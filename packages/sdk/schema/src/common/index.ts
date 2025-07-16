@@ -69,18 +69,7 @@ export namespace DataType {
   export const Message = Message$.Message;
   export type Message = Message$.Message;
 
-  export namespace MessageBlock {
-    export const Image = Message$.ImageContentBlock;
-    export type Image = Message$.ImageContentBlock;
-    export const Json = Message$.JsonContentBlock;
-    export type Json = Message$.JsonContentBlock;
-    export const Reference = Message$.ReferenceContentBlock;
-    export type Reference = Message$.ReferenceContentBlock;
-    export const Text = Message$.TextContentBlock;
-    export type Text = Message$.TextContentBlock;
-    export const Transcription = Message$.TranscriptContentBlock;
-    export type Transcription = Message$.TranscriptContentBlock;
-  }
+  export import MessageBlock = Message$.ContentBlock;
 
   /** @deprecated */
   export const MessageV1 = Message$.MessageV1;

@@ -10,25 +10,20 @@ import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
-// TODO(dmaretskyi): Namespace (e.g. ContentBlock.Text).
 // TODO(dmaretskyi): Consider renaming it to Part.
+export namespace ContentBlock {
+  export const Base = Schema.Struct({
+    /**
+     * In streaming mode, this is set to `true` when the block is not complete.
+     */
+    pending: Schema.optional(Schema.Boolean),
+  });
+  export interface Base extends Schema.Schema.Type<typeof Base> {}
 
-export const AbstractContentBlock = Schema.Struct({
   /**
-   * In streaming mode, this is set to `true` when the block is not complete.
+   * Text
    */
-  pending: Schema.optional(Schema.Boolean),
-});
-export interface AbstractContentBlock extends Schema.Schema.Type<typeof AbstractContentBlock> {}
-
-/**
- * Text
- */
-export const TextContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('text'),
-
+  export const Text = Schema.TaggedStruct('text', {
     mimeType: Schema.optional(Schema.String),
     text: Schema.String,
 
@@ -36,19 +31,16 @@ export const TextContentBlock = Schema.extend(
      * @deprecated
      */
     disposition: Schema.optional(Schema.String), // (e.g., "cot").
-  }),
-).pipe(Schema.mutable);
-export interface TextContentBlock extends Schema.Schema.Type<typeof TextContentBlock> {}
 
-/**
- * Represents part of the reasoning carried out by the model to generate a
- * response.
- */
-export const ReasoningContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('reasoning'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Text extends Schema.Schema.Type<typeof Text> {}
 
+  /**
+   * Represents part of the reasoning carried out by the model to generate a
+   * response.
+   */
+  export const Reasoning = Schema.TaggedStruct('reasoning', {
     /**
      * The reasoning content that the model used to return the output.
      */
@@ -65,17 +57,15 @@ export const ReasoningContentBlock = Schema.extend(
      * by the model.
      */
     signature: Schema.optional(Schema.String),
-  }),
-).pipe(Schema.mutable);
 
-/**
- * Represents a tool call made by the model.
- */
-export const ToolCallContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('toolCall'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Reasoning extends Schema.Schema.Type<typeof Reasoning> {}
 
+  /**
+   * Represents a tool call made by the model.
+   */
+  export const ToolCall = Schema.TaggedStruct('toolCall', {
     /**
      * Id unique to this tool call.
      * Set by the model provider.
@@ -92,15 +82,12 @@ export const ToolCallContentBlock = Schema.extend(
      * Parsed input of the tool call.
      */
     input: Schema.Unknown,
-  }),
-).pipe(Schema.mutable);
-export interface ToolCallContentBlock extends Schema.Schema.Type<typeof ToolCallContentBlock> {}
 
-export const ToolResultContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('toolResult'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface ToolCall extends Schema.Schema.Type<typeof ToolCall> {}
 
+  export const ToolResult = Schema.TaggedStruct('toolResult', {
     /**
      * Id of the tool call that this result is for.
      * Must match the Id of the preceding {@link ToolCallContentBlock}.
@@ -111,45 +98,40 @@ export const ToolResultContentBlock = Schema.extend(
      * The result of the tool call.
      */
     result: Schema.Unknown,
-  }),
-).pipe(Schema.mutable);
-export interface ToolResultContentBlock extends Schema.Schema.Type<typeof ToolResultContentBlock> {}
 
-export const Base64ImageSource = Schema.Struct({
-  type: Schema.Literal('base64'),
-  mediaType: Schema.String,
-  data: Schema.String,
-}).pipe(Schema.mutable);
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface ToolResult extends Schema.Schema.Type<typeof ToolResult> {}
 
-export const HttpImageSource = Schema.Struct({
-  type: Schema.Literal('http'),
-  url: Schema.String,
-}).pipe(Schema.mutable);
+  export const Base64ImageSource = Schema.Struct({
+    type: Schema.Literal('base64'),
+    mediaType: Schema.String,
+    data: Schema.String,
+  }).pipe(Schema.mutable);
 
-export const ImageSource = Schema.Union(
-  // prettier-ignore
-  Base64ImageSource,
-  HttpImageSource,
-);
+  export const HttpImageSource = Schema.Struct({
+    type: Schema.Literal('http'),
+    url: Schema.String,
+  }).pipe(Schema.mutable);
 
-/**
- * Image
- */
-export const ImageContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('image'),
+  export const ImageSource = Schema.Union(
+    // prettier-ignore
+    Base64ImageSource,
+    HttpImageSource,
+  );
+
+  /**
+   * Image
+   */
+  export const Image = Schema.TaggedStruct('image', {
     id: Schema.optional(Schema.String),
     source: Schema.optional(ImageSource),
-  }),
-).pipe(Schema.mutable);
-export interface ImageContentBlock extends Schema.Schema.Type<typeof ImageContentBlock> {}
 
-export const FileContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('file'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Image extends Schema.Schema.Type<typeof Image> {}
 
+  export const File = Schema.TaggedStruct('file', {
     /**
      * The URL of the file.
      * Data URLs allow for embedding small files directly in the message.
@@ -165,119 +147,131 @@ export const FileContentBlock = Schema.extend(
      * The MIME type of the file.
      */
     mediaType: Schema.optional(Schema.String),
-  }),
-).pipe(Schema.mutable);
-export interface FileContentBlock extends Schema.Schema.Type<typeof FileContentBlock> {}
 
-/**
- * Reference
- *
- * Non-text content embedded in the message (e.g., files, polls, etc.).
- */
-export const ReferenceContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('reference'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface File extends Schema.Schema.Type<typeof File> {}
+
+  /**
+   * Reference
+   *
+   * Non-text content embedded in the message (e.g., files, polls, etc.).
+   */
+  export const Reference = Schema.TaggedStruct('reference', {
     reference: Type.Ref(Type.Expando),
-  }),
-).pipe(Schema.mutable);
-export interface ReferenceContentBlock extends Schema.Schema.Type<typeof ReferenceContentBlock> {}
 
-/**
- * Transcript
- */
-export const TranscriptContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('transcription'), // TODO(burdon): Change to `transcript` (migration?).
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Reference extends Schema.Schema.Type<typeof Reference> {}
+
+  /**
+   * Transcript block.
+   */
+  export const Transcript = Schema.TaggedStruct('transcript', {
     started: Schema.String,
     text: Schema.String,
-  }),
-).pipe(Schema.mutable);
-export interface TranscriptContentBlock extends Schema.Schema.Type<typeof TranscriptContentBlock> {}
 
-/**
- * Suggestion for a follow-up prompt for the user.
- */
-export const SuggestContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('suggestion'),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Transcript extends Schema.Schema.Type<typeof Transcript> {}
+
+  /**
+   * Agent reporting it's current status.
+   */
+  export const Status = Schema.TaggedStruct('status', {
+    statusText: Schema.String,
+
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Status extends Schema.Schema.Type<typeof Status> {}
+
+  /**
+   * Suggestion for a follow-up prompt for the user.
+   */
+  export const Suggest = Schema.TaggedStruct('suggest', {
     text: Schema.String,
-  }),
-).pipe(Schema.mutable);
-export interface SuggestContentBlock extends Schema.Schema.Type<typeof SuggestContentBlock> {}
 
-/**
- * Proposed answer to the assistant's question.
- */
-export const ProposalContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('proposal'),
-    text: Schema.String,
-  }),
-).pipe(Schema.mutable);
-export interface ProposalContentBlock extends Schema.Schema.Type<typeof ProposalContentBlock> {}
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Suggest extends Schema.Schema.Type<typeof Suggest> {}
 
-/**
- * Associates artifact (of a specific version) with this conversation.
- * Used to track associated artifacts as well their changes during the conversation.
- */
-// TODO(dmaretskyi): What's the relation of this to the reference content block?
-export const ArtifactPinContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('artifactPin'),
+  /**
+   * Multiple choice selection.
+   * Usually an answer to assistant's question.
+   */
+  export const Select = Schema.TaggedStruct('select', {
+    options: Schema.Array(Schema.String),
 
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Select extends Schema.Schema.Type<typeof Select> {}
+
+  /**
+   * Associates artifact (of a specific version) with this conversation.
+   * Used to track associated artifacts as well their changes during the conversation.
+   */
+  // TODO(dmaretskyi): What's the relation of this to the reference content block?
+  const ArtifactPin = Schema.TaggedStruct('artifactPin', {
     // TODO(dmaretskyi): Consider making this a DXN.
     objectId: ObjectId,
 
     // TODO(dmaretskyi): Better type.
     version: Schema.Unknown,
-  }),
-).pipe(Schema.mutable);
-export interface ArtifactPinContentBlock extends Schema.Schema.Type<typeof ArtifactPinContentBlock> {}
 
-/**
- * Model priniting info about the list of available tools.
- */
-export const ToolListContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('toolList'),
-  }),
-).pipe(Schema.mutable);
-export interface ToolListContentBlock extends Schema.Schema.Type<typeof ToolListContentBlock> {}
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface ArtifactPin extends Schema.Schema.Type<typeof ArtifactPin> {}
 
-/**
- * JSON
- * @deprecated Use {@link TextContentBlock} with mime type of `application/json`.
- */
-export const JsonContentBlock = Schema.extend(
-  AbstractContentBlock,
-  Schema.Struct({
-    type: Schema.Literal('json'),
+  /**
+   * Proposed content to be added to an artifact.
+   */
+  // TODO(dmaretskyi): Consider handling this via a tool call.
+  export const Proposal = Schema.TaggedStruct('proposal', {
+    text: Schema.String,
+
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Proposal extends Schema.Schema.Type<typeof Proposal> {}
+
+  /**
+   * Model priniting info about the list of available tools.
+   */
+  export const ToolList = Schema.TaggedStruct('toolList', {
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface ToolList extends Schema.Schema.Type<typeof ToolList> {}
+
+  /**
+   * JSON
+   * @deprecated Use {@link Text} with mime type of `application/json`.
+   */
+  export const Json = Schema.TaggedStruct('json', {
     disposition: Schema.optional(Schema.String), // (e.g., "tool_use").
     data: Schema.String,
-  }),
-).pipe(Schema.mutable);
-export interface JsonContentBlock extends Schema.Schema.Type<typeof JsonContentBlock> {}
 
-export const MessageContentBlock = Schema.Union(
-  TextContentBlock,
-  ReasoningContentBlock,
-  ImageContentBlock,
-  FileContentBlock,
-  ReferenceContentBlock,
-  TranscriptContentBlock,
-  SuggestContentBlock,
-  ProposalContentBlock,
-  ArtifactPinContentBlock,
-  ToolListContentBlock,
-  JsonContentBlock,
-);
-export type MessageContentBlock = Schema.Schema.Type<typeof MessageContentBlock>;
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Json extends Schema.Schema.Type<typeof Json> {}
+
+  export const Any = Schema.Union(
+    Text,
+    Reasoning,
+    ToolCall,
+    ToolResult,
+    Image,
+    File,
+    Reference,
+    Transcript,
+    Status,
+    Suggest,
+    Select,
+    ArtifactPin,
+    Proposal,
+    ToolList,
+    Json,
+  );
+  export type Any = Schema.Schema.Type<typeof Any>;
+}
 
 /**
  * Message.
@@ -292,7 +286,7 @@ const MessageSchema = Schema.Struct({
     GeneratorAnnotation.set('date.iso8601'),
   ),
   sender: Schema.mutable(Actor).pipe(Schema.annotations({ description: 'Identity of the message sender.' })),
-  blocks: Schema.mutable(Schema.Array(MessageContentBlock)).annotations({
+  blocks: Schema.mutable(Schema.Array(ContentBlock.Any)).annotations({
     description: 'Contents of the message.',
     default: [],
   }),
@@ -343,8 +337,8 @@ export const MessageV1ToV2 = defineObjectMigration({
       created: from.timestamp,
       sender: from.sender,
       blocks: [
-        { type: 'text' as const, text: from.text },
-        ...(from.parts ?? []).map((part) => ({ type: 'reference' as const, reference: part })),
+        { _tag: 'text' as const, text: from.text },
+        ...(from.parts ?? []).map((part) => ({ _tag: 'reference' as const, reference: part })),
       ],
       properties: {
         ...from.properties,
