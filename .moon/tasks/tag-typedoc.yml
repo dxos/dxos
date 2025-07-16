@@ -1,0 +1,13 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  typedoc:
+    command: pnpm run typedoc
+    deps:
+      - build
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - typedoc.json
+      - '@group(production)'
+    outputs:
+      - typedoc

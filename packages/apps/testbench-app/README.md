@@ -3,7 +3,7 @@
 To run the app:
 
 ```bash
-pnpm -w nx run testbench-app:serve
+moon run testbench-app:serve
 ```
 
 To run the app in a native context (SocketSupply)

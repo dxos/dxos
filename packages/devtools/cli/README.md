@@ -111,7 +111,7 @@ NOTE: The `agent` will need to be recompiled after any changes.
 To build the CLI:
 
 ```bash
-nx run cli:build --watch=true
+moon run cli:build
 ```
 
 ### Devtools

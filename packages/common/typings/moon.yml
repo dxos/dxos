@@ -1,0 +1,9 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - compile

@@ -31,7 +31,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "^3.16.12",
+    "effect": "3.16.13",
     "mermaid": "^10.6.1"
   },
   "devDependencies": {

@@ -28,13 +28,10 @@
     "wittjosiah"
   ],
   "files.associations": {
-    "nx.json": "jsonc",
     "workspace.json": "jsonc",
-    "project.json": "jsonc",
     "schema.json": "jsonc",
     "eslintConfig.json": "jsonc",
     ".eslintrc.json": "jsonc",
-    "rush.json": "jsonc",
     "command-line.json": "jsonc",
     "version-policies.json": "jsonc",
     "artifactory.json": "jsonc",
@@ -67,6 +64,5 @@
   ],
   "circleci.notifications.mine": true,
   "search.useParentIgnoreFiles": true,
-  "search.useGlobalIgnoreFiles": false,
-  "nxConsole.generateAiAgentRules": true
+  "search.useGlobalIgnoreFiles": false
 }

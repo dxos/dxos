@@ -24,6 +24,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -40,9 +43,6 @@
     },
     {
       "path": "../../core/protocols"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"
