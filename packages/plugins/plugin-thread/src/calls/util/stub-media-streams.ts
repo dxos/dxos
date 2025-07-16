@@ -49,12 +49,9 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
   const oscillator = audioContext.createOscillator();
   oscillator.type = 'triangle';
 
-  // set to 0.1 to make inaudible
-  oscillator.frequency.setValueAtTime(0.1, audioContext.currentTime);
-
+  oscillator.frequency.setValueAtTime(0.01, audioContext.currentTime);
   const gainNode = audioContext.createGain();
-  // even w/ gain at 0 some packets are sent
-  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
 
   oscillator.connect(gainNode);
 

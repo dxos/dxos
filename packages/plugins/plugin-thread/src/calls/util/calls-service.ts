@@ -401,7 +401,7 @@ export class CallsServicePeer extends Resource {
             })
             .catch((err) => log.catch(err));
         } else {
-          log.error('missing track info');
+          log.info('missing track info', { trackData });
         }
       });
 

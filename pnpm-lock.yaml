@@ -9960,6 +9960,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
