@@ -92,6 +92,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     env:
+      NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
     steps:
