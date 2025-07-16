@@ -22,7 +22,7 @@ type UseChatProcessorProps = {
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: AIChatType;
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject.
+  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
   serviceContainer: ServiceContainer;
   blueprintRegistry?: BlueprintRegistry;
   settings?: AssistantSettingsProps;
