@@ -3,3 +3,4 @@
 //
 
 export * from './useTableModel';
+export * from './useAddRow';

@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
@@ -15,12 +15,12 @@ import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
-  AssistantDialog,
   AssistantSettings,
-  BlueprintContainer,
+  SequenceContainer,
   ChatContainer,
   PromptSettings,
   TemplateContainer,
+  ChatDialog,
 } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
 import { AIChatType, AssistantAction, type AssistantSettingsProps, CompanionTo, TemplateType } from '../types';
@@ -93,20 +93,20 @@ export default () =>
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} associatedArtifact={associatedArtifact} />;
+        return <ChatContainer role={role} chat={data.subject} artifact={associatedArtifact} />;
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/blueprint`,
+      id: `${ASSISTANT_PLUGIN}/sequence`,
       role: 'article',
-      filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
-      component: ({ data, role }) => <BlueprintContainer role={role} blueprint={data.subject} />,
+      filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
+      component: ({ data, role }) => <SequenceContainer role={role} sequence={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/companion/logs`,
       role: 'article',
-      filter: (data): data is { companionTo: Blueprint } =>
-        Obj.instanceOf(Blueprint, data.companionTo) && data.subject === 'logs',
+      filter: (data): data is { companionTo: Sequence } =>
+        Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (
@@ -126,7 +126,7 @@ export default () =>
       id: ASSISTANT_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
-      component: ({ data }) => <AssistantDialog {...data.props} />,
+      component: ({ data }) => <ChatDialog {...data.props} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/prompt-settings`,

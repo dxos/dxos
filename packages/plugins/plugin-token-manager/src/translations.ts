@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TOKEN_MANAGER_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [TOKEN_MANAGER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Tokens',
         'space panel name': 'Integrations',
         'integrations verbose label': 'Manage integrations',
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

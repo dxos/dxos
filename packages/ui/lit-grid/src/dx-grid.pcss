@@ -4,7 +4,11 @@
 @layer dx-tokens {
   :root {
     --dx-grid-cell-padding-block: 0.2rem;
+    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - 1px);
+    --dx-grid-cell-editor-padding-block: var(--dx-grid-cell-content-padding-block);
     --dx-grid-cell-padding-inline: 0.25rem;
+    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - 1px);
+    --dx-grid-cell-editor-padding-inline: var(--dx-grid-cell-content-padding-inline);
   }
 }
 
@@ -63,19 +67,14 @@
   }
 
   .dx-grid {
+    --dx-grid-cell-surface: var(--dx-grid-base, var(--dx-baseSurface));
+
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      position: relative;
-      background: var(--dx-grid-base, var(--dx-baseSurface));
-      /** This must match CellEditor styling in `CellEditor.tsx`. */
-      padding: var(--dx-grid-cell-padding-block) var(--dx-grid-cell-padding-inline);
-      box-sizing: border-box;
-      border: 1px solid transparent;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      background: var(--dx-grid-cell-surface);
       cursor: pointer;
+      position: relative;
 
       &[aria-readonly='true'] {
         cursor: default;
@@ -86,11 +85,28 @@
         user-select: text;
       }
 
-      &:focus:not([aria-readonly='true']),
-      &:focus-visible {
-        z-index: 2;
-        border-color: var(--dx-accentSurface);
+      &:focus {
         outline: none;
+      }
+
+      & > .dx-grid__cell__content {
+        padding-inline: var(--dx-grid-cell-content-padding-inline);
+        padding-block: var(--dx-grid-cell-content-padding-block);
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        block-size: 100%;
+        position: relative;
+        border: 1px solid transparent;
+        border-radius: 2px;
+
+        &:has(.dx-tag), &:has(dx-tag-picker-item) {
+          text-overflow: clip;
+          line-height: 0;
+          --dx-grid-cell-content-padding-inline: 1px;
+          --dx-grid-cell-content-padding-block: 1px;
+        }
       }
 
       &.dx-grid__cell--commented {
@@ -103,17 +119,90 @@
       [role='columnheader'],
       [role='rowheader'] {
         &[aria-selected] {
-          background: var(--dx-gridSelectionOverlay);
+          --dx-grid-cell-surface: var(--dx-gridSelectionOverlay);
+
+          &:focus:not([aria-readonly='true']),
+          &:focus-visible, &:focus-within {
+            & > .dx-grid__cell__content {
+              background: transparent;
+            }
+          }
         }
       }
     }
   }
 
+  /* Editor and focused cell styles; be sure to keep these two blocks in-sync. */
+  .dx-grid {
+    [role='gridcell'],
+    [role='columnheader'],
+    [role='rowheader'] {
+      &:focus,
+      &:focus-within {
+        & > .dx-grid__cell__content {
+          min-block-size: 100%;
+          block-size: min-content;
+          max-block-size: min(12em, 50vh);
+
+          min-inline-size: 100%;
+          inline-size: min-content;
+          max-inline-size: min(60ch, 90vw);
+
+          overflow: auto;
+          scrollbar-width: thin;
+          overscroll-behavior: contain;
+
+          white-space: normal;
+          hyphens: auto;
+          overflow-wrap: break-word;
+
+          z-index: 1;
+        }
+
+        &:not([aria-readonly='true']) > .dx-grid__cell__content {
+          background: var(--dx-grid-cell-surface);
+          border-color: var(--dx-accentSurface);
+        }
+      }
+
+      &:focus-visible > .dx-grid__cell__content {
+        border-color: var(--dx-accentSurface);
+      }
+    }
+  }
+
+  .dx-grid__cell-editor {
+    font-variant-numeric: tabular-nums;
+    white-space: normal;
+    hyphens: auto;
+    overflow-wrap: break-word;
+
+    background: var(--dx-grid-base, var(--dx-baseSurface));
+    border: 1px solid var(--dx-accentSurface);
+    border-radius: 2px;
+
+    --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
+    --dx-grid-cell-editor-max-inline-size: min(60ch, 90vw);
+
+    block-size: min-content;
+    max-block-size: var(--dx-grid-cell-editor-max-block-size);
+    inline-size: min-content;
+    max-inline-size: var(--dx-grid-cell-editor-max-inline-size);
+
+    &:has(.dx-tag), &:has(dx-tag-picker-item) {
+      text-overflow: clip;
+      line-height: 0;
+      --dx-grid-cell-editor-padding-inline: 1px;
+      --dx-grid-cell-editor-padding-block: 1px;
+    }
+  }
+
+  /* /// */
   .dx-grid-host:focus-within .dx-grid:not(:focus-within) {
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &[data-dx-active]:not([aria-readonly='true']) {
+      &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
         border-color: var(--dx-accentSurface);
       }
     }
@@ -130,6 +219,19 @@
 
     & .dx-grid-layer--presentation__cell {
       background: rgba(0, 255, 0, 0.1);
+    }
+  }
+
+  .dx-grid__cell--flagged {
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-end: 0;
+      inline-size: 0;
+      block-size: 0;
+      border-inline-start: 0.5em solid transparent;
+      border-block-start: 0.5em solid var(--dx-warningText);
     }
   }
 }

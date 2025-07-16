@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import { Client } from '@dxos/client';
-import { Expando, create } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 registerSignalsRuntime();
@@ -21,7 +21,7 @@ async () => {
 
   const space = await client.spaces.create();
 
-  const object = create(Expando, { type: 'task', name: 'buy milk' });
+  const object = Obj.make(Type.Expando, { type: 'task', name: 'buy milk' });
   space.db.add(object);
 
   const names: string[] = [];

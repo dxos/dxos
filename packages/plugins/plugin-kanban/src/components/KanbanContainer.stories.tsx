@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -27,7 +28,7 @@ import { DataType, ProjectionManager } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(0);
 
@@ -152,7 +153,6 @@ const meta: Meta<StoryProps> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, KanbanType],
           onClientInitialized: async (_, client) => {
@@ -180,6 +180,7 @@ const meta: Meta<StoryProps> = {
         SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
+        ThemePlugin({ tx: defaultTx }),
       ],
     }),
   ],

@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ViewType, ExplorerAction } from './types';
 
 export const ExplorerPlugin = () =>

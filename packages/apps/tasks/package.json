@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "deploy": "dx app publish",
     "preview": "vite preview",
     "serve": "vite"
   },
@@ -22,7 +21,6 @@
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
-    "@dxos/cli": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "autoprefixer": "^10.4.12",

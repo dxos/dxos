@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Type, Obj } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -20,6 +20,7 @@ import {
   TablePresentation,
   TableToolbar,
   useTableModel,
+  useAddRow,
 } from '@dxos/react-ui-table';
 import { type DataType, ProjectionManager } from '@dxos/schema';
 
@@ -44,11 +45,7 @@ const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView 
     });
   }, [graph]);
 
-  const handleInsertRow = useCallback(() => {
-    if (schema && space) {
-      space.db.add(Obj.make(schema, {}));
-    }
-  }, [space, schema]);
+  const addRow = useAddRow({ space, schema });
 
   const handleDeleteRows = useCallback(
     (_row: number, objects: any[]) => {
@@ -86,12 +83,16 @@ const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView 
     projection,
     features,
     rows: filteredObjects,
-    onInsertRow: handleInsertRow,
+    onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
     onCellUpdate: (cell) => tableRef.current?.update?.(cell),
     onRowOrderChange: () => tableRef.current?.update?.(),
   });
+
+  const handleInsertRow = useCallback(() => {
+    model?.insertRow();
+  }, [model]);
 
   const handleSave = useCallback(() => {
     model?.saveView();

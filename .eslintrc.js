@@ -13,6 +13,7 @@ module.exports = {
     // Build Artifacts
     'dist',
     'out',
+    'deprecated',
     '**/proto/gen/*',
     'packages/core/protocols/proto/**/*',
     'packages/sdk/client/src/version.ts',
@@ -21,8 +22,10 @@ module.exports = {
     // Config
     '.eslintrc.js',
     '.mocharc.js',
+    'astro.config.ts',
     'esbuild-server.config.js',
     'playwright.config.ts',
+    'tailwind.ts',
     'vite.config.ts',
     'vitest.config.ts',
     'vitest.*.config.ts',
@@ -35,8 +38,7 @@ module.exports = {
     // TODO(wittjosiah): Fix lint config to lint these files.
     '*.t.ts',
 
-    // Docs snippets
-    'docs/content/**/*',
+    // TypeDoc output
     '**/typedoc/assets/**/*',
   ],
 
@@ -65,6 +67,22 @@ module.exports = {
       extends: ['plugin:@dxos/test'],
       files: '**/*.test.{ts,tsx,js,jsx}',
     },
+    // TODO(burdon): Build step to generate translations.json.
+    // {
+    //   extends: ['plugin:i18next/recommended'],
+    //   files: '**/*.{ts,tsx,js,jsx}',
+    //   overrides: [
+    //     {
+    //       "files": [
+    //         '*.stories.@(js|jsx|ts|tsx)',
+    //         '*.test.@(js|jsx|ts|tsx)',
+    //       ],
+    //       "rules": {
+    //         "i18next/no-literal-string": "off"
+    //       }
+    //     }
+    //   ]
+    // },
     {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
       rules: {

@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { WELCOME_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [WELCOME_PLUGIN]: {
+      [meta.id]: {
         'login title': 'Request access or login',
         'existing identity title': 'Sign up to access your account',
         'beta description': 'Drop your email below to request early access to Composer.',
@@ -46,4 +48,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

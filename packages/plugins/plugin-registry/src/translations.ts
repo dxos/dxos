@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { REGISTRY_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [REGISTRY_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Registry',
         'details label': 'Details',
         'home page label': 'Website',
@@ -25,4 +27,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -17,7 +17,7 @@ import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPreview } from './MarkdownPreview';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 faker.seed(1234);
 

@@ -11,7 +11,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -20,7 +20,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
 
 export const AssistantPlugin = () =>
@@ -40,9 +40,9 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Blueprint),
+          id: Type.getTypename(Sequence),
           metadata: {
-            icon: 'ph--blueprint--regular',
+            icon: 'ph--circuitry--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -67,8 +67,8 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: Blueprint,
-            getIntent: () => createIntent(AssistantAction.CreateBlueprint),
+            objectSchema: Sequence,
+            getIntent: () => createIntent(AssistantAction.CreateSequence),
           }),
         ),
       ],

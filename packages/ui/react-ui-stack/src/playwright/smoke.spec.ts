@@ -8,10 +8,12 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { StackManager } from '../testing';
 
+const PORT = 9003;
+
 // TODO(wittjosiah): Update for new stack.
 test.describe.skip('Stack', () => {
   test('remove', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer', PORT) });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
@@ -24,7 +26,7 @@ test.describe.skip('Stack', () => {
   });
 
   test('rearrange', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer', PORT) });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack = new StackManager(page.getByTestId('stack-1'));
@@ -41,7 +43,7 @@ test.describe.skip('Stack', () => {
       test.skip();
     }
 
-    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--transfer', PORT) });
     await page.getByTestId('stack-transfer').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));
@@ -61,7 +63,7 @@ test.describe.skip('Stack', () => {
   });
 
   test('copy', async ({ browser }) => {
-    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--copy') });
+    const { page } = await setupPage(browser, { url: storybookUrl('ui-react-ui-stack-stack--copy', PORT) });
     await page.getByTestId('stack-copy').waitFor({ state: 'visible' });
 
     const stack1 = new StackManager(page.getByTestId('stack-1'));

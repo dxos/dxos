@@ -4,3 +4,5 @@
 
 export * from './plugins';
 export * from './services';
+export * from './blueprints';
+export * from './tools';

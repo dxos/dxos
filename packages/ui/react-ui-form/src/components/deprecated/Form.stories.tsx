@@ -12,7 +12,7 @@ import { testData, TestSchema, testProjection, type TestType } from '@dxos/schem
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DeprecatedForm, type DeprecatedFormProps } from './Form';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
 const DefaultStory = (props: DeprecatedFormProps) => (

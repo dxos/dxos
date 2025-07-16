@@ -33,7 +33,7 @@ import {
   useTestTranscriptionQueue,
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 faker.seed(1);
 

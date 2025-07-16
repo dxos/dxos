@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import translations from './translations';
+import { translations } from './translations';
 
 export * from './components';
 export * from './hooks';

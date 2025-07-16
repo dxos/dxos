@@ -11,8 +11,8 @@ import { translations as tableTranslations } from '@dxos/react-ui-table';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
 import { CreateTableSchema, TableAction, TableView } from './types';
+import { translations } from './translations';
 
 export const TablePlugin = () =>
   definePlugin(meta, [

@@ -2,14 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TRANSFORMER_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [TRANSFORMER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Transformers',
       },
     },
   },
-];
+] as const satisfies Resource[];

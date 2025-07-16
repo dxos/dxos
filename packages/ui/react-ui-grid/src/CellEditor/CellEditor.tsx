@@ -14,7 +14,9 @@ import {
   createThemeExtensions,
   preventNewline,
   useTextEditor,
+  type ThemeExtensionsOptions,
 } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type GridEditBox } from '../Grid';
 
@@ -117,9 +119,11 @@ export type CellEditorProps = {
   extension?: Extension;
   box?: GridEditBox;
   gridId?: string;
-} & Pick<UseTextEditorProps, 'autoFocus'> & { onBlur?: EditorBlurHandler };
+  onBlur?: EditorBlurHandler;
+} & Pick<UseTextEditorProps, 'autoFocus'> &
+  Pick<ThemeExtensionsOptions, 'slots'>;
 
-export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }: CellEditorProps) => {
+export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId, slots }: CellEditorProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -135,30 +139,39 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId }:
           }
           return null;
         }),
-        createBasicExtensions({ lineWrapping: false }),
+        createBasicExtensions({ lineWrapping: true }),
         createThemeExtensions({
           themeMode,
           slots: {
             editor: {
-              className: '[&>.cm-scroller]:scrollbar-none tabular-nums',
+              className: mx(
+                '!min-is-full !is-min !max-is-[--dx-grid-cell-editor-max-inline-size] !min-bs-full !max-bs-[--dx-grid-cell-editor-max-block-size]',
+                slots?.editor?.className,
+              ),
             },
-            content: {
-              className:
-                '!border !border-transparent !pli-[var(--dx-grid-cell-padding-inline)] !plb-[var(--dx-grid-cell-padding-block)]',
+            scroller: {
+              className: mx(
+                '!overflow-x-hidden !plb-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] !pie-0 !pis-[--dx-grid-cell-editor-padding-inline]',
+                slots?.scroller?.className,
+              ),
             },
+            content: { className: mx('!break-normal', slots?.content?.className) },
           },
         }),
       ],
     };
-  }, [extension, autoFocus, value, onBlur]);
+  }, [extension, autoFocus, value, onBlur, themeMode, slots]);
 
   return (
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1]'
+      className='absolute z-[1] dx-grid__cell-editor'
       style={{
-        ...box,
+        insetInlineStart: box?.insetInlineStart ?? '0px',
+        insetBlockStart: box?.insetBlockStart ?? '0px',
+        minInlineSize: box?.inlineSize ?? '180px',
+        minBlockSize: box?.blockSize ?? '30px',
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
       }}
       {...(gridId && { 'data-grid': gridId })}

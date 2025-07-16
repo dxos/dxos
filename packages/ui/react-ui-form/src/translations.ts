@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Resource } from '@dxos/react-ui';
+
 export const translationKey = 'react-ui-form';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -75,4 +77,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

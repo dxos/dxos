@@ -11,7 +11,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { withTheme } from '@dxos/storybook-utils';
 
 import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const Story = (args: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientProvider();

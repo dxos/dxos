@@ -8,14 +8,6 @@ A framework for building applications from composible plugins.
 pnpm i @dxos/app-framework
 ```
 
-## Usage
-
-Run with
-
-```bash
-pnpm nx storybook app-framework
-```
-
 ## DXOS Resources
 
 - [Website](https://dxos.org)

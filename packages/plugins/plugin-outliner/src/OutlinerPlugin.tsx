@@ -10,7 +10,7 @@ import { DataType } from '@dxos/schema';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { JournalEntryType, JournalType, OutlinerAction, OutlineType } from './types';
 
 export const OutlinerPlugin = () =>

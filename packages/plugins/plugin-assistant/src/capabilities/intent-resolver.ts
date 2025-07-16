@@ -5,7 +5,7 @@
 import { Effect } from 'effect';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref, Type } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
@@ -39,10 +39,10 @@ export default (context: PluginContext) => [
       }),
     }),
     createResolver({
-      intent: AssistantAction.CreateBlueprint,
+      intent: AssistantAction.CreateSequence,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(Blueprint, {
+          object: Obj.make(Sequence, {
             name,
             steps: [
               {

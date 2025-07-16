@@ -20,7 +20,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;

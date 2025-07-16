@@ -9,7 +9,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ChessAction, ChessType } from './types';
 
 export const ChessPlugin = () =>

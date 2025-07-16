@@ -16,9 +16,9 @@ import {
 export namespace TranscriptionCapabilities {
   export type GetTranscriberProps = {
     audioStreamTrack: MediaStreamTrack;
-    onSegments: TranscriberParams['onSegments'];
-    transcriberConfig?: Partial<TranscriberParams['config']>;
     recorderConfig?: Partial<MediaStreamRecorderParams['config']>;
+    transcriberConfig?: Partial<TranscriberParams['config']>;
+    onSegments: TranscriberParams['onSegments'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
   export const Transcriber = defineCapability<GetTranscriber>(`${TRANSCRIPTION_PLUGIN}/capability/transcriber`);

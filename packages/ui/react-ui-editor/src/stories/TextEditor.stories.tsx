@@ -217,7 +217,7 @@ export const Typeahead = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         typeahead({
-          onComplete: staticCompletion(completions, completions[0]),
+          onComplete: staticCompletion(completions, { minLength: 2 }),
         }),
       ]}
     />

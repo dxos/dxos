@@ -10,7 +10,7 @@ import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-k
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { CreateKanbanSchema, KanbanAction } from './types';
 
 export const KanbanPlugin = () =>

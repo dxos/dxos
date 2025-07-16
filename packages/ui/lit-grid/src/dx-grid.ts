@@ -640,16 +640,29 @@ export class DxGrid extends LitElement {
         (this.overscroll === 'inline' && event.overscrollInline === 0) ||
         (this.overscroll === 'block' && event.overscrollBlock === 0)
       ) {
-        event.preventDefault();
-        event.stopPropagation();
+        const element = event.target as HTMLElement;
+        const activeCell = element.closest('[data-dx-active]');
+        const contentEl = element.closest('.dx-grid__cell__content');
+        if (
+          !(
+            element &&
+            activeCell &&
+            contentEl &&
+            (contentEl.scrollWidth > contentEl.clientWidth || contentEl.scrollHeight > contentEl.clientHeight)
+          )
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
       }
     }
   };
 
   private handleWheel = (event: DxGridAnnotatedPanEvent) => {
     if (this.mode === 'browse') {
-      const nextPosInline = this.posInline + event.deltaX;
-      const nextPosBlock = this.posBlock + event.deltaY;
+      const { deltaX, deltaY } = this.getOverflowingCellModifiedDeltas(event);
+      const nextPosInline = this.posInline + deltaX;
+      const nextPosBlock = this.posBlock + deltaY;
       const maxPosInline = this.maxPosInline();
       const maxPosBlock = this.maxPosBlock();
       this.updatePos(nextPosInline, nextPosBlock, maxPosInline, maxPosBlock);
@@ -1262,6 +1275,44 @@ export class DxGrid extends LitElement {
     return colReadonly === 'text-select' || rowReadonly === 'text-select';
   }
 
+  private getOverflowingCellModifiedDeltas(
+    event: DxGridAnnotatedPanEvent,
+  ): Pick<DxGridAnnotatedPanEvent, 'deltaX' | 'deltaY'> {
+    if (!event.target) {
+      return event;
+    }
+    const element = event.target as HTMLElement;
+    const activeCell = element.closest('[data-dx-active]');
+    const contentEl = element.closest('.dx-grid__cell__content');
+
+    if (!activeCell || !contentEl || !document.activeElement?.contains(element)) {
+      return event;
+    }
+
+    // Commented-out code will let the event delta through unmodified if the cell can scroll but is scrolled to the end
+    // in the same direction as the wheel event, a.k.a. “overscroll”; this is probably undesirable, though.
+
+    const { scrollWidth, clientWidth, scrollHeight, clientHeight /*, scrollLeft, scrollTop */ } = contentEl;
+
+    if (scrollWidth <= clientWidth && scrollHeight <= clientHeight) {
+      return event;
+    }
+
+    const deltaX =
+      scrollWidth > clientWidth /* &&
+      ((event.deltaX < 0 && scrollLeft > 0) || (event.deltaX > 0 && scrollLeft < scrollWidth - clientWidth)) */
+        ? 0
+        : event.deltaX;
+
+    const deltaY =
+      scrollHeight > clientHeight /* &&
+      ((event.deltaY < 0 && scrollTop > 0) || (event.deltaY > 0 && scrollTop < scrollHeight - clientHeight)) */
+        ? 0
+        : event.deltaY;
+
+    return { deltaX, deltaY };
+  }
+
   private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
@@ -1284,9 +1335,10 @@ export class DxGrid extends LitElement {
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      ${this.mode !== 'browse' && active ? null : cell?.value}${this.mode !== 'browse' && active
-        ? null
-        : accessory}${cell?.resizeHandle &&
+      <div role="none" class="dx-grid__cell__content">
+        ${this.mode !== 'browse' && active ? null : cell?.value}${this.mode !== 'browse' && active ? null : accessory}
+      </div>
+      ${cell?.resizeHandle &&
       this.mode === 'browse' &&
       this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
         ? html`<dx-grid-axis-resize-handle
@@ -1490,6 +1542,13 @@ export class DxGrid extends LitElement {
       this.updateVisInline();
     }
 
+    if (changedProperties.has('frozen')) {
+      this.updateIntrinsicBlockSize();
+      this.updateIntrinsicInlineSize();
+      this.updateVisBlock();
+      this.updateVisInline();
+    }
+
     if (
       this.getCells &&
       (changedProperties.has('initialCells') ||
@@ -1500,7 +1559,8 @@ export class DxGrid extends LitElement {
         changedProperties.has('columns') ||
         changedProperties.has('rows') ||
         changedProperties.has('limitColumns') ||
-        changedProperties.has('limitRows'))
+        changedProperties.has('limitRows') ||
+        changedProperties.has('frozen'))
     ) {
       this.updateCells(true);
     }

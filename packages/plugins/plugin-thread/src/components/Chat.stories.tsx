@@ -20,7 +20,7 @@ import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChatContainer } from './ChatContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
 
 faker.seed(1);
@@ -60,9 +60,9 @@ const Story = () => {
 
 export const Default = {};
 
-const meta: Meta = {
+const meta: Meta<typeof Thread.Root> = {
   title: 'plugins/plugin-thread/Chat',
-  component: Thread,
+  component: Thread.Root,
   render: () => <Story />,
   decorators: [
     withPluginManager({

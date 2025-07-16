@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Outliner } from './Outliner';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { OutlineType } from '../../types';
 
 // TODO(burdon): Can we create a storybook for the Outliner without the database?

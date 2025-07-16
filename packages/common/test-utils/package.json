@@ -34,7 +34,6 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@nx/devkit": "19.7.2",
     "@playwright/test": "^1.46.0",
     "pkg-up": "^3.1.0"
   },

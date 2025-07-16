@@ -1,0 +1,45 @@
+name: Update dependencies
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  effect:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Update manifests
+        run: npx npm-check-updates --deep --upgrade effect "@effect/*"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bot/update-effect
+          delete-branch: true
+          title: 'chore: Update effect dependencies'
+          draft: false
+# effect
+# vite
+# typescript
+# eslint
+# react
+# automerge
