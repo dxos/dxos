@@ -18,7 +18,7 @@
   "exclude": [
     "demos/*",
     "src/functions/*",
-    "src/playwright/playwright.config.cts",
+    "src/playwright/playwright.config.ts",
     "vite.config.ts"
   ],
   "include": [
@@ -46,9 +46,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -74,6 +71,9 @@
     },
     {
       "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../plugins/plugin-assistant"

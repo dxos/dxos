@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keys",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "ulidx": "^2.3.0"
   },
   "devDependencies": {

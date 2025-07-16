@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -13,7 +13,7 @@ import { Dialog } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const Render = (props: ResetDialogProps) => {
   return (

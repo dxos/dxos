@@ -1,6 +1,6 @@
 {
   "name": "@dxos/lit-grid",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A grid Web Component using Lit",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,6 +39,7 @@
     "lit": "^3.2.0"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   }
 }

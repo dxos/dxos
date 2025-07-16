@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, IntentPlugin, SettingsPlugin, Surface } from '@dxos/app-framework';
@@ -26,7 +26,7 @@ import { createObjectFactory, Testing, type ValueGenerator } from '@dxos/schema/
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
-import translations from '../translations';
+import { translations } from '../translations';
 import { DocumentType } from '../types';
 
 faker.seed(1);

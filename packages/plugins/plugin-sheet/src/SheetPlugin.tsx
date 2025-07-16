@@ -11,7 +11,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AnchorSort, Markdown, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
-import translations from './translations';
+import { translations } from './translations';
 import { SheetAction, SheetType } from './types';
 
 export const SheetPlugin = () =>

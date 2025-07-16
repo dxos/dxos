@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
@@ -17,7 +17,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectInput } from './Defaults';
 import { Form, type FormProps } from './Form';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
 
 const AddressSchema = Schema.Struct({

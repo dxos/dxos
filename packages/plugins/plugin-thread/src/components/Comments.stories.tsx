@@ -4,29 +4,29 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation, Type } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { AnchoredTo, DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { layoutCentered, render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread } from './testing';
-import translations from '../translations';
+import { translations } from '../translations';
 import { ThreadType } from '../types';
 
 faker.seed(1);
 
-const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
+const DefaultStory = () => {
   const identity = useIdentity();
-  const space = useSpace(spaceKey);
+  const space = useSpace();
   const anchors = useQuery(space, Query.type(AnchoredTo));
 
   useEffect(() => {
@@ -58,26 +58,33 @@ const Story = ({ spaceKey }: ClientRepeatedComponentProps) => {
   }
 
   return (
-    <div className='flex justify-center overflow-y-auto bg-white dark:bg-black'>
-      <div className='flex flex-col w-[30rem]'>
-        <CommentsContainer anchors={anchors} onThreadDelete={console.log} />
-      </div>
+    <div className='w-[30rem] overflow-y-auto bg-baseSurface'>
+      <CommentsContainer anchors={anchors} onThreadDelete={console.log} />
     </div>
   );
 };
 
 const meta: Meta = {
   title: 'plugins/plugin-thread/Comments',
-  // TODO(wittjosiah): Use decorator.
-  render: () => <ClientRepeater component={Story} createIdentity createSpace types={[ThreadType, DataType.Message]} />,
+  render: render(DefaultStory),
   decorators: [
     withTheme,
-    withLayout({ fullscreen: true }),
+    withLayout({ fullscreen: true, classNames: layoutCentered }),
     withPluginManager({
-      plugins: [IntentPlugin()],
+      plugins: [
+        IntentPlugin(),
+        ClientPlugin({
+          types: [DataType.Message, ThreadType, AnchoredTo],
+          onClientInitialized: async (_, client) => {
+            await client.halo.createIdentity();
+          },
+        }),
+      ],
     }),
   ],
-  parameters: { translations },
+  parameters: {
+    translations,
+  },
 };
 
 export default meta;

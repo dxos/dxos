@@ -3,7 +3,8 @@
 //
 
 import '@dxos-theme';
-import { type StoryObj, type Meta } from '@storybook/react';
+
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -15,19 +16,17 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ViewProjection } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { initializeKanban } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(0);
 
@@ -149,10 +148,10 @@ const meta: Meta<StoryProps> = {
   render: () => <StorybookKanban />,
   parameters: { translations },
   decorators: [
+    withTheme,
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, KanbanType],
           onClientInitialized: async (_, client) => {

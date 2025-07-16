@@ -34,19 +34,22 @@ export const lengthsFacet = {
       noLine: { root: ['line', 0] },
       hairLine: { root: ['line', 1] },
       thickLine: { root: ['line', 2] },
+      // TODO(burdon): Can/should these be hyphenated?
       trimXs: { root: ['lacuna', 3] },
       trimSm: { root: ['lacuna', 6] },
       trimMd: { root: ['lacuna', 9] },
       trimLg: { root: ['lacuna', 12] },
+      inputFine: { root: ['lacuna', 2] },
+      inputCoarse: { root: ['lacuna', 4] },
     },
   },
 
   alias: {
     namespace: 'dx-',
     conditions: {
-      fine: [':root, .density-fine, [data-density="fine"]'],
-      coarse: ['.density-coarse, [data-density="coarse"]'],
-      flush: ['.density-flush, [data-density="flush"]'],
+      fine: [':root, .density-fine'],
+      coarse: ['.density-coarse'],
+      flush: ['.density-flush'],
     },
     aliases: {
       noLine: { fine: ['focusOffset'] },
@@ -55,6 +58,8 @@ export const lengthsFacet = {
       trimXs: { fine: ['cardSpacingChrome', 'labelSpacingBlock'] },
       trimSm: { fine: ['cardSpacingInline', 'cardSpacingBlock', 'inputSpacingBlock'] },
       trimMd: { coarse: ['cardSpacingInline', 'cardSpacingBlock'] },
+      inputFine: { fine: ['iconButtonPadding'] },
+      inputCoarse: { coarse: ['iconButtonPadding'] },
     },
   },
 } satisfies Facet;

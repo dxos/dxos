@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Client } from '@dxos/client';
@@ -13,7 +13,7 @@ import { useClient } from '@dxos/react-client';
 import { getSyncSummary, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SyncStatus } from './SyncStatus';
 
@@ -55,12 +55,12 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
 const meta: Meta<typeof SyncStatus> = {
   title: 'devtools/devtools/SyncStatus',
   component: SyncStatus,
-  decorators: [withTheme, withLayout(), withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'centered',
   },
   args: {
-    classNames: 'm-2 border border-separator rounded-md',
+    classNames: 'w-[16rem] p-1 border border-separator',
   },
 };
 

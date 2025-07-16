@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-dnd",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Drag and drop components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,11 +17,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",

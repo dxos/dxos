@@ -15,10 +15,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../lit-grid"

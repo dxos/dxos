@@ -9,9 +9,9 @@ import path from 'path';
 
 import { asyncTimeout } from '@dxos/async';
 import { type PublicKey, type Client } from '@dxos/client';
-import { type AnyLiveObject, getMeta, makeRef } from '@dxos/client/echo';
+import { type AnyLiveObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
@@ -145,7 +145,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
     functionObject.name = this.flags.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
-    setUserFunctionUrlInMetadata(getMeta(functionObject), makeFunctionUrl(uploadResult));
+    setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
     return functionObject;
   }
 
@@ -168,9 +168,9 @@ export default class Upload extends BaseCommand<typeof Upload> {
     } else {
       const sourceObj = space.db.add(Obj.make(DataType.Text, { content: scriptFileContent }));
       const obj = space.db.add(
-        Obj.make(ScriptType, { name: this.flags.name ?? scriptFileName, source: makeRef(sourceObj) }),
+        Obj.make(ScriptType, { name: this.flags.name ?? scriptFileName, source: Ref.make(sourceObj) }),
       );
-      functionObject.source = makeRef(obj);
+      functionObject.source = Ref.make(obj);
       await makeObjectNavigableInComposer(client, space, obj);
       if (this.flags.verbose) {
         this.log(`Created object, ID: ${obj.id}`);
@@ -197,7 +197,7 @@ const makeObjectNavigableInComposer = async (client: Client, space: Space, obj: 
     client.addTypes([DataType.Collection]);
     const composerCollection = await collection.load();
     if (composerCollection) {
-      composerCollection.objects.push(makeRef(obj));
+      composerCollection.objects.push(Ref.make(obj));
     }
   }
 };

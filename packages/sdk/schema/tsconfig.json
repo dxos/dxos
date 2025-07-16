@@ -54,6 +54,9 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../devtools/storybook-utils"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

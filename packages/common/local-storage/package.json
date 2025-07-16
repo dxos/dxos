@@ -1,6 +1,6 @@
 {
   "name": "@dxos/local-storage",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "^3.1.0"
+    "effect": "^3.16.12"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ai",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "AI utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,6 +35,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "vendor",
@@ -65,7 +72,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

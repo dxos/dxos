@@ -15,7 +15,7 @@
       ],
       "executor": "@nx/storybook:build",
       "options": {
-        "configDir": "{projectRoot}/config/all",
+        "configDir": "{projectRoot}/.storybook",
         "outputDir": "{projectRoot}/out/stories"
       },
       "outputs": [
@@ -50,7 +50,20 @@
       ],
       "executor": "@nx/storybook:storybook",
       "options": {
-        "configDir": "{projectRoot}/config/all"
+        "configDir": "{projectRoot}/.storybook"
+      }
+    },
+    "storybook-docs": {
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      },
+      "executor": "@nx/storybook:storybook",
+      "options": {
+        "configDir": "{projectRoot}/.storybook",
+        "docsMode": true,
+        "port": 4400
       }
     },
     "storybook-e2e": {
@@ -82,6 +95,25 @@
       "options": {
         "configDir": "{projectRoot}/config/examples",
         "outputDir": "{projectRoot}/out/examples"
+      }
+    },
+    "vitest": {
+      "configurations": {
+        "browser": {
+          "options": {
+            "command": "vitest --project browser"
+          }
+        },
+        "unit": {
+          "options": {
+            "command": "vitest --project unit"
+          }
+        }
+      },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest",
+        "cwd": "tools/stories"
       }
     }
   },

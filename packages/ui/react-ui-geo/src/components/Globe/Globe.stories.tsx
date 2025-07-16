@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useRef, useState } from 'react';
@@ -138,7 +138,7 @@ const Story = ({
   translation,
   rotation = [0, 0, 0],
   projection,
-  styles,
+  styles = defaultStyles,
   drag = false,
   spin = false,
   tour = false,
@@ -235,7 +235,7 @@ export const Earth1 = () => {
 
   return (
     <Globe.Root scale={1.2} rotation={[Math.random() * 360, 0, 0]}>
-      <Globe.Canvas ref={setController} topology={topology} />
+      <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
       <Globe.Zoom onAction={handleAction} />
     </Globe.Root>
   );
@@ -250,7 +250,7 @@ export const Earth2 = () => {
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
       <Globe.Root classNames='h-[400px]' scale={2.8} translation={{ x: 0, y: 400 }}>
-        <Globe.Canvas ref={setController} topology={topology} />
+        <Globe.Canvas ref={setController} topology={topology} styles={defaultStyles} />
         <Globe.Zoom onAction={handleAction} />
       </Globe.Root>
     </div>
@@ -291,7 +291,7 @@ export const Mercator = () => {
 };
 
 export const Globe1 = () => {
-  return <Story drag projection='mercator' scale={0.8} rotation={initialRotation} />;
+  return <Story drag projection='mercator' scale={0.8} rotation={initialRotation} styles={defaultStyles} />;
 };
 
 export const Globe2 = () => {

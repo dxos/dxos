@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ContactCard, OrganizationCard, ProjectCard } from './components';
-import translations from './translations';
+import { translations } from './translations';
 import { type PreviewProps } from './types';
 
 faker.seed(1234);

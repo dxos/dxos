@@ -3,38 +3,36 @@
 //
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import ReactPlugin from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
-import Inspect from 'vite-plugin-inspect';
+import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
-import WasmPlugin from 'vite-plugin-wasm';
+import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
+import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
-import { mergeConfig } from 'vitest/config';
-import { baseConfig } from '../../../vitest.shared';
 
 import { APP_KEY } from './src/constants';
 
-const rootDir = resolve(__dirname, '../../..');
-const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
-const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
-
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
+
+const rootDir = searchForWorkspaceRoot(process.cwd());
+const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
 
 /**
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
-  // Vitest config.
-  test: mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }))['test'] as any,
+  root: __dirname,
   server: {
     host: true,
     https:
@@ -50,7 +48,7 @@ export default defineConfig((env) => ({
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
-        searchForWorkspaceRoot(process.cwd()),
+        rootDir,
       ],
     },
   },
@@ -93,50 +91,19 @@ export default defineConfig((env) => ({
   },
   worker: {
     format: 'es' as const,
-    plugins: () => [WasmPlugin(), SourceMapsPlugin()],
+    plugins: () => [wasm(), sourcemaps()],
   },
   plugins: [
-    SourceMapsPlugin(),
+    sourcemaps(),
+
     // TODO(wittjosiah): Causing issues with bundle.
     env.command === 'serve' &&
       tsconfigPaths({
-        projects: ['../../../tsconfig.paths.json'],
+        projects: [join(rootDir, './tsconfig.paths.json')],
       }),
-    ConfigPlugin(),
-    ThemePlugin({
-      root: __dirname,
-      content: [
-        join(__dirname, './index.html'),
-        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
-    IconsPlugin({
-      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-      assetPath: (iconSet, name, variant) => {
-        switch (iconSet) {
-          case 'dx':
-            return `${dxosIcons}/${name}.svg`;
-          default:
-            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
-        }
-      },
-      spriteFile: 'icons.svg',
-      contentPaths: [
-        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
-        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
-      ],
-      // verbose: true,
-    }),
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && Inspect(),
-    WasmPlugin(),
-    ReactPlugin({
+
+    wasm(),
+    react({
       tsDecorators: true,
       plugins: [
         [
@@ -171,9 +138,15 @@ export default defineConfig((env) => ({
           },
         ],
         // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-        ['@preact-signals/safe-react/swc', { mode: 'all' }],
+        [
+          '@preact-signals/safe-react/swc', 
+          {
+            mode: 'all',
+          },
+        ],
       ],
     }),
+
     importMapPlugin({
       modules: [
         '@dxos/app-framework',
@@ -203,6 +176,7 @@ export default defineConfig((env) => ({
         'react-dom',
       ],
     }),
+
     VitePWA({
       // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
       // No PWA in dev to make it easier to ensure the latest version is being used.
@@ -246,6 +220,7 @@ export default defineConfig((env) => ({
         ],
       },
     }),
+
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
     sentryVitePlugin({
@@ -260,38 +235,81 @@ export default defineConfig((env) => ({
         name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
-    ...(process.env.DX_STATS
-      ? [
-          visualizer({
-            emitFile: true,
-            filename: 'stats.html',
-          }),
-          // https://www.bundle-buddy.com/rollup
-          {
-            name: 'bundle-buddy',
-            buildEnd() {
-              const deps: { source: string; target: string }[] = [];
-              // @ts-ignore
-              for (const id of this.getModuleIds()) {
-                // @ts-ignore
-                const m = this.getModuleInfo(id);
-                if (m != null && !m.isExternal) {
-                  for (const target of m.importedIds) {
-                    deps.push({ source: m.id, target });
-                  }
-                }
-              }
 
-              const outDir = join(__dirname, 'out');
-              if (!existsSync(outDir)) {
-                mkdirSync(outDir);
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // Open: http://localhost:5173/__inspect
+    isTrue(process.env.DX_INSPECT) && inspect(),
+
+    process.env.DX_STATS && [
+      visualizer({
+        emitFile: true,
+        filename: 'stats.html',
+      }),
+
+      // https://www.bundle-buddy.com/rollup
+      {
+        name: 'bundle-buddy',
+        buildEnd() {
+          const deps: { source: string; target: string }[] = [];
+          // @ts-ignore
+          for (const id of this.getModuleIds()) {
+            // @ts-ignore
+            const m = this.getModuleInfo(id);
+            if (m != null && !m.isExternal) {
+              for (const target of m.importedIds) {
+                deps.push({ source: m.id, target });
               }
-              writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
-            },
-          },
-        ]
-      : []),
-  ], // Plugins
+            }
+          }
+
+          const outDir = join(__dirname, 'out');
+          if (!existsSync(outDir)) {
+            mkdirSync(outDir);
+          }
+          writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        },
+      },
+    ],
+
+    //
+    // DXOS plugins
+    //
+
+    ConfigPlugin({
+      root: __dirname,
+    }),
+
+    IconsPlugin({
+      symbolPattern: '(ph|dx)--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+      assetPath: (iconSet, name, variant) => {
+        switch (iconSet) {
+          case 'dx':
+            return `${dxosIcons}/${name}.svg`;
+          default:
+            return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+        }
+      },
+      spriteFile: 'icons.svg',
+      contentPaths: [
+        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+      ],
+      // verbose: true,
+    }),
+
+    ThemePlugin({
+      root: __dirname,
+      content: [
+        join(__dirname, './index.html'),
+        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
+      ],
+    }),
+  ].filter(isNonNullable).flat(), // Plugins
 }));
 
 /**
@@ -315,7 +333,7 @@ function chunkFileNames(chunkInfo: any) {
   return 'assets/[name]-[hash].js';
 }
 
-function importMapPlugin(options: { modules: string[] }) {
+function importMapPlugin(options: { modules: string[] }): Plugin[] {
   const chunkRefIds: Record<string, string> = {};
   let imports: Record<string, string> = {};
 
@@ -361,5 +379,5 @@ function importMapPlugin(options: { modules: string[] }) {
         };
       },
     },
-  ] satisfies Plugin[];
+  ];
 }

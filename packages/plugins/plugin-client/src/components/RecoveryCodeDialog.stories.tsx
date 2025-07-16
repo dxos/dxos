@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -13,7 +13,7 @@ import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { RecoveryCodeDialog, type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const DefaultStory = () => {
   const client = useClient();

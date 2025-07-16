@@ -1,6 +1,6 @@
 {
   "name": "@dxos/compute",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Low-level compute API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,14 +29,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
-      "edge": [
-        "dist/types/src/edge/index.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ]
     }
   },
@@ -61,7 +55,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1"
   },

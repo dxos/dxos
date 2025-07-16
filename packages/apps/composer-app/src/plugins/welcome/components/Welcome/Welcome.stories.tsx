@@ -14,7 +14,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { OVERLAY_STYLE, OVERLAY_CLASSES, Welcome } from './Welcome';
 import { type WelcomeScreenProps, WelcomeState } from './types';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();
@@ -61,9 +61,14 @@ export const SpaceInvitation = {
 };
 
 export default {
-  title: 'apps/plugin-welcome/Welcome',
+  title: 'apps/composer-app/Welcome',
   component: Welcome,
   render: Container,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false }, translations },
+  parameters: {
+    translations,
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 };

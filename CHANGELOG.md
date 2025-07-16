@@ -1,5 +1,71 @@
 # Changelog
 
+## [0.8.3](https://github.com/dxos/dxos/compare/v0.8.2...v0.8.3) (2025-07-02)
+
+
+### Features
+
+* Add delay to command menu ([#9420](https://github.com/dxos/dxos/issues/9420)) ([41f4a7e](https://github.com/dxos/dxos/commit/41f4a7e72bae26c4179abcbb39e18d5207a1fe96))
+* Alert component ([#9404](https://github.com/dxos/dxos/issues/9404)) ([e405413](https://github.com/dxos/dxos/commit/e40541388a5046cbea7ed2d8ad65ac52fc67696c))
+* Blueprint editor and testing ([#9374](https://github.com/dxos/dxos/issues/9374)) ([4848439](https://github.com/dxos/dxos/commit/4848439540812b93a5b8dc124e28ab62995a9e6d))
+* blueprint invocation queue logger ([#9385](https://github.com/dxos/dxos/issues/9385)) ([11a1462](https://github.com/dxos/dxos/commit/11a14628aa962e40278f99c93f7942bd9a69b05f))
+* create blueprints in composer ([#9364](https://github.com/dxos/dxos/issues/9364)) ([a5a73ca](https://github.com/dxos/dxos/commit/a5a73cadf370b7a64bd3c251b52661bb8f668e5f))
+* delay editor command hint ([#9405](https://github.com/dxos/dxos/issues/9405)) ([922d11a](https://github.com/dxos/dxos/commit/922d11a99fb5d50f8ff5545cbc018773c6e43533))
+* devtool panels ([#9416](https://github.com/dxos/dxos/issues/9416)) ([62beed4](https://github.com/dxos/dxos/commit/62beed487107e604156c83a382471816c733836d))
+* embed blocks within markdown editor ([#9388](https://github.com/dxos/dxos/issues/9388)) ([2a2bfbe](https://github.com/dxos/dxos/commit/2a2bfbebcec6c9550047cba3546a8ecb65ed3633))
+* Execute blueprints from composer ([#9380](https://github.com/dxos/dxos/issues/9380)) ([6c48d3c](https://github.com/dxos/dxos/commit/6c48d3c231547f4251e1ec581acf2f3852e8bb84))
+* extend oauth request for bluesky account connect ([#9386](https://github.com/dxos/dxos/issues/9386)) ([7f5a14c](https://github.com/dxos/dxos/commit/7f5a14c7b5ec34f68d0d019987ded79f1bf7a61f))
+* hashtag colors ([#9361](https://github.com/dxos/dxos/issues/9361)) ([1639d9d](https://github.com/dxos/dxos/commit/1639d9d46d722262e20f9c8919e49dca2afd6469))
+* Outliner menu fix ([#9353](https://github.com/dxos/dxos/issues/9353)) ([c4564dc](https://github.com/dxos/dxos/commit/c4564dc56ab5796c2828f4017ca69da8d90b1d4d))
+* Query.without ([#9408](https://github.com/dxos/dxos/issues/9408)) ([5bf1065](https://github.com/dxos/dxos/commit/5bf1065655ae91308f59d227faae94d8d9f50d66))
+* Research story fix ([#9362](https://github.com/dxos/dxos/issues/9362)) ([5f76fe5](https://github.com/dxos/dxos/commit/5f76fe562a39e1883daf8b19d21596babf8d6f10))
+* Schema records ([#9433](https://github.com/dxos/dxos/issues/9433)) ([2b6354e](https://github.com/dxos/dxos/commit/2b6354e20a1628cf524caa10cc1059aaa889462b))
+* slash menu extension ([#9366](https://github.com/dxos/dxos/issues/9366)) ([00374f5](https://github.com/dxos/dxos/commit/00374f523720d39d49043d25cf9ef2f915231f33))
+* smart collections ([#9419](https://github.com/dxos/dxos/issues/9419)) ([4c7c29e](https://github.com/dxos/dxos/commit/4c7c29efed072d84b7d962521072154f9f540ac3))
+* Spacing tokens, visual polish ([#9403](https://github.com/dxos/dxos/issues/9403)) ([cbcdd8c](https://github.com/dxos/dxos/commit/cbcdd8c69de4c94dcf12150c3ef0713775b00737))
+* **table:** Cell input validation ([#9390](https://github.com/dxos/dxos/issues/9390)) ([512b3b9](https://github.com/dxos/dxos/commit/512b3b907db48fb127f8126d4f3813d1d8e7a4c2))
+
+
+### Bug Fixes
+
+* array reference indexing ([#9415](https://github.com/dxos/dxos/issues/9415)) ([2ccaaaf](https://github.com/dxos/dxos/commit/2ccaaafd57f9a7f3784043b487f2476203338b0a))
+* assistant chat creation ([#9401](https://github.com/dxos/dxos/issues/9401)) ([c8c5594](https://github.com/dxos/dxos/commit/c8c5594ae6876bb03ae95b3f69764df0d55ff72c))
+* Automation companion ([#9392](https://github.com/dxos/dxos/issues/9392)) ([1aa08f4](https://github.com/dxos/dxos/commit/1aa08f447807e1bae0596c891b7aa74eed7018a3))
+* blank invocation panel ([#9399](https://github.com/dxos/dxos/issues/9399)) ([b0e5c9c](https://github.com/dxos/dxos/commit/b0e5c9c5204af897552920bce627478f95e44799))
+* Cards & Form polish, theme adjustments, spacing fixes ([#9373](https://github.com/dxos/dxos/issues/9373)) ([8cff632](https://github.com/dxos/dxos/commit/8cff6320c503c0d5af84629beed9c2ab1393bd06))
+* command menu ([#9438](https://github.com/dxos/dxos/issues/9438)) ([0fa589b](https://github.com/dxos/dxos/commit/0fa589b6aeac9907347c7c852e3cc80a1374fb12))
+* delete thread ([#9439](https://github.com/dxos/dxos/issues/9439)) ([2813586](https://github.com/dxos/dxos/commit/2813586775130301fcb01ce820891690103124b3))
+* devtools table ([#9411](https://github.com/dxos/dxos/issues/9411)) ([f752a75](https://github.com/dxos/dxos/commit/f752a7511dd27f6de128998a916c614e04747a81))
+* Field editor `property` should validate correctly ([#9424](https://github.com/dxos/dxos/issues/9424)) ([9953414](https://github.com/dxos/dxos/commit/995341422458b68d5da91ebb4d287166b8379158))
+* Field/View editor stories ([#9367](https://github.com/dxos/dxos/issues/9367)) ([c6f78fb](https://github.com/dxos/dxos/commit/c6f78fbeea30914e73bcb1b83ae692278aae5903))
+* Fix `vitest` compatibility issues with `parsimmon` ([#9370](https://github.com/dxos/dxos/issues/9370)) ([672df60](https://github.com/dxos/dxos/commit/672df60e91ba6da0d451b6d4e2c71e20d97265de))
+* Fix debug plugin ([#9378](https://github.com/dxos/dxos/issues/9378)) ([bc11fb3](https://github.com/dxos/dxos/commit/bc11fb3e9e889340582b2445796a6e563b1146e2))
+* Fix RepoProxy flaky tests ([#9369](https://github.com/dxos/dxos/issues/9369)) ([79e3fe2](https://github.com/dxos/dxos/commit/79e3fe230448f1589cf8d35cc9004a64b0c390a5))
+* Fix types in invocation panel ([#9383](https://github.com/dxos/dxos/issues/9383)) ([c25b6cb](https://github.com/dxos/dxos/commit/c25b6cbfdf0a6b57200368e4404dd98e48d0c8fd))
+* graph builder + react render error ([#9436](https://github.com/dxos/dxos/issues/9436)) ([db0eca7](https://github.com/dxos/dxos/commit/db0eca7d529d796a7021f4e47a2b895e3651fab5))
+* JSON schema hack ([#9363](https://github.com/dxos/dxos/issues/9363)) ([6d4d502](https://github.com/dxos/dxos/commit/6d4d5020386c417619bfb2cc41b87ef90352d915))
+* Mailbox layout ([#9437](https://github.com/dxos/dxos/issues/9437)) ([e854ea7](https://github.com/dxos/dxos/commit/e854ea795b336651b2b73f24d806ced0918ef52b))
+* Make `flush` not required ([#9354](https://github.com/dxos/dxos/issues/9354)) ([5887169](https://github.com/dxos/dxos/commit/588716966698f0f25a71fc7b8cbe80d755610859))
+* meeting toolbar border ([#9412](https://github.com/dxos/dxos/issues/9412)) ([cca28d3](https://github.com/dxos/dxos/commit/cca28d3886f5e975f1c69169b4b033a3400fd63c))
+* minor form ux ([#9395](https://github.com/dxos/dxos/issues/9395)) ([33c3471](https://github.com/dxos/dxos/commit/33c3471f7d81398f08139ad7ec49054a8c0b3db1))
+* minor storybook fix to addon panel ([#9426](https://github.com/dxos/dxos/issues/9426)) ([b42624b](https://github.com/dxos/dxos/commit/b42624b4d5376f3579b1898f05900dda27301eee))
+* navtree actions cleanup ([#9406](https://github.com/dxos/dxos/issues/9406)) ([7a3df50](https://github.com/dxos/dxos/commit/7a3df50b01880fe24bf4f49835186fb86349f695))
+* no-project-references env ([#9377](https://github.com/dxos/dxos/issues/9377)) ([1805c9f](https://github.com/dxos/dxos/commit/1805c9f6235a40746264fd395b2eb5053c19ec3d))
+* **queries:** Deletion issue and querying ([#9409](https://github.com/dxos/dxos/issues/9409)) ([d0d1176](https://github.com/dxos/dxos/commit/d0d1176876499f16b904b427e2898746b3ae85bd))
+* Reduction of border radii & shadows, adjustment of L0 main menu trigger ([#9376](https://github.com/dxos/dxos/issues/9376)) ([cc701a1](https://github.com/dxos/dxos/commit/cc701a145a5e2b4cb9f61b17f543f88196c32ad4))
+* Remove deprecated outliner ([#9359](https://github.com/dxos/dxos/issues/9359)) ([288a26d](https://github.com/dxos/dxos/commit/288a26d95c247e5cc47b3db5f46c3f8c50c37739))
+* Restore `addon-essentials` and disable controls for stories for components with props that can’t be automatically analyzed ([#9351](https://github.com/dxos/dxos/issues/9351)) ([fd3e805](https://github.com/dxos/dxos/commit/fd3e805426a04fb8a87dc5956f3432d99af73ce8))
+* script test panel ([#9356](https://github.com/dxos/dxos/issues/9356)) ([e457a0c](https://github.com/dxos/dxos/commit/e457a0c27a37498d27b585bc1dbbaf2727911dbd))
+* Space settings UI ([#9414](https://github.com/dxos/dxos/issues/9414)) ([ec4a322](https://github.com/dxos/dxos/commit/ec4a3221748f26fb9dc50e186e024c514c059076))
+* Stack & Toolbar layout API increment ([#9413](https://github.com/dxos/dxos/issues/9413)) ([d2afae4](https://github.com/dxos/dxos/commit/d2afae4ee19ba2583599f12038a64ea858dfd2e9))
+* **table:** Schema initialization ([#9387](https://github.com/dxos/dxos/issues/9387)) ([ba8fa4a](https://github.com/dxos/dxos/commit/ba8fa4a7795d671ce1d1b138d61645e2b9d8bd9d))
+* **tables:** Ref query lookup for objects with system schema ([#9425](https://github.com/dxos/dxos/issues/9425)) ([ddd9a41](https://github.com/dxos/dxos/commit/ddd9a4132cbb42ce45b83ed79ae6541a59ea83b3))
+* **tables:** Relational stories ([#9422](https://github.com/dxos/dxos/issues/9422)) ([5239ccd](https://github.com/dxos/dxos/commit/5239ccd1323eb0fa5b9a8472de20143a1a9aa9c4))
+* Toolbar consistency. ([#9375](https://github.com/dxos/dxos/issues/9375)) ([824ae6c](https://github.com/dxos/dxos/commit/824ae6c56f01251294fb4a708cb0ab2e4321989e))
+* **ViewEditor:** Format switching issues ([#9371](https://github.com/dxos/dxos/issues/9371)) ([c56bce7](https://github.com/dxos/dxos/commit/c56bce7cb6a874e99c467f29107661341bbff1d7))
+* **ViewEditor:** Initialization issues ([#9398](https://github.com/dxos/dxos/issues/9398)) ([3d45d9c](https://github.com/dxos/dxos/commit/3d45d9c5bfd822f2367573e07f48fe8ba39520b4))
+* wait for ai client to ready ([#9391](https://github.com/dxos/dxos/issues/9391)) ([40882c9](https://github.com/dxos/dxos/commit/40882c9df7de3fdcc3374f4f298e123279faa8d9))
+
 ## [0.8.2](https://github.com/dxos/dxos/compare/v0.8.1...v0.8.2) (2025-06-17)
 
 

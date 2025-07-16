@@ -7,7 +7,7 @@ import { createResolver, defineModule, definePlugin, Events, contributes, Capabi
 import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { HelpCapabilities } from './capabilities/capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { type Step, HelpAction } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };

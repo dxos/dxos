@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { MARKDOWN_PLUGIN } from './meta';
+import { meta } from './meta';
 import { DocumentType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DocumentType)]: {
+      [DocumentType.typename]: {
         'typename label': 'Document',
         'typename label_zero': 'Documents',
         'typename label_one': 'Document',
         'typename label_other': 'Documents',
         'object name placeholder': 'New document',
       },
-      [MARKDOWN_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Editor',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)
@@ -43,4 +43,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -19,7 +19,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { AppContainer, Error, Main } from './components';
 import { getConfig } from './config';
 import { Document, Item } from './data';
-import translations from './translations';
+import { translations } from './translations';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 

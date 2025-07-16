@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { definePlugin, type Plugin } from '@dxos/app-framework';
@@ -14,7 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { PluginList } from './PluginList';
-import translations from '../translations';
+import { translations } from '../translations';
 
 faker.seed(1);
 

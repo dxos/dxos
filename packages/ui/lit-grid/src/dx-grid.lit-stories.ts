@@ -2,12 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import './dx-grid.ts';
 import './dx-grid.pcss';
 
 import './dx-grid-multiselect-cell.ts';
 
 import { html, nothing } from 'lit';
+
+import { faker } from '@dxos/random';
 
 import { defaultRowSize } from './defs.js';
 import { type DxGridFrozenPlane, type DxGridPlaneCells, type DxGridProps } from './types';
@@ -49,7 +53,7 @@ Basic.args = {
     grid: {
       '1,1': {
         // end: '8,1',
-        value: 'Waffle production',
+        value: faker.lorem.paragraphs(5),
       },
       '2,2': {
         value: '',
@@ -81,7 +85,7 @@ Basic.args = {
   columns: JSON.stringify({
     grid: {
       0: { size: 64 },
-      1: { size: 512 },
+      1: { size: 128 },
       2: { size: 64 },
       3: { size: 512 },
       4: { size: 64 },

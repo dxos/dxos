@@ -43,7 +43,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
     },
     [model, filterDispatch],
   );
-  const menu = useMailboxToolbarActions(model, tagFilterVisible, setTagFilterVisible);
+  const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
 
   const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
 
@@ -100,7 +100,9 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
 
   const gridLayout = useMemo(
     () =>
-      tagFilterVisible.value ? 'grid grid-rows-[min-content_min-content_1fr]' : 'grid grid-rows-[min-content_1fr]',
+      tagFilterVisible.value
+        ? 'grid grid-rows-[var(--toolbar-size)_min-content_1fr]'
+        : 'grid grid-rows-[var(--toolbar-size)_1fr]',
     [tagFilterVisible.value],
   );
 

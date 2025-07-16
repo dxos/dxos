@@ -11,16 +11,16 @@ import { Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { type GlobalState } from '../calls';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type CallDebugPanelProps = ThemedClassName<{
   state?: GlobalState;
 }>;
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
+  const { t } = useTranslation(meta.id);
   const users = state?.call?.users;
   const self = state?.call?.self;
-  const { t } = useTranslation(THREAD_PLUGIN);
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);

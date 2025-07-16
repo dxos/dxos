@@ -1,6 +1,6 @@
 {
   "name": "@dxos/graph",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Low-level graph API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,11 +17,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types.d.ts"
-      ]
-    }
+    "*": {}
   },
   "files": [
     "dist",
@@ -38,7 +34,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

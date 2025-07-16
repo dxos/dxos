@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { scheduleTask, sleep } from '@dxos/async';
@@ -168,7 +168,13 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      config: new Config({ runtime: { services: { iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }] } } }),
+      config: new Config({
+        runtime: {
+          services: {
+            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+          },
+        },
+      }),
     }),
     withTheme,
     withLayout(),

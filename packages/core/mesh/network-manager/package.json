@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -22,9 +22,9 @@
     "#tcp-transport": {
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
-      "node": "./dist/lib/node/transport/tcp/index.cjs",
+      "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
-      "require": "./dist/lib/node/transport/tcp/index.cjs"
+      "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
   "exports": {

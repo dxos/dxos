@@ -18,6 +18,9 @@
       "path": "../../common/test-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../primitives/react-hooks"
     }
   ]

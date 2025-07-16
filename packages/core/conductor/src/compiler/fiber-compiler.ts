@@ -16,7 +16,15 @@ import {
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { createTopology, type GraphDiagnostic, type Topology, type TopologyNode } from './topology';
+import {
+  type TopologyNodeConnector,
+  createTopology,
+  InputKind,
+  type GraphDiagnostic,
+  type Topology,
+  type TopologyNode,
+} from './topology';
+import { ComputeNodeError, ValueValidationError } from '../errors';
 import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeEffect,
@@ -140,7 +148,11 @@ export const compile = async ({
 const formatDiagnostics = (diagnostic: GraphDiagnostic[]): string => {
   return diagnostic
     .map((d) => {
-      const objects = [d.nodeId && `Node(${d.nodeId})`, d.edgeId && `Edge(${d.edgeId})`]
+      const objects = [
+        d.nodeId && `Node(${d.nodeId})`,
+        d.edgeId && `Edge(${d.edgeId})`,
+        d.property && `Prop(${d.property})`,
+      ]
         .filter(isNonNullable)
         .join(' ,');
       return `${d.severity}: ${d.message}${objects ? `. ${objects}.` : ''} `;
@@ -257,12 +269,72 @@ export class GraphExecutor {
     this._computeCache.set(nodeId, inputs);
   }
 
+  computeInput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
+    return Effect.gen(this, function* () {
+      invariant(this._topology, 'Graph not loaded');
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const input = node.inputs.find((input) => input.name === prop) ?? failedInvariant();
+
+      let value: unknown;
+      switch (input.kind) {
+        case InputKind.Scalar: {
+          invariant(input.sources.length === 1, 'Scalar input must be bound to a single output');
+          const sourceNode =
+            this._topology!.nodes.find((node) => node.id === input.sources[0].nodeId) ?? failedInvariant();
+          value = yield* this.computeOutput(sourceNode.id, input.sources[0].property);
+          invariant(!Effect.isEffect(value));
+          break;
+        }
+        case InputKind.Array: {
+          const values: unknown[] = yield* Effect.forEach(
+            input.sources,
+            Effect.fnUntraced(
+              function* (this: GraphExecutor, source: TopologyNodeConnector) {
+                const sourceNode = this._topology!.nodes.find((node) => node.id === source.nodeId) ?? failedInvariant();
+                const value = yield* this.computeOutput(sourceNode.id, source.property);
+                invariant(!Effect.isEffect(value));
+                return Array.isArray(value) ? value : [value];
+              }.bind(this),
+            ),
+          );
+          value = values.flat();
+          break;
+        }
+      }
+
+      // Assert that the value matches the schema.
+      yield* Schema.decode(input.schema)(value).pipe(
+        Effect.mapError(
+          (error) =>
+            new ValueValidationError('Invalid input value', {
+              context: {
+                nodeId,
+                property: input.name,
+                value,
+              },
+              cause: error,
+            }),
+        ),
+      );
+
+      const logger = yield* EventLogger;
+      logger.log({
+        type: 'compute-input',
+        nodeId,
+        property: input.name,
+        value,
+      });
+
+      return value;
+    }).pipe(Effect.withSpan('compute-input', { attributes: { nodeId, inputName: prop } }));
+  }
+
   /**
    * Compute inputs for a node using a pull-based computation.
    */
   computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
-    invariant(this._topology, 'Graph not loaded');
     return Effect.gen(this, function* () {
+      invariant(this._topology, 'Graph not loaded');
       const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
       // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
@@ -278,34 +350,13 @@ export class GraphExecutor {
       );
 
       const entries = node.inputs.map(
-        (input) =>
-          [
-            input.name,
-            Effect.gen(this, function* () {
-              const sourceNode =
-                this._topology!.nodes.find((node) => node.id === input.sourceNodeId) ?? failedInvariant();
-              const output = yield* this.computeOutput(sourceNode.id, input.sourceNodeOutput!);
-
-              const logger = yield* EventLogger;
-              logger.log({
-                type: 'compute-input',
-                nodeId,
-                property: input.name,
-                value: output,
-              });
-
-              return output;
-            }).pipe(
-              Effect.withSpan('compute-input', { attributes: { nodeId, inputName: input.name } }),
-              Effect.provide(layer),
-            ),
-          ] as const,
+        (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
       return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
   }
 
-  computeOutput(nodeId: string, prop: string): Effect.Effect<any, Error | NotExecuted, ComputeRequirements> {
+  computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
     return Effect.gen(this, function* () {
       const output = yield* this.computeOutputs(nodeId);
       invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
@@ -316,7 +367,8 @@ export class GraphExecutor {
         throw new Error(`No output for node: property ${prop} on node ${nodeId}: ${JSON.stringify(output)}`);
       }
 
-      const value = yield* output.values[prop];
+      const value = yield* ValueBag.get(output, prop);
+      invariant(!Effect.isEffect(value));
 
       const logger = yield* EventLogger;
       logger.log({
@@ -333,7 +385,7 @@ export class GraphExecutor {
   /**
    * Compute outputs for a node using a pull-based computation.
    */
-  computeOutputs(nodeId: string): ComputeEffect<ValueBag<any>> {
+  computeOutputs(nodeId: string): ComputeEffect<ValueBag> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       if (this._computeCache.has(nodeId)) {
@@ -364,24 +416,48 @@ export class GraphExecutor {
         // const sanitizedInputs = yield* Schema.decode(node.meta.input)(inputValues);
         // TODO(dmaretskyi): Figure out schema validation on value bags.
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
-        const output = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
+        let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
+          Effect.mapError((cause) =>
+            ComputeNodeError.is(cause) || ValueValidationError.is(cause)
+              ? cause
+              : new ComputeNodeError('Compute node failed', { cause, context: { nodeId } }),
+          ),
           Effect.withSpan('call-node'),
           Effect.provideService(EventLogger, {
             log: logger.log,
             nodeId: node.id,
           }),
         );
-        invariant(ValueBag.isValueBag(output), 'Output must be a value bag');
-        // log.info('output', { output });
-        // if ('text' in output) {
-        //   log.info('text in fiber', { text: getDebugName(output.text) });
-        // }
+        invariant(ValueBag.isValueBag(outputBag), 'Output must be a value bag');
 
-        // const decodedOutput = yield* Schema.decode(node.meta.output)(output);
+        outputBag = ValueBag.map(
+          outputBag,
+          Effect.fn('validateOutput')(function* (valueEffect, key) {
+            const value = yield* valueEffect;
+
+            // Assert that the value matches the schema.
+            const outputTopology = node.outputs.find((o) => o.name === key) ?? failedInvariant();
+            yield* Schema.decode(outputTopology.schema)(value).pipe(
+              Effect.mapError(
+                (error) =>
+                  new ValueValidationError('Invalid output value', {
+                    context: {
+                      nodeId,
+                      property: key,
+                      value: outputBag,
+                    },
+                    cause: error,
+                  }),
+              ),
+            );
+
+            return value;
+          }),
+        );
 
         const res: ValueBag<any>['values'] = {};
-        for (const key of Object.keys(output.values)) {
-          res[key] = yield* Effect.cached(output.values[key]).pipe(
+        for (const key of Object.keys(outputBag.values)) {
+          res[key] = yield* Effect.cached(outputBag.values[key]).pipe(
             Effect.withSpan('cached-output', { attributes: { key } }),
           );
         }

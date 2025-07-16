@@ -18,20 +18,18 @@ const contentFiles = '*.{ts,tsx,js,jsx,css}';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
-export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>): StorybookConfig => ({
+type ConfigProps = Partial<StorybookConfig> & Pick<StorybookConfig, 'stories'>;
+
+/**
+ * https://storybook.js.org/docs/configure
+ */
+export const config = (baseConfig: ConfigProps): StorybookConfig => ({
   framework: {
     name: '@storybook/web-components-vite',
     options: {},
   },
-  addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@storybook/addon-themes',
-  ],
-  docs: {
-    autodocs: 'tag',
-  },
+  addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-themes'],
+
   staticDirs: [resolve(__dirname, '../static')],
   ...baseConfig,
 
@@ -41,6 +39,8 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
   viteFinal: async (config) => {
     return mergeConfig(config, {
       plugins: [
+        isTrue(process.env.DX_INSPECT) && Inspect(),
+
         IconsPlugin({
           symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           assetPath: (name, variant) =>
@@ -48,19 +48,18 @@ export const config = (baseConfig: Partial<StorybookConfig> & Pick<StorybookConf
           spriteFile: resolve(__dirname, '../static/icons.svg'),
           contentPaths: [join(packages, '/**/src/**/*.{ts,tsx}')],
         }),
+
         ThemePlugin({
           root: __dirname,
           content: [
-            resolve(packages, 'app/*/src/**', contentFiles),
+            resolve(packages, 'apps/*/src/**', contentFiles),
+            resolve(packages, 'devtools/*/src/**', contentFiles),
             resolve(packages, 'experimental/*/src/**', contentFiles),
             resolve(packages, 'plugins/*/src/**', contentFiles),
             resolve(packages, 'sdk/*/src/**', contentFiles),
             resolve(packages, 'ui/*/src/**', contentFiles),
           ],
         }),
-        // https://github.com/antfu-collective/vite-plugin-inspect#readme
-        // Open: http://localhost:5173/__inspect
-        isTrue(process.env.DX_INSPECT) && Inspect(),
       ],
     });
   },

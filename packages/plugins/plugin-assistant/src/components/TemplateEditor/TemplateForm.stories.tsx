@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -13,7 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TemplateForm } from './TemplateForm';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TemplateType } from '../../types';
 
 const TEMPLATE = [

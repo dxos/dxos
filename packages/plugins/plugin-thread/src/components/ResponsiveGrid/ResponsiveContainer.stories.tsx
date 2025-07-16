@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { VideoObject as VideoObjectComponent } from '../Media';
 
 const meta: Meta<typeof ResponsiveContainer> = {

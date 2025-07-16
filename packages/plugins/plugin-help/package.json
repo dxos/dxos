@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-help",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Help plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -13,6 +13,10 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
+    "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
+      "browser": "./dist/lib/browser/meta.mjs"
+    },
     "./types": {
       "types": "./dist/types/src/types.d.ts",
       "browser": "./dist/lib/browser/types.mjs"
@@ -21,6 +25,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ],
       "types": [
         "dist/types/src/types.d.ts"
       ]
@@ -53,11 +60,11 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
+    "@effect/platform": "0.87.12",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "react-floater": "0.7.9",

@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
+import { type Resource } from '@dxos/react-ui';
 
-import { SCRIPT_PLUGIN } from './meta';
+import { meta } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ScriptType)]: {
+      [ScriptType.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',
         'typename label_other': 'Scripts',
         'object name placeholder': 'New script',
       },
-      [SCRIPT_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Scripts',
         'description label': 'Description',
         'description placeholder': 'Enter description',
@@ -76,4 +76,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

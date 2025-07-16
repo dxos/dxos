@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,11 +9,6 @@
   "sideEffects": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
     "./bundler": {
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
@@ -23,6 +18,11 @@
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
+    },
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
@@ -60,6 +60,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -68,13 +69,15 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "0.87.12",
     "@preact/signals-core": "^1.9.0",
     "cron": "^3.1.6",
     "cron-schedule": "^5.0.4",
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
+    "i18next": "^24.2.1",
     "iso-did": "^1.6.0",
     "ws": "^8.14.2"
   },

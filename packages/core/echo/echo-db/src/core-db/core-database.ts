@@ -13,32 +13,28 @@ import {
   TimeoutError,
   Trigger,
   UpdateScheduler,
-  type ReadOnlyEvent,
   type CleanupFn,
+  type ReadOnlyEvent,
 } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type Filter } from '@dxos/echo';
 import {
   encodeReference,
-  isEncodedReference,
   Reference,
-  type ObjectStructure,
   type DatabaseDirectory,
+  type ObjectStructure,
   type SpaceState,
-  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref, type AnyObjectData } from '@dxos/echo-schema';
+import { Ref, type ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN, LOCAL_SPACE_TAG, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { chunkArray, deepMapValues, defaultMap, setDeep } from '@dxos/util';
+import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
 import {
   AutomergeDocumentLoaderImpl,
@@ -46,13 +42,10 @@ import {
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
-import { CoreDatabaseQueryContext } from './core-database-query-context';
-import { type InsertBatch, type InsertData, type UpdateOperation } from './crud-api';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
 import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
 import { type Hypergraph } from '../hypergraph';
-import { normalizeQuery, QueryResult, type QueryFn } from '../query';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 
@@ -423,72 +416,6 @@ export class CoreDatabase {
         log.info('loading objects', { objectIds, elapsed: performance.now() - startTime, diagnostics });
       }
     }
-  }
-
-  // Odd way to define methods types from a typedef.
-  declare query: QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(filter?: unknown, options?: QueryOptions) {
-    return new QueryResult(
-      this._createQueryContext(),
-      normalizeQuery(filter, options, { defaultSpaceId: this.spaceId }),
-    );
-  }
-
-  /**
-   * @internal
-   */
-  _createQueryContext(): CoreDatabaseQueryContext {
-    return new CoreDatabaseQueryContext(this, this._queryService);
-  }
-
-  /**
-   * Update objects.
-   */
-  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
-    const ast = filter.ast;
-    if (ast.type !== 'object' || ast.id?.length !== 1) {
-      throw new Error('Only object id filters with one id are currently supported');
-    }
-    const id = ast.id[0];
-
-    const core = this.getObjectCoreById(id);
-    if (!core) {
-      throw new Error(`Object not found: ${id}`);
-    }
-
-    // TODO(dmaretskyi): Nested assignments.
-    core.change((doc) => {
-      for (const key in operation) {
-        if (key === 'id') {
-          continue;
-        }
-        setDeep(doc, [...core.mountPath, DATA_NAMESPACE, key], operation[key]);
-      }
-    });
-
-    await this.flush();
-  }
-
-  // TODO(dmaretskyi): Support meta.
-  async insert(data: InsertData): Promise<AnyObjectData>;
-  async insert(data: InsertBatch): Promise<AnyObjectData[]>;
-  async insert(data: InsertData | InsertBatch) {
-    const isBatch = Array.isArray(data);
-    const dataArray = isBatch ? data : [data];
-
-    const cores = dataArray.map((item) => {
-      const core = createCoreFromInsertData(item);
-      this.addCore(core);
-      return core;
-    });
-
-    await this.flush();
-
-    return isBatch ? cores.map((core) => core.toPlainObject()) : cores[0].toPlainObject();
   }
 
   addCore(core: ObjectCore, opts?: AddCoreOptions): void {
@@ -1059,45 +986,3 @@ export type FlushOptions = {
 const RPC_TIMEOUT = 20_000;
 
 const DISABLE_THROTTLING = true;
-
-const sanitizeTypename = (typename: string): DXN => {
-  if (typename.startsWith('dxn:')) {
-    return DXN.parse(typename);
-  } else {
-    if (typename.includes(':')) {
-      throw new Error(`Invalid typename: ${typename}`);
-    }
-    return new DXN(DXN.kind.TYPE, [typename]);
-  }
-};
-
-const createCoreFromInsertData = (data: InsertData): ObjectCore => {
-  if ('id' in data) {
-    throw new Error('Cannot insert object with id');
-  }
-
-  const { __typename, ...rest } = data;
-  let type: DXN | undefined;
-  if (__typename) {
-    type = sanitizeTypename(__typename);
-  }
-
-  const fieldsMapped = deepMapValues(rest, (value, recurse) => {
-    if (isEncodedReference(value)) {
-      if (value['/'].startsWith('dxn:')) {
-        return value;
-      } else {
-        return { '/': new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, value['/']]).toString() };
-      }
-    } else {
-      return recurse(value);
-    }
-  });
-
-  const core = new ObjectCore();
-  core.initNewObject(fieldsMapped);
-  if (type) {
-    core.setType(Reference.fromDXN(type));
-  }
-  return core;
-};

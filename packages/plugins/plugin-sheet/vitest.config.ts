@@ -4,7 +4,13 @@
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
-import { baseConfig } from '../../../vitest.shared';
+import { baseConfig } from '../../../vitest.base.config';
 
-export default mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({ test: { environment: 'jsdom' } }));
-// export default mergeConfig(baseConfig({ nodeExternal: true }), defineConfig({}));
+export default mergeConfig(
+  baseConfig({ cwd: __dirname }),
+  defineConfig({
+    test: {
+      environment: 'jsdom',
+    },
+  }),
+);

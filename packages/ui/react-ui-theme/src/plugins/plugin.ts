@@ -11,7 +11,7 @@ import { resolve } from 'node:path';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import tailwindcss from 'tailwindcss';
-import nesting from 'tailwindcss/nesting';
+import nesting from 'tailwindcss/nesting/index.js';
 import { type ThemeConfig } from 'tailwindcss/types/config';
 import { type UserConfig, type Plugin } from 'vite';
 
@@ -62,8 +62,8 @@ const createPostCSSPipeline = (environment: string, config: ThemePluginOptions):
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   const config: ThemePluginOptions = {
     jit: true,
-    cssPath: resolve(__dirname, '../theme.css'),
-    srcCssPath: resolve(__dirname, '../../../../src/theme.css'),
+    cssPath: resolve(import.meta.dirname, '../theme.css'),
+    srcCssPath: resolve(import.meta.dirname, '../../../../src/theme.css'),
     virtualFileId: '@dxos-theme',
     ...options,
   };
@@ -125,3 +125,5 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
     },
   };
 };
+
+ThemePlugin.foo = 'bar';

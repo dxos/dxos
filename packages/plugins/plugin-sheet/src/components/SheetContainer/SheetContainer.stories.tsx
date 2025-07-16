@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Capabilities, contributes, createResolver, IntentPlugin } from '@dxos/app-framework';
@@ -18,7 +18,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { SheetContainer } from './SheetContainer';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { SheetAction, SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';

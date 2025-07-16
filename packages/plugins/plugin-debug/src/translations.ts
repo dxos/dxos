@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DEBUG_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [DEBUG_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Debug',
         'mutation count': 'Number of mutations',
         'mutation period': 'Mutation period',
@@ -67,4 +69,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -6,9 +6,9 @@ import { it } from '@effect/vitest';
 import { Effect, Either, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { Ref } from '@dxos/echo';
 import { createTestServices } from '@dxos/functions/testing';
 import { DXN } from '@dxos/keys';
-import { refFromDXN } from '@dxos/live-object';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
@@ -29,7 +29,7 @@ const ENABLE_LOGGING = false;
 describe('Graph as a fiber runtime', () => {
   it.effect('simple adder node', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }))
+      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
         // Break line formatting.
         .registerNode('dxn:test:sum', sum)
         .registerGraph('dxn:test:g1', g1());
@@ -45,7 +45,7 @@ describe('Graph as a fiber runtime', () => {
   );
 
   test('composition', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }))
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
       .registerNode('dxn:test:sum', sum)
       .registerGraph('dxn:test:g1', g1())
       .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
@@ -60,7 +60,7 @@ describe('Graph as a fiber runtime', () => {
 
   // TODO(burdon): Is the DXN part of the runtime registration of the graph or persistent?
   test.skip('composition (with shortcut)', async ({ expect }) => {
-    const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }));
+    const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
     runtime
       .registerNode('dxn:test:sum', sum)
       .registerGraph('dxn:test:g1', g1())
@@ -76,7 +76,7 @@ describe('Graph as a fiber runtime', () => {
 
   it.effect('runFromInput', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING }))
+      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
         .registerNode('dxn:test:sum', sum)
         .registerNode('dxn:test:viewer', view)
         .registerGraph('dxn:test:g3', g3());
@@ -94,14 +94,17 @@ describe('Graph as a fiber runtime', () => {
 
   it.effect('if-else', ({ expect }) =>
     Effect.gen(function* () {
-      const runtime = new TestRuntime(createTestServices({ enableLogging: ENABLE_LOGGING })).registerGraph(
+      const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } })).registerGraph(
         'dxn:test:g4',
         g4(),
       );
 
       const result = yield* runtime
         .runGraph('dxn:test:g4', ValueBag.make({ condition: true, value: 1 }))
-        .pipe(Effect.provide(createTestServices({ enableLogging: ENABLE_LOGGING }).createLayer()), Effect.scoped);
+        .pipe(
+          Effect.provide(createTestServices({ logging: { enabled: ENABLE_LOGGING } }).createLayer()),
+          Effect.scoped,
+        );
 
       expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
       expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
@@ -154,8 +157,8 @@ const g2a = (g1: DXN) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1.toString(), subgraph: refFromDXN(g1) })
-    .createNode({ id: 'Y', type: g1.toString(), subgraph: refFromDXN(g1) })
+    .createNode({ id: 'X', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'Y', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })

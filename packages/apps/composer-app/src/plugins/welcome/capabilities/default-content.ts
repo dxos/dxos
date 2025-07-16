@@ -9,7 +9,7 @@ import { SPACES } from '@dxos/plugin-space';
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 
 export default async (context: PluginContext) => {
-  const { Obj, Ref, Type } = await import('@dxos/echo');
+  const { Obj, Ref } = await import('@dxos/echo');
   const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
   const { DocumentType } = await import('@dxos/plugin-markdown/types');
@@ -29,7 +29,7 @@ export default async (context: PluginContext) => {
     ),
   });
 
-  const defaultSpaceCollection = defaultSpace.properties[Type.getTypename(DataType.Collection)].target;
+  const defaultSpaceCollection = defaultSpace.properties[DataType.Collection.typename].target;
   defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   // Ensure the default content is in the graph and connected.

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -12,7 +12,7 @@ import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FullPresence, type MemberPresenceProps, SmallPresence, type Member } from './SpacePresence';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({

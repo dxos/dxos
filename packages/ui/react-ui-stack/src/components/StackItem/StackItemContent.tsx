@@ -47,7 +47,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
           ? {}
           : {
               gridTemplateRows: [
-                ...(toolbar ? [role === 'section' ? 'calc(var(--rail-action) - 1px)' : 'var(--rail-action)'] : []),
+                ...(toolbar ? [role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)'] : []),
                 '1fr',
                 ...(statusbar ? ['var(--statusbar-size)'] : []),
               ].join(' '),

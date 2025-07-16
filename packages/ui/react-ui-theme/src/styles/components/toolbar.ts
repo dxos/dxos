@@ -8,10 +8,11 @@ import { mx } from '../../util';
 
 export type ToolbarStyleProps = Partial<{ layoutManaged: boolean }>;
 
-export const toolbarLayout = 'flex flex-nowrap shrink-0 items-center gap-1 p-1 overflow-x-auto contain-layout';
+export const toolbarLayout =
+  'is-full shrink-0 flex flex-nowrap items-center gap-1 p-1.5 overflow-x-auto scrollbar-none contain-layout';
 
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {
-  return mx('is-full bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, ...etc);
+  return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, ...etc);
 };
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {

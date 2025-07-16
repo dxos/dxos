@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
 import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
+import { type Meta } from '@storybook/react-vite';
 import { Option, pipe } from 'effect';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -20,12 +21,12 @@ import {
   type Live,
   Filter,
 } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Select } from '@dxos/react-ui';
 import { Path, Tree } from '@dxos/react-ui-list';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
@@ -159,7 +160,7 @@ const runAction = async (client: Client, action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getRandomSpace(client)?.db.add(live({ type: 'test', name: faker.commerce.productName() }));
+      getRandomSpace(client)?.db.add(Obj.make(Type.Expando, { type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {
@@ -244,10 +245,9 @@ const Controls = ({ children }: PropsWithChildren) => {
   );
 };
 
-export default {
+const meta: Meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
-    withTheme,
     withClientProvider({
       createIdentity: true,
       onIdentityCreated: async ({ client }) => {
@@ -255,8 +255,11 @@ export default {
         await client.spaces.create();
       },
     }),
+    withTheme,
   ],
 };
+
+export default meta;
 
 export const JsonView = {
   render: () => {
@@ -367,125 +370,6 @@ export const TreeView = {
           onOpenChange={onOpenChange}
           onSelect={onSelect}
         />
-      </>
-    );
-  },
-};
-
-// TODO(wittjosiah): Remove.
-export const TabTreeView = {
-  render: () => {
-    const client = useClient();
-    const registry = useContext(RegistryContext);
-    const graph = useMemo(() => createGraph(client, registry), [client, registry]);
-    const state = useMemo(() => new Map<string, Live<{ open: boolean; current: boolean }>>(), []);
-
-    const useItems = useCallback(
-      (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
-        const connections = useRxValue(graph.connections(node?.id ?? ROOT_ID));
-        return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
-      },
-      [graph],
-    );
-
-    const getProps = useCallback(
-      (node: Node, path: string[]) => {
-        const children = graph
-          .getConnections(node.id, 'outbound')
-          .map((n) => {
-            // Break cycles.
-            const nextPath = [...path, node.id];
-            return nextPath.includes(n.id) ? undefined : (n as Node);
-          })
-          .filter(isNonNullable) as Node[];
-        const parentOf =
-          children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
-        return {
-          id: node.id,
-          label: node.id,
-          icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
-          parentOf,
-        };
-      },
-      [graph],
-    );
-
-    const isOpen = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: true, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
-
-        return object.open;
-      },
-      [state],
-    );
-
-    const isCurrent = useCallback(
-      (_path: string[]) => {
-        const path = Path.create(..._path);
-        const object = state.get(path) ?? live({ open: false, current: false });
-        if (!state.has(path)) {
-          state.set(path, object);
-        }
-
-        return object.current;
-      },
-      [state],
-    );
-
-    const onOpenChange = useCallback(
-      ({ path: _path, open }: { path: string[]; open: boolean }) => {
-        const path = Path.create(..._path);
-        const object = state.get(path);
-        object!.open = open;
-      },
-      [state],
-    );
-
-    const onSelect = useCallback(
-      ({ path: _path, current }: { path: string[]; current: boolean }) => {
-        const path = Path.create(..._path);
-        const object = state.get(path);
-        object!.current = current;
-      },
-      [state],
-    );
-
-    const spaces = useItems(graph.root);
-
-    return (
-      <>
-        <Controls />
-        <Tabs.Root defaultValue={spaces[0].id}>
-          <Tabs.Tablist>
-            {spaces.map((space) => {
-              return (
-                <Tabs.Tab key={space.id} value={space.id}>
-                  {space.id}
-                </Tabs.Tab>
-              );
-            })}
-          </Tabs.Tablist>
-          {spaces.map((space) => {
-            return (
-              <Tabs.Tabpanel key={space.id} value={space.id}>
-                <Tree
-                  id={space.id}
-                  root={space}
-                  useItems={useItems}
-                  getProps={getProps}
-                  isOpen={isOpen}
-                  isCurrent={isCurrent}
-                  onOpenChange={onOpenChange}
-                  onSelect={onSelect}
-                />
-              </Tabs.Tabpanel>
-            );
-          })}
-        </Tabs.Root>
       </>
     );
   },

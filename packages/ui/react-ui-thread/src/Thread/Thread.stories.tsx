@@ -10,12 +10,12 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Thread, ThreadFooter } from './Thread';
+import { Thread } from './Thread';
 import { MessageRoot, MessageTextbox } from '../Message';
-import { ThreadStoryContainer, MessageStoryText, type MessageEntity } from '../testing';
-import translations from '../translations';
+import { MessageStoryText, type MessageEntity } from '../testing';
+import { translations } from '../translations';
 
 faker.seed(1);
 
@@ -59,13 +59,14 @@ const DefaultStory = () => {
   };
 
   return (
-    <ThreadStoryContainer>
-      <Thread id='t1'>
+    <div className='mli-auto is-96 overflow-y-auto'>
+      <Thread.Root id='t1'>
         {messages.map((message) => (
           <MessageRoot key={message.id} classNames={[hoverableControls, hoverableFocusedWithinControls]} {...message}>
             <MessageStoryText {...message} text={message.text} onDelete={() => console.log('delete')} />
           </MessageRoot>
         ))}
+
         <MessageTextbox
           id={String(_count)}
           authorId={identityKey1.toHex()}
@@ -73,18 +74,21 @@ const DefaultStory = () => {
           extensions={extensions}
           onSend={handleSend}
         />
-        <ThreadFooter activity>Processing...</ThreadFooter>
-      </Thread>
-    </ThreadStoryContainer>
+
+        <Thread.Status activity>Processing...</Thread.Status>
+      </Thread.Root>
+    </div>
   );
 };
 
-export default {
+const meta: Meta<typeof Thread.Root> = {
   title: 'ui/react-ui-thread/Thread',
-  component: Thread,
+  component: Thread.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
 };
+
+export default meta;
 
 export const Default = {};

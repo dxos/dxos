@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
-import { osTranslations } from '../translations';
+import { translations } from '../translations';
 
 const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??
@@ -56,5 +56,10 @@ export default {
   title: 'sdk/shell/All',
   decorators: [withTheme],
   component: StoryRow,
-  parameters: { chromatic: { disableSnapshot: false }, translations: [osTranslations] },
+  parameters: {
+    translations,
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 };

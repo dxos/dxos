@@ -8,7 +8,7 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { ReactSurface } from './capabilities';
 import { meta, SECTION_IDENTIFIER } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { StackViewType } from './types';
 
 export const StackPlugin = () =>

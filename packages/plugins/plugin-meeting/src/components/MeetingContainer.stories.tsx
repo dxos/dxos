@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Capabilities, createResolver, contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
-import translations from '../translations';
+import { translations } from '../translations';
 import { MeetingAction, MeetingType } from '../types';
 
 const Story = () => {

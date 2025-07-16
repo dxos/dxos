@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -12,7 +12,7 @@ import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 type TestItem = {
   id: string;

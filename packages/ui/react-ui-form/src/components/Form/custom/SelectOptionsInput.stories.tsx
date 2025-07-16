@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
@@ -12,7 +12,7 @@ import { SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SelectOptionInput } from './SelectOptionsInput';
-import translations from '../../../translations';
+import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
 

@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { HELP_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [HELP_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Help',
         'open help tour': 'Show welcome tour',
         'open shortcuts label': 'Show shortcuts',
@@ -15,4 +17,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

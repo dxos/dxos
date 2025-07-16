@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-form",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Data components.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -47,6 +47,7 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-context": "1.1.1",
     "date-fns": "^3.3.1",
+    "effect": "3.16.12",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
@@ -56,11 +57,9 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/jsonpath": "^0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.14.21",
     "fast-check": "^3.19.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
@@ -69,7 +68,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "effect": "3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

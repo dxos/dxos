@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-pwa",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "DXOS Surface plugin for PWA registration and update handling.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,13 +27,12 @@
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "^3.13.3"
+    "effect": "^3.16.12"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
@@ -45,7 +44,6 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

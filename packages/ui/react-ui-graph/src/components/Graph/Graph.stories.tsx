@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react';
+import { type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -255,13 +255,13 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.Container role='popover'>
+          <Card.SurfaceRoot role='popover'>
             <SyntaxHighlighter
               classNames='bg-transparent text-xs !mlb-cardSpacingBlock !pli-cardSpacingInline !overflow-visible'
               language='json'
               code={JSON.stringify(popover, null, 2)}
             />
-          </Card.Container>
+          </Card.SurfaceRoot>
         </Popover.Viewport>
         <Popover.Arrow />
       </Popover.Content>

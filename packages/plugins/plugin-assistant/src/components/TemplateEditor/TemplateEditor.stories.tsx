@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/artifact';
@@ -14,7 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TemplateType } from '../../types';
 
 const TEMPLATE = [

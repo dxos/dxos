@@ -10,6 +10,7 @@ import { DatabaseService } from './database';
 import { EventLogger } from './event-logger';
 import { FunctionCallService } from './function-call-service';
 import { QueueService } from './queues';
+import { ToolResolverService } from './tool-resolver';
 import { TracingService } from './tracing';
 
 /**
@@ -23,6 +24,7 @@ export interface ServiceTagRecord {
   functionCallService: FunctionCallService;
   tracing: TracingService;
   queues: QueueService;
+  toolResolver: ToolResolverService;
 }
 
 /**
@@ -45,6 +47,7 @@ const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = {
   [FunctionCallService.key]: 'functionCallService',
   [QueueService.key]: 'queues',
   [TracingService.key]: 'tracing',
+  [ToolResolverService.key]: 'toolResolver',
 };
 
 export const SERVICE_TAGS: Context.Tag<any, any>[] = [
@@ -74,13 +77,14 @@ export class ServiceContainer {
     return this;
   }
 
-  getService<T extends Context.Tag<any, any>>(tag: T): Context.Tag.Service<T> {
+  getService<Id, T>(tag: Context.Tag<Id, T>): T {
     const serviceKey = SERVICE_MAPPING[tag.key];
     const service = serviceKey != null ? this._services[serviceKey] : undefined;
     if (!service) {
       throw new Error(`Service not available: ${tag.key}`);
     }
-    return service as Context.Tag.Service<T>;
+
+    return service as T;
   }
 
   clone(): ServiceContainer {
@@ -103,7 +107,21 @@ export class ServiceContainer {
       FunctionCallService,
       this._services.functionCallService ?? FunctionCallService.mock(),
     );
+    const toolResolver = Layer.succeed(
+      ToolResolverService,
+      this._services.toolResolver ?? ToolResolverService.notAvailable,
+    );
 
-    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);
+    return Layer.mergeAll(
+      //
+      ai,
+      credentials,
+      database,
+      queues,
+      tracing,
+      eventLogger,
+      functionCallService,
+      toolResolver,
+    );
   }
 }

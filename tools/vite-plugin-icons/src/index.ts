@@ -24,12 +24,13 @@ export const IconsPlugin = ({
   const isContent = (filepath: string) => !!pms.find((pm) => pm(filepath));
   const shouldIgnore = (filepath: string) => !isContent(filepath);
 
-  let rootDir: string;
-  let spritePath: string;
-  let server: ViteDevServer | null = null;
   const detectedSymbols = new Set<string>();
   const visitedFiles = new Set<string>();
   const status = { updated: false };
+
+  let rootDir: string;
+  let spritePath: string;
+  let server: ViteDevServer | null = null;
 
   const scan = (src: string) => {
     let updated = false;
@@ -108,7 +109,6 @@ export const IconsPlugin = ({
         if (status.updated) {
           status.updated = false;
           await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-
           if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();

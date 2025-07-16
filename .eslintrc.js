@@ -8,10 +8,12 @@ require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
   root: true,
+
   ignorePatterns: [
     // Build Artifacts
     'dist',
     'out',
+    'deprecated',
     '**/proto/gen/*',
     'packages/core/protocols/proto/**/*',
     'packages/sdk/client/src/version.ts',
@@ -21,11 +23,11 @@ module.exports = {
     '.eslintrc.js',
     '.mocharc.js',
     'esbuild-server.config.js',
-    'webpack.config.js',
+    'playwright.config.ts',
     'vite.config.ts',
     'vitest.config.ts',
-    'vitest.shared.ts',
-    'playwright.config.cts',
+    'vitest.*.config.ts',
+    'webpack.config.js',
 
     // Dependencies
     'node_modules',
@@ -38,6 +40,12 @@ module.exports = {
     'docs/content/**/*',
     '**/typedoc/assets/**/*',
   ],
+
+  rules: {
+    // Suspected bug mistakes all `play` functions for storybook.play.
+    'storybook/context-in-play-function': 'off',
+  },
+
   overrides: [
     {
       extends: ['plugin:@dxos/recommended'],
@@ -58,6 +66,22 @@ module.exports = {
       extends: ['plugin:@dxos/test'],
       files: '**/*.test.{ts,tsx,js,jsx}',
     },
+    // TODO(burdon): Build step to generate translations.json.
+    // {
+    //   extends: ['plugin:i18next/recommended'],
+    //   files: '**/*.{ts,tsx,js,jsx}',
+    //   overrides: [
+    //     {
+    //       "files": [
+    //         '*.stories.@(js|jsx|ts|tsx)',
+    //         '*.test.@(js|jsx|ts|tsx)',
+    //       ],
+    //       "rules": {
+    //         "i18next/no-literal-string": "off"
+    //       }
+    //     }
+    //   ]
+    // },
     {
       files: '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
       rules: {
@@ -65,4 +89,6 @@ module.exports = {
       },
     },
   ],
+
+  extends: ['plugin:storybook/recommended'],
 };

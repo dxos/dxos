@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Core ECHO APIs.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "publishConfig": {
     "access": "public"

@@ -6,10 +6,12 @@ import { Schema, type Context, type Effect } from 'effect';
 
 import { type AiServiceClient } from '@dxos/ai';
 // import { type Space } from '@dxos/client/echo';
-import type { CoreDatabase, EchoDatabase } from '@dxos/echo-db';
+import type { EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type SpaceId, type DXN } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
+
+import type { Services } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -31,7 +33,7 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
    * This will be the payload from the trigger or other data passed into the function in a workflow.
    */
   data: TData;
-}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any>;
+}) => TOutput | Promise<TOutput> | Effect.Effect<TOutput, any, Services>;
 
 /**
  * Function context.
@@ -74,11 +76,9 @@ export interface QueuesAPI {
  */
 export interface SpaceAPI {
   get id(): SpaceId;
-  /**
-   * @deprecated
-   */
-  get crud(): CoreDatabase;
+
   get db(): EchoDatabase;
+
   // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
   get queues(): QueuesAPI;
 }

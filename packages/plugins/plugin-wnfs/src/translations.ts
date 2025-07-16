@@ -2,21 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { WNFS_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
+
+import { meta } from './meta';
 import { FileType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
       [FileType.typename]: {
         'typename label': 'File',
         'object name placeholder': 'New file',
       },
-      [WNFS_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Files',
         'delete object label': 'Delete',
         'file input placeholder': 'Drop a file here, or click to select a file',
       },
     },
   },
-];
+] as const satisfies Resource[];

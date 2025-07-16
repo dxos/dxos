@@ -1,16 +1,13 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
-//
-// Config for the vitest vscode extension.
-//
-
-// TODO(dmaretskyi): Migrate to https://vitest.dev/guide/projects once its stable.
-
-console.log({
-  proj: new URL('./tsconfig.paths.json', import.meta.url).pathname,
-});
-
+/**
+ * Config for the vitest vscode extension.
+ */
 export default defineConfig({
   esbuild: {
     target: 'es2020',
@@ -39,4 +36,10 @@ export default defineConfig({
       projects: [new URL('./tsconfig.paths.json', import.meta.url).pathname],
     }),
   ],
+});
+
+// TODO(dmaretskyi): Migrate to https://vitest.dev/guide/projects once it is stable.
+// eslint-disable-next-line no-console
+console.log({
+  proj: new URL('./tsconfig.paths.json', import.meta.url).pathname,
 });

@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FILES_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [FILES_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Local Files',
         'missing file permissions': 'Permission required to view the currently selected file',
         'open file label': 'Open file',
@@ -35,4 +37,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

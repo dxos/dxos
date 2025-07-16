@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -38,7 +38,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

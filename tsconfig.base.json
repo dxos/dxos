@@ -1,4 +1,5 @@
 // Base tsconfig for all projects.
+// Don't rename it tsconfig.json. This is specifically non-standard name so TSC doesn't pick it up.
 {
   "compilerOptions": {
     "allowJs": false,
@@ -17,6 +18,7 @@
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,
     "outDir": "${configDir}/dist/types",
+    "types": ["node", "wicg-file-system-access"],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -26,7 +28,7 @@
 
     // Set this to true if you are having performance issues with the Typescript Language Server.
     // See: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#build-free-editing-with-project-references
-    "disableSourceOfProjectReferenceRedirect": true
+    "disableSourceOfProjectReferenceRedirect": false
   },
   "exclude": ["build", "dist", "node_modules", "out"],
   "include": [],

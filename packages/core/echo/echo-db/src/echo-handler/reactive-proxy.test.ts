@@ -13,7 +13,7 @@ import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
 // NOTE: These are tests for @dxos/echo-schema but they live here currently because the tests are shared.
-//  echo-schema cannot export the test blueprint because @dxos/test is not published.
+//  echo-schema cannot export the test sequence because @dxos/test is not published.
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
     if (schema != null && getTypeAnnotation(schema) != null) {
@@ -59,7 +59,7 @@ describe('Echo reactive proxy', () => {
           db.graph.schemaRegistry.addSchema([testSchema]);
         }
 
-        return db.add(object) as Testing.TestSchema;
+        return db.add(object as any) as Testing.TestSchema;
       },
     };
   });

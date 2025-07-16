@@ -74,6 +74,7 @@ export const ToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
+// TODO(burdon): Transform to @effect/ai AiTool.
 export const Tool = Schema.Struct({
   // TODO(burdon): DXN?
   id: Schema.String,
@@ -83,7 +84,9 @@ export const Tool = Schema.Struct({
    * ^[a-zA-Z0-9_-]{1,64}$
    */
   name: Schema.String,
+
   namespace: Schema.optional(Schema.String),
+
   function: Schema.optional(Schema.String),
 
   /**
@@ -108,7 +111,6 @@ export const Tool = Schema.Struct({
    * Input schema for the tool in the JSON Schema format.
    * Required for user-implemented tools.
    */
-  // TODO(burdon): Rename inputSchema.
   parameters: Schema.optional(JsonSchemaType),
 
   /**
@@ -123,11 +125,22 @@ export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
 
+export const ToolId = Schema.String.annotations({
+  identifier: 'ToolId',
+  name: 'ToolId',
+  description: 'Unique identifier for a tool.',
+});
+export type ToolId = Schema.Schema.Type<typeof ToolId>;
+
+export interface ToolResolver {
+  resolve: (id: ToolId) => Promise<ExecutableTool>;
+}
+
 /**
  * Registry of executable tools.
  */
 // TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
-export class ToolRegistry {
+export class ToolRegistry implements ToolResolver {
   private readonly _tools = new Map<string, ExecutableTool>();
 
   constructor(tools: ExecutableTool[]) {
@@ -146,12 +159,21 @@ export class ToolRegistry {
     };
   }
 
+  has(tool: ExecutableTool): boolean {
+    return this._tools.has(tool.id);
+  }
+
   register(tool: ExecutableTool): this {
     this._tools.set(tool.id, tool);
     return this;
   }
 
-  get(id: string) {
-    return this._tools.get(id);
+  async resolve(id: ToolId): Promise<ExecutableTool> {
+    const executable = this._tools.get(id);
+    if (!executable) {
+      throw new Error(`Tool not found: ${id}`);
+    }
+
+    return executable;
   }
 }

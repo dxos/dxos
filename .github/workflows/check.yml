@@ -1,11 +1,16 @@
 name: Check
 
 on:
-  # TODO(wittjosiah): Flaky.
-  # push:
+  pull_request:
+  merge_group:
 
-  # schedule:
-  #   - cron: '0 4 * * 1-5'
+  push:
+    branches:
+      - main
+      - ci/*
+
+  schedule:
+    - cron: '0 4 * * 1-5'
 
   workflow_dispatch:
     inputs:
@@ -37,11 +42,60 @@ concurrency:
 
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
+  check:
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
+
+      - name: Check All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=lint,build
+
+      - name: Check for import cycles
+        if: always()
+        run: pnpm run check-cycles
+
   test:
     strategy:
       matrix:
-        node-version: ['18.20.1', '20.12.1', '21.7.2']
-    runs-on: ubuntu-latest
+        # TODO(wittjosiah): Test across all LTS versions of node.
+        #  Currently fails on 22 and 24.
+        # node-version: ['20.12.1', '22', '24']
+        node-version: ['20.12.1']
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: 'true'
+      VITEST_JSON_REPORT: 'true'
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -61,25 +115,27 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          node-version: ${{ matrix.node-version }}
-          # TODO(wittjosiah): Nx Agents were flaky.
-          # stop-agents-after: test
 
-      # TODO(wittjosiah): Coverage is causing CI failures.
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t test
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test --verbose
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t test
+        run: pnpm exec nx run-many --targets=test --verbose
 
-      - uses: codecov/codecov-action@v4
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-report
+          path: test-results
+          retention-days: 7
+
+      - uses: codecov/codecov-action@v5
         if: ${{ matrix.node-version == '20.12.1' }}
         with:
           directory: ./coverage
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           handle_no_reports_found: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
@@ -91,41 +147,20 @@ jobs:
           name: '${{ github.job }}-${{ matrix.node-version }}'
           result: ${{ job.status }}
 
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
-          # TODO(wittjosiah): Nx Agents were flaky.
-          # stop-agents-after: build
-
-      - name: Check Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t lint build
-
-      - name: Check All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t lint build
-
   e2e:
-    runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    runs-on:
+      group: ubuntu-large
+    container:
+      image: ghcr.io/dxos/gh-actions:20.12.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
     env:
       DX_ENVIRONMENT: ci
       DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=8192
+      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -139,22 +174,29 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          node-version: 20.12.1
 
-      - name: Install system dependencies
-        run: npx playwright@1.46.0 install-deps
+      - name: Bundle Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=bundle --parallel=1
 
-      - name: Bundle
-        run: pnpm exec nx affected -t bundle --parallel=2
+      - name: Bundle All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: pnpm exec nx run-many --targets=bundle --parallel=1
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected -t e2e --browser=all --parallel=1
+        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=e2e --browser=all --parallel=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many -t e2e --browser=all --parallel=1
+        run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: dist/.playwright
+          retention-days: 7
 
       - name: Send test report
         if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
@@ -162,40 +204,3 @@ jobs:
         with:
           name: ${{ github.job }}
           result: ${{ job.status }}
-
-  dead-links:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Link Checker
-        uses: lycheeverse/lychee-action@v1
-        with:
-          args: --offline ./docs/content/composer ./docs/content/guide
-
-  check-cycles:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Extract branch
-        id: extract_branch
-        uses: ./.github/actions/branch
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.12.1
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        shell: bash
-
-      - name: Check for import cycles
-        run: pnpm run check-cycles

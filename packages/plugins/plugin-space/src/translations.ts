@@ -2,29 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
-import { SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 
-export default [
+// TODO(burdon): Change to single Resource?
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DataType.Collection)]: {
+      [DataType.Collection.typename]: {
         'typename label': 'Collection',
         'typename label_zero': 'Collections',
         'typename label_one': 'Collection',
         'typename label_other': 'Collections',
         'object name placeholder': 'New collection',
       },
-      [Type.getTypename(DataType.QueryCollection)]: {
+      [DataType.QueryCollection.typename]: {
         'typename label': 'Smart Collection',
         'typename label_zero': 'Smart Collections',
         'typename label_one': 'Smart Collection',
         'typename label_other': 'Smart Collections',
         'object name placeholder': 'New smart collection',
       },
-      [SPACE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Spaces',
         'first run message': 'Nothing selected.',
         'create space label': 'Create space',
@@ -51,6 +52,7 @@ export default [
         'confirm restore title': 'Overwrite files in this space?',
         'confirm restore body': 'Restoring from a backup will overwrite the contents of any documents that match.',
         'upload file message': 'Drag file here or click to browse',
+        'object name placeholder': 'Object',
         'object placeholder': 'Type a title here…',
         'personal space label': 'Personal Space',
         'spaces label': 'Spaces',
@@ -167,4 +169,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

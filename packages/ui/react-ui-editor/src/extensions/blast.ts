@@ -9,6 +9,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { throttle } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 export type BlastOptions = {
@@ -214,12 +215,12 @@ class Blaster {
     requestAnimationFrame(this.loop.bind(this));
   }
 
-  shake = throttle<{ time: number }>(({ time }) => {
+  shake = throttle(({ time }: { time: number }) => {
     this._shakeTime = this._shakeTimeMax || time;
     this._shakeTimeMax = time;
   }, 100);
 
-  spawn = throttle<{ element: Element; point: { x: number; y: number } }>(({ element, point }) => {
+  spawn = throttle(({ element, point }: { element: Element; point: { x: number; y: number } }) => {
     const color = getRGBComponents(element, this._options.color);
     const numParticles = random(this._options.particleNumRange.min, this._options.particleNumRange.max);
     const dir = this._lastPoint.x === point.x ? 0 : this._lastPoint.x < point.x ? 1 : -1;
@@ -335,20 +336,6 @@ class Effect2 extends Effect {
 //
 // Utils
 //
-
-function throttle<T>(callback: (arg: T) => void, limit: number): (arg: T) => void {
-  let wait = false;
-  return function (...args: any[]) {
-    if (!wait) {
-      // @ts-ignore
-      callback.apply(this, args);
-      wait = true;
-      setTimeout(() => {
-        wait = false;
-      }, limit);
-    }
-  };
-}
 
 const getRGBComponents = (node: Element, color: BlastOptions['color']): Particle['color'] => {
   if (typeof color === 'function') {

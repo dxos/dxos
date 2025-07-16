@@ -15,6 +15,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -22,6 +25,12 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
     },
     {
       "path": "../../sdk/app-framework"
@@ -46,6 +55,12 @@
     },
     {
       "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../functions"
     },
     {
       "path": "../mesh/edge-client"

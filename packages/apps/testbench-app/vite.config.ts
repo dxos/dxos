@@ -19,6 +19,7 @@ import { UserConfig } from 'vitest/config';
 export default defineConfig(
   (env) =>
     ({
+      root: __dirname,
       server: {
         host: true,
         cors: true,
@@ -77,6 +78,7 @@ export default defineConfig(
             projects: ['../../../tsconfig.paths.json'],
           }),
         ConfigPlugin({
+          root: __dirname,
           env: ['DX_VAULT', 'BASELIME_API_KEY'],
         }),
         ThemePlugin({

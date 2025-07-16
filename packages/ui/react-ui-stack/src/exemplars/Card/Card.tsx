@@ -15,14 +15,14 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardContent, cardHeading, cardRoot, cardText, cardSpacing } from './fragments';
+import { cardChrome, cardRoot, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
-const CardRoot = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
+  ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
     return (
@@ -33,27 +33,13 @@ const CardRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardContent = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
-    const rootProps = asChild
-      ? { classNames: [cardContent, classNames] }
-      : { className: mx(cardContent, classNames), role };
-    return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
-        {children}
-      </Root>
-    );
-  },
-);
-
 /**
  * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g.
- * in a Popover) and knows this based on the `role` it receives. This will render a `Card.Content` by default, otherwise
+ * in a Popover) and knows this based on the `role` it receives. This will render a `Card.StaticRoot` by default, otherwise
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
-const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: string }>) => {
-  if (['popover', 'card--kanban'].includes(role ?? 'never')) {
+const CardSurfaceRoot = ({ role = 'never', children }: PropsWithChildren<{ role?: string }>) => {
+  if (['popover', 'card--kanban'].includes(role)) {
     return (
       <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
         {children}
@@ -61,9 +47,9 @@ const CardConditionalContent = ({ role, children }: PropsWithChildren<{ role?: s
     );
   } else {
     return (
-      <CardContent {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
+      <CardStaticRoot {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
         {children}
-      </CardContent>
+      </CardStaticRoot>
     );
   }
 };
@@ -84,7 +70,7 @@ const CardHeading = forwardRef<HTMLDivElement, SharedCardProps>(
 
 const CardToolbar = forwardRef<HTMLDivElement, ToolbarRootProps>(({ children, classNames, ...props }, forwardedRef) => {
   return (
-    <Toolbar.Root {...props} classNames={['bg-transparent', classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} classNames={['bg-transparent density-coarse', classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -101,7 +87,7 @@ const CardDragHandle = forwardRef<HTMLButtonElement, { toolbarItem?: boolean }>(
       iconOnly
       icon='ph--dots-six-vertical--regular'
       variant='ghost'
-      label={t('card drag handle label')}
+      label={t('drag handle label')}
       classNames='pli-2'
       ref={forwardedRef}
     />
@@ -164,9 +150,8 @@ const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
 );
 
 export const Card = {
-  Root: CardRoot,
-  Content: CardContent,
-  Container: CardConditionalContent,
+  StaticRoot: CardStaticRoot,
+  SurfaceRoot: CardSurfaceRoot,
   Heading: CardHeading,
   Toolbar: CardToolbar,
   ToolbarIconButton: CardToolbarIconButton,
@@ -179,4 +164,4 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardRoot, cardContent, cardHeading, cardText, cardChrome, cardSpacing };
+export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing };

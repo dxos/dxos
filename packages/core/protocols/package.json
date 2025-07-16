@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protocols",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Protobuf definitions for DXOS protocols.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -86,7 +86,7 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",
     "@bufbuild/protoc-gen-es": "^2.1.0",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -15,7 +15,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AutomationPanel } from './AutomationPanel';
 import { functions } from '../../testing';
-import translations from '../../translations';
+import { translations } from '../../translations';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

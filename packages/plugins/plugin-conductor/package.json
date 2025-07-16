@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-conductor",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Composer plugin for conductor.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,16 +15,16 @@
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "types": "./dist/types/src/types.d.ts",
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node-esm/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types/src/types/index.d.ts"
+        "dist/types/src/types.d.ts"
       ]
     }
   },
@@ -50,7 +50,7 @@
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "3.14.21"
+    "effect": "3.16.12"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

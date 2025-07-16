@@ -40,6 +40,11 @@ import {
   RelationTargetDXNId,
   RelationSourceDXNId,
   assertObjectModelShape,
+  getMeta,
+  type ObjectJSON,
+  ATTR_DELETED,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
 } from '@dxos/echo-schema';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -52,7 +57,7 @@ import {
   type ReactiveHandler,
   symbolIsProxy,
 } from '@dxos/live-object';
-import { getMeta, getProxySlot } from '@dxos/live-object';
+import { getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -757,25 +762,39 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   };
 
   // TODO(dmaretskyi): Re-use existing json serializer
-  private _toJSON(target: ProxyTarget): any {
+  private _toJSON(target: ProxyTarget): ObjectJSON {
     target[symbolInternals].signal.notifyRead();
     const typeRef = target[symbolInternals].core.getType();
     const reified = this._getReified(target);
-    return {
-      [ATTR_TYPE]: typeRef ? encodeReference(typeRef) : undefined,
-      ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
+
+    const obj: Partial<ObjectJSON> = {
+      id: target[symbolInternals].core.id,
+      [ATTR_TYPE]: typeRef ? typeRef.toDXN().toString() : undefined,
       [ATTR_META]: { ...this.getMeta(target) },
+    };
 
-      // TODO(dmaretskyi): Change to just `id`.
-      '@id': target[symbolInternals].core.id,
+    if (target[symbolInternals].core.isDeleted()) {
+      obj[ATTR_DELETED] = true;
+    }
 
-      ...deepMapValues(reified, (value, recurse) => {
+    if (target[symbolInternals].core.getSource()) {
+      obj[ATTR_RELATION_SOURCE] = target[symbolInternals].core.getSource()!.toDXN().toString();
+    }
+    if (target[symbolInternals].core.getTarget()) {
+      obj[ATTR_RELATION_TARGET] = target[symbolInternals].core.getTarget()!.toDXN().toString();
+    }
+
+    Object.assign(
+      obj,
+      deepMapValues(reified, (value, recurse) => {
         if (value instanceof Reference) {
           return encodeReference(value);
         }
         return recurse(value);
       }),
-    };
+    );
+
+    return obj as ObjectJSON;
   }
 
   private _getReified(target: ProxyTarget): any {

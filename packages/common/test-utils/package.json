@@ -1,6 +1,6 @@
 {
   "name": "@dxos/test-utils",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Test utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,18 +11,12 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/index.cjs",
-        "default": "./dist/lib/node-esm/index.mjs"
-      }
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./playwright": {
       "types": "./dist/types/src/playwright.d.ts",
       "browser": "./dist/lib/browser/playwright.mjs",
-      "node": {
-        "require": "./dist/lib/node/playwright.cjs",
-        "default": "./dist/lib/node-esm/playwright.mjs"
-      }
+      "node": "./dist/lib/node-esm/playwright.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -45,7 +39,7 @@
     "pkg-up": "^3.1.0"
   },
   "peerDependencies": {
-    "vitest": "^3.0.8"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

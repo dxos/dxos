@@ -17,5 +17,5 @@ void build({
   outdir: join(__dirname, '../../out'),
   write: true,
   bundle: true,
-  plugins: [ConfigPlugin()],
+  plugins: [ConfigPlugin({ root: __dirname })],
 });

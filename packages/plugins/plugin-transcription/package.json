@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-transcription",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Voice transcription.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -78,7 +78,7 @@
     "extendable-media-recorder": "^9.2.19",
     "extendable-media-recorder-wav-encoder": "^7.0.123",
     "main-thread-scheduling": "^14.1.1",
-    "react-resize-detector": "^12.0.2",
+    "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0",
     "react-use": "^17.5.1",
     "wavefile": "^11.0.0"
@@ -95,7 +95,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
+    "@effect/platform": "0.87.12",
     "@types/dom-speech-recognition": "^0.0.6",
     "@types/react": "~18.2.0",
     "effect": "3.14.21",
@@ -107,8 +107,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
-    "effect": "^3.13.3",
+    "@effect/platform": "0.87.12",
+    "effect": "^3.16.12",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

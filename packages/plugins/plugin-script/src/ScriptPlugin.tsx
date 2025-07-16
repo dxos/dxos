@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
-import { RefArray } from '@dxos/live-object';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -21,7 +21,7 @@ import {
 } from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ScriptAction } from './types';
 
 export const ScriptPlugin = () =>
@@ -50,7 +50,7 @@ export const ScriptPlugin = () =>
           metadata: {
             icon: 'ph--code--regular',
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (script: ScriptType) => await RefArray.loadAll([script.source]),
+            loadReferences: async (script: ScriptType) => await Ref.Array.loadAll([script.source]),
           },
         }),
     }),

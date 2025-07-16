@@ -24,12 +24,12 @@ export interface EsbuildExecutorOptions {
   ignorePackages: string[];
   alias: Record<string, string>;
   entryPoints: string[];
-  format?: Format;
   injectGlobals: boolean;
   importGlobals: boolean;
   metafile: boolean;
   outputPath: string;
   platforms: Platform[];
+  moduleFormat: Format[];
   sourcemap: boolean;
   watch: boolean;
   preactSignalTracking: boolean;
@@ -46,8 +46,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
     await rm(options.outputPath, { recursive: true });
   } catch {}
 
-  // TODO(wittjosiah): Workspace from context is deprecated.
-  const packagePath = join(context.workspace!.projects[context.projectName!].root, 'package.json');
+  const packagePath = join(context.projectsConfigurations!.projects[context.projectName!].root, 'package.json');
   const packageJson = JSON.parse(await readFile(packagePath, 'utf-8'));
 
   const swcTransformPlugin = new SwcTransformPlugin({
@@ -112,8 +111,12 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
   const configurations = options.platforms.flatMap((platform) => {
     return platform === 'node'
       ? [
-          { platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false },
-          { platform: 'node', format: 'cjs', slug: 'node', replaceRequire: false },
+          ...(options.moduleFormat.includes('esm')
+            ? [{ platform: 'node', format: 'esm', slug: 'node-esm', replaceRequire: false }]
+            : []),
+          ...(options.moduleFormat.includes('cjs')
+            ? [{ platform: 'node', format: 'cjs', slug: 'node-cjs', replaceRequire: false }]
+            : []),
         ]
       : [{ platform: 'browser', format: 'esm', slug: 'browser', replaceRequire: true }];
   });
@@ -145,6 +148,12 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         banner: {
           js: format === 'esm' && platform === 'node' ? CREATE_REQUIRE_BANNER : '',
         },
+        define:
+          format === 'cjs'
+            ? {
+                'import.meta.dirname': '__dirname',
+              }
+            : undefined,
         plugins: [
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,

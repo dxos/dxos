@@ -14,6 +14,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // https://vitejs.dev/config
 export default defineConfig({
+  root: __dirname,
   server: {
     host: true,
     https:
@@ -53,7 +54,10 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    ConfigPlugin({ env: ['DX_VAULT'] }),
+    ConfigPlugin({
+      root: __dirname,
+      env: ['DX_VAULT'],
+    }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     ReactPlugin({

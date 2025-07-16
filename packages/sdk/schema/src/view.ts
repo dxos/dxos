@@ -11,12 +11,12 @@ import {
   FormatEnum,
   JsonPath,
   JsonSchemaType,
+  type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
   StoredSchema,
   TypedObject,
   toEffectSchema,
-  type PropertyMetaAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { live, type Live } from '@dxos/live-object';
@@ -32,11 +32,15 @@ export const FieldSchema = Schema.Struct({
   id: Schema.String,
   path: JsonPath,
   visible: Schema.optional(Schema.Boolean),
-  size: Schema.optional(Schema.Number),
   referencePath: Schema.optional(JsonPath),
+
+  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
+  size: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
+
+const KeyValueProps = Schema.Record({ key: Schema.String, value: Schema.Any });
 
 /**
  * Views are generated or user-defined projections of a schema's properties.
@@ -81,7 +85,7 @@ export class ViewType extends TypedObject({
   /**
    * Additional metadata for the view.
    */
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 
   // TODO(burdon): Readonly flag?
   // TODO(burdon): Add array of sort orders (which might be tuples).
@@ -102,14 +106,19 @@ export class ViewTypeV1 extends TypedObject({
   }).pipe(Schema.mutable),
   schema: Schema.optional(JsonSchemaType),
   fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
+  metadata: Schema.optional(KeyValueProps.pipe(Schema.mutable)),
 }) {}
 
 export const ViewTypeV1ToV2 = defineObjectMigration({
   from: ViewTypeV1,
   to: ViewType,
   transform: async (from) => {
-    return { ...from, query: { typename: from.query.type } };
+    return {
+      ...from,
+      query: {
+        typename: from.query.type,
+      },
+    };
   },
   onMigration: async () => {},
 });
@@ -169,13 +178,20 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
   });
 };
 
-export const HasViewSchema = Schema.Struct({});
+// [StoredSchema] ==[HasView]==> []
+
+export const HasViewSchema = Schema.Struct({
+  // TODO(burdon): Refernce View/Projection here?
+});
 
 export const HasView = HasViewSchema.pipe(
   Type.Relation({
     typename: 'dxos.org/type/HasView',
     version: '0.1.0',
+    // TODO(burdon): Also immutable?
     source: StoredSchema,
+    // TODO(burdon): Does view have a ref to the Table?
+    //   Separate Projection from View?
     target: ViewType,
   }),
 );

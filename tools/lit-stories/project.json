@@ -23,6 +23,8 @@
       },
       "dependsOn": [
         "lit-grid:compile",
+        "lit-theme-editor:compile",
+        "lit-ui:compile",
         "mkdist"
       ],
       "executor": "@nx/storybook:storybook",

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { contributes } from '@dxos/app-framework';
@@ -16,7 +16,7 @@ import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
 
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 import { createThreadPlugins } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
 
 // TODO(wittjosiah): Channel doesn't render full height.

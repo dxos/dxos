@@ -1,6 +1,6 @@
 {
   "name": "@dxos/env-tests",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "private": true,
   "description": "Testing that our code compiles in different environments.",
   "homepage": "https://dxos.org",
@@ -16,6 +16,9 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {}
+  },
   "files": [
     "dist",
     "src"
@@ -33,7 +36,7 @@
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
-    "effect": "3.14.21",
+    "effect": "3.16.12",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

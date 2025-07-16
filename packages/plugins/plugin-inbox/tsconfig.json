@@ -27,6 +27,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -37,9 +40,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -54,6 +54,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/conductor"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -64,6 +67,9 @@
     },
     {
       "path": "../../core/functions"
+    },
+    {
+      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

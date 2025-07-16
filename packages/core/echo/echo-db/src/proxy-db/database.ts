@@ -4,21 +4,22 @@
 
 import { inspect } from 'node:util';
 
-import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
+import { LifecycleState, Resource, type Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { assertObjectModelShape, type AnyObjectData, type BaseObject } from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+import { assertObjectModelShape, type AnyEchoObject, type BaseObject, type HasId } from '@dxos/echo-schema';
+import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type Live, getProxyTarget, getType, isLiveObject } from '@dxos/live-object';
+import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
 import type { ObjectMigration } from './object-migration';
+import type { SaveStateChangedEvent } from '../automerge';
 import {
   CoreDatabase,
   type FlushOptions,
@@ -26,7 +27,6 @@ import {
   type ObjectCore,
   type ObjectPlacement,
 } from '../core-db';
-import type { InsertBatch, InsertData, UpdateOperation } from '../core-db/crud-api';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -56,7 +56,7 @@ export type AddOptions = {
 };
 
 /**
- *
+ * Database API.
  */
 export interface EchoDatabase {
   get graph(): Hypergraph;
@@ -77,12 +77,14 @@ export interface EchoDatabase {
   /**
    * Adds object to the database.
    */
-  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): AnyLiveObject<T>;
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
-  remove<T extends BaseObject>(obj: T): void;
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  remove<T extends AnyEchoObject>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -90,25 +92,19 @@ export interface EchoDatabase {
   flush(opts?: FlushOptions): Promise<void>;
 
   /**
-   * Update objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  update(filter: Filter.Any, operation: UpdateOperation): Promise<void>;
-
-  /**
-   * Insert new objects.
-   * @deprecated Use `add` instead.
-   */
-  // TODO(burdon): Remove.
-  // TODO(dmaretskyi): Support meta.
-  insert(data: InsertData): Promise<AnyObjectData>;
-  insert(data: InsertBatch): Promise<AnyObjectData[]>;
-
-  /**
    * Run migrations.
    */
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
+   * Get notification about the sync progress with other peers.
+   */
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+
+  /**
+   * Get notification about the data being saved to disk.
+   */
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /**
    * @deprecated
@@ -119,6 +115,21 @@ export interface EchoDatabase {
    * @deprecated
    */
   readonly coreDatabase: CoreDatabase;
+
+  /**
+   * Update objects.
+   * @deprecated Directly mutate the object.
+   */
+  // TODO(burdon): Remove.
+  update(filter: Filter.Any, operation: unknown): Promise<void>;
+
+  /**
+   * Insert new objects.
+   * @deprecated Use `add` instead.
+   */
+  // TODO(burdon): Remove.
+  // TODO(dmaretskyi): Support meta.
+  insert(data: unknown): Promise<unknown>;
 }
 
 export type EchoDatabaseParams = {
@@ -158,6 +169,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _rootProxies = new Map<ObjectCore, AnyLiveObject<any>>();
 
+  readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
   constructor(params: EchoDatabaseParams) {
     super();
 
@@ -173,6 +186,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       reactiveQuery: params.reactiveSchemaQuery,
       preloadSchemaOnOpen: params.preloadSchemaOnOpen,
     });
+
+    this.saveStateChanged = this._coreDatabase.saveStateChanged;
   }
 
   [inspect.custom]() {
@@ -262,22 +277,24 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   /**
    * Update objects.
+   * @deprecated Mutate the object directly
    */
-  async update(filter: Filter.Any, operation: UpdateOperation): Promise<void> {
-    await this._coreDatabase.update(filter, operation);
+  async update(filter: Filter.Any, operation: unknown): Promise<void> {
+    throw new Error('Not implemented');
   }
 
-  // TODO(dmaretskyi): Support meta.
-  async insert(data: InsertData): Promise<AnyObjectData>;
-  async insert(data: InsertBatch): Promise<AnyObjectData[]>;
-  async insert(data: InsertData | InsertBatch): Promise<AnyObjectData | AnyObjectData[]> {
-    return this._coreDatabase.insert(data);
+  /**
+   * @deprecated Use `db.add`.
+   */
+  async insert(data: unknown): Promise<never> {
+    throw new Error('Not implemented');
   }
 
   /**
    * Add reactive object.
    */
-  add<T extends BaseObject>(obj: T, opts?: AddOptions): AnyLiveObject<T> {
+  // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
+  add<T extends BaseObject>(obj: T, opts?: AddOptions): Live<T & HasId> {
     if (!isEchoObject(obj)) {
       const schema = getSchema(obj);
       if (schema != null) {
@@ -335,6 +352,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this.flush();
+  }
+
+  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+    return this._coreDatabase.subscribeToSyncState(ctx, callback);
   }
 
   /**

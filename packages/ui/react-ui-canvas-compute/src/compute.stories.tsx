@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EdgeAiServiceClient } from '@dxos/ai';
-import { createTestOllamaClient } from '@dxos/ai/testing';
+import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
@@ -182,9 +182,9 @@ const meta: Meta<RenderProps> = {
   component: Editor.Root,
   render: DefaultStory,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,
     withAttention,
+    withClientProvider({ createIdentity: true, createSpace: true }),
     withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
@@ -334,7 +334,7 @@ export const ImageGen: Story = {
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
+        ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -350,7 +350,7 @@ export const Audio: Story = {
     ...createComputeGraphController(
       createAudioCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
+        ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -365,7 +365,7 @@ export const Voice: Story = {
     ...createComputeGraphController(
       createGPTRealtimeCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestOllamaClient()),
+        ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },

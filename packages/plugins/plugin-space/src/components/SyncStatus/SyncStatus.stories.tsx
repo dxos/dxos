@@ -4,28 +4,21 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react';
-import React from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SyncStatusIndicator } from './SyncStatus';
-import translations from '../../translations';
-
-const DefaultStory = (props: any) => {
-  return (
-    <div className='flex flex-col-reverse p-4'>
-      <SyncStatusIndicator {...props} />
-    </div>
-  );
-};
+import { translations } from '../../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
+  decorators: [withTheme],
+  parameters: {
+    translations,
+    layout: 'centered',
+  },
 };
 
 export default meta;

@@ -4,10 +4,10 @@
 import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getTypeReference, getSchema } from '@dxos/echo-schema';
+import { getTypeReference, getSchema, getType } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { getProxyHandler, getType } from '@dxos/live-object';
+import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 registerSignalsRuntime();
@@ -274,7 +274,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         if (!objectsHaveId) {
           expect(actual).to.deep.eq(expected);
         } else {
-          expect(actual).to.deep.contain({ '@id': (obj as any).id, ...expected });
+          expect(actual).to.deep.contain({ id: (obj as any).id, ...expected });
         }
       });
 
