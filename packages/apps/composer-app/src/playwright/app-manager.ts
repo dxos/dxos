@@ -16,7 +16,7 @@ import { DeckManager } from './plugins';
 
 const isMac = os.platform() === 'darwin';
 const modifier = isMac ? 'Meta' : 'Control';
-export const INITIAL_URL = 'http://localhost:4200';
+export const INITIAL_URL = 'http://localhost:4173';
 
 export class AppManager {
   page!: Page;

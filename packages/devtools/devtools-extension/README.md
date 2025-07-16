@@ -23,7 +23,7 @@ The Devtools zip file is created during the [Publish](https://github.com/dxos/dx
 2. Then to build the extension:
 
 ```
-pnpm -w nx bundle devtools-extension
+moon run devtools-extension:bundle
 ```
 ### Manifest
 
@@ -42,7 +42,7 @@ We use Vite to bundle extension, you can find manifest setup inside `vite.config
 
 ### Firefox
 
-4. Run `pnpm -w nx pack:webext devtools-extension`.
+4. Run `pnpm run pack:webext`.
 5. Navigate to [This Firefox](about:debugging#/runtime/this-firefox) tab of the `about:debugging` page.
 6. Click `Load Temporary Add-on...` and select the zip file in `web-ext-artifacts`.
 

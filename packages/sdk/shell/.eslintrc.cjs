@@ -5,5 +5,8 @@ module.exports = {
   "parserOptions": {
     "project": "tsconfig.json",
     "tsconfigRootDir": __dirname,
-  }
+  },
+  "ignorePatterns": [
+    "react-i18next.d.ts"
+  ]
 }

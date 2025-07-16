@@ -14,11 +14,12 @@ on:
 
   workflow_dispatch:
     inputs:
-      debug_enabled:
-        type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-        required: false
-        default: false
+      # TODO(wittjosiah): Requires sudo access.
+      # debug_enabled:
+      #   type: boolean
+      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+      #   required: false
+      #   default: false
 
       e2e:
         type: boolean
@@ -26,13 +27,8 @@ on:
         required: false
         default: false
 
-# Needed for nx-set-shas when run on the main branch
-permissions:
-  actions: read
-  contents: read
-
 env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
@@ -40,11 +36,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# https://nx.dev/ci/intro/tutorials/github-actions
+# https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
-    runs-on:
-      group: ubuntu-large
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
@@ -67,11 +62,16 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=lint,build
+        run: moon run :lint :build --affected --remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=lint,build
+        run: moon run :lint :build
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for import cycles
         if: always()
@@ -84,8 +84,7 @@ jobs:
         #  Currently fails on 22 and 24.
         # node-version: ['20.12.1', '22', '24']
         node-version: ['20.12.1']
-    runs-on:
-      group: ubuntu-large
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
       credentials:
@@ -93,15 +92,15 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     env:
+      NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
-      VITEST_JSON_REPORT: 'true'
     steps:
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        with:
-          detached: true
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+      #   with:
+      #     detached: true
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -118,13 +117,19 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=test --verbose
+        run: moon run :test --affected --remote
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=test --verbose
+        run: moon run :test
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitest-report
@@ -141,7 +146,7 @@ jobs:
           verbose: true
 
       - name: Send test report
-        if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
+        if: ${{ always() && github.event_name == 'schedule' }}
         uses: ./.github/actions/test-report
         with:
           name: '${{ github.job }}-${{ matrix.node-version }}'
@@ -149,8 +154,7 @@ jobs:
 
   e2e:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
-    runs-on:
-      group: ubuntu-large
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
@@ -162,6 +166,12 @@ jobs:
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
     steps:
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+      #   with:
+      #     detached: true
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -175,27 +185,35 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=bundle --parallel=1
+        run: moon run :bundle --affected --remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=bundle --parallel=1
+        run: moon run :bundle
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --targets=e2e --browser=all --parallel=1
+        run: moon run :e2e --affected --remote -- --browser=all
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: pnpm exec nx run-many --targets=e2e --browser=all --parallel=1
+        run: moon run :e2e -- --browser=all
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Traces
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: dist/.playwright
+          path: test-results/playwright
           retention-days: 7
 
       - name: Send test report

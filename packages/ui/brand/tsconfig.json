@@ -6,14 +6,14 @@
       "DOM",
       "ESNext"
     ],
-    "outDir": "dist"
+    "outDir": "dist/types"
   },
   "include": [
     "src"
   ],
   "references": [
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/storybook-utils"
     },
     {
       "path": "../react-ui"
