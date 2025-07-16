@@ -155,6 +155,136 @@ describe('parser', () => {
         ]);
       }),
     );
+
+    it.effect(
+      'COT tags get parsed to reasoning blocks',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          //
+          text('<cot>My thoughts are...</cot>'),
+        ])
+          .pipe(parseGptStream())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'reasoning',
+            reasoningText: 'My thoughts are...',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'think tags get parsed to reasoning blocks',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          //
+          text('<think>My thoughts are...</think>'),
+        ])
+          .pipe(parseGptStream())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'reasoning',
+            reasoningText: 'My thoughts are...',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'tool list',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream(
+          [
+            //
+            '<tool-list/>',
+          ]
+            .flatMap(splitByWord)
+            .map(text),
+        )
+          .pipe(parseGptStream())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'toolList',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'multi choice select',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream(
+          [
+            //
+            '<select><option>Yes</option><option>No</option></select>',
+          ]
+            .flatMap(splitByWord)
+            .map(text),
+        )
+          .pipe(parseGptStream())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'select',
+            options: ['Yes', 'No'],
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'works when every character is streamed individually',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream(
+          [
+            //
+            '<status>I am thinking...</status>',
+            'Hello, world!',
+            '<tool-list/>',
+            '<suggest>Yes</suggest>',
+            '<select><option>Yes</option><option>No</option></select>',
+          ]
+            .flatMap(splitByCharacter)
+            .map(text),
+        )
+          .pipe(parseGptStream())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'status',
+            statusText: 'I am thinking...',
+          },
+          {
+            _tag: 'text',
+            text: 'Hello, world!',
+          },
+          {
+            _tag: 'toolList',
+          },
+          {
+            _tag: 'suggest',
+            text: 'Yes',
+          },
+          {
+            _tag: 'select',
+            options: ['Yes', 'No'],
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
   });
 
   describe('streaming', () => {
@@ -222,3 +352,6 @@ const makeInputStream = (parts: readonly AiResponse.Part[]): Stream.Stream<AiRes
   Stream.fromIterable(parts).pipe(Stream.map((part) => new AiResponse.AiResponse({ parts: [part] })));
 
 const text = (text: string) => new AiResponse.TextPart({ text });
+
+const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
+const splitByCharacter = (text: string): string[] => text.split('');

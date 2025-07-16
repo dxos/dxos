@@ -5,6 +5,32 @@ import type { ContentBlock } from '@dxos/schema';
 import type { AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
+/**
+ * Tags that are used by the model to indicate the type of content.
+ *
+ * NOTE: Keep in sync with system instructions.
+ */
+enum ModelTags {
+  /**
+   * Chain of thought.
+   */
+  COT = 'cot',
+
+  /**
+   * Chain of thought.
+   *
+   * Used by DeepSeek.
+   */
+  THINK = 'think',
+
+  STATUS = 'status',
+  ARTIFACT = 'artifact',
+  SUGGEST = 'suggest',
+  PROPOSAL = 'proposal',
+  SELECT = 'select',
+  TOOL_LIST = 'tool-list',
+}
+
 export interface ParseGptStreamOptions {
   /**
    * Called when the stream begins.
@@ -238,7 +264,8 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
     //
     case 'tag': {
       switch (block.tag) {
-        case 'cot': {
+        case ModelTags.COT:
+        case ModelTags.THINK: {
           const content = block.content
             .map((block) => {
               switch (block.type) {
@@ -257,7 +284,7 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
           } satisfies ContentBlock.Reasoning;
         }
 
-        case 'status': {
+        case ModelTags.STATUS: {
           const content = block.content
             .map((block) => {
               switch (block.type) {
@@ -276,12 +303,12 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
           } satisfies ContentBlock.Status;
         }
 
-        case 'artifact': {
+        case ModelTags.ARTIFACT: {
           log.warn('artifact tags not implemented', { block });
           break;
         }
 
-        case 'suggest': {
+        case ModelTags.SUGGEST: {
           if (block.content.length === 1 && block.content[0].type === 'text') {
             return {
               _tag: 'suggest',
@@ -292,7 +319,7 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
           return undefined;
         }
 
-        case 'proposal': {
+        case ModelTags.PROPOSAL: {
           if (block.content.length === 1 && block.content[0].type === 'text') {
             return {
               _tag: 'proposal',
@@ -303,7 +330,7 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
           return undefined;
         }
 
-        case 'select': {
+        case ModelTags.SELECT: {
           return {
             _tag: 'select',
             options: block.content.flatMap((content) =>
@@ -314,7 +341,7 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
           } satisfies ContentBlock.Select;
         }
 
-        case 'tool-list': {
+        case ModelTags.TOOL_LIST: {
           return {
             _tag: 'toolList',
           } satisfies ContentBlock.ToolList;
