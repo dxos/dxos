@@ -33,9 +33,12 @@ export type ChatPromptProps = ThemedClassName<
     processing?: boolean;
   } & {
     blueprintRegistry?: BlueprintRegistry;
+
+    // TODO(burdon): Factor out.
     blueprints?: TagPickerItemData[];
     onSearchBlueprints?: TagPickerOptions['onSearch'];
     onUpdateBlueprints?: TagPickerOptions['onUpdate'];
+
     onScroll?: () => void;
   }
 >;
@@ -113,7 +116,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
           <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
         </div>
         <Toolbar.Root classNames='bg-transparent overflow-visible'>
-          <ChatOptionsMenu blueprints={blueprints} blueprintRegistry={blueprintRegistry} />
+          {blueprintRegistry && <ChatOptionsMenu blueprints={blueprints} blueprintRegistry={blueprintRegistry} />}
 
           {(onSearchBlueprints && (
             <TagPicker
