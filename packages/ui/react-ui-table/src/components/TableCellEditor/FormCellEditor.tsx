@@ -20,10 +20,11 @@ type FormCellEditorProps = {
   fieldProjection: FieldProjection;
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
+  onSave?: () => void;
   __gridScope: any;
 };
 
-export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: FormCellEditorProps) => {
+export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridScope }: FormCellEditorProps) => {
   const { editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
   const [editing, setLocalEditing] = useState(false);
   const cellRef = useRef<HTMLButtonElement | null>(null);
@@ -70,6 +71,8 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);
       setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
     },
     [fieldProjection.field.path, originalRow],
   );
@@ -77,6 +80,7 @@ export const FormCellEditor = ({ fieldProjection, model, schema, __gridScope }: 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
       setEditing(null);
+      onSave?.();
     }
     setLocalEditing(nextOpen);
   }, []);

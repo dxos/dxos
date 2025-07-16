@@ -49,6 +49,7 @@ export type TableCellEditorProps = {
   schema?: Schema.AnyNoContext;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
+  onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
 
@@ -58,6 +59,7 @@ export const TableValueEditor = ({
   schema,
   onEnter,
   onFocus,
+  onSave,
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
@@ -75,8 +77,20 @@ export const TableValueEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  if (fieldProjection?.props.type === TypeEnum.Array) {
-    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
+  if (
+    fieldProjection?.props.type === TypeEnum.Array ||
+    fieldProjection?.props.format === FormatEnum.SingleSelect ||
+    fieldProjection?.props.format === FormatEnum.MultiSelect
+  ) {
+    return (
+      <FormCellEditor
+        fieldProjection={fieldProjection}
+        model={model}
+        schema={schema}
+        __gridScope={__gridScope}
+        onSave={onSave}
+      />
+    );
   }
 
   // For all other types, use the existing cell editor
@@ -87,6 +101,7 @@ export const TableValueEditor = ({
       onEnter={onEnter}
       onFocus={onFocus}
       onQuery={onQuery}
+      onSave={onSave}
       __gridScope={__gridScope}
     />
   );
@@ -100,6 +115,7 @@ export const TableCellEditor = ({
   onEnter,
   onFocus,
   onQuery,
+  onSave,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
@@ -167,6 +183,7 @@ export const TableCellEditor = ({
         onEnter?.(cell);
         onFocus?.();
         setEditing(null);
+        onSave?.();
       } else {
         setValidationError(validationResult.error);
         setValidationVariant('error');
@@ -205,6 +222,7 @@ export const TableCellEditor = ({
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
+          onSave?.();
           onEnter?.(cell);
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
@@ -216,12 +234,13 @@ export const TableCellEditor = ({
       } else {
         setValidationError(null);
         setEditing(null);
+        onSave?.();
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, setEditing],
+    [model, editing, onFocus, onEnter, fieldProjection, setEditing, onSave],
   );
 
   const extension = useMemo(() => {
