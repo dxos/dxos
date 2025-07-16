@@ -202,19 +202,30 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     'with parser',
     Effect.fn(
       function* ({ expect }) {
+        const system = `
+          Before you answer I want you to emit your current status (what are you doing?) inside <status></status> XML tags.
+
+          After your answer emit the suggestions for follow-up user prompts inside <suggest></suggest> XML tags.
+        `;
+
         const chat = yield* AiChat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = 'What is six times seven?';
+        let prompt: AiInput.Raw = `
+        <instructions>
+          ${system}
+        </instructions>
+        
+        What is six times seven?`;
         do {
           // disableToolCallResolution
-          const stream = chat.streamText({ toolkit, prompt }).pipe(parseGptStream());
+          const stream = chat.streamText({ system, prompt, toolkit }).pipe(parseGptStream());
           prompt = AiInput.empty;
 
           yield* Stream.runForEach(
             stream,
             Effect.fnUntraced(function* (item) {
-              log.info('item', { item, time: new Date().toISOString() });
+              log.info('item', { item });
             }),
           );
           log.break();
@@ -234,7 +245,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 // What's the right stopping condition?
 const hasToolCall = Effect.fn(function* (chat: AiChat.AiChat.Service) {
   const history = yield* chat.history;
-  console.log('history', { history: history.messages.map((m) => m.parts.map((p) => p._tag)) });
   return (
     history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
     history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallResultPart'
