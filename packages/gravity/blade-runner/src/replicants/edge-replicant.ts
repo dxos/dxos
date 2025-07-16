@@ -17,6 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { dataGenerator } from '@dxos/plugin-script/templates';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
@@ -31,14 +32,21 @@ export class EdgeReplicant {
   private _client?: Client = undefined;
   private _identity?: Identity = undefined;
 
-  constructor(private readonly env: ReplicantEnv) {}
+  constructor(private readonly _env: ReplicantEnv) {}
 
   @trace.span()
   async initClient({ config, indexing }: { config: ConfigProto; indexing?: IndexConfig }): Promise<void> {
     log.trace('dxos.edge-replicant.initClient');
 
     // Initialize client.
-    this._client = new Client({ config: new Config(config) });
+    this._client = new Client({
+      config: new Config(
+        {
+          runtime: { client: { storage: getStorageConfig(this._env) } },
+        },
+        config,
+      ),
+    });
     await this._client.initialize();
 
     // Set indexing config.
@@ -47,12 +55,18 @@ export class EdgeReplicant {
     }
   }
 
+  async reinitializeClient({ config, indexing }: { config: ConfigProto; indexing?: IndexConfig }) {
+    await this.destroyClient();
+    await this.initClient({ config, indexing });
+  }
+
   @trace.span()
   async destroyClient(): Promise<void> {
     log.trace('dxos.edge-replicant.destroyClient');
     await this._client?.destroy();
   }
 
+  @trace.span()
   async createIdentity(): Promise<Identity> {
     invariant(this._client, 'no client');
     const identity = await this._client.halo.createIdentity();
@@ -61,6 +75,7 @@ export class EdgeReplicant {
     return identity;
   }
 
+  @trace.span()
   async startAgent(): Promise<void> {
     log.trace('dxos.edge-replicant.startAgent');
     invariant(this._client, 'no client');
@@ -74,6 +89,7 @@ export class EdgeReplicant {
     log.info('agent created');
   }
 
+  @trace.span()
   async getAgentKey(): Promise<string | undefined> {
     invariant(this._client, 'no client');
     const agentDevice = this._client.halo.devices
@@ -82,6 +98,7 @@ export class EdgeReplicant {
     return agentDevice?.deviceKey.toHex();
   }
 
+  @trace.span()
   async createSpace(): Promise<SpaceId> {
     await sleep(1000);
     invariant(this._client, 'no client');
@@ -103,6 +120,7 @@ export class EdgeReplicant {
     return space.id;
   }
 
+  @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const buildResult = await bundler.bundle({ source: source ?? dataGenerator });
@@ -127,6 +145,7 @@ export class EdgeReplicant {
     return result;
   }
 
+  @trace.span()
   async invokeFunction({
     functionId,
     spaceId,
@@ -146,6 +165,7 @@ export class EdgeReplicant {
     return response.text();
   }
 
+  @trace.span()
   async waitForReplication({ spaceId }: { spaceId: SpaceId }) {
     invariant(this._client, 'no client');
     const space = this._client!.spaces.get(spaceId);
@@ -165,3 +185,8 @@ export class EdgeReplicant {
 }
 
 ReplicantRegistry.instance.register(EdgeReplicant);
+
+const getStorageConfig = (env: ReplicantEnv): Runtime.Client.Storage => ({
+  persistent: true,
+  dataRoot: env.params.outDir,
+});

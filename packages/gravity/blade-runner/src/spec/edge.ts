@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import path from 'node:path';
+
 import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 
+import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
-import { type Platform, type TestParams, type TestPlan } from '../plan';
+import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
 import { EdgeReplicant } from '../replicants/edge-replicant';
 
 export type EdgeTestSpec = {
@@ -45,7 +48,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
         runtime: {
           client: {
             edgeFeatures: {
-              echoReplicator: false,
+              echoReplicator: true,
               signaling: true,
               feedReplicator: true,
               agents: true,
@@ -67,7 +70,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
 
   async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<void> {
     const replicant = await env.spawn(EdgeReplicant, { platform: params.spec.platform });
-    await replicant.brain.initClient({ config: params.spec.config });
+    await replicant.brain.initClient({ config: params.spec.config, indexing: params.spec.indexing });
     await replicant.brain.createIdentity();
     await replicant.brain.startAgent();
 
@@ -84,32 +87,20 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
     });
     log.info('invoked function', { result });
 
-    // await replicant.brain.waitForReplication();
-    await replicant.brain.getSyncState({ spaceId });
+    // Replicate with echo replicator.
+    const config = params.spec.config;
+    config.runtime!.client!.edgeFeatures!.echoReplicator = true;
+    log.info('reinitializing client', { config });
+    await replicant.brain.reinitializeClient({ config, indexing: params.spec.indexing });
+    log.info('reinitialized client');
+    await replicant.brain.waitForReplication({ spaceId });
 
     await replicant.brain.destroyClient();
     replicant.kill();
   }
-}
 
-const getConfig = (): ConfigProto => ({
-  runtime: {
-    client: {
-      edgeFeatures: {
-        echoReplicator: false,
-        signaling: true,
-        feedReplicator: true,
-        agents: true,
-      },
-    },
-    services: {
-      agentHosting: {
-        type: 'AGENTHOSTING_API',
-        server: 'http://localhost:8787/v1alpha1/',
-      },
-      edge: {
-        url: 'http://localhost:8787',
-      },
-    },
-  },
-});
+  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: void) {
+    const reader = new TraceReader();
+    await reader.addFile(path.join(params.outDir, 'perfetto.json'));
+  }
+}
