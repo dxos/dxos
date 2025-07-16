@@ -47,6 +47,7 @@ export const MapPlugin = () =>
           defineObjectForm({
             objectSchema: MapType,
             formSchema: CreateMapSchema,
+            hidden: true,
             getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
           }),
         ),

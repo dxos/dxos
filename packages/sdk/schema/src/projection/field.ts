@@ -12,9 +12,13 @@ import { JsonPath } from '@dxos/effect';
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
   path: JsonPath,
-  visible: Schema.optional(Schema.Boolean),
-  size: Schema.optional(Schema.Number),
   referencePath: Schema.optional(JsonPath),
+
+  // TODO(wittjosiah): Remove this? Duplicate of hiddenFields?
+  visible: Schema.optional(Schema.Boolean),
+
+  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
+  size: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;

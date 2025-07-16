@@ -37,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, defineObjectForm } from './types';
+import { CollectionAction, createDefaultSchema, defineObjectForm, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -141,6 +141,19 @@ export const SpacePlugin = ({
             objectSchema: DataType.QueryCollection,
             formSchema: CollectionAction.QueryCollectionForm,
             getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
+          }),
+        ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DataType.StoredSchema,
+            formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+            getIntent: (props, options) =>
+              createIntent(SpaceAction.AddSchema, {
+                space: options.space,
+                name: props.name,
+                schema: createDefaultSchema(),
+              }),
           }),
         ),
       ],

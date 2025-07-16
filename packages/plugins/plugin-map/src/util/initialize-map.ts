@@ -31,7 +31,7 @@ export const initializeMap = async ({
     map.coordinates = coordinates;
   }
 
-  const projection = createProjection({ name: "Map's item view", fields: [] });
+  const projection = createProjection({ fields: [] });
 
   if (initialSchema) {
     const schema = await space.db.schemaRegistry.query({ typename: initialSchema }).firstOrUndefined();

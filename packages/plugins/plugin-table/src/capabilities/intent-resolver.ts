@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { contributes, Capabilities, createResolver, type PluginContext, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Relation } from '@dxos/echo';
-import { type StoredSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { initializeProjection } from '@dxos/react-ui-table';
@@ -16,13 +16,19 @@ import { TableAction, TableView } from '../types';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
+      intent: TableAction.OnSchemaAdded,
+      resolve: ({ space, schema }) => ({
+        intents: [createIntent(TableAction.Create, { space, typename: schema.typename })],
+      }),
+    }),
+    createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const { schema, projection } = await initializeProjection({ space, typename });
         const table = Obj.make(TableView, { name });
         const hasView = Relation.make(DataType.HasView, {
           // TODO(wittjosiah): Remove cast.
-          [Relation.Source]: schema as unknown as StoredSchema,
+          [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,
           [Relation.Target]: table,
           projection: Ref.make(projection),
         });

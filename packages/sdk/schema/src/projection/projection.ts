@@ -39,8 +39,6 @@ export const Projection = Schema.Struct({
    */
   schema: Schema.optional(JsonSchemaType),
 
-  // TODO(wittjosiah): Remove fields and hiddenFields. Instead require schema and mutate it instead.
-
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
@@ -51,6 +49,13 @@ export const Projection = Schema.Struct({
    * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
    */
   hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
+
+  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
+
+  /**
+   * Optional metadata associated with the projection.
+   */
+  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/Projection', version: '0.1.0' }));
 export type Projection = Schema.Schema.Type<typeof Projection>;
 

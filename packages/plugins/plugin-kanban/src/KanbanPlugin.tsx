@@ -40,6 +40,7 @@ export const KanbanPlugin = () =>
           defineObjectForm({
             objectSchema: KanbanType,
             formSchema: CreateKanbanSchema,
+            hidden: true,
             getIntent: (props, options) => createIntent(KanbanAction.Create, { ...props, space: options.space }),
           }),
         ),

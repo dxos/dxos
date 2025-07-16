@@ -4,15 +4,15 @@
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import { CreateTableSchema, TableAction, TableView } from './types';
 import { translations } from './translations';
+import { CreateTableSchema, TableAction, TableView } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -48,8 +48,17 @@ export const TablePlugin = () =>
           defineObjectForm({
             objectSchema: TableView,
             formSchema: CreateTableSchema,
+            hidden: true,
             getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
           }),
+        ),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SchemaAdded,
+      activate: () =>
+        contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema }) =>
+          createIntent(TableAction.OnSchemaAdded, { space, schema }),
         ),
     }),
     defineModule({

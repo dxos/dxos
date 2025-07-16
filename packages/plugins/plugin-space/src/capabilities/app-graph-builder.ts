@@ -7,7 +7,7 @@ import { Array, Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
-import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -24,6 +24,7 @@ import {
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
+  createViewNode,
   rxFromQuery,
   SHARED,
   SPACES,
@@ -501,13 +502,10 @@ export default (context: PluginContext) => {
                 .map((relation) =>
                   get(
                     rxFromSignal(() =>
-                      createObjectNode({
-                        // TODO(wittjosiah): Remove this cast.
-                        object: Relation.getTarget(relation as any) as any,
+                      createViewNode({
                         space,
+                        relation,
                         resolve,
-                        droppable: false,
-                        navigable: false,
                       }),
                     ),
                   ),
