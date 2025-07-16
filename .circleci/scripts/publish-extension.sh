@@ -10,7 +10,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 # See how to obtaine ACCESS_TOKEN from REFRESH_TOKEN https://circleci.com/blog/continuously-deploy-a-chrome-extension/
 if [ "$BRANCH" = "production" ]; then
   for EXTENSION in "${EXTENSIONS[@]}"; do
-    pushd $EXTENSION || exit
+    pushd "$EXTENSION" || exit
     ROOT=$(git rev-parse --show-toplevel)
 
     PACKAGE=${PWD##*/}
@@ -18,8 +18,8 @@ if [ "$BRANCH" = "production" ]; then
     PACKAGE_ENV=${PACKAGE_CAPS//-/_}
 
     echo ---------------------------------------------------
-    echo "${PACKAGE_ENV}: bundel"
-    eval "pnpm -w nx bundle $PACKAGE"
+    echo "${PACKAGE_ENV}: bundle"
+    eval "moon run $PACKAGE:bundle"
     
     eval "CLIENT_ID=$""${PACKAGE_ENV}"_CLIENT_ID""
     eval "CLIENT_SECRET=$""${PACKAGE_ENV}"_CLIENT_SECRET""

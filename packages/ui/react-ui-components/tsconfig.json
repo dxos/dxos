@@ -21,10 +21,10 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/util"
     },
     {
       "path": "../react-ui"

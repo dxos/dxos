@@ -34,7 +34,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.16.12",
+    "effect": "3.16.13",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

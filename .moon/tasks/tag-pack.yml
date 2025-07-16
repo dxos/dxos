@@ -1,0 +1,13 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  pack:
+    command: bash -c 'pnpm pack --pack-destination "$(git rev-parse --show-toplevel)/dist/tarballs/$project"'
+    deps:
+      - target: build
+        optional: true
+      - target: compile
+        optional: true
+    inputs:
+      - '@group(production)'
+    outputs:
+      - /dist/tarballs/$project

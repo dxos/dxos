@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist/esm",
+    "outDir": "dist",
     "target": "ESNext"
   },
   "include": [
@@ -20,6 +20,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/protobuf-compiler"
     },
     {
       "path": "../../common/timeframe"

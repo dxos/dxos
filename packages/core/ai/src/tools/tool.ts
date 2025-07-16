@@ -159,6 +159,10 @@ export class ToolRegistry implements ToolResolver {
     };
   }
 
+  has(tool: ExecutableTool): boolean {
+    return this._tools.has(tool.id);
+  }
+
   register(tool: ExecutableTool): this {
     this._tools.set(tool.id, tool);
     return this;

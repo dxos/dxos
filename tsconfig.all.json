@@ -97,6 +97,12 @@
       "path": "packages/common/random-access-storage/tsconfig.json"
     },
     {
+      "path": "packages/common/storybook-addon-logger/tsconfig.json"
+    },
+    {
+      "path": "packages/common/storybook-utils/tsconfig.json"
+    },
+    {
       "path": "packages/common/test-utils/tsconfig.json"
     },
     {
@@ -226,16 +232,10 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
-      "path": "packages/devtools/storybook-addon-logger/tsconfig.json"
-    },
-    {
-      "path": "packages/devtools/storybook-utils/tsconfig.json"
+      "path": "packages/e2e/proto-guard/tsconfig.json"
     },
     {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/cf-labs/tsconfig.json"
     },
     {
       "path": "packages/experimental/discord-bot/tsconfig.json"
@@ -247,19 +247,10 @@
       "path": "packages/experimental/metagraph/tsconfig.json"
     },
     {
-      "path": "packages/experimental/plexus/tsconfig.json"
-    },
-    {
       "path": "packages/experimental/react-metagraph/tsconfig.json"
     },
     {
       "path": "packages/experimental/script-toolbox/tsconfig.json"
-    },
-    {
-      "path": "packages/experimental/spyglass/tsconfig.json"
-    },
-    {
-      "path": "packages/gravity/proto-guard/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
@@ -475,6 +466,9 @@
       "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-chat/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-components/tsconfig.json"
     },
     {
@@ -553,16 +547,10 @@
       "path": "tools/codemorph/tsconfig.json"
     },
     {
-      "path": "tools/executors/esbuild/tsconfig.json"
+      "path": "tools/esbuild/tsconfig.json"
     },
     {
-      "path": "tools/executors/nx-protobuf-compiler/tsconfig.json"
-    },
-    {
-      "path": "tools/executors/toolbox/tsconfig.json"
-    },
-    {
-      "path": "tools/lit-stories/tsconfig.json"
+      "path": "tools/lit-storybook/tsconfig.json"
     },
     {
       "path": "tools/lockfile-explorer/tsconfig.json"
@@ -574,10 +562,10 @@
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {
-      "path": "tools/ridoculous/tsconfig.json"
+      "path": "tools/storybook/tsconfig.json"
     },
     {
-      "path": "tools/stories/tsconfig.json"
+      "path": "tools/toolbox/tsconfig.json"
     },
     {
       "path": "tools/vite-plugin-icons/tsconfig.json"

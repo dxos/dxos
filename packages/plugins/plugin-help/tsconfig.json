@@ -30,6 +30,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -37,9 +40,6 @@
     },
     {
       "path": "../../core/echo/live-object"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

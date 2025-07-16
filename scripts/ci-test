@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 set -euxo pipefail
 
-pnpm nx run-many --target=lint
-pnpm nx run-many --target=build
-pnpm nx run-many --target=test
-pnpm nx run-many --target=test --coverage --xmlReport
+moon run :lint :build
+moon run :test
+VITEST_COVERAGE=true moon run :test

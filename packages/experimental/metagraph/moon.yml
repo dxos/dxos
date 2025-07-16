@@ -1,0 +1,25 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+    deps:
+      - compile-node
+  compile-node:
+    command: dx-compile
+    args:
+      - '--entryPoint=src/testing/index.ts'
+      - '--outputPath=dist/testing'
+      - '--platform=node'
+    deps:
+      - ^:compile
+      - esbuild:compile
+    inputs:
+      - '@group(production)'
+    outputs:
+      - dist/testing

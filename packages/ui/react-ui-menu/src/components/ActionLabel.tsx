@@ -16,9 +16,8 @@ import { getShortcut } from '../util';
 type Action = GraphAction<MenuActionProperties> | ActionGroup<Omit<MenuActionProperties, 'variant'>>;
 
 export const ActionLabel = ({ action }: { action: Action }) => {
-  const shortcut = getShortcut(action);
   const { t } = useTranslation(translationKey);
-
+  const shortcut = getShortcut(action);
   return (
     <>
       <span className='grow truncate'>{toLocalizedString(action.properties!.label, t)}</span>

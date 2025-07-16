@@ -28,6 +28,8 @@ import { tableButtons, tableControls } from '../util';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
+  private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
+
   constructor(
     private readonly model: TableModel<T>,
     private readonly _visibleRange = signal<DxGridPlaneRange>({
@@ -37,6 +39,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
   ) {}
 
   public getCells(range: DxGridPlaneRange, plane: DxGridPlane): DxGridPlaneCells {
+    // Clear cache at the start of each render pass
+    this.fieldProjectionCache.clear();
+
     let cells: DxGridPlaneCells;
 
     switch (plane) {
@@ -78,6 +83,18 @@ export class TablePresentation<T extends TableRow = TableRow> {
     return cells;
   }
 
+  /**
+   * Gets a field projection, using cache if available within the current render pass.
+   */
+  private getFieldProjection(fieldId: string) {
+    let projection = this.fieldProjectionCache.get(fieldId);
+    if (!projection) {
+      projection = this.model.projection.getFieldProjection(fieldId);
+      this.fieldProjectionCache.set(fieldId, projection);
+    }
+    return projection;
+  }
+
   private createDataCell(
     cells: DxGridPlaneCells,
     obj: T,
@@ -85,7 +102,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     colIndex: number,
     displayIndex: number,
   ): void {
-    const { props } = this.model.projection.getFieldProjection(field.id);
+    const { props } = this.getFieldProjection(field.id);
 
     const cell: DxGridCellValue = {
       get value() {
@@ -223,10 +240,10 @@ export class TablePresentation<T extends TableRow = TableRow> {
             return null;
           })
           .filter(Boolean)
-          .join(' ');
+          .join('');
 
         if (tags) {
-          cell.accessoryHtml = `<div role='none' class="flex flex-row gap-1">${tags}</div>`;
+          cell.accessoryHtml = tags;
         }
       }
     }
@@ -287,7 +304,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     const fields = this.model.view?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
+      const { field, props } = this.getFieldProjection(fields[col].id);
       const sorting = this.model.sorting?.sorting;
       const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
 

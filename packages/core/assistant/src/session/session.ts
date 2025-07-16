@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Schema } from 'effect';
+import { Array, Option, pipe, Schema } from 'effect';
 
 import {
   AgentStatusReport,
@@ -216,14 +216,17 @@ export class AISession {
     try {
       let more = false;
       do {
-        const tools: ExecutableTool[] = [
-          ...systemTools,
-          ...(await Promise.all(options.tools.map((toolId) => options.toolResolver.resolve(toolId)))),
-          ...(options.executableTools ?? []),
-          ...options.artifacts
-            .filter((artifact) => requiredArtifactIds.has(artifact.id))
-            .flatMap((artifact) => artifact.tools),
-        ];
+        const tools: ExecutableTool[] = pipe(
+          [
+            ...systemTools,
+            ...(await Promise.all(options.tools.map((toolId) => options.toolResolver.resolve(toolId)))),
+            ...(options.executableTools ?? []),
+            ...options.artifacts
+              .filter((artifact) => requiredArtifactIds.has(artifact.id))
+              .flatMap((artifact) => artifact.tools),
+          ],
+          Array.dedupeWith((a, b) => a.id === b.id),
+        );
 
         log('request', {
           pending: this._pending.length,
@@ -240,7 +243,7 @@ export class AISession {
           systemPrompt:
             options.systemPrompt ??
             createBaseInstructions({
-              availableArtifacts: Array.from(requiredArtifactIds),
+              availableArtifacts: [...requiredArtifactIds],
               operationModel: this._options.operationModel,
             }),
         });
@@ -318,7 +321,7 @@ export class AISession {
       const versions = gatherObjectVersions(history);
 
       const artifactDiff = await artifactDiffResolver(
-        Array.from(versions.entries()).map(([id, version]) => ({ id, lastVersion: version })),
+        [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
       );
 
       log.info('vision', {
@@ -571,7 +574,7 @@ const createArtifactUpdateBlock = (
     disposition: 'artifact-update',
     text: `
       The following artifacts have been updated since the last message:
-      ${Array.from(artifactDiff.entries())
+      ${[...artifactDiff.entries()]
         .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
         .join('\n')}
     `,

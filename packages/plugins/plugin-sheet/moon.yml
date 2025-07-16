@@ -1,0 +1,15 @@
+type: library
+language: typescript
+tags:
+  - e2e
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=browser'
+      - '--platform=node'
+      - '--preactSignalTracking'

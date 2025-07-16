@@ -4,7 +4,7 @@
 
 import { Context, Effect, Layer } from 'effect';
 
-import type { Obj, Relation } from '@dxos/echo';
+import type { Obj, Ref, Relation } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
 
@@ -40,4 +40,11 @@ export class DatabaseService extends Context.Tag('DatabaseService')<
       });
     },
   );
+
+  static loadRef: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, Error, never> = Effect.fn(function* (ref) {
+    return yield* Effect.tryPromise({
+      try: () => ref.load(),
+      catch: (error) => error as Error,
+    });
+  });
 }
