@@ -9,8 +9,6 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Blueprint } from '@dxos/assistant';
 import { type Ref } from '@dxos/echo';
-import type { Blueprint } from '@dxos/assistant';
-import type { Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -30,7 +28,15 @@ export type ToolboxProps = ThemedClassName<{
   striped?: boolean;
 }>;
 
-export const Toolbox = ({ classNames, artifacts, functions, services, blueprints, activeBlueprints, striped }: ToolboxProps) => {
+export const Toolbox = ({
+  classNames,
+  artifacts,
+  functions,
+  services,
+  blueprints,
+  activeBlueprints,
+  striped,
+}: ToolboxProps) => {
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {blueprints && blueprints.length > 0 && (
@@ -144,11 +150,10 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   return (
     <Toolbox
       classNames={classNames}
+      blueprints={processor.context.blueprints.value}
       artifacts={artifactDefinitions}
       services={serviceTools}
-      blueprints={processor.context.blueprints.value}
       functions={functions}
-      activeBlueprints={processor.blueprints.bindings.value}
     />
   );
 };

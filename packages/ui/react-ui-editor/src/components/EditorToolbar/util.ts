@@ -10,17 +10,16 @@ import { type Action } from '@dxos/app-graph';
 import { live, type Live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  type MenuSeparator,
+  type ActionGraphProps,
+  type MenuActionProperties,
   type MenuItemGroup,
+  type MenuSeparator,
   type ToolbarMenuActionGroupProperties,
   createMenuAction,
   createMenuItemGroup,
-  type ActionGraphProps,
-  type MenuActionProperties,
 } from '@dxos/react-ui-menu';
 
 import type { EditorAction, Formatting } from '../../extensions';
-import { EditorViewMode } from '../../types';
 import { translationKey } from '../../translations';
 import { type EditorViewMode } from '../../types';
 
