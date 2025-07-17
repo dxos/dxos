@@ -4,4 +4,6 @@ tasks:
     command: eslint . --format unix --quiet
     inputs:
       - /eslint.config.mjs
+      # Is this fine:
+      - /tools/eslint-plugin-rules/**/*
       - '@group(sources)'

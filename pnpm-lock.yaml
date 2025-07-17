@@ -68,12 +68,9 @@ importers:
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
-      '@dxos/eslint-plugin':
-        specifier: workspace:*
-        version: link:packages/common/eslint-plugin
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:packages/common/eslint-plugin-rules
+        version: link:tools/eslint-plugin-rules
       '@dxos/keys':
         specifier: workspace:*
         version: link:packages/common/keys
@@ -1358,7 +1355,7 @@ importers:
     dependencies:
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:../eslint-plugin-rules
+        version: link:../../../tools/eslint-plugin-rules
       '@rushstack/eslint-plugin-packlets':
         specifier: ^0.12.0
         version: 0.12.0(eslint@9.30.1(jiti@2.4.2))(typescript@5.8.3)
@@ -1405,8 +1402,6 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
-
-  packages/common/eslint-plugin-rules: {}
 
   packages/common/feed-store:
     dependencies:
@@ -14535,6 +14530,8 @@ importers:
       '@types/yargs':
         specifier: ~16.0.1
         version: 16.0.4
+
+  tools/eslint-plugin-rules: {}
 
   tools/lit-storybook:
     devDependencies:

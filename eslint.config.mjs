@@ -12,7 +12,6 @@ export default tseslint.config(
   //
   {
     ignores: [
-      'eslint.config.mjs',
       // Build Artifacts
       'dist',
       'out',
@@ -22,7 +21,10 @@ export default tseslint.config(
       'packages/sdk/client-services/src/version.ts',
 
       // Config
+      'eslint.config.mjs',
+      'eslint.config.cjs',
       '.eslintrc.js',
+      '.eslintrc.cjs',
       '.mocharc.js',
       'esbuild-server.config.js',
       'playwright.config.ts',
