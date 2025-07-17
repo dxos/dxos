@@ -49,16 +49,16 @@
     "src"
   ],
   "dependencies": {
-    "@preact/signals": "^2.2.0",
-    "@preact/signals-core": "^1.9.0",
-    "@preact/signals-react": "^3.2.0"
+    "@preact/signals": "^2.2.1",
+    "@preact/signals-core": "^1.11.0",
+    "@preact/signals-react": "^3.2.1"
   },
   "devDependencies": {
-    "preact": "^10.11.0",
+    "preact": "^10.26.9",
     "react": "~18.2.0"
   },
   "optionalDependencies": {
-    "preact": "^10.11.0",
+    "preact": "^10.26.9",
     "react": "~18.2.0"
   },
   "publishConfig": {

@@ -18,10 +18,10 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../sdk/app-framework"

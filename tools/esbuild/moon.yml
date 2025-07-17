@@ -1,0 +1,8 @@
+type: tool
+language: typescript
+tags:
+  - ts-compile
+tasks:
+  compile:
+    deps:
+      - esbuild-plugins:compile

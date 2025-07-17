@@ -1,0 +1,37 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  bundle:
+    command: vite build
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - vite.config.ts
+      - '@group(production)'
+      - $CONFIG_DYNAMIC
+      - $DX_ENVIRONMENT
+      - $DX_HOST
+      - $DX_HUB_URL
+      - $DX_IPDATA_API_KEY
+      - $DX_LABS
+      - $DX_PWA
+      - $DX_SENTRY_DESTINATION
+      - $DX_TELEMETRY_API_KEY
+      - $LOG_FILTER
+      - $LOG_PREFIX
+      - $NODE_ENV
+      - $NODE_OPTIONS
+      - $REMOTE_SOURCE
+      - $SENTRY_RELEASE_AUTH_TOKEN
+    outputs:
+      - out
+  serve:
+    command: vite dev
+    deps:
+      - ^:compile
+    preset: server
+  preview:
+    command: vite preview
+    deps:
+      - bundle
+    preset: server

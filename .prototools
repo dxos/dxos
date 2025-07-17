@@ -1,0 +1,7 @@
+# https://moonrepo.dev/docs/proto/config
+
+node = "20.12.1"
+pnpm = "10.13.1"
+
+# Upgrading moon: https://moonrepo.dev/docs/install#upgrading
+moon = "1.38.5"

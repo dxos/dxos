@@ -15,7 +15,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/storybook-utils"
     },
     {
       "path": "../lit-ui"

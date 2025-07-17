@@ -2,8 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "out/tasks",
-
+    "outDir": "dist/types",
     "types": ["node", "sharedworker"],
   },
   "include": ["src"],

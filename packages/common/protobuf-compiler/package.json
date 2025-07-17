@@ -17,7 +17,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "tsx ./src/main.ts ./test/proto/example/testing/service.proto ./test/proto/example/testing/types.proto ./test/proto/example/testing/another.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen",
+    "prebuild": "tsx ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen",
     "test": "true || mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
@@ -26,6 +26,7 @@
     "@dxos/node-std": "workspace:*",
     "argparse": "^2.0.1",
     "chalk": "^4.1.0",
+    "extensionless": "^1.9.9",
     "glob": "^7.2.3",
     "protobufjs": "^7.2.5",
     "read-pkg": "^5.2.0",

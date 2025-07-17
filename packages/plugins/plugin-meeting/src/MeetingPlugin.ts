@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
-import { AssistantEvents } from '@dxos/plugin-assistant';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -73,7 +72,7 @@ export const MeetingPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/call-extension`,
-      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady, AssistantEvents.AiClientReady),
+      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
       activate: CallExtension,
     }),
   ]);

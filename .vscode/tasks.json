@@ -60,7 +60,7 @@
     {
       "label": "storybook",
       "type": "shell",
-      "command": "pnpm -w nx storybook stories",
+      "command": "moon run storybook:serve",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -75,7 +75,7 @@
     {
       "label": "serve composer-app",
       "type": "shell",
-      "command": "pnpm -w nx serve composer-app",
+      "command": "moon run composer-app:serve",
       "isBackground": true,
       "presentation": {
         "echo": true,
@@ -95,7 +95,7 @@
     {
       "label": "build and test all packages",
       "type": "shell",
-      "command": "pnpm -w nx run-many --target=build,test --parallel 12",
+      "command": "moon run :build :test --concurrency 12",
       "presentation": {
         "echo": true,
         "reveal": "always",

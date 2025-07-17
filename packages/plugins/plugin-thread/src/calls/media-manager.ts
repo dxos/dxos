@@ -54,6 +54,8 @@ export type MediaManagerParams = {
   serviceConfig: CallsServiceConfig;
 };
 
+const USE_INAUDIBLE_AUDIO = false;
+
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
   private readonly _state: MediaState = { pulledVideoStreams: {}, pulledAudioTracks: {} };
@@ -86,8 +88,10 @@ export class MediaManager extends Resource {
     this._state.videoStream = new MediaStream();
     this._state.videoStream.addTrack(this._state.videoTrack);
 
-    this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
-    this._state.audioTrack = this._inaudibleAudioStreamTrack;
+    if (USE_INAUDIBLE_AUDIO) {
+      this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
+      this._state.audioTrack = this._inaudibleAudioStreamTrack;
+    }
 
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {
       await this._pushTracks();
@@ -170,11 +174,14 @@ export class MediaManager extends Resource {
   async turnAudioOff(): Promise<void> {
     void this._speakingMonitor?.close();
     this._speakingMonitor = undefined;
-    if (this._state.audioTrack !== this._inaudibleAudioStreamTrack) {
+    this._state.audioEnabled = false;
+    if (USE_INAUDIBLE_AUDIO && this._state.audioTrack !== this._inaudibleAudioStreamTrack) {
       this._state.audioTrack?.stop();
       this._state.audioTrack = this._inaudibleAudioStreamTrack;
+    } else {
+      this._state.audioTrack?.stop();
+      this._state.audioTrack = undefined;
     }
-    this._state.audioEnabled = false;
     this.stateUpdated.emit(this._state);
     this._pushTracksTask!.schedule();
   }

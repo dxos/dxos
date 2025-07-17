@@ -12,6 +12,9 @@ import { log } from '@dxos/log';
 import { PackageDependencyBuilder, WorkspaceProcessor } from './nx';
 import { getBaseDir } from './util';
 
+// NOTE: Currently deprecated and not a part of the moon workspace as it was built on top of Nx.
+// TODO(wittjosiah): Consider folding this into toolbox.
+
 export type Config = {
   exclude?: string[];
 };
