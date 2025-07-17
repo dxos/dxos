@@ -39,7 +39,7 @@ export const InvitationManager = ({
 }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
-  const statusValue = multiUse ? 0 : invitationStatusValue.get(status!) ?? 0;
+  const statusValue = multiUse ? 0 : (invitationStatusValue.get(status!) ?? 0);
   const showAuthCode = statusValue === 3;
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {

@@ -113,7 +113,7 @@ export const Link: Story = {
           return [];
         }
 
-        const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';
+        const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
         const result = await space?.db.query(Query.type(Testing.Contact)).run();
         const items = result.objects
           .filter((object) => object.name.toLowerCase().includes(name))

@@ -564,7 +564,7 @@ export const cloneObject = async (
   newSpace: Space,
 ): Promise<Type.Expando> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? Type.getTypename(schema) ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

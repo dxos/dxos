@@ -122,26 +122,22 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     /**
      * Provides an external controller that can be called to repaint the table.
      */
-    useImperativeHandle<TableController, TableController>(
-      forwardedRef,
-      () => {
-        if (!presentation || !dxGrid) {
-          return {};
-        }
+    useImperativeHandle<TableController, TableController>(forwardedRef, () => {
+      if (!presentation || !dxGrid) {
+        return {};
+      }
 
-        return {
-          update: (cell) => {
-            if (cell) {
-              dxGrid.updateIfWithinBounds(cell);
-            } else {
-              dxGrid.updateCells(true);
-              dxGrid.requestUpdate();
-            }
-          },
-        };
-      },
-      [presentation, dxGrid],
-    );
+      return {
+        update: (cell) => {
+          if (cell) {
+            dxGrid.updateIfWithinBounds(cell);
+          } else {
+            dxGrid.updateCells(true);
+            dxGrid.requestUpdate();
+          }
+        },
+      };
+    }, [presentation, dxGrid]);
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
