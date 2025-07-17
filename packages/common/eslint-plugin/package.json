@@ -13,8 +13,6 @@
     "@stayradiated/eslint-plugin-prefer-arrow-functions": "^4.4.0",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "eslint-config-semistandard": "^17.0.0",
-    "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-n": "^17.21.0",
     "eslint-plugin-node": "^11.1.0",
@@ -23,7 +21,6 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "~12.1.1",
-    "eslint-plugin-unused-imports": "^4.1.4",
     "prettier": "^3.6.2"
   },
   "devDependencies": {
