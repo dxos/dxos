@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach } from 'node:test';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Query, Filter } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo-schema';

@@ -3,8 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { afterEach } from 'node:test';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
