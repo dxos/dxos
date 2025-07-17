@@ -9,7 +9,8 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   webServer: {
-    command: 'moon run rpc-tunnel-e2e:serve',
+    // TODO(wittjosiah): Using vite directly to avoid moon re-building things.
+    command: 'pnpm vite dev',
     port: 5173,
     reuseExistingServer: false,
   },
