@@ -23,20 +23,20 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: 6dyk6jdzb2jilsayrhfilaihsa
+pnpmfileChecksum: sha256-FMdXdwX9r3N53oU6qIQxDlJOMbxMGO0Q1P2xJa1V9ls=
 
 patchedDependencies:
   random-access-idb@1.2.2:
-    hash: mqfhtwnltd5kq5s4kb4gk7k2k4
+    hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
   ts-node@10.9.1:
-    hash: rke3py7up3u364r7wwqfla7cdm
+    hash: 8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636
     path: patches/ts-node@10.9.1.patch
   uuid@8.3.2:
-    hash: rxfbstxgb7ip2ka7npjixuqpye
+    hash: 7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9
     path: patches/uuid@8.3.2.patch
   vite@5.4.7:
-    hash: i2cyw7vpoo7fbe7qgy5pwsznyq
+    hash: 75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1
     path: patches/vite@5.4.7.patch
 
 importers:
@@ -52,7 +52,7 @@ importers:
         version: 0.1.13
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.53
-        version: 0.8.53(@cloudflare/workers-types@4.20250715.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
+        version: 0.8.53(@cloudflare/workers-types@4.20250715.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4)
       '@cloudflare/workers-types':
         specifier: ^4.20250715.0
         version: 4.20250715.0
@@ -100,7 +100,7 @@ importers:
         version: link:packages/common/typings
       '@effect/vitest':
         specifier: ~0.24.0
-        version: 0.24.0(effect@3.16.13)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
+        version: 0.24.0(effect@3.16.13)(vitest@3.2.4)
       '@mdx-js/react':
         specifier: ^2.1.3
         version: 2.1.5(react@18.2.0)
@@ -187,13 +187,13 @@ importers:
         version: 6.20.0(eslint@8.57.0)(typescript@5.8.3)
       '@vitejs/plugin-react-swc':
         specifier: ^3.10.2
-        version: 3.10.2(@swc/helpers@0.5.17)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.10.2(@swc/helpers@0.5.17)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@vitest/browser':
         specifier: ^3.2.4
-        version: 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
+        version: 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
+        version: 3.2.4(@vitest/browser@3.2.4)(vitest@3.2.4)
       '@vitest/expect':
         specifier: ^3.2.4
         version: 3.2.4
@@ -346,7 +346,7 @@ importers:
         version: 16.0.0
       ts-node:
         specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
+        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
       tsx:
         specifier: ^4.19.3
         version: 4.19.4
@@ -364,22 +364,22 @@ importers:
         version: 9.0.1
       vite:
         specifier: ^5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-glslify:
         specifier: ^2.2.1
-        version: 2.2.1(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 2.2.1(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-inspect:
         specifier: 0.8.9
-        version: 0.8.9(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 0.8.9(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-top-level-await:
         specifier: ^1.5.0
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.4.1
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-tsconfig-paths:
         specifier: ^5.1.4
-        version: 5.1.4(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 5.1.4(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
@@ -723,16 +723,16 @@ importers:
         version: 5.12.0(rollup@4.40.2)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-pwa:
         specifier: ^0.18.2
-        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
+        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -805,7 +805,7 @@ importers:
         version: 7.28.0
       '@crxjs/vite-plugin':
         specifier: 2.0.0-beta.28
-        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -835,7 +835,7 @@ importers:
         version: 0.12.3
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       body-parser:
         specifier: 1.19.0
         version: 1.19.0
@@ -865,19 +865,19 @@ importers:
         version: 1.1.4
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 0.7.0(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/apps/tasks:
     dependencies:
@@ -923,16 +923,16 @@ importers:
         version: 8.5.3
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -1062,13 +1062,13 @@ importers:
         version: 0.0.103
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/apps/todomvc:
     dependencies:
@@ -1132,13 +1132,13 @@ importers:
         version: 18.2.25
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/common/async:
     dependencies:
@@ -1461,14 +1461,14 @@ importers:
       streamx:
         specifier: ^2.12.5
         version: 2.15.6
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../random
     devDependencies:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../random
 
   packages/common/graph:
     dependencies:
@@ -1869,7 +1869,7 @@ importers:
         version: 10.6.0
       ts-node:
         specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
+        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -1948,7 +1948,7 @@ importers:
         version: 2.0.0
       random-access-idb:
         specifier: ^1.2.2
-        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
+        version: 1.2.2(patch_hash=207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e)
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
@@ -2218,7 +2218,7 @@ importers:
         version: 2.0.22
       ts-node:
         specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
+        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
 
   packages/core/ai:
     dependencies:
@@ -4664,28 +4664,28 @@ importers:
         version: 1.11.11
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       postcss:
         specifier: ^8.4.41
         version: 8.5.3
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 0.7.0(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-pwa:
         specifier: ^0.18.2
-        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
+        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -4755,7 +4755,7 @@ importers:
         version: 7.28.0
       '@crxjs/vite-plugin':
         specifier: 2.0.0-beta.28
-        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 2.0.0-beta.28(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -4776,7 +4776,7 @@ importers:
         version: 0.12.3
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       body-parser:
         specifier: 1.19.0
         version: 1.19.0
@@ -4806,19 +4806,19 @@ importers:
         version: 1.1.4
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-fonts:
         specifier: ^0.7.0
-        version: 0.7.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 0.7.0(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/e2e/blade-runner:
     dependencies:
@@ -5088,7 +5088,7 @@ importers:
         version: 18.2.25
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/experimental/discord-bot:
     dependencies:
@@ -5511,7 +5511,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-attention:
     dependencies:
@@ -5651,7 +5651,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-board:
     dependencies:
@@ -5763,7 +5763,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-chess:
     dependencies:
@@ -5857,7 +5857,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-client:
     dependencies:
@@ -5960,7 +5960,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-conductor:
     dependencies:
@@ -6042,7 +6042,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-debug:
     dependencies:
@@ -6244,7 +6244,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-deck:
     dependencies:
@@ -6368,7 +6368,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-excalidraw:
     dependencies:
@@ -6480,7 +6480,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-explorer:
     dependencies:
@@ -6619,7 +6619,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-files:
     dependencies:
@@ -6719,7 +6719,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-graph:
     dependencies:
@@ -6768,7 +6768,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-help:
     dependencies:
@@ -6862,7 +6862,7 @@ importers:
         version: 4.10.1
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-inbox:
     dependencies:
@@ -7031,7 +7031,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-kanban:
     dependencies:
@@ -7143,7 +7143,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-map:
     dependencies:
@@ -7403,7 +7403,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-meeting:
     dependencies:
@@ -7575,7 +7575,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
   packages/plugins/plugin-mermaid:
     dependencies:
@@ -7636,7 +7636,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-native:
     dependencies:
@@ -7664,7 +7664,7 @@ importers:
     devDependencies:
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-navtree:
     dependencies:
@@ -7815,7 +7815,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-observability:
     dependencies:
@@ -7903,7 +7903,7 @@ importers:
         version: 18.2.0
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-outliner:
     dependencies:
@@ -8018,7 +8018,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-presenter:
     dependencies:
@@ -8148,7 +8148,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-preview:
     dependencies:
@@ -8227,7 +8227,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-pwa:
     dependencies:
@@ -8270,10 +8270,10 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-pwa:
         specifier: ^0.18.2
-        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
+        version: 0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0)
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
@@ -8352,7 +8352,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-script:
     dependencies:
@@ -8581,7 +8581,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-search:
     dependencies:
@@ -8696,7 +8696,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-sheet:
     dependencies:
@@ -8928,7 +8928,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-sketch:
     dependencies:
@@ -9064,7 +9064,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-space:
     dependencies:
@@ -9245,7 +9245,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-stack:
     dependencies:
@@ -9354,7 +9354,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-status-bar:
     dependencies:
@@ -9427,7 +9427,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-storybook-layout:
     dependencies:
@@ -9464,7 +9464,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-table:
     dependencies:
@@ -9570,7 +9570,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-template:
     dependencies:
@@ -9634,7 +9634,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-theme:
     dependencies:
@@ -9683,7 +9683,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-theme-editor:
     dependencies:
@@ -9753,7 +9753,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-thread:
     dependencies:
@@ -9937,7 +9937,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-token-manager:
     dependencies:
@@ -10028,7 +10028,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-transcription:
     dependencies:
@@ -10233,7 +10233,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
   packages/plugins/plugin-transformer:
     dependencies:
@@ -10327,7 +10327,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/plugins/plugin-wnfs:
     dependencies:
@@ -10454,7 +10454,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/sdk/app-framework:
     dependencies:
@@ -10633,7 +10633,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/sdk/client:
     dependencies:
@@ -11068,7 +11068,7 @@ importers:
         version: 18.2.25
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11077,16 +11077,16 @@ importers:
         version: 18.2.0(react@18.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/sdk/migrations:
     dependencies:
@@ -11295,16 +11295,6 @@ importers:
       react-error-boundary:
         specifier: ^4.0.13
         version: 4.0.13(react@18.2.0)
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -11330,6 +11320,16 @@ importers:
       typedoc:
         specifier: 0.28.1
         version: 0.28.1(typescript@5.8.3)
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
 
   packages/sdk/react-edge-client:
     dependencies:
@@ -11369,7 +11369,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/sdk/schema:
     dependencies:
@@ -11454,7 +11454,7 @@ importers:
         version: 3.23.1
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/sdk/shell:
     dependencies:
@@ -11539,16 +11539,6 @@ importers:
       xstate:
         specifier: ^4.37.0
         version: 4.37.1
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -11576,7 +11566,7 @@ importers:
         version: 18.2.25
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -11585,7 +11575,17 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
+    optionalDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
 
   packages/ui/brand:
     dependencies:
@@ -11977,7 +11977,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-attention:
     dependencies:
@@ -12053,7 +12053,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-board:
     dependencies:
@@ -12156,7 +12156,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-canvas:
     dependencies:
@@ -12226,7 +12226,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-canvas-compute:
     dependencies:
@@ -12377,7 +12377,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-canvas-editor:
     dependencies:
@@ -12507,7 +12507,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-chat:
     dependencies:
@@ -12616,7 +12616,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-components:
     dependencies:
@@ -12668,7 +12668,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-dnd:
     dependencies:
@@ -12702,7 +12702,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-editor:
     dependencies:
@@ -12943,13 +12943,13 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-top-level-await:
         specifier: ^1.4.1
-        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       vite-plugin-wasm:
         specifier: ^3.3.0
-        version: 3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
 
   packages/ui/react-ui-form:
     dependencies:
@@ -13070,7 +13070,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-gameboard:
     dependencies:
@@ -13140,7 +13140,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-geo:
     dependencies:
@@ -13307,10 +13307,6 @@ importers:
       topojson-client:
         specifier: ^3.1.0
         version: 3.1.0
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -13357,6 +13353,10 @@ importers:
       react-dom:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
 
   packages/ui/react-ui-grid:
     dependencies:
@@ -13423,7 +13423,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-kanban:
     dependencies:
@@ -13511,7 +13511,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-list:
     dependencies:
@@ -13587,7 +13587,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-menu:
     dependencies:
@@ -13657,7 +13657,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-pickers:
     dependencies:
@@ -13709,7 +13709,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-searchlist:
     dependencies:
@@ -13755,7 +13755,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-sfx:
     dependencies:
@@ -13846,7 +13846,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-stack:
     dependencies:
@@ -13943,7 +13943,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
@@ -13986,7 +13986,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-table:
     dependencies:
@@ -14149,7 +14149,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-tabs:
     dependencies:
@@ -14210,7 +14210,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-tag-picker:
     dependencies:
@@ -14274,7 +14274,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-text-tooltip:
     dependencies:
@@ -14305,13 +14305,13 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
         specifier: 2.7.0
-        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
+        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
       '@ch-ui/tokens':
         specifier: 2.4.0
         version: 2.4.0
@@ -14329,10 +14329,10 @@ importers:
         version: 5.0.21
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
+        version: 0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
       '@tailwindcss/forms':
         specifier: ^0.5.3
-        version: 0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
+        version: 0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
       autoprefixer:
         specifier: ^10.4.12
         version: 10.4.13(postcss@8.5.3)
@@ -14359,13 +14359,13 @@ importers:
         version: 2.2.1
       tailwind-scrollbar:
         specifier: ^3.1.0
-        version: 3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
+        version: 3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       tailwindcss-logical:
         specifier: ^3.0.0
-        version: 3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+        version: 3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       tailwindcss-radix:
         specifier: ^2.8.0
         version: 2.8.0
@@ -14387,7 +14387,7 @@ importers:
         version: 0.25.6
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-thread:
     dependencies:
@@ -14451,7 +14451,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   packages/ui/react-ui-types: {}
 
@@ -14564,16 +14564,16 @@ importers:
         version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
       '@storybook/addon-vitest':
         specifier: ~9.0.14
-        version: 9.0.15(@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
+        version: 9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4)
       '@storybook/builder-vite':
         specifier: ~9.0.14
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/web-components':
         specifier: ~9.0.14
         version: 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
       '@storybook/web-components-vite':
         specifier: ~9.0.14
-        version: 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        version: 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       lit:
         specifier: ^3.2.0
         version: 3.2.0
@@ -14582,7 +14582,7 @@ importers:
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   tools/lockfile-explorer:
     dependencies:
@@ -14647,19 +14647,19 @@ importers:
         version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
       '@storybook/addon-vitest':
         specifier: ^9.0.15
-        version: 9.0.15(@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))
+        version: 9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4)
       '@storybook/builder-vite':
         specifier: ^9.0.15
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/html-vite':
         specifier: ^9.0.15
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/mdx2-csf':
         specifier: ^1.1.0
         version: 1.1.0
       '@storybook/react-vite':
         specifier: ^9.0.15
-        version: 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        version: 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -14671,7 +14671,7 @@ importers:
         version: 18.2.25
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+        version: 4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       chromatic:
         specifier: ^13.0.1
         version: 13.1.2
@@ -14695,7 +14695,7 @@ importers:
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-turbosnap:
         specifier: ^1.0.3
         version: 1.0.3
@@ -14755,7 +14755,7 @@ importers:
         version: 2.3.1
       vite:
         specifier: 5.4.7
-        version: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+        version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     devDependencies:
       '@types/picomatch':
         specifier: ^3.0.1
@@ -16136,6 +16136,7 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
+    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 
@@ -34657,10 +34658,10 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
+  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
     dependencies:
       '@ch-ui/tokens': 2.4.0
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
   '@ch-ui/tokens@2.4.0':
     dependencies:
@@ -34692,7 +34693,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20250709.0
 
-  '@cloudflare/vitest-pool-workers@0.8.53(@cloudflare/workers-types@4.20250715.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))':
+  '@cloudflare/vitest-pool-workers@0.8.53(@cloudflare/workers-types@4.20250715.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4)':
     dependencies:
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -35024,7 +35025,7 @@ snapshots:
 
   '@colors/colors@1.6.0': {}
 
-  '@crxjs/vite-plugin@2.0.0-beta.28(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))':
+  '@crxjs/vite-plugin@2.0.0-beta.28(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))':
     dependencies:
       '@rollup/pluginutils': 4.2.1(rollup@2.79.2)
       '@webcomponents/custom-elements': 1.5.1
@@ -35041,7 +35042,7 @@ snapshots:
       react-refresh: 0.13.0
       rollup: 2.79.2
       rxjs: 7.5.7
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -35277,7 +35278,7 @@ snapshots:
       effect: 3.16.13
       uuid: 11.1.0
 
-  '@effect/vitest@0.24.0(effect@3.16.13)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))':
+  '@effect/vitest@0.24.0(effect@3.16.13)(vitest@3.2.4)':
     dependencies:
       effect: 3.16.13
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
@@ -36292,12 +36293,12 @@ snapshots:
       '@types/yargs': 16.0.4
       chalk: 4.1.2
 
-  '@joshwooding/vite-plugin-react-docgen-typescript@0.6.1(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))':
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.6.1(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))':
     dependencies:
       glob: 10.4.5
       magic-string: 0.30.17
       react-docgen-typescript: 2.2.2(typescript@5.8.3)
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     optionalDependencies:
       typescript: 5.8.3
 
@@ -36647,7 +36648,7 @@ snapshots:
   '@ngneat/falso@7.1.1':
     dependencies:
       seedrandom: 3.0.5
-      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
 
   '@noble/hashes@1.3.2': {}
 
@@ -37766,7 +37767,7 @@ snapshots:
 
   '@peermetrics/webrtc-stats@5.7.1':
     dependencies:
-      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
 
   '@phosphor-icons/core@2.1.1': {}
 
@@ -40100,7 +40101,7 @@ snapshots:
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       ts-dedent: 2.2.0
 
-  '@storybook/addon-vitest@9.0.15(@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))':
+  '@storybook/addon-vitest@9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vitest@3.2.4)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -40108,19 +40109,19 @@ snapshots:
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       ts-dedent: 2.2.0
     optionalDependencies:
-      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
+      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
       '@vitest/runner': 3.2.4
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@storybook/builder-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/builder-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
       '@storybook/csf-plugin': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(webpack-sources@3.2.3)
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       ts-dedent: 2.2.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - webpack-sources
 
@@ -40133,9 +40134,9 @@ snapshots:
 
   '@storybook/global@5.0.0': {}
 
-  '@storybook/html-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/html-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/html': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
     transitivePeerDependencies:
@@ -40161,11 +40162,11 @@ snapshots:
       react-dom: 18.2.0(react@18.2.0)
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
 
-  '@storybook/react-vite@9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/react-vite@9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.6.1(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.6.1(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@rollup/pluginutils': 5.1.4(rollup@3.23.0)
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/react': 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(typescript@5.8.3)
       find-up: 7.0.0
       magic-string: 0.30.17
@@ -40175,7 +40176,7 @@ snapshots:
       resolve: 1.22.10
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
       tsconfig-paths: 4.2.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -40192,9 +40193,9 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  '@storybook/web-components-vite@9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/web-components-vite@9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/web-components': 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4))
       storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
     transitivePeerDependencies:
@@ -40460,14 +40461,14 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
+  '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
     dependencies:
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
-  '@tailwindcss/forms@0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
+  '@tailwindcss/forms@0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)))':
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
   '@testing-library/dom@10.4.0':
     dependencies:
@@ -41557,30 +41558,30 @@ snapshots:
       '@codemirror/lint': 6.8.2
       '@codemirror/view': 6.34.1
 
-  '@vitejs/plugin-react-swc@3.10.2(@swc/helpers@0.5.17)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))':
+  '@vitejs/plugin-react-swc@3.10.2(@swc/helpers@0.5.17)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.11
       '@swc/core': 1.11.31(@swc/helpers@0.5.17)
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  '@vitejs/plugin-react@4.2.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))':
+  '@vitejs/plugin-react@4.2.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-transform-react-jsx-self': 7.23.3(@babel/core@7.28.0)
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.28.0)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))':
+  '@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
-      '@vitest/mocker': 3.2.4(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+      '@vitest/mocker': 3.2.4(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@vitest/utils': 3.2.4
       magic-string: 0.30.17
       sirv: 3.0.1
@@ -41596,7 +41597,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@3.2.4(@vitest/browser@3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2))':
+  '@vitest/coverage-v8@3.2.4(@vitest/browser@3.2.4)(vitest@3.2.4)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -41613,7 +41614,7 @@ snapshots:
       tinyrainbow: 2.0.0
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
     optionalDependencies:
-      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
+      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
     transitivePeerDependencies:
       - supports-color
 
@@ -41625,13 +41626,13 @@ snapshots:
       chai: 5.2.0
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.4(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))':
+  '@vitest/mocker@3.2.4(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.17
     optionalDependencies:
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -47583,7 +47584,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       p-map: 3.0.0
       rimraf: 3.0.2
-      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
 
   istanbul-lib-report@3.0.1:
     dependencies:
@@ -49656,7 +49657,7 @@ snapshots:
       is-wsl: 2.2.0
       semver: 7.7.1
       shellwords: 0.1.1
-      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
+      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
       which: 2.0.2
 
   node-preload@0.2.1:
@@ -50441,21 +50442,21 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.5.3
 
-  postcss-load-config@3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
+  postcss-load-config@3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
     dependencies:
       lilconfig: 2.1.0
       yaml: 1.10.2
     optionalDependencies:
       postcss: 8.5.3
-      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
+      ts-node: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
 
-  postcss-load-config@4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
+  postcss-load-config@4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
     dependencies:
       lilconfig: 2.1.0
       yaml: 2.7.1
     optionalDependencies:
       postcss: 8.5.3
-      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
+      ts-node: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)
 
   postcss-modules-extract-imports@3.0.0(postcss@8.5.3):
     dependencies:
@@ -50869,7 +50870,7 @@ snapshots:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.3
 
-  random-access-idb@1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4):
+  random-access-idb@1.2.2(patch_hash=207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e):
     dependencies:
       buffer-alloc: 1.2.0
       buffer-from: 0.1.2
@@ -52985,13 +52986,13 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.27.1
 
-  tailwind-scrollbar@3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))):
+  tailwind-scrollbar@3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))):
     dependencies:
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
 
-  tailwindcss-logical@3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
+  tailwindcss-logical@3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
     dependencies:
-      tailwindcss: 3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      tailwindcss: 3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
     transitivePeerDependencies:
       - autoprefixer
       - postcss
@@ -52999,7 +53000,7 @@ snapshots:
 
   tailwindcss-radix@2.8.0: {}
 
-  tailwindcss@3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
+  tailwindcss@3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
     dependencies:
       arg: 5.0.2
       autoprefixer: 10.4.13(postcss@8.5.3)
@@ -53017,7 +53018,7 @@ snapshots:
       object-hash: 2.2.0
       postcss: 8.5.3
       postcss-js: 3.0.3
-      postcss-load-config: 3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      postcss-load-config: 3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       postcss-nested: 5.0.6(postcss@8.5.3)
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
@@ -53027,7 +53028,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-node
 
-  tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
+  tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -53046,7 +53047,7 @@ snapshots:
       postcss: 8.5.3
       postcss-import: 15.1.0(postcss@8.5.3)
       postcss-js: 4.0.1(postcss@8.5.3)
-      postcss-load-config: 4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
+      postcss-load-config: 4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3))
       postcss-nested: 6.0.1(postcss@8.5.3)
       postcss-selector-parser: 6.0.11
       resolve: 1.22.10
@@ -53415,7 +53416,7 @@ snapshots:
       '@ts-morph/common': 0.17.0
       code-block-writer: 11.0.3
 
-  ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3):
+  ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.11.31(@swc/helpers@0.5.17))(@types/node@22.10.2)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
@@ -53967,7 +53968,7 @@ snapshots:
 
   uuid@11.1.0: {}
 
-  uuid@8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye): {}
+  uuid@8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9): {}
 
   uuid@9.0.1: {}
 
@@ -54049,7 +54050,7 @@ snapshots:
       debug: 4.4.1(supports-color@5.5.0)
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -54061,23 +54062,23 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-fonts@0.7.0(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-fonts@0.7.0(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       fast-glob: 3.3.3
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
-  vite-plugin-glslify@2.2.1(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-glslify@2.2.1(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       '@rollup/pluginutils': 4.2.1(rollup@3.23.0)
       astring: 1.9.0
       estree-walker: 2.0.2
       glslify: 7.1.1
       magic-string: 0.25.9
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - rollup
 
-  vite-plugin-inspect@0.8.9(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-inspect@0.8.9(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       '@antfu/utils': 0.7.10
       '@rollup/pluginutils': 5.1.4(rollup@3.23.0)
@@ -54088,61 +54089,61 @@ snapshots:
       perfect-debounce: 1.0.0
       picocolors: 1.1.1
       sirv: 3.0.1
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - rollup
       - supports-color
 
-  vite-plugin-pwa@0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0):
+  vite-plugin-pwa@0.18.2(@types/babel__core@7.20.5)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(workbox-window@7.0.0):
     dependencies:
       debug: 4.4.1(supports-color@5.5.0)
       fast-glob: 3.3.3
       pretty-bytes: 6.1.1
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       workbox-build: 7.0.0(@types/babel__core@7.20.5)
       workbox-window: 7.0.0
     transitivePeerDependencies:
       - '@types/babel__core'
       - supports-color
 
-  vite-plugin-top-level-await@1.5.0(@swc/helpers@0.5.17)(rollup@3.23.0)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-top-level-await@1.5.0(@swc/helpers@0.5.17)(rollup@3.23.0)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       '@rollup/plugin-virtual': 3.0.2(rollup@3.23.0)
       '@swc/core': 1.11.31(@swc/helpers@0.5.17)
       uuid: 10.0.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
 
-  vite-plugin-top-level-await@1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-top-level-await@1.5.0(@swc/helpers@0.5.17)(rollup@4.40.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       '@rollup/plugin-virtual': 3.0.2(rollup@4.40.2)
       '@swc/core': 1.11.31(@swc/helpers@0.5.17)
       uuid: 10.0.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - '@swc/helpers'
       - rollup
 
   vite-plugin-turbosnap@1.0.3: {}
 
-  vite-plugin-wasm@3.4.1(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-plugin-wasm@3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
 
-  vite-tsconfig-paths@5.1.4(typescript@5.8.3)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)):
+  vite-tsconfig-paths@5.1.4(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)):
     dependencies:
       debug: 4.4.1(supports-color@5.5.0)
       globrex: 0.1.2
       tsconfck: 3.1.5(typescript@5.8.3)
     optionalDependencies:
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2):
+  vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.3
@@ -54176,7 +54177,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))
+      '@vitest/mocker': 3.2.4(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -54194,13 +54195,13 @@ snapshots:
       tinyglobby: 0.2.14
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2)
+      vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
       vite-node: 3.2.4(@types/node@22.10.2)(terser@5.19.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12
       '@types/node': 22.10.2
-      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=i2cyw7vpoo7fbe7qgy5pwsznyq)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
+      '@vitest/browser': 3.2.4(playwright@1.53.2)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
       '@vitest/ui': 3.2.4(vitest@3.2.4)
       happy-dom: 13.3.4
       jsdom: 26.1.0
