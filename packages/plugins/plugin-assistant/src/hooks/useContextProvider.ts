@@ -13,19 +13,9 @@ export type ContextProvider = {
   resolveMetadata: (params: { uri: string }) => Promise<{ uri: string; label: string }>;
 };
 
-<<<<<<< HEAD
 /**
  * @deprecated
  */
-||||||| d7f239a172
-const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());
-
-=======
-/**
- *
- */
-// TODO(burdon): Document.
->>>>>>> origin/main
 export const useContextProvider = (space?: Space): ContextProvider | undefined => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
