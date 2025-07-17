@@ -23,7 +23,7 @@ jobs:
   build-and-push:
     strategy:
       matrix:
-        node_version: ['20.12.1', '22', '24']
+        node_version: ['20.12.1', '22.17.1', '24.4.1']
     runs-on: ubuntu-latest
 
     steps:
