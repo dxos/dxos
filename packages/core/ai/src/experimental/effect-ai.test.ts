@@ -8,6 +8,7 @@ import { Chunk, Config, Console, Effect, Layer, Schema, Stream } from 'effect';
 import { parseGptStream } from './parser';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
+import { preprocessAiInput } from './preprocessor';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
@@ -62,9 +63,11 @@ describe('effect AI client', () => {
           blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
           created: new Date().toISOString(),
         });
+        const prompt = yield* preprocessAiInput([userMessage]);
+        log.info('prompt', { prompt });
         const blocks = yield* languageModel
           .streamText({
-            prompt: 'What is 2 + 2?',
+            prompt,
             toolkit: TestToolkit,
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
@@ -87,4 +90,3 @@ describe('effect AI client', () => {
     ),
   );
 });
-

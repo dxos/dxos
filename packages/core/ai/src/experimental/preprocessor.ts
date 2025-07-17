@@ -14,11 +14,12 @@ export const preprocessAiInput: (
         Effect.fnUntraced(function* (msg) {
           switch (msg.sender.role) {
             case 'user':
-              pipe(
+              return yield* pipe(
                 msg.blocks,
                 (arr) => splitBy(arr, (left, right) => isToolResult(left) !== isToolResult(right)),
                 Effect.forEach(
                   Effect.fnUntraced(function* (chunk) {
+                    console.log('chunk', { chunk });
                     switch (chunk[0]._tag) {
                       case 'toolResult':
                         assumeType<ContentBlock.ToolResult[]>(chunk);
@@ -45,7 +46,6 @@ export const preprocessAiInput: (
                   }),
                 ),
               );
-              return [];
             case 'assistant':
               return [
                 new AiInput.AssistantMessage({
