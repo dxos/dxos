@@ -59,15 +59,15 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.9.0",
     "@radix-ui/react-context": "1.1.1",
-    "effect": "3.16.12",
+    "effect": "3.16.13",
     "immer": "^10.1.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.87.12",
+    "@effect-rx/rx-react": "0.38.0",
+    "@effect/platform": "0.88.0",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
@@ -78,7 +78,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
-    "@effect/platform": "0.80.12",
+    "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

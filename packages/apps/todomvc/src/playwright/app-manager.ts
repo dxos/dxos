@@ -10,7 +10,7 @@ import { setupPage } from '@dxos/test-utils/playwright';
 
 import { type FILTER } from '../constants';
 
-export const INITIAL_URL = 'http://localhost:4200/';
+export const INITIAL_URL = 'http://localhost:9006/';
 
 export class AppManager {
   page!: Page;

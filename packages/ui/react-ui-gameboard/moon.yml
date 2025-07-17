@@ -1,0 +1,18 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--preactSignalTracking'
+    deps:
+      - gen-pieces
+  gen-pieces:
+    command: pnpm run gen:pieces
+    inputs:
+      - assets/*.*
+    outputs:
+      - src/gen

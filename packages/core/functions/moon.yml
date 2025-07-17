@@ -1,0 +1,13 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/bundler/index.ts'
+      - '--entryPoint=src/edge/index.ts'
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'

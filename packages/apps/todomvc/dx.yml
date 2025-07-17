@@ -9,7 +9,7 @@ package:
       tags:
         - demo
       build:
-        command: pnpm -w nx bundle todomvc
+        command: moon run todomvc:bundle
 
 runtime:
   client:

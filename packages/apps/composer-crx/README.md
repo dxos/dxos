@@ -3,14 +3,14 @@
 ## Development
 
 ```sh
-pnpm -w nx serve composer-crx
+moon run composer-crx:serve
 ```
 
 Open: 
 - http://localhost:5173/popup.html
 
-Bunle then load the unpacked extension from Chrome:
+Bundle then load the unpacked extension from Chrome:
 
 ```sh
-pnpm -w nx bundle composer-crx
+moon run composer-crx:bundle
 ```

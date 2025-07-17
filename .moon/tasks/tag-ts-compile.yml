@@ -1,0 +1,15 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  compile:
+    command: tsc
+    deps:
+      - ^:compile
+      - ^:build
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/
+    options:
+      timeout: 60

@@ -182,7 +182,7 @@ describe('removeStyle', () => {
 
   testCommand('can remove code style', 'a `{variable}`', code, 'a {variable}');
 
-  // TODO(dmaretskyi): Flaky on CI: https://cloud.nx.app/runs/0byxg4Uq5G/task/react-ui-editor%3Atest
+  // TODO(dmaretskyi): Flaky on CI.
   // testCommand(
   //   'can remove emphasis across multiple blocks',
   //   '{*one*\n\n# *two*\n\n> 1. *three} four*\n',

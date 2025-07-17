@@ -18,6 +18,7 @@ function runStep(name: string, command: string) {
 
 const results: { name: string; seconds: string }[] = [];
 
+// TODO(wittjosiah): Remove or update for moon.
 results.push(runStep('Clean Nx Cache', 'npx nx reset'));
 results.push(runStep('pnpm Install', 'pnpm install'));
 

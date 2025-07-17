@@ -3,14 +3,13 @@
 DXOS Devtools vite app, which can be run and deployed stand-alone, or packaged as a browser extension.
 
 The `dx.yml` config contains `runtime.client.remoteSource` default endpoint with remote client.
-It is configured to listen for halo-app shared worker (`pnpm nx serve halo-app`).
 
 ## Development
 
 Serve the devtools app:
 
 ```bash
-pnpm -w nx serve devtools
+moon run devtools:serve
 ```
 
 Then open the testbench: `http://localhost:5173/testbench.html`
@@ -34,7 +33,7 @@ runtime:
 Next, run the proxy socket:
 
 ```bash
-pnpm -w nx proxy devtools
+pnpm run proxy
 ```
 
 Once the socket is running both devtools and the app can connect to it in order to connect to each other.

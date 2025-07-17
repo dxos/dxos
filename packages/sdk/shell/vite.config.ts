@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 export default defineConfig({
   root: __dirname,
   build: {
+    outDir: 'dist/bundle',
     sourcemap: true,
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

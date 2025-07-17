@@ -6,7 +6,7 @@
  * https://github.com/hypercore-protocol/hypercore-streams
  */
 declare module 'hypercore-streams' {
-  import { Hypercore } from 'hypercore';
+  import { type Hypercore } from 'hypercore';
   import { Readable, Writable } from 'streamx';
 
   export class WriteStream extends Writable {

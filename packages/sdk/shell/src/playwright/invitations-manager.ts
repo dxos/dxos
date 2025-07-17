@@ -6,13 +6,9 @@ import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';
-import { setupPage } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { ScopedShellManager } from '../testing';
-
-// TODO(wittjosiah): Factor out.
-// TODO(burdon): No hard-coding of ports; reconcile all DXOS tools ports.
-const storybookUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 export type PanelType = number | 'identity' | 'devices' | 'spaces' | 'join';
 
@@ -31,7 +27,7 @@ export class InvitationsManager extends ScopedShellManager {
     }
 
     const { page } = await setupPage(this._browser, {
-      url: storybookUrl('sdk-shell-invitations--default'),
+      url: storybookUrl('sdk-shell-invitations--default', 9001),
     });
 
     this.page = page;
