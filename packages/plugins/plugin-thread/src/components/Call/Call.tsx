@@ -34,7 +34,7 @@ type CallAudioProps = {};
 const CallAudio: FC<CallAudioProps> = () => {
   const call = useCapability(ThreadCapabilities.CallManager);
 
-  return <AudioStream tracks={call.pulledAudioTracks} />;
+  return <AudioStream tracks={call.audioTracksToPlay} />;
 };
 
 CallAudio.displayName = 'CallAudio';

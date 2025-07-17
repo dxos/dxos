@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState, type ChangeEvent } fr
 
 import { useCapabilities, useCapability } from '@dxos/app-framework';
 import { Context } from '@dxos/context';
+import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
@@ -36,7 +37,7 @@ export type ChannelContainerProps = {
 export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
-  const roomId = channel ? fullyQualifiedId(channel) : _roomId;
+  const roomId = _roomId ?? (channel ? fullyQualifiedId(channel) : failUndefined());
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');

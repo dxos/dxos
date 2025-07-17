@@ -48,19 +48,16 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
   const audioContext = new window.AudioContext();
   const oscillator = audioContext.createOscillator();
   oscillator.type = 'triangle';
-
-  // set to 0.1 to make inaudible
-  oscillator.frequency.setValueAtTime(0.1, audioContext.currentTime);
+  // roughly sounds like a box fan
+  oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
 
   const gainNode = audioContext.createGain();
   // even w/ gain at 0 some packets are sent
-  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-
+  gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
   oscillator.connect(gainNode);
 
   const destination = audioContext.createMediaStreamDestination();
   gainNode.connect(destination);
-
   oscillator.start();
 
   ctx.onDispose(async () => {

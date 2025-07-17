@@ -20,20 +20,20 @@ import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
 
 // TODO(wittjosiah): Channel doesn't render full height.
-const Story = () => {
+const Story = ({ roomId }: ChannelContainerProps) => {
   const space = useSpace();
   const [channel] = useQuery(space, Query.type(ChannelType));
   if (!channel) {
     return null;
   }
 
-  return <ChannelContainer channel={channel} />;
+  return <ChannelContainer channel={channel} roomId={roomId} />;
 };
 
 const meta: Meta<ChannelContainerProps> = {
   title: 'plugins/plugin-thread/ChannelContainer',
   component: ChannelContainer,
-  render: () => <Story />,
+  render: (args) => <Story {...args} />,
   decorators: [
     withPluginManager({
       plugins: [...(await createThreadPlugins())],

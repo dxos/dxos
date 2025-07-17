@@ -28,7 +28,11 @@ export const createThreadPlugins = async () => [
     },
     config: new Config({
       runtime: {
-        client: { edgeFeatures: { signaling: true } },
+        client: {
+          edgeFeatures: {
+            signaling: true,
+          },
+        },
         services: {
           edge: {
             url: 'https://edge.dxos.workers.dev/',
