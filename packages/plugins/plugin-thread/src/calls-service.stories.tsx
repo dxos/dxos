@@ -32,7 +32,7 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const [metrics, setMetrics] = useState<Record<string, any>>({});
   const trackInfo = useRef<TrackObject | undefined>(undefined);
   const pullCtx = useRef<Context | undefined>(undefined);
-  const pulledTrack = useRef<MediaStreamTrack | undefined>(undefined);
+  const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack | undefined>(undefined);
   const hadRun = useRef(false);
 
   // Push/pull video stream track to cloudflare.
@@ -73,26 +73,26 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
         performance.mark('pullTrack:begin');
         pullCtx.current = Context.default();
         let retries = 0;
-        while (!pulledTrack.current && retries < 3) {
+        let pulledTrack: MediaStreamTrack | undefined;
+        while (!pulledTrack && retries < 3) {
           retries++;
           log.info('pulling track', {
             trackData: { ...trackInfo.current!, mid: undefined },
             retries,
-            pulledTrack: pulledTrack.current,
+            pulledTrack,
           });
-          pulledTrack.current = await peerPull.pullTrack({
+          pulledTrack = await peerPull.pullTrack({
             trackData: { ...trackInfo.current!, mid: undefined },
             ctx: pullCtx.current,
           });
           await sleep(200);
         }
-        invariant(pulledTrack.current);
+        invariant(pulledTrack);
+        setPulledTrack(pulledTrack);
         performance.mark('pullTrack:end');
         const pullTime = performance.measure('pullTrack', 'pullTrack:begin', 'pullTrack:end').duration;
         setMetrics((prev) => ({ ...prev, 'time to pull track [ms]': Math.round(pullTime) }));
         log.info('successfully pulled track', { pullTime, pulledTrack });
-
-        invariant(pulledTrack);
       },
       1000,
     );
@@ -104,8 +104,8 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
 
   const rePullTrack = useCallback(async () => {
     performance.mark('rePullVideo:begin');
-    invariant(pulledTrack.current);
-    pulledTrack.current.stop();
+    invariant(pulledTrack);
+    pulledTrack.stop();
     await pullCtx.current!.dispose();
     pullCtx.current = Context.default();
     const newPulledTrack = await peerPull.pullTrack({
@@ -113,11 +113,11 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
       ctx: pullCtx.current,
     });
     invariant(newPulledTrack);
-    pulledTrack.current = newPulledTrack;
+    setPulledTrack(newPulledTrack);
     performance.mark('rePullVideo:end');
     const rePullTime = performance.measure('rePullVideo', 'rePullVideo:begin', 'rePullVideo:end').duration;
     setMetrics((prev) => ({ ...prev, 'time to re-pull video [ms]': Math.round(rePullTime) }));
-  }, [peerPull, trackInfo.current, pullCtx.current, pulledTrack.current]);
+  }, [peerPull, trackInfo.current, pullCtx.current, pulledTrack]);
 
   return {
     pulledTrack,
@@ -159,7 +159,7 @@ export const Default = {
 
     // Push/pull video stream track to cloudflare.
     useEffect(() => {
-      if (pulledTrack || hadRun.current) {
+      if (!pulledTrack || hadRun.current) {
         return;
       }
       hadRun.current = true;
@@ -175,9 +175,8 @@ export const Default = {
     }, [pulledTrack]);
 
     return (
-      <div className='grid grid-cols-3 gap-4 items-center'>
+      <div className='grid grid-rows-3 gap-4 items-center'>
         <video ref={pushVideoElement} muted autoPlay loop />
-        <Json data={metrics} />
         <div className='flex flex-col gap-4'>
           <video ref={pullVideoElement} muted />
           <Button
@@ -192,6 +191,7 @@ export const Default = {
             Re-pull video
           </Button>
         </div>
+        <Json data={metrics} />
       </div>
     );
   },
@@ -207,7 +207,7 @@ export const InaudibleAudioStreamTrack = {
     const { rePullTrack, metrics } = pushAndPullTrack(audioStreamTrack);
 
     return (
-      <div className='grid grid-cols-3 gap-4 items-center'>
+      <div className='flex flex-col gap-4 items-center'>
         <Json data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
