@@ -32,8 +32,8 @@ export default defineConfig(
         https:
           process.env.HTTPS === 'true'
             ? {
-                key: './key.pem',
-                cert: './cert.pem',
+                key: '../../../key.pem',
+                cert: '../../../cert.pem',
               }
             : undefined,
         fs: {
@@ -49,6 +49,7 @@ export default defineConfig(
         keepNames: true,
       },
       build: {
+        outDir: 'out/testbench-app',
         sourcemap: true,
         minify: false,
         target: ['chrome89', 'edge89', 'firefox89', 'safari15'],

@@ -1,0 +1,26 @@
+type: library
+language: typescript
+tags:
+  - ts-compile
+  - pack
+tasks:
+  compile:
+    deps:
+      - prebuild
+    inputs:
+      - bin/main.js
+  prebuild:
+    command: pnpm run prebuild
+    deps:
+      - ^:build
+    inputs:
+      - test/proto/example/
+    outputs:
+      - test/proto/gen/
+  test:
+    command: pnpm run test
+    deps:
+      - prebuild
+      - ^:compile
+    inputs:
+      - '@group(sources)'

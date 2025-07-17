@@ -1,0 +1,19 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'
+    deps:
+      - prebuild
+  prebuild:
+    command: ./scripts/vendor.mjs
+    inputs:
+      - ./scripts/vendor.mjs
+    outputs:
+      - dist/vendor/*

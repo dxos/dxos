@@ -20,6 +20,7 @@ import {
   type BlueprintRegistry,
   type ContextBinder,
   type Conversation,
+  type BlueprintBinder,
 } from '@dxos/assistant';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -117,12 +118,21 @@ export class ChatProcessor {
   /**
    * Binder of active blueprints attached to this coversation.
    */
+
   get context(): ContextBinder {
     return this._conversation.context;
   }
 
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
+  }
+
+  /**
+   * Binder of active blueprints attached to this coversation.
+   */
+
+  get blueprints(): BlueprintBinder {
+    return this._conversation.blueprints;
   }
 
   get tools() {

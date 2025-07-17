@@ -21,6 +21,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# TODO(wittjosiah): https://moonrepo.dev/docs/ci/intro/tutorials/github-actions
 # https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   edge-test:

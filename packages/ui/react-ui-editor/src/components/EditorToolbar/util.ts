@@ -22,6 +22,7 @@ import {
 import type { EditorAction, Formatting } from '../../extensions';
 import { EditorViewMode } from '../../types';
 import { translationKey } from '../../translations';
+import { type EditorViewMode } from '../../types';
 
 export type EditorToolbarState = Formatting & Partial<{ viewMode: EditorViewMode }>;
 

@@ -60,7 +60,7 @@ for APP_PATH in "${APPS[@]}"; do
     export LOG_FILTER="error"
   fi
 
-  pnpm -w nx bundle "$APP"
+  moon run "$APP:bundle"
 
   # TODO(???): extract outdir from project.json?
   outdir=${APP%-app}

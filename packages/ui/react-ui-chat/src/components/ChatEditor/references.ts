@@ -27,8 +27,15 @@ export interface ReferencesProvider {
   resolveReference({ uri }: { uri: string }): Promise<ReferenceData | null>;
 }
 
+<<<<<<< HEAD
 export type ReferencesOptions = {
   provider: ReferencesProvider;
+||||||| d7f239a172
+export type PromptReferencesOptions = {
+  provider: ReferencesProvider;
+=======
+export type ReferencesOptions = {
+>>>>>>> origin/main
   /**
    * Prevent the autocomplete from closing when the user blurs the editor.
    * @default false
@@ -38,6 +45,7 @@ export type ReferencesOptions = {
    * @default '@'
    */
   triggerCharacter?: string;
+  provider: ReferencesProvider;
 };
 
 /**

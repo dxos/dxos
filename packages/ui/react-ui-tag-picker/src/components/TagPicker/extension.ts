@@ -286,7 +286,6 @@ class ItemWidget extends WidgetType {
 
   toDOM(): HTMLElement {
     const el = document.createElement('dx-tag-picker-item');
-    el.classList.add('inline-block', 'pie-0.5');
     el.setAttribute('itemId', this.props.itemId ?? 'never');
     el.setAttribute('label', this.props.label ?? 'never');
     el.setAttribute('hue', this.props.hue ?? 'neutral');

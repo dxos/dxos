@@ -10,7 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },

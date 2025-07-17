@@ -20,6 +20,7 @@ import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../ty
 
 type UseChatProcessorProps = {
   part?: 'deck' | 'dialog';
+<<<<<<< HEAD
   space?: Space;
   chat?: AIChatType;
   // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
@@ -30,6 +31,25 @@ type UseChatProcessorProps = {
   artifact?: AssociatedArtifact;
   /** @deprecated */
   noPluginArtifacts?: boolean;
+||||||| d7f239a172
+  associatedArtifact?: AssociatedArtifact;
+=======
+  space?: Space;
+  chat?: AIChatType;
+  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject.
+  serviceContainer: ServiceContainer;
+  blueprintRegistry?: BlueprintRegistry;
+  settings?: AssistantSettingsProps;
+  /** @deprecated */
+  artifact?: AssociatedArtifact;
+  /** @deprecated */
+  noPluginArtifacts?: boolean;
+
+  /**
+   * Additional instructions to included in the system prompt.
+   */
+  instructions?: string;
+>>>>>>> origin/main
 };
 
 /**
@@ -37,6 +57,7 @@ type UseChatProcessorProps = {
  */
 export const useChatProcessor = ({
   part,
+<<<<<<< HEAD
   space,
   chat,
   serviceContainer,
@@ -45,6 +66,23 @@ export const useChatProcessor = ({
   artifact,
   noPluginArtifacts,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
+||||||| d7f239a172
+  associatedArtifact,
+}: UseChatProcessorProps): ChatProcessor => {
+  const aiClient = useCapability(AssistantCapabilities.AiClient);
+  const globalTools = useCapabilities(Capabilities.Tools);
+  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+=======
+  space,
+  chat,
+  serviceContainer,
+  blueprintRegistry,
+  settings,
+  artifact,
+  noPluginArtifacts,
+  instructions,
+}: UseChatProcessorProps): ChatProcessor | undefined => {
+>>>>>>> origin/main
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
@@ -87,9 +125,22 @@ export const useChatProcessor = ({
     () =>
       createSystemPrompt({
         artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
+<<<<<<< HEAD
         artifact,
+||||||| d7f239a172
+        associatedArtifact,
+=======
+        artifact,
+        instructions,
+>>>>>>> origin/main
       }),
+<<<<<<< HEAD
     [artifactDefinitions, artifact],
+||||||| d7f239a172
+    [artifactDefinitions, associatedArtifact],
+=======
+    [artifactDefinitions, artifact, instructions],
+>>>>>>> origin/main
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).

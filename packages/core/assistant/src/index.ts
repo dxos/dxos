@@ -9,3 +9,4 @@ export * from './extraction';
 export * from './research';
 export * from './session';
 export * from './types';
+export * from './conversation';

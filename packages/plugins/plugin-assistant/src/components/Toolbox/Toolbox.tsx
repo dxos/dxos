@@ -9,6 +9,8 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Blueprint } from '@dxos/assistant';
 import { type Ref } from '@dxos/echo';
+import type { Blueprint } from '@dxos/assistant';
+import type { Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
@@ -24,10 +26,11 @@ export type ToolboxProps = ThemedClassName<{
   artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint>[];
   striped?: boolean;
 }>;
 
-export const Toolbox = ({ classNames, artifacts, functions, services, blueprints, striped }: ToolboxProps) => {
+export const Toolbox = ({ classNames, artifacts, functions, services, blueprints, activeBlueprints, striped }: ToolboxProps) => {
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {blueprints && blueprints.length > 0 && (
@@ -65,6 +68,17 @@ export const Toolbox = ({ classNames, artifacts, functions, services, blueprints
 
       {functions && functions.length > 0 && (
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+      )}
+
+      {activeBlueprints && activeBlueprints.length > 0 && (
+        <Section
+          title='Blueprints'
+          items={activeBlueprints.map(({ target }) => ({
+            name: target?.name ?? '',
+            description: target?.description ?? '',
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+          }))}
+        />
       )}
     </div>
   );
@@ -134,6 +148,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
       services={serviceTools}
       blueprints={processor.context.blueprints.value}
       functions={functions}
+      activeBlueprints={processor.blueprints.bindings.value}
     />
   );
 };

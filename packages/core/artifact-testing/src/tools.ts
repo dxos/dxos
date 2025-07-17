@@ -7,8 +7,8 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/artifact';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-
 import { DocumentType } from '@dxos/plugin-markdown/types';
+
 import { toolFromFunction } from './util';
 
 export const readDocument = toolFromFunction(
