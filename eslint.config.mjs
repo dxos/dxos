@@ -15,26 +15,25 @@ export default tseslint.config(
       // Build Artifacts
       '**/dist',
       '**/out',
-      '**/proto/gen/*',
+      '**/gen/*',
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
 
       // Config
-      'eslint.config.mjs',
-      'eslint.config.cjs',
-      '.eslintrc.js',
-      '.eslintrc.cjs',
-      '.mocharc.js',
-      'esbuild-server.config.js',
-      'playwright.config.ts',
-      'vite.config.ts',
-      'vitest.config.ts',
-      'vitest.*.config.ts',
-      'webpack.config.js',
+      '**/eslint.config.mjs',
+      '**/eslint.config.cjs',
+      '**/.eslintrc.js',
+      '**/.eslintrc.cjs',
+      '**/playwright.config.ts',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/vitest.*.config.ts',
+      '**/webpack.config.js',
 
       // Dependencies
       'node_modules',
+      '**/node_modules',
 
       // Templates
       // TODO(wittjosiah): Fix lint config to lint these files.
