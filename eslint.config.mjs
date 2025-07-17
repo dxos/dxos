@@ -30,6 +30,7 @@ export default tseslint.config(
       '**/vitest.config.ts',
       '**/vitest.*.config.ts',
       '**/webpack.config.js',
+      '**/tailwind.config.js',
 
       // Dependencies
       'node_modules',
@@ -42,6 +43,9 @@ export default tseslint.config(
       // Docs snippets
       'docs/content/**/*',
       '**/typedoc/assets/**/*',
+
+      // Deprecated
+      'packages/plugins/plugin-assistant/deprecated',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -124,6 +128,13 @@ export default tseslint.config(
 
       'storybook/context-in-play-function': 'off',
       camelcase: 'off',
+      'no-empty': 'off',
+      'prefer-const': [
+        'error',
+        {
+          destructuring: 'all',
+        },
+      ],
       'jsx-quotes': ['error', 'prefer-single'],
       'react/display-name': 'off',
       'react/function-component-definition': [
