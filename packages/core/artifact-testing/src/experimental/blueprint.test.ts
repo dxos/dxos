@@ -5,19 +5,18 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
 import { ConsolePrinter, ToolRegistry } from '@dxos/ai';
-import { Blueprint } from '@dxos/assistant';
+import { Blueprint, Conversation } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
-
-import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { Conversation } from '@dxos/assistant';
-import { readDocument, writeDocument } from '../tools';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
+
+import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
+import { readDocument, writeDocument } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -56,7 +55,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     });
 
     await db.add(DESIGN_SPEC_BLUEPRINT);
-    await conversation.blueprints.bind(Ref.make(DESIGN_SPEC_BLUEPRINT));
+    await conversation.context.bind({ blueprints: [Ref.make(DESIGN_SPEC_BLUEPRINT)] });
 
     const artifact = db.add(
       Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
@@ -74,7 +73,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
         What do you think about this approach? Let's capture the key design decisions in our spec.
 
-        Store spec in ${Obj.getDXN(artifact)}
+        The store spec in ${Obj.getDXN(artifact)}
       `,
     });
     log.info('spec 1', { doc: artifact });
@@ -103,16 +102,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     });
 
     await db.add(TASK_LIST_BLUEPRINT);
-    await conversation.blueprints.bind(Ref.make(TASK_LIST_BLUEPRINT));
+    await conversation.context.bind({ blueprints: [Ref.make(TASK_LIST_BLUEPRINT)] });
 
     const artifact = db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
     let prevContent = artifact.content;
     await conversation.run({
       prompt: `
         I'm building a shelf.
-        
         I need a hammer, nails, and a saw.
-
         Store the shopping list in ${Obj.getDXN(artifact)}
       `,
     });

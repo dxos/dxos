@@ -16,7 +16,6 @@ import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 
-import { useBlueprintHandlers } from './useBlueprintHandlers';
 import { type ChatProcessor, useContextProvider } from '../../hooks';
 import { type AIChatType } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
@@ -179,9 +178,8 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
     ChatPrompt.displayName,
   );
 
+  // Referenced objects (type-ahead).
   const contextProvider = useContextProvider(space);
-
-  // Referenced objects.
   const references = useMemo<ReferencesOptions | undefined>(() => {
     if (!contextProvider) {
       return;
@@ -196,7 +194,7 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
   }, [contextProvider]);
 
   // Blueprints.
-  const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(space, processor);
+  // const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(space, processor);
 
   return (
     <NativeChatPrompt
@@ -204,10 +202,10 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
       error={processor?.error.value}
       processing={processor?.streaming.value ?? false}
       references={references}
-      blueprints={blueprints}
       blueprintRegistry={processor.blueprintRegistry}
-      onSearchBlueprints={handleSearchBlueprints}
-      onUpdateBlueprints={handleUpdateBlueprints}
+      // blueprints={blueprints}
+      // onSearchBlueprints={handleSearchBlueprints}
+      // onUpdateBlueprints={handleUpdateBlueprints}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onScroll={() => update.emit('scroll')}

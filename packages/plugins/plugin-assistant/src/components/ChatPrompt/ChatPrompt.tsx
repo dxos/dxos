@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useState } from 'react';
 
-import { type BlueprintRegistry } from '@dxos/assistant';
+import { type Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import {
   Icon,
@@ -18,7 +18,6 @@ import {
 } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { Spinner } from '@dxos/react-ui-sfx';
-import { TagPicker, type TagPickerOptions, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { ChatOptionsMenu } from './ChatOptionsMenu';
@@ -33,11 +32,12 @@ export type ChatPromptProps = ThemedClassName<
     processing?: boolean;
   } & {
     blueprintRegistry?: BlueprintRegistry;
+    blueprints?: Blueprint[];
 
     // TODO(burdon): Factor out.
-    blueprints?: TagPickerItemData[];
-    onSearchBlueprints?: TagPickerOptions['onSearch'];
-    onUpdateBlueprints?: TagPickerOptions['onUpdate'];
+    // blueprints?: TagPickerItemData[];
+    // onSearchBlueprints?: TagPickerOptions['onSearch'];
+    // onUpdateBlueprints?: TagPickerOptions['onUpdate'];
 
     onScroll?: () => void;
   }
@@ -51,10 +51,10 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
       microphone,
       error,
       processing,
-      blueprints,
       blueprintRegistry,
-      onSearchBlueprints,
-      onUpdateBlueprints,
+      blueprints,
+      // onSearchBlueprints,
+      // onUpdateBlueprints,
       onCancel,
       onScroll,
       ...props
@@ -118,7 +118,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
         <Toolbar.Root classNames='bg-transparent overflow-visible'>
           {blueprintRegistry && <ChatOptionsMenu blueprints={blueprints} blueprintRegistry={blueprintRegistry} />}
 
-          {(onSearchBlueprints && (
+          {/* {(onSearchBlueprints && (
             <TagPicker
               classNames='w-full'
               mode='multi-select'
@@ -127,7 +127,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
               onSearch={onSearchBlueprints}
               onUpdate={onUpdateBlueprints}
             />
-          )) || <div className='flex-1' />}
+          )) || <div className='flex-1' />} */}
 
           <ActionButtons
             microphone={microphone}

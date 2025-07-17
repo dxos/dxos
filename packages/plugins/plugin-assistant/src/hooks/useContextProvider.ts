@@ -14,9 +14,8 @@ export type ContextProvider = {
 };
 
 /**
- *
+ * @deprecated
  */
-// TODO(burdon): Document.
 export const useContextProvider = (space?: Space): ContextProvider | undefined => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 

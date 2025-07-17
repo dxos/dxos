@@ -9,7 +9,7 @@ export class BlueprintRegistry {
     this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
   }
 
-  query() {
+  query(): Blueprint[] {
     return this._blueprints;
   }
 }

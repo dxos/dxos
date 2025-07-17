@@ -16,7 +16,7 @@ import {
   writeDocument,
   DESIGN_SPEC_BLUEPRINT,
 } from '@dxos/artifact-testing';
-import { BlueprintBinder, Blueprint, BlueprintRegistry } from '@dxos/assistant';
+import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -189,10 +189,10 @@ const getDecorators = ({
           space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
 
           // Clone blueprints and bind to conversation.
-          const binder = new BlueprintBinder(await chat.queue.load());
+          const binder = new ContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const obj = space.db.add(Obj.make(Blueprint, { ...blueprint }));
-            await binder.bind(Ref.make(obj));
+            await binder.bind({ blueprints: [Ref.make(obj)] });
           }
         },
       }),

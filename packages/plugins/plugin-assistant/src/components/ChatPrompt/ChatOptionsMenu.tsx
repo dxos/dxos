@@ -4,21 +4,21 @@
 
 import React, { useMemo } from 'react';
 
-import { type BlueprintRegistry } from '@dxos/assistant';
+import { type Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
 export type ChatOptionsMenuProps = {
-  blueprints: string[];
-  blueprintRegistry: BlueprintRegistry;
-  onChange: (id: string, active: boolean) => void;
+  blueprints?: Blueprint[];
+  blueprintRegistry?: BlueprintRegistry;
+  onChange?: (key: string, active: boolean) => void;
 };
 
 export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: ChatOptionsMenuProps) => {
   const { t } = useTranslation(meta.id);
-  const items = useMemo(
-    () => blueprintRegistry.query().map((blueprint) => ({ id: blueprint.id, label: blueprint.name })),
+  const blueprintOptions = useMemo(
+    () => blueprintRegistry?.query().map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
     [blueprintRegistry],
   );
 
@@ -37,15 +37,15 @@ export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: Cha
       <DropdownMenu.Portal>
         <DropdownMenu.Content side='left'>
           <DropdownMenu.Viewport>
-            {items.map((item) => (
-              <DropdownMenu.Item key={item.id}>
+            {blueprintOptions?.map((option) => (
+              <DropdownMenu.Item key={option.key}>
                 <Input.Root>
                   <Input.Checkbox
-                    checked={blueprints.includes(item.id)}
-                    onCheckedChange={(checked) => onChange(item.id, !!checked)}
+                    checked={!!blueprints?.find((blueprint) => blueprint.key === option.key)}
+                    onCheckedChange={(checked) => onChange?.(option.key, !!checked)}
                   />
                   {/* TODO(burdon): Input.Label? */}
-                  <span>{item.label}</span>
+                  <span>{option.label}</span>
                 </Input.Root>
               </DropdownMenu.Item>
             ))}

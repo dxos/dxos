@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 import { ContextBinder, type ContextBinding } from '../context';
 import { AISession, type SessionRunOptions } from '../session';
@@ -60,16 +61,14 @@ export class Conversation {
   }
 
   async run(options: ConversationRunOptions): Promise<Message[]> {
-    const session = new AISession({
-      operationModel: 'configured',
-    });
+    const session = new AISession({ operationModel: 'configured' });
     this.onBegin.emit(session);
 
     const history = await this.getHistory();
     const context = await this.context.query();
     const blueprints = await Ref.Array.loadAll([...context.blueprints]);
     if (blueprints.length > 1) {
-      throw new Error('Multiple blueprints are not yet supported.');
+      log.warn('multiple blueprints are not yet supported');
     }
 
     const messages = await session.run({

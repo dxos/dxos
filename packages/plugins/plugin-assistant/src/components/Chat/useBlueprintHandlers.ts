@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Blueprint } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type TagPickerOptions } from '@dxos/react-ui-tag-picker';
 
@@ -36,13 +36,13 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
 
     const t = setTimeout(async () => {
       const blueprints: Blueprint[] = [];
-      for (const ref of processor?.blueprints.bindings.value ?? []) {
-        const obj = await resolver.resolve(ref.dxn);
-        invariant(Obj.instanceOf(Blueprint, obj));
-        if (obj) {
-          blueprints.push(obj);
-        }
-      }
+      // for (const ref of processor?.context.blueprints.value ?? []) {
+      //   const obj = await resolver.resolve(ref.dxn);
+      //   invariant(Obj.instanceOf(Blueprint, obj));
+      //   if (obj) {
+      //     blueprints.push(obj);
+      //   }
+      // }
 
       setBlueprints(blueprints);
     });
@@ -81,7 +81,7 @@ export const useBlueprintHandlers = (space?: Space, processor?: ChatProcessor) =
           local = space.db.add(blueprint);
         }
 
-        await processor.blueprints.bind(Ref.make(local));
+        await processor.context.bind({ blueprints: [Ref.make(local)] });
       }
     },
     [processor, space],
