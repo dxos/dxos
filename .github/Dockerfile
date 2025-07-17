@@ -12,7 +12,7 @@ RUN apt-get update \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/* \
   # Install pnpm.
-  && npm install -g pnpm@9.11.0
+  && npm install -g pnpm@10.13.1
 
 # Create a user with a fixed UID:GID.
 RUN groupadd -g 1001 runner && \
