@@ -8,7 +8,7 @@ RUN apt-get update \
   # Install playwright native dependencies.
   # NOTE: Keep playwright version in sync with the one in package.json.
   # https://playwright.dev/docs/docker#build-your-own-image
-  && npx -y playwright@1.46.0 install --with-deps \
+  && npx -y playwright@1.54.1 install-deps \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/* \
   # Install pnpm.
