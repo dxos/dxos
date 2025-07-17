@@ -32,6 +32,8 @@ export default tseslint.config(
       '**/vitest.*.config.ts',
       '**/webpack.config.js',
       '**/tailwind.config.js',
+      '**/postcss.config.cjs',
+      '**/tailwind.ts',
 
       // Dependencies
       'node_modules',
@@ -47,6 +49,13 @@ export default tseslint.config(
 
       // Deprecated
       'packages/plugins/plugin-assistant/deprecated',
+
+      // Other
+      '**/bin',
+      'packages/common/esbuild-plugins/polyfills',
+      'packages/core/mesh/signal/testing/setup.js',
+      'packages/sdk/shell',
+      '**/scripts',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
