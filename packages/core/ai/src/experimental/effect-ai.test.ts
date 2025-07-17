@@ -1,14 +1,15 @@
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit, type AiError } from '@effect/ai';
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { describe, it } from '@effect/vitest';
 import { NodeHttpClient } from '@effect/platform-node';
-import { Chunk, Config, Console, Effect, Layer, Schema, Stream } from 'effect';
+import { Chunk, Config, Console, Effect, Layer, Predicate, Schema, Stream } from 'effect';
 import { parseGptStream } from './parser';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
 import { preprocessAiInput } from './preprocessor';
+import { isToolUse } from '../tools';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
@@ -54,34 +55,58 @@ describe('effect AI client', () => {
     'streaming',
     Effect.fn(
       function* ({ expect }) {
-        const languageModel = yield* AiLanguageModel.AiLanguageModel;
+        let history: DataType.Message[] = [];
+        history.push(
+          Obj.make(DataType.Message, {
+            sender: {
+              role: 'user',
+            },
+            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
+            created: new Date().toISOString(),
+          }),
+        );
 
-        const userMessage = Obj.make(DataType.Message, {
-          sender: {
-            role: 'user',
-          },
-          blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
-          created: new Date().toISOString(),
-        });
-        const prompt = yield* preprocessAiInput([userMessage]);
-        log.info('prompt', { prompt });
-        const blocks = yield* languageModel
-          .streamText({
+        const toolkit = TestToolkit;
+
+        do {
+          const prompt = yield* preprocessAiInput(history);
+          const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit: TestToolkit,
+            toolkit,
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
-          })
-          .pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
-        const message = Obj.make(DataType.Message, {
-          sender: {
-            role: 'assistant',
-          },
-          blocks,
-          created: new Date().toISOString(),
-        });
+          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          const message = Obj.make(DataType.Message, {
+            sender: {
+              role: 'assistant',
+            },
+            blocks,
+            created: new Date().toISOString(),
+          });
+          log.info('message', { message });
+          history.push(message);
 
-        log.info('message', { message });
+          const actualToolkit = Effect.isEffect(toolkit)
+            ? yield* toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
+            : (toolkit as unknown as AiToolkit.ToHandler<any>);
+          const toolCalls = getToolCalls(message);
+          if (toolCalls.length === 0) {
+            break;
+          }
+
+          const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
+            runTool(actualToolkit, toolCall),
+          );
+          history.push(
+            Obj.make(DataType.Message, {
+              sender: {
+                role: 'user',
+              },
+              blocks: toolResults,
+              created: new Date().toISOString(),
+            }),
+          );
+        } while (true);
       },
       Effect.provide(toolkitLayer),
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
@@ -89,4 +114,22 @@ describe('effect AI client', () => {
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
+});
+
+const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[] => {
+  return message.blocks.filter((block) => block._tag === 'toolCall');
+};
+
+const runTool: (
+  toolkit: AiToolkit.ToHandler<AiTool.AiTool<string>>,
+  toolCall: ContentBlock.ToolCall,
+) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError> = Effect.fn('runTool')(function* (toolkit, toolCall) {
+  const handlerEff = toolkit.handle(toolCall.name, toolCall.input as any);
+  const result = yield* handlerEff;
+  return {
+    _tag: 'toolResult',
+    toolCallId: toolCall.toolCallId,
+    name: toolCall.name,
+    result,
+  } satisfies ContentBlock.ToolResult;
 });

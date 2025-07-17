@@ -67,7 +67,7 @@ export const parseGptStream =
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
   }: ParseGptStreamOptions = {}) =>
-  <E>(input: Stream.Stream<AiResponse.AiResponse, E, never>): Stream.Stream<ContentBlock.Any, E, never> =>
+  <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
