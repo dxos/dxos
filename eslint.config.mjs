@@ -3,9 +3,10 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
-import storybookPlugin from 'eslint-plugin-storybook';
-import dxosRulesPlugin from '@dxos/eslint-plugin-rules';
-import arrowFunctionsPlugin from 'eslint-plugin-prefer-arrow-functions';
+import storybook from 'eslint-plugin-storybook';
+import dxos from '@dxos/eslint-plugin-rules';
+import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
+import unusedImports from 'eslint-plugin-unused-imports';
 
 export default tseslint.config(
   //
@@ -57,7 +58,7 @@ export default tseslint.config(
       '**/vendor',
       'packages/common/esbuild-plugins/polyfills',
       'packages/core/mesh/signal/testing/setup.js',
-      'packages/sdk/shell',
+      // 'packages/sdk/shell',
       'tools/esbuild/cli.js',
     ],
     // WARNING: Do not add extra keys to this config object
@@ -75,7 +76,8 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'prefer-arrow-functions': arrowFunctionsPlugin,
+      'prefer-arrow-functions': arrowFunctions,
+      'unused-imports': unusedImports,
     },
   },
 
@@ -85,8 +87,8 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   reactPlugin.configs.flat.recommended,
-  storybookPlugin.configs['flat/recommended'],
-  dxosRulesPlugin.configs.recommended,
+  storybook.configs['flat/recommended'],
+  dxos.configs.recommended,
 
   //
   // Global overrides
@@ -175,6 +177,17 @@ export default tseslint.config(
       'prefer-arrow-functions/prefer-arrow-functions': 'error',
       'require-yield': 'off',
       '@typescript-eslint/only-throw-error': 'off',
+      'no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 
