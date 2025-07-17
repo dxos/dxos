@@ -131,20 +131,20 @@ export class TranscriptionManager extends Resource {
     if (this._enabled.value && !this._transcriber?.isOpen) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
+      // const block = Obj.make(DataType.Message, {
+      //   created: new Date().toISOString(),
+      //   blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
+      //   sender: { role: 'assistant' },
+      // });
+      // await this._queue?.append([block]);
     } else if (!this._enabled.value && this._transcriber?.isOpen) {
       await this._transcriber?.close();
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
+      // const block = Obj.make(DataType.Message, {
+      //   created: new Date().toISOString(),
+      //   blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
+      //   sender: { role: 'assistant' },
+      // });
+      // await this._queue?.append([block]);
     }
   }
 
