@@ -38,8 +38,8 @@ export default defineConfig((env) => ({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: './key.pem',
-            cert: './cert.pem',
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
           }
         : undefined,
     fs: {
