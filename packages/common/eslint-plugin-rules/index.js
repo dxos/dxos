@@ -2,10 +2,40 @@
 // Copyright 2022 DXOS.org
 //
 
-module.exports = {
+import comment from './rules/comment.js';
+import header from './rules/header.js';
+import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import fs from 'node:fs';
+
+const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+
+const plugin = {
+  meta: {
+    name: pkg.name,
+    version: pkg.version,
+    namespace: 'example',
+  },
   rules: {
-    comment: require('./rules/comment'),
-    header: require('./rules/header'),
-    'no-empty-promise-catch': require('./rules/no-empty-promise-catch'),
+    comment,
+    header,
+    'no-empty-promise-catch': noEmptyPromiseCatch,
   },
 };
+
+Object.assign(plugin, {
+  configs: {
+    recommended: {
+      plugins: {
+        'dxos-plugin': plugin,
+      },
+      rules: {
+        'dxos-plugin/header': 'error',
+        'dxos-plugin/no-empty-promise-catch': 'error',
+        // TODO(dmaretskyi): Tured off due to large number of errors and no auto-fix.
+        // 'dxos-plugin/comment': 'error',
+      },
+    },
+  },
+});
+
+export default plugin;

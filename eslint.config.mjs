@@ -4,6 +4,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import storybookPlugin from 'eslint-plugin-storybook';
+import dxosRulesPlugin from '@dxos/eslint-plugin-rules';
 
 export default tseslint.config(
   //
@@ -64,6 +65,7 @@ export default tseslint.config(
   tseslint.configs.recommendedTypeChecked,
   reactPlugin.configs.flat.recommended,
   storybookPlugin.configs['flat/recommended'],
+  dxosRulesPlugin.configs.recommended,
 
   //
   // Global overrides

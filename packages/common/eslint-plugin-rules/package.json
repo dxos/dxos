@@ -5,8 +5,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
   "sideEffects": true,
-  "main": "index.js",
   "publishConfig": {
     "access": "public"
   }
