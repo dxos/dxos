@@ -34,6 +34,7 @@ export default tseslint.config(
       '**/tailwind.config.js',
       '**/postcss.config.cjs',
       '**/tailwind.ts',
+      '**/esbuild-server.config.js',
 
       // Dependencies
       'node_modules',
