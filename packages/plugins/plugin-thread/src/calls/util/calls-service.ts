@@ -73,7 +73,10 @@ export class CallsServicePeer extends Resource {
   pullTrackDispatcher = new BulkRequestDispatcher<
     TrackObject,
     {
-      trackMap: Map<TrackObject, { resolvedTrack: Promise<MediaStreamTrack>; mid: string }>;
+      /**
+       * trackName -> { resolvedTrack, mid }
+       */
+      trackMap: Map<string, { resolvedTrack: Promise<MediaStreamTrack>; mid: string }>;
     }
   >(32);
 
@@ -354,14 +357,14 @@ export class CallsServicePeer extends Resource {
             );
 
             if (pulledTrackData && pulledTrackData.mid) {
-              acc.set(track, {
+              acc.set(track.trackName!, {
                 mid: pulledTrackData.mid,
                 resolvedTrack: resolveTrack(peerConnection, (t) => t.mid === pulledTrackData.mid),
               });
             }
 
             return acc;
-          }, new Map<TrackObject, { resolvedTrack: Promise<MediaStreamTrack>; mid: string }>());
+          }, new Map<string, { resolvedTrack: Promise<MediaStreamTrack>; mid: string }>());
 
           if (newTrackResponse.requiresImmediateRenegotiation) {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(newTrackResponse.sessionDescription));
@@ -392,7 +395,7 @@ export class CallsServicePeer extends Resource {
         }),
       )
       .then(({ trackMap }) => {
-        const trackInfo = trackMap.get(trackData);
+        const trackInfo = trackMap.get(trackData.trackName!);
         if (trackInfo) {
           return trackInfo.resolvedTrack
             .then((track) => {
@@ -401,7 +404,7 @@ export class CallsServicePeer extends Resource {
             })
             .catch((err) => log.catch(err));
         } else {
-          log.info('missing track info', { trackData });
+          log.warn('missing track info', { trackData, availableTracks: Array.from(trackMap.keys()) });
         }
       });
 
