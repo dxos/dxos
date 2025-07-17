@@ -87,7 +87,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/TableCellEditor',
+  title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
   parameters: { translations, layout: 'centered' },

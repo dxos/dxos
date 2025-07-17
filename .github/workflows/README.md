@@ -24,5 +24,4 @@ To run e2e job:
 
 ## Resources
 
-- https://nx.dev/ci/intro/tutorials/github-actions
 - https://nektosact.com/introduction.html

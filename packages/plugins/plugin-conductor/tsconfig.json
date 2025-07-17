@@ -22,6 +22,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../core/ai"
     },
     {
@@ -44,9 +47,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/app-framework"

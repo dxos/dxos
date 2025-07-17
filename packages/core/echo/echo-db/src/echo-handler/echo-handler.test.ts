@@ -9,7 +9,17 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query } from '@dxos/echo';
 import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
-import { getSchema, createQueueDXN, getMeta, getType, isDeleted } from '@dxos/echo-schema';
+import {
+  getSchema,
+  createQueueDXN,
+  getMeta,
+  getType,
+  isDeleted,
+  RelationTargetId,
+  RelationSourceId,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+} from '@dxos/echo-schema';
 import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -330,19 +340,41 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
-  test('data symbol', async () => {
+  test('calling toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([Testing.TestType]);
     const objects = [db.add(live(Testing.TestType, TEST_OBJECT)), db.add(live(Testing.TestSchemaType, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
-        '@id': obj.id,
+        id: obj.id,
+        '@type': 'dxn:type:example.com/type/Test:0.1.0',
         '@meta': { keys: [] },
-        '@type': { '/': 'dxn:type:example.com/type/Test:0.1.0' },
         ...TEST_OBJECT,
       });
     }
+  });
+
+  test('calling Object.toJSON on an object', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([Testing.TestType]);
+    const obj = db.add(live(Testing.TestType, TEST_OBJECT));
+    const objData: any = Obj.toJSON(obj as any);
+    expect(objData).to.deep.contain({ id: obj.id, ...TEST_OBJECT });
+  });
+
+  test('relation toJSON', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
+    const alice = db.add(live(Testing.Contact, { name: 'Alice' }));
+    const bob = db.add(live(Testing.Contact, { name: 'Bob' }));
+    const manager = db.add(live(Testing.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }));
+    const objData: any = Obj.toJSON(manager as any);
+    expect(objData).to.deep.contain({
+      id: manager.id,
+      [ATTR_RELATION_SOURCE]: Obj.getDXN(alice as any).toString(),
+      [ATTR_RELATION_TARGET]: Obj.getDXN(bob as any).toString(),
+    });
   });
 
   test('undefined field handling', async () => {
@@ -647,7 +679,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        '@id': employee.id,
+        id: employee.id,
         '@meta': { keys: [] },
         name: 'John',
         worksAt: encodeReference(Reference.localObjectReference(org.id)),

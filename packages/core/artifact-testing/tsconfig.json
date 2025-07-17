@@ -30,6 +30,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

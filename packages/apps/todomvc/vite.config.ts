@@ -20,8 +20,8 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-            key: './key.pem',
-            cert: './cert.pem',
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
           }
         : undefined,
     fs: {
@@ -34,6 +34,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: 'out/todomvc',
     // TODO(wittjosiah): Minification is causing issues with the app.
     minify: false,
     rollupOptions: {

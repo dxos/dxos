@@ -21,10 +21,10 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/util"
+      "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../devtools/storybook-utils"
+      "path": "../../common/util"
     },
     {
       "path": "../brand"

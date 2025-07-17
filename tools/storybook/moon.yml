@@ -1,0 +1,42 @@
+type: tool
+language: typescript
+tasks:
+  bundle:
+    command: storybook build
+    args:
+      - --output-dir=out/stories
+    deps:
+      # Ensure that all packages are built to run storybook.
+      - '#ts-build:build'
+      - '#ts-compile:compile'
+    inputs:
+      - .storybook/*
+      - static/*
+      - $NODE_OPTIONS
+    outputs:
+      - out/stories/
+  serve:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+      - static/*
+    preset: server
+  serve-e2e:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --ci
+      - --quiet
+      - --config-dir=config/e2e
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+      - config/e2e/*
+      - static/*
+    preset: server

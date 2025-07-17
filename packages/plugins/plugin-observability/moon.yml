@@ -1,0 +1,11 @@
+type: library
+language: typescript
+tags:
+  - ts-build
+  - pack
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/types.ts'
+      - '--preactSignalTracking'

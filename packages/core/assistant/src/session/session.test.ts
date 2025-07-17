@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult } from '@dxos/ai';
+import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult, ToolRegistry } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type, Obj } from '@dxos/echo';
@@ -31,7 +31,52 @@ const CalendarEventSchema = Schema.Struct({
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
 // TODO(burdon): Flaky.
-describe.skip('AISession with Ollama', () => {
+describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', () => {
+  test('tool', async () => {
+    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
+    // const aiClient = new OllamaAiServiceClient({
+    //   overrides: { model: 'llama3.1:8b' },
+    // });
+    const session = new AISession({ operationModel: 'configured' });
+
+    const printer = new ConsolePrinter();
+    session.message.on((message) => printer.printMessage(message));
+    session.userMessage.on((message) => printer.printMessage(message));
+    session.block.on((block) => printer.printContentBlock(block));
+
+    // session.update.on((update) => {
+    //   log('update', { update });
+    // });
+
+    const calculatorTool = createTool('test', {
+      name: 'calculator',
+      description: 'Adds to numbers',
+      schema: Schema.Struct({
+        operand1: Schema.Number,
+        operand2: Schema.Number,
+      }),
+      execute: async ({ operand1, operand2 }) => {
+        return ToolResult.Success(operand1 + operand2);
+      },
+    });
+
+    // Test creating an itinerary
+    const response = await session.run({
+      client: aiClient,
+      tools: [calculatorTool.id],
+      artifacts: [],
+      requiredArtifactIds: [],
+      history: [],
+      generationOptions: {
+        model: '@anthropic/claude-3-5-haiku-20241022',
+      },
+      prompt: 'What is 10 + 20?',
+      toolResolver: new ToolRegistry([calculatorTool]),
+    });
+
+    log('result', { response });
+  });
+
   test('create calendar itinerary', { timeout: 60_000 }, async () => {
     const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaAiServiceClient({
@@ -145,6 +190,7 @@ describe.skip('AISession with Ollama', () => {
         model: '@anthropic/claude-3-5-haiku-20241022',
       },
       prompt: 'create a table and map for a travel itinerary based on events in my calendar',
+      toolResolver: new ToolRegistry([]),
     });
 
     log('result', {

@@ -157,6 +157,9 @@ export type ThemeExtensionsOptions = {
     scroll?: {
       className?: string;
     };
+    scroller?: {
+      className?: string;
+    };
     content?: {
       className?: string;
     };
@@ -192,6 +195,14 @@ export const createThemeExtensions = ({
         class {
           constructor(view: EditorView) {
             view.scrollDOM.classList.add(slots.scroll.className);
+          }
+        },
+      ),
+    slots.scroller?.className &&
+      ViewPlugin.fromClass(
+        class {
+          constructor(view: EditorView) {
+            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(' '));
           }
         },
       ),

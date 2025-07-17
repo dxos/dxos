@@ -4,7 +4,7 @@ package:
     - name: tasks
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle tasks
+        command: moon run tasks:bundle
         outdir: out/tasks
 
 runtime:

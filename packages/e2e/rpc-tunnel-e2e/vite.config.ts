@@ -9,6 +9,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: __dirname,
   base: '', // Ensures relative path to assets.
+  build: {
+    outDir: 'out',
+  },
   server: {
     host: true
   }

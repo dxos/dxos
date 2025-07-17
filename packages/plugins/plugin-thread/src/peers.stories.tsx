@@ -168,7 +168,13 @@ const meta: Meta<typeof DefaultStory> = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
-      config: new Config({ runtime: { services: { iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }] } } }),
+      config: new Config({
+        runtime: {
+          services: {
+            iceProviders: [{ urls: 'https://edge.dxos.workers.dev/ice' }],
+          },
+        },
+      }),
     }),
     withTheme,
     withLayout(),
