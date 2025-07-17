@@ -42,7 +42,10 @@ export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: Cha
                 <Input.Root>
                   <Input.Checkbox
                     checked={!!blueprints?.find((blueprint) => blueprint.key === option.key)}
-                    onCheckedChange={(checked) => onChange?.(option.key, !!checked)}
+                    onCheckedChange={(checked) => {
+                      console.log('checked', option.key, checked);
+                      onChange?.(option.key, !!checked);
+                    }}
                   />
                   {/* TODO(burdon): Input.Label? */}
                   <span>{option.label}</span>
