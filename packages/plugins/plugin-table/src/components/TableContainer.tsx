@@ -80,6 +80,7 @@ const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView 
   );
 
   const model = useTableModel({
+    id: view.id,
     projection,
     features,
     rows: filteredObjects,
