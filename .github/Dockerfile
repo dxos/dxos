@@ -3,15 +3,14 @@ FROM ubuntu:24.04
 # Install dependencies
 RUN apt-get update \
   && apt-get install -y \
-    curl \
-    xz-utils \
     ca-certificates \
-    libxtst-dev \
-    libpng++-dev \
-    libenchant-2-2 \
+    curl \
     git-lfs \
     jq \
-  && rm -rf /var/lib/apt/lists/*
+    libenchant-2-2 \
+    libpng++-dev \
+    libxtst-dev \
+    xz-utils
 
 # Install Node.js from official binary tarball
 ARG NODE_VERSION=20.12.1
@@ -23,12 +22,18 @@ RUN ARCH=$(uname -m) \
   && rm /tmp/node.tar.xz \
   && ln -s /opt/nodejs/bin/* /usr/local/bin/
 
-# Install pnpm
+# Ensure npm global installs go to /usr/local and are in PATH.
+ENV NPM_CONFIG_PREFIX=/usr/local
+ENV PATH=$PATH:/usr/local/bin
+
+# Install pnpm.
 RUN npm install -g pnpm@10.13.1 \
   # Install playwright native dependencies.
   # NOTE: Keep playwright version in sync with the one in package.json.
   # https://playwright.dev/docs/docker#build-your-own-image
-  && npx -y playwright@1.54.1 install-deps
+  && npx -y playwright@1.54.1 install-deps \
+  # Cleanup apt cache.
+  && rm -rf /var/lib/apt/lists/*
 
 # TODO(wittjosiah): Allow runner to use sudo.
 # Create a user with a fixed UID:GID.
