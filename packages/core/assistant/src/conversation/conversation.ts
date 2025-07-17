@@ -9,6 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import { ContextBinder, type ContextBinding } from '../context';
 import { AISession, type SessionRunOptions } from '../session';
@@ -66,7 +67,7 @@ export class Conversation {
 
     const history = await this.getHistory();
     const context = await this.context.query();
-    const blueprints = await Ref.Array.loadAll([...context.blueprints]);
+    const blueprints = (await Ref.Array.loadAll([...context.blueprints])).filter(isNonNullable);
     if (blueprints.length > 1) {
       log.warn('multiple blueprints are not yet supported');
     }

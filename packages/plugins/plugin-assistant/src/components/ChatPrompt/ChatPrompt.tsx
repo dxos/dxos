@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 
 import { type Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { useVoiceInput } from '@dxos/plugin-transcription';
@@ -17,21 +17,20 @@ import { meta } from '../../meta';
 
 export type ChatPromptProps = ThemedClassName<
   Omit<ChatEditorProps, 'classNames'> & {
-    // TODO(burdon): Split components.
+    /** @deprecated */
     compact?: boolean;
     microphone?: boolean;
     error?: Error;
     processing?: boolean;
-  } & {
     blueprintRegistry?: BlueprintRegistry;
     blueprints?: Blueprint[];
+    onChangeBlueprints?: ChatOptionsMenuProps['onChange'];
+    onScroll?: () => void;
 
     // TODO(burdon): Factor out.
     // blueprints?: TagPickerItemData[];
     // onSearchBlueprints?: TagPickerOptions['onSearch'];
     // onUpdateBlueprints?: TagPickerOptions['onUpdate'];
-
-    onScroll?: () => void;
   }
 >;
 
@@ -45,6 +44,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
       processing,
       blueprintRegistry,
       blueprints,
+      onChangeBlueprints,
       onCancel,
       onScroll,
       ...props
@@ -63,11 +63,6 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
         promptRef.current?.focus();
       },
     });
-
-    const handleUpdateBlueprints = useCallback<NonNullable<ChatOptionsMenuProps['onChange']>>(
-      (key: string, active: boolean) => {},
-      [],
-    );
 
     if (compact) {
       return (
@@ -100,24 +95,27 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
     }
 
     return (
-      <div className={mx('flex flex-col shrink-0 w-full', classNames)}>
-        <div className='flex grid grid-cols-[var(--rail-action)_1fr]'>
-          <div className='flex h-[--rail-action] items-center justify-center'>
-            <ChatStatusIndicator error={error} processing={processing} />
-          </div>
-
-          <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
+      <div
+        className={mx(
+          'grid grid-cols-[var(--rail-action)_1fr] grid-rows-[min-content_var(--rail-action)] shrink-0 w-full',
+          classNames,
+        )}
+      >
+        <div className='grid h-[--rail-action] items-center justify-center'>
+          <ChatStatusIndicator error={error} processing={processing} />
         </div>
 
-        <Toolbar.Root classNames='bg-transparent overflow-visible'>
-          {blueprintRegistry && (
-            <ChatOptionsMenu
-              blueprints={blueprints}
-              blueprintRegistry={blueprintRegistry}
-              onChange={handleUpdateBlueprints}
-            />
-          )}
+        <ChatEditor classNames='pbs-2 w-full' lineWrapping {...props} ref={promptRef} />
 
+        {(blueprintRegistry && (
+          <ChatOptionsMenu
+            blueprintRegistry={blueprintRegistry}
+            blueprints={blueprints}
+            onChange={onChangeBlueprints}
+          />
+        )) || <div />}
+
+        <Toolbar.Root>
           {/* {(onSearchBlueprints && (
             <TagPicker
               classNames='w-full'

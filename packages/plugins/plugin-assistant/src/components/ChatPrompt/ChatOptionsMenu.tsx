@@ -10,12 +10,12 @@ import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui'
 import { meta } from '../../meta';
 
 export type ChatOptionsMenuProps = {
-  blueprints?: Blueprint[];
   blueprintRegistry?: BlueprintRegistry;
+  blueprints?: Blueprint[];
   onChange?: (key: string, active: boolean) => void;
 };
 
-export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: ChatOptionsMenuProps) => {
+export const ChatOptionsMenu = ({ blueprintRegistry, blueprints, onChange }: ChatOptionsMenuProps) => {
   const { t } = useTranslation(meta.id);
   const blueprintOptions = useMemo(
     () => blueprintRegistry?.query().map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
@@ -25,14 +25,7 @@ export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: Cha
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton
-          disabled
-          icon='ph--plus--regular'
-          variant='ghost'
-          size={5}
-          iconOnly
-          label={t('button add blueprint')}
-        />
+        <IconButton icon='ph--plus--regular' variant='ghost' size={5} iconOnly label={t('button add blueprint')} />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content side='left'>
@@ -42,13 +35,11 @@ export const ChatOptionsMenu = ({ blueprints, blueprintRegistry, onChange }: Cha
                 <Input.Root>
                   <Input.Checkbox
                     checked={!!blueprints?.find((blueprint) => blueprint.key === option.key)}
-                    onCheckedChange={(checked) => {
-                      console.log('checked', option.key, checked);
-                      onChange?.(option.key, !!checked);
-                    }}
+                    onCheckedChange={(checked) => onChange?.(option.key, !!checked)}
                   />
-                  {/* TODO(burdon): Input.Label? */}
-                  <span>{option.label}</span>
+                  {/* TODO(burdon): Remove need for custom margin. */}
+                  {/* TODO(burdon): Clicking on label doesn't toggle checkbox. */}
+                  <Input.Label classNames='m-0'>{option.label}</Input.Label>
                 </Input.Root>
               </DropdownMenu.Item>
             ))}

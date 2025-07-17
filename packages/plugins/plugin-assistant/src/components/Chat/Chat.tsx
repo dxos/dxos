@@ -4,10 +4,11 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { type Blueprint } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -15,10 +16,12 @@ import { log } from '@dxos/log';
 import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { type ReferencesOptions } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
+import { isNonNullable } from '@dxos/util';
 
 import { type ChatProcessor, useContextProvider } from '../../hooks';
 import { type AIChatType } from '../../types';
 import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
+import { type ChatOptionsMenuProps } from '../ChatPrompt/ChatOptionsMenu';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
 
 type ChatEvents = 'submit' | 'scroll';
@@ -193,6 +196,24 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
     };
   }, [contextProvider]);
 
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  useEffect(() => {
+    const t = setInterval(async () => {
+      const blueprints = (await Ref.Array.loadAll(processor.context.blueprints.value ?? [])).filter(isNonNullable);
+      setBlueprints(blueprints);
+    });
+
+    return () => clearInterval(t);
+  }, [processor]);
+
+  // TODO(burdon): Force add to context.
+  const handleUpdateBlueprints = useCallback<NonNullable<ChatOptionsMenuProps['onChange']>>(
+    (key: string, active: boolean) => {
+      console.log(key, active);
+    },
+    [],
+  );
+
   // Blueprints.
   // const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(space, processor);
 
@@ -203,6 +224,8 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
       processing={processor?.streaming.value ?? false}
       references={references}
       blueprintRegistry={processor.blueprintRegistry}
+      blueprints={blueprints}
+      onChangeBlueprints={handleUpdateBlueprints}
       // blueprints={blueprints}
       // onSearchBlueprints={handleSearchBlueprints}
       // onUpdateBlueprints={handleUpdateBlueprints}
