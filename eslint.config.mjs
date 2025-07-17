@@ -5,6 +5,7 @@ import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import storybookPlugin from 'eslint-plugin-storybook';
 import dxosRulesPlugin from '@dxos/eslint-plugin-rules';
+import arrowFunctionsPlugin from 'eslint-plugin-prefer-arrow-functions';
 
 export default tseslint.config(
   //
@@ -60,6 +61,9 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    plugins: {
+      'prefer-arrow-functions': arrowFunctionsPlugin,
     },
   },
 
@@ -156,6 +160,7 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
+      'prefer-arrow-functions/prefer-arrow-functions': 'error',
     },
   },
 
