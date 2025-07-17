@@ -182,9 +182,9 @@ const meta: Meta<RenderProps> = {
   component: Editor.Root,
   render: DefaultStory,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,
     withAttention,
+    withClientProvider({ createIdentity: true, createSpace: true }),
     withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],

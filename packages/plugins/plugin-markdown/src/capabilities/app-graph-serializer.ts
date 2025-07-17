@@ -5,12 +5,12 @@
 import { pipe } from 'effect';
 
 import { contributes, Capabilities, type PluginContext, chain, createIntent } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import translations from '../translations';
+import { translations } from '../translations';
 import { MarkdownAction, DocumentType } from '../types';
 
 export default (context: PluginContext) =>
@@ -33,7 +33,7 @@ export default (context: PluginContext) =>
         const space = ancestors.find(isSpace);
         const target =
           ancestors.findLast((ancestor) => Obj.instanceOf(DataType.Collection, ancestor)) ??
-          space?.properties[Type.getTypename(DataType.Collection)]?.target;
+          space?.properties[DataType.Collection.typename]?.target;
         if (!space || !target) {
           return;
         }

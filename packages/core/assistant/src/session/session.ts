@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Schema } from 'effect';
+import { Array, Option, pipe, Schema } from 'effect';
 
 import {
   AgentStatusReport,
@@ -19,6 +19,8 @@ import {
   ToolResult,
   createTool,
   type ExecutableTool,
+  type ToolId,
+  type ToolResolver,
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event, synchronized } from '@dxos/async';
@@ -58,14 +60,12 @@ export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: Obje
 >;
 
 export type SessionRunOptions = {
-  client: AiServiceClient;
-
   artifacts: ArtifactDefinition[];
 
   /**
    * Non-artifact specific tools.
    */
-  tools: ExecutableTool[];
+  tools: ToolId[];
 
   history: Message[];
 
@@ -81,6 +81,14 @@ export type SessionRunOptions = {
    * Pre-require artifacts.
    */
   requiredArtifactIds?: string[];
+
+  client: AiServiceClient;
+  toolResolver: ToolResolver;
+
+  /**
+   * Executable tools that do not go through the tool resolver.
+   */
+  executableTools?: ExecutableTool[];
 
   /**
    * @see ArtifactDiffResolver
@@ -208,13 +216,17 @@ export class AISession {
     try {
       let more = false;
       do {
-        const tools: ExecutableTool[] = [
-          ...systemTools,
-          ...options.tools,
-          ...options.artifacts
-            .filter((artifact) => requiredArtifactIds.has(artifact.id))
-            .flatMap((artifact) => artifact.tools),
-        ];
+        const tools: ExecutableTool[] = pipe(
+          [
+            ...systemTools,
+            ...(await Promise.all(options.tools.map((toolId) => options.toolResolver.resolve(toolId)))),
+            ...(options.executableTools ?? []),
+            ...options.artifacts
+              .filter((artifact) => requiredArtifactIds.has(artifact.id))
+              .flatMap((artifact) => artifact.tools),
+          ],
+          Array.dedupeWith((a, b) => a.id === b.id),
+        );
 
         log('request', {
           pending: this._pending.length,
@@ -231,7 +243,7 @@ export class AISession {
           systemPrompt:
             options.systemPrompt ??
             createBaseInstructions({
-              availableArtifacts: Array.from(requiredArtifactIds),
+              availableArtifacts: [...requiredArtifactIds],
               operationModel: this._options.operationModel,
             }),
         });
@@ -293,7 +305,7 @@ export class AISession {
     const parser = structuredOutputParser(schema);
     const result = await this.run({
       ...options,
-      tools: [...options.tools, parser.tool],
+      executableTools: [...(options.executableTools ?? []), parser.tool],
     });
     return parser.getResult(result);
   }
@@ -309,7 +321,7 @@ export class AISession {
       const versions = gatherObjectVersions(history);
 
       const artifactDiff = await artifactDiffResolver(
-        Array.from(versions.entries()).map(([id, version]) => ({ id, lastVersion: version })),
+        [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
       );
 
       log.info('vision', {
@@ -428,14 +440,11 @@ export class AISession {
           session.userMessage.on((ev) => this.userMessage.emit(ev));
 
           const messages = await session.run({
-            client: options.client,
             artifacts: options.artifacts,
             tools: options.tools,
             history: options.history,
             extensions: options.extensions,
-            generationOptions: options.generationOptions,
             requiredArtifactIds: step.requiredArtifactIds.slice(),
-            artifactDiffResolver: options.artifactDiffResolver,
             prompt: `
               You are an agent that executes the subtask in a plan.
               
@@ -458,6 +467,11 @@ export class AISession {
               Previous step results:
               ${JSON.stringify(stepResults.at(-1))}.
             `,
+
+            generationOptions: options.generationOptions,
+            client: options.client,
+            toolResolver: options.toolResolver,
+            artifactDiffResolver: options.artifactDiffResolver,
           });
           const result = messages.at(-1);
           stepResults.push(result);
@@ -560,7 +574,7 @@ const createArtifactUpdateBlock = (
     disposition: 'artifact-update',
     text: `
       The following artifacts have been updated since the last message:
-      ${Array.from(artifactDiff.entries())
+      ${[...artifactDiff.entries()]
         .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
         .join('\n')}
     `,

@@ -15,25 +15,25 @@ import { type KanbanType } from '@dxos/react-ui-kanban';
 import { type DataType } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
-import { KANBAN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { isKanban, PivotColumnAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${KANBAN_PLUGIN}/kanban`,
+      id: meta.id,
       role: ['article', 'section'],
       filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
       component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
     }),
     createSurface({
-      id: `${KANBAN_PLUGIN}/object-settings`,
+      id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
       component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,
     }),
     createSurface({
-      id: `${KANBAN_PLUGIN}/create-initial-schema-form-[pivot-column]`,
+      id: `${meta.id}/create-initial-schema-form-[pivot-column]`,
       role: 'form-input',
       filter: (
         data,

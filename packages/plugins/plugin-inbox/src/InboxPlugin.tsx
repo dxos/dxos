@@ -11,7 +11,7 @@ import { DataType } from '@dxos/schema';
 
 import { AppGraphBuilder, ArtifactDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { CalendarType, InboxAction, MailboxType } from './types';
 
 export const InboxPlugin = () =>

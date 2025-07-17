@@ -32,7 +32,7 @@ export const resources = {
       'loading translations': 'Loading translations…',
     },
   },
-} as const;
+} as const satisfies Resource;
 
 void i18Next.use(initReactI18next).init({
   resources,

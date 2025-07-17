@@ -2,24 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { TEMPLATE_PLUGIN } from './meta';
+import { meta } from './meta';
 import { TemplateType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TemplateType)]: {
+      [TemplateType.typename]: {
         'typename label': 'Template',
         'typename label_zero': 'Templates',
         'typename label_one': 'Template',
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
-      [TEMPLATE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Template',
       },
     },
   },
-];
+] as const satisfies Resource[];

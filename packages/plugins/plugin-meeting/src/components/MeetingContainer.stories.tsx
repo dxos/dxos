@@ -7,23 +7,23 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capabilities, createResolver, contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { ThreadType } from '@dxos/plugin-thread/types';
+import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { useQuery, Query, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
+import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
-import translations from '../translations';
-import { MeetingAction, MeetingType } from '../types';
+import { translations } from '../translations';
+import { MeetingType } from '../types';
 
 const Story = () => {
   const space = useSpace();
@@ -67,20 +67,9 @@ const meta: Meta<MeetingContainerProps> = {
         SpacePlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [
-        contributes(ClientCapabilities.Schema, [MeetingType, TranscriptType, ThreadType, DataType.Text]),
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: MeetingAction.Summarize,
-            resolve: async ({ meeting }) => {
-              const text = await meeting.summary.load();
-              text.content = `Summary from ${new Date().toISOString()}`;
-            },
-          }),
-        ]),
-      ],
+      capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
-    withLayout({ fullscreen: true }),
+    withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
   ],
 };
 

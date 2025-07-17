@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { OBSERVABILITY_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [OBSERVABILITY_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Telemetry',
         'observability toast label': 'Privacy Notice',
         'observability toast description':
@@ -29,4 +31,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

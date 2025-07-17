@@ -3,7 +3,6 @@
 //
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
-import { AssistantEvents } from '@dxos/plugin-assistant';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import {
@@ -15,7 +14,7 @@ import {
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { MeetingType } from './types';
 
 export const MeetingPlugin = () =>
@@ -73,7 +72,7 @@ export const MeetingPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/call-extension`,
-      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady, AssistantEvents.AiClientReady),
+      activatesOn: allOf(Events.SettingsReady, ClientEvents.ClientReady),
       activate: CallExtension,
     }),
   ]);

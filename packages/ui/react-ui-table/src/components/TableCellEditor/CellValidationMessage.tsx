@@ -8,10 +8,12 @@ import { useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
 
 export type CellValidationMessageProps = {
   validationError: string | null;
+  variant?: 'error' | 'warning';
 };
 
 export const CellValidationMessage = ({
   validationError,
+  variant = 'error',
   __gridScope,
 }: GridScopedProps<CellValidationMessageProps>) => {
   const { editing, editBox: box } = useGridContext('GridSheetCellEditor', __gridScope);
@@ -20,10 +22,13 @@ export const CellValidationMessage = ({
     return null;
   }
 
+  const bgClass = variant === 'error' ? 'bg-errorSurface' : 'bg-warningSurface';
+  const textClass = variant === 'error' ? 'text-errorSurfaceText' : 'text-warningSurfaceText';
+
   return (
     <div
       role='none'
-      className='absolute bg-errorSurface text-errorSurfaceText rounded-bs-sm text-xs p-1'
+      className={`absolute ${bgClass} ${textClass} rounded-bs-sm text-xs p-1`}
       style={{
         ...{ '--dx-gridCellWidth': `${box?.inlineSize ?? 200}px` },
         zIndex: 10,

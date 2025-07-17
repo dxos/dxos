@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { KanbanType } from '@dxos/react-ui-kanban';
 
-import { KANBAN_PLUGIN } from './meta';
+import { meta } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(KanbanType)]: {
+      [KanbanType.typename]: {
         'typename label': 'Kanban',
         'typename label_zero': 'Kanbans',
         'typename label_one': 'Kanban',
         'typename label_other': 'Kanbans',
         'object name placeholder': 'New kanban',
       },
-      [KANBAN_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Kanban',
         'kanban title label': 'Title',
         'column title label': 'Column title',
@@ -33,4 +33,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

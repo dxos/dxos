@@ -72,10 +72,11 @@ export const [ListItemProvider, useListItemContext] = createContext<ListItemCont
 );
 
 export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
-  PropsWithChildren<{
-    item: T;
-  }> &
-    HTMLAttributes<HTMLDivElement>
+  PropsWithChildren<
+    {
+      item: T;
+    } & HTMLAttributes<HTMLDivElement>
+  >
 >;
 
 /**
@@ -86,6 +87,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
   const [state, setState] = useState<ItemDragState>(idle);
+
   useEffect(() => {
     const element = ref.current;
     invariant(element);
@@ -142,6 +144,9 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
           const closestEdge = extractClosestEdge(self.data);
           setState({ type: 'is-dragging-over', closestEdge });
         },
+        onDragLeave: () => {
+          setState(idle);
+        },
         onDrag: ({ self }) => {
           const closestEdge = extractClosestEdge(self.data);
           setState((current) => {
@@ -150,9 +155,6 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
             }
             return { type: 'is-dragging-over', closestEdge };
           });
-        },
-        onDragLeave: () => {
-          setState(idle);
         },
         onDrop: () => {
           setState(idle);

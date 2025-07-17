@@ -20,7 +20,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures } from '../../model';
-import translations from '../../translations';
+import { translations } from '../../translations';
 import { TableType } from '../../types';
 import { initializeTable } from '../../util';
 
@@ -87,7 +87,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/TableCellEditor',
+  title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
   parameters: { translations, layout: 'centered' },

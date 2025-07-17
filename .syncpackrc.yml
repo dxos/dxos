@@ -15,12 +15,6 @@ semverGroups:
     dependencies:
       - esbuild
       - '@swc-node/register'
-  - range: ''
-    packages:
-      - '**'
-    dependencies:
-      - nx
-      - '@nwrl/*'
 versionGroups:
   - packages:
       - '@dxos/docs'

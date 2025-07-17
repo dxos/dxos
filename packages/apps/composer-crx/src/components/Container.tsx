@@ -9,7 +9,7 @@ import React, { useEffect, type PropsWithChildren } from 'react';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-import translations from '../translations';
+import { translations } from '../translations';
 
 export const Container = ({ children, classNames }: PropsWithChildren<{ classNames?: string }>) => {
   // Monitor system theme.

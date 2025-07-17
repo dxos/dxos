@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { NAVTREE_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [NAVTREE_PLUGIN]: {
+      [meta.id]: {
         'app menu label': 'App menu',
         'open settings label': 'Settings',
         'open commands label': 'Search commands',
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

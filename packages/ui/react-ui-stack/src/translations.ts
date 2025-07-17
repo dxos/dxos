@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'stack';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-stack';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

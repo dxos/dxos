@@ -13,7 +13,7 @@ import { Dialog } from '@dxos/react-ui';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
-import translations from '../translations';
+import { translations } from '../translations';
 
 const Render = (props: ResetDialogProps) => {
   return (

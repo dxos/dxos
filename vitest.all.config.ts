@@ -21,7 +21,7 @@ export default defineConfig({
       '!**/test/**/*.browser.test.{ts,tsx}',
     ],
     exclude: [
-      '.nx/*',
+      '.moon/*',
       '**/node_modules/*',
       '**/dist/*',
       '**/build/*',

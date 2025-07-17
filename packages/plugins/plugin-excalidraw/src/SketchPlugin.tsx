@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { ExcalidrawSettings, IntentResolvers, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { SketchAction } from './types';
 
 export const ExcalidrawPlugin = () =>

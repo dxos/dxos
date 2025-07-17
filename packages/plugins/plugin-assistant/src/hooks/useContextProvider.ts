@@ -13,8 +13,10 @@ export type ContextProvider = {
   resolveMetadata: (params: { uri: string }) => Promise<{ uri: string; label: string }>;
 };
 
-const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());
-
+/**
+ *
+ */
+// TODO(burdon): Document.
 export const useContextProvider = (space?: Space): ContextProvider | undefined => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -53,3 +55,5 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
     };
   }, [space, artifactDefinitions]);
 };
+
+const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());

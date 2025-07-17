@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
 import { useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
-import translations from '../translations';
+import { translations } from '../translations';
 import { type MenuAction } from '../types';
 
 faker.seed(1234);

@@ -5,6 +5,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Filter, Type } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
 import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -12,7 +13,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 export const App = () => {
   useIdentity();
   const [space] = useSpaces();
-  const tasks = useQuery(space, { type: 'task' });
+  const tasks = useQuery(space, Filter.type(Type.Expando, { type: 'task' }));
   return (
     <>
       {tasks.map((task) => (

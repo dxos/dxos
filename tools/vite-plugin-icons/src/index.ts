@@ -109,7 +109,6 @@ export const IconsPlugin = ({
         if (status.updated) {
           status.updated = false;
           await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
-
           if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
             symbols.sort();

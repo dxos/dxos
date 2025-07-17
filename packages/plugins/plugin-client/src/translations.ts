@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CLIENT_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [CLIENT_PLUGIN]: {
+      [meta.id]: {
         'account label': 'User Account',
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',
@@ -65,4 +67,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

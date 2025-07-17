@@ -8,7 +8,7 @@ import { SpaceEvents } from '@dxos/plugin-space';
 
 import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
 import { WELCOME_PLUGIN, meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const WelcomePlugin = () =>
   definePlugin(meta, [

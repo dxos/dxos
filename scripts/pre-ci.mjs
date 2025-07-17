@@ -7,9 +7,9 @@ import { $, cd, chalk, fs, question } from 'zx';
  * 1. If there are any uncommitted changes, abort with error.
  * 2. Merge the latest origin/main.
  * 3. Run pnpm install and commit the changes if any.
- * 4. Run pnpm -w nx run-many --target=lint --fix. If it errors -- abort, otherwise commit changes if any.
+ * 4. Run moon run :lint -- --fix. If it errors -- abort, otherwise commit changes if any.
  * 5. Push
- * 6. Run pnpm -w nx run-many --target=build,test
+ * 6. Run moon run :build :test
  */
 
 // Set error handling to capture specific failures
@@ -149,7 +149,7 @@ async function main() {
   // Step 4: Run lint with fixes and commit changes if any
   console.log(chalk.blue('Step 4: Running linting with auto-fix...'));
   try {
-    await $`pnpm -w nx run-many --target=lint --fix`;
+    await $`moon run :lint -- --fix`;
 
     if (await hasUncommittedChanges()) {
       await commitChanges('style: fix linting issues');
@@ -174,7 +174,7 @@ async function main() {
   // Step 6: Run build and test
   console.log(chalk.blue('Step 6: Running build and tests...'));
   try {
-    await $`pnpm -w nx run-many --target=build,test`;
+    await $`moon run :build :test`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error);

@@ -16,7 +16,7 @@ export const OrganizationCard = ({
   role,
 }: PreviewProps<DataType.Organization>) => {
   return (
-    <Card.Container role={role}>
+    <Card.SurfaceRoot role={role}>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       <Card.Heading>{name}</Card.Heading>
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
@@ -36,6 +36,6 @@ export const OrganizationCard = ({
         </Card.Chrome>
       )}
       {children}
-    </Card.Container>
+    </Card.SurfaceRoot>
   );
 };

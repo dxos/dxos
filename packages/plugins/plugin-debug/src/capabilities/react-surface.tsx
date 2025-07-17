@@ -43,7 +43,7 @@ import {
   TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -111,7 +111,7 @@ export default (context: PluginContext) =>
 
             const collection =
               data.subject.space.state.get() === SpaceState.SPACE_READY &&
-              data.subject.space.properties[Type.getTypename(DataType.Collection)]?.target;
+              data.subject.space.properties[DataType.Collection.typename]?.target;
             if (!Obj.instanceOf(DataType.Collection, collection)) {
               return;
             }

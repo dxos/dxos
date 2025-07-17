@@ -26,7 +26,7 @@ Technologies to consider:
 - Codemirror v6 for editor integrations.
 
 Monorepo tools:
-- NX for monorepo management.
+- moon for monorepo management.
 - pnpm for package management.
 - vitest
 - vite

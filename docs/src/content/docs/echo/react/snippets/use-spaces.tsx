@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
 import {
   type Space,
+  Filter,
   useQuery,
   useSpace,
   useSpaces,
@@ -22,7 +23,7 @@ export const App = () => {
   const space2: Space | undefined = spaces[0]; // Spaces may be an empty list.
 
   // Get objects from the space as an array of JS objects.
-  const objects = useQuery(space2);
+  const objects = useQuery(space2, Filter.everything());
 
   return <>{objects.length}</>;
 };

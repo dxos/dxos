@@ -5,7 +5,7 @@ package:
     - name: devtools
       type: dxos:type/app
       build:
-        command: pnpm -w nx bundle devtools
+        command: moon run devtools:bundle
 
 runtime:
   services:

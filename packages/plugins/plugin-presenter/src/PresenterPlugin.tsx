@@ -6,7 +6,7 @@ import { definePlugin, defineModule, Events, contributes, Capabilities } from '@
 
 import { AppGraphBuilder, PresenterSettings, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 // TODO(burdon): Only scale markdown content.
 // TODO(burdon): Map stack content; Slide content type (e.g., markdown, sketch, IPFS image, table, etc.)

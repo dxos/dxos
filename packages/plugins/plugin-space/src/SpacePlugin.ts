@@ -18,7 +18,7 @@ import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client';
 import { DataType } from '@dxos/schema';
-import { osTranslations } from '@dxos/shell/react';
+import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
   AppGraphBuilder,
@@ -36,7 +36,7 @@ import {
 } from './capabilities';
 import { SpaceEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { CollectionAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
@@ -85,7 +85,7 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, [...translations, osTranslations]),
+      activate: () => contributes(Capabilities.Translations, [...translations, ...shellTranslations]),
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

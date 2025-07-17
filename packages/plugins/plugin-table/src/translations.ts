@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 import { TableType } from '@dxos/react-ui-table';
 
-import { TABLE_PLUGIN } from './meta';
+import { meta } from './meta';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(TableType)]: {
+      [TableType.typename]: {
         'typename label': 'Table',
         'typename label_zero': 'Tables',
         'typename label_one': 'Table',
         'typename label_other': 'Tables',
         'object name placeholder': 'New table',
       },
-      [TABLE_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Tables',
         'table name placeholder': 'Table name',
         'settings title': 'Table settings',
@@ -41,4 +41,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

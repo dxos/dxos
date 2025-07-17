@@ -5,6 +5,7 @@
 //
 
 import { ArgumentParser } from 'argparse';
+import glob from 'glob';
 import { resolve } from 'node:path';
 import readPkg from 'read-pkg';
 
@@ -21,7 +22,7 @@ const main = async () => {
   });
 
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
-  parser.add_argument('proto', { help: 'Protobuf input files', nargs: '+' }); // TODO(burdon): Glob.
+  parser.add_argument('--src', { help: 'Protobuf input files' });
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', {
     help: 'Base path to resolve fully qualified packages',
@@ -31,9 +32,9 @@ const main = async () => {
     required: true,
   });
 
-  const { proto, substitutions, baseDir, outDir } = parser.parse_args();
+  const { src, substitutions, baseDir, outDir } = parser.parse_args();
 
-  const protoFilePaths = proto.map((file: string) => resolve(process.cwd(), file));
+  const protoFilePaths = glob.sync(src, { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
@@ -44,7 +45,17 @@ const main = async () => {
   registerResolver(baseDirPath);
   preconfigureProtobufjs();
 
-  await parseAndGenerateSchema(substitutionsModule, protoFilePaths, baseDirPath, outDirPath, process.cwd());
+  await parseAndGenerateSchema(
+    substitutionsModule,
+    protoFilePaths,
+    baseDirPath,
+    outDirPath,
+    process.cwd(),
+    // TODO(wittjosiah): Expose as args.
+    undefined,
+    true,
+    false,
+  );
 };
 
 void main();

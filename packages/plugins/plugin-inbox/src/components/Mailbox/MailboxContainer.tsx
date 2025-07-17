@@ -43,7 +43,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
     },
     [model, filterDispatch],
   );
-  const menu = useMailboxToolbarActions(model, tagFilterVisible, setTagFilterVisible);
+  const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
 
   const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
 

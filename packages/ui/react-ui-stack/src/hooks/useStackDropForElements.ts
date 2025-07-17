@@ -66,7 +66,10 @@ export const useStackDropForElements = ({
           }
         },
       }),
-      autoScrollForElements({ element: scrollElement as Element, getAllowedAxis: () => orientation }),
+      autoScrollForElements({
+        element: scrollElement as Element,
+        getAllowedAxis: () => orientation,
+      }),
     );
   }, [element, scrollElement, selfDroppable, orientation, id, onRearrange]);
 

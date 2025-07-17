@@ -16,7 +16,7 @@ import {
 } from './capabilities';
 import { ObservabilityEvents, ClientReadyEvent } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const ObservabilityPlugin = (options: { namespace: string; observability: () => Promise<Observability> }) =>
   definePlugin(meta, [
