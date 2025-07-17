@@ -7,6 +7,7 @@ import storybook from 'eslint-plugin-storybook';
 import dxos from '@dxos/eslint-plugin-rules';
 import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
 import unusedImports from 'eslint-plugin-unused-imports';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config(
   //
@@ -89,6 +90,7 @@ export default tseslint.config(
   reactPlugin.configs.flat.recommended,
   storybook.configs['flat/recommended'],
   dxos.configs.recommended,
+  prettierRecommended,
 
   //
   // Global overrides
@@ -188,6 +190,7 @@ export default tseslint.config(
           argsIgnorePattern: '^_',
         },
       ],
+      'prettier/prettier': 'error',
     },
   },
 
