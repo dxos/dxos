@@ -3,5 +3,5 @@ tasks:
   lint:
     command: eslint . --format unix --quiet
     inputs:
-      - /.eslintrc.config.mjs
+      - /eslint.config.mjs
       - '@group(sources)'
