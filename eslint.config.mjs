@@ -53,10 +53,12 @@ export default tseslint.config(
 
       // Other
       '**/bin',
+      '**/scripts',
+      '**/vendor',
       'packages/common/esbuild-plugins/polyfills',
       'packages/core/mesh/signal/testing/setup.js',
       'packages/sdk/shell',
-      '**/scripts',
+      'tools/esbuild/cli.js',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -171,6 +173,8 @@ export default tseslint.config(
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
       'prefer-arrow-functions/prefer-arrow-functions': 'error',
+      'require-yield': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
     },
   },
 
