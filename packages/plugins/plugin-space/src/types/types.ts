@@ -6,7 +6,15 @@ import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { EchoSchema, StoredSchema, TypedObject, type BaseObject } from '@dxos/echo-schema';
+import {
+  EchoSchema,
+  FormatAnnotation,
+  FormatEnum,
+  PropertyMetaAnnotationId,
+  StoredSchema,
+  TypedObject,
+  type BaseObject,
+} from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -349,6 +357,21 @@ export const createDefaultSchema = () =>
     version: '0.1.0',
   })({
     title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')).annotations({ title: 'Status' }),
+    status: Schema.optional(
+      Schema.Literal('todo', 'in-progress', 'done')
+        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+        .annotations({
+          title: 'Status',
+          [PropertyMetaAnnotationId]: {
+            singleSelect: {
+              options: [
+                { id: 'todo', title: 'Todo', color: 'indigo' },
+                { id: 'in-progress', title: 'In Progress', color: 'purple' },
+                { id: 'done', title: 'Done', color: 'amber' },
+              ],
+            },
+          },
+        }),
+    ),
     description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
   });
