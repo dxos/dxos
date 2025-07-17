@@ -128,7 +128,7 @@ export class TranscriptionManager extends Resource {
     await this._maybeReinitTranscriber();
 
     // Open or close transcriber if transcription is enabled or disabled.
-    if (this._enabled.value) {
+    if (this._enabled.value && !this._transcriber?.isOpen) {
       await this._transcriber?.open();
       // TODO(burdon): Started and stopped blocks appear twice.
       const block = Obj.make(DataType.Message, {
@@ -137,7 +137,7 @@ export class TranscriptionManager extends Resource {
         sender: { role: 'assistant' },
       });
       await this._queue?.append([block]);
-    } else {
+    } else if (!this._enabled.value && this._transcriber?.isOpen) {
       await this._transcriber?.close();
       const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
