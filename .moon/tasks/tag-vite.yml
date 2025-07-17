@@ -27,6 +27,8 @@ tasks:
       - out
   serve:
     command: vite dev
+    deps:
+      - ^:compile
     preset: server
   preview:
     command: vite preview
