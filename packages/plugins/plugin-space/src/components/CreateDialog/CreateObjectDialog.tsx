@@ -14,7 +14,7 @@ import {
   useIntentDispatcher,
   usePluginManager,
 } from '@dxos/app-framework';
-import { Query, Type, type Obj } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, isLiveObject, isSpace, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -77,7 +77,7 @@ export const CreateObjectDialog = ({
           yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object: relation, hidden: true }));
         }
 
-        if (isLiveObject(object)) {
+        if (isLiveObject(object) && !Obj.instanceOf(DataType.StoredSchema, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
           const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });

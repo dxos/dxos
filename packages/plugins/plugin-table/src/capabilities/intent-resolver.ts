@@ -2,11 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext, createIntent } from '@dxos/app-framework';
+import { Effect } from 'effect';
+
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  type PluginContext,
+  createIntent,
+  LayoutAction,
+} from '@dxos/app-framework';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { initializeProjection } from '@dxos/react-ui-table';
 import { DataType, ProjectionManager } from '@dxos/schema';
 
@@ -17,9 +26,19 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TableAction.OnSchemaAdded,
-      resolve: ({ space, schema }) => ({
-        intents: [createIntent(TableAction.Create, { space, typename: schema.typename })],
-      }),
+      resolve: ({ space, schema }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object, relation } = yield* dispatch(
+            createIntent(TableAction.Create, { space, typename: schema.typename }),
+          );
+          space.db.add(object);
+          space.db.add(relation);
+
+          return {
+            intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(relation)] })],
+          };
+        }),
     }),
     createResolver({
       intent: TableAction.Create,
