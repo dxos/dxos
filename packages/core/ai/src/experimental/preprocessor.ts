@@ -1,5 +1,5 @@
-import { DataType, type ContentBlock } from '@dxos/schema';
-import { bufferToArray } from '@dxos/util';
+import { ContentBlock, DataType } from '@dxos/schema';
+import { assumeType, bufferToArray } from '@dxos/util';
 import { AiInput } from '@effect/ai';
 import { Array, Effect, pipe, Predicate } from 'effect';
 import { AiInputPreprocessingError } from '../errors';
@@ -16,13 +16,14 @@ export const preprocessAiInput: (
             case 'user':
               pipe(
                 msg.blocks,
-                partitionUserMessage,
+                (arr) => splitBy(arr, (left, right) => isToolResult(left) !== isToolResult(right)),
                 Effect.forEach(
-                  Effect.fnUntraced(function* (parition) {
-                    switch (parition._tag) {
-                      case 'tools':
+                  Effect.fnUntraced(function* (chunk) {
+                    switch (chunk[0]._tag) {
+                      case 'toolResult':
+                        assumeType<ContentBlock.ToolResult[]>(chunk);
                         return new AiInput.ToolMessage({
-                          parts: parition.blocks.map(
+                          parts: chunk.map(
                             (block) =>
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
@@ -31,11 +32,11 @@ export const preprocessAiInput: (
                               }),
                           ),
                         });
-                      case 'other':
+                      default:
                         return new AiInput.UserMessage({
                           userName: msg.sender.name,
                           parts: yield* pipe(
-                            parition.blocks,
+                            chunk,
                             Effect.forEach(convertUserMessagePart),
                             Effect.map(Array.filter(Predicate.isNotUndefined)),
                           ),
@@ -193,26 +194,26 @@ const convertAssistantMessagePart: (
 
 const isToolResult = Predicate.isTagged('toolResult');
 
-type BlocksPartition =
-  | {
-      _tag: 'tools';
-      blocks: ContentBlock.ToolResult[];
+/**
+ * @param predicate Determines whether to split an array at this location, based on two neighbors.
+ * @returns Arrays partitioned into subarrays based on the predicate.
+ */
+// TODO(dmaretskyi): Extract.
+const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] => {
+  const result: T[][] = [];
+  for (const item of arr) {
+    if (result.length === 0) {
+      result.push([item]);
+      continue;
     }
-  | {
-      _tag: 'other';
-      blocks: Exclude<ContentBlock.Any, ContentBlock.ToolResult>[];
-    };
-
-const partitionUserMessage = (blocks: ContentBlock.Any[]): BlocksPartition[] => {
-  const result: BlocksPartition[] = [];
-
-  for (const block of blocks) {
-    if (result.length === 0 || pipe(result.at(-1)!.blocks.at(-1)!, isToolResult) === isToolResult(block)) {
-      result.at(-1)!.blocks.push(block as any);
+    const prevChunk = result.at(-1)!;
+    const prev = prevChunk.at(-1)!;
+    const makeSplit = predicate(prev, item);
+    if (makeSplit) {
+      result.push([item]);
     } else {
-      result.push([block] as any);
+      prevChunk.push(item);
     }
   }
-
   return result;
 };
