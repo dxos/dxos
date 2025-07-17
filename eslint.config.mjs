@@ -13,8 +13,8 @@ export default tseslint.config(
   {
     ignores: [
       // Build Artifacts
-      'dist',
-      'out',
+      '**/dist',
+      '**/out',
       '**/proto/gen/*',
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
