@@ -88,8 +88,12 @@ export class CallManager extends Resource {
   }
 
   /** @reactive */
-  get pulledAudioTracks() {
-    return Object.values(this._state.media.pulledAudioTracks).map((track) => track.track);
+  get audioTracksToPlay(): MediaStreamTrack[] {
+    return (this._state.call.users ?? [])
+      .map((user) => (user.tracks?.audioEnabled ? user.tracks?.audio : undefined))
+      .filter(isNonNullable)
+      .map((track) => this._state.media.pulledAudioTracks[track as EncodedTrackName]?.track)
+      .filter(isNonNullable);
   }
 
   /** @reactive */
