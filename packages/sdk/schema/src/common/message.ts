@@ -95,6 +95,11 @@ export namespace ContentBlock {
     toolCallId: Schema.String,
 
     /**
+     * The name of the tool that was called.
+     */
+    name: Schema.String,
+
+    /**
      * The result of the tool call.
      */
     result: Schema.Unknown,
