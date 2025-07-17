@@ -28,7 +28,7 @@ export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(meta.id)?.value;
   const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
   const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'deck', serviceContainer, settings });
+  const processor = useChatProcessor({ part: 'deck', chat, serviceContainer, settings });
 
   // TODO(burdon): Add attention attributes.
   return (
