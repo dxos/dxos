@@ -11,6 +11,6 @@ export default defineConfig({
   webServer: {
     command: 'moon run rpc-tunnel-e2e:serve',
     port: 5173,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });

@@ -9,8 +9,8 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
   webServer: {
-    command: 'moon run todomvc:preview',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
+    command: 'moon run todomvc:preview -- --port=9006',
+    port: 9006,
+    reuseExistingServer: false,
   },
 });

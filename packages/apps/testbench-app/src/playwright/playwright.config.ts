@@ -11,6 +11,6 @@ export default defineConfig({
   webServer: {
     command: 'moon run testbench-app:preview',
     port: 4173,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });
