@@ -10,6 +10,7 @@ import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
 import { preprocessAiInput } from './preprocessor';
 import { isToolUse } from '../tools';
+import { getToolCalls } from './tools';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
@@ -116,20 +117,3 @@ describe('effect AI client', () => {
   );
 });
 
-const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[] => {
-  return message.blocks.filter((block) => block._tag === 'toolCall');
-};
-
-const runTool: (
-  toolkit: AiToolkit.ToHandler<AiTool.AiTool<string>>,
-  toolCall: ContentBlock.ToolCall,
-) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError> = Effect.fn('runTool')(function* (toolkit, toolCall) {
-  const handlerEff = toolkit.handle(toolCall.name, toolCall.input as any);
-  const result = yield* handlerEff;
-  return {
-    _tag: 'toolResult',
-    toolCallId: toolCall.toolCallId,
-    name: toolCall.name,
-    result,
-  } satisfies ContentBlock.ToolResult;
-});
