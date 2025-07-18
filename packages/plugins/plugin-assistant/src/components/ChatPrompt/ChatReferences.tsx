@@ -30,12 +30,10 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
 
   const handleSearch = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
     (text, ids) => {
-      // TODO(burdon): Query by object label.
+      // TODO(burdon): Filter by Item tag (e.g., exclude "contacts") and Query by object label.
       const objects = space.db.query(Filter.everything()).runSync();
       return objects
-        .map(({ object }) => {
-          return { id: object.id, label: Obj.getLabel(object) ?? '' };
-        })
+        .map(({ object }) => ({ id: object.id, label: Obj.getLabel(object) ?? '' }))
         .filter(({ id, label }) => !ids.includes(id) && label.toLocaleLowerCase().includes(text.toLocaleLowerCase()));
     },
     [space],
