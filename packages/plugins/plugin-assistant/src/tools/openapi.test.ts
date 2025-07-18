@@ -8,13 +8,12 @@ import { log } from '@dxos/log';
 
 import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../hooks';
-import type { ApiAuthorization } from '../types';
+import { type ApiAuthorization } from '../types';
 
 describe.skip('openapi', () => {
   describe.skip('mapping', () => {
     test('amadeus flight availabilities', async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API);
-
       log.info('tools', { tools });
       // for (const tool of tools) {
       //   const schema = tool.parameters;
