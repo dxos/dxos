@@ -26,6 +26,7 @@ export class ContextBinder {
 
   // TODO(burdon): load refs?
   readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint>[]> = computed(() => [...this.bindings.value.blueprints]);
+  readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
 
   /**
    * Asynchronous query of all bindings.

@@ -8,6 +8,9 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, type Type } from '@dxos/echo';
 
+/**
+ * @deprecated
+ */
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
   resolveMetadata: (params: { uri: string }) => Promise<{ uri: string; label: string }>;

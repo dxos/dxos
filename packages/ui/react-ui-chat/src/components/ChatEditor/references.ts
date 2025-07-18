@@ -15,6 +15,7 @@ import {
 } from '@codemirror/view';
 
 import { Mutex } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
@@ -31,27 +32,26 @@ export type ReferencesOptions = {
   provider: ReferencesProvider;
 
   /**
+   * @default '@'
+   */
+  triggerCharacter?: string;
+
+  /**
    * Prevent the autocomplete from closing when the user blurs the editor.
    * @default false
    */
   debug?: boolean;
-
-  /**
-   * @default '@'
-   */
-  triggerCharacter?: string;
 };
 
 /**
- * Include references into text.
+ * Lookup object references.
  */
-export const references = ({ provider, debug = false, triggerCharacter = '@' }: ReferencesOptions): Extension => {
-  if (triggerCharacter.length !== 1) {
-    throw new Error('triggerCharacter must be a single character');
-  }
+export const references = ({ provider, triggerCharacter = '@', debug = false }: ReferencesOptions): Extension => {
+  invariant(triggerCharacter.length === 1);
 
   const decorationField = ViewPlugin.fromClass(
     class ReferenceView {
+      // TODO(burdon): Why?
       private _mutex = new Mutex();
 
       decorations: DecorationSet = Decoration.set([]);
@@ -128,7 +128,6 @@ export const references = ({ provider, debug = false, triggerCharacter = '@' }: 
       override: [
         async (context): Promise<CompletionResult | null> => {
           const match = context.matchBefore(new RegExp(`${triggerCharacter}[a-zA-Z0-9]+`));
-
           if (!match || match?.to === match?.from) {
             return null;
           }

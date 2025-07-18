@@ -185,10 +185,19 @@ const getDecorators = ({
           await space.waitUntilReady();
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
-          const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
+          const chat = space.db.add(
+            Obj.make(AIChatType, {
+              queue: Ref.fromDXN(space.queues.create().dxn),
+            }),
+          );
 
           // TODO(burdon): Add to conversation context.
-          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
+          space.db.add(
+            Obj.make(DocumentType, {
+              name: 'Tasks',
+              content: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            }),
+          );
 
           // Clone blueprints and bind to conversation.
           const binder = new ContextBinder(await chat.queue.load());

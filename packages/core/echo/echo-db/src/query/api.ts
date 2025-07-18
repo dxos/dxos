@@ -25,10 +25,16 @@ export interface QueryFn {
  */
 export type QueryOptions = {
   /**
+   * @deprecated Use `spaceIds` instead.
+   */
+  spaces?: PublicKey[];
+
+  /**
    * Query only in specific spaces.
    */
   // TODO(dmaretskyi): Change this to SpaceId.
   spaceIds?: string[];
+
   /**
    * Controls how deleted items are filtered.
    *
@@ -55,23 +61,18 @@ export type QueryOptions = {
    * Return only the first `limit` results.
    */
   limit?: number;
-
-  /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
 };
 
 export interface QueryJoinSpec extends Record<string, true | QueryJoinSpec> {}
 
 export const optionsToProto = (options: QueryOptions): QueryOptionsProto => {
   return {
+    spaces: options.spaces,
     spaceIds: options.spaceIds,
     deleted: options.deleted,
     dataLocation: options.dataLocation,
     include: options.include,
     limit: options.limit,
-    spaces: options.spaces,
   };
 };
 

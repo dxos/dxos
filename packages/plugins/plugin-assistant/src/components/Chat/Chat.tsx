@@ -10,17 +10,20 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { type ContextBinder, type Blueprint } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { useTimeout, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable, isNotFalsy } from '@dxos/util';
 
-import { type ChatProcessor } from '../../hooks';
+import { useContextProvider, type ChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type AIChatType } from '../../types';
 import {
@@ -28,7 +31,9 @@ import {
   type ChatActionsProps,
   type ChatEvent,
   ChatOptionsMenu,
+  type ChatOptionsMenuProps,
   ChatReferences,
+  type ChatReferencesProps,
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
@@ -45,6 +50,7 @@ const Endcap = ({ children }: PropsWithChildren) => {
 // Components outside of this Radix-style group shuld define their own APIs.
 //
 
+// TODO(burdon): Inject via effect layer.
 type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
@@ -71,7 +77,7 @@ type ChatRootProps = ThemedClassName<
   >
 >;
 
-const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent }: ChatRootProps) => {
+const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ...props }: ChatRootProps) => {
   const space = getSpace(chat);
 
   // Messages.
@@ -130,7 +136,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent }: 
   }
 
   return (
-    <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages}>
+    <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages} {...props}>
       <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
         {children}
       </div>
@@ -199,7 +205,7 @@ type ChatPromptProps = ThemedClassName<Pick<ChatEditorProps, 'placeholder'> & { 
 
 const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { event, processor } = useChatContext(ChatPrompt.displayName);
+  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -226,35 +232,42 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
     },
   });
 
-  // Editor events.
-  const extensions = useMemo<Extension[]>(
-    () =>
-      expandable
-        ? [
-            Prec.highest(
-              keymap.of([
-                {
-                  key: 'cmd-ArrowUp',
-                  preventDefault: true,
-                  run: () => {
-                    event.emit({ type: 'thread-open' });
-                    return true;
-                  },
-                },
-                {
-                  key: 'cmd-ArrowDown',
-                  preventDefault: true,
-                  run: () => {
-                    event.emit({ type: 'thread-close' });
-                    return true;
-                  },
-                },
-              ]),
-            ),
-          ]
-        : [],
-    [event],
-  );
+  const [blueprints, handleUpdateBlueprints] = useBlueprints(processor.context);
+
+  // TODO(burdon): Reconcile with object tags.
+  const contextProvider = useContextProvider(space);
+  const extensions = useMemo<Extension[]>(() => {
+    return [
+      contextProvider &&
+        references({
+          provider: {
+            getReferences: async ({ query }) => contextProvider.query({ query }),
+            resolveReference: async ({ uri }) => contextProvider.resolveMetadata({ uri }),
+          },
+        }),
+      expandable &&
+        Prec.highest(
+          keymap.of([
+            {
+              key: 'cmd-ArrowUp',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'thread-open' });
+                return true;
+              },
+            },
+            {
+              key: 'cmd-ArrowDown',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'thread-close' });
+                return true;
+              },
+            },
+          ]),
+        ),
+    ].filter(isNotFalsy);
+  }, [event, expandable, contextProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -273,36 +286,10 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
     [event],
   );
 
-  // Referenced objects (type-ahead).
-  // const contextProvider = useContextProvider(space);
-  // const references = useMemo<ReferencesOptions | undefined>(() => {
-  //   if (!contextProvider) {
-  //     return;
-  //   }
-  //   return {
-  //     provider: {
-  //       getReferences: async ({ query }) => contextProvider.query({ query }),
-  //       resolveReference: async ({ uri }) => contextProvider.resolveMetadata({ uri }),
-  //     },
-  //   };
-  // }, [contextProvider]);
-
-  // const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
-  // useEffect(() => {
-  //   const t = setInterval(async () => {
-  //     const blueprints = (await Ref.Array.loadAll(processor.context.blueprints.value ?? [])).filter(isNonNullable);
-  //     setBlueprints(blueprints);
-  //   });
-  //   return () => clearInterval(t);
-  // }, [processor]);
-
-  // TODO(burdon): Force add to context.
-  // const handleUpdateBlueprints = useCallback<NonNullable<ChatOptionsMenuProps['onChange']>>(
-  //   (key: string, active: boolean) => {
-  //     console.log(key, active);
-  //   },
-  //   [],
-  // );
+  // TODO(burdon): Update context.
+  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((ids) => {
+    log.info('update', { ids });
+  }, []);
 
   return (
     <div
@@ -314,18 +301,30 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
       <Endcap>
         <ChatStatusIndicator error={processor.error.value} processing={processor.streaming.value} />
       </Endcap>
+
       <ChatEditor
         ref={editorRef}
         autoFocus
-        classNames='col-span-2 pis-1 pbs-2'
         lineWrapping
+        classNames='col-span-2 pis-1 pbs-2'
         placeholder={placeholder ?? t('prompt placeholder')}
         extensions={extensions}
         onSubmit={handleSubmit}
       />
 
-      <ChatOptionsMenu />
-      <ChatReferences classNames='flex pis-1 items-center' />
+      <ChatOptionsMenu
+        blueprintRegistry={processor.blueprintRegistry}
+        blueprints={blueprints}
+        onChange={handleUpdateBlueprints}
+      />
+
+      <ChatReferences
+        classNames='flex pis-1 items-center'
+        space={space}
+        context={processor.context}
+        onUpdate={handleUpdateReferences}
+      />
+
       <ChatActions
         microphone={true}
         recording={recording}
@@ -349,3 +348,25 @@ export const Chat = {
 };
 
 export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };
+
+// TODO(burdon): Factor out.
+const useBlueprints = (context: ContextBinder) => {
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  useTimeout(
+    async () => {
+      const blueprints = (await Ref.Array.loadAll(context.blueprints.value ?? [])).filter(isNonNullable);
+      setBlueprints(blueprints);
+    },
+    0,
+    [context],
+  );
+
+  const handleUpdateBlueprints = useCallback<NonNullable<ChatOptionsMenuProps['onChange']>>(
+    (key: string, active: boolean) => {
+      log.info('update', { key, active });
+    },
+    [],
+  );
+
+  return [blueprints, handleUpdateBlueprints] as const;
+};
