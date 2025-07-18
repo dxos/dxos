@@ -6,7 +6,7 @@ import { createIntent, defineModule, contributes, Capabilities, Events, definePl
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { KanbanType, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
+import { KanbanView, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -25,7 +25,7 @@ export const KanbanPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: KanbanType.typename,
+          id: KanbanView.typename,
           metadata: {
             icon: 'ph--kanban--regular',
           },
@@ -38,7 +38,7 @@ export const KanbanPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: KanbanType,
+            objectSchema: KanbanView,
             formSchema: CreateKanbanSchema,
             hidden: true,
             getIntent: (props, options) => createIntent(KanbanAction.Create, { ...props, space: options.space }),

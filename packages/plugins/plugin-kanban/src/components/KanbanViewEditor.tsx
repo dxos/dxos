@@ -5,27 +5,27 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
+import { Relation, Type } from '@dxos/echo';
 import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
-import { type KanbanType, KanbanSettingsSchema } from '@dxos/react-ui-kanban';
+import { KanbanSettingsSchema, type KanbanView } from '@dxos/react-ui-kanban';
 import { DataType, ProjectionManager } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
-type KanbanViewEditorProps = { kanban: KanbanType };
+type KanbanViewEditorProps = { view: DataType.HasView };
 
-export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
+export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const space = getSpace(kanban);
-  const currentTypename = useMemo(
-    () => kanban?.cardView?.target?.query?.typename,
-    [kanban?.cardView?.target?.query?.typename],
-  );
+  const space = getSpace(view);
+  const projection = view.projection.target;
+  // TODO(wittjosiah): Remove cast.
+  const kanban = Relation.getTarget(view as any) as KanbanView;
+  const currentTypename = useMemo(() => projection?.query?.typename, [projection?.query?.typename]);
   const schema = useSchema(client, space, currentTypename);
   const views = useQuery(space, Filter.type(DataType.Projection));
 
@@ -46,19 +46,19 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch?.(createIntent(KanbanAction.DeleteCardField, { kanban, fieldId }));
+      void dispatch?.(createIntent(KanbanAction.DeleteCardField, { view, fieldId }));
     },
-    [dispatch, kanban],
+    [dispatch, view],
   );
 
-  const projection = useMemo(() => {
-    if (kanban?.cardView?.target && schema) {
+  const projectionManager = useMemo(() => {
+    if (projection && schema) {
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      return new ProjectionManager(jsonSchema, kanban.cardView.target);
+      return new ProjectionManager(jsonSchema, projection);
     }
-  }, [kanban?.cardView?.target, JSON.stringify(schema)]);
+  }, [projection, JSON.stringify(schema)]);
 
-  const fieldProjections = projection?.getFieldProjections() || [];
+  const fieldProjections = projectionManager?.getFieldProjections() || [];
   const selectFields = fieldProjections
     .filter((field) => field.props.format === FormatEnum.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
@@ -76,7 +76,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
     [selectFields],
   );
 
-  if (!space || !schema || !kanban.cardView?.target) {
+  if (!space || !schema || !projection) {
     return null;
   }
 
@@ -94,7 +94,7 @@ export const KanbanViewEditor = ({ kanban }: KanbanViewEditorProps) => {
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
-        projection={kanban.cardView.target}
+        projection={projection}
         onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
         onDelete={Type.isMutable(schema) ? handleDelete : undefined}
         outerSpacing={false}

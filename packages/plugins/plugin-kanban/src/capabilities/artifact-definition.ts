@@ -8,11 +8,12 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { KanbanView } from '@dxos/react-ui-kanban';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
@@ -37,7 +38,7 @@ export default () => {
       - When adding items, you must not include the 'id' field -- it is automatically generated
       - BEFORE adding items, always make sure the board has been shown to the user!
     `,
-    schema: KanbanType,
+    schema: KanbanView,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -88,14 +89,16 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
+          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
+          // TODO(wittjosiah): Remove cast.
+          const views = objects.filter((object) => Obj.instanceOf(KanbanView, Relation.getTarget(object as any)));
 
           const boardInfo = await Promise.all(
-            boards.map(async (board: KanbanType) => {
-              const view = await board.cardView?.load();
+            views.map(async (view) => {
+              const projection = await view.projection.load();
               return {
-                id: fullyQualifiedId(board),
-                typename: view?.query.typename,
+                id: fullyQualifiedId(view),
+                typename: projection.query.typename,
               };
             }),
           );
@@ -111,21 +114,22 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
-          const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
-          invariant(Obj.instanceOf(KanbanType, board));
+          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
+          const view = objects.find((board) => fullyQualifiedId(board) === id);
+          invariant(Obj.instanceOf(DataType.HasView, view));
+          // TODO(wittjosiah): Remove cast.
+          const board = Relation.getTarget(view as any);
+          invariant(Obj.instanceOf(KanbanView, board));
 
-          const view = await board.cardView?.load();
-          invariant(view);
-
-          const typename = view.query.typename;
+          const projection = await view.projection.load();
+          const typename = projection.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
           return ToolResult.Success({
             schema,
             columnField: board.columnFieldId,
-            viewFields: view.fields,
+            viewFields: projection.fields,
           });
         },
       }),

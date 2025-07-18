@@ -9,7 +9,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -21,7 +22,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useSpaces, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban, KanbanType, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban, KanbanView, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ProjectionManager } from '@dxos/schema';
@@ -48,30 +49,32 @@ const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const kanbans = useQuery(space, Filter.type(KanbanType));
-  const [kanban, setKanban] = useState<KanbanType>();
+  const views = useQuery(space, Filter.type(DataType.HasView));
+  const [view, setView] = useState<DataType.HasView>();
   const [projection, setProjection] = useState<ProjectionManager>();
-  const schema = useSchema(client, space, kanban?.cardView?.target?.query.typename);
+  const schema = useSchema(client, space, view?.projection.target?.query.typename);
 
   useEffect(() => {
-    if (kanbans.length && !kanban) {
-      const kanban = kanbans[0];
-      setKanban(kanban);
+    if (views.length && !view) {
+      const view = views[0];
+      setView(view);
     }
-  }, [kanbans]);
+  }, [views]);
 
   useEffect(() => {
-    if (kanban?.cardView?.target && schema) {
+    if (view?.projection.target && schema) {
       const jsonSchema = Type.toJsonSchema(schema);
-      setProjection(new ProjectionManager(jsonSchema, kanban.cardView.target));
+      setProjection(new ProjectionManager(jsonSchema, view.projection.target));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [kanban?.cardView?.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  }, [view?.projection.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
+  // TODO(wittjosiah): Remove cast.
+  const kanban = Relation.getTarget(view as any) as KanbanView;
   const model = useKanbanModel({
     kanban,
     schema,
@@ -101,15 +104,15 @@ const StorybookKanban = () => {
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      invariant(kanban?.cardView?.target);
+      invariant(view?.projection.target);
 
       schema.updateTypename(typename);
-      kanban.cardView.target.query.typename = typename;
+      view.projection.target.query.typename = typename;
     },
-    [kanban?.cardView?.target, schema],
+    [view?.projection.target, schema],
   );
 
-  if (!schema || !kanban) {
+  if (!schema || !view) {
     return null;
   }
 
@@ -117,11 +120,11 @@ const StorybookKanban = () => {
     <div className='grow grid grid-cols-[1fr_350px]'>
       {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
-        {kanban.cardView && (
+        {view.projection.target && (
           <ViewEditor
             registry={space?.db.schemaRegistry}
             schema={schema}
-            projection={kanban.cardView.target!}
+            projection={view.projection.target}
             onTypenameChanged={handleTypenameChanged}
             onDelete={(fieldId: string) => {
               console.log('[ViewEditor]', 'onDelete', fieldId);
@@ -129,7 +132,7 @@ const StorybookKanban = () => {
           />
         )}
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ cardView: kanban.cardView?.target, cardSchema: schema }, null, 2)}
+          {JSON.stringify({ cardView: view.projection.target, cardSchema: schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -154,18 +157,25 @@ const meta: Meta<StoryProps> = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, KanbanType],
+          types: [DataType.Organization, DataType.Person, DataType.HasView, KanbanView],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { schema, kanban } = await initializeKanban({
+            const { projection, kanban, schema } = await initializeKanban({
               space,
               client,
               typename: DataType.Organization.typename,
               initialPivotColumn: 'status',
             });
+            const hasView = Relation.make(DataType.HasView, {
+              // TODO(wittjosiah): Remove cast.
+              [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,
+              [Relation.Target]: kanban,
+              projection: Ref.make(projection),
+            });
             space.db.add(kanban);
+            space.db.add(hasView);
 
             if (schema) {
               // TODO(burdon): Replace with sdk/schema/testing.

@@ -4,13 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { TypedObject, FormatEnum, TypeEnum, type JsonProp } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Client, PublicKey } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
-import { createProjection, createFieldId, getSchemaProperties, ProjectionManager } from '@dxos/schema';
+import { KanbanView } from '@dxos/react-ui-kanban';
+import { createProjection, createFieldId, getSchemaProperties, ProjectionManager, type DataType } from '@dxos/schema';
 import { capitalize } from '@dxos/util';
 
 // TODO(wittjosiah): UI package shouldn't depend on client.
@@ -48,7 +48,7 @@ export const initializeKanban = async ({
   name,
   typename,
   initialPivotColumn,
-}: InitializeKanbanProps): Promise<{ kanban: KanbanType; schema?: Type.Schema }> => {
+}: InitializeKanbanProps): Promise<{ kanban: KanbanView; projection: DataType.Projection; schema?: Type.Schema }> => {
   if (typename) {
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -68,7 +68,7 @@ export const initializeKanban = async ({
       fields,
     });
 
-    const kanban = Obj.make(KanbanType, { cardView: Ref.make(projection), columnFieldId: undefined, name });
+    const kanban = Obj.make(KanbanView, { columnFieldId: undefined, name });
     if (initialPivotColumn) {
       const projectionManager = new ProjectionManager(jsonSchema, projection);
       const fieldId = projectionManager.getFieldId(initialPivotColumn);
@@ -76,7 +76,7 @@ export const initializeKanban = async ({
         kanban.columnFieldId = fieldId;
       }
     }
-    return { kanban, schema };
+    return { kanban, projection, schema };
   } else {
     const { schema: taskSchema, stateOptions } = createDefaultTaskSchema();
     const [schema] = await space.db.schemaRegistry.register([taskSchema]);
@@ -120,7 +120,7 @@ export const initializeKanban = async ({
     const fieldId = projectionManager.getFieldId(initialPivotField);
     invariant(fieldId);
 
-    const kanban = Obj.make(KanbanType, { cardView: Ref.make(projection), columnFieldId: fieldId });
-    return { kanban, schema };
+    const kanban = Obj.make(KanbanView, { columnFieldId: fieldId });
+    return { kanban, projection, schema };
   }
 };
