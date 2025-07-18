@@ -1,5 +1,6 @@
 // @ts-check
 
+import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
@@ -11,12 +12,6 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config(
   //
-  // Global includes.
-  //
-  {
-    files: ['**/src/**/*.{j,t}sx?'],
-  },
-  //
   // Global ignores.
   //
   {
@@ -25,6 +20,7 @@ export default tseslint.config(
       '**/dist',
       '**/out',
       '**/gen/*',
+      '**/__swc_snapshots__',
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
@@ -92,19 +88,18 @@ export default tseslint.config(
   },
 
   //
-  // Plugins and rulesets
-  //
-  eslint.configs.recommended,
-  tseslint.configs.recommendedTypeChecked,
-  reactPlugin.configs.flat.recommended,
-  storybook.configs['flat/recommended'],
-  dxos.configs.recommended,
-  prettierRecommended,
-
-  //
-  // Global overrides
+  // All files.
   //
   {
+    files: ['**/src/**/*.{js,ts,jsx,tsx}'],
+    extends: [
+      eslint.configs.recommended,
+      tseslint.configs.recommendedTypeChecked,
+      reactPlugin.configs.flat.recommended,
+      storybook.configs['flat/recommended'],
+      dxos.configs.recommended,
+      prettierRecommended,
+    ],
     rules: {
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -210,7 +205,7 @@ export default tseslint.config(
   },
 
   //
-  // File-specific overrides
+  // Tests.
   //
   {
     files: ['**/src/**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
