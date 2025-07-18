@@ -17,6 +17,8 @@ export default tseslint.config(
   // Global ignores.
   //
   {
+    // WARNING: Do not add extra keys to this config object
+    // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
     ignores: [
       // Build Artifacts
       '**/dist',
@@ -69,6 +71,8 @@ export default tseslint.config(
       'packages/core/mesh/network-manager/module-stub.mjs',
       'packages/ui/react-ui-geo/data',
       'packages/apps/composer-app/src/functions/_worker.ts',
+      'packages/common/node-std',
+      'packages/sdk/config/src/testing',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -131,7 +135,7 @@ export default tseslint.config(
       ],
       '@typescript-eslint/no-this-alias': 'off',
 
-      // TODO(dmaretskyi): New overrieds. Need to review later.
+      // TODO(dmaretskyi): New overrides. Need to review later.
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
