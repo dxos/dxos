@@ -14,6 +14,8 @@ import gmail from './gmail.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
+export { dataGenerator };
+
 export type Template = {
   id: string;
   name: string;

@@ -4843,6 +4843,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4864,6 +4867,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4891,6 +4897,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-script
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -16133,7 +16142,6 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
-    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 

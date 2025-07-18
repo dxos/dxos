@@ -164,6 +164,10 @@ export class EdgeHttpClient {
   // OAuth and credentials
   //
 
+  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
+    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
+  }
+
   public async initiateOAuthFlow(
     body: InitiateOAuthFlowRequest,
     args?: EdgeHttpGetArgs,

@@ -39,7 +39,6 @@ export class ReadableMuxer<T> {
         this._readableController.enqueue(value);
       }
     });
-    log.info('done');
   }
 
   async close(): Promise<void> {
