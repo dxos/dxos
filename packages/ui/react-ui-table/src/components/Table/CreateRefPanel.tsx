@@ -54,7 +54,7 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
     }
   }, [modals]);
 
-  if (!model?.view || !model.projection) {
+  if (!model?.projectionManager || !model.projection) {
     return null;
   }
 

@@ -14,21 +14,31 @@ tasks:
     deps:
       - ^:build
       - build
+      - typedoc
     inputs:
+      - astro.config.ts
       - '@group(sources)'
     outputs:
+      - .astro
       - dist
   prebuild:
-    command: astro sync && pnpm run prebuild
+    command: astro sync
+    inputs:
+      - astro.config.ts
+      - '@group(sources)'
+    outputs:
+      - .astro
+  serve:
+    command: astro dev
+    deps:
+      - ^:build
+      - typedoc
+    preset: server
+  typedoc:
+    command: pnpm run typedoc
     deps:
       - ^:typedoc
     inputs:
       - scripts/collect-typedoc.sh
     outputs:
       - public/typedoc
-  serve:
-    command: astro dev
-    deps:
-      - ^:build
-      - prebuild
-    preset: server

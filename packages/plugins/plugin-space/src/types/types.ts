@@ -5,9 +5,17 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Type, type Obj } from '@dxos/echo';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/react-client';
+import { type Obj, Type } from '@dxos/echo';
+import {
+  EchoSchema,
+  FormatAnnotation,
+  FormatEnum,
+  PropertyMetaAnnotationId,
+  StoredSchema,
+  TypedObject,
+  type BaseObject,
+} from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
@@ -217,6 +225,21 @@ export namespace SpaceAction {
     output: Schema.Boolean,
   }) {}
 
+  export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      name: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Schema for schema?
+      schema: Schema.Any,
+    }),
+    output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
+      id: Schema.String,
+      object: StoredSchema,
+      schema: Schema.instanceOf(EchoSchema),
+    }),
+  }) {}
+
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
@@ -233,6 +256,7 @@ export namespace SpaceAction {
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
       id: Schema.String,
       subject: Schema.Array(Schema.String),
       object: EchoObjectSchema,
@@ -326,3 +350,28 @@ export namespace CollectionAction {
     },
   ) {}
 }
+
+export const createDefaultSchema = () =>
+  TypedObject({
+    typename: `example.com/type/${PublicKey.random().truncate()}`,
+    version: '0.1.0',
+  })({
+    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    status: Schema.optional(
+      Schema.Literal('todo', 'in-progress', 'done')
+        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+        .annotations({
+          title: 'Status',
+          [PropertyMetaAnnotationId]: {
+            singleSelect: {
+              options: [
+                { id: 'todo', title: 'Todo', color: 'indigo' },
+                { id: 'in-progress', title: 'In Progress', color: 'purple' },
+                { id: 'done', title: 'Done', color: 'amber' },
+              ],
+            },
+          },
+        }),
+    ),
+    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  });

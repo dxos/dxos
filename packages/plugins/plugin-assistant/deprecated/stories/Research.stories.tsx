@@ -284,7 +284,8 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
                 </SyntaxHighlighter>
               }
             />
-            <ResearchPrompts object={object} onResearch={handleResearchMore} />
+            {/* TODO(wittjosiah): Remove cast. */}
+            <ResearchPrompts object={object as any} onResearch={handleResearchMore} />
           </div>
         ))}
       </div>

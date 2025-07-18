@@ -3,14 +3,14 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { KanbanView } from '@dxos/react-ui-kanban';
 
 import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [KanbanType.typename]: {
+      [KanbanView.typename]: {
         'typename label': 'Kanban',
         'typename label_zero': 'Kanbans',
         'typename label_one': 'Kanban',

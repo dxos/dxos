@@ -6,8 +6,8 @@ import { Rx } from '@effect-rx/rx-react';
 import { pipe } from 'effect';
 
 import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Rx value of the objects.
  */
-export const rxFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Rx.Rx<T[]> => {
+export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
   return Rx.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
@@ -329,6 +329,38 @@ export const constructSpaceActions = ({
   }
 
   return actions;
+};
+
+export const createViewNode = ({
+  space,
+  relation,
+  resolve,
+}: {
+  space: Space;
+  relation: DataType.HasView;
+  resolve: (typename: string) => Record<string, any>;
+}) => {
+  // TODO(wittjosiah): Remove cast.
+  const view = Relation.getTarget(relation as any);
+  const type = Obj.getTypename(view as any) ?? 'never';
+  const metadata = resolve(type);
+  if (Object.keys(metadata).length === 0) {
+    return undefined;
+  }
+
+  return {
+    id: fullyQualifiedId(relation),
+    type,
+    cacheable: ['label', 'icon', 'role'],
+    data: relation,
+    properties: {
+      // TODO(burdon): Use annotation to get the name field.
+      label: metadata.label?.(view) ||
+        (view as any).name || ['object name placeholder', { ns: type, default: 'New object' }],
+      icon: metadata.icon ?? 'ph--placeholder--regular',
+      testId: 'spacePlugin.view',
+    },
+  };
 };
 
 export const createObjectNode = ({

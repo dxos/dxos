@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Effect } from 'effect';
-
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
@@ -124,23 +122,10 @@ export const ThreadPlugin = () =>
     defineModule({
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
-      activate: (context) => {
-        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-        return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
-          const program = Effect.gen(function* () {
-            const { object: collection } = yield* dispatch(
-              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(ChannelType) }),
-            );
-            rootCollection.objects.push(Ref.make(collection));
-
-            const { object: channel } = yield* dispatch(
-              createIntent(ThreadAction.CreateChannel, { name: 'General', spaceId: space.id }),
-            );
-            space.db.add(channel);
-          });
-          await Effect.runPromise(program);
-        });
-      },
+      activate: () =>
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
+          createIntent(ThreadAction.OnSpaceCreated, { space, rootCollection }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/markdown`,

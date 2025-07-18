@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { StoredSchema } from '@dxos/echo-schema';
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
@@ -24,6 +25,13 @@ export const translations = [
         'typename label_one': 'Smart Collection',
         'typename label_other': 'Smart Collections',
         'object name placeholder': 'New smart collection',
+      },
+      [StoredSchema.typename]: {
+        'typename label': 'Record',
+        'typename label_zero': 'Records',
+        'typename label_one': 'Record',
+        'typename label_other': 'Records',
+        'object name placeholder': 'New record type',
       },
       [meta.id]: {
         'plugin name': 'Spaces',

@@ -11,4 +11,5 @@ export namespace SpaceEvents {
   export const SetupSettingsPanel = defineEvent(`${SPACE_PLUGIN}/event/setup-settings-panel`);
   export const DefaultSpaceReady = defineEvent(`${SPACE_PLUGIN}/event/default-space-ready`);
   export const SpaceCreated = defineEvent(`${SPACE_PLUGIN}/event/space-created`);
+  export const SchemaAdded = defineEvent(`${SPACE_PLUGIN}/event/schema-added`);
 }

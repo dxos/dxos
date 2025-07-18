@@ -6,14 +6,14 @@ import { type Schema } from 'effect';
 import { useEffect, useState } from 'react';
 
 import { type Live } from '@dxos/react-client/echo';
-import { type ViewProjection } from '@dxos/schema';
+import { type ProjectionManager } from '@dxos/schema';
 
-import { type KanbanType, type BaseKanbanItem, KanbanModel } from '../types';
+import { type KanbanView, type BaseKanbanItem, KanbanModel } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
-  kanban?: KanbanType;
+  kanban?: KanbanView;
   schema?: Schema.Schema.AnyNoContext;
-  projection?: ViewProjection;
+  projection?: ProjectionManager;
   items?: Live<T>[];
 };
 

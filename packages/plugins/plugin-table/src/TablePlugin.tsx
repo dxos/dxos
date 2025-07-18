@@ -3,18 +3,16 @@
 //
 
 import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { TableType, translations as tableTranslations } from '@dxos/react-ui-table';
-import { ViewType, ViewTypeV1, ViewTypeV1ToV2 } from '@dxos/schema';
+import { translations as tableTranslations } from '@dxos/react-ui-table';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import { serializer } from './serializer';
 import { translations } from './translations';
-import { CreateTableSchema, TableAction } from './types';
+import { CreateTableSchema, TableAction, TableView } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [
@@ -29,13 +27,9 @@ export const TablePlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: TableType.typename,
+          id: TableView.typename,
           metadata: {
-            label: (object: TableType) => object.name,
             icon: 'ph--table--regular',
-            // TODO(wittjosiah): Move out of metadata.
-            loadReferences: (table: TableType) => [], // loadObjectReferences(table, (table) => [table.schema]),
-            serializer,
             comments: 'unanchored',
           },
         }),
@@ -52,21 +46,20 @@ export const TablePlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TableType,
+            objectSchema: TableView,
             formSchema: CreateTableSchema,
+            hidden: true,
             getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
           }),
         ),
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ViewType, ViewTypeV1]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/migration`,
-      activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SchemaAdded,
+      activate: () =>
+        contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema }) =>
+          createIntent(TableAction.OnSchemaAdded, { space, schema }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

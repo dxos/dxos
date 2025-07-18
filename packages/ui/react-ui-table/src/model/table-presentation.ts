@@ -28,7 +28,7 @@ import { tableButtons, tableControls } from '../util';
  * different grid planes.
  */
 export class TablePresentation<T extends TableRow = TableRow> {
-  private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projection.getFieldProjection>>();
+  private fieldProjectionCache = new Map<string, ReturnType<typeof this.model.projectionManager.getFieldProjection>>();
 
   constructor(
     private readonly model: TableModel<T>,
@@ -89,7 +89,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
   private getFieldProjection(fieldId: string) {
     let projection = this.fieldProjectionCache.get(fieldId);
     if (!projection) {
-      projection = this.model.projection.getFieldProjection(fieldId);
+      projection = this.model.projectionManager.getFieldProjection(fieldId);
       this.fieldProjectionCache.set(fieldId, projection);
     }
     return projection;
@@ -217,7 +217,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     // Single-Selects.
     if (props.format === FormatEnum.SingleSelect) {
       const value = getValue(obj, field.path);
-      const options = this.model.projection.getFieldProjection(field.id).props.options;
+      const options = this.model.projectionManager.getFieldProjection(field.id).props.options;
       if (options) {
         const option = options.find((o) => o.id === value);
         if (option) {
@@ -229,7 +229,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     // Multi-Selects.
     if (props.format === FormatEnum.MultiSelect) {
       const values = getValue(obj, field.path) as string[] | undefined;
-      const options = this.model.projection.getFieldProjection(field.id).props.options;
+      const options = this.model.projectionManager.getFieldProjection(field.id).props.options;
       if (options && values && values.length > 0) {
         const tags = values
           .map((value) => {
@@ -254,7 +254,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -272,7 +272,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
     const draftRows = this.model.draftRows.value;
 
     for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
@@ -302,9 +302,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this.getFieldProjection(fields[col].id);
+      const { field, props } = this.model.projectionManager.getFieldProjection(fields[col].id);
       const sorting = this.model.sorting?.sorting;
       const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
 
@@ -386,7 +386,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
-              disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+              disabled: (this.model.projection?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
         className: '!bg-toolbarSurface',

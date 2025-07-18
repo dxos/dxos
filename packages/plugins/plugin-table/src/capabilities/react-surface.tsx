@@ -5,31 +5,37 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj, Relation, type Ref } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { DataType, Projection } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { meta } from '../meta';
+import { TableView } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/table`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: TableType } => Obj.instanceOf(TableType, data.subject) && !data.variant,
-      component: ({ data, role }) => <TableContainer table={data.subject} role={role} />,
+      filter: (data): data is { subject: DataType.HasView } =>
+        Obj.instanceOf(DataType.HasView, data.subject) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(TableView, Relation.getTarget(data.subject as any)),
+      component: ({ data, role }) => <TableContainer view={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/companion/schema`,
       role: 'article',
-      filter: (data): data is { companionTo: TableType; subject: 'schema' } =>
-        Obj.instanceOf(TableType, data.companionTo) && data.subject === 'schema',
+      filter: (data): data is { companionTo: DataType.HasView; subject: 'schema' } =>
+        Obj.instanceOf(DataType.HasView, data.companionTo) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(TableView, Relation.getTarget(data.companionTo as any)) &&
+        data.subject === 'schema',
       component: ({ data, role }) => {
         return (
           <StackItem.Content role={role}>
-            <TableViewEditor table={data.companionTo} />
+            <TableViewEditor view={data.companionTo} />
           </StackItem.Content>
         );
       },
@@ -40,7 +46,7 @@ export default () =>
       filter: (
         data,
       ): data is {
-        companionTo: Obj.Obj<{ view: Ref.Ref<ViewType> } | { cardView: Ref.Ref<ViewType> }>;
+        companionTo: Obj.Obj<{ view: Ref.Ref<Projection> } | { cardView: Ref.Ref<Projection> }>;
       } => {
         if (data.subject !== 'selected-objects' || !data.companionTo || !Obj.isObject(data.companionTo)) {
           return false;
@@ -48,8 +54,8 @@ export default () =>
 
         const companionTo = data.companionTo as any;
         // TODO(ZaymonFC): Unify the path of view between table and kanban.
-        const hasValidView = companionTo.view?.target instanceof ViewType;
-        const hasValidCardView = companionTo.cardView?.target instanceof ViewType;
+        const hasValidView = companionTo.view?.target instanceof Projection;
+        const hasValidCardView = companionTo.cardView?.target instanceof Projection;
         return hasValidView || hasValidCardView;
       },
       component: ({ data }) => {
@@ -59,7 +65,7 @@ export default () =>
           return null;
         }
 
-        return <ObjectDetailsPanel objectId={data.companionTo.id} view={viewTarget} />;
+        return <ObjectDetailsPanel objectId={data.companionTo.id} projection={viewTarget} />;
       },
     }),
   ]);

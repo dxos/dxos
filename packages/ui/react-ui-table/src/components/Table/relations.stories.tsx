@@ -5,17 +5,15 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import { SchemaAST } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { Obj, Ref, type Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
-import { getAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
+import { DataType, createProjection, ProjectionManager } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -23,7 +21,6 @@ import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
-import { TableType } from '../../types';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
@@ -36,32 +33,30 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
   const { space } = useClientProvider();
 
   const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
-  const table = useMemo(() => {
+  const projection = useMemo(() => {
     if (!space) {
       return undefined;
     }
     const typename = getSchemaTypename(schema);
     invariant(typename);
-    const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema });
-    return space.db.add(Obj.make(TableType, { view: Ref.make(view) }));
+    return space.db.add(createProjection({ typename, jsonSchema }));
   }, [schema, space, jsonSchema]);
 
-  const projection = useMemo(() => {
-    if (!table?.view?.target) {
+  const manager = useMemo(() => {
+    if (!projection) {
       return undefined;
     }
 
     // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(jsonSchema, table.view.target);
-  }, [jsonSchema, table]);
+    return new ProjectionManager(jsonSchema, projection);
+  }, [jsonSchema, projection]);
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
     [],
   );
 
-  const model = useTableModel<TableRow>({ table, projection, rows: [], features });
+  const model = useTableModel<TableRow>({ projection: manager, rows: [], features });
   useEffect(() => {
     if (!model || !space) {
       return;
@@ -107,7 +102,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, DataType.Organization, DataType.Person],
+      types: [DataType.Projection, DataType.Organization, DataType.Person],
       createIdentity: true,
       createSpace: true,
     }),

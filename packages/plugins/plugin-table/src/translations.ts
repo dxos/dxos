@@ -3,14 +3,14 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { TableType } from '@dxos/react-ui-table';
 
 import { meta } from './meta';
+import { TableView } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [TableType.typename]: {
+      [TableView.typename]: {
         'typename label': 'Table',
         'typename label_zero': 'Tables',
         'typename label_one': 'Table',

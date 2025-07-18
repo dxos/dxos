@@ -5,9 +5,11 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { StoredSchema } from '@dxos/echo-schema';
 
 import { Organization } from './organization';
 import { Person } from './person';
+import { Projection } from '../projection/projection';
 
 //
 // Employer
@@ -95,9 +97,26 @@ export const AnchoredTo = Schema.Struct({
   Type.Relation({
     typename: 'dxos.org/relation/AnchoredTo',
     version: '0.1.0',
-    source: Type.Expando, // TODO(burdon): Any???
-    target: Type.Expando,
+    source: Type.Expando, // TODO(burdon): Type.Obj.Any.
+    target: Type.Expando, // TODO(burdon): Type.Obj.Any.
   }),
 );
 
 export interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
+
+//
+// HasView
+//
+
+export const HasView = Schema.Struct({
+  projection: Type.Ref(Projection),
+}).pipe(
+  Type.Relation({
+    typename: 'dxos.org/relation/HasView',
+    version: '0.1.0',
+    source: StoredSchema,
+    target: Type.Expando,
+  }),
+);
+
+export interface HasView extends Schema.Schema.Type<typeof HasView> {}

@@ -4,18 +4,15 @@
 
 import { type Schema } from 'effect';
 
-import { Obj, Ref } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import {
-  createView,
+  createProjection,
   getSchemaFromPropertyDefinitions,
-  ViewProjection,
-  type ViewType,
+  type Projection,
+  ProjectionManager,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
-
-import { TableType } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
@@ -61,37 +58,32 @@ export const makeDynamicTable = ({
   typename: string;
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { table: TableType; projection: ViewProjection } => {
-  const view = createView({
-    name: 'dynamic-table',
+}): ProjectionManager => {
+  const projection = createProjection({
     typename,
     jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  const table = Obj.make(TableType, { name: 'dynamic-table', view: Ref.make(view) });
-  const projection = new ViewProjection(jsonSchema, view);
-  if (properties && view.fields) {
-    setProperties(view, projection, properties);
+  const manager = new ProjectionManager(jsonSchema, projection);
+  if (properties && projection.fields) {
+    setProperties(projection, manager, properties);
   }
 
-  return {
-    table,
-    projection,
-  };
+  return manager;
 };
 
-const setProperties = (view: ViewType, projection: ViewProjection, properties: TablePropertyDefinition[]) => {
+const setProperties = (projection: Projection, manager: ProjectionManager, properties: TablePropertyDefinition[]) => {
   for (const property of properties) {
-    const field = view.fields.find((field) => field.path === property.name);
+    const field = projection.fields.find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
         field.size = property.size;
       }
 
       if (property.title !== undefined) {
-        const fieldProjection = projection.getFieldProjection(field.id);
-        projection.setFieldProjection({
+        const fieldProjection = manager.getFieldProjection(field.id);
+        manager.setFieldProjection({
           ...fieldProjection,
           props: { ...fieldProjection.props, title: property.title },
         });
@@ -99,7 +91,7 @@ const setProperties = (view: ViewType, projection: ViewProjection, properties: T
 
       if (property.sort) {
         const fieldId = field.id;
-        view.query.sort = [{ fieldId, direction: property.sort }];
+        projection.query.sort = [{ fieldId, direction: property.sort }];
       }
     }
   }

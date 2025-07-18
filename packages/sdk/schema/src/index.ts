@@ -11,4 +11,3 @@ export * from './projection';
 export * from './properties';
 export * from './util';
 export * from './validate';
-export * from './view';

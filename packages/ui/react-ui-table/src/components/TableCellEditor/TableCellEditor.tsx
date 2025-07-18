@@ -69,8 +69,8 @@ export const TableValueEditor = ({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.view.fields[col];
-    const fieldProjection = model.projection.getFieldProjection(field.id);
+    const field = model.projectionManager.projection.fields[col];
+    const fieldProjection = model.projectionManager.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
@@ -114,8 +114,8 @@ export const TableCellEditor = ({
     }
 
     const { col } = parseCellIndex(editing.index);
-    const field = model.projection.view.fields[col];
-    const fieldProjection = model.projection.getFieldProjection(field.id);
+    const field = model.projectionManager.projection.fields[col];
+    const fieldProjection = model.projectionManager.getFieldProjection(field.id);
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
@@ -131,7 +131,7 @@ export const TableCellEditor = ({
     const { row, col } = cell;
 
     if (model.isDraftCell(cell)) {
-      const field = model.projection.view.fields[col];
+      const field = model.projection.fields[col];
       const hasValidationError = model.hasDraftRowValidationError(row, field.path);
 
       if (hasValidationError) {
@@ -322,8 +322,8 @@ export const TableCellEditor = ({
     if (model && editing) {
       const cell = parseCellIndex(editing.index);
       const { col } = cell;
-      const field = model.projection.view.fields[col];
-      const fieldProjection = model.projection.getFieldProjection(field.id);
+      const field = model.projectionManager.projection.fields[col];
+      const fieldProjection = model.projectionManager.getFieldProjection(field.id);
 
       if (
         fieldProjection?.props.format === FormatEnum.SingleSelect ||

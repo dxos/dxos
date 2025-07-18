@@ -6,31 +6,37 @@ import { type Schema } from 'effect';
 import React, { useMemo } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
-import { type KanbanType } from '@dxos/react-ui-kanban';
-import { type DataType } from '@dxos/schema';
+import { KanbanView } from '@dxos/react-ui-kanban';
+import { DataType } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../components';
 import { meta } from '../meta';
-import { isKanban, PivotColumnAnnotationId } from '../types';
+import { PivotColumnAnnotationId } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
       role: ['article', 'section'],
-      filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
-      component: ({ data, role }) => <KanbanContainer kanban={data.subject} role={role} />,
+      filter: (data): data is { subject: DataType.HasView } =>
+        Obj.instanceOf(DataType.HasView, data.subject) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(KanbanView, Relation.getTarget(data.subject as any)),
+      component: ({ data, role }) => <KanbanContainer view={data.subject} role={role} />,
     }),
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: KanbanType } => isKanban(data.subject),
-      component: ({ data }) => <KanbanViewEditor kanban={data.subject} />,
+      filter: (data): data is { subject: DataType.HasView } =>
+        Obj.instanceOf(DataType.HasView, data.subject) &&
+        // TODO(wittjosiah): Remove cast.
+        Obj.instanceOf(KanbanView, Relation.getTarget(data.subject as any)),
+      component: ({ data }) => <KanbanViewEditor view={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/create-initial-schema-form-[pivot-column]`,

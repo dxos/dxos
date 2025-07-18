@@ -2,30 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe, Schema } from 'effect';
+// import { Effect, pipe, Schema } from 'effect';
 
-import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import {
-  contributes,
-  Capabilities,
-  createResolver,
-  type PluginContext,
-  createIntent,
-  chain,
-} from '@dxos/app-framework';
-import { ArtifactId } from '@dxos/artifact';
-import { getSpace } from '@dxos/client/echo';
-import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
-import { TestRuntime } from '@dxos/conductor/testing';
+// import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+// import { ArtifactId } from '@dxos/artifact';
+// import { getSpace } from '@dxos/client/echo';
+// import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
+// import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
-import { runAndForwardErrors } from '@dxos/effect';
-import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
-import { failedInvariant } from '@dxos/invariant';
+// import { runAndForwardErrors } from '@dxos/effect';
+// import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
+// import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { SpaceAction } from '@dxos/plugin-space/types';
-import { TableAction } from '@dxos/plugin-table';
-import { TableType } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
@@ -141,26 +131,27 @@ export default (context: PluginContext) =>
         space.db.add(newContact);
         log.info('Contact extracted and added to space', { contact: newContact });
 
-        const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-        const contactTable = tables.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Person.typename;
-        });
+        // TODO(wittjosiah): Create a table for contacts.
+        // const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
+        // const contactTable = tables.find((table) => {
+        //   return table.view?.target?.query?.typename === DataType.Person.typename;
+        // });
 
-        if (!contactTable) {
-          log.info('No table found for contacts, creating one.');
-          return {
-            intents: [
-              pipe(
-                createIntent(TableAction.Create, {
-                  space,
-                  name: 'Contacts',
-                  typename: DataType.Person.typename,
-                }),
-                chain(SpaceAction.AddObject, { target: space }),
-              ),
-            ],
-          };
-        }
+        // if (!contactTable) {
+        //   log.info('No table found for contacts, creating one.');
+        //   return {
+        //     intents: [
+        //       pipe(
+        //         createIntent(TableAction.Create, {
+        //           space,
+        //           name: 'Contacts',
+        //           typename: DataType.Person.typename,
+        //         }),
+        //         chain(SpaceAction.AddObject, { target: space }),
+        //       ),
+        //     ],
+        //   };
+        // }
       },
     }),
     // TODO(dmaretskyi): There should be a generic execute{function/sequence/workflow} intent that runs the executable locally or remotelly.
@@ -169,65 +160,65 @@ export default (context: PluginContext) =>
       resolve: async ({ mailbox }) => {
         throw new Error('Not implemented');
 
-        log.info('Run assistant', { mailbox });
+        // log.info('Run assistant', { mailbox });
 
-        const space = getSpace(mailbox) ?? failedInvariant();
-        const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
+        // const space = getSpace(mailbox) ?? failedInvariant();
+        // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
 
-        const serviceContainer = new ServiceContainer().setServices({
-          ai: AiService.make(aiClient.value),
-          database: DatabaseService.make(space.db),
-          queues: QueueService.make(space.queues, undefined),
-          // eventLogger: consoleLogger,
-          toolResolver: ToolResolverService.make(
-            // TODO(dmaretskyi): Provided by a plugin.
-            new ToolRegistry([
-              createTool('inbox', {
-                name: 'label',
-                description: 'Label a message',
-                schema: Schema.Struct({
-                  message: ArtifactId.annotations({ description: 'The message to label' }),
-                  labels: Schema.Array(Label).annotations({ description: 'The labels to apply to the message' }),
-                }),
-                execute: async ({ message, labels }) => {
-                  log.info('Labeling message', { message, labels });
-                  return ToolResult.Success({
-                    message: 'Message labeled',
-                  });
-                },
-              }),
-            ]),
-          ),
-        });
+        // const serviceContainer = new ServiceContainer().setServices({
+        //   ai: AiService.make(aiClient.value),
+        //   database: DatabaseService.make(space.db),
+        //   queues: QueueService.make(space.queues, undefined),
+        //   // eventLogger: consoleLogger,
+        //   toolResolver: ToolResolverService.make(
+        //     // TODO(dmaretskyi): Provided by a plugin.
+        //     new ToolRegistry([
+        //       createTool('inbox', {
+        //         name: 'label',
+        //         description: 'Label a message',
+        //         schema: Schema.Struct({
+        //           message: ArtifactId.annotations({ description: 'The message to label' }),
+        //           labels: Schema.Array(Label).annotations({ description: 'The labels to apply to the message' }),
+        //         }),
+        //         execute: async ({ message, labels }) => {
+        //           log.info('Labeling message', { message, labels });
+        //           return ToolResult.Success({
+        //             message: 'Message labeled',
+        //           });
+        //         },
+        //       }),
+        //     ]),
+        //   ),
+        // });
 
-        const circuit = await compileSequence(SEQUENCE);
+        // const circuit = await compileSequence(SEQUENCE);
 
-        // TODO(dmaretskyi): We shouldn't really use test-runtime here but thats the most convinient api.
-        // Lets imporve the workflow-loader api.
-        const runtime = new TestRuntime(serviceContainer);
-        runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(circuit));
+        // // TODO(dmaretskyi): We shouldn't really use test-runtime here but thats the most convinient api.
+        // // Lets imporve the workflow-loader api.
+        // const runtime = new TestRuntime(serviceContainer);
+        // runtime.registerGraph('dxn:compute:test', new ComputeGraphModel(circuit));
 
-        // TODO(dmaretskyi): This should iterate over every message.
+        // // TODO(dmaretskyi): This should iterate over every message.
 
-        const input = 'TODO';
-        const { text } = await pipe(
-          { [DEFAULT_INPUT]: input },
-          ValueBag.make,
-          (input) => runtime.runGraph('dxn:compute:test', input),
-          Effect.flatMap(ValueBag.unwrap),
-          Effect.scoped,
-          runAndForwardErrors,
-        );
+        // const input = 'TODO';
+        // const { text } = await pipe(
+        //   { [DEFAULT_INPUT]: input },
+        //   ValueBag.make,
+        //   (input) => runtime.runGraph('dxn:compute:test', input),
+        //   Effect.flatMap(ValueBag.unwrap),
+        //   Effect.scoped,
+        //   runAndForwardErrors,
+        // );
 
-        log.info('Workflow result', { text });
+        // log.info('Workflow result', { text });
       },
     }),
   ]);
 
-const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
+// const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promotions', 'updates', 'forums', 'spam');
 
-const SEQUENCE = SequenceBuilder.create()
-  .step('Analyze the email and assign labels to it', {
-    tools: ['inbox/label'],
-  })
-  .build();
+// const SEQUENCE = SequenceBuilder.create()
+//   .step('Analyze the email and assign labels to it', {
+//     tools: ['inbox/label'],
+//   })
+//   .build();

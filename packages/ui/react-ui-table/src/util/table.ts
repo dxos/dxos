@@ -10,32 +10,24 @@ import {
   FormatEnum,
   type JsonPath,
   type JsonProp,
-  Ref,
   TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
-import { type Client, PublicKey } from '@dxos/react-client';
+import { PublicKey } from '@dxos/react-client';
 import { live, type Space } from '@dxos/react-client/echo';
-import { createFieldId, createView, getSchemaProperties, ViewProjection, type ViewType } from '@dxos/schema';
+import { createFieldId, createProjection, getSchemaProperties, ProjectionManager, type Projection } from '@dxos/schema';
 
-import { type TableType } from '../types';
-
-// TODO(ZaymonFC): We don't need the client anymore.
 type InitialiseTableProps = {
-  client: Client;
   space: Space;
-  table: TableType;
   typename?: string;
   initialRow?: boolean;
 };
 
-export const initializeTable = async ({
-  client,
+export const initializeProjection = async ({
   space,
-  table,
   typename,
   initialRow = true,
-}: InitialiseTableProps): Promise<Schema.Schema.AnyNoContext> => {
+}: InitialiseTableProps): Promise<{ schema: Schema.Schema.AnyNoContext; projection: Projection }> => {
   if (typename) {
     const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
     if (!schema) {
@@ -44,38 +36,31 @@ export const initializeTable = async ({
 
     const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
-    table.view = Ref.make(
-      createView({
-        // TODO(ZaymonFC): Don't hardcode name?
-        name: 'View',
+    return {
+      schema,
+      projection: createProjection({
         typename: schema.typename,
         jsonSchema: schema.jsonSchema,
         fields,
       }),
-    );
-
-    return schema;
+    };
   } else {
     const [schema] = await space.db.schemaRegistry.register([createContactSchema()]);
     const fields = ContactFields;
+    const projection = createProjection({
+      typename: schema.typename,
+      jsonSchema: schema.jsonSchema,
+      fields,
+    });
 
-    table.view = Ref.make(
-      createView({
-        name: 'View',
-        typename: schema.typename,
-        jsonSchema: schema.jsonSchema,
-        fields,
-      }),
-    );
-
-    createProjection(schema, table.view.target!);
+    createProjectionManager(schema, projection);
 
     if (initialRow) {
       // TODO(burdon): Last (first) row should not be in db and should be managed by the model.
       space.db.add(live(schema, {}));
     }
 
-    return schema;
+    return { schema, projection };
   }
 };
 
@@ -92,23 +77,23 @@ const createContactSchema = () =>
 
 const ContactFields = ['name', 'email', 'salary', 'active'];
 
-const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection => {
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  projection.setFieldProjection({
+const createProjectionManager = (schema: EchoSchema, projection: Projection): ProjectionManager => {
+  const manager = new ProjectionManager(schema.jsonSchema, projection);
+  manager.setFieldProjection({
     field: {
-      id: view.fields.find((f) => f.path === 'salary')!.id,
+      id: projection.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
       size: 150,
     },
   });
-  projection.setFieldProjection({
+  manager.setFieldProjection({
     field: {
-      id: view.fields.find((f) => f.path === 'active')!.id,
+      id: projection.fields.find((f) => f.path === 'active')!.id,
       path: 'active' as JsonPath,
       size: 100,
     },
   });
-  projection.setFieldProjection({
+  manager.setFieldProjection({
     field: {
       id: createFieldId(),
       path: 'manager' as JsonPath,
@@ -123,5 +108,5 @@ const createProjection = (schema: EchoSchema, view: ViewType): ViewProjection =>
     },
   });
 
-  return projection;
+  return manager;
 };
