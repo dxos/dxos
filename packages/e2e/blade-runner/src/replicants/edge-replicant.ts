@@ -138,7 +138,7 @@ export class EdgeReplicant {
         name: 'test',
         source: buildResult.bundle,
       }),
-      10_000,
+      60_000,
     );
     invariant(result.functionId, 'Upload failed.');
     log.info(`Uploaded function ${result.functionId}, version ${result.version}`);
@@ -172,7 +172,7 @@ export class EdgeReplicant {
     invariant(space, 'space not found');
 
     const replicationIsDone = new Trigger();
-    const unsub = space.crud.subscribeToSyncState(Context.default(), (state) => {
+    const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
       log.info('sync state', { state });
       if (state.peers?.every((peer) => peer.differentDocuments === 0)) {
         replicationIsDone.wake();

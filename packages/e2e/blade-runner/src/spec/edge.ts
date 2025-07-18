@@ -34,14 +34,18 @@ export type EdgeTestSpec = {
   };
 };
 
-export class EdgeReplication implements TestPlan<EdgeTestSpec> {
+type EdgeReplicationResult = {
+  allCombinedReplicationTime: number;
+};
+
+export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationResult> {
   defaultSpec(): EdgeTestSpec {
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 100,
-        textSize: 1,
-        mutationAmount: 1,
+        documentAmount: 500,
+        textSize: 100,
+        mutationAmount: 100,
       },
       indexing: { enabled: true, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
@@ -57,10 +61,10 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
           services: {
             agentHosting: {
               type: 'AGENTHOSTING_API',
-              server: 'http://localhost:8787/v1alpha1/',
+              server: 'https://edge.dxos.workers.dev/v1alpha1/',
             },
             edge: {
-              url: 'http://localhost:8787',
+              url: 'https://edge.dxos.workers.dev',
             },
           },
         },
@@ -68,7 +72,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
     };
   }
 
-  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<void> {
+  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeReplicationResult> {
     const replicant = await env.spawn(EdgeReplicant, { platform: params.spec.platform });
     await replicant.brain.initClient({ config: params.spec.config, indexing: params.spec.indexing });
     await replicant.brain.createIdentity();
@@ -87,20 +91,37 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec> {
     });
     log.info('invoked function', { result });
 
-    // Replicate with echo replicator.
-    const config = params.spec.config;
-    config.runtime!.client!.edgeFeatures!.echoReplicator = true;
-    log.info('reinitializing client', { config });
-    await replicant.brain.reinitializeClient({ config, indexing: params.spec.indexing });
-    log.info('reinitialized client');
+    performance.mark('sync:start');
     await replicant.brain.waitForReplication({ spaceId });
+    performance.mark('sync:end');
+    const allCombinedReplicationTime = performance.measure('sync', 'sync:start', 'sync:end').duration;
 
     await replicant.brain.destroyClient();
     replicant.kill();
+
+    return { allCombinedReplicationTime };
   }
 
-  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: void) {
+  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeReplicationResult) {
     const reader = new TraceReader();
     await reader.addFile(path.join(params.outDir, 'perfetto.json'));
+    const traces = reader.getTraces('collection-sync-automerge-replicator');
+
+    const syncTime = traces.reduce((acc, trace) => {
+      if (!trace.duration) {
+        log.warn('trace has no duration', { trace });
+        return acc;
+      }
+
+      return acc + trace.duration;
+    }, 0);
+
+    const stats = {
+      syncTime,
+      ...result,
+    };
+
+    log.info('stats', { stats });
+    return stats;
   }
 }
