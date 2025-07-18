@@ -16133,7 +16133,6 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
-    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 
