@@ -57,8 +57,8 @@ export default (context: PluginContext) =>
               const hasValidView = get(
                 rxFromSignal(() => {
                   // TODO(dmaretskyi): There should be a type instanceof check
-                  const hasValidView = (subject as any).view?.target instanceof Projection;
-                  const hasValidCardView = (subject as any).cardView?.target instanceof Projection;
+                  const hasValidView = Obj.instanceOf(Projection, (subject as any).view?.target);
+                  const hasValidCardView = Obj.instanceOf(Projection, (subject as any).cardView?.target);
                   return hasValidView || hasValidCardView;
                 }),
               );
