@@ -10,11 +10,11 @@ import React, { useMemo, type FunctionComponent } from 'react';
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
+  DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
   remoteServiceEndpoints,
   readDocument,
   writeDocument,
-  DESIGN_SPEC_BLUEPRINT,
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -69,10 +69,6 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 //
 // Components
 //
-
-// const documents = useQuery(space, Filter.type(DocumentType));
-// TODO(dmaretskyi): This should be part of the context.
-// instructions: `Documents available: ${JSON.stringify(documents.map(Obj.getDXN))}`,
 
 const ChatContainer = () => {
   const space = useSpace();

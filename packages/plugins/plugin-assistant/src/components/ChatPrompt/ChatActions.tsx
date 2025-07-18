@@ -23,7 +23,7 @@ export const ChatActions = ({ microphone, recording, processing, onEvent }: Chat
   return (
     <div className='flex items-center'>
       {/* TODO(burdon): Modes (models and/or presets for blueprints?). */}
-      <Select.Root value={'ollama'}>
+      <Select.Root value={'ollama'} disabled>
         <Select.TriggerButton classNames='mie-2 text-sm' />
         <Select.Content>
           <Select.Option value={'ollama'} classNames='text-sm'>

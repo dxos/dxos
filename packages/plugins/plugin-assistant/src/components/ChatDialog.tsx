@@ -24,10 +24,10 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(meta.id)?.value;
   const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'deck', serviceContainer, settings });
+  const processor = useChatProcessor({ part: 'deck', chat, serviceContainer, settings });
 
   // TODO(burdon): Refocus when open.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
     switch (event.type) {
       case 'submit':

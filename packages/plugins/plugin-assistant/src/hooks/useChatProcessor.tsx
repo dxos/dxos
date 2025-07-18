@@ -103,31 +103,33 @@ export const useChatProcessor = ({
       ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
       : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
-  const conversation = useMemo(
-    () =>
-      chat?.queue.target &&
-      new Conversation({
-        serviceContainer,
-        queue: chat.queue.target as Queue<any>,
-      }),
-    [chat?.queue.target, serviceContainer],
-  );
+  const conversation = useMemo(() => {
+    if (!chat?.queue.target) {
+      return;
+    }
+
+    return new Conversation({
+      serviceContainer,
+      queue: chat.queue.target as Queue<any>,
+    });
+  }, [chat?.queue.target, serviceContainer]);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
+    if (!conversation) {
+      return undefined;
+    }
+
     log('creating processor...', { settings });
-    return (
-      conversation &&
-      new ChatProcessor(conversation, {
-        tools,
-        extensions,
-        blueprintRegistry,
-        artifacts,
-        systemPrompt,
-        model,
-      })
-    );
+    return new ChatProcessor(conversation, {
+      tools,
+      extensions,
+      blueprintRegistry,
+      artifacts,
+      systemPrompt,
+      model,
+    });
   }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
 
   return processor;

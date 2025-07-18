@@ -15,7 +15,7 @@ const preventDefault = (event: Event) => event.preventDefault();
 //  This currently causes the Footer to be unsettled when closed.
 //  As a work around, setting minSize to 6rem and adding 16-2px padding to content.
 // TODO(burdon): Allow for expandable multi-line input.
-const minSize = 6;
+const minSize = 10;
 const contentMargin = 'mbs-[6px] mbe-[6px]'; // Exclude border.
 
 //
@@ -74,7 +74,7 @@ const ChatDialogRoot = ({
             classNames={[
               'box-content md:is-[35rem] md:max-is-none pointer-events-auto',
               'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
-              'grid grid-rows-[var(--rail-action)_1fr_var(--rail-action)] p-0 overflow-hidden',
+              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
             ]}
             inOverlayLayout
             {...resizeAttributes}
