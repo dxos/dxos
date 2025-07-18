@@ -10,6 +10,8 @@ import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
 import unusedImports from 'eslint-plugin-unused-imports';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
+const SOURCES_GLOB = '**/{src,config,.storybook}/**';
+
 export default tseslint.config(
   //
   // Global ignores.
@@ -66,6 +68,7 @@ export default tseslint.config(
       'packages/sdk/shell/react-i18next.d.ts',
       'packages/core/mesh/network-manager/module-stub.mjs',
       'packages/ui/react-ui-geo/data',
+      'packages/apps/composer-app/src/functions/_worker.ts',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -91,7 +94,7 @@ export default tseslint.config(
   // All files.
   //
   {
-    files: ['**/src/**/*.{js,ts,jsx,tsx}'],
+    files: [[SOURCES_GLOB, '**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
     extends: [
       eslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
@@ -207,7 +210,7 @@ export default tseslint.config(
   // Tests.
   //
   {
-    files: ['**/src/**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
+    files: [[SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
     rules: {
       'no-console': 'off',
     },
@@ -217,7 +220,7 @@ export default tseslint.config(
   // Stories.
   //
   {
-    files: ['**/src/**/*.stories.{tsx,jsx}'],
+    files: [[SOURCES_GLOB, '**/*.stories.{tsx,jsx}']],
     extends: [storybook.configs['flat/recommended']],
     rules: {
       'storybook/context-in-play-function': 'off',
