@@ -36,6 +36,7 @@ import {
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
 
+// TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
     <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>

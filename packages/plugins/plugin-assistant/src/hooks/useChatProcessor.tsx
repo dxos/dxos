@@ -39,7 +39,7 @@ type UseChatProcessorProps = {
  * Configure and create ChatProcessor.
  */
 export const useChatProcessor = ({
-  part,
+  part = 'deck',
   space,
   chat,
   serviceContainer,

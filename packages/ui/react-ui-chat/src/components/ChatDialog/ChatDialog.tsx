@@ -18,6 +18,13 @@ const preventDefault = (event: Event) => event.preventDefault();
 const minSize = 10;
 const contentMargin = 'mbs-[6px] mbe-[6px]'; // Exclude border.
 
+// TODO(burdon): Factor out.
+const Endcap = ({ children }: PropsWithChildren) => {
+  return (
+    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+  );
+};
+
 //
 // Context
 //
@@ -31,7 +38,7 @@ type ChatDialogContextValue = {
   setSize: Dispatch<SetStateAction<Size>>;
 };
 
-const [ChadDialogContextProvider, useChatDialogContext] = createContext<ChatDialogContextValue>('ChatDialog');
+const [ChatDialogContextProvider, useChatDialogContext] = createContext<ChatDialogContextValue>('ChatDialog');
 
 //
 // Root
@@ -60,7 +67,7 @@ const ChatDialogRoot = ({
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.
   return (
-    <ChadDialogContextProvider
+    <ChatDialogContextProvider
       open={openState}
       setOpen={setOpenState}
       expanded={expandedState}
@@ -89,7 +96,7 @@ const ChatDialogRoot = ({
           </Dialog.Content>
         </div>
       </Dialog.Root>
-    </ChadDialogContextProvider>
+    </ChatDialogContextProvider>
   );
 };
 
@@ -114,12 +121,18 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   }, [expanded]);
 
   return (
-    <div className={mx('flex w-full items-center overflow-hidden', classNames)}>
-      <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
+    <div
+      className={mx(
+        'w-full grid grid-cols-[var(--rail-action)_1fr_min-content] items-center overflow-hidden',
+        classNames,
+      )}
+    >
+      <Endcap>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />
         </Dialog.Close>
-      </div>
+      </Endcap>
+      <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'></div>
       <div className='grow'>
         {title && (
           <Dialog.Title
@@ -130,7 +143,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           </Dialog.Title>
         )}
       </div>
-      <div className='flex w-[--rail-action] h-[--rail-action] items-center justify-center'>
+      <Endcap>
         <IconButton
           variant='ghost'
           icon='ph--caret-up--regular'
@@ -139,7 +152,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           label={expanded ? 'Close' : 'Open'}
           onClick={() => setExpanded((expanded) => !expanded)}
         />
-      </div>
+      </Endcap>
 
       <ResizeHandle
         key={resizeKey}
