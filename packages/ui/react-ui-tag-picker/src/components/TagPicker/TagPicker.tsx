@@ -19,13 +19,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { TagPickerItem } from './TagPickerItem';
-import {
-  type TagPickerItemData,
-  type TagPickerMode,
-  type TagPickerOptions,
-  createLinks,
-  tagPickerExtension,
-} from './extension';
+import { type TagPickerItemData, type TagPickerMode, type TagPickerOptions, createLinks, tagPicker } from './extension';
 import { translationKey } from '../../translations';
 
 export type TagPickerProps = ThemedClassName<
@@ -104,7 +98,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
               },
             },
           }),
-          tagPickerExtension({
+          tagPicker({
             debug: true,
             onUpdate: handleUpdate,
             removeLabel: t('remove label'),

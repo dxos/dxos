@@ -6,14 +6,14 @@ import React, { forwardRef, useState } from 'react';
 
 import { type Blueprint, type BlueprintRegistry } from '@dxos/assistant';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type ThemedClassName, Toolbar, useForwardedRef, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ChatActionButtons } from './ChatActionButtons';
+import { ChatActions } from './ChatActions';
 import { ChatOptionsMenu, type ChatOptionsMenuProps } from './ChatOptionsMenu';
+import { ChatReferences } from './ChatReferences';
 import { ChatStatusIndicator } from './ChatStatusIndicator';
-import { meta } from '../../meta';
 
 export type ChatPromptProps = ThemedClassName<
   Omit<ChatEditorProps, 'classNames'> & {
@@ -26,14 +26,10 @@ export type ChatPromptProps = ThemedClassName<
     blueprints?: Blueprint[];
     onChangeBlueprints?: ChatOptionsMenuProps['onChange'];
     onScroll?: () => void;
-
-    // TODO(burdon): Factor out.
-    // blueprints?: TagPickerItemData[];
-    // onSearchBlueprints?: TagPickerOptions['onSearch'];
-    // onUpdateBlueprints?: TagPickerOptions['onUpdate'];
   }
 >;
 
+// TODO(burdon): Remove this compoennts and move parts into ../Chat
 export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
   (
     {
@@ -51,7 +47,6 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.id);
     const promptRef = useForwardedRef<ChatEditorController>(forwardedRef);
     const [active, setActive] = useState(false);
 
@@ -80,8 +75,8 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
 
           <ChatEditor {...props} ref={promptRef} />
 
-          <div className='flex h-[--rail-action] items-center justify-center'>
-            <ChatActionButtons
+          <div className='flex h-[--rail-action] items-center'>
+            <ChatActions
               microphone={microphone}
               processing={processing}
               recording={recording}
@@ -101,7 +96,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
           classNames,
         )}
       >
-        <div className='grid h-[--rail-action] items-center justify-center'>
+        <div className='grid h-[--rail-action] items-center'>
           <ChatStatusIndicator error={error} processing={processing} />
         </div>
 
@@ -115,20 +110,9 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
           />
         )) || <div />}
 
-        <Toolbar.Root>
-          {/* {(onSearchBlueprints && (
-            <TagPicker
-              classNames='w-full'
-              mode='multi-select'
-              items={blueprints ?? []}
-              placeholder={t('blueprints placeholder')}
-              onSearch={onSearchBlueprints}
-              onUpdate={onUpdateBlueprints}
-            />
-          )) || <div className='flex-1' />} */}
-          <div className='flex-1' />
-
-          <ChatActionButtons
+        <div className='grid h-[--rail-action] items-center'>
+          <ChatReferences classNames='w-full' />
+          <ChatActions
             microphone={microphone}
             processing={processing}
             recording={recording}
@@ -136,7 +120,7 @@ export const ChatPrompt = forwardRef<ChatEditorController, ChatPromptProps>(
             onScroll={onScroll}
             onRecordChange={setActive}
           />
-        </Toolbar.Root>
+        </div>
       </div>
     );
   },

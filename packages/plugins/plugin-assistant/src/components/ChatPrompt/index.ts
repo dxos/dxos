@@ -3,3 +3,4 @@
 //
 
 export * from './ChatPrompt';
+export * from './ChatOptionsMenu';

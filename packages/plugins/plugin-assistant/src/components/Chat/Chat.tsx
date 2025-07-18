@@ -20,8 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { type ChatProcessor, useContextProvider } from '../../hooks';
 import { type AIChatType } from '../../types';
-import { ChatPrompt as NativeChatPrompt, type ChatPromptProps } from '../ChatPrompt';
-import { type ChatOptionsMenuProps } from '../ChatPrompt/ChatOptionsMenu';
+import { ChatPrompt as NativeChatPrompt, type ChatPromptProps, type ChatOptionsMenuProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps } from '../ChatThread';
 
 type ChatEvents = 'submit' | 'scroll';
@@ -214,9 +213,6 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
     [],
   );
 
-  // Blueprints.
-  // const [blueprints, handleSearchBlueprints, handleUpdateBlueprints] = useBlueprintHandlers(space, processor);
-
   return (
     <NativeChatPrompt
       {...props}
@@ -226,9 +222,6 @@ const ChatPrompt = (props: Pick<ChatPromptProps, 'classNames' | 'placeholder' | 
       blueprintRegistry={processor.blueprintRegistry}
       blueprints={blueprints}
       onChangeBlueprints={handleUpdateBlueprints}
-      // blueprints={blueprints}
-      // onSearchBlueprints={handleSearchBlueprints}
-      // onUpdateBlueprints={handleUpdateBlueprints}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       onScroll={() => update.emit('scroll')}
