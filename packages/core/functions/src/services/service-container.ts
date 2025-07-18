@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Layer, type Context } from 'effect';
+import { Context, Layer, Struct } from 'effect';
 
-import { AiService } from './ai';
+import { AiService } from '@dxos/ai';
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { EventLogger } from './event-logger';
@@ -12,53 +12,49 @@ import { FunctionCallService } from './function-call-service';
 import { QueueService } from './queues';
 import { ToolResolverService } from './tool-resolver';
 import { TracingService } from './tracing';
+import { entries } from '@dxos/util';
+import { AiLanguageModel } from '@effect/ai';
+
+// TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
 
 /**
- * List of all service tags and their names.
+ * List of all services.
  */
-export interface ServiceTagRecord {
-  ai: AiService;
-  credentials: CredentialsService;
-  database: DatabaseService;
-  eventLogger: EventLogger;
-  functionCallService: FunctionCallService;
-  tracing: TracingService;
-  queues: QueueService;
-  toolResolver: ToolResolverService;
-}
+const SERVICES = {
+  ai: AiService,
+  credentials: CredentialsService,
+  database: DatabaseService,
+  eventLogger: EventLogger,
+  functionCallService: FunctionCallService,
+  queues: QueueService,
+  tracing: TracingService,
+  toolResolver: ToolResolverService,
+} as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
 /**
- * List of all services and their runtime types.
+ * Mapping of service names to their tags.
+ */
+export type ServiceTagRecord = {
+  [K in keyof typeof SERVICES]: (typeof SERVICES)[K] extends { new (_: never): infer T } ? T : never;
+};
+
+/**
+ * Mapping of service names to their runtime types.
  */
 export type ServiceRecord = {
   [K in keyof ServiceTagRecord]: Context.Tag.Service<ServiceTagRecord[K]>;
 };
 
 /**
- * Union of all services.
+ * Union of all services tags.
  */
 export type Services = ServiceTagRecord[keyof ServiceTagRecord];
 
-const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = {
-  [AiService.key]: 'ai',
-  [CredentialsService.key]: 'credentials',
-  [DatabaseService.key]: 'database',
-  [EventLogger.key]: 'eventLogger',
-  [FunctionCallService.key]: 'functionCallService',
-  [QueueService.key]: 'queues',
-  [TracingService.key]: 'tracing',
-  [ToolResolverService.key]: 'toolResolver',
-};
+const SERVICE_MAPPING: Record<string, keyof ServiceRecord> = Object.fromEntries(
+  entries(SERVICES).map(([name, tag]) => [tag.key, name]),
+);
 
-export const SERVICE_TAGS: Context.Tag<any, any>[] = [
-  AiService,
-  CredentialsService,
-  DatabaseService,
-  EventLogger,
-  FunctionCallService,
-  TracingService,
-  QueueService,
-];
+export const SERVICE_TAGS: Context.Tag<any, any>[] = Object.values(SERVICES);
 
 const DEFAULT_SERVICES: Partial<ServiceRecord> = {
   tracing: TracingService.noop,

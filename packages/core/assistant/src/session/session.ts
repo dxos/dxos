@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Option, pipe, Schema } from 'effect';
+import { Array, Effect, Option, pipe, Schema } from 'effect';
 
 import {
   AgentStatusReport,

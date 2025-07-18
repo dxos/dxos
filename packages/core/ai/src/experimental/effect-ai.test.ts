@@ -4,13 +4,15 @@ import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit, type AiError } fro
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { describe, it } from '@effect/vitest';
 import { NodeHttpClient } from '@effect/platform-node';
-import { Chunk, Config, Console, Effect, Layer, Predicate, Schema, Stream } from 'effect';
+import { Chunk, Config, Console, Context, Effect, Layer, Predicate, Schema, Stream } from 'effect';
 import { parseGptStream } from './parser';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
 import { preprocessAiInput } from './preprocessor';
-import { isToolUse } from '../tools';
-import { getToolCalls } from './tools';
+import { getToolCalls, runTool } from './tools';
+import { AiService } from '../service';
+import { AiModelNotAvailableError } from '../errors';
+import { todo } from '@dxos/debug';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
@@ -110,10 +112,33 @@ describe('effect AI client', () => {
         } while (true);
       },
       Effect.provide(toolkitLayer),
-      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+
+      /// Runtime
+      Effect.provide(AiServiceRouter),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
 });
 
+// TODO(dmaretskyi): Make this generic.
+const AiServiceRouter = Layer.effect(
+  AiService,
+  Effect.gen(function* () {
+    const anthropicClient = Layer.succeed(AnthropicClient.AnthropicClient, yield* AnthropicClient.AnthropicClient);
+    return AiService.of({
+      model: (model) => {
+        switch (model) {
+          case '@anthropic/claude-3-5-sonnet-20241022':
+            return AnthropicLanguageModel.model('claude-3-5-sonnet-20241022').pipe(Layer.provide(anthropicClient));
+          default:
+            return Layer.fail(new AiModelNotAvailableError(model));
+        }
+      },
+      get client(): never {
+        throw new Error('Client not available');
+      },
+    });
+  }),
+);
