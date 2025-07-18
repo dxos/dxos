@@ -10,20 +10,19 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { type ContextBinder, type Blueprint } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTimeout, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
-import { useContextProvider, type ChatProcessor } from '../../hooks';
+import { type ChatProcessor, useContextProvider, useBlueprints } from '../../hooks';
 import { meta } from '../../meta';
 import { type AIChatType } from '../../types';
 import {
@@ -31,7 +30,6 @@ import {
   type ChatActionsProps,
   type ChatEvent,
   ChatOptionsMenu,
-  type ChatOptionsMenuProps,
   ChatReferences,
   type ChatReferencesProps,
   ChatStatusIndicator,
@@ -348,25 +346,3 @@ export const Chat = {
 };
 
 export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };
-
-// TODO(burdon): Factor out.
-const useBlueprints = (context: ContextBinder) => {
-  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
-  useTimeout(
-    async () => {
-      const blueprints = (await Ref.Array.loadAll(context.blueprints.value ?? [])).filter(isNonNullable);
-      setBlueprints(blueprints);
-    },
-    0,
-    [context],
-  );
-
-  const handleUpdateBlueprints = useCallback<NonNullable<ChatOptionsMenuProps['onChange']>>(
-    (key: string, active: boolean) => {
-      log.info('update', { key, active });
-    },
-    [],
-  );
-
-  return [blueprints, handleUpdateBlueprints] as const;
-};
