@@ -38,7 +38,7 @@ class NodeRtcConnectionFactory implements RtcConnectionFactory {
   private static _cleanupMutex = new Mutex();
 
   // This should be inside the function to avoid triggering `eval` in the global scope.
-  // eslint-disable-next-line no-new-func
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
 
   // TODO(burdon): Do imports here?
   async initialize(): Promise<void> {}

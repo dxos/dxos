@@ -11,7 +11,13 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config(
   //
-  // Global ignores
+  // Global includes.
+  //
+  {
+    files: ['**/src/**/*.{j,t}sx?'],
+  },
+  //
+  // Global ignores.
   //
   {
     ignores: [
@@ -61,6 +67,9 @@ export default tseslint.config(
       'packages/core/mesh/signal/testing/setup.js',
       // 'packages/sdk/shell',
       'tools/esbuild/cli.js',
+      'packages/sdk/shell/react-i18next.d.ts',
+      'packages/core/mesh/network-manager/module-stub.mjs',
+      'packages/ui/react-ui-geo/data',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
@@ -191,6 +200,12 @@ export default tseslint.config(
         },
       ],
       'prettier/prettier': 'error',
+      'no-constant-binary-expression': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+
+      // TODO(dmaretskyi): To re-enable.
+      'no-unsafe-optional-chaining': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
     },
   },
 

@@ -28,7 +28,7 @@ log.config({
   filter: LogLevel.DEBUG,
 });
 
-/* eslint-disable @stayradiated/prefer-arrow-functions/prefer-arrow-functions */
+/* eslint-disable prefer-arrow-functions/prefer-arrow-functions */
 
 describe('log', () => {
   test('throws an error', () => {
