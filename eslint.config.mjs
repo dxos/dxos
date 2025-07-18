@@ -213,7 +213,7 @@ export default tseslint.config(
   // File-specific overrides
   //
   {
-    files: ['**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
+    files: ['**/src/**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
     rules: {
       'no-console': 'off',
     },
