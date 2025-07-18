@@ -96,7 +96,7 @@ export default tseslint.config(
       eslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat.recommended,
-      storybook.configs['flat/recommended'],
+
       dxos.configs.recommended,
       prettierRecommended,
     ],
@@ -150,7 +150,6 @@ export default tseslint.config(
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-for-in-array': 'off',
 
-      'storybook/context-in-play-function': 'off',
       camelcase: 'off',
       'no-empty': 'off',
       'prefer-const': [
@@ -211,6 +210,17 @@ export default tseslint.config(
     files: ['**/src/**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}'],
     rules: {
       'no-console': 'off',
+    },
+  },
+
+  //
+  // Stories.
+  //
+  {
+    files: ['**/src/**/*.stories.{tsx,jsx}'],
+    extends: [storybook.configs['flat/recommended']],
+    rules: {
+      'storybook/context-in-play-function': 'off',
     },
   },
 );
