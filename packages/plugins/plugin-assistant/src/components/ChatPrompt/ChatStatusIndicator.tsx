@@ -8,7 +8,12 @@ import { Icon, Tooltip } from '@dxos/react-ui';
 import { Spinner } from '@dxos/react-ui-sfx';
 import { errorText } from '@dxos/react-ui-theme';
 
-export const ChatStatusIndicator = ({ error, processing }: { error?: Error; processing?: boolean }) => {
+export type ChatStatusIndicatorProps = {
+  error?: Error;
+  processing?: boolean;
+};
+
+export const ChatStatusIndicator = ({ error, processing }: ChatStatusIndicatorProps) => {
   if (error) {
     return (
       <Tooltip.Trigger content={error.message} delayDuration={0}>

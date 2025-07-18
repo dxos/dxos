@@ -19,6 +19,7 @@ import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
+  /** @deprecated Why is this required? */
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: AIChatType;
@@ -52,9 +53,9 @@ export const useChatProcessor = ({
   const globalTools = useCapabilities(Capabilities.Tools);
 
   // TODO(burdon): Spec artifacts.
-  let artifactDefinitions: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
+  let artifacts: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
   if (noPluginArtifacts) {
-    artifactDefinitions = Stable.array;
+    artifacts = Stable.array;
   }
 
   // Services.
@@ -89,11 +90,11 @@ export const useChatProcessor = ({
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({
-        artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
+        artifacts: artifacts.map((definition) => `${definition.name}\n${definition.instructions}`),
         artifact,
         instructions,
       }),
-    [artifactDefinitions, artifact, instructions],
+    [artifacts, artifact, instructions],
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
@@ -122,12 +123,12 @@ export const useChatProcessor = ({
         tools,
         extensions,
         blueprintRegistry,
-        artifacts: artifactDefinitions,
+        artifacts,
         systemPrompt,
         model,
       })
     );
-  }, [conversation, tools, blueprintRegistry, artifactDefinitions, extensions, systemPrompt, model]);
+  }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
 
   return processor;
 };

@@ -18,6 +18,7 @@ import {
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -26,9 +27,10 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Config } from '@dxos/react-client';
 import { createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   Editor,
   createBasicExtensions,
@@ -44,7 +46,6 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
 import { useChatProcessor, useServiceContainer } from '../hooks';
-import { meta as pluginMeta } from '../meta';
 import { translations } from '../translations';
 import { AIChatType } from '../types';
 
@@ -74,8 +75,6 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 // instructions: `Documents available: ${JSON.stringify(documents.map(Obj.getDXN))}`,
 
 const ChatContainer = () => {
-  const { t } = useTranslation(pluginMeta.id);
-
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(AIChatType));
 
@@ -84,18 +83,17 @@ const ChatContainer = () => {
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
 
-  if (!chat) {
+  if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor}>
+    <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
       <Chat.Thread />
-      <div className='p-4'>
+      <div className='p-2'>
         <Chat.Prompt
+          expandable
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-          placeholder={t('prompt placeholder')}
-          compact={false}
         />
       </div>
     </Chat.Root>
@@ -204,7 +202,10 @@ const getDecorators = ({
       SettingsPlugin(),
       SpacePlugin(),
 
+      TranscriptionPlugin(),
+
       // TODO(burdon): Install capabilities independently?
+      // TODO(burdon): How to mock?
       AssistantPlugin(),
 
       ...plugins,

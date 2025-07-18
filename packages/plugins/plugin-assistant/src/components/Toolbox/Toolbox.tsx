@@ -13,11 +13,13 @@ import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { type ChatProcessor } from '../../hooks';
+import { meta } from '../../meta';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
-import { useChatContext } from '../Chat';
 
 export type ToolboxProps = ThemedClassName<{
   blueprints?: readonly Ref.Ref<Blueprint>[];
@@ -37,12 +39,25 @@ export const Toolbox = ({
   activeBlueprints,
   striped,
 }: ToolboxProps) => {
+  const { t } = useTranslation(meta.id);
+
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
       {blueprints && blueprints.length > 0 && (
         <Section
           title='Blueprints'
           items={blueprints.map(({ target }) => ({
+            name: target?.name ?? '',
+            description: target?.description ?? '',
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+          }))}
+        />
+      )}
+
+      {activeBlueprints && activeBlueprints.length > 0 && (
+        <Section
+          title='Blueprints'
+          items={activeBlueprints.map(({ target }) => ({
             name: target?.name ?? '',
             description: target?.description ?? '',
             subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
@@ -76,16 +91,11 @@ export const Toolbox = ({
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
       )}
 
-      {activeBlueprints && activeBlueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={activeBlueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
-          }))}
-        />
-      )}
+      {!blueprints?.length &&
+        !activeBlueprints?.length &&
+        !artifacts?.length &&
+        !services?.length &&
+        !functions?.length && <div>{t('no tools')}</div>}
     </div>
   );
 };
@@ -124,9 +134,9 @@ const Section: FC<{
   );
 };
 
-export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
-  const { processor } = useChatContext(ToolboxContainer.name);
+export type ToolboxContainerProps = ThemedClassName<{ space?: Space; processor?: ChatProcessor }>;
 
+export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
   // Plugin artifacts.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -150,7 +160,7 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   return (
     <Toolbox
       classNames={classNames}
-      blueprints={processor.context.blueprints.value}
+      blueprints={processor?.context.blueprints.value}
       artifacts={artifactDefinitions}
       services={serviceTools}
       functions={functions}

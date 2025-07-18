@@ -34,7 +34,7 @@ import { log } from '@dxos/log';
  *
  * NOTE: This effect does not cancel the async operation if the component is unmounted.
  *
- * @deprecated
+ * @deprecated Use useTimeout.
  */
 export const useAsyncEffect = <T>(
   callback: (isMounted: () => boolean) => Promise<T> | undefined,

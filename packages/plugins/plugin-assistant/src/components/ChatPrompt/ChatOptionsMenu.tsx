@@ -24,7 +24,7 @@ export const ChatOptionsMenu = ({ blueprintRegistry, blueprints, onChange }: Cha
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+      <DropdownMenu.Trigger asChild disabled={!blueprintOptions?.length}>
         <IconButton icon='ph--plus--regular' variant='ghost' size={5} iconOnly label={t('button add blueprint')} />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
