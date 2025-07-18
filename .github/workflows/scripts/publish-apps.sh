@@ -58,7 +58,8 @@ for APP_PATH in "${APPS[@]}"; do
     export LOG_FILTER="error"
   fi
 
-  moon run "$APP:bundle" --update-cache
+  # Don't use the cache when bundling the app for deployment to avoid any caching issues causing bad builds.
+  moon run "$APP:bundle" --updateCache
 
   outdir=${APP%-app}
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
