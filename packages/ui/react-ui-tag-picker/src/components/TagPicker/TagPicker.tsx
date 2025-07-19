@@ -19,13 +19,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { TagPickerItem } from './TagPickerItem';
-import {
-  type TagPickerItemData,
-  type TagPickerMode,
-  type TagPickerOptions,
-  createLinks,
-  tagPickerExtension,
-} from './extension';
+import { type TagPickerItemData, type TagPickerMode, type TagPickerOptions, createLinks, tagPicker } from './extension';
 import { translationKey } from '../../translations';
 
 export type TagPickerProps = ThemedClassName<
@@ -51,7 +45,7 @@ export const TagPicker = forwardRef<TagPickerHandle, TagPickerProps>(({ readonly
 
 TagPicker.displayName = 'TagPicker';
 
-const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
+const ReadonlyTagPicker = ({ classNames, items, onSelect }: TagPickerProps) => {
   const handleItemClick = useCallback(
     ({ itemId, action }: DxTagPickerItemClick) => {
       if (action === 'activate') {
@@ -60,19 +54,20 @@ const ReadonlyTagPicker = ({ items, onSelect }: TagPickerProps) => {
     },
     [onSelect],
   );
+
   return (
-    <>
+    <div className={mx(classNames)}>
       {items?.map((item) => (
         <TagPickerItem
           key={item.id}
           itemId={item.id}
           label={item.label}
           {...(item.hue ? { hue: item.hue } : {})}
-          onItemClick={handleItemClick}
           rootClassName='mie-1'
+          onItemClick={handleItemClick}
         />
       ))}
-    </>
+    </div>
   );
 };
 
@@ -96,15 +91,8 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({
-            themeMode,
-            slots: {
-              editor: {
-                className: mx(classNames),
-              },
-            },
-          }),
-          tagPickerExtension({
+          createThemeExtensions({ themeMode }),
+          tagPicker({
             debug: true,
             onUpdate: handleUpdate,
             removeLabel: t('remove label'),
@@ -134,7 +122,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
     return (
       <div
         ref={composedRef}
-        className='min-is-0 flex-1'
+        className={mx('min-is-0 flex-1', classNames)}
         style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties}
       />
     );

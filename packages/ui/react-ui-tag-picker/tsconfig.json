@@ -18,6 +18,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../lit-ui"
     },
     {

@@ -42,18 +42,18 @@ const RESIZE_SUBJECT = 'data-dx-resize-subject';
 const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
 
 export const resizeAttributes = {
-  'data-dx-resize-subject': true,
+  [RESIZE_SUBJECT]: true,
 };
 
 export type ResizeHandleProps = ThemedClassName<{
   side: Side;
+  iconPosition?: 'start' | 'center' | 'end';
   defaultSize?: Size;
   fallbackSize: number;
   size?: Size;
   minSize: number;
   maxSize?: number;
   unit?: 'rem';
-  iconPosition?: 'start' | 'center' | 'end';
   onSizeChange?: (nextSize: Size, commit?: boolean) => void;
 }>;
 
@@ -63,14 +63,14 @@ export const ResizeHandle = ({
   iconPosition = 'start',
   defaultSize,
   fallbackSize,
-  size: propsSize,
+  size: _size,
   minSize,
   maxSize,
   onSizeChange,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [size = 'min-content', setSize] = useControllableState({
-    prop: propsSize,
+    prop: _size,
     defaultProp: defaultSize,
     onChange: onSizeChange,
   });
@@ -102,6 +102,8 @@ export const ResizeHandle = ({
             : dragStartSize.current;
         buttonRef.current?.closest(`[${RESIZE_SUBJECT}]`)?.setAttribute(RESIZE_SUBJECT_DRAGGING, 'true');
       },
+      // NOTE: Throttling here doesn't prevent the warning:
+      //  Measure loop restarted more than 5 times
       onDrag: ({ location }) => {
         if (typeof dragStartSize.current !== 'number') {
           return;

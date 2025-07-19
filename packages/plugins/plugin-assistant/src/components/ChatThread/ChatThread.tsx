@@ -5,8 +5,9 @@
 import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { type Message } from '@dxos/ai';
+import { PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -14,20 +15,23 @@ import { keyToFallback } from '@dxos/util';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
+import { type ChatProcessor } from '../../hooks';
 
 export type ChatThreadProps = ThemedClassName<{
+  identity?: Identity;
   space?: Space;
+  // TODO(burdon): Replace with context.
+  processor?: ChatProcessor;
   messages?: Message[];
   collapse?: boolean;
-  transcription?: boolean;
 }> &
   Pick<ChatMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, space, messages, collapse = true, transcription, ...props }, forwardedRef) => {
-    const identity = useIdentity();
-    const fallbackValue = keyToFallback(identity!.identityKey);
-    const userHue = identity!.profile?.data?.hue || fallbackValue.hue;
+  ({ classNames, identity, space, processor, messages, collapse = true, ...props }, forwardedRef) => {
+    const userHue = useMemo(() => {
+      return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
+    }, [identity]);
 
     // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
     const { messages: filteredMessages = [] } = useMemo(() => {
@@ -48,7 +52,14 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ChatMessage key={message.id} classNames='px-4 pbe-4' space={space} message={message} {...props} />
+            <ChatMessage
+              key={message.id}
+              classNames='px-4 pbe-4'
+              space={space}
+              processor={processor}
+              message={message}
+              {...props}
+            />
           ))}
         </div>
       </ScrollContainer>

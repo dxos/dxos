@@ -6,15 +6,16 @@ import { autocompletion, completionKeymap, type CompletionResult } from '@codemi
 import { type Extension, RangeSet } from '@codemirror/state';
 import {
   Decoration,
-  EditorView,
-  keymap,
-  ViewPlugin,
-  WidgetType,
   type DecorationSet,
+  EditorView,
+  ViewPlugin,
   type ViewUpdate,
+  WidgetType,
+  keymap,
 } from '@codemirror/view';
 
 import { Mutex } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 
 // TODO(dmaretskyi): Consider adding details renderer for when you hover over the reference.
 export type ReferenceData = {
@@ -28,28 +29,29 @@ export interface ReferencesProvider {
 }
 
 export type ReferencesOptions = {
+  provider: ReferencesProvider;
+
+  /**
+   * @default '@'
+   */
+  triggerCharacter?: string;
+
   /**
    * Prevent the autocomplete from closing when the user blurs the editor.
    * @default false
    */
   debug?: boolean;
-  /**
-   * @default '@'
-   */
-  triggerCharacter?: string;
-  provider: ReferencesProvider;
 };
 
 /**
- * Include references into text.
+ * Lookup object references.
  */
-export const references = ({ provider, debug = false, triggerCharacter = '@' }: ReferencesOptions): Extension => {
-  if (triggerCharacter.length !== 1) {
-    throw new Error('triggerCharacter must be a single character');
-  }
+export const references = ({ provider, triggerCharacter = '@', debug = false }: ReferencesOptions): Extension => {
+  invariant(triggerCharacter.length === 1);
 
   const decorationField = ViewPlugin.fromClass(
     class ReferenceView {
+      // TODO(burdon): Why?
       private _mutex = new Mutex();
 
       decorations: DecorationSet = Decoration.set([]);
@@ -122,18 +124,19 @@ export const references = ({ provider, debug = false, triggerCharacter = '@' }: 
     }),
 
     autocompletion({
+      tooltipClass: () => 'shadow rounded',
       activateOnTyping: true,
+      aboveCursor: true,
+      closeOnBlur: !debug,
       override: [
         async (context): Promise<CompletionResult | null> => {
           const match = context.matchBefore(new RegExp(`${triggerCharacter}[a-zA-Z0-9]+`));
-
           if (!match || match?.to === match?.from) {
             return null;
           }
 
           const query = match.text.slice(1);
           const references = await provider.getReferences({ query });
-
           return {
             from: match.from,
             filter: false,
@@ -144,9 +147,6 @@ export const references = ({ provider, debug = false, triggerCharacter = '@' }: 
           };
         },
       ],
-      closeOnBlur: !debug,
-      tooltipClass: () => 'shadow rounded',
-      aboveCursor: true,
     }),
 
     keymap.of(completionKeymap),

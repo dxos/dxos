@@ -8,13 +8,12 @@ import { log } from '@dxos/log';
 
 import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../hooks';
-import type { ApiAuthorization } from '../types';
+import { type ApiAuthorization } from '../types';
 
 describe.skip('openapi', () => {
   describe.skip('mapping', () => {
     test('amadeus flight availabilities', async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API);
-
       log.info('tools', { tools });
       // for (const tool of tools) {
       //   const schema = tool.parameters;
@@ -55,7 +54,7 @@ describe.skip('openapi', () => {
 
     test('weather API', async () => {
       const tools = await createToolsFromApi(WEATHER_API, { authorization: VISUAL_CROSSING_CREDENTIALS });
-      const forecastTool = tools.find((t) => t.name.includes('forecast'));
+      const forecastTool = tools.find((tool) => tool.name.includes('forecast'));
       const result = await forecastTool?.execute(
         {
           locations: 'Brooklyn, NY',

@@ -19,10 +19,12 @@ import { mx } from '@dxos/react-ui-theme';
 import { safeParseJson } from '@dxos/util';
 
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
+import { type ChatProcessor } from '../../hooks';
 import { ToolboxContainer } from '../Toolbox';
 
 export type ChatMessageProps = ThemedClassName<{
   space?: Space;
+  processor?: ChatProcessor;
   message: Message;
   debug?: boolean;
   tools?: Tool[];
@@ -31,7 +33,15 @@ export type ChatMessageProps = ThemedClassName<{
   onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
-export const ChatMessage: FC<ChatMessageProps> = ({ classNames, space, message, tools, onPrompt, onAddToGraph }) => {
+export const ChatMessage = ({
+  classNames,
+  space,
+  processor,
+  message,
+  tools,
+  onPrompt,
+  onAddToGraph,
+}: ChatMessageProps) => {
   const { role, content = [] } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
@@ -57,7 +67,7 @@ export const ChatMessage: FC<ChatMessageProps> = ({ classNames, space, message, 
         classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
         user={block.type === 'text' && role === 'user'}
       >
-        <Component space={space} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
+        <Component space={space} processor={processor} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
   });
@@ -65,6 +75,8 @@ export const ChatMessage: FC<ChatMessageProps> = ({ classNames, space, message, 
 
 type BlockComponent = FC<{
   space?: Space;
+  /** @deprecated Replace with context */
+  processor?: ChatProcessor;
   block: MessageContentBlock;
   onPrompt?: (text: string) => void;
   onAddToGraph?: (object: Obj.Any) => void;
@@ -112,14 +124,14 @@ const components: Record<string, BlockComponent> = {
   //
   // JSON
   //
-  ['json' as const]: ({ space, block, onPrompt, onAddToGraph }) => {
+  ['json' as const]: ({ space, processor, block, onPrompt, onAddToGraph }) => {
     invariant(block.type === 'json');
 
     switch (block.disposition) {
       case 'tool_list': {
         return (
           <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
-            <ToolboxContainer space={space} classNames='pbe-2' />
+            <ToolboxContainer space={space} processor={processor} classNames='pbe-2' />
           </ToggleContainer>
         );
       }

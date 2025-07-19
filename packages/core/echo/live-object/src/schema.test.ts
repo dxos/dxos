@@ -5,9 +5,9 @@
 import { SchemaAST, Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { PropertyMeta, getTypeAnnotation, getPropertyMetaAnnotation, TypedObject } from '@dxos/echo-schema';
+import { PropertyMeta, TypedObject, getTypeAnnotation, getPropertyMetaAnnotation } from '@dxos/echo-schema';
 
-import { createEchoSchema } from './testing/echo-schema';
+import { createEchoSchema } from './testing';
 
 // TODO(dmaretskyi): Comment.
 class EmptySchemaType extends TypedObject({

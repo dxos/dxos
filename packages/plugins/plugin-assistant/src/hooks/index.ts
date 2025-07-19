@@ -4,6 +4,7 @@
 
 export * from './chat-processor';
 
+export * from './useBlueprints';
 export * from './useChatProcessor';
 export * from './useContextProvider';
 export * from './useServiceContainer';

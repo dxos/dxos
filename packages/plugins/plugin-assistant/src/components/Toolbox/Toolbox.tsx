@@ -7,19 +7,22 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
-import type { Blueprint } from '@dxos/assistant';
-import type { Ref } from '@dxos/echo';
+import { type Blueprint } from '@dxos/assistant';
+import { type Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { type ChatProcessor } from '../../hooks';
+import { meta } from '../../meta';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
-import { useChatContext } from '../Chat';
 
 export type ToolboxProps = ThemedClassName<{
+  blueprints?: readonly Ref.Ref<Blueprint>[];
   artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
@@ -27,9 +30,41 @@ export type ToolboxProps = ThemedClassName<{
   striped?: boolean;
 }>;
 
-export const Toolbox = ({ classNames, artifacts, functions, services, activeBlueprints, striped }: ToolboxProps) => {
+export const Toolbox = ({
+  classNames,
+  artifacts,
+  functions,
+  services,
+  blueprints,
+  activeBlueprints,
+  striped,
+}: ToolboxProps) => {
+  const { t } = useTranslation(meta.id);
+
   return (
     <div className={mx('flex flex-col overflow-y-auto box-content', classNames)}>
+      {blueprints && blueprints.length > 0 && (
+        <Section
+          title='Blueprints'
+          items={blueprints.map(({ target }) => ({
+            name: target?.name ?? '',
+            description: target?.description ?? '',
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+          }))}
+        />
+      )}
+
+      {activeBlueprints && activeBlueprints.length > 0 && (
+        <Section
+          title='Blueprints'
+          items={activeBlueprints.map(({ target }) => ({
+            name: target?.name ?? '',
+            description: target?.description ?? '',
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+          }))}
+        />
+      )}
+
       {artifacts && artifacts.length > 0 && (
         <Section
           title='Artifacts'
@@ -56,16 +91,11 @@ export const Toolbox = ({ classNames, artifacts, functions, services, activeBlue
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
       )}
 
-      {activeBlueprints && activeBlueprints.length > 0 && (
-        <Section
-          title='Blueprints'
-          items={activeBlueprints.map(({ target }) => ({
-            name: target?.name ?? '',
-            description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
-          }))}
-        />
-      )}
+      {!blueprints?.length &&
+        !activeBlueprints?.length &&
+        !artifacts?.length &&
+        !services?.length &&
+        !functions?.length && <div>{t('no tools')}</div>}
     </div>
   );
 };
@@ -104,9 +134,9 @@ const Section: FC<{
   );
 };
 
-export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?: Space }>) => {
-  const { processor } = useChatContext(ToolboxContainer.name);
+export type ToolboxContainerProps = ThemedClassName<{ space?: Space; processor?: ChatProcessor }>;
 
+export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
   // Plugin artifacts.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -130,10 +160,10 @@ export const ToolboxContainer = ({ classNames, space }: ThemedClassName<{ space?
   return (
     <Toolbox
       classNames={classNames}
+      blueprints={processor?.context.blueprints.value}
       artifacts={artifactDefinitions}
       services={serviceTools}
       functions={functions}
-      activeBlueprints={processor.blueprints.bindings.value}
     />
   );
 };

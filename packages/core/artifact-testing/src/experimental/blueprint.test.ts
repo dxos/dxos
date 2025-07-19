@@ -55,7 +55,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     });
 
     await db.add(DESIGN_SPEC_BLUEPRINT);
-    await conversation.blueprints.bind(Ref.make(DESIGN_SPEC_BLUEPRINT));
+    await conversation.context.bind({ blueprints: [Ref.make(DESIGN_SPEC_BLUEPRINT)] });
 
     const artifact = db.add(
       Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
@@ -73,7 +73,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
         What do you think about this approach? Let's capture the key design decisions in our spec.
 
-        Store spec in ${Obj.getDXN(artifact)}
+        The store spec in ${Obj.getDXN(artifact)}
       `,
     });
     log.info('spec 1', { doc: artifact });
@@ -102,16 +102,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     });
 
     await db.add(TASK_LIST_BLUEPRINT);
-    await conversation.blueprints.bind(Ref.make(TASK_LIST_BLUEPRINT));
+    await conversation.context.bind({ blueprints: [Ref.make(TASK_LIST_BLUEPRINT)] });
 
     const artifact = db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
     let prevContent = artifact.content;
     await conversation.run({
       prompt: `
         I'm building a shelf.
-        
         I need a hammer, nails, and a saw.
-
         Store the shopping list in ${Obj.getDXN(artifact)}
       `,
     });

@@ -132,6 +132,7 @@ export const isDeleted = (obj: Any): boolean => {
   return deleted;
 };
 
+// TODO(burdon): Rename "label"
 export const getLabel = (obj: Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
