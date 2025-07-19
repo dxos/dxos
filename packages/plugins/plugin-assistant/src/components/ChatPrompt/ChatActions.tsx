@@ -21,7 +21,7 @@ export const ChatActions = ({ microphone, recording, processing, onEvent }: Chat
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='flex items-center'>
+    <div className='flex items-center mie-1'>
       {/* TODO(burdon): Modes (models and/or presets for blueprints?). */}
       <Select.Root value={'ollama'} disabled>
         <Select.TriggerButton classNames='mie-2 text-sm' />

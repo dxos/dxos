@@ -28,11 +28,13 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
     switch (event.type) {
       case 'submit':
       case 'thread-open':
         setOpen(true);
+        setExpanded(true);
         break;
 
       case 'thread-close':
@@ -47,7 +49,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
-      <NativeChatDialog.Root open={open} onOpenChange={setOpen}>
+      <NativeChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NativeChatDialog.Header title={t('assistant dialog title')} />
         <NativeChatDialog.Content>
           <Chat.Thread />

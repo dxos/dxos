@@ -124,7 +124,10 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
     }),
 
     autocompletion({
+      tooltipClass: () => 'shadow rounded',
       activateOnTyping: true,
+      aboveCursor: true,
+      closeOnBlur: !debug,
       override: [
         async (context): Promise<CompletionResult | null> => {
           const match = context.matchBefore(new RegExp(`${triggerCharacter}[a-zA-Z0-9]+`));
@@ -134,7 +137,6 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
 
           const query = match.text.slice(1);
           const references = await provider.getReferences({ query });
-
           return {
             from: match.from,
             filter: false,
@@ -145,9 +147,6 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
           };
         },
       ],
-      closeOnBlur: !debug,
-      tooltipClass: () => 'shadow rounded',
-      aboveCursor: true,
     }),
 
     keymap.of(completionKeymap),

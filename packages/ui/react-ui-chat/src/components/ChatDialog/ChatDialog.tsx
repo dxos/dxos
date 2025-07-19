@@ -47,28 +47,28 @@ type ChatDialogRootProps = PropsWithChildren<{
 
 const ChatDialogRoot = ({
   children,
-  open = false,
-  expanded = false,
+  open: _open = false,
+  expanded: _expanded = false,
   onOpenChange,
   onExpandedChange,
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
-  const [openState, setOpenState] = useControlledState<boolean>(open, onOpenChange);
-  const [expandedState, setExpandedState] = useControlledState<boolean>(expanded, onExpandedChange);
+  const [open, setOpen] = useControlledState<boolean>(_open, onOpenChange);
+  const [expanded, setExpanded] = useControlledState<boolean>(_expanded, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.
   return (
     <ChatDialogContextProvider
-      open={openState}
-      setOpen={setOpenState}
-      expanded={expandedState}
-      setExpanded={setExpandedState}
+      open={open}
+      setOpen={setOpen}
+      expanded={expanded}
+      setExpanded={setExpanded}
       size={size}
       setSize={setSize}
     >
-      <Dialog.Root modal={false} open={openState} onOpenChange={setOpenState}>
+      <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
         <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
           <Dialog.Content
             inOverlayLayout
@@ -108,7 +108,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}

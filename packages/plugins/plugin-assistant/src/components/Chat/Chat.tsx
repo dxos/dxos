@@ -116,7 +116,6 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
           if (!processor.streaming.value) {
             void processor.request(event.text);
           }
-
           break;
         }
 
@@ -136,7 +135,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
 
   return (
     <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages} {...props}>
-      <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex flex-col grow', classNames)}>
         {children}
       </div>
     </ChatContextProvider>
