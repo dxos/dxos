@@ -27,7 +27,7 @@ export * from './join-tables';
 export * from './json';
 export * from './map-values';
 export * from './map';
-export * from './no-infer';
+export type * from './no-infer';
 export * from './object';
 export * from './order-keys';
 export * from './order';

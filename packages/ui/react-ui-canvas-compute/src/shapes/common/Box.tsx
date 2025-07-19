@@ -35,7 +35,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
       <div ref={forwardedRef} className='flex flex-col h-full w-full justify-between'>
         <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-hoverSurface'>
           <Icon icon={icon} classNames='mx-2' />
-          <div className='grow text-sm truncate'>{debug ? shape.type : name ?? shape.text ?? title}</div>
+          <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           <IconButton
             classNames='p-1 text-green-500'
             variant='ghost'

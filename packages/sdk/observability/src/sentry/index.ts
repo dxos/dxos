@@ -3,4 +3,4 @@
 //
 
 export * from './node';
-export * from './types';
+export type * from './types';

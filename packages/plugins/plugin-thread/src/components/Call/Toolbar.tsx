@@ -174,7 +174,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? state.on.classNames ?? 'bg-callActive' : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-callActive') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}

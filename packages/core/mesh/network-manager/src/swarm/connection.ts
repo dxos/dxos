@@ -414,7 +414,7 @@ export class Connection {
     invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
-    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
+    const signals = msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
     for (const signal of signals) {
       if (!signal) {
         continue;

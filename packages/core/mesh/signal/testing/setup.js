@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { runTestSignalServer } = require('@dxos/signal');
 
 module.exports = {

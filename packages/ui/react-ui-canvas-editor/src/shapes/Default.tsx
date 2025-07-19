@@ -18,5 +18,5 @@ export const DefaultFrameComponent = ({ debug, shape, editing, onClose, onCancel
 };
 
 const getLabel = (shape: Polygon, debug = false) => {
-  return debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : shape.text ?? shape.id;
+  return debug ? [shape.id, shape.type, `(${shape.center.x},${shape.center.y})`].join('\n') : (shape.text ?? shape.id);
 };

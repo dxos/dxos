@@ -102,7 +102,7 @@ export const runTools = async ({
             type: 'tool_result',
             toolUseId: toolCall.id,
             content:
-              typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
+              typeof toolResult.result === 'string' ? toolResult.result : (JSON.stringify(toolResult.result) ?? ''),
           },
           ...(toolResult.extractContentBlocks ?? []),
         ],

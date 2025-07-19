@@ -49,7 +49,7 @@ const createBlockActions = (value: string, getView: () => EditorView, blankLine?
   });
 
 export const createBlocks = (state: EditorToolbarState, getView: () => EditorView) => {
-  const value = state?.blockQuote ? 'blockquote' : state.blockType ?? '';
+  const value = state?.blockQuote ? 'blockquote' : (state.blockType ?? '');
   const blockGroupAction = createBlockGroupAction(value);
   const blockActions = createBlockActions(value, getView, state.blankLine);
   return {

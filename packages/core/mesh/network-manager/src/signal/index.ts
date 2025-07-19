@@ -4,5 +4,5 @@
 
 export * from './ice';
 export * from './swarm-messenger';
-export * from './signal-connection';
-export * from './signal-messenger';
+export type * from './signal-connection';
+export type * from './signal-messenger';

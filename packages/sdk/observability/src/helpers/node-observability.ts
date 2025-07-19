@@ -63,7 +63,7 @@ const initializeState = async (idPath: string): Promise<PersistentObservabilityS
   const observabilityState = {
     installationId: uuid(),
     group: process.env.DX_OBSERVABILITY_GROUP ?? undefined,
-    mode: (process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : process.env.DX_OBSERVABILITY_MODE ?? 'basic') as Mode,
+    mode: (process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : (process.env.DX_OBSERVABILITY_MODE ?? 'basic')) as Mode,
   };
 
   await writeFile(
@@ -80,7 +80,7 @@ const validate = (contextString: string) => {
   if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
     return {
       ...context,
-      mode: process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : context.mode ?? 'basic',
+      mode: process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : (context.mode ?? 'basic'),
     };
   }
 };

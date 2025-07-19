@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Topology } from 'topojson-specification';
+import { type Topology } from 'topojson-specification';
 
 /** 
  * https://github.com/topojson/world-atlas

@@ -142,7 +142,7 @@ export interface ObjectMetaJSON {
 }
 
 // NOTE: Keep as `function` to avoid type inference issues.
-// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
 export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);

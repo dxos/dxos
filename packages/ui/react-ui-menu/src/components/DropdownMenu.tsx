@@ -80,7 +80,9 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {items?.map((item) => <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />)}
+            {items?.map((item) => (
+              <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />
+            ))}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

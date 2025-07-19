@@ -86,7 +86,7 @@ const MarkdownContainer = ({
   const filter = useMemo(() => Filter.or(...objectForms.map((form) => Filter.type(form.objectSchema))), [objectForms]);
   const onLinkQuery = useCallback(
     async (query?: string): Promise<CommandMenuGroup[]> => {
-      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';
+      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
       // TODO(wittjosiah): Use `Obj.Any` type.
       const getLabel = (object: any) => {

@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-export * from './types';
+export type * from './types';
 
 export * from './Globe';
 export * from './Map';

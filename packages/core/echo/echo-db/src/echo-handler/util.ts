@@ -17,7 +17,7 @@ export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined 
     return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const target = getProxyTarget(obj) as ProxyTarget;
   return target[symbolInternals].database;
 };
