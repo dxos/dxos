@@ -55,7 +55,7 @@ function readPackage(packageJson, context) {
 
     // TODO(wittjosiah): Remove when bumping @effect-rx/rx-react.
     case '@effect-rx/rx': {
-      packageJson.peerDependencies['@effect/platform'] = '0.88.0';
+      packageJson.peerDependencies['@effect/platform'] = '*';
       break;
     }
 

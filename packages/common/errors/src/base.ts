@@ -15,9 +15,21 @@ export type BaseErrorOptions = {
   context?: Record<string, unknown>;
 };
 
-export class BaseError extends Error {
-  static extend(code: string) {
-    return class extends BaseError {
+/**
+ * Base class for all DXOS errors.
+ */
+export class BaseError<Code extends string = string> extends Error {
+  /**
+   * Primary way of defining new error classes.
+   *
+   * Expample:
+   *
+   * ```ts
+   * export class AiInputPreprocessingError extends BaseError.extend('AI_INPUT_PREPROCESSING_ERROR') {}
+   * ```
+   */
+  static extend<Code extends string>(code: Code) {
+    return class extends BaseError<Code> {
       static code = code;
 
       static is(error: unknown): error is BaseError {
@@ -30,10 +42,10 @@ export class BaseError extends Error {
     };
   }
 
-  #code: string;
+  #code: Code;
   #context: Record<string, unknown>;
 
-  constructor(code: string, message: string, options?: BaseErrorOptions) {
+  constructor(code: Code, message: string, options?: BaseErrorOptions) {
     super(message, options);
 
     this.#code = code;
@@ -45,7 +57,12 @@ export class BaseError extends Error {
     return this.#code;
   }
 
-  get code() {
+  get code(): Code {
+    return this.#code;
+  }
+
+  // For effect error matching.
+  get _tag(): Code {
     return this.#code;
   }
 

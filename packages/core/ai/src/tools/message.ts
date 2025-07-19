@@ -175,6 +175,9 @@ export const Message = MessageSchema.pipe(
     version: '0.1.0',
   }),
 );
+/**
+ * @deprecated
+ */
 export type Message = Schema.Schema.Type<typeof Message>;
 
 export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): Message =>

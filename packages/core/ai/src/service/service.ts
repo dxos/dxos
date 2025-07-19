@@ -2,11 +2,59 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse } from '../types';
+import { Context, Effect, Layer } from 'effect';
+import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
+import { AiLanguageModel } from '@effect/ai';
+import type { AiModelNotAvailableError } from '../errors';
+
+export class AiService extends Context.Tag('AiService')<
+  AiService,
+  {
+    readonly model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
+
+    /**
+     * @deprecated
+     */
+    readonly client: AiServiceClient;
+  }
+>() {
+  static model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, AiService> =
+    (model) =>
+      AiService.pipe(
+        Effect.map((_) => _.model(model)),
+        Layer.unwrapEffect,
+      );
+
+  static make = (client: AiServiceClient): Context.Tag.Service<AiService> => {
+    return {
+      model(model) {
+        throw new Error('Not implemented');
+      },
+
+      get client() {
+        return client;
+      },
+    };
+  };
+
+  static makeLayer = (client: AiServiceClient): Layer.Layer<AiService> =>
+    Layer.succeed(AiService, AiService.make(client));
+
+  static notAvailable = Layer.succeed(AiService, {
+    model(model) {
+      throw new Error('Not implemented');
+    },
+
+    get client(): AiServiceClient {
+      throw new Error('AiService not available');
+    },
+  });
+}
 
 /**
  * Interface for AI service.
  * Generates chat completions, supports, history and tools.
+ * @deprecated
  */
 export interface AiServiceClient {
   /**
@@ -24,6 +72,7 @@ export interface AiServiceClient {
 
 /**
  * Streaming chat completion stream.
+ * @depreacted
  */
 export interface GenerationStream extends AsyncIterable<GenerationStreamEvent> {
   /**

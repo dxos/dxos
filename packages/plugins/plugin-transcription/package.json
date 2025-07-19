@@ -95,10 +95,10 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.88.0",
+    "@effect/platform": "0.88.1",
     "@types/dom-speech-recognition": "^0.0.6",
     "@types/react": "~18.2.0",
-    "effect": "3.16.13",
+    "effect": "3.16.16",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1"
