@@ -1,6 +1,6 @@
 import { describe, it, vi } from '@effect/vitest';
 import { Chunk, Effect, Function, Stream } from 'effect';
-import { parseGptStream } from './parser';
+import { parseGptStream } from './AiParser';
 import { AiResponse } from '@effect/ai';
 import type { ContentBlock } from '@dxos/schema';
 

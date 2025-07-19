@@ -3,7 +3,7 @@ import { DataType } from '@dxos/schema';
 import { AiInput } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Either } from 'effect';
-import { preprocessAiInput } from './preprocessor';
+import { preprocessAiInput } from './AiPreprocessor';
 import { AiInputPreprocessingError } from '../errors';
 
 describe('preprocessor', () => {

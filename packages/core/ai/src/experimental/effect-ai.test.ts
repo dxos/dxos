@@ -5,10 +5,10 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { describe, it } from '@effect/vitest';
 import { NodeHttpClient } from '@effect/platform-node';
 import { Chunk, Config, Console, Context, Effect, Layer, Predicate, Schema, Stream } from 'effect';
-import { parseGptStream } from './parser';
+import { parseGptStream } from './AiParser';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
-import { preprocessAiInput } from './preprocessor';
+import { preprocessAiInput } from './AiPreprocessor';
 import { getToolCalls, runTool } from './tools';
 import { AiService } from '../service';
 import { AiModelNotAvailableError } from '../errors';
@@ -127,6 +127,7 @@ const AiServiceRouter = Layer.effect(
   AiService,
   Effect.gen(function* () {
     const anthropicClient = Layer.succeed(AnthropicClient.AnthropicClient, yield* AnthropicClient.AnthropicClient);
+
     return AiService.of({
       model: (model) => {
         switch (model) {
