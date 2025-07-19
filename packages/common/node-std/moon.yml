@@ -2,6 +2,10 @@ type: library
 language: typescript
 tags:
   - ts-build
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
 tasks:
   compile:
     args:
