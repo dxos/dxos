@@ -1,6 +1,5 @@
 // @ts-check
 
-import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
@@ -9,6 +8,7 @@ import dxos from '@dxos/eslint-plugin-rules';
 import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
 import unusedImports from 'eslint-plugin-unused-imports';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import importX from 'eslint-plugin-import-x';
 
 const SOURCES_GLOB = '**/{src,config,.storybook}/**';
 
@@ -91,6 +91,7 @@ export default tseslint.config(
     plugins: {
       'prefer-arrow-functions': arrowFunctions,
       'unused-imports': unusedImports,
+      'import-x': importX,
     },
   },
 
@@ -103,7 +104,7 @@ export default tseslint.config(
       eslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat.recommended,
-
+      prettierRecommended,
       dxos.configs.recommended,
       prettierRecommended,
     ],
@@ -203,6 +204,30 @@ export default tseslint.config(
       'prettier/prettier': 'error',
       'no-constant-binary-expression': 'off',
       '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      'import-x/newline-after-import': [
+        'error',
+        {
+          count: 1,
+        },
+      ],
+      'import-x/order': [
+        'error',
+        {
+          alphabetize: {
+            order: 'asc',
+          },
+          groups: [['builtin', 'external'], 'internal'],
+          'newlines-between': 'always',
+          pathGroups: [
+            {
+              pattern: '@{dxos,braneframe}/**',
+              group: 'internal',
+              position: 'before',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
+        },
+      ],
 
       // TODO(dmaretskyi): To re-enable.
       'no-unsafe-optional-chaining': 'off',

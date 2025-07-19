@@ -102,6 +102,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-formatter-unix": "^8.40.0",
     "eslint-plugin-i18next": "^6.1.2",
+    "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-prefer-arrow-functions": "^3.6.2",
     "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-react": "^7.37.5",
