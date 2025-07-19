@@ -27,7 +27,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const processor = useChatProcessor({ part: 'dialog', chat, serviceContainer, settings });
 
   // TODO(burdon): Refocus when open.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
     switch (event.type) {
       case 'submit':
