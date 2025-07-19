@@ -11,3 +11,4 @@ export * from './types';
 export * from './util';
 export * from './status-report';
 export * from './experimental';
+export * from './errors';
