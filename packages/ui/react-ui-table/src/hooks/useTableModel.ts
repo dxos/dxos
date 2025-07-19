@@ -12,10 +12,12 @@ import { type ProjectionManager } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
+import { type TableView } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   id?: string;
   projection?: ProjectionManager;
+  table?: TableView;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
@@ -28,6 +30,7 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 export const useTableModel = <T extends TableRow = TableRow>({
   id,
   projection: manager,
+  table,
   rows,
   rowActions,
   features,
@@ -37,7 +40,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!id || !manager) {
+    if (!id || !manager || !table) {
       return;
     }
 
@@ -47,6 +50,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         id,
         space: getSpace(manager.projection),
         projection: manager,
+        table,
         features,
         rowActions,
         onRowAction,
@@ -60,7 +64,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [id, manager, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [id, manager, table, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {

@@ -106,7 +106,6 @@ export const initializeKanban = async ({
       field: {
         id: createFieldId(),
         path: initialPivotField as JsonProp,
-        size: 150,
       },
       props: {
         property: initialPivotField as JsonProp,

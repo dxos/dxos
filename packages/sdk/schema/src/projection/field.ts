@@ -16,9 +16,6 @@ export const FieldSchema = Schema.Struct({
 
   // TODO(wittjosiah): Remove this? Duplicate of hiddenFields?
   visible: Schema.optional(Schema.Boolean),
-
-  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
-  size: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;

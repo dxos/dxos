@@ -16,7 +16,6 @@ import {
   TypeEnum,
   TypedObject,
   getPropertyMetaAnnotation,
-  getSchemaTypename,
   toJsonSchema,
   type JsonPath,
   type JsonProp,
@@ -92,7 +91,6 @@ describe('ProjectionManager', () => {
       field: {
         id: getFieldId(projection, 'email'),
         path: 'email' as JsonPath,
-        size: 100,
       },
     });
 
@@ -100,7 +98,6 @@ describe('ProjectionManager', () => {
       const { field, props } = manager.getFieldProjection(getFieldId(projection, 'email'));
       expect(field).to.include({
         path: 'email',
-        size: 100,
       });
       expect(props).to.include({
         property: 'email',
@@ -846,7 +843,7 @@ describe('ProjectionManager', () => {
     const schema = Organization;
     const jsonSchema = toJsonSchema(schema);
 
-    const projection = createProjection({ typename: getSchemaTypename(schema), jsonSchema });
+    const projection = createProjection({ typename: schema.typename, jsonSchema });
     const manager = new ProjectionManager(jsonSchema, projection);
     const fieldId = getFieldId(projection, 'status');
     invariant(fieldId);

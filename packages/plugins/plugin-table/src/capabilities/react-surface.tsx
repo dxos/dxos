@@ -7,11 +7,11 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj, Relation, type Ref } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType, Projection } from '@dxos/schema';
 
 import { ObjectDetailsPanel, TableContainer, TableViewEditor } from '../components';
 import { meta } from '../meta';
-import { TableView } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

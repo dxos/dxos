@@ -6,6 +6,7 @@ import { computed } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -14,6 +15,7 @@ import { live } from '@dxos/react-client/echo';
 import { createProjection, ProjectionManager } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
+import { TableView } from '../types';
 
 // TODO(burdon): Tests are disabled in project.json since they bring in plugin deps.
 //  Restore once factored out into react-ui-table.
@@ -107,5 +109,6 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const projection = createProjection({ typename: schema.typename, jsonSchema: schema.jsonSchema });
   const manager = new ProjectionManager(schema.jsonSchema, projection);
-  return new TableModel({ id: projection.id, space: undefined, projection: manager, ...props });
+  const table = Obj.make(TableView, { sizes: {} });
+  return new TableModel({ id: projection.id, space: undefined, projection: manager, table, ...props });
 };

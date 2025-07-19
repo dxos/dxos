@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 
 import { EchoSchema } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
-import { TableView } from './table';
 import { TABLE_PLUGIN } from '../meta';
 
 export const CreateTableSchema = Schema.Struct({

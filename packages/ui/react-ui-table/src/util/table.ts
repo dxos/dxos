@@ -23,17 +23,14 @@ type InitialiseTableProps = {
   initialRow?: boolean;
 };
 
+// TODO(wittjosiah): Factor out to @dxos/schema.
 export const initializeProjection = async ({
   space,
   typename,
   initialRow = true,
-}: InitialiseTableProps): Promise<{ schema: Schema.Schema.AnyNoContext; projection: Projection }> => {
+}: InitialiseTableProps): Promise<{ schema: EchoSchema; projection: Projection }> => {
   if (typename) {
-    const schema = await space.db.graph.getSchemaByTypename(typename, space.db);
-    if (!schema) {
-      throw new Error(`Schema not found: ${typename}`);
-    }
-
+    const schema = await space.db.schemaRegistry.query({ typename }).first();
     const fields = getSchemaProperties(schema.ast).map((prop) => prop.name);
 
     return {
@@ -64,6 +61,8 @@ export const initializeProjection = async ({
   }
 };
 
+// TODO(wittjosiah): Remove.
+
 const createContactSchema = () =>
   TypedObject({
     typename: `example.com/type/${PublicKey.random().truncate()}`,
@@ -83,14 +82,12 @@ const createProjectionManager = (schema: EchoSchema, projection: Projection): Pr
     field: {
       id: projection.fields.find((f) => f.path === 'salary')!.id,
       path: 'salary' as JsonPath,
-      size: 150,
     },
   });
   manager.setFieldProjection({
     field: {
       id: projection.fields.find((f) => f.path === 'active')!.id,
       path: 'active' as JsonPath,
-      size: 100,
     },
   });
   manager.setFieldProjection({

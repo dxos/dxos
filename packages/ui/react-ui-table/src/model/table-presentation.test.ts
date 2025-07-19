@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
@@ -12,6 +13,7 @@ import { createProjection, ProjectionManager } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
+import { TableView } from '../types';
 
 describe('TablePresentation', () => {
   describe('row reactivity', () => {
@@ -97,5 +99,6 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const projection = createProjection({ typename: schema.typename, jsonSchema: schema.jsonSchema });
   const manager = new ProjectionManager(schema.jsonSchema, projection);
-  return new TableModel({ id: projection.id, projection: manager, ...props });
+  const table = Obj.make(TableView, { sizes: {} });
+  return new TableModel({ id: projection.id, projection: manager, table, ...props });
 };

@@ -17,10 +17,11 @@ import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { initializeProjection } from '@dxos/react-ui-table';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType, ProjectionManager } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
-import { TableAction, TableView } from '../types';
+import { TableAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -44,7 +45,7 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const { schema, projection } = await initializeProjection({ space, typename });
-        const table = Obj.make(TableView, { name });
+        const table = Obj.make(TableView, { name, sizes: {} });
         const hasView = Relation.make(DataType.HasView, {
           // TODO(wittjosiah): Remove cast.
           [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,

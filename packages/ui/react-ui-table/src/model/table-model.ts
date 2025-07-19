@@ -37,6 +37,7 @@ import {
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
+import { type TableView } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -75,6 +76,7 @@ const defaultFeatures: TableFeatures = {
 export type TableModelProps<T extends TableRow = TableRow> = {
   id?: string;
   space?: Space;
+  table: TableView;
   projection: ProjectionManager;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
@@ -93,6 +95,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _space: Space | undefined;
   private readonly _projection: DataType.Projection;
   private readonly _projectionManager: ProjectionManager;
+  private readonly _table: TableView;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -120,6 +123,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     id,
     space,
     projection: manager,
+    table,
     features = {},
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
@@ -136,6 +140,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._space = space;
     this._projection = manager.projection;
     this._projectionManager = manager;
+    this._table = table;
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -243,7 +248,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._columnMeta = computed(() => {
       const fields = this._projection?.fields ?? [];
       const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: field?.size ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: this._table.sizes[field.path] ?? 256, resizeable: true }]),
       );
 
       return {
@@ -618,7 +623,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        field.size = newWidth;
+        this._table.sizes[field.path] = newWidth;
       }
     }
   }

@@ -62,8 +62,8 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
-  typename?: string;
-  jsonSchema?: JsonSchemaType;
+  typename: string;
+  jsonSchema: JsonSchemaType;
   fields?: string[];
 };
 

@@ -4,6 +4,7 @@
 
 import { type Schema } from 'effect';
 
+import { Obj } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import {
@@ -13,6 +14,8 @@ import {
   ProjectionManager,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
+
+import { TableView } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
@@ -58,27 +61,33 @@ export const makeDynamicTable = ({
   typename: string;
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): ProjectionManager => {
+}): { projection: ProjectionManager; table: TableView } => {
   const projection = createProjection({
     typename,
     jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
+  const table = Obj.make(TableView, { sizes: {} });
   const manager = new ProjectionManager(jsonSchema, projection);
   if (properties && projection.fields) {
-    setProperties(projection, manager, properties);
+    setProperties(projection, manager, table, properties);
   }
 
-  return manager;
+  return { projection: manager, table };
 };
 
-const setProperties = (projection: Projection, manager: ProjectionManager, properties: TablePropertyDefinition[]) => {
+const setProperties = (
+  projection: Projection,
+  manager: ProjectionManager,
+  table: TableView,
+  properties: TablePropertyDefinition[],
+) => {
   for (const property of properties) {
     const field = projection.fields.find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        field.size = property.size;
+        table.sizes[field.path] = property.size;
       }
 
       if (property.title !== undefined) {

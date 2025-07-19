@@ -12,10 +12,11 @@ import { Obj, Query, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { TableAction, TableView } from '../types';
+import { TableAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {

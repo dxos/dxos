@@ -9,10 +9,10 @@ import { Capabilities, contributes, type PluginContext } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { TableView } from '@dxos/react-ui-table/types';
 import { Projection } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { TableView } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

@@ -8,7 +8,7 @@ import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -26,6 +26,7 @@ import { Table, type TableController } from './Table';
 import { useTableModel, useAddRow } from '../../hooks';
 import { TablePresentation } from '../../model';
 import { translations } from '../../translations';
+import { TableView } from '../../types';
 import { initializeProjection } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 
@@ -39,9 +40,10 @@ const useTestTableModel = () => {
   const client = useClient();
   const { space } = useClientProvider();
 
-  const projections = useQuery(space, Filter.type(DataType.Projection));
-  const projection = useMemo(() => projections.at(0), [projections]);
-  const schema = useSchema(client, space, projection?.query.typename);
+  const views = useQuery(space, Filter.type(DataType.HasView));
+  const view = useMemo(() => views.at(0), [views]);
+  const projection = view?.projection.target;
+  const schema = useSchema(client, space, view?.projection.target?.query.typename);
 
   const manager = useMemo(() => {
     if (schema && projection) {
@@ -90,9 +92,11 @@ const useTestTableModel = () => {
     [projection],
   );
 
+  const table = view ? (Relation.getTarget(view as any) as TableView) : undefined;
   const model = useTableModel({
     id: projection ? fullyQualifiedId(projection) : undefined,
     projection: manager,
+    table,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,
@@ -219,12 +223,19 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout({ fullscreen: true }),
     withClientProvider({
-      types: [DataType.Projection],
+      types: [DataType.HasView, DataType.Projection, TableView],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
         const { schema, projection } = await initializeProjection({ space, initialRow: false });
-        space.db.add(projection);
+        const table = Obj.make(TableView, { name: 'Test', sizes: {} });
+        space.db.add(
+          Relation.make(DataType.HasView, {
+            [Relation.Source]: schema.storedSchema,
+            [Relation.Target]: table,
+            projection: Ref.make(projection),
+          }),
+        );
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             live(schema, {
@@ -250,8 +261,15 @@ export const StaticSchema: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        const { projection } = await initializeProjection({ space, initialRow: false });
-        space.db.add(projection);
+        const { projection, schema } = await initializeProjection({ space, initialRow: false });
+        const table = Obj.make(TableView, { name: 'Test', sizes: {} });
+        space.db.add(
+          Relation.make(DataType.HasView, {
+            [Relation.Source]: schema.storedSchema,
+            [Relation.Target]: table,
+            projection: Ref.make(projection),
+          }),
+        );
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
@@ -292,8 +310,18 @@ export const ArrayOfObjects: StoryObj = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ space }) => {
-        const { projection } = await initializeProjection({ space, typename: ContactWithArrayOfEmails.typename });
-        space.db.add(projection);
+        const { projection, schema } = await initializeProjection({
+          space,
+          typename: ContactWithArrayOfEmails.typename,
+        });
+        const table = Obj.make(TableView, { name: 'Test', sizes: {} });
+        space.db.add(
+          Relation.make(DataType.HasView, {
+            [Relation.Source]: schema.storedSchema,
+            [Relation.Target]: table,
+            projection: Ref.make(projection),
+          }),
+        );
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
@@ -346,7 +374,14 @@ export const Tags: Meta<StoryProps> = {
 
         // Initialize table.
         const { projection } = await initializeProjection({ space, initialRow: false, typename });
-        space.db.add(projection);
+        const table = Obj.make(TableView, { name: 'Test', sizes: {} });
+        space.db.add(
+          Relation.make(DataType.HasView, {
+            [Relation.Source]: storedSchema,
+            [Relation.Target]: table,
+            projection: Ref.make(projection),
+          }),
+        );
 
         // Populate.
         Array.from({ length: 10 }).map(() => {

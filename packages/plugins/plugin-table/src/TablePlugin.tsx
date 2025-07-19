@@ -8,11 +8,12 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
+import { TableView } from '@dxos/react-ui-table/types';
 
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateTableSchema, TableAction, TableView } from './types';
+import { CreateTableSchema, TableAction } from './types';
 
 export const TablePlugin = () =>
   definePlugin(meta, [

@@ -10,9 +10,9 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { TableView } from '@dxos/plugin-table';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
+import { TableView } from '@dxos/react-ui-table/types';
 import { createProjection, DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
@@ -48,7 +48,7 @@ export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): Object
     if (!view) {
       const name = type.typename.split('/').pop() ?? type.typename;
       const projection = createProjection({ typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = Obj.make(TableView, { name });
+      const table = Obj.make(TableView, { name, sizes: {} });
       space.db.add(
         Relation.make(DataType.HasView, {
           [Relation.Source]: schema.storedSchema,

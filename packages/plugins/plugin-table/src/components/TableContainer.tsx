@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Relation, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -22,6 +22,7 @@ import {
   useTableModel,
   useAddRow,
 } from '@dxos/react-ui-table';
+import { type TableView } from '@dxos/react-ui-table/types';
 import { type DataType, ProjectionManager } from '@dxos/schema';
 
 import { TableAction } from '../types';
@@ -79,9 +80,12 @@ const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView 
     [],
   );
 
+  // TODO(wittjosiah): Remove cast.
+  const table = Relation.getTarget(view as any) as TableView;
   const model = useTableModel({
     id: view.id,
     projection,
+    table,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,

@@ -3,9 +3,9 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { TableView } from '@dxos/react-ui-table/types';
 
 import { meta } from './meta';
-import { TableView } from './types';
 
 export const translations = [
   {
