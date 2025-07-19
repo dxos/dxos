@@ -168,7 +168,7 @@ export type ThemeExtensionsOptions = {
 
 const defaultThemeSlots = {
   editor: {
-    className: 'w-full bs-full',
+    className: 'w-full',
   },
 };
 

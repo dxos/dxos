@@ -55,13 +55,15 @@ export const translations = [
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
+        'no tools': 'No tools are configured.',
+
         'button save': 'Save',
         'button run': 'Run',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
-        'blueprints placeholder': 'Select blueprints...',
-        'button add blueprint': 'Add blueprint',
+        'context objects placeholder': 'Add to context...',
+        'button add blueprint': 'Configure blueprints',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',

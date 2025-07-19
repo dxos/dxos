@@ -156,7 +156,7 @@ export const RefField = ({
             onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
             onUpdate={handleUpdate}
             onSearch={handleSearch}
-            classNames='rounded-sm bg-inputSurface p-1.5'
+            classNames='bg-inputSurface p-1.5 rounded-sm'
           />
         )}
       </div>
