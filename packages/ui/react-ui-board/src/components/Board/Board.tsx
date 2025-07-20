@@ -34,7 +34,7 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Drag to resize.
+// TODO(burdon): Drag edges to resize.
 
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
 const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
