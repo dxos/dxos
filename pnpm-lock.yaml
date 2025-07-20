@@ -5727,6 +5727,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
+      '@preact/signals-react':
+        specifier: ^3.2.0
+        version: 3.2.1(react@18.2.0)
       effect:
         specifier: 3.16.13
         version: 3.16.13
