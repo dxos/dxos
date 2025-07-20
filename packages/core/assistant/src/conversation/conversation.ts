@@ -69,6 +69,9 @@ export class Conversation {
       if (blueprints.length > 1) {
         throw new Error('Multiple blueprints are not yet supported.');
       }
+
+      // TODO(dmaretskyi): Blueprint instructions + tools.
+
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
