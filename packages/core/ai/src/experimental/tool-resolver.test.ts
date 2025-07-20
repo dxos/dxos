@@ -3,6 +3,7 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Schema } from 'effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
+import type { Tool } from '../tools';
 
 export const ToolId = Schema.String.pipe(Schema.brand('ToolId'));
 export type ToolId = Schema.Schema.Type<typeof ToolId>;
@@ -29,13 +30,10 @@ export class ToolResolverService extends Context.Tag('ToolResolverService')<
 export class ToolExecutionService extends Context.Tag('ToolExecutionService')<
   ToolExecutionService,
   {
-    readonly toolkitLayer: <Tools extends AiTool.Any>(
-      toolkit: AiToolkit.AiToolkit<Tools>,
-    ) => Layer.Layer<AiTool.ToHandler<Tools>, never, never>;
+    readonly handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) => AiTool.ToHandler<Tools>;
   }
 >() {
-  static toolkitLayer = <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) =>
-    Layer.unwrapEffect(ToolExecutionService.pipe(Effect.map((_) => _.toolkitLayer(toolkit))));
+  static handlersFor = Effect.serviceFunction(ToolExecutionService, (_) => _.handlersFor);
 }
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
@@ -57,8 +55,8 @@ const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
 }));
 
 const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
-  toolkitLayer: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) =>
-    toolkit.toLayer({
+  handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) =>
+    toolkit.of({
       Calculator: Effect.fn(function* ({ input }) {
         const result = (() => {
           // Restrict to basic arithmetic operations for safety.
@@ -74,18 +72,39 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
     } as any),
 }));
 
+class UserToolkit extends AiToolkit.make(
+  AiTool.make('test/age', {
+    description: 'Gets the age of the user',
+    parameters: {},
+    success: Schema.Number,
+  }),
+) {}
+
+const userToolkitLayer = UserToolkit.toLayer({
+  'test/age': Effect.fn(function* () {
+    return 21;
+  }),
+});
+
 describe('ToolResolverService', () => {
   it.effect(
     'should resolve a tool',
     Effect.fn(
       function* () {
-        const toolkit = yield* ToolResolverService.resolveToolkit([ToolId.make('test')]);
-        log.info('toolkit', { toolkit });
-
-        const result = yield* toolkit.pipe(
-          Effect.flatMap((h: any) => h.handle('Calculator', { input: '1 + 1' }) as Effect.Effect<any, any, any>),
-          Effect.provide(ToolExecutionService.toolkitLayer(toolkit)),
+        const dynamicToolkit = yield* ToolResolverService.resolveToolkit([ToolId.make('test')]);
+        const dynamicToolkitLayer = dynamicToolkit.toLayer(
+          yield* ToolExecutionService.handlersFor(dynamicToolkit) as Effect.Effect<any, never, ToolExecutionService>,
         );
+
+        const toolkit = AiToolkit.merge(dynamicToolkit, UserToolkit);
+
+        const results = Effect.gen(function* () {
+          return {
+            sum: yield* callTool(toolkit, 'Calculator', { input: '1 + 1' }),
+            age: yield* callTool(toolkit, 'test/age', {}),
+          };
+        });
+        const result = yield* results.pipe(Effect.provide(Layer.mergeAll(dynamicToolkitLayer, userToolkitLayer)));
         log.info('result', { result });
       },
       Effect.provide(TestToolResolverService),
@@ -93,3 +112,10 @@ describe('ToolResolverService', () => {
     ),
   );
 });
+
+const callTool = <Tools extends AiTool.Any>(
+  toolkit: AiToolkit.AiToolkit<Tools>,
+  toolName: AiTool.Name<Tools>,
+  toolParams: AiTool.Parameters<Tools>,
+): Effect.Effect<AiTool.Success<Tools>, AiTool.Failure<Tools>, AiTool.Context<Tools>> =>
+  toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolParams) as Effect.Effect<any, any, any>));
