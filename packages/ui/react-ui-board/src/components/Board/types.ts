@@ -25,16 +25,18 @@ export const CellLayout = Schema.extend(Position, Schema.partial(Size));
 export type CellLayout = Schema.Schema.Type<typeof CellLayout>;
 
 export const BoardLayout = Schema.Struct({
-  // TODO(burdon): Must be odd numbered since (0,0) must be the center.
+  // TODO(burdon): Should be odd numbered since (0,0) is the center.
   size: Schema.Struct({
     width: Schema.Number,
     height: Schema.Number,
   }),
 
-  cells: Schema.Record({
-    key: Schema.String,
-    value: CellLayout,
-  }),
+  cells: Schema.mutable(
+    Schema.Record({
+      key: Schema.String,
+      value: CellLayout,
+    }),
+  ),
 });
 
 export type BoardLayout = Schema.Schema.Type<typeof BoardLayout>;

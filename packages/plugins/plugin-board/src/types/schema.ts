@@ -15,10 +15,11 @@ export namespace Board {
   // Types
   //
 
-  // TODO(burdon): View.
+  // TODO(burdon): View?
   export const Board = Schema.Struct({
     name: Schema.optional(Schema.String),
-    layout: BoardLayout,
+    items: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
+    layout: Schema.mutable(BoardLayout),
   }).pipe(
     Type.Obj({
       typename: 'dxos.org/type/Board',

@@ -15,7 +15,17 @@ export default () => [
       resolve: ({ name }) => {
         return {
           data: {
-            object: Obj.make(Board.Board, { name, layout: { size: { width: 5, height: 5 }, cells: {} } }),
+            object: Obj.make(Board.Board, {
+              name,
+              items: [],
+              layout: {
+                size: {
+                  width: 5,
+                  height: 5,
+                },
+                cells: {},
+              },
+            }),
           },
         };
       },
