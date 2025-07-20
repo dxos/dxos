@@ -4,7 +4,13 @@
 
 import { type Context } from 'effect';
 
-import { type AiServiceEdgeClientOptions, EdgeAiServiceClient, type AiServiceClient, ToolRegistry } from '@dxos/ai';
+import {
+  type AiServiceEdgeClientOptions,
+  EdgeAiServiceClient,
+  type AiServiceClient,
+  ToolRegistry,
+  AiService,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
@@ -12,7 +18,6 @@ import { assertArgument } from '@dxos/invariant';
 
 import { consoleLogger, noopLogger } from './logger';
 import {
-  AiService,
   ConfiguredCredentialsService,
   type CredentialsService,
   DatabaseService,

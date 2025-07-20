@@ -32,7 +32,7 @@ export class ServiceRegistry extends Context.Tag('ServiceRegistry')<ServiceRegis
       E | ServiceNotAvailableError,
       Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
-  } = (...tags) => flow(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
+  } = (...tags) => (flow as any)(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
 
   static provideOrDie: {
     <Tags extends [Context.Tag<any, any>, ...Context.Tag<any, any>[]]>(
@@ -45,5 +45,7 @@ export class ServiceRegistry extends Context.Tag('ServiceRegistry')<ServiceRegis
       Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>
-    flow(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag).pipe(Effect.orDie))));
+    (flow as any)(
+      ...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag).pipe(Effect.orDie))),
+    );
 }
