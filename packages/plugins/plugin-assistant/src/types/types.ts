@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Sequence } from '@dxos/conductor';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
-import { AIChatType } from './chat';
+import { Assistant } from './schema';
 import { ASSISTANT_PLUGIN } from '../meta';
 
 export namespace AssistantAction {
@@ -19,7 +19,7 @@ export namespace AssistantAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: AIChatType,
+      object: Assistant.Chat,
     }),
   }) {}
 

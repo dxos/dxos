@@ -12,11 +12,11 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { Chat } from './Chat';
 import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta } from '../meta';
-import { type AssistantSettingsProps, type AIChatType } from '../types';
+import { type Assistant, type AssistantSettingsProps } from '../types';
 
 export type ChatContainerProps = {
   role: string;
-  chat: AIChatType;
+  chat: Assistant.Chat;
   artifact?: AssociatedArtifact;
 };
 

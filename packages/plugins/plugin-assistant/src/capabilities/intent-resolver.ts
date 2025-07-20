@@ -6,7 +6,7 @@ import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 
-import { AssistantAction, AIChatType } from '../types';
+import { Assistant, AssistantAction } from '../types';
 
 export default () => [
   contributes(
@@ -15,7 +15,7 @@ export default () => [
       intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: Obj.make(AIChatType, {
+          object: Obj.make(Assistant.Chat, {
             name,
             queue: Ref.fromDXN(space.queues.create().dxn),
           }),

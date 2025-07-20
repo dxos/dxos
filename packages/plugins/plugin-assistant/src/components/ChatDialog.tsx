@@ -12,10 +12,10 @@ import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 import { Chat, type ChatRootProps } from './Chat';
 import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta } from '../meta';
-import { type AIChatType, type AssistantSettingsProps } from '../types';
+import { type Assistant, type AssistantSettingsProps } from '../types';
 
 export type ChatDialogProps = {
-  chat?: AIChatType;
+  chat?: Assistant.Chat;
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {

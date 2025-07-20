@@ -24,7 +24,7 @@ import { isNotFalsy } from '@dxos/util';
 
 import { type ChatProcessor, useContextProvider, useBlueprints } from '../../hooks';
 import { meta } from '../../meta';
-import { type AIChatType } from '../../types';
+import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
@@ -53,7 +53,7 @@ const Endcap = ({ children }: PropsWithChildren) => {
 type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
-  chat: AIChatType;
+  chat: Assistant.Chat;
   processor: ChatProcessor;
   messages: Message[];
 

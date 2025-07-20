@@ -23,7 +23,7 @@ import {
   ChatDialog,
 } from '../components';
 import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
-import { AIChatType, AssistantAction, type AssistantSettingsProps, CompanionTo, TemplateType } from '../types';
+import { Assistant, AssistantAction, type AssistantSettingsProps, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -37,16 +37,16 @@ export default () =>
     createSurface({
       id: `${ASSISTANT_PLUGIN}/chat`,
       role: 'article',
-      filter: (data): data is { subject: AIChatType; variant: undefined } =>
-        Obj.instanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
+      filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
+        Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
       id: `${ASSISTANT_PLUGIN}/object-chat`,
       role: 'article',
-      filter: (data): data is { companionTo: Obj.Any; subject: AIChatType | 'assistant-chat' } =>
+      filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
-        (Obj.instanceOf(AIChatType, data.subject) || data.subject === 'assistant-chat'),
+        (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();
         const associatedArtifact = useMemo(
@@ -64,7 +64,7 @@ export default () =>
             const space = getSpace(data.companionTo);
             if (space && data.subject === 'assistant-chat') {
               const result = await space.db
-                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(CompanionTo).source())
+                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
                 .run();
               if (result.objects.length > 0) {
                 return;
@@ -76,7 +76,7 @@ export default () =>
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {
                     space,
-                    schema: CompanionTo,
+                    schema: Assistant.CompanionTo,
                     source: object,
                     target: data.companionTo,
                   }),
@@ -125,7 +125,7 @@ export default () =>
     createSurface({
       id: ASSISTANT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
+      filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
       component: ({ data }) => <ChatDialog {...data.props} />,
     }),
     createSurface({

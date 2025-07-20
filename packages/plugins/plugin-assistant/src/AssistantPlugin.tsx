@@ -23,7 +23,7 @@ import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } fro
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
+import { Assistant, AssistantAction, ServiceType, TemplateType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -48,7 +48,7 @@ export const AssistantPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(AIChatType),
+          id: Type.getTypename(Assistant.Chat),
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -62,7 +62,7 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: AIChatType,
+            objectSchema: Assistant.Chat,
             getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
           }),
         ),
@@ -78,7 +78,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
@@ -88,7 +88,7 @@ export const AssistantPlugin = () =>
         return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
           const program = Effect.gen(function* () {
             const { object: collection } = yield* dispatch(
-              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Assistant.Chat) }),
             );
             rootCollection.objects.push(Ref.make(collection));
 

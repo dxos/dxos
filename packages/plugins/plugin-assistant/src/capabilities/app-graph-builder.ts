@@ -32,7 +32,7 @@ import {
 } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
-import { AIChatType, AssistantAction, CompanionTo, TemplateType } from '../types';
+import { Assistant, AssistantAction, TemplateType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -90,7 +90,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
       connector: (node) => {
-        let query: QueryResult<AIChatType> | undefined;
+        let query: QueryResult<Assistant.Chat> | undefined;
         return Rx.make((get) => {
           const nodeOption = get(node);
           if (Option.isNone(nodeOption)) {
@@ -108,7 +108,7 @@ export default (context: PluginContext) =>
           }
 
           if (!query) {
-            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(CompanionTo).source());
+            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
           }
 
           const chat = get(rxFromQuery(query))[0];
@@ -230,10 +230,15 @@ export default (context: PluginContext) =>
   ]);
 
 // TODO(burdon): Factor out.
-const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
+const getOrCreateChat = async (
+  dispatch: PromiseIntentDispatcher,
+  space: Space,
+): Promise<Assistant.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
-  const { objects: allChats } = await space.db.query(Query.type(AIChatType)).run();
-  const { objects: relatedChats } = await space.db.query(Query.type(AIChatType).sourceOf(CompanionTo).source()).run();
+  const { objects: allChats } = await space.db.query(Query.type(Assistant.Chat)).run();
+  const { objects: relatedChats } = await space.db
+    .query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source())
+    .run();
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   // console.log('objects', JSON.stringify(objects, null, 2));
   if (chats.length > 0) {
@@ -242,7 +247,7 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
   }
 
   const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-  invariant(Obj.instanceOf(AIChatType, data?.object));
+  invariant(Obj.instanceOf(Assistant.Chat, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;
 };
