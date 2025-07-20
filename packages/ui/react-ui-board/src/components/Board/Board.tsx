@@ -176,7 +176,8 @@ const Container = ({ classNames, children }: ContainerProps) => {
     <div
       ref={containerRef}
       className={mx(
-        'relative board grow overflow-auto scrollbar-none opacity-0 transition-opacity duration-1000',
+        'flex items-center justify-center overflow-auto scrollbar-none',
+        'opacity-0 transition-opacity duration-1000',
         mounted && 'opacity-100',
         classNames,
       )}
@@ -184,7 +185,8 @@ const Container = ({ classNames, children }: ContainerProps) => {
         padding: grid.overScroll ?? 0,
       }}
     >
-      {children}
+      {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
+      <div className='max-bs-full max-is-full'>{children}</div>
     </div>
   );
 };
