@@ -34,7 +34,9 @@ export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
     <StackItem.Content role={role} classNames='container-max-width'>
       <Chat.Root chat={chat} processor={processor} artifact={artifact}>
         <Chat.Thread />
-        <Chat.Prompt />
+        <div className='pbe-4 pis-2 pie-2'>
+          <Chat.Prompt classNames='border border-subduedSeparator rounded-md' />
+        </div>
       </Chat.Root>
     </StackItem.Content>
   );

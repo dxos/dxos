@@ -292,7 +292,7 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
   return (
     <div
       className={mx(
-        'w-full grid grid-cols-[var(--rail-action)_1fr_min-content] grid-rows-[min-content_var(--rail-action)]',
+        'is-full grid grid-cols-[var(--rail-action)_1fr_min-content] grid-rows-[min-content_var(--rail-action)]',
         classNames,
       )}
     >
