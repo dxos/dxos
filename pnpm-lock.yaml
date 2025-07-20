@@ -480,6 +480,9 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../../plugins/plugin-automation
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
@@ -5667,6 +5670,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -5724,6 +5730,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
+      '@preact/signals-react':
+        specifier: ^3.2.0
+        version: 3.2.1(react@18.2.0)
       effect:
         specifier: 3.16.13
         version: 3.16.13

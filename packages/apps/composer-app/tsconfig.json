@@ -85,6 +85,9 @@
       "path": "../../plugins/plugin-automation"
     },
     {
+      "path": "../../plugins/plugin-board"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
