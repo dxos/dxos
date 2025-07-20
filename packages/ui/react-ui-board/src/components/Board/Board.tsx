@@ -37,7 +37,7 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Drag to resize.
 
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
-const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 40 };
+const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -72,14 +72,12 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 //
 
 type RootProps = PropsWithChildren<
-  ThemedClassName<
-    Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
-  >
+  Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
 >;
 
 const Root = forwardRef<BoardController, RootProps>(
   (
-    { children, classNames, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
+    { children, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
     forwardedRef,
   ) => {
     const bounds = useMemo<Size>(() => getBoardBounds(layout.size, grid), [layout, grid]);
@@ -225,15 +223,17 @@ Viewport.displayName = 'Board.Viewport';
 // Content
 //
 
-type ContentProps<T extends HasId = any> = {
-  items?: T[];
-} & Pick<CellProps, 'getTitle'>;
+type ContentProps<T extends HasId = any> = ThemedClassName<
+  {
+    items?: T[];
+  } & Pick<CellProps, 'getTitle'>
+>;
 
-const Content = <T extends HasId = any>({ items, ...props }: ContentProps<T>) => {
+const Content = <T extends HasId = any>({ classNames, items, ...props }: ContentProps<T>) => {
   const { layout } = useBoardContext(Viewport.displayName);
 
   return (
-    <div role='none'>
+    <div role='none' className={mx(classNames)}>
       {items?.map((item, index) => (
         <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} {...props} />
       ))}

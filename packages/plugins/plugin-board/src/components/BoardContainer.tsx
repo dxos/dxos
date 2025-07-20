@@ -21,14 +21,14 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const space = getSpace(board);
 
   // TODO(burdon): Create effect utility for reactive arrays.
-  const [items, setItem] = useState<Type.Expando[]>([]);
+  const [items, setItems] = useState<Type.Expando[]>([]);
   useEffect(() => {
     let t: NodeJS.Timeout;
     effect(() => {
       const refs = [...board.items];
       t = setTimeout(async () => {
         const items = await Ref.Array.loadAll(refs);
-        setItem(items.filter(isNonNullable));
+        setItems(items.filter(isNonNullable));
       });
     });
 
@@ -50,14 +50,12 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
-      const idx = board.items.findIndex((ref) => {
-        const dxn = ref.dxn.asEchoDXN();
-        return dxn?.echoId === id;
-      });
+      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
       if (idx !== -1) {
         board.items.splice(idx, 1);
       }
       delete board.layout.cells[id];
+      setItems((items) => items.filter((item) => item.id !== id));
     },
     [board],
   );
@@ -77,7 +75,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       <StackItem.Content toolbar>
         <BoardComponent.Controls />
         <BoardComponent.Container>
-          <BoardComponent.Viewport>
+          <BoardComponent.Viewport classNames='border-none'>
             <BoardComponent.Background />
             <BoardComponent.Content items={items} getTitle={(item) => Obj.getLabel(item) ?? item.id} />
           </BoardComponent.Viewport>
