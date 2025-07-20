@@ -315,7 +315,7 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
       ref={ref}
       style={rect}
       className={mx(
-        'absolute group flex items-center justify-center border rounded opacity-50',
+        'group/cell absolute flex items-center justify-center border rounded opacity-50',
         active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
       )}
     >
@@ -326,7 +326,7 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
           size={5}
           iconOnly
           label={t('button add')}
-          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover:opacity-100'
+          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onClick}
         />
       )}

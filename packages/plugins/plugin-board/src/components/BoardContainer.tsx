@@ -62,9 +62,18 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
+  // TODO(burdon): Use intents so can be undone.
+  const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
+    (id, position) => {
+      const layout = board.layout.cells[id];
+      board.layout.cells[id] = { ...layout, ...position };
+    },
+    [board],
+  );
+
   // TODO(burdon): Attention attributes.
   return (
-    <BoardComponent.Root layout={board.layout} onAdd={handleAdd} onDelete={handleDelete}>
+    <BoardComponent.Root layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
       <StackItem.Content toolbar>
         <BoardComponent.Controls />
         <BoardComponent.Container>
