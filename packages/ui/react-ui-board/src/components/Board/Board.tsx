@@ -55,6 +55,7 @@ type BoardContextValue = {
   layout: BoardLayout;
   grid: BoardGrid;
   bounds: Size;
+  center: Position;
   zoom: boolean;
   controller: BoardController;
   onSelect?: (id: string) => void;
@@ -67,6 +68,7 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 
 //
 // Root
+// NOTE: The Root is headless, which allows the Controls and Container to be in different subtrees.
 //
 
 type RootProps = PropsWithChildren<
@@ -80,11 +82,8 @@ const Root = forwardRef<BoardController, RootProps>(
     { children, classNames, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
     forwardedRef,
   ) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { width, height } = useResizeDetector({ targetRef: containerRef });
     const bounds = useMemo<Size>(() => getBoardBounds(layout.size, grid), [layout, grid]);
 
-    const [mounted, setMounted] = useState(false);
     const [zoom, setZoom] = useState(false);
     const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
 
@@ -111,28 +110,6 @@ const Root = forwardRef<BoardController, RootProps>(
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
-    // Auto-center (on mount).
-    useEffect(() => {
-      const container = containerRef.current;
-      if (container && width && height) {
-        container.scrollTo({
-          left: center.x - width / 2,
-          top: center.y - height / 2,
-          behavior: mounted ? 'smooth' : 'auto',
-        });
-
-        setMounted(true);
-      }
-    }, [center, bounds, width, height]);
-
-    // Auto-scroll.
-    useEffect(() => {
-      invariant(containerRef.current);
-      return autoScrollForElements({
-        element: containerRef.current,
-      });
-    }, []);
-
     const handleSelect = useCallback<NonNullable<BoardContextValue['onSelect']>>(
       (id) => {
         controller.center(id);
@@ -146,6 +123,7 @@ const Root = forwardRef<BoardController, RootProps>(
         layout={layout}
         grid={grid}
         bounds={bounds}
+        center={center}
         zoom={zoom}
         controller={controller}
         onSelect={onSelect ?? handleSelect}
@@ -153,19 +131,7 @@ const Root = forwardRef<BoardController, RootProps>(
         onMove={onMove}
         onAdd={readonly ? undefined : onAdd}
       >
-        <div
-          ref={containerRef}
-          className={mx(
-            'relative board grow overflow-auto scrollbar-none opacity-0 transition-opacity duration-1000',
-            mounted && 'opacity-100',
-            classNames,
-          )}
-          style={{
-            padding: grid.overScroll ?? 0,
-          }}
-        >
-          {children}
-        </div>
+        {children}
       </BoardContextProvider>
     );
   },
@@ -174,7 +140,61 @@ const Root = forwardRef<BoardController, RootProps>(
 Root.displayName = 'Board.Root';
 
 //
-// Content
+// Container
+//
+
+type ContainerProps = ThemedClassName<PropsWithChildren>;
+
+const Container = ({ classNames, children }: ContainerProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width, height } = useResizeDetector({ targetRef: containerRef });
+  const { bounds, grid, center } = useBoardContext(Container.displayName);
+
+  const [mounted, setMounted] = useState(false);
+
+  // Auto-center (on mount).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && width && height) {
+      container.scrollTo({
+        left: center.x - width / 2,
+        top: center.y - height / 2,
+        behavior: mounted ? 'smooth' : 'auto',
+      });
+
+      setMounted(true);
+    }
+  }, [center, bounds, width, height]);
+
+  // Auto-scroll.
+  useEffect(() => {
+    invariant(containerRef.current);
+    return autoScrollForElements({
+      element: containerRef.current,
+    });
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={mx(
+        'relative board grow overflow-auto scrollbar-none opacity-0 transition-opacity duration-1000',
+        mounted && 'opacity-100',
+        classNames,
+      )}
+      style={{
+        padding: grid.overScroll ?? 0,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+Container.displayName = 'Board.Container';
+
+//
+// Viewport
 //
 
 type ViewportProps = ThemedClassName<PropsWithChildren>;
@@ -326,25 +346,23 @@ const Controls = ({ classNames }: ControlsProps) => {
   const { readonly, zoom, controller, onAdd } = useBoardContext(Controls.displayName);
 
   return (
-    <div className={mx('absolute top-4 left-4 z-10', classNames)}>
-      <Toolbar.Root>
-        <IconButton
-          icon='ph--crosshair--regular'
-          iconOnly
-          label={t('button center')}
-          onClick={() => controller.center()}
-        />
-        <IconButton
-          icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-          iconOnly
-          label={t('button zoom')}
-          onClick={() => controller.toggleZoom()}
-        />
-        {!readonly && onAdd && (
-          <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
-        )}
-      </Toolbar.Root>
-    </div>
+    <Toolbar.Root classNames={classNames}>
+      <IconButton
+        icon='ph--crosshair--regular'
+        iconOnly
+        label={t('button center')}
+        onClick={() => controller.center()}
+      />
+      <IconButton
+        icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+        iconOnly
+        label={t('button zoom')}
+        onClick={() => controller.toggleZoom()}
+      />
+      {!readonly && onAdd && (
+        <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
+      )}
+    </Toolbar.Root>
   );
 };
 
@@ -356,6 +374,7 @@ Controls.displayName = 'Board.Controls';
 
 export const Board = {
   Root,
+  Container,
   Viewport,
   Content,
   Background,
@@ -365,6 +384,7 @@ export const Board = {
 
 export type {
   RootProps as BoardRootProps,
+  ContainerProps as BoardContainerProps,
   ViewportProps as BoardViewportProps,
   ContentProps as BoardContentProps,
   BackgroundProps as BoardBackgroundProps,

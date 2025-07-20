@@ -18,15 +18,16 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   // TODO(burdon): Attention attributes.
   return (
-    <StackItem.Content>
-      <BoardComponent.Root layout={board.layout}>
-        {/* TODO(burdon): Move to StackItem toolbar; make Board.Root headless so that can be outside of StackItem. */}
+    <BoardComponent.Root layout={board.layout}>
+      <StackItem.Content toolbar>
         <BoardComponent.Controls />
-        <BoardComponent.Viewport>
-          <BoardComponent.Background />
-          <BoardComponent.Content items={items} getTitle={(item) => Obj.getLabel(item) ?? item.id} />
-        </BoardComponent.Viewport>
-      </BoardComponent.Root>
-    </StackItem.Content>
+        <BoardComponent.Container>
+          <BoardComponent.Viewport>
+            <BoardComponent.Background />
+            <BoardComponent.Content items={items} getTitle={(item) => Obj.getLabel(item) ?? item.id} />
+          </BoardComponent.Viewport>
+        </BoardComponent.Container>
+      </StackItem.Content>
+    </BoardComponent.Root>
   );
 };

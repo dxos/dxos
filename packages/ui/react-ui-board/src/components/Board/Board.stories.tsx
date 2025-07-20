@@ -69,11 +69,13 @@ const meta: Meta<StoryProps> = {
         onMove={handleMove}
         ref={controller}
       >
-        <Board.Controls />
-        <Board.Viewport>
-          <Board.Background />
-          <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
-        </Board.Viewport>
+        <Board.Controls classNames='absolute top-3 left-3 z-10 min-bs-0 is-auto' />
+        <Board.Container>
+          <Board.Viewport>
+            <Board.Background />
+            <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
+          </Board.Viewport>
+        </Board.Container>
       </Board.Root>
     );
   },
