@@ -12,17 +12,17 @@ import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 import { Chat, type ChatRootProps } from './Chat';
 import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta } from '../meta';
-import { type AIChatType, type AssistantSettingsProps } from '../types';
+import { type Assistant } from '../types';
 
 export type ChatDialogProps = {
-  chat?: AIChatType;
+  chat?: Assistant.Chat;
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
 
   const space = getSpace(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(meta.id)?.value;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const serviceContainer = useServiceContainer({ space });
   const processor = useChatProcessor({ part: 'dialog', chat, serviceContainer, settings });
 

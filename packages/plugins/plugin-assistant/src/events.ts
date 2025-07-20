@@ -4,8 +4,8 @@
 
 import { Events } from '@dxos/app-framework';
 
-import { ASSISTANT_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace AssistantEvents {
-  export const AiClientReady = Events.createStateEvent(`${ASSISTANT_PLUGIN}/ai-client-ready`);
+  export const AiClientReady = Events.createStateEvent(`${meta.id}/ai-client-ready`);
 }

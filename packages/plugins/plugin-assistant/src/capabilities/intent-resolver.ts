@@ -6,16 +6,16 @@ import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 
-import { AssistantAction, AIChatType } from '../types';
+import { Assistant } from '../types';
 
 export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateChat,
+      intent: Assistant.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: Obj.make(AIChatType, {
+          object: Obj.make(Assistant.Chat, {
             name,
             queue: Ref.fromDXN(space.queues.create().dxn),
           }),
@@ -26,7 +26,7 @@ export default () => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: AssistantAction.CreateSequence,
+      intent: Assistant.CreateSequence,
       resolve: ({ name }) => ({
         data: {
           object: Obj.make(Sequence, {
