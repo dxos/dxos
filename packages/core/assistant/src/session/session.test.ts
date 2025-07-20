@@ -123,51 +123,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
     ),
   );
 
-  it.skip('tool', async () => {
-    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
-    // const aiClient = new OllamaAiServiceClient({
-    //   overrides: { model: 'llama3.1:8b' },
-    // });
-    const session = new AISession({ operationModel: 'configured' });
-
-    // const printer = new ConsolePrinter();
-    session.message.on((message) => log('message', { message }));
-    session.userMessage.on((message) => log('userMessage', { message }));
-    session.block.on((block) => log('block', { block }));
-
-    // session.update.on((update) => {
-    //   log('update', { update });
-    // });
-
-    const calculatorTool = createTool('test', {
-      name: 'calculator',
-      description: 'Adds to numbers',
-      schema: Schema.Struct({
-        operand1: Schema.Number,
-        operand2: Schema.Number,
-      }),
-      execute: async ({ operand1, operand2 }) => {
-        return ToolResult.Success(operand1 + operand2);
-      },
-    });
-
-    // Test creating an itinerary
-    const response = await session.run({
-      tools: [calculatorTool.id],
-      artifacts: [],
-      requiredArtifactIds: [],
-      history: [],
-      generationOptions: {
-        model: '@anthropic/claude-3-5-haiku-20241022',
-      },
-      prompt: 'What is 10 + 20?',
-      // TODO(dmaretskyi): Move to context.
-      toolResolver: new ToolRegistry([calculatorTool]),
-    });
-
-    log('result', { response });
-  });
-
   it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
     const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaAiServiceClient({
