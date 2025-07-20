@@ -37,21 +37,20 @@ class TestToolkit extends AiToolkit.make(
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({
-  Calculator: ({ input }) =>
-    Effect.gen(function* () {
-      const result = (() => {
-        // Restrict to basic arithmetic operations for safety.
-        const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-        log.info('calculate', { sanitizedInput });
+  Calculator: Effect.fn(function* ({ input }) {
+    const result = (() => {
+      // Restrict to basic arithmetic operations for safety.
+      const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+      log.info('calculate', { sanitizedInput });
 
-        // eslint-disable-next-line no-new-func
-        return Function(`"use strict"; return (${sanitizedInput})`)();
-      })();
+      // eslint-disable-next-line no-new-func
+      return Function(`"use strict"; return (${sanitizedInput})`)();
+    })();
 
-      // TODO(burdon): How to return an error.
-      yield* Console.log(`Executing calculation: ${input} = ${result}`);
-      return { result };
-    }),
+    // TODO(burdon): How to return an error.
+    yield* Console.log(`Executing calculation: ${input} = ${result}`);
+    return { result };
+  }),
 });
 
 describe('effect AI client', () => {
