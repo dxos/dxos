@@ -34,6 +34,7 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
+    "@dxos/plugin-board": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-conductor": "workspace:*",
