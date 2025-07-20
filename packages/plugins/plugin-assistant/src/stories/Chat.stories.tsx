@@ -47,7 +47,7 @@ import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
 import { useChatProcessor, useServiceContainer } from '../hooks';
 import { translations } from '../translations';
-import { AIChatType } from '../types';
+import { Assistant } from '../types';
 
 //
 // Story container
@@ -72,7 +72,7 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 
 const ChatContainer = () => {
   const space = useSpace();
-  const [chat] = useQuery(space, Filter.type(AIChatType));
+  const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
   // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
   const serviceContainer = useServiceContainer({ space });
@@ -171,7 +171,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [AIChatType, DocumentType, Blueprint],
+        types: [Assistant.Chat, DocumentType, Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -182,7 +182,7 @@ const getDecorators = ({
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(
-            Obj.make(AIChatType, {
+            Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );

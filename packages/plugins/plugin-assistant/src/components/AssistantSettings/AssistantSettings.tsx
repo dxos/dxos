@@ -9,7 +9,7 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { LLM_PROVIDERS, type AssistantSettingsProps } from '../../types';
+import { LLM_PROVIDERS, type Assistant } from '../../types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
@@ -20,7 +20,7 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
+export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }) => {
   const { t } = useTranslation(meta.id);
 
   return (

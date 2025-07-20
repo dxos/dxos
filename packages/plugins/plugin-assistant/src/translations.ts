@@ -6,12 +6,12 @@ import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { AIChatType, TemplateType } from './types';
+import { Assistant, TemplateType } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [AIChatType.typename]: {
+      [Assistant.Chat.typename]: {
         'typename label': 'Assistant',
         'typename label_zero': 'Assistants',
         'typename label_one': 'Assistant',

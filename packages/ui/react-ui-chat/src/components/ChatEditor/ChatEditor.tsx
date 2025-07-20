@@ -46,6 +46,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         debug: true,
         autoFocus,
         extensions: [
+          createThemeExtensions({ themeMode }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           references ? referencesExtension({ provider: references.provider }) : [],
           createBasicExtensions({
@@ -53,7 +54,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             lineWrapping,
             placeholder,
           }),
-          createThemeExtensions({ themeMode }),
           extensions,
         ].filter(isNonNullable),
       },
@@ -86,6 +86,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
       [view, onSubmit],
     );
 
-    return <div ref={parentRef} className={mx('w-full', classNames)} />;
+    return <div ref={parentRef} className={mx('is-full', classNames)} />;
   },
 );
