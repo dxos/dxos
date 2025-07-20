@@ -480,6 +480,9 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../../plugins/plugin-automation
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess

@@ -4,18 +4,18 @@
 
 import React from 'react';
 
-import { Board } from '@dxos/react-ui-board';
+import { Board as BoardComponent } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type BoardType } from '../types';
+import { type Board } from '../types';
 
 // TODO(burdon): Factor out.
-type BoardContainerProps = { role: string; board: BoardType };
+type BoardContainerProps = { role: string; board: Board.Board };
 
 export const BoardContainer = ({ board }: BoardContainerProps) => {
   return (
     <StackItem.Content>
-      <Board.Root />
+      <BoardComponent.Root />
     </StackItem.Content>
   );
 };

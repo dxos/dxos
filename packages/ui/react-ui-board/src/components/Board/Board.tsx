@@ -28,15 +28,13 @@ import { type HasId, type BoardLayout, type Size, type Position } from './types'
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-// TODO(burdon): Drag cards.
 // TODO(burdon): Center when has focus; key nav.
-// TODO(burdon): Editors with concurrent AI cells.
 // TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Increase width/height.
+// TODO(burdon): Drag to resize.
 
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
 const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 40 };

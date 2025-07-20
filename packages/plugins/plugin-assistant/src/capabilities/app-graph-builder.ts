@@ -49,7 +49,6 @@ export default (context: PluginContext) =>
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const client = context.getCapability(ClientCapabilities.Client);
-
                   const space = getActiveSpace(context) ?? client.spaces.default;
                   const chat = await getOrCreateChat(dispatch, space);
                   if (!chat) {
