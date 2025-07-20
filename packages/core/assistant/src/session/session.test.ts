@@ -109,7 +109,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
           history: [],
-          toolkit: TestToolkit,
+          toolkit: yield* TestToolkit,
         });
         log.info('response', { response });
       },

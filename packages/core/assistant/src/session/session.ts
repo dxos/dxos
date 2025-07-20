@@ -30,6 +30,7 @@ import { todo } from '@dxos/debug';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { AiLanguageModel, type AiError, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
 import { AiAssistantError } from '../errors';
+import { invariant } from '@dxos/invariant';
 
 /**
  * Contains message history, tools, current context.
@@ -75,7 +76,7 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
 
   // TODO(dmaretskyi): Blueprints.
 
-  toolkit?: AiToolkit.AiToolkit<Tools>;
+  toolkit?: AiToolkit.ToHandler<Tools>;
   systemPrompt?: string;
 };
 
@@ -193,12 +194,17 @@ export class AISession {
           break;
         }
 
-        const actualToolkit = Effect.isEffect(options.toolkit)
-          ? yield* options.toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
-          : (options.toolkit as unknown as AiToolkit.ToHandler<any>);
+        const toolkit = options.toolkit;
+        if (!toolkit) {
+          return yield* Effect.dieMessage('Toolkit is required to run the session.');
+        }
+        invariant(
+          !Effect.isEffect(toolkit),
+          'Toolkit must be resolved to a handler before being passed to the session.',
+        );
 
         const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-          runTool(actualToolkit, toolCall),
+          runTool(toolkit, toolCall),
         );
         this._pending.push(
           Obj.make(DataType.Message, {

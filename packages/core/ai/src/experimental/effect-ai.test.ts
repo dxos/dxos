@@ -75,7 +75,7 @@ describe('effect AI client', () => {
           const prompt = yield* preprocessAiInput(history);
           const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit,
+            toolkit: yield* TestToolkit.pipe(Effect.provide(toolkitLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));

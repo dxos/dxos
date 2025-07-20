@@ -36,16 +36,18 @@ export const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[]
   return message.blocks.filter((block) => block._tag === 'toolCall');
 };
 
-export const runTool: (
-  toolkit: AiToolkit.ToHandler<AiTool.AiTool<string>>,
+export const runTool: <Tools extends AiTool.Any>(
+  toolkit: AiToolkit.ToHandler<Tools>,
   toolCall: ContentBlock.ToolCall,
-) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError> = Effect.fn('runTool')(function* (toolkit, toolCall) {
-  const handlerEff = toolkit.handle(toolCall.name, toolCall.input as any);
-  const result = yield* handlerEff;
-  return {
-    _tag: 'toolResult',
-    toolCallId: toolCall.toolCallId,
-    name: toolCall.name,
-    result,
-  } satisfies ContentBlock.ToolResult;
-});
+) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('runTool')(
+  function* (toolkit, toolCall) {
+    const handlerEff = toolkit.handle(toolCall.name as any, toolCall.input as any);
+    const result = yield* handlerEff;
+    return {
+      _tag: 'toolResult',
+      toolCallId: toolCall.toolCallId,
+      name: toolCall.name,
+      result,
+    } satisfies ContentBlock.ToolResult;
+  },
+);
