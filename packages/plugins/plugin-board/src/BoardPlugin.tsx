@@ -24,6 +24,7 @@ export const BoardPlugin = () => {
       id: `${meta.id}/module/metadata`,
       activatesOn: Events.SetupMetadata,
       activate: () =>
+        // TODO(burdon): "Metadata" here seems non-descriptive; is this specifically for the type? ObjectMetadata?
         contributes(Capabilities.Metadata, {
           id: Board.Board.typename,
           metadata: {

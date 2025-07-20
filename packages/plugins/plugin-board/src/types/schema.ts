@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { SpaceSchema } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { BoardLayout } from '@dxos/react-ui-board';
@@ -18,7 +17,7 @@ export namespace Board {
 
   // TODO(burdon): View.
   export const Board = Schema.Struct({
-    name: Schema.String,
+    name: Schema.optional(Schema.String),
     layout: BoardLayout,
   }).pipe(
     Type.Obj({
@@ -36,7 +35,6 @@ export namespace Board {
 
   export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: Schema.Struct({
-      space: SpaceSchema,
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({

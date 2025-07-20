@@ -300,6 +300,7 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
       )}
     >
       {onClick && (
+        // TODO(burdon): Make this pluggable so that the container can provide a menu trigger.
         <IconButton
           icon='ph--plus--regular'
           size={5}
@@ -319,14 +320,13 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
 
 type ControlsProps = ThemedClassName;
 
-// TODO(burdon): Translations.
 // TODO(burdon): Create variant that can be housed outside of provider?
 const Controls = ({ classNames }: ControlsProps) => {
   const { t } = useTranslation(translationKey);
   const { readonly, zoom, controller, onAdd } = useBoardContext(Controls.displayName);
 
   return (
-    <div className={mx('fixed top-4 left-4 z-10', classNames)}>
+    <div className={mx('absolute top-4 left-4 z-10', classNames)}>
       <Toolbar.Root>
         <IconButton
           icon='ph--crosshair--regular'
