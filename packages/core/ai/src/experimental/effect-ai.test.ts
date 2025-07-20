@@ -13,6 +13,7 @@ import { getToolCalls, runTool } from './tools';
 import { AiService } from '../service';
 import { AiModelNotAvailableError } from '../errors';
 import { todo } from '@dxos/debug';
+import * as AiServiceRouter from './AiServiceRouter';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
@@ -114,32 +115,10 @@ describe('effect AI client', () => {
       Effect.provide(toolkitLayer),
       Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
 
-      /// Runtime
-      Effect.provide(AiServiceRouter),
+      // Runtime
+      Effect.provide(AiServiceRouter.AiServiceRouter),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
 });
-
-// TODO(dmaretskyi): Make this generic.
-const AiServiceRouter = Layer.effect(
-  AiService,
-  Effect.gen(function* () {
-    const anthropicClient = Layer.succeed(AnthropicClient.AnthropicClient, yield* AnthropicClient.AnthropicClient);
-
-    return AiService.of({
-      model: (model) => {
-        switch (model) {
-          case '@anthropic/claude-3-5-sonnet-20241022':
-            return AnthropicLanguageModel.model('claude-3-5-sonnet-20241022').pipe(Layer.provide(anthropicClient));
-          default:
-            return Layer.fail(new AiModelNotAvailableError(model));
-        }
-      },
-      get client(): never {
-        throw new Error('Client not available');
-      },
-    });
-  }),
-);
