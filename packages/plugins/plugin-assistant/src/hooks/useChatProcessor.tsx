@@ -16,17 +16,17 @@ import { isNonNullable } from '@dxos/util';
 
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
-import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
+import { type Assistant, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
   /** @deprecated Why is this required? */
   part?: 'deck' | 'dialog';
   space?: Space;
-  chat?: AIChatType;
+  chat?: Assistant.Chat;
   // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
   serviceContainer: ServiceContainer;
   blueprintRegistry?: BlueprintRegistry;
-  settings?: AssistantSettingsProps;
+  settings?: Assistant.Settings;
   /** @deprecated */
   instructions?: string;
   /** @deprecated */

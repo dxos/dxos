@@ -83,7 +83,7 @@ const defaultBasicOptions: BasicExtensionsOptions = {
   keymap: 'standard',
   lineWrapping: true,
   search: true,
-};
+} as const;
 
 const keymaps: { [key: string]: readonly KeyBinding[] } = {
   // https://codemirror.net/docs/ref/#commands.standardKeymap
@@ -93,7 +93,7 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaultBasicOptions);
+  const props = defaultsDeep({}, _props, defaultBasicOptions);
   return [
     // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
@@ -166,11 +166,19 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-const defaultThemeSlots = {
+export const grow = {
   editor: {
-    className: 'w-full',
+    className: 'is-full bs-full',
   },
-};
+} as const;
+
+export const fullWidth = {
+  editor: {
+    className: 'is-full',
+  },
+} as const;
+
+export const defaultThemeSlots = grow;
 
 /**
  * https://codemirror.net/examples/styling

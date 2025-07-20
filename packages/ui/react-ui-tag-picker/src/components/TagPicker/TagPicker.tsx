@@ -14,6 +14,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  fullWidth,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -91,7 +92,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode }),
+          createThemeExtensions({ themeMode, slots: fullWidth }),
           tagPicker({
             debug: true,
             onUpdate: handleUpdate,
@@ -122,7 +123,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
     return (
       <div
         ref={composedRef}
-        className={mx('min-is-0 flex-1', classNames)}
+        className={mx('min-is-0 grow', classNames)}
         style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties}
       />
     );

@@ -7,6 +7,7 @@ export * from './useAsyncState';
 export * from './useControlledState';
 export * from './useDebugReactDeps';
 export * from './useDefaultValue';
+export * from './useDefaults';
 export * from './useDynamicRef';
 export * from './useFileDownload';
 export * from './useForwardedRef';
