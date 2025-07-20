@@ -3,38 +3,8 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Schema } from 'effect';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
-import type { Tool } from '../tools';
-
-export const ToolId = Schema.String.pipe(Schema.brand('ToolId'));
-export type ToolId = Schema.Schema.Type<typeof ToolId>;
-
-export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}
-
-export class ToolResolverService extends Context.Tag('ToolResolverService')<
-  ToolResolverService,
-  {
-    readonly resolve: (id: ToolId) => Effect.Effect<AiTool.Any, AiToolNotFoundError>;
-  }
->() {
-  static resolve = Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
-
-  static resolveToolkit: (
-    ids: ToolId[],
-  ) => Effect.Effect<AiToolkit.AiToolkit<AiTool.Any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
-    Effect.gen(function* () {
-      const tools = yield* Effect.all(ids.map(ToolResolverService.resolve));
-      return AiToolkit.make(...tools);
-    });
-}
-
-export class ToolExecutionService extends Context.Tag('ToolExecutionService')<
-  ToolExecutionService,
-  {
-    readonly handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) => AiTool.ToHandler<Tools>;
-  }
->() {
-  static handlersFor = Effect.serviceFunction(ToolExecutionService, (_) => _.handlersFor);
-}
+import { Tool, ToolId } from '../tools';
+import { ToolResolverService, ToolExecutionService } from './tools';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (id: ToolId) =>
@@ -100,7 +70,7 @@ describe('ToolResolverService', () => {
 
         const results = Effect.gen(function* () {
           return {
-            sum: yield* callTool(toolkit, 'Calculator', { input: '1 + 1' }),
+            sum: yield* callTool(toolkit, 'Calculator' as any, { input: '1 + 1' }),
             age: yield* callTool(toolkit, 'test/age', {}),
           };
         });

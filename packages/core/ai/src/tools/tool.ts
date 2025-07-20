@@ -125,7 +125,7 @@ export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
 
-export const ToolId = Schema.String.annotations({
+export const ToolId = Schema.String.pipe(Schema.brand('ToolId')).annotations({
   identifier: 'ToolId',
   name: 'ToolId',
   description: 'Unique identifier for a tool.',

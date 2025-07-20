@@ -25,6 +25,7 @@ import { AISession } from './session';
 import { AnthropicClient } from '@effect/ai-anthropic';
 import { NodeHttpClient } from '@effect/platform-node';
 import { TestHelpers } from '@dxos/effect';
+import { AiTool, AiToolkit } from '@effect/ai';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -45,6 +46,38 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
+class TestToolkit extends AiToolkit.make(
+  AiTool.make('Calculator', {
+    description: 'Basic calculator tool',
+    parameters: {
+      input: Schema.String.annotations({
+        description: 'The calculation to perform.',
+      }),
+    },
+    success: Schema.Struct({
+      result: Schema.Number,
+    }),
+    failure: Schema.Never,
+  }),
+) {}
+
+// Tool handlers.
+const toolkitLayer = TestToolkit.toLayer({
+  Calculator: ({ input }) =>
+    Effect.gen(function* () {
+      const result = (() => {
+        // Restrict to basic arithmetic operations for safety.
+        const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+        log.info('calculate', { sanitizedInput });
+
+        // eslint-disable-next-line no-new-func
+        return Function(`"use strict"; return (${sanitizedInput})`)();
+      })();
+
+      return { result };
+    }),
+});
+
 describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
   it.effect(
     'no tools',
@@ -53,15 +86,35 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         const session = new AISession({ operationModel: 'configured' });
 
         const response = yield* session.run({
-          tools: [],
-          artifacts: [],
-          history: [],
           prompt: 'Hello world!',
-          toolResolver: new ToolRegistry([]),
+          history: [],
         });
         log.info('response', { response });
       },
       Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+
+      // Runtime
+      Effect.provide(AiServiceRouter.AiServiceRouter),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+    ),
+  );
+
+  it.effect.only(
+    'calculator',
+    Effect.fn(
+      function* ({ expect }) {
+        const session = new AISession({ operationModel: 'configured' });
+
+        const response = yield* session.run({
+          prompt: 'What is 10 + 20?',
+          history: [],
+          toolkit: TestToolkit,
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+      Effect.provide(toolkitLayer),
 
       // Runtime
       Effect.provide(AiServiceRouter.AiServiceRouter),
