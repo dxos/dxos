@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { SpaceSchema, Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo-schema';
 
 import { meta } from '../meta';
 
@@ -26,6 +27,7 @@ export namespace Assistant {
       typename: 'dxos.org/type/assistant/Chat',
       version: '0.2.0',
     }),
+    LabelAnnotation.set(['name']),
   );
 
   export interface Chat extends Schema.Schema.Type<typeof Chat> {}
@@ -63,9 +65,7 @@ export namespace Assistant {
   // Actions
   //
 
-  const ASSISTANT_ACTION = `${meta.id}/action`;
-
-  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
+  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${meta.id}/action}/create-chat`, {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
@@ -75,7 +75,7 @@ export namespace Assistant {
     }),
   }) {}
 
-  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${ASSISTANT_ACTION}/create-sequence`, {
+  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta.id}/action}/create-sequence`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
     }),
