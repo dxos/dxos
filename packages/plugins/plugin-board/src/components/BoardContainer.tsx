@@ -71,7 +71,13 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   // TODO(burdon): Attention attributes.
   return (
-    <BoardComponent.Root layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
+    <BoardComponent.Root
+      ref={controller}
+      layout={board.layout}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      onMove={handleMove}
+    >
       <StackItem.Content toolbar>
         <BoardComponent.Controls />
         <BoardComponent.Container>
