@@ -23,7 +23,7 @@ import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } fro
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, AssistantAction, ServiceType, TemplateType } from './types';
+import { Assistant, ServiceType, TemplateType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -63,14 +63,14 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Assistant.Chat,
-            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
+            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Sequence,
-            getIntent: () => createIntent(AssistantAction.CreateSequence),
+            getIntent: () => createIntent(Assistant.CreateSequence),
           }),
         ),
       ],
@@ -92,7 +92,7 @@ export const AssistantPlugin = () =>
             );
             rootCollection.objects.push(Ref.make(collection));
 
-            const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+            const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
             space.db.add(chat);
           });
           await Effect.runPromise(program);

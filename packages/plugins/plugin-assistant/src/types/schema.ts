@@ -4,10 +4,19 @@
 
 import { Schema } from 'effect';
 
-import { Queue } from '@dxos/client/echo';
+import { SpaceSchema, Queue } from '@dxos/client/echo';
+import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 
+import { meta } from '../meta';
+
+export const LLM_PROVIDERS = ['edge', 'ollama', 'lmstudio'] as const;
+
 export namespace Assistant {
+  //
+  // Types
+  //
+
   export const Chat = Schema.Struct({
     id: Type.ObjectId,
     name: Schema.optional(Schema.String),
@@ -33,4 +42,45 @@ export namespace Assistant {
   );
 
   export interface CompanionTo extends Schema.Schema.Type<typeof CompanionTo> {}
+
+  //
+  // Settings
+  //
+
+  export const Settings = Schema.mutable(
+    Schema.Struct({
+      llmProvider: Schema.optional(Schema.Literal(...LLM_PROVIDERS)),
+      edgeModel: Schema.optional(Schema.String),
+      ollamaModel: Schema.optional(Schema.String),
+      lmstudioModel: Schema.optional(Schema.String),
+      customPrompts: Schema.optional(Schema.Boolean),
+    }),
+  );
+
+  export type Settings = Schema.Schema.Type<typeof Settings>;
+
+  //
+  // Actions
+  //
+
+  const ASSISTANT_ACTION = `${meta.id}/action`;
+
+  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${ASSISTANT_ACTION}/create-chat`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      name: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({
+      object: Assistant.Chat,
+    }),
+  }) {}
+
+  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${ASSISTANT_ACTION}/create-sequence`, {
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({
+      object: Sequence,
+    }),
+  }) {}
 }

@@ -6,43 +6,43 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
+import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   AssistantSettings,
-  SequenceContainer,
   ChatContainer,
-  PromptSettings,
-  TemplateContainer,
   ChatDialog,
+  PromptSettings,
+  SequenceContainer,
+  TemplateContainer,
 } from '../components';
-import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
-import { Assistant, AssistantAction, type AssistantSettingsProps, TemplateType } from '../types';
+import { meta, ASSISTANT_DIALOG } from '../meta';
+import { Assistant, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<AssistantSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === ASSISTANT_PLUGIN,
+      filter: (data): data is { subject: SettingsStore<Assistant.Settings> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/chat`,
+      id: `${meta.id}/chat`,
       role: 'article',
       filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
         Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/object-chat`,
+      id: `${meta.id}/object-chat`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
@@ -71,7 +71,7 @@ export default () =>
               }
 
               const program = Effect.gen(function* () {
-                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+                const { object } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {
@@ -97,13 +97,13 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/sequence`,
+      id: `${meta.id}/sequence`,
       role: 'article',
       filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
       component: ({ data, role }) => <SequenceContainer role={role} sequence={data.subject} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/companion/logs`,
+      id: `${meta.id}/companion/logs`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
         Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
@@ -117,7 +117,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/template`,
+      id: `${meta.id}/template`,
       role: 'article',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
@@ -129,7 +129,7 @@ export default () =>
       component: ({ data }) => <ChatDialog {...data.props} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/prompt-settings`,
+      id: `${meta.id}/prompt-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data }) => <PromptSettings template={data.subject} />,
