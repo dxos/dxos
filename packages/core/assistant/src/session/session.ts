@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chunk, Effect, Schema, Stream } from 'effect';
+import { Chunk, Context, Effect, Option, Schema, Stream } from 'effect';
 
 import {
   createTool,
@@ -15,7 +15,7 @@ import {
   type GenerateRequest,
   type GenerationStream,
   type ToolId,
-  type ToolResolver
+  type ToolResolver,
 } from '@dxos/ai';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { Event } from '@dxos/async';
@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 import { AiParser, AiPreprocessor } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { DataType, type ContentBlock } from '@dxos/schema';
-import { AiLanguageModel, type AiError } from '@effect/ai';
+import { AiLanguageModel, type AiError, type AiResponse } from '@effect/ai';
 import { AiAssistantError } from '../errors';
 
 /**
@@ -46,16 +46,27 @@ import { AiAssistantError } from '../errors';
  * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
  * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
  * a diff is inserted into the conversation.
+ *
+ * Can be optionally provided to the session run call.
  */
-export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
-  Map<
-    ObjectId,
-    {
-      version: ObjectVersion;
-      diff?: string;
-    }
-  >
->;
+export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
+  ArtifactDiffResolver,
+  ArtifactDiffResolver.Service
+>() {}
+
+export namespace ArtifactDiffResolver {
+  export type Service = {
+    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
+      Map<
+        ObjectId,
+        {
+          version: ObjectVersion;
+          diff?: string;
+        }
+      >
+    >;
+  };
+}
 
 export type SessionRunOptions = {
   artifacts: ArtifactDefinition[];
@@ -86,11 +97,6 @@ export type SessionRunOptions = {
    * Executable tools that do not go through the tool resolver.
    */
   executableTools?: ExecutableTool[];
-
-  /**
-   * @see ArtifactDiffResolver
-   */
-  artifactDiffResolver?: ArtifactDiffResolver;
 };
 
 type OperationModel = 'planning' | 'importing' | 'configured';
@@ -116,25 +122,25 @@ export class AISession {
   /** Prior history from queue. */
   private _history: DataType.Message[] = [];
 
-  // /**
-  //  * New message.
-  //  */
-  // public readonly message = this._parser.message;
+  /**
+   * New message.
+   */
+  public readonly message = new Event<DataType.Message>();
 
-  // /**
-  //  * Complete block added to Message.
-  //  */
-  // public readonly block = this._parser.block;
+  /**
+   * Complete block added to Message.
+   */
+  public readonly block = new Event<ContentBlock.Any>();
 
-  // /**
-  //  * Update partial block (while streaming).
-  //  */
-  // public readonly update = this._parser.update;
+  /**
+   * Update partial block (while streaming).
+   */
+  public readonly update = new Event<ContentBlock.Any>();
 
-  // /**
-  //  * Unparsed events from the underlying generation stream.
-  //  */
-  // public readonly streamEvent = this._parser.streamEvent;
+  /**
+   * Unparsed events from the underlying generation stream.
+   */
+  public readonly streamEvent = new Event<AiResponse.Part>();
 
   /**
    * User prompt or tool result.
@@ -151,12 +157,6 @@ export class AISession {
    * Emits when the session is done.
    */
   public readonly done = new Event<void>();
-
-  /**
-   * Emits when the tool reports its status.
-   * Triggered by the tool execution function.
-   */
-  public readonly toolStatusReport = new Event<{ message: DataType.Message; status: AgentStatus }>();
 
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
@@ -199,13 +199,10 @@ export class AISession {
       // // }
 
       this._history = [...options.history];
-      this._pending = [
-        yield* Effect.tryPromise({
-          try: () => this._formatUserPrompt(options.artifactDiffResolver, options.prompt, options.history),
-          catch: (error) => new AiAssistantError('Prompt processing error', { cause: error }),
-        }),
-      ];
-      this.userMessage.emit(this._pending.at(-1)!);
+
+      const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
+      this._pending = [promptMessages];
+      this.userMessage.emit(promptMessages);
 
       // const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
       do {
@@ -227,8 +224,21 @@ export class AISession {
           // tools: tools.map((tool) => tool.name),
         });
 
-        const prompt = yield* AiPreprocessor.preprocessAiInput([]);
+        const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
+        // Open request stream.
+        // this._stream = await options.client.execStream({
+        //   ...(options.generationOptions ?? {}),
+        //   // TODO(burdon): Rename messages or separate history/message.
+        //   history: [...this._history, ...this._pending],
+        //   tools,
+        //   systemPrompt:
+        //     options.systemPrompt ??
+        //     createBaseInstructions({
+        //       availableArtifacts: [...requiredArtifactIds],
+        //       operationModel: this._options.operationModel,
+        //     }),
+        // });
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           // toolkit,
@@ -250,190 +260,86 @@ export class AISession {
         }
 
         todo('Implement tool execution');
+
+        //     // const actualToolkit = Effect.isEffect(toolkit)
+        //     //   ? yield* toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
+        //     //   : (toolkit as unknown as AiToolkit.ToHandler<any>);
+        //     // const toolCalls = getToolCalls(message);
+        //     // if (toolCalls.length === 0) {
+        //     //   break;
+        //     // }
+
+        //     // const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
+        //     //   runTool(actualToolkit, toolCall),
+        //     // );
+        //     history.push(
+        //       Obj.make(DataType.Message, {
+        //         sender: {
+        //           role: 'user',
+        //         },
+        //         blocks: toolResults,
+        //         created: new Date().toISOString(),
+        //       }),
+        //     );
       } while (true);
 
-      return [];
-
-      // // this._pending = [await this._formatUserPrompt(options.artifactDiffResolver, options.prompt, options.history)];
-      // this.userMessage.emit(this._pending.at(-1)!);
-      // this._stream = undefined;
-
-      // let error: Error | undefined;
-
-      // // const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
-      // try {
-      //   let more = false;
-      //   do {
-      //     // const tools: ExecutableTool[] = pipe(
-      //     //   [
-      //     //     ...systemTools,
-      //     //     ...(await Promise.all(options.tools.map((toolId) => options.toolResolver.resolve(toolId)))),
-      //     //     ...(options.executableTools ?? []),
-      //     //     ...options.artifacts
-      //     //       .filter((artifact) => requiredArtifactIds.has(artifact.id))
-      //     //       .flatMap((artifact) => artifact.tools),
-      //     //   ],
-      //     //   Array.dedupeWith((a, b) => a.id === b.id),
-      //     // );
-
-      //     log('request', {
-      //       pending: this._pending.length,
-      //       history: this._history.length,
-      //       tools: tools.map((tool) => tool.name),
-      //     });
-
-      //     const prompt = yield* AiPreprocessor.preprocessAiInput(history);
-      //     const blocks = yield* AiLanguageModel.streamText({
-      //       prompt,
-      //       toolkit,
-      //       system: 'You are a helpful assistant.',
-      //       disableToolCallResolution: true,
-      //     }).pipe(AiParser.parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
-      //     const message = Obj.make(DataType.Message, {
-      //       sender: {
-      //         role: 'assistant',
-      //       },
-      //       blocks,
-      //       created: new Date().toISOString(),
-      //     });
-      //     log.info('message', { message });
-      //     history.push(message);
-
-      //     // const actualToolkit = Effect.isEffect(toolkit)
-      //     //   ? yield* toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
-      //     //   : (toolkit as unknown as AiToolkit.ToHandler<any>);
-      //     // const toolCalls = getToolCalls(message);
-      //     // if (toolCalls.length === 0) {
-      //     //   break;
-      //     // }
-
-      //     // const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-      //     //   runTool(actualToolkit, toolCall),
-      //     // );
-      //     history.push(
-      //       Obj.make(DataType.Message, {
-      //         sender: {
-      //           role: 'user',
-      //         },
-      //         blocks: toolResults,
-      //         created: new Date().toISOString(),
-      //       }),
-      //     );
-
-      //     // Open request stream.
-      //     // this._stream = await options.client.execStream({
-      //     //   ...(options.generationOptions ?? {}),
-      //     //   // TODO(burdon): Rename messages or separate history/message.
-      //     //   history: [...this._history, ...this._pending],
-      //     //   tools,
-      //     //   systemPrompt:
-      //     //     options.systemPrompt ??
-      //     //     createBaseInstructions({
-      //     //       availableArtifacts: [...requiredArtifactIds],
-      //     //       operationModel: this._options.operationModel,
-      //     //     }),
-      //     // });
-
-      //     // Wait until complete.
-      //     // await this._parser.parse(this._stream);
-      //     // await this._stream.complete();
-
-      //     // Add messages.
-      //     log('response', { pending: this._pending });
-
-      //     // Resolve tool use locally.
-      //     more = false;
-      //     // const message = this._pending.at(-1);
-      //     // invariant(message);
-      //     // if (isToolUse(message)) {
-      //     //   log('tool request...');
-      //     //   const response = await runTools({
-      //     //     message: this._pending.at(-1)!,
-      //     //     tools,
-      //     //     extensions: options.extensions ?? {},
-      //     //     reportStatus: (status) => this._onToolStatusReport(message, status),
-      //     //   });
-
-      //     //   log('tool response', { response });
-      //     //   switch (response.type) {
-      //     //     case 'continue': {
-      //     //       this._pending = [...this._pending, response.message];
-      //     //       this.userMessage.emit(response.message);
-      //     //       more = true;
-      //     //       break;
-      //     //     }
-      //     //   }
-      //     // }
-      //   } while (more);
-      // } catch (err) {
-      //   log.catch(err);
-      //   if (err instanceof Error && err.message.includes('Overloaded')) {
-      //     error = new AIServiecOverloadedError('AI service overloaded', { cause: err } as any); // TODO(dmaretskyi): Schema errors cant have cause
-      //   } else {
-      //     error = new Error('AI service error', { cause: err });
-      //   }
-      // } finally {
-      //   this._stream = undefined;
-      //   this.done.emit();
-      // }
-
-      // if (error) {
-      //   throw error;
-      // }
-
-      // return this._pending;
+      return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AISession.run'));
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     schema: S,
     options: SessionRunOptions,
   ): Promise<Schema.Schema.Type<S>> {
-    const parser = structuredOutputParser(schema);
-    const result = await this.run({
-      ...options,
-      executableTools: [...(options.executableTools ?? []), parser.tool],
-    });
-    return parser.getResult(result);
+    return todo();
+    // const parser = structuredOutputParser(schema);
+    // const result = await this.run({
+    //   ...options,
+    //   executableTools: [...(options.executableTools ?? []), parser.tool],
+    // });
+    // return parser.getResult(result);
   }
 
-  private async _formatUserPrompt(
-    artifactDiffResolver: ArtifactDiffResolver | undefined,
-    prompt: string,
-    history: DataType.Message[],
-  ) {
-    const prelude: ContentBlock.Any[] = [];
+  private _formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
+    Effect.gen(function* () {
+      const prelude: ContentBlock.Any[] = [];
 
-    if (artifactDiffResolver) {
-      const versions = gatherObjectVersions(history);
+      // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
+      const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
+      if (Option.isSome(artifactDiffResolver)) {
+        const versions = gatherObjectVersions(history);
 
-      const artifactDiff = await artifactDiffResolver(
-        [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
-      );
+        const artifactDiff = yield* Effect.tryPromise({
+          try: () =>
+            artifactDiffResolver.value.resolve(
+              [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
+            ),
+          catch: AiAssistantError.wrap('Artifact diff resolution error'),
+        });
 
-      log.info('vision', {
-        artifactDiff,
-        versions,
-      });
+        log.info('vision', {
+          artifactDiff,
+          versions,
+        });
 
-      for (const [id, { version }] of [...artifactDiff.entries()]) {
-        if (ObjectVersion.equals(version, versions.get(id)!)) {
-          artifactDiff.delete(id);
-          continue;
+        for (const [id, { version }] of [...artifactDiff.entries()]) {
+          if (ObjectVersion.equals(version, versions.get(id)!)) {
+            artifactDiff.delete(id);
+            continue;
+          }
+
+          prelude.push({ _tag: 'artifactPin', objectId: id, version });
         }
-
-        prelude.push({ _tag: 'artifactPin', objectId: id, version });
+        if (artifactDiff.size > 0) {
+          prelude.push(createArtifactUpdateBlock(artifactDiff));
+        }
       }
-      if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
-      }
-    }
 
-    return Obj.make(DataType.Message, {
-      sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
-      created: new Date().toUTCString(),
+      return Obj.make(DataType.Message, {
+        sender: { role: 'user' },
+        blocks: [...prelude, { _tag: 'text', text: prompt }],
+        created: new Date().toUTCString(),
+      });
     });
-  }
 
   private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]): ExecutableTool {
     return createTool('system', {
@@ -481,96 +387,6 @@ export class AISession {
         return ToolResult.Success({});
       },
     });
-  }
-
-  private _createPlanningTool(options: SessionRunOptions): ExecutableTool {
-    return createTool('system', {
-      name: 'create_plan',
-      description:
-        'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',
-      schema: Schema.Struct({
-        goal: Schema.String.annotations({ description: 'The goal that the plan will achieve.' }),
-        steps: Schema.Array(
-          Schema.Struct({
-            action: Schema.String.annotations({
-              description: 'Complete, detailed action to perform.',
-            }),
-            input: Schema.String.annotations({
-              description: 'The required input data for this step. First step must not require any data.',
-            }),
-            output: Schema.String.annotations({
-              description: 'The output data from this step. This is passed to the next step as input.',
-            }),
-            requiredArtifactIds: Schema.Array(Schema.String).annotations({
-              description: 'The ids of the artifacts required to perform this step.',
-              examples: [['artifact:dxos.org/example/Test']],
-            }),
-          }),
-        ).annotations({ description: 'Steps' }),
-      }),
-      execute: async ({ goal, steps }) => {
-        const missingArtifactIds = steps
-          .flatMap((step) => step.requiredArtifactIds)
-          .filter((artifactId) => !options.artifacts.some((artifact) => artifact.id === artifactId));
-        if (missingArtifactIds.length > 0) {
-          return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
-        }
-
-        const stepResults: any[] = [];
-        for (const step of steps) {
-          log('executing step', { action: step.action });
-          const session = new AISession({ operationModel: 'importing' });
-          session.message.on((ev) => this.message.emit(ev));
-          session.block.on((ev) => this.block.emit(ev));
-          session.update.on((ev) => this.update.emit(ev));
-          session.streamEvent.on((ev) => this.streamEvent.emit(ev));
-          session.userMessage.on((ev) => this.userMessage.emit(ev));
-
-          const messages = await session.run({
-            artifacts: options.artifacts,
-            tools: options.tools,
-            history: options.history,
-            extensions: options.extensions,
-            requiredArtifactIds: step.requiredArtifactIds.slice(),
-            prompt: `
-              You are an agent that executes the subtask in a plan.
-              
-              While you know the plan's goal only focus on your subtask
-              Use the data from the previous step to complete your task.
-              Return all of the data from "output" in your last message.
-              
-              Current step (that you need to complete):
-              ${JSON.stringify(
-                {
-                  goal,
-                  input: step.input,
-                  output: step.output,
-                  yourTask: step.action,
-                },
-                null,
-                2,
-              )}
-              
-              Previous step results:
-              ${JSON.stringify(stepResults.at(-1))}.
-            `,
-
-            generationOptions: options.generationOptions,
-            client: options.client,
-            toolResolver: options.toolResolver,
-            artifactDiffResolver: options.artifactDiffResolver,
-          });
-          const result = messages.at(-1);
-          stepResults.push(result);
-        }
-
-        return ToolResult.Success({ stepResults });
-      },
-    });
-  }
-
-  private _onToolStatusReport(message: DataType.Message, status: AgentStatus): void {
-    this.toolStatusReport.emit({ message, status });
   }
 
   abort(): void {
@@ -630,11 +446,6 @@ const createBaseInstructions = ({
 
   ${availableArtifacts.length > 0 ? `Artifacts already in context: ${availableArtifacts.join('\n')}` : ''}
 `;
-
-export class AIServiecOverloadedError extends Schema.TaggedError<AIServiecOverloadedError>()(
-  'AIServiecOverloadedError',
-  {},
-) {}
 
 const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();

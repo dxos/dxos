@@ -36,6 +36,10 @@ export class BaseError<Code extends string = string> extends Error {
         return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
       }
 
+      static wrap(message: string, options?: Omit<BaseErrorOptions, 'cause'>) {
+        return (error: unknown) => new this(message, { ...options, cause: error });
+      }
+
       constructor(message: string, options?: BaseErrorOptions) {
         super(code, message, options);
       }

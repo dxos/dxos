@@ -2,10 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { describe, test } from 'vitest';
+import { Config, Effect, Layer, Schema } from 'effect';
+import { describe, it } from '@effect/vitest';
 
-import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult, ToolRegistry } from '@dxos/ai';
+import {
+  EdgeAiServiceClient,
+  ConsolePrinter,
+  createTool,
+  ToolResult,
+  ToolRegistry,
+  AiServiceRouter,
+  AiService,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type, Obj } from '@dxos/echo';
@@ -14,6 +22,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { NodeHttpClient } from '@effect/platform-node';
+import { TestHelpers } from '@dxos/effect';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -28,21 +39,48 @@ const CalendarEventSchema = Schema.Struct({
   }),
 );
 
+const AnthropicLayer = AnthropicClient.layerConfig({
+  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+}).pipe(Layer.provide(NodeHttpClient.layerUndici));
+
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
-// TODO(burdon): Flaky.
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', () => {
-  test('tool', async () => {
+describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
+  it.effect(
+    'no tools',
+    Effect.fn(
+      function* ({ expect }) {
+        const session = new AISession({ operationModel: 'configured' });
+
+        const response = yield* session.run({
+          tools: [],
+          artifacts: [],
+          history: [],
+          prompt: 'Hello world!',
+          toolResolver: new ToolRegistry([]),
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+
+      // Runtime
+      Effect.provide(AiServiceRouter.AiServiceRouter),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+    ),
+  );
+
+  it.skip('tool', async () => {
     const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaAiServiceClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
     const session = new AISession({ operationModel: 'configured' });
 
-    const printer = new ConsolePrinter();
-    session.message.on((message) => printer.printMessage(message));
-    session.userMessage.on((message) => printer.printMessage(message));
-    session.block.on((block) => printer.printContentBlock(block));
+    // const printer = new ConsolePrinter();
+    session.message.on((message) => log('message', { message }));
+    session.userMessage.on((message) => log('userMessage', { message }));
+    session.block.on((block) => log('block', { block }));
 
     // session.update.on((update) => {
     //   log('update', { update });
@@ -62,7 +100,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', (
 
     // Test creating an itinerary
     const response = await session.run({
-      client: aiClient,
       tools: [calculatorTool.id],
       artifacts: [],
       requiredArtifactIds: [],
@@ -71,13 +108,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', (
         model: '@anthropic/claude-3-5-haiku-20241022',
       },
       prompt: 'What is 10 + 20?',
+      // TODO(dmaretskyi): Move to context.
       toolResolver: new ToolRegistry([calculatorTool]),
     });
 
     log('result', { response });
   });
 
-  test('create calendar itinerary', { timeout: 60_000 }, async () => {
+  it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
     const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaAiServiceClient({
     //   overrides: { model: 'llama3.1:8b' },

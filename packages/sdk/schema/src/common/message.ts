@@ -216,6 +216,7 @@ export namespace ContentBlock {
    * Used to track associated artifacts as well their changes during the conversation.
    */
   // TODO(dmaretskyi): What's the relation of this to the reference content block?
+  // TODO(dmaretskyi): Rename `Anchor`.
   const ArtifactPin = Schema.TaggedStruct('artifactPin', {
     // TODO(dmaretskyi): Consider making this a DXN.
     objectId: ObjectId,
