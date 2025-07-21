@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "emitDeclarationOnly": false,
-    "outDir": "dist/src",
+    "outDir": "dist",
     "rootDirs": [
       "./src", // <-- KEEP "./src" FIRST
       "./notebooks"
