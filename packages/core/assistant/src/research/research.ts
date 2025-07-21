@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
-import { AgentStatusReport, ConsolePrinter, ToolRegistry, AiService } from '@dxos/ai';
+import { AgentStatusReport, AiService, NewConsolePrinter } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
-import { CredentialsService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
+import { defineFunction, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';
 
-import { LiveExaHandler, MockExaHandler, ExaToolkit } from './exa';
-import { createGraphWriterTool } from './graph';
+import { ExaToolkit, LiveExaHandler, MockExaHandler } from './exa';
+import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
-import PROMPT from './instructions-research.tpl?raw';
+import { AiToolkit } from '@effect/ai';
 import { AISession } from '../session';
+import PROMPT from './instructions-research.tpl?raw';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -36,52 +37,53 @@ export const researchFn = defineFunction({
   outputSchema: Schema.Struct({
     result: Schema.Unknown,
   }),
-  handler: Effect.fnUntraced(function* ({ data: { query, mockSearch } }) {
-    const ai = yield* AiService;
-    const credentials = yield* CredentialsService;
-    const { db } = yield* DatabaseService;
-    // const queues = context.getService(QueueService);
-    const tracing = yield* TracingService;
+  handler: Effect.fnUntraced(
+    function* ({ data: { query, mockSearch } }) {
+      // const queues = context.getService(QueueService);
 
-    tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
+      // TODO(dmaretskyi): Extract to a function.
+      const tracing = yield* TracingService;
+      tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
 
-    const toolkit = yield* ExaToolkit.pipe(Effect.provide(mockSearch ? MockExaHandler : LiveExaHandler));
+      const graphWriteToolkit = makeGraphWriterToolkit({ schema: DataTypes });
+      const toolkit = yield* AiToolkit.merge(ExaToolkit, LocalSearchToolkit, graphWriteToolkit).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            mockSearch ? MockExaHandler : LiveExaHandler,
+            LocalSearchHandler,
+            makeGraphWriterHandler(graphWriteToolkit),
+          ),
+        ),
+      );
 
-    const printer = new ConsolePrinter();
-    const session = new AISession({ operationModel: 'configured' });
-    session.message.on((message) => printer.printMessage(message));
-    session.userMessage.on((message) => printer.printMessage(message));
-    session.block.on((block) => printer.printContentBlock(block));
-    session.statusReport.on((status) => {
-      log.info('[agent] status', { status });
-      tracing.write(status);
-    });
-    session.streamEvent.on((event) => log('stream', { event }));
+      const printer = new NewConsolePrinter();
+      const session = new AISession();
+      session.message.on((message) => printer.printMessage(message));
+      session.userMessage.on((message) => printer.printMessage(message));
+      session.block.on((block) => printer.printContentBlock(block));
+      session.streamEvent.on((event) => log('stream', { event }));
 
-    const graphWriteTool = createGraphWriterTool({ db, schema: DataTypes });
-    log.info('graphWriteTool', { schema: graphWriteTool.parameters });
+      // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
+      const result = yield* session.run({
+        prompt: query,
+        history: [],
+        systemPrompt: PROMPT,
+        toolkit,
+      });
 
-    // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
-    const result = yield* session.run({
-      prompt: query,
-      history: [],
-      systemPrompt: PROMPT,
-      toolkit,
-      tools: [searchTool.id, graphWriteTool.id],
-      toolResolver: new ToolRegistry([searchTool, graphWriteTool]),
-    });
+      return {
+        result: result,
+      };
 
-    return {
-      result: result,
-    };
+      // queues.contextQueue!.append(data);
 
-    // queues.contextQueue!.append(data);
-
-    // return {
-    //   result: `
-    //   The research results are placed in the following objects:
-    //     ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
-    //   `,
-    // };
-  }),
+      // return {
+      //   result: `
+      //   The research results are placed in the following objects:
+      //     ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
+      //   `,
+      // };
+    },
+    Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+  ),
 });

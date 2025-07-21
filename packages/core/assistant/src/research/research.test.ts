@@ -3,9 +3,15 @@
 //
 
 import { inspect } from 'node:util';
-import { beforeAll, describe, test } from 'vitest';
+import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient, structuredOutputParser } from '@dxos/ai';
+import {
+  AiService,
+  AiServiceRouter,
+  EdgeAiServiceClient,
+  OllamaAiServiceClient,
+  structuredOutputParser,
+} from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
@@ -16,16 +22,32 @@ import { DataType, DataTypes } from '@dxos/schema';
 
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
+import { Config, Effect, Layer, ManagedRuntime, Scope } from 'effect';
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { NodeHttpClient } from '@effect/platform-node';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
-describe.skip('Research', () => {
+const AnthropicLayer = AnthropicClient.layerConfig({
+  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+}).pipe(Layer.provide(NodeHttpClient.layerUndici));
+
+const AiServiceLayer = Layer.provide(
+  //
+  AiServiceRouter.AiServiceRouter,
+  AnthropicLayer,
+);
+
+describe('Research', () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
+  let rt: ManagedRuntime.ManagedRuntime<AiService, any>;
 
   beforeAll(async () => {
+    rt = ManagedRuntime.make(AiServiceLayer);
+
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
 
@@ -34,21 +56,7 @@ describe.skip('Research', () => {
 
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: {
-          client: REMOTE_AI
-            ? new EdgeAiServiceClient({
-                endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-                defaultGenerationOptions: {
-                  // model: '@anthropic/claude-sonnet-4-20250514',
-                  model: '@anthropic/claude-3-5-sonnet-20241022',
-                },
-              })
-            : new OllamaAiServiceClient({
-                overrides: {
-                  model: 'llama3.1:8b',
-                },
-              }),
-        },
+        ai: await rt.runPromise(AiService),
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
         database: { db },
         tracing: TracingService.console,
@@ -56,7 +64,11 @@ describe.skip('Research', () => {
     );
   });
 
-  test('should generate a research report', { timeout: 300_000 }, async () => {
+  afterAll(async () => {
+    await rt.dispose();
+  });
+
+  test.only('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(
       Obj.make(DataType.Organization, {
         name: 'Notion',

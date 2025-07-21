@@ -51,6 +51,7 @@ import { invariant } from '@dxos/invariant';
  *
  * Can be optionally provided to the session run call.
  */
+// TODO(dmaretskyi): Convert to Context.Reference
 export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
   ArtifactDiffResolver,
   ArtifactDiffResolver.Service
