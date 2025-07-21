@@ -1960,7 +1960,7 @@ importers:
         version: link:../log
       storybook:
         specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
+        version: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.2.4)
     devDependencies:
       '@types/react':
         specifier: ~18.2.0
@@ -1994,7 +1994,7 @@ importers:
         version: 4.6.1
       storybook:
         specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4)
+        version: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.2.4)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -16151,6 +16151,7 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
+    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 
@@ -30744,15 +30745,6 @@ packages:
   stoppable@1.1.0:
     resolution: {integrity: sha512-KXDYZ9dszj6bzvnEMRYvxgeTHU74QBFL54XKtP3nyMuJ81CFYtABZ3bAzL2EdFUaEwJOBOgENyFj3R7oTzDyyw==}
     engines: {node: '>=4', npm: '>=6'}
-
-  storybook@9.0.15:
-    resolution: {integrity: sha512-r9hwcSMM3dq7dkMveaWFTosrmyHCL2FRrV3JOwVnVWraF6GtCgp2k+r4hsYtyp1bY3zdmK9e4KYzXsGs5q1h/Q==}
-    hasBin: true
-    peerDependencies:
-      prettier: ^2 || ^3
-    peerDependenciesMeta:
-      prettier:
-        optional: true
 
   storybook@9.0.17:
     resolution: {integrity: sha512-O+9jgJ+Trlq9VGD1uY4OBLKQWHHDKM/A/pA8vMW6PVehhGHNvpzcIC1bngr6mL5gGHZP2nBv+9XG8pTMcggMmg==}
@@ -52506,27 +52498,6 @@ snapshots:
       internal-slot: 1.0.5
 
   stoppable@1.1.0: {}
-
-  storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.2.4):
-    dependencies:
-      '@storybook/global': 5.0.0
-      '@testing-library/jest-dom': 6.6.3
-      '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
-      '@vitest/expect': 3.2.4
-      '@vitest/spy': 3.2.4
-      better-opn: 3.0.2
-      esbuild: 0.25.6
-      esbuild-register: 3.6.0(esbuild@0.25.6)
-      recast: 0.23.9
-      semver: 7.7.1
-      ws: 8.18.2
-    optionalDependencies:
-      prettier: 3.2.4
-    transitivePeerDependencies:
-      - '@testing-library/dom'
-      - bufferutil
-      - supports-color
-      - utf-8-validate
 
   storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.2.4):
     dependencies:
