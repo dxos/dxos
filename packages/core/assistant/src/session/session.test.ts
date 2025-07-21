@@ -8,9 +8,9 @@ import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, Schema } from 'effect';
 
-import { AiServiceRouter, AiService } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Type, Obj } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
@@ -79,12 +79,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
-
-      // Runtime
-      Effect.provide(AiServiceRouter.AiServiceRouter),
-      Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      Effect.provide(
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
+        ),
+      ),
     ),
   );
 
@@ -101,13 +100,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
-      Effect.provide(toolkitLayer),
-
-      // Runtime
-      Effect.provide(AiServiceRouter.AiServiceRouter),
-      Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      Effect.provide(
+        Layer.mergeAll(
+          toolkitLayer,
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+        ),
+      ),
     ),
   );
 

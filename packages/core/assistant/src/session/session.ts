@@ -171,7 +171,20 @@ export class AISession {
           toolkit: options.toolkit,
           system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
-        }).pipe(AiParser.parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+        }).pipe(
+          AiParser.parseGptStream({
+            onBlock: (block) =>
+              Effect.gen(this, function* () {
+                if (block.pending) {
+                  this.update.emit(block);
+                } else {
+                  this.block.emit(block);
+                }
+              }),
+          }),
+          Stream.runCollect,
+          Effect.map(Chunk.toArray),
+        );
 
         const response = Obj.make(DataType.Message, {
           sender: {
