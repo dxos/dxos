@@ -14,11 +14,13 @@ import { isNonNullable } from '@dxos/util';
 
 import { type Board } from '../types';
 
-export type BoardContainerProps = { role: string; board: Board.Board };
+export type BoardContainerProps = {
+  role: string;
+  board: Board.Board;
+};
 
-export const BoardContainer = ({ board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, board }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
-  const space = getSpace(board);
 
   // TODO(burdon): Create effect utility for reactive arrays.
   const [items, setItems] = useState<Type.Expando[]>([]);
@@ -37,6 +39,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     (position = { x: 0, y: 0 }) => {
+      const space = getSpace(board);
       invariant(space);
       // TODO(burdon): Create from menu/intent?
       const obj = space.db.add(Obj.make(Type.Expando, {}));
@@ -44,9 +47,10 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       board.layout.cells[obj.id] = { ...position, width: 1, height: 1 };
       controller.current?.center(position);
     },
-    [space, board, controller],
+    [board, controller],
   );
 
+  // TODO(burdon): Use intents so can be undone.
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
@@ -60,7 +64,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
-  // TODO(burdon): Use intents so can be undone.
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
@@ -69,7 +72,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
-  // TODO(burdon): Attention attributes.
   return (
     <BoardComponent.Root
       ref={controller}
@@ -78,7 +80,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       onDelete={handleDelete}
       onMove={handleMove}
     >
-      <StackItem.Content toolbar>
+      <StackItem.Content role={role} toolbar>
         <BoardComponent.Controls />
         <BoardComponent.Container>
           <BoardComponent.Viewport classNames='border-none'>

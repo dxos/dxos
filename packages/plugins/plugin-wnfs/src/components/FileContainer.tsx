@@ -14,7 +14,12 @@ import { WnfsCapabilities } from '../capabilities';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
 import { type FileType } from '../types';
 
-const FileContainer = ({ file, role }: { file: FileType; role: string }) => {
+export type FileContainerProps = {
+  role: string;
+  file: FileType;
+};
+
+export const FileContainer = ({ role, file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();
