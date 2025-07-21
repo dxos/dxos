@@ -6,7 +6,7 @@ import { type AiInputPreprocessingError } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { type ServiceContainer } from '@dxos/functions';
+import { DatabaseService, type ServiceContainer } from '@dxos/functions';
 
 import { DataType } from '@dxos/schema';
 import type { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
@@ -64,14 +64,13 @@ export class Conversation {
       const session = new AISession();
       this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());
-      const blueprints = yield* Effect.promise(async () => Ref.Array.loadAll(await this.blueprints.query()));
+      const context = yield* Effect.promise(() => this.context.query());
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
       if (blueprints.length > 1) {
         throw new Error('Multiple blueprints are not yet supported.');
       }
 
       // TODO(dmaretskyi): Blueprint instructions + tools.
-      // const context = await this.context.query();
-      
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
