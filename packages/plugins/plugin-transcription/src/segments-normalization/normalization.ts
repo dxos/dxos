@@ -7,10 +7,11 @@ import { Schema } from 'effect';
 import { DEFAULT_EDGE_MODEL, Message } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { AiService, defineFunction, ToolResolverService } from '@dxos/functions';
+import { defineFunction, ToolResolverService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
+import { AiService } from "@dxos/ai";
 
 const MessageWithRangeId = Schema.extend(
   DataType.Message,

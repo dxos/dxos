@@ -12,7 +12,7 @@ import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { AiService, ServiceContainer } from '@dxos/functions';
+import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -45,6 +45,7 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
+import { AiService } from "@dxos/ai";
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 

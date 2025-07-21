@@ -2,35 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chunk, Context, Effect, Option, Schema, Stream, Struct } from 'effect';
+import { AiLanguageModel, type AiError, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
+import { Chunk, Context, Effect, Option, type Schema, Stream } from 'effect';
 
 import {
-  createTool,
   getToolCalls,
   runTool,
-  structuredOutputParser,
-  ToolResult,
   type AgentStatus,
   type AiInputPreprocessingError,
-  type ExecutableTool,
-  type GenerateRequest,
   type GenerationStream,
-  type ToolId,
-  type ToolResolver,
 } from '@dxos/ai';
-import { type ArtifactDefinition } from '@dxos/artifact';
+import { AiParser, AiPreprocessor } from '@dxos/ai';
 import { Event } from '@dxos/async';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
-import { AiParser, AiPreprocessor } from '@dxos/ai';
-import { todo } from '@dxos/debug';
-import { DataType, type ContentBlock } from '@dxos/schema';
-import { AiLanguageModel, type AiError, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
-import { AiAssistantError } from '../errors';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { DataType, type ContentBlock } from '@dxos/schema';
+
+import { AiAssistantError } from '../errors';
 
 /**
  * Contains message history, tools, current context.
@@ -152,7 +144,6 @@ export class AISession {
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
       this.userMessage.emit(promptMessages);
-
       do {
         log('request', {
           pending: this._pending.length,
@@ -181,6 +172,7 @@ export class AISession {
           system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
         }).pipe(AiParser.parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+
         const response = Obj.make(DataType.Message, {
           sender: {
             role: 'assistant',
@@ -262,7 +254,7 @@ export class AISession {
             continue;
           }
 
-          prelude.push({ _tag: 'artifactPin', objectId: id, version });
+          prelude.push({ _tag: 'anchor', objectId: id, version });
         }
         if (artifactDiff.size > 0) {
           prelude.push(createArtifactUpdateBlock(artifactDiff));
@@ -285,7 +277,7 @@ const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, Objec
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {
-      if (block._tag === 'artifactPin') {
+      if (block._tag === 'anchor') {
         artifactIds.set(block.objectId, block.version as ObjectVersion);
       }
     }

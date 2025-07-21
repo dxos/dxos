@@ -9,13 +9,14 @@ import { AISession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { contextFromScope } from '@dxos/effect';
-import { AiService, QueueService, ToolResolverService } from '@dxos/functions';
+import { QueueService, ToolResolverService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { EventLogger } from '../../services';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
+import { AiService } from "@dxos/ai";
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.
 const GptStreamEventSchema = Schema.Any as Schema.Schema<GenerationStreamEvent>;

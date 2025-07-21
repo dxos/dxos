@@ -6,7 +6,6 @@ import { Effect, Layer, Schema, Scope } from 'effect';
 
 import { raise } from '@dxos/debug';
 import {
-  AiService,
   CredentialsService,
   DatabaseService,
   FunctionCallService,
@@ -37,6 +36,7 @@ import {
   NotExecuted,
   ValueBag,
 } from '../types';
+import { AiService } from "@dxos/ai";
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

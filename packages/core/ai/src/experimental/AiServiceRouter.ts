@@ -1,7 +1,12 @@
-import { Effect, Layer } from 'effect';
-import { AiService } from '../service';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
+import { Effect, Layer } from 'effect';
+
 import { AiModelNotAvailableError } from '../errors';
+import { AiService } from '../service';
 
 // TODO(dmaretskyi): Make this generic.
 export const AiServiceRouter = Layer.effect(
