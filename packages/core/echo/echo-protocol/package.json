@@ -30,7 +30,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.16.13"
+    "effect": "3.16.16"
   },
   "publishConfig": {
     "access": "public"
