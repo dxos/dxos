@@ -2,14 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 import { type AiServiceClient } from '../service';
-import { Message, type ExecutableTool } from '../tools';
+import { type ExecutableTool } from '../tools';
 import { type LLMModel, type GenerationStreamEvent } from '../types';
 
 export type CreateLLMConversationParams = {
@@ -26,7 +30,7 @@ export type CreateLLMConversationParams = {
 
   // TODO(burdon): Tool registry.
   tools: ExecutableTool[];
-  history?: Message[];
+  history?: DataType.Message[];
   aiClient: AiServiceClient;
 
   logger?: (event: ConversationEvent) => void;
@@ -35,7 +39,7 @@ export type CreateLLMConversationParams = {
 export type ConversationEvent =
   | {
       type: 'message';
-      message: Message;
+      message: DataType.Message;
     }
   | GenerationStreamEvent;
 
@@ -59,7 +63,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
 
     // TODO(burdon): !!!
     await stream.complete();
-    const messages: Message[] = [];
+    const messages: DataType.Message[] = [];
     const message = messages.at(-1);
     invariant(message);
 
@@ -68,13 +72,16 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
     logger?.({ type: 'message', message });
     history.push(
       ...messages.map(
-        (message): Message => ({ ...message, content: message.content.filter((block) => block.type !== 'image') }),
+        (message): DataType.Message => ({
+          ...message,
+          blocks: message.blocks.filter((block) => block._tag !== 'image'),
+        }),
       ),
     );
 
-    const isToolUse = message.content.at(-1)?.type === 'tool_use';
+    const isToolUse = message.blocks.at(-1)?._tag === 'toolCall';
     if (isToolUse) {
-      const toolCalls = message.content.filter((block) => block.type === 'tool_use');
+      const toolCalls = message.blocks.filter((block) => block._tag === 'toolCall');
       invariant(toolCalls.length === 1);
       const toolCall = toolCalls[0];
       const tool = tools.find((tool) => tool.name === toolCall.name);
@@ -87,15 +94,19 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
       switch (toolResult.kind) {
         case 'error': {
           log.warn('tool error', { message: toolResult.message });
-          const resultMessage: Message = Obj.make(Message, {
+          const resultMessage = Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: {
+              role: 'user',
+            },
             id: ObjectId.random(),
-            role: 'user',
-            content: [
+            blocks: [
               {
-                type: 'tool_result',
-                toolUseId: toolCall.id,
-                content: toolResult.message,
-                isError: true,
+                _tag: 'toolResult',
+                name: toolCall.name,
+                toolCallId: toolCall.id,
+                result: toolResult.message,
+                // isError: true,
               },
             ],
           });
@@ -107,14 +118,17 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
 
         case 'success': {
           log('tool success', { result: toolResult.result });
-          const resultMessage: Message = Obj.make(Message, {
-            id: ObjectId.random(),
-            role: 'user',
-            content: [
+          const resultMessage = Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: {
+              role: 'user',
+            },
+            blocks: [
               {
-                type: 'tool_result',
-                toolUseId: toolCall.id,
-                content: JSON.stringify(toolResult.result),
+                _tag: 'toolResult',
+                name: toolCall.name,
+                toolCallId: toolCall.id,
+                result: JSON.stringify(toolResult.result),
               },
             ],
           });

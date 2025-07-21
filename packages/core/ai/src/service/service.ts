@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiLanguageModel } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
-import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
-import { AiLanguageModel } from '@effect/ai';
+
 import type { AiModelNotAvailableError } from '../errors';
+import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
 
 export class AiService extends Context.Tag('AiService')<
   AiService,

@@ -5,21 +5,15 @@
 import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';
 
-import {
-  type AiServiceClient,
-  type GenerateRequest,
-  Message,
-  MixedStreamParser,
-  type TextContentBlock,
-  createTool,
-} from '@dxos/ai';
+import { type AiServiceClient, type GenerateRequest, MixedStreamParser, createTool } from '@dxos/ai';
 import { Key, Obj, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { deepMapValues } from '@dxos/util';
+import { type ContentBlock, DataType } from '@dxos/schema';
+import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
   query?: string;
@@ -85,12 +79,12 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
     model: '@anthropic/claude-3-5-haiku-20241022',
     systemPrompt,
     history: [
-      Obj.make(Message, {
-        role: 'user',
-
-        content: context.results.map(
-          (r): TextContentBlock => ({
-            type: 'text',
+      Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: context.results.map(
+          (r): ContentBlock.Text => ({
+            _tag: 'text',
             text: `# ${r.title}\n\n${r.text}`,
           }),
         ),
@@ -182,18 +176,19 @@ const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
 const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
   const { terms } = await getStructuredOutput(AiService, {
     model: '@anthropic/claude-3-5-haiku-20241022',
-    systemPrompt: `
+    systemPrompt: trim`
       You are a search term extraction agent.
       Extract the relevant search terms from the context.
       Return the search terms as an array of strings.
       Prefer own names of people, companies, and projects, technologies, and other entities.
     `,
     history: [
-      Obj.make(Message, {
-        role: 'user',
-        content: [
+      Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [
           {
-            type: 'text',
+            _tag: 'text',
             text: `# Context to extract search terms from:\n\n${context}`,
           },
         ],

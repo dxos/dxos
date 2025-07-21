@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, ToolRegistry } from '@dxos/ai';
+import { ToolRegistry, AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { defineFunction, type FunctionDefinition } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import PROMPT from './instructions.tpl?raw';
 import { AISession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { insertReferences, ReferencedQuotes } from '../quotes';
-import { AiService } from "@dxos/ai";
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',
@@ -29,17 +28,20 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       client: ai.client,
       systemPrompt: PROMPT,
       history: [
-        Obj.make(Message, {
-          role: 'user',
-          content: [
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: [
             {
-              type: 'text',
+              _tag: 'text',
               text: `<context>${JSON.stringify(objects)}</context>`,
-            },
+            } satisfies ContentBlock.Text,
             {
-              type: 'text',
+              _tag: 'text',
               text: `<transcript>${JSON.stringify(message.blocks)}</transcript>`,
-            },
+            } satisfies ContentBlock.Text,
           ],
         }),
       ],
@@ -47,13 +49,13 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       prompt: '',
       tools: [],
       toolResolver: new ToolRegistry([]),
-    });
+    } as any); // TODO(burdon): !!!
 
     return {
       message: create(DataType.Message, {
         ...message,
         blocks: message.blocks.map((block, i) =>
-          block.type !== 'transcription'
+          block._tag !== 'transcript'
             ? block
             : {
                 ...block,

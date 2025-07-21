@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AgentStatusReport, AiService, NewConsolePrinter } from '@dxos/ai';
+import { AgentStatus, AiService, ConsolePrinter } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
 import { defineFunction, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -13,9 +14,8 @@ import { DataTypes } from '@dxos/schema';
 import { ExaToolkit, LiveExaHandler, MockExaHandler } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
-import { AiToolkit } from '@effect/ai';
-import { AISession } from '../session';
 import PROMPT from './instructions-research.tpl?raw';
+import { AISession } from '../session';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -43,7 +43,7 @@ export const researchFn = defineFunction({
 
       // TODO(dmaretskyi): Extract to a function.
       const tracing = yield* TracingService;
-      tracing.write(create(AgentStatusReport, { message: 'Researching...' }));
+      tracing.write(create(AgentStatus, { message: 'Researching...' }));
 
       const graphWriteToolkit = makeGraphWriterToolkit({ schema: DataTypes });
       const toolkit = yield* AiToolkit.merge(ExaToolkit, LocalSearchToolkit, graphWriteToolkit).pipe(
@@ -56,7 +56,7 @@ export const researchFn = defineFunction({
         ),
       );
 
-      const printer = new NewConsolePrinter();
+      const printer = new ConsolePrinter();
       const session = new AISession();
       session.message.on((message) => printer.printMessage(message));
       session.userMessage.on((message) => printer.printMessage(message));
@@ -72,7 +72,7 @@ export const researchFn = defineFunction({
       });
 
       return {
-        result: result,
+        result,
       };
 
       // queues.contextQueue!.append(data);

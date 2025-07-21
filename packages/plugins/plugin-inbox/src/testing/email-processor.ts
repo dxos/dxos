@@ -4,11 +4,11 @@
 
 import { Schema } from 'effect';
 
-import { Message, type AiServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
+import { type AiServiceClient, MixedStreamParser, createTool } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { type Testing } from '@dxos/schema/testing';
 
 type ProcessEmailResult = {
@@ -57,15 +57,18 @@ export const processEmail = async ({ aiClient, email, context }: ProcessEmailPar
       model: '@anthropic/claude-3-5-sonnet-20241022',
       systemPrompt,
       history: [
-        Obj.make(Message, {
-          role: 'user',
-          content: [
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: [
             {
-              type: 'text',
+              _tag: 'text',
               text: JSON.stringify({
                 sender: email.sender,
                 subject: email.properties?.subject,
-                body: email.blocks.find((block) => block.type === 'text')?.text,
+                body: email.blocks.find((block) => block._tag === 'text')?.text,
               }),
             },
           ],

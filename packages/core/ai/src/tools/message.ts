@@ -5,8 +5,9 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
-import { AgentStatusReport } from '../status-report';
+import { AgentStatus } from '../status-report';
 
 // TODO(dmaretskyi): Extract IDs to protocols and dedupe package with dxos/edge.
 
@@ -116,7 +117,7 @@ export const ToolUseContentBlock = Schema.extend(
     /**
      * Ephemeral status message.
      */
-    currentStatus: Schema.optional(AgentStatusReport),
+    currentStatus: Schema.optional(AgentStatus),
   }),
 ).pipe(Schema.mutable);
 export interface ToolUseContentBlock extends Schema.Schema.Type<typeof ToolUseContentBlock> {}
@@ -134,6 +135,7 @@ export interface ToolResultContentBlock extends Schema.Schema.Type<typeof ToolRe
 
 /**
  * Content union.
+ * @deprecated
  */
 export const MessageContentBlock = Schema.Union(
   TextContentBlock,
@@ -145,6 +147,7 @@ export const MessageContentBlock = Schema.Union(
   ToolResultContentBlock,
 );
 
+/** @deprecated */
 export type MessageContentBlock = Schema.Schema.Type<typeof MessageContentBlock>;
 
 export const MessageRole = Schema.String.pipe(Schema.filter((role) => role === 'user' || role === 'assistant'));
@@ -167,6 +170,7 @@ const MessageSchema = Schema.Struct({
 
 /**
  * @deprecated
+ * @internal
  */
 // TODO(burdon): Reconcile with Chat/Message types?
 export const Message = MessageSchema.pipe(
@@ -180,8 +184,11 @@ export const Message = MessageSchema.pipe(
  */
 export type Message = Schema.Schema.Type<typeof Message>;
 
-export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): Message =>
-  Obj.make(Message, {
-    role: 'user',
-    content: [{ type: 'text', text }],
+export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): DataType.Message =>
+  Obj.make(DataType.Message, {
+    created: new Date().toISOString(),
+    sender: {
+      role: 'user',
+    },
+    blocks: [{ _tag: 'text', text }],
   });

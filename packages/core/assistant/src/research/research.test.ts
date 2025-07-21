@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { NodeHttpClient } from '@effect/platform-node';
+import { Config, Layer, ManagedRuntime } from 'effect';
 import { inspect } from 'node:util';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import {
-  AiService,
-  AiServiceRouter,
-  structuredOutputParser
-} from '@dxos/ai';
+import { AiService, AiServiceRouter, structuredOutputParser } from '@dxos/ai';
 import { EXA_API_KEY, tapHttpErrors } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
@@ -18,9 +17,6 @@ import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
-import { Config, Layer, ManagedRuntime } from 'effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
 
@@ -39,13 +35,13 @@ const AiServiceLayer = Layer.provide(
 );
 
 describe('Research', () => {
+  let runtime: ManagedRuntime.ManagedRuntime<AiService, any>;
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
-  let rt: ManagedRuntime.ManagedRuntime<AiService, any>;
 
   beforeAll(async () => {
-    rt = ManagedRuntime.make(AiServiceLayer);
+    runtime = ManagedRuntime.make(AiServiceLayer);
 
     // TODO(dmaretskyi): Helper to scaffold this from a config.
     builder = await new EchoTestBuilder().open();
@@ -55,7 +51,7 @@ describe('Research', () => {
 
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: await rt.runPromise(AiService),
+        ai: await runtime.runPromise(AiService),
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
         database: { db },
         tracing: TracingService.console,
@@ -64,7 +60,7 @@ describe('Research', () => {
   });
 
   afterAll(async () => {
-    await rt.dispose();
+    await runtime.dispose();
   });
 
   test.only('should generate a research report', { timeout: 300_000 }, async () => {

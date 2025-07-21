@@ -4,14 +4,7 @@
 
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 
-import {
-  DEFAULT_EDGE_MODEL,
-  type ExecutableTool,
-  type GenerateRequest,
-  type Message,
-  type MessageContentBlock,
-  type ToolUseContentBlock,
-} from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest, type ToolUseContentBlock } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import {
@@ -24,6 +17,7 @@ import {
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -62,13 +56,13 @@ export class ChatProcessor {
    * Pending messages (incl. the current user request).
    * @reactive
    */
-  private readonly _pending: Signal<Message[]> = signal([]);
+  private readonly _pending: Signal<DataType.Message[]> = signal([]);
 
   /**
    * Current streaming block (from the AI service).
    * @reactive
    */
-  private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
+  private readonly _block: Signal<ContentBlock.Any | undefined> = signal(undefined);
 
   /**
    * Streaming state.
@@ -86,7 +80,7 @@ export class ChatProcessor {
    * Array of Messages (incl. the current message being streamed).
    * @reactive
    */
-  public readonly messages: Signal<Message[]> = computed(() => {
+  public readonly messages: Signal<DataType.Message[]> = computed(() => {
     const messages = [...this._pending.value];
     if (this._block.value && messages.length) {
       const { content, ...rest } = messages.pop()!;
@@ -136,7 +130,7 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
+  async request(message: string, options: RequestOptions = {}): Promise<DataType.Message[]> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     this._conversation.onBegin.on(ctx, (session) => {
@@ -232,7 +226,7 @@ export class ChatProcessor {
    * Cancel pending requests.
    * @returns Pending requests (incl. the request message).
    */
-  async cancel(): Promise<Message[]> {
+  async cancel(): Promise<DataType.Message[]> {
     log.info('cancelling...');
 
     // TODO(dmaretskyi): Conversation should handle aborting.
@@ -240,7 +234,7 @@ export class ChatProcessor {
     return this._reset();
   }
 
-  private async _reset(): Promise<Message[]> {
+  private async _reset(): Promise<DataType.Message[]> {
     const messages = this._pending.value;
     batch(() => {
       this._pending.value = [];

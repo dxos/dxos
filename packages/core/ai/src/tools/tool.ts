@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 
 import { JsonSchemaType } from '@dxos/echo-schema';
+import { type ContentBlock } from '@dxos/schema';
 
-import { type MessageContentBlock } from './message';
-import type { AgentStatus } from '../status-report';
+import { type AgentStatus } from '../status-report';
 
 declare global {
   /**
@@ -44,7 +44,7 @@ export type ToolExecutionContext = {
 
 export type ToolResult =
   // TODO(dmaretskyi): Rename `contentBlocks`
-  | { kind: 'success'; result: unknown; extractContentBlocks?: MessageContentBlock[] }
+  | { kind: 'success'; result: unknown; extractContentBlocks?: ContentBlock.Any[] }
   | { kind: 'error'; message: string }
   | { kind: 'break'; result: unknown };
 
@@ -54,7 +54,7 @@ export const ToolResult = Object.freeze({
    * Gives the result back to the LLM.
    */
   // TODO(dmaretskyi): Rename `contentBlocks`
-  Success: (result: unknown, extractContentBlocks?: MessageContentBlock[]): ToolResult => ({
+  Success: (result: unknown, extractContentBlocks?: ContentBlock.Any[]): ToolResult => ({
     kind: 'success',
     result,
     extractContentBlocks,
