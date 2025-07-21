@@ -4,6 +4,6 @@
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
-import { baseConfig } from '../../../vitest.base.config';
+import { baseConfig } from '{{ workspace_root | path_join(part = 'vitest.base.config') }}';
 
 export default mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({}));
