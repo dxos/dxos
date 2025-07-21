@@ -4,8 +4,10 @@
 
 import { Schema } from 'effect';
 
+import { type ContentBlock, DataType } from '@dxos/schema';
+
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
-import { Tool, Message, type MessageContentBlock } from './tools';
+import { Tool } from './tools';
 
 export const LLMModel = Schema.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
@@ -40,12 +42,12 @@ export const GenerateRequest = Schema.Struct({
    * History of messages to include in the context window.
    */
   // TODO(burdon): Rename messages.
-  history: Schema.optional(Schema.Array(Message)),
+  history: Schema.optional(Schema.Array(DataType.Message)),
 
   /**
    * Current request.
    */
-  prompt: Schema.optional(Message),
+  prompt: Schema.optional(DataType.Message),
 });
 export type GenerateRequest = Schema.Schema.Type<typeof GenerateRequest>;
 
@@ -53,7 +55,7 @@ export type GenerateRequest = Schema.Schema.Type<typeof GenerateRequest>;
  * Non-streaming response.
  */
 export const GenerateResponse = Schema.Struct({
-  messages: Schema.Array(Message),
+  messages: Schema.Array(DataType.Message),
 
   /**
    * Number of tokens used in the response.
@@ -73,7 +75,7 @@ export type GenerationStreamEvent =
   | {
       // TODO(dmaretskyi): Normalize types to our schema.
       type: 'message_start';
-      message: Message;
+      message: DataType.Message;
     }
   | {
       type: 'message_delta';
@@ -87,7 +89,7 @@ export type GenerationStreamEvent =
   | {
       type: 'content_block_start';
       index: number;
-      content: MessageContentBlock;
+      content: ContentBlock.Any;
     }
   | {
       type: 'content_block_delta';

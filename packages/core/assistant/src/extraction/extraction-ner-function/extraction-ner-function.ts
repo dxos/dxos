@@ -25,7 +25,7 @@ export const extractionNerFn = defineFunction({
 
     const entitiesPromise = Promise.all(
       message.blocks.map(async (block) => {
-        invariant(block.type === 'transcription' || block.type === 'text', 'Block must have text');
+        invariant(block._tag === 'transcript' || block._tag === 'text', 'Block must have text');
         return extractFullEntities(block.text);
       }),
     ).then((entities) => entities.flat());
@@ -36,8 +36,8 @@ export const extractionNerFn = defineFunction({
       db,
     );
     const blocksWithReferences = message.blocks.map((block, i) => {
-      invariant(block.type === 'transcription' || block.type === 'text', 'Block must have text');
-      return { ...block, text: insertReferences(block.text, quoteReferences) };
+      invariant(block._tag === 'transcript' || block._tag === 'text', 'Block must have text');
+      return { ...block, text: insertReferences(block._tag, quoteReferences) };
     });
     const messageWithReferences = create(DataType.Message, {
       ...message,

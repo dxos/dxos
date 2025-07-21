@@ -9,11 +9,12 @@ import { Obj } from '@dxos/echo';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 import { DEFAULT_EDGE_MODEL } from './defs';
 import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient } from './service';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from './testing';
-import { createTool, defineTool, Message, ToolResult } from './tools';
+import { createTool, defineTool, type Message, ToolResult } from './tools';
 import { ToolTypes } from './types';
 
 // log.config({ filter: 'debug' });
@@ -172,9 +173,12 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: Obj.make(Message, {
-          role: 'user',
-          content: [{ type: 'text', text: 'Hello, world!' }],
+        prompt: Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: [{ _tag: 'text', text: 'Hello, world!' }],
         }),
       }),
     );
@@ -207,9 +211,12 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await aiClient.execStream({
-        prompt: Obj.make(Message, {
-          role: 'user',
-          content: [{ type: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
+        prompt: Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: [{ _tag: 'text', text: 'What is the encrypted message for "Hello, world!"' }],
         }),
       }),
     );
@@ -228,9 +235,12 @@ describe.skip('Ollama Client', () => {
 
     const messages = await parser.parse(
       await client.execStream({
-        prompt: Obj.make(Message, {
-          role: 'user',
-          content: [{ type: 'text', text: 'Generate an image of a cat' }],
+        prompt: Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: [{ _tag: 'text', text: 'Generate an image of a cat' }],
         }),
         tools: [
           defineTool('testing', {

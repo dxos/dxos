@@ -5,10 +5,10 @@
 import { type Signal, signal } from '@preact/signals-core';
 
 import { Obj } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
 import { createReplaySSEStream } from './test-stream';
 import { createGenerationStream, type GenerationStream, type AiServiceClient, GenerationStreamImpl } from '../service';
-import { Message } from '../tools';
 import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 
 export type SpyAiServiceMode = 'mock' | 'spy';
@@ -135,8 +135,8 @@ export class MockAiServiceClient implements AiServiceClient {
    */
   async execStream(request: GenerateRequest): Promise<GenerationStream> {
     const controller = new AbortController();
-    const block = request.prompt?.content[0];
-    const prompt = block?.type === 'text' ? block.text : '';
+    const block = request.prompt?.blocks[0];
+    const prompt = block?._tag === 'text' ? block.text : '';
     const response = this.config.responses[prompt] || this.config.responses.default;
     return new GenerationStreamImpl(controller, () => this.createStream(response, () => {}));
   }
@@ -154,9 +154,12 @@ export class MockAiServiceClient implements AiServiceClient {
 
     yield {
       type: 'message_start',
-      message: Obj.make(Message, {
-        role: 'assistant',
-        content: [],
+      message: Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: {
+          role: 'assistant',
+        },
+        blocks: [],
       }),
     };
     yield {

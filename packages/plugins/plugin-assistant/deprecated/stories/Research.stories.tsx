@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatusReport, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
+import { AgentStatus, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -37,7 +37,7 @@ import {
 } from '@dxos/react-ui-menu';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { DataTypes } from '@dxos/schema';
+import { DataType, DataTypes } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
@@ -133,12 +133,15 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       void queue.append([
-        Obj.make(Message, {
-          role: 'assistant',
-          content: prompts.map(
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'assistant',
+          },
+          blocks: prompts.map(
             (prompt) =>
               ({
-                type: 'json',
+                _tag: 'json',
                 disposition: 'suggest',
                 json: JSON.stringify({ text: prompt }),
               }) as const,
@@ -327,7 +330,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
         serviceContainer.clone().setServices({
           tracing: {
             write: (event) => {
-              if (Obj.instanceOf(AgentStatusReport, event)) {
+              if (Obj.instanceOf(AgentStatus, event)) {
                 log.info('[too] report status', { status: event });
                 reportStatus?.(event);
               }
@@ -337,7 +340,7 @@ const createResearchTool = (serviceContainer: ServiceContainer, name: string, fn
       );
 
       reportStatus?.(
-        Obj.make(AgentStatusReport, {
+        Obj.make(AgentStatus, {
           message: 'Researching...',
         }),
       );

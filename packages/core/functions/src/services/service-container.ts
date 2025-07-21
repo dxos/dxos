@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Layer, Struct } from 'effect';
+import { type Context, Layer } from 'effect';
 
 import { AiService } from '@dxos/ai';
+import { entries } from '@dxos/util';
+
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { EventLogger } from './event-logger';
@@ -12,8 +14,6 @@ import { FunctionCallService } from './function-call-service';
 import { QueueService } from './queues';
 import { ToolResolverService } from './tool-resolver';
 import { TracingService } from './tracing';
-import { entries } from '@dxos/util';
-import { AiLanguageModel } from '@effect/ai';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
 
@@ -90,7 +90,10 @@ export class ServiceContainer {
   // TODO(dmaretskyi): `getService` is designed to error at runtime if the service is not available, but layer forces us to provide all services and makes stubs for the ones that are not available.
   createLayer(): Layer.Layer<Services> {
     const ai = this._services.ai != null ? Layer.succeed(AiService, this._services.ai) : AiService.notAvailable;
-    const credentials = Layer.succeed(CredentialsService, this._services.credentials ?? new ConfiguredCredentialsService());
+    const credentials = Layer.succeed(
+      CredentialsService,
+      this._services.credentials ?? new ConfiguredCredentialsService(),
+    );
     const database =
       this._services.database != null
         ? Layer.succeed(DatabaseService, this._services.database)

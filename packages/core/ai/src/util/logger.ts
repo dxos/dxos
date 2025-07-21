@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ContentBlock } from '@dxos/schema';
+
 import type { ConversationEvent } from '../conversation';
-import type { ImageSource, MessageContentBlock } from '../tools';
+import type { ImageSource } from '../tools';
 
 export const createLogger = ({
   stream,
@@ -22,12 +24,12 @@ export const createLogger = ({
       return;
     }
 
-    const printContentBlock = (content: MessageContentBlock) => {
-      switch (content.type) {
+    const printContentBlock = (content: ContentBlock.Any) => {
+      switch (content._tag) {
         case 'text':
           process.stdout.write(content.text);
           break;
-        case 'tool_use':
+        case 'toolCall':
           process.stdout.write(`⚙️ [Tool Use] ${content.name}\n`);
           break;
         case 'image': {
@@ -54,7 +56,7 @@ export const createLogger = ({
     if (stream) {
       switch (event.type) {
         case 'message_start': {
-          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
+          process.stdout.write(`${event.message.sender.role.toUpperCase()}\n\n`);
           for (const content of event.message.content) {
             printContentBlock(content);
           }
@@ -97,7 +99,7 @@ export const createLogger = ({
 
     switch (event.type) {
       case 'message': {
-        if (!stream || event.message.role !== 'assistant') {
+        if (!stream || event.message.sender.role !== 'assistant') {
           process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
           for (const block of event.message.content) {
             switch (block.type) {

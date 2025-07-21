@@ -2,30 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config, Effect, Layer, Schema } from 'effect';
+import { AiTool, AiToolkit } from '@effect/ai';
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
+import { Config, Effect, Layer, Schema } from 'effect';
 
-import {
-  EdgeAiServiceClient,
-  ConsolePrinter,
-  createTool,
-  ToolResult,
-  ToolRegistry,
-  AiServiceRouter,
-  AiService,
-} from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { ArtifactId, defineArtifact } from '@dxos/artifact';
+import { AiServiceRouter, AiService } from '@dxos/ai';
 import { Type, Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
+import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
-import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
-import { TestHelpers } from '@dxos/effect';
-import { AiTool, AiToolkit } from '@effect/ai';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -123,6 +111,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
     ),
   );
 
+  /*
   it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
     const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
     // const aiClient = new OllamaAiServiceClient({
@@ -244,6 +233,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
       finalMessage: response.at(-1),
     });
   });
+  */
 });
 
 // Travel to rome, florence, livorno, siena, madrid for conferences

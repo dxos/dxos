@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type AiServiceClient, Message, MixedStreamParser } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, type AiServiceClient, MixedStreamParser } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 import { type MeetingType } from './types';
 
@@ -27,7 +29,13 @@ export const summarizeTranscript = async (ai: AiServiceClient, content: string):
     await ai.execStream({
       model: DEFAULT_EDGE_MODEL,
       systemPrompt: SUMMARIZE_PROMPT,
-      history: [Obj.make(Message, { role: 'user', content: [{ type: 'text', text: content }] })],
+      history: [
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: [{ _tag: 'text', text: content }],
+        }),
+      ],
     }),
   );
 
@@ -37,7 +45,7 @@ export const summarizeTranscript = async (ai: AiServiceClient, content: string):
 };
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
-const SUMMARIZE_PROMPT = `
+const SUMMARIZE_PROMPT = trim`
   # Goal
   Create a markdown summary of the transcript provided.
 

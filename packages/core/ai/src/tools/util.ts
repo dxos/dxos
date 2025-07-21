@@ -5,18 +5,18 @@
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
-import { Message } from './message';
 import { type ExecutableTool, ToolResult } from './tool';
 import { type AgentStatus } from '../status-report';
 
-export const isToolUse = (message: Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
-  const block = message.content.at(-1);
-  return block && block.type === 'tool_use' && (!onlyToolNames || onlyToolNames.includes(block.name));
+export const isToolUse = (message: DataType.Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
+  const block = message.blocks.at(-1);
+  return block && block._tag === 'toolCall' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
 export type RunToolsOptions = {
-  message: Message;
+  message: DataType.Message;
   tools: ExecutableTool[];
   extensions?: ToolContextExtensions;
   reportStatus: (status: AgentStatus) => void;
@@ -25,7 +25,7 @@ export type RunToolsOptions = {
 export type RunToolsResult =
   | {
       type: 'continue';
-      message: Message;
+      message: DataType.Message;
     }
   | {
       type: 'break';
@@ -38,18 +38,21 @@ export const runTools = async ({
   extensions,
   reportStatus,
 }: RunToolsOptions): Promise<RunToolsResult> => {
-  const toolCalls = message.content.filter((block) => block.type === 'tool_use');
+  const toolCalls = message.blocks.filter((block) => block._tag === 'toolUse');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
   if (!tool) {
-    const resultMessage = Obj.make(Message, {
-      role: 'user',
-      content: [
+    const resultMessage = Obj.make(DataType.Message, {
+      created: new Date().toISOString(),
+      sender: {
+        role: 'user',
+      },
+      blocks: [
         {
-          type: 'tool_result',
-          toolUseId: toolCall.id,
-          content: `Tool not found: ${toolCall.name}`,
+          _tag: 'toolResult',
+          toolCallId: toolCall.id,
+          result: `Tool not found: ${toolCall.name}`,
           isError: true,
         },
       ],
@@ -74,13 +77,16 @@ export const runTools = async ({
   switch (toolResult.kind) {
     case 'error': {
       log('tool error', { message: toolResult.message });
-      const resultMessage = Obj.make(Message, {
-        role: 'user',
-        content: [
+      const resultMessage = Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: {
+          role: 'user',
+        },
+        blocks: [
           {
-            type: 'tool_result',
-            toolUseId: toolCall.id,
-            content: toolResult.message,
+            _tag: 'toolResult',
+            toolCallId: toolCall.id,
+            result: toolResult.message,
             isError: true,
           },
         ],
@@ -95,14 +101,16 @@ export const runTools = async ({
 
     case 'success': {
       log('tool success', { result: toolResult.result });
-      const resultMessage = Obj.make(Message, {
-        role: 'user',
-        content: [
+      const resultMessage = Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: {
+          role: 'user',
+        },
+        blocks: [
           {
-            type: 'tool_result',
-            toolUseId: toolCall.id,
-            content:
-              typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
+            _tag: 'toolResult',
+            toolCallId: toolCall.id,
+            result: typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },
           ...(toolResult.extractContentBlocks ?? []),
         ],

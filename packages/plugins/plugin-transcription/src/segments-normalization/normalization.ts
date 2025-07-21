@@ -4,14 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, Message } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, AiService } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { defineFunction, ToolResolverService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-import { AiService } from "@dxos/ai";
 
 const MessageWithRangeId = Schema.extend(
   DataType.Message,
@@ -84,14 +83,19 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
     const session = new AISession({ operationModel: 'configured' });
 
     const response = await session.runStructured(NormalizationOutput, {
-      generationOptions: { model: DEFAULT_EDGE_MODEL },
+      generationOptions: {
+        model: DEFAULT_EDGE_MODEL,
+      },
       client: ai.client,
       tools: [],
       artifacts: [],
       history: [
-        Obj.make(Message, {
-          role: 'user',
-          content: messages.map((message) => ({ type: 'text', text: JSON.stringify(message) }) as const),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: {
+            role: 'user',
+          },
+          blocks: messages.map((message) => ({ _tag: 'text', text: JSON.stringify(message) }) as const),
         }),
       ],
       prompt,
