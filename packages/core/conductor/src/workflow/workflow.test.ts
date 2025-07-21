@@ -9,7 +9,7 @@ import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
 
@@ -28,6 +28,7 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
+import { AiService } from "@dxos/ai";
 
 describe('workflow', () => {
   test('run', async () => {

@@ -16,7 +16,7 @@ import {
   type WorkflowLoader,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log, LogLevel } from '@dxos/log';
@@ -27,6 +27,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
+import { AiService } from "@dxos/ai";
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 

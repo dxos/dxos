@@ -25,7 +25,6 @@ import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import {
-  AiService,
   FunctionExecutor,
   type ServiceContainer,
   ToolResolverService,
@@ -35,6 +34,7 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+import { AiService } from "@dxos/ai";
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;

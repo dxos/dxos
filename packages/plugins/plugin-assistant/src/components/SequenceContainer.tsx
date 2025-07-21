@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ToolRegistry } from '@dxos/ai';
 import { useCapability } from '@dxos/app-framework';
-import { createLocalSearchTool, createExaTool, createGraphWriterTool } from '@dxos/assistant';
+import { createLocalSearchTool, createGraphWriterTool } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/conductor';
 import { DXN, Key } from '@dxos/echo';
@@ -59,7 +59,8 @@ export const SequenceContainer = ({ role, sequence }: Pick<StackItemContentProps
     const queue = space.queues.create();
 
     return new ToolRegistry([
-      createExaTool({ apiKey: EXA_API_KEY }),
+      // TODO(burdon): !!!
+      // createExaTool({ apiKey: EXA_API_KEY }),
       createLocalSearchTool(space.db, queue),
       createGraphWriterTool({
         db: space.db,

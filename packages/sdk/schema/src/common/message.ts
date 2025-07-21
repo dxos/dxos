@@ -216,8 +216,7 @@ export namespace ContentBlock {
    * Used to track associated artifacts as well their changes during the conversation.
    */
   // TODO(dmaretskyi): What's the relation of this to the reference content block?
-  // TODO(dmaretskyi): Rename `Anchor`.
-  const ArtifactPin = Schema.TaggedStruct('artifactPin', {
+  const Anchor = Schema.TaggedStruct('anchor', {
     // TODO(dmaretskyi): Consider making this a DXN.
     objectId: ObjectId,
 
@@ -226,7 +225,7 @@ export namespace ContentBlock {
 
     ...Base.fields,
   }).pipe(Schema.mutable);
-  export interface ArtifactPin extends Schema.Schema.Type<typeof ArtifactPin> {}
+  export interface Anchor extends Schema.Schema.Type<typeof Anchor> {}
 
   /**
    * Proposed content to be added to an artifact.
@@ -240,7 +239,7 @@ export namespace ContentBlock {
   export interface Proposal extends Schema.Schema.Type<typeof Proposal> {}
 
   /**
-   * Model priniting info about the list of available tools.
+   * Model printing info about the list of available tools.
    */
   export const ToolList = Schema.TaggedStruct('toolList', {
     ...Base.fields,
@@ -260,21 +259,21 @@ export namespace ContentBlock {
   export interface Json extends Schema.Schema.Type<typeof Json> {}
 
   export const Any = Schema.Union(
-    Text,
-    Reasoning,
-    ToolCall,
-    ToolResult,
-    Image,
+    Anchor,
     File,
+    Image,
+    Json,
+    Proposal,
+    Reasoning,
     Reference,
-    Transcript,
+    Select,
     Status,
     Suggest,
-    Select,
-    ArtifactPin,
-    Proposal,
+    Text,
+    ToolCall,
     ToolList,
-    Json,
+    ToolResult,
+    Transcript,
   );
   export type Any = Schema.Schema.Type<typeof Any>;
 }

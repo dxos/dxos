@@ -1,9 +1,26 @@
-import { ContentBlock, DataType } from '@dxos/schema';
-import { assumeType, bufferToArray } from '@dxos/util';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiInput } from '@effect/ai';
 import { Array, Effect, pipe, Predicate } from 'effect';
+
+import { log } from '@dxos/log';
+import { type ContentBlock, type DataType } from '@dxos/schema';
+import { assumeType, bufferToArray } from '@dxos/util';
+
 import { AiInputPreprocessingError } from '../errors';
 
+/**
+ * Preprocesses messages for AI input.
+ *
+ * This function takes a list of Messages and returns a list of AIInput objects.
+ * The conversion is done by:
+ * 1. Filtering out messages that are not from the user or assistant.
+ * 2. Converting each message into an AIInput.
+ * 3. Removing any invalid AIInput.
+ * The function returns a list of valid AIInput objects.
+ */
 export const preprocessAiInput: (
   messages: DataType.Message[],
 ) => Effect.Effect<AiInput.AiInput, AiInputPreprocessingError, never> = Effect.fn('preprocessAiInput')(
@@ -19,7 +36,7 @@ export const preprocessAiInput: (
                 (arr) => splitBy(arr, (left, right) => isToolResult(left) !== isToolResult(right)),
                 Effect.forEach(
                   Effect.fnUntraced(function* (chunk) {
-                    console.log('chunk', { chunk });
+                    log.info('chunk', { chunk });
                     switch (chunk[0]._tag) {
                       case 'toolResult':
                         assumeType<ContentBlock.ToolResult[]>(chunk);
@@ -85,7 +102,7 @@ const convertUserMessagePart: (
         return new AiInput.TextPart({
           text: block.text,
         });
-      case 'artifactPin':
+      case 'anchor':
         // TODO(dmaretskyi): Notify of artifact changes based on the version progression.
         return undefined;
       case 'image':
@@ -167,7 +184,7 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`,
         });
-      case 'artifactPin':
+      case 'anchor':
         // TODO(dmaretskyi): Notify of artifact changes based on the version progression.
         return undefined;
       case 'proposal':

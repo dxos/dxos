@@ -16,9 +16,10 @@ import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { AiService, defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
+import { AiService } from "@dxos/ai";
 
 const REMOTE_AI = true;
 
