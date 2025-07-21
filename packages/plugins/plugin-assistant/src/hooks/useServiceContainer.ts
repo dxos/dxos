@@ -10,7 +10,7 @@ import { DatabaseService, QueueService, ServiceContainer, ToolResolverService } 
 import { type Space } from '@dxos/react-client/echo';
 
 import { AssistantCapabilities } from '../capabilities';
-import { AiService } from "@dxos/ai";
+import { AiService } from '@dxos/ai';
 
 interface UseServiceContainerProps {
   space?: Space;
