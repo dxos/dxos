@@ -143,7 +143,6 @@ export class AISession {
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
       this.userMessage.emit(promptMessages);
-
       do {
         log('request', {
           pending: this._pending.length,
