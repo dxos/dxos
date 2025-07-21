@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from './defs';
 import { Tool, Message, type MessageContentBlock } from './tools';
 
+// TODO(dmaretskyi): Rename `ModelName`.
 export const LLMModel = Schema.Literal(...DEFAULT_EDGE_MODELS, ...DEFAULT_OLLAMA_MODELS);
 
 export type LLMModel = Schema.Schema.Type<typeof LLMModel>;
