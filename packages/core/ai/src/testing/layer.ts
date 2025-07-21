@@ -31,6 +31,18 @@ export const LocalEdgeAiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
 );
 
 /**
+ * Uses hosted EDGE AI-service instance.
+ */
+export const RemoteEdgeAiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
+  Layer.provide(
+    AnthropicClient.layerConfig({
+      apiUrl: Config.succeed('https://edge-main.dxos.workers.dev/provider/anthropic'),
+    }),
+  ),
+  Layer.provide(NodeHttpClient.layerUndici),
+);
+
+/**
  * Create an appropriate testing layer based on the preset.
  */
 export const AiServiceTestingPreset = (
@@ -42,6 +54,6 @@ export const AiServiceTestingPreset = (
     case 'local-edge':
       return LocalEdgeAiServiceLayer;
     case 'remote-edge':
-      return Layer.die(new Error('Remote edge AI service is not implemented'));
+      return RemoteEdgeAiServiceLayer;
   }
 };
