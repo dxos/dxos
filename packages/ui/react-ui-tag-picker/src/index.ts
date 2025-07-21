@@ -4,5 +4,4 @@
 
 export * from './components';
 
-
-// nuke cache
+// TODO(dmaretskyi): Nuke cache.

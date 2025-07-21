@@ -170,7 +170,7 @@ const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
       ],
     }),
   );
-  return result[0].content.find((c) => c.type === 'tool_use')?.input as any;
+  return result[0].blocks.find((c) => c._tag === 'toolCall')?.input as any;
 };
 
 const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
