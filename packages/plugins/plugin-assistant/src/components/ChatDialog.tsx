@@ -2,43 +2,60 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { useCapability, Capabilities, useCapabilities } from '@dxos/app-framework';
+import { useCapability, Capabilities } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat } from './Chat';
+import { Chat, type ChatRootProps } from './Chat';
 import { useChatProcessor, useServiceContainer } from '../hooks';
 import { meta } from '../meta';
-import { type AssistantSettingsProps, type AIChatType } from '../types';
+import { type Assistant } from '../types';
 
 export type ChatDialogProps = {
-  chat?: AIChatType;
+  chat?: Assistant.Chat;
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.id);
+
   const space = getSpace(chat);
-  const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(meta.id)?.value;
-  const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'deck', serviceContainer, settings });
+  const processor = useChatProcessor({ part: 'dialog', chat, serviceContainer, settings });
 
   // TODO(burdon): Refocus when open.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>((event) => {
+    switch (event.type) {
+      case 'submit':
+      case 'thread-open':
+        setOpen(true);
+        setExpanded(true);
+        break;
+
+      case 'thread-close':
+        setOpen(false);
+        break;
+    }
+  }, []);
+
+  if (!chat || !processor) {
+    return null;
+  }
 
   return (
-    <Chat.Root chat={chat} processor={processor} onOpenChange={setOpen}>
-      <NativeChatDialog.Root open={open} onOpenChange={setOpen}>
+    <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
+      <NativeChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NativeChatDialog.Header title={t('assistant dialog title')} />
         <NativeChatDialog.Content>
-          <Chat.Thread transcription={transcription} />
+          <Chat.Thread />
         </NativeChatDialog.Content>
         <NativeChatDialog.Footer>
-          <Chat.Prompt placeholder={t('prompt placeholder')} />
+          <Chat.Prompt expandable />
         </NativeChatDialog.Footer>
       </NativeChatDialog.Root>
     </Chat.Root>

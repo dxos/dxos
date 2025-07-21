@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
 import { fullyQualifiedId, getSpace } from '@dxos/client/echo';
 import { useMembers, useQueue } from '@dxos/react-client/echo';
@@ -13,7 +13,12 @@ import { Transcript, renderMarkdown } from './Transcript';
 import { useQueueModelAdapter } from '../hooks';
 import { type TranscriptType } from '../types';
 
-export const TranscriptionContainer: FC<{ role: string; transcript: TranscriptType }> = ({ role, transcript }) => {
+export type TranscriptionContainerProps = {
+  role: string;
+  transcript: TranscriptType;
+};
+
+export const TranscriptionContainer = ({ role, transcript }: TranscriptionContainerProps) => {
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);

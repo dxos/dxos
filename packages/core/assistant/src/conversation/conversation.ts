@@ -2,19 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, type ExecutableTool, AiService, type AiInputPreprocessingError } from '@dxos/ai';
-import { type ArtifactDefinition } from '@dxos/artifact';
+import { type AiInputPreprocessingError } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 
-import { BlueprintBinder, type BlueprintBinding } from '../blueprint';
-import { AISession, type SessionRunOptions } from '../session';
+import { DataType } from '@dxos/schema';
 import type { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
-import { DataType } from '@dxos/schema';
+import { ContextBinder, type ContextBinding } from '../context';
 import type { AiAssistantError } from '../errors';
+import { AISession } from '../session';
 
 export interface ConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
@@ -25,7 +24,7 @@ export interface ConversationRunOptions<Tools extends AiTool.Any> {
 
 export type ConversationOptions = {
   serviceContainer: ServiceContainer;
-  queue: Queue<DataType.Message | BlueprintBinding>;
+  queue: Queue<DataType.Message | ContextBinding>;
 };
 
 /**
@@ -35,7 +34,7 @@ export type ConversationOptions = {
  */
 export class Conversation {
   private readonly _serviceContainer: ServiceContainer;
-  private readonly _queue: Queue<DataType.Message | BlueprintBinding>;
+  private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
    * Fired when the execution loop begins.
@@ -46,12 +45,12 @@ export class Conversation {
   /**
    * Blueprints bound to the conversation.
    */
-  public readonly blueprints: BlueprintBinder;
+  public readonly context: ContextBinder;
 
   constructor(options: ConversationOptions) {
     this._serviceContainer = options.serviceContainer;
     this._queue = options.queue;
-    this.blueprints = new BlueprintBinder(this._queue);
+    this.context = new ContextBinder(this._queue);
   }
 
   run: <Tools extends AiTool.Any>(
@@ -71,7 +70,8 @@ export class Conversation {
       }
 
       // TODO(dmaretskyi): Blueprint instructions + tools.
-
+      // const context = await this.context.query();
+      
       const messages = yield* session.run({
         prompt: options.prompt,
         history,

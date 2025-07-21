@@ -7,6 +7,10 @@ Storybook config package for the DXOS monorepo.
 To run the storybook:
 
 ```bash
+pnpm storybook dev -p 9009 --no-open
+```
+
+```bash
 moon run storybook:serve
 ```
 

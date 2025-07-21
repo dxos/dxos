@@ -10,7 +10,12 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { TestPanel } from './TestPanel';
 import { useDeployState, useToolbarState } from '../../hooks';
 
-export const TestContainer = ({ script, role }: { script: ScriptType; role: string }) => {
+export type TestContainerProps = {
+  role: string;
+  script: ScriptType;
+};
+
+export const TestContainer = ({ script, role }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (
