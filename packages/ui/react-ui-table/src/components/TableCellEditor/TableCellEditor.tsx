@@ -24,7 +24,7 @@ import {
   type GridCellEditorProps,
   type GridScopedProps,
 } from '@dxos/react-ui-grid';
-import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
+import { tagPicker, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
 import { CellValidationMessage } from './CellValidationMessage';
@@ -248,9 +248,9 @@ export const TableCellEditor = ({
       const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
 
       extension.push(
-        tagPickerExtension({
+        tagPicker({
           mode,
-          inGrid: true,
+          keymap: false,
           onSearch: (text, selectedIds) => {
             return options
               .filter(

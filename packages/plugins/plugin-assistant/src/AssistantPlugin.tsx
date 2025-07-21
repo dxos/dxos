@@ -21,7 +21,7 @@ import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } fro
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
+import { Assistant, ServiceType, TemplateType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -46,7 +46,7 @@ export const AssistantPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(AIChatType),
+          id: Type.getTypename(Assistant.Chat),
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -60,15 +60,15 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: AIChatType,
-            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
+            objectSchema: Assistant.Chat,
+            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Sequence,
-            getIntent: () => createIntent(AssistantAction.CreateSequence),
+            getIntent: () => createIntent(Assistant.CreateSequence),
           }),
         ),
       ],
@@ -76,14 +76,14 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
         contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-          createIntent(AssistantAction.OnSpaceCreated, { space, rootCollection }),
+          createIntent(Assistant.OnSpaceCreated, { space, rootCollection }),
         ),
     }),
     defineModule({

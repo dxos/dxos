@@ -4,15 +4,11 @@
 
 import { Schema } from 'effect';
 
-import { Obj } from '@dxos/echo';
-
 import { ChessType } from './schema';
-import { CHESS_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace ChessAction {
-  const CHESS_ACTION = `${CHESS_PLUGIN}/action`;
-
-  export class Create extends Schema.TaggedClass<Create>()(`${CHESS_ACTION}/create`, {
+  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
       fen: Schema.optional(Schema.String),
@@ -22,5 +18,3 @@ export namespace ChessAction {
     }),
   }) {}
 }
-
-export const isObject = Obj.instanceOf(ChessType);

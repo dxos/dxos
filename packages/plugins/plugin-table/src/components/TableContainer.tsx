@@ -27,7 +27,12 @@ import { type DataType, ProjectionManager } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-const TableContainer = ({ role, view }: { role?: string; view: DataType.HasView }) => {
+export type TableContainerProps = {
+  role: string;
+  view: DataType.HasView;
+};
+
+export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 

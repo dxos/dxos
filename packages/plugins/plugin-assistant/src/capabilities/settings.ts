@@ -6,14 +6,14 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { type AssistantSettingsProps, AssistantSettingsSchema } from '../types';
+import { Assistant } from '../types';
 
 export default () => {
-  const settings = live<AssistantSettingsProps>({});
+  const settings = live<Assistant.Settings>({});
 
   return contributes(Capabilities.Settings, {
     prefix: meta.id,
-    schema: AssistantSettingsSchema,
+    schema: Assistant.Settings,
     value: settings,
   });
 };

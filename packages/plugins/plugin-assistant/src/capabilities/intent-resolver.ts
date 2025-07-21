@@ -9,7 +9,7 @@ import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref, Type } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
-import { AssistantAction, AIChatType } from '../types';
+import { Assistant } from '../types';
 
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
@@ -28,10 +28,10 @@ export default (context: PluginContext) => [
         }),
     }),
     createResolver({
-      intent: AssistantAction.CreateChat,
+      intent: Assistant.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
-          object: Obj.make(AIChatType, {
+          object: Obj.make(Assistant.Chat, {
             name,
             queue: Ref.fromDXN(space.queues.create().dxn),
           }),
@@ -39,7 +39,7 @@ export default (context: PluginContext) => [
       }),
     }),
     createResolver({
-      intent: AssistantAction.CreateSequence,
+      intent: Assistant.CreateSequence,
       resolve: ({ name }) => ({
         data: {
           object: Obj.make(Sequence, {
