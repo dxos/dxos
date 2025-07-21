@@ -1,0 +1,16 @@
+# https://moonrepo.dev/docs/config/template
+$schema: '../../.moon/cache/schemas/template.json'
+
+title: 'Title'
+description: 'Description of the template.'
+variables:
+  name:
+    type: 'string'
+    default: ''
+    required: true
+    prompt: 'Package name?'
+  description:
+    type: 'string'
+    default: ''
+    required: true
+    prompt: 'Description of the package?'
