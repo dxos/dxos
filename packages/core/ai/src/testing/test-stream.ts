@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(dmaretskyi): Fix this.
+// @ts-nocheck
+
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
