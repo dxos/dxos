@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, type Message, OllamaAiServiceClient, ToolRegistry, ToolTypes } from '@dxos/ai';
+import { defineTool, type Message, OllamaAiServiceClient, ToolId, ToolRegistry, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -113,7 +113,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
       const input: GptInput = {
         prompt: 'A beautiful sunset over a calm ocean',
-        tools: ['testing/text-to-image'],
+        tools: [ToolId.make('testing/text-to-image')],
       };
       const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
         Effect.flatMap(ValueBag.unwrap),

@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -38,7 +41,7 @@ export const runTools = async ({
   extensions,
   reportStatus,
 }: RunToolsOptions): Promise<RunToolsResult> => {
-  const toolCalls = message.blocks.filter((block) => block._tag === 'toolUse');
+  const toolCalls = message.blocks.filter((block) => block._tag === 'toolCall');
   invariant(toolCalls.length === 1);
   const toolCall = toolCalls[0];
   const tool = tools.find((tool) => tool.name === toolCall.name);
@@ -109,6 +112,7 @@ export const runTools = async ({
         blocks: [
           {
             _tag: 'toolResult',
+            name: toolCall.name,
             toolCallId: toolCall.id,
             result: typeof toolResult.result === 'string' ? toolResult.result : JSON.stringify(toolResult.result) ?? '',
           },

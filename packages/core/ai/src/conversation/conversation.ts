@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

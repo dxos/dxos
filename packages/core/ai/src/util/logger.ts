@@ -36,7 +36,7 @@ export const createLogger = ({
           if (content.id && content.source) {
             images[content.id] = content.source;
           }
-          process.stdout.write(`[Image id=${content.id} mediaType=${content.source?.mediaType}]`);
+          process.stdout.write(`[Image id=${content.id}]`);
           break;
         }
       }
@@ -56,8 +56,8 @@ export const createLogger = ({
     if (stream) {
       switch (event.type) {
         case 'message_start': {
-          process.stdout.write(`${event.message.sender.role.toUpperCase()}\n\n`);
-          for (const content of event.message.content) {
+          process.stdout.write(`${event.message.sender?.role?.toUpperCase()}\n\n`);
+          for (const content of event.message.blocks) {
             printContentBlock(content);
           }
           break;
@@ -99,25 +99,25 @@ export const createLogger = ({
 
     switch (event.type) {
       case 'message': {
-        if (!stream || event.message.sender.role !== 'assistant') {
-          process.stdout.write(`${event.message.role.toUpperCase()}\n\n`);
-          for (const block of event.message.content) {
-            switch (block.type) {
+        if (!stream || event.message.sender?.role !== 'assistant') {
+          process.stdout.write(`${event.message.sender?.role?.toUpperCase()}\n\n`);
+          for (const block of event.message.blocks) {
+            switch (block._tag) {
               case 'text':
                 process.stdout.write(block.text + '\n');
                 onTextBlockPrinted(block.text);
                 break;
-              case 'tool_use':
+              case 'toolCall':
                 process.stdout.write(`⚙️ [Tool Use] ${block.name}\n`);
                 process.stdout.write(`  ${JSON.stringify(block.input)}\n`);
                 break;
-              case 'tool_result':
-                if (block.isError) {
-                  process.stdout.write('❌ [Tool Error]\n');
-                  process.stdout.write(block.content + '\n');
-                } else {
+              case 'toolResult':
+                if (block.result) {
                   process.stdout.write('✅ [Tool Success]\n');
-                  process.stdout.write(block.content + '\n');
+                  process.stdout.write(block.result + '\n');
+                } else {
+                  process.stdout.write('❌ [Tool Error]\n');
+                  process.stdout.write(block.result + '\n');
                 }
             }
             process.stdout.write('\n\n');

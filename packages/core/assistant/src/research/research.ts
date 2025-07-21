@@ -5,7 +5,7 @@
 import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AgentStatus, AiService, NewConsolePrinter } from '@dxos/ai';
+import { AgentStatus, AiService, ConsolePrinter } from '@dxos/ai';
 import { create } from '@dxos/echo-schema';
 import { defineFunction, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -56,7 +56,7 @@ export const researchFn = defineFunction({
         ),
       );
 
-      const printer = new NewConsolePrinter();
+      const printer = new ConsolePrinter();
       const session = new AISession();
       session.message.on((message) => printer.printMessage(message));
       session.userMessage.on((message) => printer.printMessage(message));

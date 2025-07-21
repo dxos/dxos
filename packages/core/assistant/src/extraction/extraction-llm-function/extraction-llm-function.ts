@@ -13,7 +13,6 @@ import { AISession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { insertReferences, ReferencedQuotes } from '../quotes';
 
-// TODO(burdon): !!!
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',
   inputSchema: ExtractionInput,

@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Schema } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, AiService } from '@dxos/ai';

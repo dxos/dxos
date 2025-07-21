@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Schema } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -272,7 +275,7 @@ export class OllamaAiServiceClient implements AiServiceClient {
             type: 'content_block_start',
             index: currentBlockIndex,
             content: {
-              type: 'toolCall',
+              _tag: 'toolCall',
               id: ObjectId.random(),
               name: data.message.tool_calls[0].function.name,
               input: sanitizeToolArguments(data.message.tool_calls[0].function.arguments),

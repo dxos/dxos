@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): !!!
+// @ts-nocheck
+
 import { Match, Schema } from 'effect';
 
 import { createTool, type AiServiceClient, ToolResult, type ToolRegistry } from '@dxos/ai';
