@@ -14,7 +14,7 @@ import {
   AiServiceRouter,
   AiService,
 } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { AI_SERVICE_ENDPOINT, AiServiceTestingPreset } from '@dxos/ai/testing';
 import { ArtifactId, defineArtifact } from '@dxos/artifact';
 import { Type, Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
@@ -91,12 +91,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
-
-      // Runtime
-      Effect.provide(AiServiceRouter.AiServiceRouter),
-      Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      Effect.provide(
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
+        ),
+      ),
     ),
   );
 
@@ -113,13 +112,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
         });
         log.info('response', { response });
       },
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
-      Effect.provide(toolkitLayer),
-
-      // Runtime
-      Effect.provide(AiServiceRouter.AiServiceRouter),
-      Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      Effect.provide(
+        Layer.mergeAll(
+          toolkitLayer,
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+        ),
+      ),
     ),
   );
 

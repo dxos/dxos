@@ -2,19 +2,13 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
-import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Config, Console, Effect, Layer, Schema, Stream } from 'effect';
+import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
 import { AiService } from '../service';
+import { AiServiceTestingPreset } from '../testing';
 import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
-import * as AiServiceRouter from './AiServiceRouter';
 import { getToolCalls, runTool } from './tools';
-
-const AnthropicLayer = AnthropicClient.layerConfig({
-  apiUrl: Config.succeed('http://localhost:8788/provider/anthropic'),
-}).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -108,12 +102,14 @@ describe('effect AI client', () => {
           );
         } while (true);
       },
-      Effect.provide(toolkitLayer),
-      Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
-
-      // Runtime
-      Effect.provide(AiServiceRouter.AiServiceRouter),
-      Effect.provide(AnthropicLayer),
+      Effect.provide(
+        Layer.mergeAll(
+          toolkitLayer,
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+        ),
+      ),
     ),
   );
 });
