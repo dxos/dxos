@@ -8,7 +8,6 @@ import { defineObjectMigration } from '@dxos/echo-db';
 import { FieldSortType, JsonSchemaType, QueryType, TypedObject } from '@dxos/echo-schema';
 
 import { FieldSchema, KeyValueProps } from './field';
-import { Projection } from './projection';
 
 // TODO(wittjosiah): Refactor to organize better previous versions + migrations.
 
@@ -58,11 +57,4 @@ export const ViewTypeV1ToV2 = defineObjectMigration({
   onMigration: async () => {},
 });
 
-export const ViewTypeToProjection = defineObjectMigration({
-  from: ViewTypeV1,
-  to: Projection,
-  transform: async (from) => {
-    return from;
-  },
-  onMigration: async () => {},
-});
+// NOTE: v2 to v3 migration is more complex and must be handled separately.

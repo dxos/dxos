@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import {
   FormatEnum,
   JsonSchemaType,
@@ -21,19 +21,7 @@ import { stripUndefined } from '@dxos/util';
 import { FieldSchema, type FieldType } from './field';
 import { getSchemaProperties } from '../properties';
 
-/**
- * Projections are generated or user-defined projections of a schema's properties.
- * They are used to configure the visual representation of the data.
- * The query is separate from the projection (queries configure the projection of data objects).
- */
 export const Projection = Schema.Struct({
-  /**
-   * Query used to retrieve data.
-   * This includes the base type that the view schema (above) references.
-   * It may include predicates that represent a persistent "drill-down" query.
-   */
-  query: QueryType,
-
   /**
    * Optional schema override used to customize the underlying schema.
    */
@@ -42,13 +30,39 @@ export const Projection = Schema.Struct({
   /**
    * UX metadata associated with displayed fields (in table, form, etc.)
    */
+  // TODO(wittjosiah): Should this just be an array of JsonPath?
   fields: Schema.mutable(Schema.Array(FieldSchema)),
 
   /**
    * Array of fields that are part of the view's schema but hidden from UI display.
    * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
    */
+  // TODO(wittjosiah): Remove? This can be easily derived from fields.
   hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
+}).pipe(Schema.mutable);
+export type Projection = Schema.Schema.Type<typeof Projection>;
+
+/**
+ * Views are generated or user-defined projections of a schema's properties.
+ * They are used to configure the visual representation of the data.
+ */
+export const View = Schema.Struct({
+  /**
+   * Query used to retrieve data.
+   * This includes the base type that the view schema (above) references.
+   * It may include predicates that represent a persistent "drill-down" query.
+   */
+  query: QueryType,
+
+  /**
+   * Projection of the data returned from the query.
+   */
+  projection: Projection,
+
+  /**
+   * Reference to the custom view object which is used to store data specific to rendering.
+   */
+  presentation: Type.Ref(Type.Expando),
 
   // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
 
@@ -56,21 +70,22 @@ export const Projection = Schema.Struct({
    * Optional metadata associated with the projection.
    */
   metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/Projection', version: '0.1.0' }));
-export type Projection = Schema.Schema.Type<typeof Projection>;
+}).pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
+export type View = Schema.Schema.Type<typeof View>;
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   typename: string;
   jsonSchema: JsonSchemaType;
+  presentation: Obj.Any;
   fields?: string[];
 };
 
 /**
  * Create projection from existing schema.
  */
-export const createProjection = ({ typename, jsonSchema, fields: include }: CreateViewProps): Live<Projection> => {
+export const createView = ({ typename, jsonSchema, presentation, fields: include }: CreateViewProps): Live<View> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
     const schema = toEffectSchema(jsonSchema);
@@ -106,10 +121,14 @@ export const createProjection = ({ typename, jsonSchema, fields: include }: Crea
     });
   }
 
-  return Obj.make(Projection, {
+  return Obj.make(View, {
     query: {
       typename,
     },
-    fields,
+    projection: {
+      schema: jsonSchema,
+      fields,
+    },
+    presentation: Ref.make(presentation),
   });
 };

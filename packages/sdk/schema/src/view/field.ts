@@ -12,6 +12,8 @@ import { JsonPath } from '@dxos/effect';
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
   path: JsonPath,
+
+  // TODO(wittjosiah): Presentation-specific?
   referencePath: Schema.optional(JsonPath),
 
   // TODO(wittjosiah): Remove this? Duplicate of hiddenFields?

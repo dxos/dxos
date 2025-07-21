@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
 import { type FieldType } from './field';
-import { createFieldId, type Projection } from './projection';
+import { createFieldId, type Projection } from './view';
 import { PropertySchema, type PropertyType } from '../format';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
 
@@ -37,7 +37,7 @@ export type FieldProjection = {
 /**
  * Wrapper for Projection that manages Field and Format updates.
  */
-export class ProjectionManager {
+export class ProjectionModel {
   private readonly _encode = Schema.encodeSync(PropertySchema);
   private readonly _decode = Schema.decodeSync(PropertySchema, {});
 

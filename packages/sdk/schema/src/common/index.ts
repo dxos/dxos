@@ -16,7 +16,7 @@ import * as Project$ from './project';
 import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
-import * as Projection$ from '../projection';
+import * as View$ from '../view';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
@@ -118,13 +118,6 @@ export namespace DataType {
   export type Project = Project$.Project;
 
   //
-  // Projection
-  //
-
-  export const Projection = Projection$.Projection;
-  export type Projection = Projection$.Projection;
-
-  //
   // StoredSchema
   //
 
@@ -146,6 +139,13 @@ export namespace DataType {
   export type Text = Text$.Text;
 
   //
+  // View
+  //
+
+  export const View = View$.View;
+  export type View = View$.View;
+
+  //
   // Relations
   //
 
@@ -157,9 +157,6 @@ export namespace DataType {
 
   export const HasRelationship = Relations$.HasRelationship;
   export type HasRelationship = Relations$.HasRelationship;
-
-  export const HasView = Relations$.HasView;
-  export type HasView = Relations$.HasView;
 
   // TOOD(burdon): Move Thread from plugin-space?
 }
@@ -173,14 +170,13 @@ export const DataTypes = [
   DataType.Organization,
   DataType.Person,
   DataType.Project,
-  DataType.Projection,
   DataType.StoredSchema,
   DataType.Task,
   DataType.Text,
+  DataType.View,
 
   // Relations
   DataType.Employer,
   DataType.HasRelationship,
   DataType.HasConnection,
-  DataType.HasView,
 ];

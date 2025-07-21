@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { type Live, Type } from '@dxos/echo';
+import { type Live, Obj, Type } from '@dxos/echo';
 import { create, StoredSchema, TypedObject } from '@dxos/echo-schema';
 
-import { createProjection, type Projection } from '../projection';
+import { createView, type View } from '../view';
 
 export class TestSchema extends TypedObject({
   typename: 'example.com/type/Test',
@@ -48,9 +48,10 @@ export const testSchema: Live<StoredSchema> = create(StoredSchema, {
   jsonSchema: Type.toJsonSchema(TestSchema),
 });
 
-export const testProjection: Live<Projection> = createProjection({
+export const testView: Live<View> = createView({
   typename: testSchema.typename,
   jsonSchema: Type.toJsonSchema(TestSchema),
+  presentation: Obj.make(Type.Expando, {}),
 });
 
 export const testData: TestType = {

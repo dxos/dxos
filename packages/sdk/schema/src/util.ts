@@ -9,7 +9,7 @@ import jp from 'jsonpath';
 import { type BaseObject, FormatEnum, type JsonSchemaType, TypeEnum } from '@dxos/echo-schema';
 import { visit } from '@dxos/effect';
 
-import { type FieldType } from './projection';
+import { type FieldType } from './view';
 
 // TODO(burdon): Remove once deprecated table is removed.
 
