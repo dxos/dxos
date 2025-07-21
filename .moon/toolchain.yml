@@ -1,2 +1,7 @@
+# https://moonrepo.dev/docs/config/toolchain
 node:
   packageManager: pnpm
+  # TODO(wittjosiah): Doesn't seem to always produce stable package.json.
+  #   Conflicting with toolbox?
+  syncPackageManagerField: false
+  addEnginesConstraint: false

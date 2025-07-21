@@ -28,18 +28,16 @@ import { type HasId, type BoardLayout, type Size, type Position } from './types'
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-// TODO(burdon): Drag cards.
 // TODO(burdon): Center when has focus; key nav.
-// TODO(burdon): Editors with concurrent AI cells.
 // TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Increase width/height.
+// TODO(burdon): Drag edges to resize.
 
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
-const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 40 };
+const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -57,6 +55,7 @@ type BoardContextValue = {
   layout: BoardLayout;
   grid: BoardGrid;
   bounds: Size;
+  center: Position;
   zoom: boolean;
   controller: BoardController;
   onSelect?: (id: string) => void;
@@ -69,24 +68,20 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 
 //
 // Root
+// NOTE: The Root is headless, which allows the Controls and Container to be in different subtrees.
 //
 
 type RootProps = PropsWithChildren<
-  ThemedClassName<
-    Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
-  >
+  Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
 >;
 
 const Root = forwardRef<BoardController, RootProps>(
   (
-    { children, classNames, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
+    { children, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
     forwardedRef,
   ) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { width, height } = useResizeDetector({ targetRef: containerRef });
     const bounds = useMemo<Size>(() => getBoardBounds(layout.size, grid), [layout, grid]);
 
-    const [mounted, setMounted] = useState(false);
     const [zoom, setZoom] = useState(false);
     const [center, setCenter] = useState({ x: bounds.width / 2, y: bounds.height / 2 });
 
@@ -113,28 +108,6 @@ const Root = forwardRef<BoardController, RootProps>(
     );
     useImperativeHandle(forwardedRef, () => controller, [controller]);
 
-    // Auto-center (on mount).
-    useEffect(() => {
-      const container = containerRef.current;
-      if (container && width && height) {
-        container.scrollTo({
-          left: center.x - width / 2,
-          top: center.y - height / 2,
-          behavior: mounted ? 'smooth' : 'auto',
-        });
-
-        setMounted(true);
-      }
-    }, [center, bounds, width, height]);
-
-    // Auto-scroll.
-    useEffect(() => {
-      invariant(containerRef.current);
-      return autoScrollForElements({
-        element: containerRef.current,
-      });
-    }, []);
-
     const handleSelect = useCallback<NonNullable<BoardContextValue['onSelect']>>(
       (id) => {
         controller.center(id);
@@ -148,6 +121,7 @@ const Root = forwardRef<BoardController, RootProps>(
         layout={layout}
         grid={grid}
         bounds={bounds}
+        center={center}
         zoom={zoom}
         controller={controller}
         onSelect={onSelect ?? handleSelect}
@@ -155,19 +129,7 @@ const Root = forwardRef<BoardController, RootProps>(
         onMove={onMove}
         onAdd={readonly ? undefined : onAdd}
       >
-        <div
-          ref={containerRef}
-          className={mx(
-            'relative board grow overflow-auto scrollbar-none opacity-0 transition-opacity duration-1000',
-            mounted && 'opacity-100',
-            classNames,
-          )}
-          style={{
-            padding: grid.overScroll ?? 0,
-          }}
-        >
-          {children}
-        </div>
+        {children}
       </BoardContextProvider>
     );
   },
@@ -176,7 +138,63 @@ const Root = forwardRef<BoardController, RootProps>(
 Root.displayName = 'Board.Root';
 
 //
-// Content
+// Container
+//
+
+type ContainerProps = ThemedClassName<PropsWithChildren>;
+
+const Container = ({ classNames, children }: ContainerProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width, height } = useResizeDetector({ targetRef: containerRef });
+  const { bounds, grid, center } = useBoardContext(Container.displayName);
+
+  const [mounted, setMounted] = useState(false);
+
+  // Auto-center (on mount).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && width && height) {
+      container.scrollTo({
+        left: center.x - width / 2,
+        top: center.y - height / 2,
+        behavior: mounted ? 'smooth' : 'auto',
+      });
+
+      setMounted(true);
+    }
+  }, [center, bounds, width, height]);
+
+  // Auto-scroll.
+  useEffect(() => {
+    invariant(containerRef.current);
+    return autoScrollForElements({
+      element: containerRef.current,
+    });
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={mx(
+        'flex items-center justify-center overflow-auto scrollbar-none',
+        'opacity-0 transition-opacity duration-1000',
+        mounted && 'opacity-100',
+        classNames,
+      )}
+      style={{
+        padding: grid.overScroll ?? 0,
+      }}
+    >
+      {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
+      <div className='max-bs-full max-is-full'>{children}</div>
+    </div>
+  );
+};
+
+Container.displayName = 'Board.Container';
+
+//
+// Viewport
 //
 
 type ViewportProps = ThemedClassName<PropsWithChildren>;
@@ -207,15 +225,17 @@ Viewport.displayName = 'Board.Viewport';
 // Content
 //
 
-type ContentProps<T extends HasId = any> = {
-  items?: T[];
-} & Pick<CellProps, 'getTitle'>;
+type ContentProps<T extends HasId = any> = ThemedClassName<
+  {
+    items?: T[];
+  } & Pick<CellProps, 'getTitle'>
+>;
 
-const Content = <T extends HasId = any>({ items, ...props }: ContentProps<T>) => {
+const Content = <T extends HasId = any>({ classNames, items, ...props }: ContentProps<T>) => {
   const { layout } = useBoardContext(Viewport.displayName);
 
   return (
-    <div role='none'>
+    <div role='none' className={mx(classNames)}>
       {items?.map((item, index) => (
         <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} {...props} />
       ))}
@@ -297,17 +317,18 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
       ref={ref}
       style={rect}
       className={mx(
-        'absolute group flex items-center justify-center border rounded opacity-50',
+        'group/cell absolute flex items-center justify-center border rounded opacity-50',
         active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
       )}
     >
       {onClick && (
+        // TODO(burdon): Make this pluggable so that the container can provide a menu trigger.
         <IconButton
           icon='ph--plus--regular'
           size={5}
           iconOnly
           label={t('button add')}
-          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover:opacity-100'
+          classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onClick}
         />
       )}
@@ -321,32 +342,29 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
 
 type ControlsProps = ThemedClassName;
 
-// TODO(burdon): Translations.
 // TODO(burdon): Create variant that can be housed outside of provider?
 const Controls = ({ classNames }: ControlsProps) => {
   const { t } = useTranslation(translationKey);
   const { readonly, zoom, controller, onAdd } = useBoardContext(Controls.displayName);
 
   return (
-    <div className={mx('fixed top-4 left-4 z-10', classNames)}>
-      <Toolbar.Root>
-        <IconButton
-          icon='ph--crosshair--regular'
-          iconOnly
-          label={t('button center')}
-          onClick={() => controller.center()}
-        />
-        <IconButton
-          icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
-          iconOnly
-          label={t('button zoom')}
-          onClick={() => controller.toggleZoom()}
-        />
-        {!readonly && onAdd && (
-          <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
-        )}
-      </Toolbar.Root>
-    </div>
+    <Toolbar.Root classNames={classNames}>
+      <IconButton
+        icon='ph--crosshair--regular'
+        iconOnly
+        label={t('button center')}
+        onClick={() => controller.center()}
+      />
+      <IconButton
+        icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
+        iconOnly
+        label={t('button zoom')}
+        onClick={() => controller.toggleZoom()}
+      />
+      {!readonly && onAdd && (
+        <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
+      )}
+    </Toolbar.Root>
   );
 };
 
@@ -358,6 +376,7 @@ Controls.displayName = 'Board.Controls';
 
 export const Board = {
   Root,
+  Container,
   Viewport,
   Content,
   Background,
@@ -367,6 +386,7 @@ export const Board = {
 
 export type {
   RootProps as BoardRootProps,
+  ContainerProps as BoardContainerProps,
   ViewportProps as BoardViewportProps,
   ContentProps as BoardContentProps,
   BackgroundProps as BoardBackgroundProps,

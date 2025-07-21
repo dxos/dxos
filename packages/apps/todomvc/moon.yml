@@ -8,6 +8,3 @@ tasks:
   bundle:
     deps:
       - shell:bundle
-  preview:
-    args:
-      - '--port=9006'

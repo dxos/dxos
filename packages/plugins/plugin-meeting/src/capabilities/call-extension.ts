@@ -33,7 +33,6 @@ type MeetingPayload = buf.MessageInitShape<typeof MeetingPayloadSchema>;
 export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
-  const aiClient = context.getCapability(AssistantCapabilities.AiClient);
   const state = context.getCapability(MeetingCapabilities.State);
   const settings = context
     .getCapability(Capabilities.SettingsStore)
@@ -47,6 +46,7 @@ export default (context: PluginContext) => {
       invariant(space);
 
       let messageEnricher;
+      const aiClient = context.getCapabilities(AssistantCapabilities.AiClient).pop();
       if (aiClient && settings.entityExtraction) {
         messageEnricher = createEntityExtractionEnricher({
           aiClient: aiClient.value,
