@@ -1,22 +1,19 @@
-import { TestHelpers } from '@dxos/effect';
-import { log } from '@dxos/log';
-import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit, type AiError } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { describe, it } from '@effect/vitest';
-import { NodeHttpClient } from '@effect/platform-node';
-import { Chunk, Config, Console, Context, Effect, Layer, Predicate, Schema, Stream } from 'effect';
-import { parseGptStream } from './AiParser';
-import { DataType, type ContentBlock } from '@dxos/schema';
 import { Obj } from '@dxos/echo';
-import { preprocessAiInput } from './AiPreprocessor';
-import { getToolCalls, runTool } from './tools';
+import { log } from '@dxos/log';
+import { DataType, type ContentBlock } from '@dxos/schema';
+import { AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { NodeHttpClient } from '@effect/platform-node';
+import { describe, it } from '@effect/vitest';
+import { Chunk, Config, Console, Effect, Layer, Schema, Stream } from 'effect';
 import { AiService } from '../service';
-import { AiModelNotAvailableError } from '../errors';
-import { todo } from '@dxos/debug';
+import { parseGptStream } from './AiParser';
+import { preprocessAiInput } from './AiPreprocessor';
 import * as AiServiceRouter from './AiServiceRouter';
+import { getToolCalls, runTool } from './tools';
 
 const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+  apiUrl: Config.succeed('http://localhost:8788/provider/anthropic'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 // Tool definitions.
@@ -117,7 +114,6 @@ describe('effect AI client', () => {
       // Runtime
       Effect.provide(AiServiceRouter.AiServiceRouter),
       Effect.provide(AnthropicLayer),
-      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
 });
