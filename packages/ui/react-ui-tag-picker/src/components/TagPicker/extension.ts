@@ -26,6 +26,7 @@ import {
 } from '@codemirror/view';
 
 import { type ChromaticPalette } from '@dxos/react-ui';
+import { isNotFalsy } from '@dxos/util';
 
 import { type TagPickerItemProps } from './TagPickerItem';
 
@@ -83,9 +84,8 @@ export type TagPickerMode = 'single-select' | 'multi-select';
 
 export type TagPickerOptions = {
   debug?: boolean;
+  keymap?: boolean;
   removeLabel?: string;
-  // TODO(ZaymonFC): Think of a better name for this?
-  inGrid?: boolean;
   mode?: TagPickerMode;
   onBlur?: (event: FocusEvent) => void;
   onSelect?: (id: string) => void;
@@ -96,18 +96,19 @@ export type TagPickerOptions = {
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const tagPickerExtension = ({
+export const tagPicker = ({
   debug,
-  inGrid,
+  keymap: _keymap = true,
+  removeLabel,
   mode = 'multi-select',
   onSelect,
   onSearch,
   onUpdate,
-  removeLabel,
 }: TagPickerOptions): Extension => {
-  /** Ordered list of ids. */
+  // Ordered list of ids.
   const ids: string[] = [];
-  /** Range spans for each id. */
+
+  // Range spans for each id.
   const itemSpan = new Map<string, { from: number; to: number }>();
 
   const handleCompletion = (view: EditorView) => {
@@ -115,32 +116,30 @@ export const tagPickerExtension = ({
     if (acceptCompletion(view)) {
       return true;
     }
+
     // If no completion is active, start one.
     startCompletion(view);
     return true;
   };
 
-  const getKeymap = () => {
-    if (inGrid) {
-      return [];
-    }
-    return [
-      {
-        key: 'Tab',
-        run: handleCompletion,
-        preventDefault: true,
-      },
-      {
-        key: 'Enter',
-        run: handleCompletion,
-        preventDefault: true,
-      },
-    ];
-  };
-
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
-    Prec.highest(keymap.of(getKeymap())),
+
+    _keymap &&
+      Prec.highest(
+        keymap.of([
+          {
+            key: 'Tab',
+            run: handleCompletion,
+            preventDefault: true,
+          },
+          {
+            key: 'Enter',
+            run: handleCompletion,
+            preventDefault: true,
+          },
+        ]),
+      ),
 
     // Autocomplete.
     autocompletion({
@@ -243,7 +242,7 @@ export const tagPickerExtension = ({
     ),
 
     styles,
-  ];
+  ].filter(isNotFalsy);
 
   if (onSearch) {
     extensions.push(

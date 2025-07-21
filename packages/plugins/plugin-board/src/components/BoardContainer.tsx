@@ -2,20 +2,93 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { effect } from '@preact/signals-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Board } from '@dxos/react-ui-board';
+import { getSpace } from '@dxos/client/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { Board as BoardComponent, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
+import { isNonNullable } from '@dxos/util';
 
-import { type BoardType } from '../types';
+import { type Board } from '../types';
 
-// TODO(burdon): Factor out.
-type BoardContainerProps = { role: string; board: BoardType };
+export type BoardContainerProps = {
+  role: string;
+  board: Board.Board;
+};
 
-export const BoardContainer = ({ board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, board }: BoardContainerProps) => {
+  const controller = useRef<BoardController>(null);
+
+  // TODO(burdon): Create effect utility for reactive arrays.
+  const [items, setItems] = useState<Type.Expando[]>([]);
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    effect(() => {
+      const refs = [...board.items];
+      t = setTimeout(async () => {
+        const items = await Ref.Array.loadAll(refs);
+        setItems(items.filter(isNonNullable));
+      });
+    });
+
+    return () => clearTimeout(t);
+  }, [board.items]);
+
+  const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
+    (position = { x: 0, y: 0 }) => {
+      const space = getSpace(board);
+      invariant(space);
+      // TODO(burdon): Create from menu/intent?
+      const obj = space.db.add(Obj.make(Type.Expando, {}));
+      board.items.push(Ref.make(obj));
+      board.layout.cells[obj.id] = { ...position, width: 1, height: 1 };
+      controller.current?.center(position);
+    },
+    [board, controller],
+  );
+
+  // TODO(burdon): Use intents so can be undone.
+  const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
+    (id) => {
+      // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
+      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
+      if (idx !== -1) {
+        board.items.splice(idx, 1);
+      }
+      delete board.layout.cells[id];
+      setItems((items) => items.filter((item) => item.id !== id));
+    },
+    [board],
+  );
+
+  const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
+    (id, position) => {
+      const layout = board.layout.cells[id];
+      board.layout.cells[id] = { ...layout, ...position };
+    },
+    [board],
+  );
+
   return (
-    <StackItem.Content>
-      <Board.Root />
-    </StackItem.Content>
+    <BoardComponent.Root
+      ref={controller}
+      layout={board.layout}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      onMove={handleMove}
+    >
+      <StackItem.Content role={role} toolbar>
+        <BoardComponent.Controls />
+        <BoardComponent.Container>
+          <BoardComponent.Viewport classNames='border-none'>
+            <BoardComponent.Background />
+            <BoardComponent.Content items={items} getTitle={(item) => Obj.getLabel(item) ?? item.id} />
+          </BoardComponent.Viewport>
+        </BoardComponent.Container>
+      </StackItem.Content>
+    </BoardComponent.Root>
   );
 };

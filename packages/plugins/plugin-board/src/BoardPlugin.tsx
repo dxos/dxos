@@ -2,16 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
+import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
+import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { BoardType } from './types';
+import { Board } from './types';
 
-export const BoardPlugin = () =>
-  definePlugin(meta, [
+export const BoardPlugin = () => {
+  return definePlugin(meta, [
     defineModule({
       id: `${meta.id}/module/translations`,
       activatesOn: Events.SetupTranslations,
@@ -21,12 +24,25 @@ export const BoardPlugin = () =>
       id: `${meta.id}/module/metadata`,
       activatesOn: Events.SetupMetadata,
       activate: () =>
+        // TODO(burdon): "Metadata" here seems non-descriptive; is this specifically for the type? ObjectMetadata?
         contributes(Capabilities.Metadata, {
-          id: BoardType.typename,
+          id: Board.Board.typename,
           metadata: {
             icon: 'ph--squares-four--regular',
           },
         }),
+    }),
+    defineModule({
+      id: `${meta.id}/module/object-form`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: Board.Board,
+            getIntent: () => createIntent(Board.Create),
+          }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -39,3 +55,4 @@ export const BoardPlugin = () =>
       activate: IntentResolver,
     }),
   ]);
+};

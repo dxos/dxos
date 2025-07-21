@@ -15,10 +15,12 @@ import { LabelAnnotation } from '@dxos/echo-schema';
 export const Blueprint = Schema.Struct({
   /**
    * Global registry ID.
+   * NOTE: Once a blueprint has been cloned from the registry, its stored definition may converge,
+   * but the `key` property refers to the original registry entry.
    */
   // TODO(burdon): Create Format type.
   key: Schema.String.annotations({
-    description: 'Unique system name for the blueprint',
+    description: 'Unique registration key for the blueprint',
   }),
 
   /**

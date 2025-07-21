@@ -3,6 +3,8 @@
 //
 
 export * from './blueprint';
+export * from './context';
+export * from './conversation';
 export * from './extraction';
 export * from './research';
 export * from './session';

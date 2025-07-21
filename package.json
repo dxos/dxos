@@ -20,14 +20,11 @@
     "postinstall": "[ \"$CI\" != \"true\" ] && tsx tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "lint": "moon run :lint -- --fix",
-    "lint:changed": "nx run-many --target=lint --projects=$(pnpm run -w --silent changed-packages) --fix",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "test": "moon run :test",
-    "toolbox": "tsx tools/toolbox/src/main.ts",
-    "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\"",
-    "watch-build": "./node_modules/.bin/nx watch --all -- pnpm -w nx build \"\\$NX_PROJECT_NAME\""
+    "toolbox": "tsx tools/toolbox/src/main.ts"
   },
   "dependencies": {
     "tslib": "^2.8.1"
@@ -128,7 +125,7 @@
     "rollup-plugin-sourcemaps": "^0.6.3",
     "semver": "^7.5.4",
     "serve": "^14.1.2",
-    "storybook": "9.0.15",
+    "storybook": "9.0.17",
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
     "ts-node": "10.9.1",
