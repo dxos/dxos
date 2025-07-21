@@ -2,6 +2,12 @@
 
 import { $, chalk, argv } from 'zx';
 
+const CONFIG = {
+  usernameAlias: {
+    burdon: 'richburdon',
+  },
+};
+
 /**
  * Script to find new TODOs added in the current branch compared to origin/main.
  * Looks for TODOs in the format: // TODO(username): body
@@ -22,6 +28,11 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 const GITHUB_EVENT_NAME = process.env.GITHUB_EVENT_NAME;
 const GITHUB_REF = process.env.GITHUB_REF;
+
+// Process username with alias mapping
+function processUsername(username) {
+  return CONFIG.usernameAlias[username] || username;
+}
 
 // Extract PR number from GitHub context
 async function getPRNumber() {
@@ -62,7 +73,8 @@ function formatTodosAsMarkdown(todos) {
   Object.entries(todosByFile).forEach(([filename, fileTodos]) => {
     markdown += `### 📁 \`${filename}\`\n\n`;
     fileTodos.forEach(({ username, message }) => {
-      markdown += `- **@${username}**: ${message}\n`;
+      const processedUsername = processUsername(username);
+      markdown += `- **@${processedUsername}**: ${message}\n`;
     });
     markdown += '\n';
   });
@@ -227,7 +239,8 @@ try {
 
     // Display todos in a single line format
     todos.forEach(({ filename, username, message }) => {
-      console.log(chalk.gray(`${filename}`) + chalk.yellow(` (${username}): `) + chalk.white(message));
+      const processedUsername = processUsername(username);
+      console.log(chalk.gray(`${filename}`) + chalk.yellow(` (${processedUsername}): `) + chalk.white(message));
     });
   }
 } catch (error) {
