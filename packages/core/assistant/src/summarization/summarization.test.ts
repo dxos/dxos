@@ -79,7 +79,7 @@ const summarizationFn = defineFunction({
       }),
     );
     return Obj.make(DataType.Text, {
-      content: pipe(result[0]?.content[0], (c) => (c?.type === 'text' ? c.text : '')),
+      content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
     });
   },
 });
@@ -137,7 +137,7 @@ const refinementFn = defineFunction({
     );
     return {
       summary: Obj.make(DataType.Text, {
-        content: pipe(result[0]?.content[0], (c) => (c?.type === 'text' ? c.text : '')),
+        content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
       }),
     };
   },
