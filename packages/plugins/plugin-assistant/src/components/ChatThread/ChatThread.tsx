@@ -4,13 +4,13 @@
 
 import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { type Message } from '@dxos/ai';
 import { PublicKey } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
@@ -22,7 +22,7 @@ export type ChatThreadProps = ThemedClassName<{
   space?: Space;
   // TODO(burdon): Replace with context.
   processor?: ChatProcessor;
-  messages?: Message[];
+  messages?: DataType.Message[];
   collapse?: boolean;
 }> &
   Pick<ChatMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
@@ -36,7 +36,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
     const { messages: filteredMessages = [] } = useMemo(() => {
       if (collapse) {
-        return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(messageReducer, {
+        return (messages ?? []).reduce<{ messages: DataType.Message[]; current?: DataType.Message }>(messageReducer, {
           messages: [],
         });
       } else {
