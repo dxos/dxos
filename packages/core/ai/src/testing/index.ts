@@ -9,3 +9,4 @@ export * from './prompts';
 export * from './test-data';
 export * from './test-schema';
 export * from './test-stream';
+export * from './tap';

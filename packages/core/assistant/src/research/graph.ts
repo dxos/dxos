@@ -99,7 +99,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
  */
 // TODO(dmaretskyi): Rename `GraphReadToolkit`.
 export class LocalSearchToolkit extends AiToolkit.make(
-  AiTool.make('search/local_search', {
+  AiTool.make('search_local_search', {
     description: 'Search the local database for information using a vector index',
     parameters: {
       query: Schema.String.annotations({
@@ -112,7 +112,7 @@ export class LocalSearchToolkit extends AiToolkit.make(
 ) {}
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
-  'search/local_search': Effect.fn(function* ({ query }) {
+  search_local_search: Effect.fn(function* ({ query }) {
     const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
@@ -144,7 +144,7 @@ class GraphWriterSchema extends Context.Tag('GraphWriterSchema')<
  */
 export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) => {
   return AiToolkit.make(
-    AiTool.make('graph/writer', {
+    AiTool.make('graph_writer', {
       description: 'Write to the local graph database',
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
@@ -157,11 +157,11 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
 
 export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWriterToolkit>) => {
   const { schema } = Context.get(
-    toolkit.tools['graph/writer'].annotations as Context.Context<GraphWriterSchema>,
+    toolkit.tools['graph_writer'].annotations as Context.Context<GraphWriterSchema>,
     GraphWriterSchema,
   );
   return toolkit.toLayer({
-    'graph/writer': Effect.fn(function* (input) {
+    graph_writer: Effect.fn(function* (input) {
       const { db } = yield* DatabaseService;
       const contextQueue = yield* Effect.serviceOption(ContextQueueService);
       const data = yield* Effect.promise(() =>

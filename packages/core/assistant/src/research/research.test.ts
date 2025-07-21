@@ -8,11 +8,9 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import {
   AiService,
   AiServiceRouter,
-  EdgeAiServiceClient,
-  OllamaAiServiceClient,
-  structuredOutputParser,
+  structuredOutputParser
 } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY, tapHttpErrors } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -20,17 +18,18 @@ import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { createExtractionSchema, getSanitizedSchemaName } from './graph';
-import { researchFn } from './research';
-import { Config, Effect, Layer, ManagedRuntime, Scope } from 'effect';
 import { AnthropicClient } from '@effect/ai-anthropic';
 import { NodeHttpClient } from '@effect/platform-node';
+import { Config, Layer, ManagedRuntime } from 'effect';
+import { createExtractionSchema, getSanitizedSchemaName } from './graph';
+import { researchFn } from './research';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+  transformClient: tapHttpErrors,
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AiServiceLayer = Layer.provide(
