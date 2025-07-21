@@ -2,33 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, identity, Option, SchemaAST } from 'effect';
+import { Context, Effect, identity, Option, Schema, SchemaAST } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
 import type { Obj, Relation } from '@dxos/echo';
-import { Query, Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
+  create,
   EntityKind,
+  getEntityKind,
+  getSchemaDXN,
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-  create,
-  getEntityKind,
-  getSchemaDXN,
   ObjectId,
   ReferenceAnnotationId,
-  type BaseObject,
   RelationSourceDXNId,
-  RelationTargetDXNId,
   RelationSourceId,
+  RelationTargetDXNId,
   RelationTargetId,
+  type BaseObject,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
+import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable } from '@dxos/util';
+import { AiTool, AiToolkit } from '@effect/ai';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -96,33 +97,80 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
 /**
  * Perform vector search in the local database.
  */
-export const createLocalSearchTool = (db: EchoDatabase, queue?: Queue) => {
-  return createTool('search', {
-    name: 'local_search',
+// TODO(dmaretskyi): Rename `GraphReadToolkit`.
+export class LocalSearchToolkit extends AiToolkit.make(
+  AiTool.make('search_local_search', {
     description: 'Search the local database for information using a vector index',
-    schema: Schema.Struct({
+    parameters: {
       query: Schema.String.annotations({
         description: 'The query to search for. Could be a question or a topic or a set of keywords.',
       }),
-    }),
-    execute: async ({ query }) => {
-      const { objects } = await db.query(Query.select(Filter.text(query, { type: 'vector' }))).run();
-      const results = [...objects];
-      if (queue) {
-        const queueObjects = await queue.queryObjects();
-        // TODO(dmaretskyi): Text search on the queue.
-        results.push(...queueObjects);
-      }
-
-      return ToolResult.Success(`
-        <local_context>
-          ${JSON.stringify(results, null, 2)}
-        </local_context>
-        `);
     },
-  });
+    success: Schema.Unknown,
+    failure: Schema.Never,
+  }).addRequirement<DatabaseService>(),
+) {}
+
+export const LocalSearchHandler = LocalSearchToolkit.toLayer({
+  search_local_search: Effect.fn(function* ({ query }) {
+    const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
+    const results = [...objects];
+
+    const contextQueue = yield* Effect.serviceOption(ContextQueueService);
+    if (Option.isSome(contextQueue)) {
+      const queueObjects = yield* Effect.promise(() => contextQueue.value.contextQueue.queryObjects());
+      // TODO(dmaretskyi): Text search on the queue.
+      results.push(...queueObjects);
+    }
+
+    return `
+      <local_context>
+        ${JSON.stringify(results, null, 2)}
+      </local_context>
+      `;
+  }),
+});
+
+/**
+ * Attached as an annotation to the writer tool.
+ */
+class GraphWriterSchema extends Context.Tag('GraphWriterSchema')<
+  GraphWriterSchema,
+  { schema: Schema.Schema.AnyNoContext[] }
+>() {}
+
+/**
+ * Forms typed objects that can be written to the graph database.
+ */
+export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) => {
+  return AiToolkit.make(
+    AiTool.make('graph_writer', {
+      description: 'Write to the local graph database',
+      parameters: createExtractionSchema(schema).fields,
+      success: Schema.Unknown,
+      failure: Schema.Never,
+    })
+      .addRequirement<DatabaseService>()
+      .annotateContext(Context.make(GraphWriterSchema, { schema })),
+  );
 };
 
+export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWriterToolkit>) => {
+  const { schema } = Context.get(
+    toolkit.tools['graph_writer'].annotations as Context.Context<GraphWriterSchema>,
+    GraphWriterSchema,
+  );
+  return toolkit.toLayer({
+    graph_writer: Effect.fn(function* (input) {
+      const { db } = yield* DatabaseService;
+      const contextQueue = yield* Effect.serviceOption(ContextQueueService);
+      const data = yield* Effect.promise(() =>
+        sanitizeObjects(schema, input as any, db, contextQueue.pipe(Option.getOrUndefined)?.contextQueue),
+      );
+      return data as Obj.Any[];
+    }),
+  });
+};
 /**
  * Create a schema for structured data extraction.
  */
@@ -312,26 +360,4 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
         )
       : identity<Schema.Schema.AnyNoContext>,
   );
-};
-
-export const createGraphWriterTool = ({
-  db,
-  queue,
-  schema,
-  onDone = async (x) => x,
-}: {
-  db: EchoDatabase;
-  queue?: Queue;
-  schema: Schema.Schema.AnyNoContext[];
-  onDone?: (data: Obj.Any[]) => Promise<any>;
-}) => {
-  return createTool('graph', {
-    name: 'writer',
-    description: 'Write to the local graph database',
-    schema: createExtractionSchema(schema),
-    execute: async (input) => {
-      const data = await sanitizeObjects(schema, input as any, db, queue);
-      return ToolResult.Success(await onDone(data as Obj.Any[]));
-    },
-  });
 };

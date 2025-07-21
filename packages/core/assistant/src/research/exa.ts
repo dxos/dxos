@@ -5,14 +5,13 @@
 import { Effect, Schema } from 'effect';
 import Exa from 'exa-js';
 
-import { createTool, ToolResult } from '@dxos/ai';
 import { log } from '@dxos/log';
 
-import { SEARCH_RESULTS } from '../testing';
-import { AiTool, AiToolkit } from '@effect/ai';
 import { CredentialsService } from '@dxos/functions';
+import { AiTool, AiToolkit } from '@effect/ai';
+import { SEARCH_RESULTS } from '../testing';
 export class ExaToolkit extends AiToolkit.make(
-  AiTool.make('exa/search', {
+  AiTool.make('exa_search', {
     description: 'Search the web for information',
     parameters: {
       query: Schema.String.annotations({ description: 'The query to search for' }),
@@ -23,7 +22,7 @@ export class ExaToolkit extends AiToolkit.make(
 ) {}
 
 export const LiveExaHandler = ExaToolkit.toLayer({
-  'exa/search': Effect.fn(function* ({ query }) {
+  exa_search: Effect.fn(function* ({ query }) {
     const credential = yield* CredentialsService.getCredential({ service: 'exa.ai' });
     const exa = new Exa(credential.apiKey);
 
@@ -44,7 +43,7 @@ export const LiveExaHandler = ExaToolkit.toLayer({
 });
 
 export const MockExaHandler = ExaToolkit.toLayer({
-  'exa/search': Effect.fn(function* ({ query }) {
+  exa_search: Effect.fn(function* ({ query }) {
     // Find result with closest matching autoprompt using weighted Levenshtein distance
     const result = SEARCH_RESULTS.reduce(
       (closest, current) => {

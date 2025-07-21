@@ -46,6 +46,7 @@
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.22.1",
     "@effect/ai-anthropic": "^0.12.2",
+    "@effect/platform": "^0.88.1",
     "@effect/platform-node": "^0.91.0",
     "@preact/signals-core": "^1.9.0",
     "@xenova/transformers": "^2.17.2",
