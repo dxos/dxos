@@ -10,7 +10,7 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -130,25 +130,27 @@ describe('RepoProxy', () => {
     }
   });
 
-  test.skip('document persists without flush', async () => {
-    const level = createTestLevel();
-
+  test('document persists without flush', async () => {
+    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
     let url: AutomergeUrl;
+
     {
+      const level = createTestLevel(path);
       const { host, dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-
       const clientHandle = clientRepo.create<{ text: string }>({ text });
       url = clientHandle.url;
       await sleep(500); // Wait for the object to be saved.
+      await level.close();
       await host.close();
       await clientRepo.close();
     }
 
     {
+      const level = createTestLevel(path);
       const { dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);

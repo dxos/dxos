@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@automerge/automerge': 3.0.0-beta.4
+  '@automerge/automerge': 3.0.0
   ipfs-utils: 9.0.14
   micromatch: ^4.0.8
   nan: 2.19.0
@@ -2696,11 +2696,11 @@ importers:
   packages/core/echo/echo-db:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2790,8 +2790,8 @@ importers:
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2830,11 +2830,11 @@ importers:
   packages/core/echo/echo-pipeline:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3058,8 +3058,8 @@ importers:
   packages/core/echo/indexing:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4440,8 +4440,8 @@ importers:
   packages/devtools/devtools:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -4823,17 +4823,17 @@ importers:
   packages/e2e/blade-runner:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6059,8 +6059,8 @@ importers:
         specifier: ^1.2.13
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.6)))
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6379,8 +6379,8 @@ importers:
   packages/plugins/plugin-excalidraw:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7266,8 +7266,8 @@ importers:
   packages/plugins/plugin-markdown:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@codemirror/search':
         specifier: ^6.5.6
         version: 6.5.6
@@ -8939,8 +8939,8 @@ importers:
   packages/plugins/plugin-sketch:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9075,8 +9075,8 @@ importers:
   packages/plugins/plugin-space:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -10644,11 +10644,11 @@ importers:
   packages/sdk/client:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10834,11 +10834,11 @@ importers:
   packages/sdk/client-services:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11097,11 +11097,11 @@ importers:
   packages/sdk/migrations:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -12719,8 +12719,8 @@ importers:
   packages/ui/react-ui-editor:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@codemirror/autocomplete':
         specifier: ^6.18.1
         version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
@@ -12855,11 +12855,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -14956,20 +14956,20 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
-    resolution: {integrity: sha512-YnnO6WStkOj7vPEB6B9IdcxBbUHCxAUttePzSbNALNdEchhPZF6PbEQhhddjqfYzX4LnEAoGpkQvVnPop3w4Gg==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
+    resolution: {integrity: sha512-2pvxSaKfS1Lg8QqRlT/+vDmB/mKBxPewFKBdaa1+zTb4SQ87Akmw2qvYsVB2Aw8kZk5W43GkEIrIwsvuoG6l4Q==}
 
-  '@automerge/automerge-repo-network-websocket@2.0.1':
-    resolution: {integrity: sha512-bO1itzPw6z6+rHKRV6ItEOnGReAoEuk9dRbxQPRKZKg+StyowNBLaOl4R4/yVO49roxMRh+OrFYKfEuZ+B/M3w==}
+  '@automerge/automerge-repo-network-websocket@2.0.8':
+    resolution: {integrity: sha512-Q42Oo4TDvCK8V9c8U020lGw8QR/j9iKB9dWENptxzcmVB3jAtLz5wGzT41kpBsJU0ArDTC3xM6SWGBwTahMIog==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
-    resolution: {integrity: sha512-4e7fnA0rwQ8KJSZV7HsntOixgvh+YkW1pLs1h3XGMGRARKvSo+xZ6bcf3D8jzR/BPawpJkeu9BExH585X+UC8w==}
+  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
+    resolution: {integrity: sha512-35YPDes5GMtV4fmw9+JcfXflT21tBXoUSMcFIbw1yUzwAzajpdRnVhf4JmOv+w7An+9bT84L3Bj5JueN5feffA==}
 
-  '@automerge/automerge-repo@2.0.1':
-    resolution: {integrity: sha512-1V8pyX5s8PtyPDKmkdEaK/lSuwc9j1HWRYxiWwx2/7FYshfKjl3+mMTAEemzKrwQNE3f3+0zKlI4gChBebAevg==}
+  '@automerge/automerge-repo@2.0.8':
+    resolution: {integrity: sha512-DP+irpMjbymPWuKVsR6eopLiSEvq/1JlL8IRIBhTsI8RPTKNco3j4+rjTPtKF3UG/EsZydXi541QmRMYEe/A7w==}
 
-  '@automerge/automerge@3.0.0-beta.4':
-    resolution: {integrity: sha512-eI3aGxd2RxhXJevza5LWi9JFb4pmgdWcijrADasJnhwkzXptAMGlhEaJEalesF5Z789DIDA+BJrXOuKNqOp5yg==}
+  '@automerge/automerge@3.0.0':
+    resolution: {integrity: sha512-vp/LrAzOyS4J+YmEKRjnCjCUqN6itzz9nKvPEcSLJuapZXfPmY72TYg0F05DVnLCvGe+sLuVAoVntJT6K0qutQ==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -16151,7 +16151,6 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
-    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 
@@ -33010,15 +33009,15 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.0.1':
+  '@automerge/automerge-repo-network-websocket@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
       cbor-x: 1.5.4
       debug: 4.4.1(supports-color@5.5.0)
       eventemitter3: 5.0.1
@@ -33029,15 +33028,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
+  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.0.1':
+  '@automerge/automerge-repo@2.0.8':
     dependencies:
-      '@automerge/automerge': 3.0.0-beta.4
+      '@automerge/automerge': 3.0.0
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.4.1(supports-color@5.5.0)
@@ -33048,7 +33047,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge@3.0.0-beta.4': {}
+  '@automerge/automerge@3.0.0': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
