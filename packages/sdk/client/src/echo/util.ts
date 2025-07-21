@@ -34,6 +34,7 @@ export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pi
   Schema.annotations({ title: 'EchoObject' }),
 );
 
+// TODO(wittjosiah): This should be `Obj.getSpace` / `Relation.getSpace` / `Ref.getSpace`.
 export const getSpace = (object?: Live<any>): Space | undefined => {
   if (!object) {
     return undefined;

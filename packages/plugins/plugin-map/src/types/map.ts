@@ -4,16 +4,22 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
+import { Obj, Type } from '@dxos/echo';
+import { createViewFromSpace, type CreateViewFromSpaceProps } from '@dxos/schema';
 
-export class MapType extends TypedObject({
-  typename: 'dxos.org/type/Map',
-  version: '0.1.0',
-})({
+export const MapView = Schema.Struct({
   name: Schema.optional(Schema.String),
-  coordinates: Schema.optional(Type.Format.GeoPoint),
-  // Reference to view used to query for map items
-  view: Schema.optional(Type.Ref(DataType.Projection)),
-}) {}
+  locationFieldId: Schema.String,
+}).pipe(Type.Obj({ typename: 'dxos.org/type/MapView', version: '0.1.0' }));
+export type MapView = Schema.Schema.Type<typeof MapView>;
+
+type CreateMapProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
+  name?: string;
+  locationFieldId: string;
+};
+
+export const createMap = async ({ name, locationFieldId, ...props }: CreateMapProps) => {
+  const map = Obj.make(MapView, { name, locationFieldId });
+  const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: map });
+  return { jsonSchema, view };
+};

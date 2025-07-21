@@ -43,7 +43,7 @@ export const DynamicTable = ({
   onRowAction,
   ...props
 }: DynamicTableProps) => {
-  const { projection, table } = useMemo(() => {
+  const { projection, view } = useMemo(() => {
     // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
     const props = getBaseSchema({ typename: name, properties, jsonSchema, schema });
     return makeDynamicTable({ ...props, properties });
@@ -69,8 +69,9 @@ export const DynamicTable = ({
 
   const model = useTableModel({
     rows,
+    view,
+    schema: jsonSchema,
     projection,
-    table,
     features,
     rowActions,
     onCellUpdate: handleCellUpdate,

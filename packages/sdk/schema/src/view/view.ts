@@ -4,18 +4,23 @@
 
 import { Schema } from 'effect';
 
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
 import {
+  FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
   toEffectSchema,
+  TypedObject,
 } from '@dxos/echo-schema';
 import { findAnnotation, type JsonPath } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type Live } from '@dxos/live-object';
+import { live, type Live } from '@dxos/live-object';
 import { stripUndefined } from '@dxos/util';
 
 import { FieldSchema, type FieldType } from './field';
@@ -77,15 +82,22 @@ export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   typename: string;
-  jsonSchema: JsonSchemaType;
+  jsonSchema: JsonSchemaType; // Base schema.
+  overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
   fields?: string[];
 };
 
 /**
- * Create projection from existing schema.
+ * Create view from provided schema.
  */
-export const createView = ({ typename, jsonSchema, presentation, fields: include }: CreateViewProps): Live<View> => {
+export const createView = ({
+  typename,
+  jsonSchema,
+  overrideSchema,
+  presentation,
+  fields: include,
+}: CreateViewProps): Live<View> => {
   const fields: FieldType[] = [];
   if (jsonSchema) {
     const schema = toEffectSchema(jsonSchema);
@@ -126,9 +138,78 @@ export const createView = ({ typename, jsonSchema, presentation, fields: include
       typename,
     },
     projection: {
-      schema: jsonSchema,
+      schema: overrideSchema,
       fields,
     },
     presentation: Ref.make(presentation),
   });
 };
+
+export type CreateViewFromSpaceProps = {
+  client?: Client;
+  space: Space;
+  presentation: Obj.Any;
+  typename?: string;
+  fields?: string[];
+  createInitial?: number;
+};
+
+/**
+ * Create view from a schema in provided space or client.
+ */
+export const createViewFromSpace = async ({
+  client,
+  space,
+  typename,
+  presentation,
+  fields,
+  createInitial = 1,
+}: CreateViewFromSpaceProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
+  if (!typename) {
+    const [schema] = await space.db.schemaRegistry.register([createDefaultSchema()]);
+    typename = schema.typename;
+  } else {
+    createInitial = 0;
+  }
+
+  const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+  const dynamicSchema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+  const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
+  invariant(jsonSchema, `Schema not found: ${typename}`);
+  const schema = staticSchema ?? dynamicSchema;
+  invariant(schema, `Schema not found: ${typename}`);
+
+  Array.from({ length: createInitial }).forEach(() => {
+    space.db.add(live(schema, {}));
+  });
+
+  return {
+    jsonSchema,
+    view: createView({ typename, jsonSchema, presentation, fields }),
+  };
+};
+
+export const createDefaultSchema = () =>
+  TypedObject({
+    typename: `example.com/type/${PublicKey.random().truncate()}`,
+    version: '0.1.0',
+  })({
+    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+    status: Schema.optional(
+      Schema.Literal('todo', 'in-progress', 'done')
+        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+        .annotations({
+          title: 'Status',
+          [PropertyMetaAnnotationId]: {
+            singleSelect: {
+              options: [
+                { id: 'todo', title: 'Todo', color: 'indigo' },
+                { id: 'in-progress', title: 'In Progress', color: 'purple' },
+                { id: 'done', title: 'Done', color: 'amber' },
+              ],
+            },
+          },
+        }),
+    ),
+    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  });

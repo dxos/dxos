@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import { useEffect } from 'react';
 
 import { FormatEnum, ObjectId, setValue, TypedObject, TypeEnum } from '@dxos/echo-schema';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
-import { live } from '@dxos/react-client/echo';
-import { type ProjectionManager } from '@dxos/schema';
+import { type ProjectionModel } from '@dxos/schema';
 
 export const TestSchema = TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
   id: ObjectId,
@@ -32,13 +32,13 @@ export const createItems = (n: number) => {
 };
 
 export type SimulatorProps = {
-  projectionManager: ProjectionManager;
+  projection: ProjectionModel;
   items: any[];
   insertInterval?: number;
   updateInterval?: number;
 };
 
-export const useSimulator = ({ items, projectionManager, insertInterval, updateInterval }: SimulatorProps) => {
+export const useSimulator = ({ items, projection, insertInterval, updateInterval }: SimulatorProps) => {
   useEffect(() => {
     if (!insertInterval) {
       return;
@@ -59,14 +59,14 @@ export const useSimulator = ({ items, projectionManager, insertInterval, updateI
 
     const i = setInterval(() => {
       const rowIdx = Math.floor(Math.random() * items.length);
-      const fields = projectionManager.projection.fields ?? [];
+      const fields = projection.fields ?? [];
       const columnIdx = Math.floor(Math.random() * fields.length);
       const field = fields[columnIdx];
       const item = items[rowIdx];
 
       const {
         props: { type, format },
-      } = projectionManager.getFieldProjection(field.id);
+      } = projection.getFieldProjection(field.id);
 
       if (field) {
         const path = field.path;
@@ -98,5 +98,5 @@ export const useSimulator = ({ items, projectionManager, insertInterval, updateI
     }, updateInterval);
 
     return () => clearInterval(i);
-  }, [items, projectionManager.projection.fields, updateInterval]);
+  }, [items, projection.fields, updateInterval]);
 };

@@ -8,12 +8,13 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 import { KanbanView } from '@dxos/react-ui-kanban';
 import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
@@ -89,21 +90,24 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
-          // TODO(wittjosiah): Remove cast.
-          const views = objects.filter((object) => Obj.instanceOf(KanbanView, Relation.getTarget(object as any)));
+          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
 
           const boardInfo = await Promise.all(
-            views.map(async (view) => {
-              const projection = await view.projection.load();
+            objects.map(async (view) => {
+              const kanban = await view.presentation.load();
+              if (!Obj.instanceOf(KanbanView, kanban)) {
+                return null;
+              }
+
               return {
                 id: fullyQualifiedId(view),
-                typename: projection.query.typename,
+                name: kanban.name ?? 'Unnamed Kanban',
+                typename: view.query.typename,
               };
             }),
           );
 
-          return ToolResult.Success(boardInfo);
+          return ToolResult.Success(boardInfo.filter(isNonNullable));
         },
       }),
       createTool(meta.id, {
@@ -114,22 +118,22 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
-          const view = objects.find((board) => fullyQualifiedId(board) === id);
-          invariant(Obj.instanceOf(DataType.HasView, view));
-          // TODO(wittjosiah): Remove cast.
-          const board = Relation.getTarget(view as any);
-          invariant(Obj.instanceOf(KanbanView, board));
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
-          const projection = await view.projection.load();
-          const typename = projection.query.typename;
+          const kanban = await view.presentation.load();
+          invariant(Obj.instanceOf(KanbanView, kanban));
+
+          const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
           invariant(schema);
 
           return ToolResult.Success({
             schema,
-            columnField: board.columnFieldId,
-            viewFields: projection.fields,
+            columnField: kanban.columnFieldId,
+            viewFields: view.projection.fields,
           });
         },
       }),

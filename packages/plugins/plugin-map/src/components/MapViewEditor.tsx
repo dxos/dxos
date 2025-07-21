@@ -10,23 +10,22 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
+import { type DataType } from '@dxos/schema';
 
-import { type MapType } from '../types';
-import { getLocationProperty, setLocationProperty } from '../util';
+import { type MapView } from '../types';
 
 export const MapSettingsSchema = Schema.Struct({
   coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
 });
 
-type MapViewEditorProps = { map: MapType };
+type MapViewEditorProps = { view: DataType.View };
 
-export const MapViewEditor = ({ map }: MapViewEditorProps) => {
+export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
-  const space = getSpace(map);
-  const currentTypename = useMemo(() => map?.view?.target?.query?.typename, [map?.view?.target?.query?.typename]);
-  const currentCoordinateProperty = useMemo(() => getLocationProperty(map?.view?.target), [map?.view?.target]);
-  const currentSchema = useSchema(client, space, currentTypename);
+  const space = getSpace();
+  const map = view.presentation.target as MapView | undefined;
+  const currentSchema = useSchema(client, space, view.query.typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
 
@@ -70,15 +69,15 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
 
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
-      if (map.view?.target && values.coordinateColumn) {
-        setLocationProperty(map.view.target, values.coordinateColumn);
+      if (map && values.coordinateColumn) {
+        map.locationFieldId = values.coordinateColumn;
       }
     },
     [map],
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: currentTypename, coordinateColumn: currentCoordinateProperty }),
+    () => ({ coordinateSource: view.query.typename, coordinateColumn: map?.locationFieldId }),
     [map],
   );
 
@@ -90,7 +89,7 @@ export const MapViewEditor = ({ map }: MapViewEditorProps) => {
     [schemaOptions, locationFields],
   );
 
-  if (!space || !map.view?.target) {
+  if (!space || !map) {
     return null;
   }
 

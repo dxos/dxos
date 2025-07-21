@@ -17,7 +17,7 @@ import {
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, HasView, ViewTypeToProjection, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2 } from '@dxos/schema';
+import { createDefaultSchema, DataType, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2 } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -37,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, createDefaultSchema, defineObjectForm, SpaceAction } from './types';
+import { CollectionAction, defineObjectForm, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -115,12 +115,6 @@ export const SpacePlugin = ({
             icon: 'ph--database--regular',
           },
         }),
-        contributes(Capabilities.Metadata, {
-          id: Type.getTypename(DataType.Projection),
-          metadata: {
-            icon: 'ph--table--regular',
-          },
-        }),
       ],
     }),
     defineModule({
@@ -167,12 +161,12 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [DataType.Projection, ViewTypeV1, ViewTypeV2, HasView]),
+      activate: () => contributes(ClientCapabilities.Schema, [DataType.View, ViewTypeV1, ViewTypeV2]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2, ViewTypeToProjection]),
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

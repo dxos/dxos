@@ -14,33 +14,30 @@ import { DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-type TableViewEditorProps = { view: DataType.HasView };
+type TableViewEditorProps = { view: DataType.View };
 
 const TableViewEditor = ({ view }: TableViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.projection.target?.query.typename);
+  const schema = useSchema(client, space, view.query.typename);
 
-  const projections = useQuery(space, Filter.type(DataType.Projection));
-  const currentTypename = useMemo(
-    () => view.projection.target?.query?.typename,
-    [view.projection.target?.query?.typename],
-  );
+  const views = useQuery(space, Filter.type(DataType.View));
+  const currentTypename = useMemo(() => view.query?.typename, [view.query?.typename]);
 
   const handleUpdateTypename = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
 
-      const matchingProjections = projections.filter((projection) => projection.query.typename === currentTypename);
-      for (const projection of matchingProjections) {
-        projection.query.typename = typename;
+      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
+      for (const view of matchingViews) {
+        view.query.typename = typename;
       }
 
       schema.updateTypename(typename);
     },
-    [projections, schema],
+    [views, schema],
   );
 
   const handleDelete = useCallback(
@@ -50,7 +47,7 @@ const TableViewEditor = ({ view }: TableViewEditorProps) => {
     [dispatch, view],
   );
 
-  if (!space || !schema || !view.projection.target) {
+  if (!space || !schema) {
     return null;
   }
 
@@ -58,7 +55,7 @@ const TableViewEditor = ({ view }: TableViewEditorProps) => {
     <ViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
-      projection={view.projection.target}
+      view={view}
       onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
     />

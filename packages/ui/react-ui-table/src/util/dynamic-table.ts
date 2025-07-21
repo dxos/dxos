@@ -8,10 +8,10 @@ import { Obj } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import {
-  createProjection,
+  createView,
+  type DataType,
   getSchemaFromPropertyDefinitions,
-  type Projection,
-  ProjectionManager,
+  ProjectionModel,
   type SchemaPropertyDefinition,
 } from '@dxos/schema';
 
@@ -61,25 +61,26 @@ export const makeDynamicTable = ({
   typename: string;
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
-}): { projection: ProjectionManager; table: TableView } => {
-  const projection = createProjection({
+}): { projection: ProjectionModel; view: DataType.View } => {
+  const table = Obj.make(TableView, { sizes: {} });
+  const view = createView({
     typename,
     jsonSchema,
+    presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  const table = Obj.make(TableView, { sizes: {} });
-  const manager = new ProjectionManager(jsonSchema, projection);
-  if (properties && projection.fields) {
-    setProperties(projection, manager, table, properties);
+  const model = new ProjectionModel(jsonSchema, view.projection);
+  if (properties && model.fields) {
+    setProperties(view, model, table, properties);
   }
 
-  return { projection: manager, table };
+  return { projection: model, view };
 };
 
 const setProperties = (
-  projection: Projection,
-  manager: ProjectionManager,
+  view: DataType.View,
+  projection: ProjectionModel,
   table: TableView,
   properties: TablePropertyDefinition[],
 ) => {
@@ -91,8 +92,8 @@ const setProperties = (
       }
 
       if (property.title !== undefined) {
-        const fieldProjection = manager.getFieldProjection(field.id);
-        manager.setFieldProjection({
+        const fieldProjection = projection.getFieldProjection(field.id);
+        projection.setFieldProjection({
           ...fieldProjection,
           props: { ...fieldProjection.props, title: property.title },
         });
@@ -100,7 +101,7 @@ const setProperties = (
 
       if (property.sort) {
         const fieldId = field.id;
-        projection.query.sort = [{ fieldId, direction: property.sort }];
+        view.query.sort = [{ fieldId, direction: property.sort }];
       }
     }
   }

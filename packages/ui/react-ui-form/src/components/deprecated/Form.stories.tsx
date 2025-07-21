@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { live } from '@dxos/live-object';
-import { testData, TestSchema, testProjection, type TestType } from '@dxos/schema/testing';
+import { testData, TestSchema, testView, type TestType } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DeprecatedForm, type DeprecatedFormProps } from './Form';
@@ -40,14 +40,14 @@ type Story = StoryObj<DeprecatedFormProps<TestType>>;
 export const Default: Story = {
   args: {
     object: live(testData),
-    projection: live(testProjection),
+    projection: live(testView).projection,
     schema: TestSchema,
   },
 };
 
 export const Empty: Story = {
   args: {
-    projection: live(testProjection),
+    projection: live(testView).projection,
     schema: TestSchema,
   },
 };
@@ -55,7 +55,7 @@ export const Empty: Story = {
 export const Readonly: Story = {
   args: {
     object: live(testData),
-    projection: live(testProjection),
+    projection: live(testView).projection,
     schema: TestSchema,
     readonly: true,
   },

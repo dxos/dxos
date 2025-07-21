@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Relation, Type } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -22,14 +22,13 @@ import {
   useTableModel,
   useAddRow,
 } from '@dxos/react-ui-table';
-import { type TableView } from '@dxos/react-ui-table/types';
-import { type DataType, ProjectionManager } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
 export type TableContainerProps = {
   role: string;
-  view: DataType.HasView;
+  view: DataType.View;
 };
 
 export const TableContainer = ({ role, view }: TableContainerProps) => {
@@ -38,7 +37,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.projection.target?.query.typename);
+  const schema = useSchema(client, space, view.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -67,15 +66,6 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     [dispatch],
   );
 
-  const projection = useMemo(() => {
-    if (!schema || !view.projection.target) {
-      return;
-    }
-
-    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-    return new ProjectionManager(jsonSchema, view.projection.target);
-  }, [view.projection.target, JSON.stringify(schema)]);
-
   const features: Partial<TableFeatures> = useMemo(
     () => ({
       selection: { enabled: true, mode: 'multiple' },
@@ -85,12 +75,10 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     [],
   );
 
-  // TODO(wittjosiah): Remove cast.
-  const table = Relation.getTarget(view as any) as TableView;
   const model = useTableModel({
     id: view.id,
-    projection,
-    table,
+    view,
+    schema: schema instanceof EchoSchema ? schema.jsonSchema : schema ? Type.toJsonSchema(schema) : undefined,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,

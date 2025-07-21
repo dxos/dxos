@@ -4,9 +4,8 @@
 
 import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
 
-import { type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import {
   type FieldSortType,
   FormatEnum,
@@ -16,6 +15,7 @@ import {
   getSnapshot,
   getSchema,
   toEffectSchema,
+  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -27,17 +27,11 @@ import {
   type DxGridPlanePosition,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import {
-  type DataType,
-  type ProjectionManager,
-  type PropertyType,
-  validateSchema,
-  type ValidationError,
-} from '@dxos/schema';
+import { type DataType, ProjectionModel, type PropertyType, validateSchema, type ValidationError } from '@dxos/schema';
 
 import { type SelectionMode, SelectionModel } from './selection-model';
 import { TableSorting } from './table-sorting';
-import { type TableView } from '../types';
+import { TableView } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -74,14 +68,15 @@ const defaultFeatures: TableFeatures = {
 };
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  id?: string;
-  space?: Space;
-  table: TableView;
-  projection: ProjectionManager;
+  id: string;
+  view: DataType.View;
+  schema: JsonSchemaType;
+  projection?: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
+  onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
   onInsertRow?: (data?: any) => boolean;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
@@ -91,11 +86,10 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _id: string | undefined;
-  private readonly _space: Space | undefined;
-  private readonly _projection: DataType.Projection;
-  private readonly _projectionManager: ProjectionManager;
-  private readonly _table: TableView;
+  private readonly _id: string;
+  private readonly _view: DataType.View;
+  private readonly _projection: ProjectionModel;
+  private _table?: TableView;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -121,9 +115,9 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   constructor({
     id,
-    space,
-    projection: manager,
-    table,
+    view,
+    schema,
+    projection,
     features = {},
     sorting = [],
     pinnedRows = { top: [], bottom: [] },
@@ -137,10 +131,8 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }: TableModelProps<T>) {
     super();
     this._id = id;
-    this._space = space;
-    this._projection = manager.projection;
-    this._projectionManager = manager;
-    this._table = table;
+    this._view = view;
+    this._projection = projection ?? new ProjectionModel(schema, view.projection);
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
@@ -150,7 +142,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, manager);
+    this._sorting = new TableSorting(this._rows, this._view, (fieldId) => this.projection.getFieldProjection(fieldId));
 
     if (sorting.length > 0) {
       const [sort] = sorting;
@@ -167,24 +159,25 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._onRowAction = onRowAction;
   }
 
-  public get id() {
+  public get id(): string {
     return this._id;
   }
 
-  public get space() {
-    return this._space;
+  public get view(): DataType.View {
+    return this._view;
   }
 
-  public get projection() {
+  public get table(): TableView {
+    invariant(this._table, 'Model not initialized');
+    return this._table;
+  }
+
+  public get projection(): ProjectionModel {
     return this._projection;
   }
 
-  public get projectionManager() {
-    return this._projectionManager;
-  }
-
   public get rows(): ReadonlySignal<T[]> {
-    return this._sorting.sortedRows;
+    return this.sorting.sortedRows;
   }
 
   public get features(): TableFeatures {
@@ -194,7 +187,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   /**
    * @reactive
    */
-  public get sorting(): TableSorting<T> | undefined {
+  public get sorting(): TableSorting<T> {
     return this._sorting;
   }
 
@@ -202,11 +195,11 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
    * Gets the row data at the specified display index.
    */
   public getRowAt(displayIndex: number): T | undefined {
-    if (displayIndex < 0 || displayIndex >= this._sorting.sortedRows.value.length) {
+    if (displayIndex < 0 || displayIndex >= this.sorting.sortedRows.value.length) {
       return undefined;
     }
 
-    return this._sorting.sortedRows.value[displayIndex];
+    return this.sorting.sortedRows.value[displayIndex];
   }
 
   public get pinnedRows(): NonNullable<TableModelProps<T>['pinnedRows']> {
@@ -224,7 +217,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   /** @reactive */
   public get isViewDirty(): boolean {
-    return this._sorting.isDirty;
+    return this.sorting.isDirty;
   }
 
   public get rowActions(): TableRowAction[] {
@@ -236,6 +229,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
+    const presentation = await this._view.presentation.load();
+    invariant(Obj.instanceOf(TableView, presentation));
+    this._table = presentation;
+
     this.initializeColumnMeta();
     this.initializeEffects();
     this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
@@ -248,7 +245,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     this._columnMeta = computed(() => {
       const fields = this._projection?.fields ?? [];
       const meta = Object.fromEntries(
-        fields.map((field, index: number) => [index, { size: this._table.sizes[field.path] ?? 256, resizeable: true }]),
+        fields.map((field, index: number) => [index, { size: this.table.sizes[field.path] ?? 256, resizeable: true }]),
       );
 
       return {
@@ -261,7 +258,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   private initializeEffects(): void {
     const rowOrderWatcher = effect(() => {
-      touch(this._sorting.sortedRows.value);
+      touch(this.sorting.sortedRows.value);
       this._onRowOrderChange?.();
     });
     this._ctx.onDispose(rowOrderWatcher);
@@ -277,7 +274,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       for (let row = start.row; row <= end.row; row++) {
         rowEffects.push(
           effect(() => {
-            const obj = this._sorting.sortedRows.value[row];
+            const obj = this.sorting.sortedRows.value[row];
             this._projection?.fields.forEach((field) => touch(getValue(obj, field.path)));
             this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
           }),
@@ -379,7 +376,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   private validateDraftRowData(data: T): ValidationError[] {
-    const schema = toEffectSchema(this._projectionManager.schema);
+    const schema = toEffectSchema(this._projection.baseSchema);
     return validateSchema(schema, data) || [];
   }
 
@@ -458,7 +455,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return '';
     }
 
-    const { props } = this._projectionManager.getFieldProjection(field.id);
+    const { props } = this._projection.getFieldProjection(field.id);
     switch (props.format) {
       case FormatEnum.Ref: {
         if (!field.referencePath) {
@@ -481,7 +478,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     const field = fields[col];
-    const { props } = this._projectionManager.getFieldProjection(field.id);
+    const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
     const isDraftRow = plane === 'frozenRowsEnd';
@@ -534,7 +531,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     }
 
     const field = fields[col];
-    const { props } = this._projectionManager.getFieldProjection(field.id);
+    const { props } = this._projection.getFieldProjection(field.id);
     const transformedValue = editorTextToCellValue(props, value);
 
     // Special handling for Ref format to preserve existing behavior
@@ -623,7 +620,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const newWidth = Math.max(0, width);
       const field = fields[columnIndex];
       if (field) {
-        this._table.sizes[field.path] = newWidth;
+        this.table.sizes[field.path] = newWidth;
       }
     }
   }

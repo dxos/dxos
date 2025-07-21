@@ -4,7 +4,7 @@
 
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref, Relation } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Ref } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
@@ -12,8 +12,8 @@ import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
-import { TableView } from '@dxos/react-ui-table/types';
-import { createProjection, DataType } from '@dxos/schema';
+import { createTable } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -21,14 +21,8 @@ const generator: ValueGenerator = faker as any;
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-const findViewByTypename = async (views: DataType.HasView[], typename: string) => {
-  for (const view of views) {
-    const loadedProjection = await view.projection.load();
-    if (loadedProjection?.query?.typename === typename) {
-      return view;
-    }
-  }
-  return undefined;
+const findViewByTypename = async (views: DataType.View[], typename: string) => {
+  return views.find((view) => view.query.typename === typename);
 };
 
 export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
@@ -43,19 +37,12 @@ export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): Object
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
-    const { objects: views } = await space.db.query(Filter.type(DataType.HasView)).run();
+    const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
     const view = await findViewByTypename(views, type.typename);
     if (!view) {
       const name = type.typename.split('/').pop() ?? type.typename;
-      const projection = createProjection({ typename: type.typename, jsonSchema: schema.jsonSchema });
-      const table = Obj.make(TableView, { name, sizes: {} });
-      space.db.add(
-        Relation.make(DataType.HasView, {
-          [Relation.Source]: schema.storedSchema,
-          [Relation.Target]: table,
-          projection: Ref.make(projection),
-        }),
-      );
+      const { view } = await createTable({ space, typename: type.typename, name });
+      space.db.add(view);
     }
 
     return objects;

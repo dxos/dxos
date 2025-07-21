@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MapType, MapAction, CreateMapSchema } from './types';
+import { MapView, MapAction, CreateMapSchema } from './types';
 
 export const MapPlugin = () =>
   definePlugin(meta, [
@@ -32,7 +32,7 @@ export const MapPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: MapType.typename,
+          id: MapView.typename,
           metadata: {
             icon: 'ph--compass--regular',
           },
@@ -45,7 +45,7 @@ export const MapPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: MapType,
+            objectSchema: MapView,
             formSchema: CreateMapSchema,
             hidden: true,
             getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),

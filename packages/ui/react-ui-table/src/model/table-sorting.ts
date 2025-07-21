@@ -7,7 +7,7 @@ import orderBy from 'lodash.orderby';
 
 import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type { PropertyType, FieldType, ProjectionManager } from '@dxos/schema';
+import type { PropertyType, FieldType, DataType, FieldProjection } from '@dxos/schema';
 
 import { type TableRow } from './table-model';
 
@@ -49,12 +49,13 @@ export class TableSorting<T extends TableRow> {
 
   constructor(
     rows: Signal<T[]>,
-    private readonly _projection: ProjectionManager,
+    private readonly _view: DataType.View,
+    private readonly _getFieldProjection: (fieldId: string) => FieldProjection,
   ) {
     this._rows = rows;
     this._isDirty = computed(() => {
       const local = this._localSort.value;
-      const viewSort = this._projection.projection.query.sort?.[0];
+      const viewSort = this._view.query.sort?.[0];
       if (local?.type === 'cleared') {
         return viewSort !== undefined;
       }
@@ -82,7 +83,7 @@ export class TableSorting<T extends TableRow> {
       return local.sort;
     }
 
-    return this._projection.projection.query.sort?.[0];
+    return this._view.query.sort?.[0];
   }
 
   /**
@@ -105,7 +106,7 @@ export class TableSorting<T extends TableRow> {
   }
 
   public toggleSort(fieldId: string): void {
-    if (!this._projection || !this.sorting || this.sorting.fieldId !== fieldId) {
+    if (!this.sorting || this.sorting.fieldId !== fieldId) {
       return;
     }
 
@@ -126,11 +127,11 @@ export class TableSorting<T extends TableRow> {
   }
 
   public save(): void {
-    if (this._projection && this._localSort.value !== undefined) {
+    if (this._localSort.value !== undefined) {
       if (this._localSort.value.type === 'active') {
-        this._projection.projection.query.sort = [this._localSort.value.sort];
+        this._view.query.sort = [this._localSort.value.sort];
       } else {
-        this._projection.projection.query.sort = [];
+        this._view.query.sort = [];
       }
       this._localSort.value = undefined;
     }
@@ -144,16 +145,16 @@ export class TableSorting<T extends TableRow> {
     return computed(() => {
       this._displayToDataIndex.clear();
       const sort = this.sorting;
-      if (!sort || !this._projection) {
+      if (!sort) {
         return this._rows.value;
       }
 
-      const field = this._projection.projection.fields.find((f) => f.id === sort.fieldId);
+      const field = this._view.projection.fields.find((f) => f.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }
 
-      const { props } = this._projection.getFieldProjection(field.id);
+      const { props } = this._getFieldProjection(field.id);
 
       const dataWithIndices = this._rows.value.map((item, index) => {
         const sortValue = this.getSortValue(props, field, item);

@@ -24,7 +24,6 @@ import {
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
-  createViewNode,
   rxFromQuery,
   SHARED,
   SPACES,
@@ -483,7 +482,7 @@ export default (context: PluginContext) => {
     createExtension({
       id: `${SPACE_PLUGIN}/schema-views`,
       connector: (node) => {
-        let query: QueryResult<DataType.HasView> | undefined;
+        let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
@@ -495,17 +494,17 @@ export default (context: PluginContext) => {
             }),
             Option.map(({ space, schema }) => {
               if (!query) {
-                query = space.db.query(Query.select(Filter.ids(schema.id)).sourceOf(DataType.HasView));
+                query = space.db.query(Filter.type(DataType.View, { query: { typename: schema.typename } }));
               }
-              const relations = get(rxFromQuery(query));
-              return relations
-                .map((relation) =>
+              return get(rxFromQuery(query))
+                .map((view) =>
                   get(
                     rxFromSignal(() =>
-                      createViewNode({
+                      createObjectNode({
+                        object: view,
                         space,
-                        relation,
                         resolve,
+                        droppable: false,
                       }),
                     ),
                   ),

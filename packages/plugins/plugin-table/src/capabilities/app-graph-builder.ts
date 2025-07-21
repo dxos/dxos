@@ -8,15 +8,15 @@ import { Option, pipe } from 'effect';
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { createExtension } from '@dxos/plugin-graph';
 import { TableView } from '@dxos/react-ui-table/types';
-import { Projection } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    // TODO(burdon): Factor out/make generic?
+    // TODO(burdon): Factor out to space plugin.
     createExtension({
       id: `${meta.id}/schema`,
       connector: (node) =>
@@ -40,31 +40,14 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-    // TODO(wittjosiah): Factor out/make generic?
+    // TODO(wittjosiah): Factor out to space plugin.
     createExtension({
       id: `${meta.id}/selected-objects`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => {
-              if (!node.data || !Obj.isObject(node.data)) {
-                return Option.none();
-              }
-
-              const subject = node.data;
-              // TODO(ZaymonFC): Unify the path of view between table and kanban.
-              const hasValidView = get(
-                rxFromSignal(() => {
-                  // TODO(dmaretskyi): There should be a type instanceof check
-                  const hasValidView = Obj.instanceOf(Projection, (subject as any).view?.target);
-                  const hasValidCardView = Obj.instanceOf(Projection, (subject as any).cardView?.target);
-                  return hasValidView || hasValidCardView;
-                }),
-              );
-
-              return hasValidView ? Option.some(node) : Option.none();
-            }),
+            Option.flatMap((node) => (Obj.instanceOf(DataType.View, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),

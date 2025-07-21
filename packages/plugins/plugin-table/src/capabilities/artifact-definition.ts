@@ -8,12 +8,13 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj, Query, Relation } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 import { TableAction } from '../types';
@@ -101,24 +102,23 @@ export default () => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
           // TODO(wittjosiah): This query needs to be able to filter to just the table view, post-filtering is awkward.
-          const { objects } = await space.db.query(Filter.type(DataType.HasView)).run();
+          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
           const tableInfo = await Promise.all(
-            objects
-              // TODO(wittjosiah): Remove this cast.
-              .filter((object) => Obj.instanceOf(TableView, Relation.getTarget(object as any)))
-              .map(async (hasView) => {
-                const projection = await hasView.projection.load();
-                // TODO(wittjosiah): Remove this cast.
-                const table = Relation.getTarget(hasView as any) as TableView;
-                return {
-                  id: fullyQualifiedId(table),
-                  name: table.name ?? 'Unnamed Table',
-                  typename: projection.query.typename,
-                };
-              }),
+            objects.map(async (view) => {
+              const presentation = await view.presentation.load();
+              if (!Obj.instanceOf(TableView, presentation)) {
+                return null;
+              }
+
+              return {
+                id: fullyQualifiedId(view),
+                name: presentation.name ?? 'Unnamed Table',
+                typename: view.query.typename,
+              };
+            }),
           );
 
-          return ToolResult.Success(tableInfo);
+          return ToolResult.Success(tableInfo.filter(isNonNullable));
         },
       }),
       createTool(meta.id, {
@@ -130,12 +130,16 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
-          const projection = await hasView.projection.load();
-          const typename = projection.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
+
+          const typename = view.query.typename;
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
           return ToolResult.Success(schema);
         },
       }),
@@ -153,12 +157,16 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
-          const projection = await hasView.projection.load();
-          const typename = projection.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
+
+          const typename = view.query.typename;
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
           const { objects: rows } = await space.db.query(Filter.type(schema)).run();
           return ToolResult.Success(rows);
         },
@@ -179,12 +187,16 @@ export default () => {
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
           const space = extensions.space;
-          const hasView = await space.db.query(Query.select(Filter.ids(id)).targetOf(DataType.HasView)).first();
-          const projection = await hasView.projection.load();
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
           // Get schema for validation.
-          const typename = projection.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
+          const typename = view.query.typename;
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
+
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
@@ -196,7 +208,7 @@ export default () => {
 
           // Add rows sequentially.
           for (const row of data) {
-            const intent = createIntent(TableAction.AddRow, { view: hasView, data: row });
+            const intent = createIntent(TableAction.AddRow, { view, data: row });
             const { error } = await extensions.dispatch(intent);
             if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to add rows to table');

@@ -9,8 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -25,11 +24,11 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanView, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ProjectionManager } from '@dxos/schema';
+import { DataType, ProjectionModel } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { initializeKanban } from '../testing';
 import { translations } from '../translations';
+import { createKanban } from '../types';
 
 faker.seed(0);
 
@@ -42,17 +41,17 @@ const rollOrg = () => ({
   description: faker.lorem.paragraph(),
   image: faker.image.url(),
   website: faker.internet.url(),
-  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
+  status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id as DataType.Organization['status'],
 });
 
 const StorybookKanban = () => {
   const client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const views = useQuery(space, Filter.type(DataType.HasView));
-  const [view, setView] = useState<DataType.HasView>();
-  const [projection, setProjection] = useState<ProjectionManager>();
-  const schema = useSchema(client, space, view?.projection.target?.query.typename);
+  const views = useQuery(space, Filter.type(DataType.View));
+  const [view, setView] = useState<DataType.View>();
+  const [projection, setProjection] = useState<ProjectionModel>();
+  const schema = useSchema(client, space, view?.query.typename);
 
   useEffect(() => {
     if (views.length && !view) {
@@ -62,19 +61,18 @@ const StorybookKanban = () => {
   }, [views]);
 
   useEffect(() => {
-    if (view?.projection.target && schema) {
+    if (view?.projection && schema) {
       const jsonSchema = Type.toJsonSchema(schema);
-      setProjection(new ProjectionManager(jsonSchema, view.projection.target));
+      setProjection(new ProjectionModel(jsonSchema, view.projection));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
     //  @dmaretskyi? Once resolved, update in multiple places (e.g., storybooks).
-  }, [view?.projection.target, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
+  }, [view?.projection, schema, JSON.stringify(schema ? Type.toJsonSchema(schema) : {})]);
 
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  // TODO(wittjosiah): Remove cast.
-  const kanban = Relation.getTarget(view as any) as KanbanView;
+  const kanban = view?.presentation.target as KanbanView | undefined;
   const model = useKanbanModel({
     kanban,
     schema,
@@ -104,12 +102,12 @@ const StorybookKanban = () => {
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      invariant(view?.projection.target);
+      invariant(view);
 
       schema.updateTypename(typename);
-      view.projection.target.query.typename = typename;
+      view.query.typename = typename;
     },
-    [view?.projection.target, schema],
+    [view, schema],
   );
 
   if (!schema || !view) {
@@ -120,19 +118,17 @@ const StorybookKanban = () => {
     <div className='grow grid grid-cols-[1fr_350px]'>
       {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
-        {view.projection.target && (
-          <ViewEditor
-            registry={space?.db.schemaRegistry}
-            schema={schema}
-            projection={view.projection.target}
-            onTypenameChanged={handleTypenameChanged}
-            onDelete={(fieldId: string) => {
-              console.log('[ViewEditor]', 'onDelete', fieldId);
-            }}
-          />
-        )}
+        <ViewEditor
+          registry={space?.db.schemaRegistry}
+          schema={schema}
+          view={view}
+          onTypenameChanged={handleTypenameChanged}
+          onDelete={(fieldId: string) => {
+            console.log('[ViewEditor]', 'onDelete', fieldId);
+          }}
+        />
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ cardView: view.projection.target, cardSchema: schema }, null, 2)}
+          {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -156,33 +152,25 @@ const meta: Meta<StoryProps> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
+        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, DataType.HasView, KanbanView],
+          types: [DataType.Organization, DataType.Person, DataType.View, KanbanView],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { projection, kanban, schema } = await initializeKanban({
-              space,
+            const { view } = await createKanban({
               client,
+              space,
               typename: DataType.Organization.typename,
               initialPivotColumn: 'status',
             });
-            const hasView = Relation.make(DataType.HasView, {
-              // TODO(wittjosiah): Remove cast.
-              [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,
-              [Relation.Target]: kanban,
-              projection: Ref.make(projection),
-            });
-            space.db.add(kanban);
-            space.db.add(hasView);
+            space.db.add(view);
 
-            if (schema) {
-              // TODO(burdon): Replace with sdk/schema/testing.
-              Array.from({ length: 80 }).map(() => {
-                return space.db.add(Obj.make(schema, rollOrg()));
-              });
-            }
+            // TODO(burdon): Replace with sdk/schema/testing.
+            Array.from({ length: 80 }).map(() => {
+              return space.db.add(Obj.make(DataType.Organization, rollOrg()));
+            });
           },
         }),
         StorybookLayoutPlugin(),
@@ -190,7 +178,6 @@ const meta: Meta<StoryProps> = {
         SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
-        ThemePlugin({ tx: defaultTx }),
       ],
     }),
   ],

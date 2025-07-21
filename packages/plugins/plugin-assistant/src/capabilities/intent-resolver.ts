@@ -14,16 +14,16 @@ import { Assistant } from '../types';
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: AssistantAction.OnSpaceCreated,
+      intent: Assistant.OnSpaceCreated,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: collection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Assistant.Chat.typename }),
           );
           rootCollection.objects.push(Ref.make(collection));
 
-          const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+          const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
           space.db.add(chat);
         }),
     }),

@@ -12,13 +12,13 @@ import {
   createIntent,
   LayoutAction,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { initializeProjection } from '@dxos/react-ui-table';
-import { TableView } from '@dxos/react-ui-table/types';
-import { DataType, ProjectionManager } from '@dxos/schema';
+import { createTable } from '@dxos/react-ui-table';
+import { ProjectionModel } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
@@ -30,29 +30,20 @@ export default (context: PluginContext) =>
       resolve: ({ space, schema }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object, relation } = yield* dispatch(
-            createIntent(TableAction.Create, { space, typename: schema.typename }),
-          );
-          space.db.add(object);
-          space.db.add(relation);
+          const { object } = yield* dispatch(createIntent(TableAction.Create, { space, typename: schema.typename }));
+          yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object, hidden: true }));
 
           return {
-            intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(relation)] })],
+            intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
           };
         }),
     }),
     createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
-        const { schema, projection } = await initializeProjection({ space, typename });
-        const table = Obj.make(TableView, { name, sizes: {} });
-        const hasView = Relation.make(DataType.HasView, {
-          // TODO(wittjosiah): Remove cast.
-          [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,
-          [Relation.Target]: table,
-          projection: Ref.make(projection),
-        });
-        return { data: { object: table, relation: hasView } };
+        const client = context.getCapability(ClientCapabilities.Client);
+        const { view } = await createTable({ client, space, typename, name });
+        return { data: { object: view } };
       },
     }),
     createResolver({
@@ -60,21 +51,22 @@ export default (context: PluginContext) =>
       resolve: async ({ view, data }) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.projection.target?.query.typename);
-        const schema = space.db.schemaRegistry.getSchema(view.projection.target.query.typename);
+        invariant(view.query.typename);
+        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
         invariant(schema);
-        space.db.add(Obj.make(schema, data));
+        const object = Obj.make(schema, data);
+        return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };
       },
     }),
     createResolver({
       intent: TableAction.DeleteColumn,
-      resolve: ({ view, fieldId, deletionData }, undo) => {
+      resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.projection.target?.query.typename);
-        const schema = space.db.schemaRegistry.getSchema(view.projection.target.query.typename);
+        invariant(view.query.typename);
+        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
         invariant(schema);
-        const projection = new ProjectionManager(schema.jsonSchema, view.projection.target);
+        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {

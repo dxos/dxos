@@ -8,9 +8,10 @@ import { Option, pipe } from 'effect';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createExtension } from '@dxos/plugin-graph';
+import { DataType } from '@dxos/schema';
 
 import { MAP_PLUGIN } from '../meta';
-import { MapType, MapAction } from '../types';
+import { MapAction, MapView } from '../types';
 
 export default (context: PluginContext) =>
   contributes(
@@ -21,10 +22,14 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(MapType, node.data) ? Option.some(node) : Option.none())),
-            Option.map(() => [
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.View, node.data) && Obj.instanceOf(MapView, node.data.presentation.target)
+                ? Option.some(node)
+                : Option.none(),
+            ),
+            Option.map((node) => [
               {
-                id: `${MAP_PLUGIN}/toggle`,
+                id: `${node.id}/toggle-map`,
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   await dispatch(createIntent(MapAction.Toggle));

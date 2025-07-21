@@ -3,17 +3,13 @@
 //
 
 import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Ref, Relation } from '@dxos/echo';
-import { type EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { type KanbanView } from '@dxos/react-ui-kanban';
-import { DataType, ProjectionManager } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
-import { initializeKanban } from '../testing';
-import { KanbanAction } from '../types';
+import { createKanban, KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -21,35 +17,25 @@ export default (context: PluginContext) =>
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { kanban, projection, schema } = await initializeKanban({
+        const { view } = await createKanban({
           client,
           space,
           name,
           typename,
           initialPivotColumn,
         });
-        const hasView = Relation.make(DataType.HasView, {
-          // TODO(wittjosiah): Remove cast.
-          [Relation.Source]: (schema as unknown as EchoSchema).storedSchema,
-          [Relation.Target]: kanban,
-          projection: Ref.make(projection),
-        });
-        return { data: { object: kanban, relation: hasView } };
+        return { data: { object: view } };
       },
     }),
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        // TODO(wittjosiah): Remove cast.
-        const kanban = Relation.getTarget(view as any) as KanbanView;
-        const projection = await view.projection.load();
-
-        const schema = getSpace(kanban)?.db.schemaRegistry.getSchema(projection.query.typename!);
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(view.query.typename!);
         invariant(schema);
-        const projectionManager = new ProjectionManager(schema.jsonSchema, projection);
+        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
         if (!undo) {
-          const { deleted, index } = projectionManager.deleteFieldProjection(fieldId);
+          const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
               message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
@@ -58,7 +44,7 @@ export default (context: PluginContext) =>
           };
         } else if (undo && deletionData) {
           const { field, props, index } = deletionData;
-          projectionManager.setFieldProjection({ field, props }, index);
+          projection.setFieldProjection({ field, props }, index);
         }
       },
     }),

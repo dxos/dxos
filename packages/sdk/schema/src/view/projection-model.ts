@@ -15,7 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot } from '@dxos/live-object';
+import { getSnapshot, type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
@@ -44,23 +44,36 @@ export class ProjectionModel {
   private _fieldProjections = computed(() => this._projection.fields.map((field) => this.getFieldProjection(field.id)));
   private _hiddenProperties = computed(() => this._projection.hiddenFields?.map((field) => field.path as string) ?? []);
 
-  // TOOD(burdon): Should this take an instane of S.S.AnyNoContext and derive the JsonSchemaType itselft (and watch for reactivity)?
+  // TOOD(burdon): Take an instance of S.S.AnyNoContext and derive the JsonSchemaType (and watch for reactivity)?
   constructor(
-    /** Possibly reactive object. */
     // TODO(burdon): Pass in boolean readonly?
-    private readonly _schema: JsonSchemaType,
-    private readonly _projection: Projection,
+    private readonly _baseSchema: Live<JsonSchemaType>,
+    private readonly _projection: Live<Projection>,
   ) {
     this.normalizeView();
     this.migrateSingleSelectStoredFormat();
   }
 
-  get projection() {
+  /**
+   * The base schema of the data being projected.
+   */
+  get baseSchema() {
+    return this._baseSchema;
+  }
+
+  /**
+   * The core projection data type.
+   */
+  get data(): Live<Projection> {
     return this._projection;
   }
 
-  get schema() {
-    return this._schema;
+  /**
+   * The fields in the projection.
+   * @reactive
+   */
+  get fields() {
+    return this._projection.fields;
   }
 
   /**
@@ -87,12 +100,12 @@ export class ProjectionModel {
    * Get projection of View fields and JSON schema property annotations.
    */
   getFieldProjection(fieldId: string): FieldProjection {
-    invariant(this._schema.properties);
+    invariant(this._baseSchema.properties);
     const field = this._projection.fields.find((field) => field.id === fieldId);
     invariant(field, `invalid field: ${fieldId}`);
     invariant(field.path.indexOf('.') === -1);
 
-    const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? { format: FormatEnum.None };
+    const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
     const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
@@ -140,7 +153,7 @@ export class ProjectionModel {
    * @param fieldId The ID of the field to get projection for
    */
   tryGetFieldProjection(fieldId: string): FieldProjection | undefined {
-    invariant(this._schema.properties);
+    invariant(this._baseSchema.properties);
     const field = this._projection.fields.find((field) => field.id === fieldId);
     if (!field) {
       return undefined;
@@ -187,8 +200,8 @@ export class ProjectionModel {
 
   showFieldProjection(property: JsonProp): void {
     untracked(() => {
-      invariant(this._schema.properties);
-      invariant(property in this._schema.properties);
+      invariant(this._baseSchema.properties);
+      invariant(property in this._baseSchema.properties);
 
       const existingField = this._projection.fields.find((field) => field.path === property);
       if (existingField) {
@@ -285,24 +298,24 @@ export class ProjectionModel {
         }
 
         invariant(type !== TypeEnum.Ref);
-        this._schema.properties ??= {};
-        this._schema.properties[property] = { type, format, ...jsonProperty, ...rest };
+        this._baseSchema.properties ??= {};
+        this._baseSchema.properties[property] = { type, format, ...jsonProperty, ...rest };
         if (isRename) {
-          delete this._schema.properties[sourcePropertyName!];
+          delete this._baseSchema.properties[sourcePropertyName!];
 
           // Update propertyOrder array if it exists
-          if (this._schema.propertyOrder) {
-            const orderIndex = this._schema.propertyOrder.indexOf(sourcePropertyName!);
+          if (this._baseSchema.propertyOrder) {
+            const orderIndex = this._baseSchema.propertyOrder.indexOf(sourcePropertyName!);
             if (orderIndex !== -1) {
-              this._schema.propertyOrder[orderIndex] = property;
+              this._baseSchema.propertyOrder[orderIndex] = property;
             }
           }
 
           // Update required array if it exists
-          if (this._schema.required) {
-            const requiredIndex = this._schema.required.indexOf(sourcePropertyName!);
+          if (this._baseSchema.required) {
+            const requiredIndex = this._baseSchema.required.indexOf(sourcePropertyName!);
             if (requiredIndex !== -1) {
-              this._schema.required[requiredIndex] = property;
+              this._baseSchema.required[requiredIndex] = property;
             }
           }
         }
@@ -328,12 +341,12 @@ export class ProjectionModel {
       }
 
       // Delete property.
-      invariant(this._schema.properties, 'Schema properties must exist');
+      invariant(this._baseSchema.properties, 'Schema properties must exist');
       invariant(snapshot.field.path, 'Field path must exist');
-      delete this._schema.properties[snapshot.field.path];
+      delete this._baseSchema.properties[snapshot.field.path];
 
       // check that it's actually gone
-      invariant(!this._schema.properties[snapshot.field.path], 'Field path still exists');
+      invariant(!this._baseSchema.properties[snapshot.field.path], 'Field path still exists');
 
       return { deleted: snapshot, index: fieldIndex };
     });
@@ -347,7 +360,7 @@ export class ProjectionModel {
   private normalizeView(): void {
     untracked(() => {
       // Get all properties from the schema.
-      const schemaProperties = new Set(Object.keys(this._schema.properties ?? {}));
+      const schemaProperties = new Set(Object.keys(this._baseSchema.properties ?? {}));
 
       // 1. Process view.fields - keep ID fields, remove other fields not in schema.
       for (let i = this._projection.fields.length - 1; i >= 0; i--) {
@@ -395,10 +408,10 @@ export class ProjectionModel {
    * Migrate legacy single-select format to new format.
    */
   private migrateSingleSelectStoredFormat(): void {
-    invariant(this._schema.properties);
+    invariant(this._baseSchema.properties);
 
     for (const field of this._projection.fields) {
-      const jsonProperty: JsonSchemaType = this._schema.properties[field.path] ?? {
+      const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? {
         format: FormatEnum.None,
       };
       const { format: schemaFormat = FormatEnum.None, oneOf } = jsonProperty;

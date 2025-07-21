@@ -9,8 +9,8 @@ import React, { useMemo, useEffect } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
-import { ProjectionManager } from '@dxos/schema';
-import { TestSchema, testProjection } from '@dxos/schema/testing';
+import { ProjectionModel } from '@dxos/schema';
+import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { FieldEditor, type FieldEditorProps } from './FieldEditor';
@@ -20,7 +20,7 @@ import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 // Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;
-  projection: ProjectionManager;
+  projection: ProjectionModel;
 };
 
 type StoryProps = FieldEditorProps;
@@ -71,8 +71,8 @@ type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    projection: new ProjectionManager(createEchoSchema(TestSchema).jsonSchema, testProjection),
-    field: testProjection.fields[0],
+    projection: new ProjectionModel(createEchoSchema(TestSchema).jsonSchema, testView.projection),
+    field: testView.projection.fields[0],
   },
   parameters: { controls: { disabled: true } },
 };

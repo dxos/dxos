@@ -11,17 +11,17 @@ import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
-import { type Projection } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
-type RowDetailsPanelProps = { objectId: string; projection: Projection };
+type RowDetailsPanelProps = { objectId: string; view: DataType.View };
 
-const ObjectDetailsPanel = ({ objectId, projection }: RowDetailsPanelProps) => {
+const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
   const client = useClient();
-  const space = getSpace(projection);
-  const schema = useSchema(client, space, projection.query?.typename);
+  const space = getSpace(view);
+  const schema = useSchema(client, space, view.query?.typename);
 
   // NOTE(ZaymonFC): Since selection is currently a set, the order of these objects may not
   //  match the order in the selected context.

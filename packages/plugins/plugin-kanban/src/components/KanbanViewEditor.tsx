@@ -5,29 +5,27 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Relation, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor, Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { KanbanSettingsSchema, type KanbanView } from '@dxos/react-ui-kanban';
-import { DataType, ProjectionManager } from '@dxos/schema';
+import { DataType, ProjectionModel } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
-type KanbanViewEditorProps = { view: DataType.HasView };
+type KanbanViewEditorProps = { view: DataType.View };
 
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const projection = view.projection.target;
-  // TODO(wittjosiah): Remove cast.
-  const kanban = Relation.getTarget(view as any) as KanbanView;
-  const currentTypename = useMemo(() => projection?.query?.typename, [projection?.query?.typename]);
+  const kanban = view.presentation.target as KanbanView;
+  const currentTypename = useMemo(() => view.query.typename, [view.query.typename]);
   const schema = useSchema(client, space, currentTypename);
-  const views = useQuery(space, Filter.type(DataType.Projection));
+  const views = useQuery(space, Filter.type(DataType.View));
 
   const handleUpdateTypename = useCallback(
     (newTypename: string) => {
@@ -51,14 +49,14 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
     [dispatch, view],
   );
 
-  const projectionManager = useMemo(() => {
-    if (projection && schema) {
+  const projection = useMemo(() => {
+    if (schema) {
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      return new ProjectionManager(jsonSchema, projection);
+      return new ProjectionModel(jsonSchema, view.projection);
     }
-  }, [projection, JSON.stringify(schema)]);
+  }, [view.projection, JSON.stringify(schema)]);
 
-  const fieldProjections = projectionManager?.getFieldProjections() || [];
+  const fieldProjections = projection?.getFieldProjections() || [];
   const selectFields = fieldProjections
     .filter((field) => field.props.format === FormatEnum.SingleSelect)
     .map(({ field }) => ({ value: field.id, label: field.path }));
@@ -94,7 +92,7 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
       <ViewEditor
         registry={space.db.schemaRegistry}
         schema={schema}
-        projection={projection}
+        view={view}
         onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
         onDelete={Type.isMutable(schema) ? handleDelete : undefined}
         outerSpacing={false}

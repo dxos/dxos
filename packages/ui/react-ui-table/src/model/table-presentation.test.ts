@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
-import { createProjection, ProjectionManager } from '@dxos/schema';
+import { createView } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
@@ -97,8 +97,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const projection = createProjection({ typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const manager = new ProjectionManager(schema.jsonSchema, projection);
   const table = Obj.make(TableView, { sizes: {} });
-  return new TableModel({ id: projection.id, projection: manager, table, ...props });
+  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema, presentation: table });
+  return new TableModel({ id: view.id, view, schema: schema.jsonSchema, ...props });
 };

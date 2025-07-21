@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 
 import { EchoSchema } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { TableView } from '@dxos/react-ui-table/types';
 import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
@@ -39,14 +38,13 @@ export namespace TableAction {
       CreateTableSchema,
     ),
     output: Schema.Struct({
-      object: TableView,
-      relation: DataType.HasView,
+      object: DataType.View,
     }),
   }) {}
 
   export class DeleteColumn extends Schema.TaggedClass<DeleteColumn>()(`${TABLE_ACTION}/delete-column`, {
     input: Schema.Struct({
-      view: DataType.HasView, // TODO(wittjosiah): HasView<StoredSchema, TableView>?
+      view: DataType.View,
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(
@@ -64,7 +62,7 @@ export namespace TableAction {
 
   export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {
     input: Schema.Struct({
-      view: DataType.HasView, // TODO(wittjosiah): HasView<StoredSchema, TableView>?
+      view: DataType.View,
       data: Schema.Any,
     }),
     output: Schema.Void,

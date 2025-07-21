@@ -4,23 +4,28 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+// TODO(burdon): Remove dependency on echo-db.
+import { type SchemaRegistry } from '@dxos/echo-db';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
 import { type TableModel, type ModalController } from '../../model';
 
-type ColumnSettingsProps = { model?: TableModel; modals: ModalController; onNewColumn: () => void };
+type ColumnSettingsProps = {
+  registry?: SchemaRegistry;
+  model?: TableModel;
+  modals: ModalController;
+  onNewColumn: () => void;
+};
 
-export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsProps) => {
+export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnSettingsProps) => {
   const [newField, setNewField] = useState<FieldType>();
   const state = modals.state.value;
 
-  const space = model?.space;
-
   useEffect(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && model?.projection) {
-      setNewField(model.projectionManager.createFieldProjection());
+      setNewField(model.projection.createFieldProjection());
       requestAnimationFrame(() => {
         onNewColumn();
       });
@@ -47,11 +52,11 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
 
   const handleCancel = useCallback(() => {
     if (state?.type === 'columnSettings' && state.mode.type === 'create' && newField) {
-      model?.projectionManager.deleteFieldProjection(newField.id);
+      model?.projection.deleteFieldProjection(newField.id);
     }
   }, [model?.projection, state, newField]);
 
-  if (!model?.projectionManager || !model.projection || !field) {
+  if (!model?.projection || !field) {
     return null;
   }
 
@@ -62,9 +67,9 @@ export const ColumnSettings = ({ model, modals, onNewColumn }: ColumnSettingsPro
         <Popover.Content classNames='md:is-64'>
           <Popover.Viewport>
             <FieldEditor
-              projection={model.projectionManager}
+              projection={model.projection}
               field={field}
-              registry={space?.db.schemaRegistry}
+              registry={registry}
               onSave={handleSave}
               onCancel={handleCancel}
             />
