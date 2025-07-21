@@ -5,9 +5,11 @@
 import { effect } from '@preact/signals-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Board as BoardComponent, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
@@ -20,6 +22,7 @@ export type BoardContainerProps = {
 };
 
 export const BoardContainer = ({ role, board }: BoardContainerProps) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const controller = useRef<BoardController>(null);
 
   // TODO(burdon): Create effect utility for reactive arrays.
@@ -38,16 +41,22 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
   }, [board.items]);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
-    (position = { x: 0, y: 0 }) => {
+    async (position = { x: 0, y: 0 }) => {
       const space = getSpace(board);
       invariant(space);
-      // TODO(burdon): Create from menu/intent?
-      const obj = space.db.add(Obj.make(Type.Expando, {}));
-      board.items.push(Ref.make(obj));
-      board.layout.cells[obj.id] = { ...position, width: 1, height: 1 };
-      controller.current?.center(position);
+      await dispatch(
+        createIntent(SpaceAction.OpenCreateObject, {
+          target: space,
+          navigable: false,
+          onCreateObject: (object: Obj.Any) => {
+            board.items.push(Ref.make(object));
+            board.layout.cells[object.id] = { ...position, width: 1, height: 1 };
+            controller.current?.center(position);
+          },
+        }),
+      );
     },
-    [board, controller],
+    [board, controller, dispatch],
   );
 
   // TODO(burdon): Use intents so can be undone.
