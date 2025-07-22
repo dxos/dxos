@@ -3,11 +3,11 @@
 //
 
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
+import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { Effect, Layer } from 'effect';
 
 import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 
 const LmStudioClient = OpenAiClient.layer({
   apiUrl: 'http://localhost:1234/v1',
@@ -18,7 +18,8 @@ export const AiServiceRouter = Layer.effect(
   AiService,
   Effect.gen(function* () {
     const anthropicClient = Layer.succeed(AnthropicClient.AnthropicClient, yield* AnthropicClient.AnthropicClient);
-    // TODO(dmaretskyi): If I push this into requirements this will conflict with the real OpenAiClient.
+
+    // TODO(dmaretskyi): If this is pushed into requirements this will conflict with the real OpenAiClient.
     const lmStudioClient = Layer.succeed(
       OpenAiClient.OpenAiClient,
       yield* OpenAiClient.OpenAiClient.pipe(Effect.provide(LmStudioClient)),

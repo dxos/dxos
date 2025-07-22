@@ -5,7 +5,7 @@
 import { type Layer } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
+import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
