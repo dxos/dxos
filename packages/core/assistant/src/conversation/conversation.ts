@@ -23,7 +23,6 @@ export interface ConversationRunOptions<Tools extends AiTool.Any> {
 }
 
 export type ConversationOptions = {
-  serviceContainer: ServiceContainer;
   queue: Queue<DataType.Message | ContextBinding>;
 };
 
@@ -33,7 +32,6 @@ export type ConversationOptions = {
  * Backed by a Queue.
  */
 export class Conversation {
-  private readonly _serviceContainer: ServiceContainer;
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
@@ -48,7 +46,6 @@ export class Conversation {
   public readonly context: ContextBinder;
 
   constructor(options: ConversationOptions) {
-    this._serviceContainer = options.serviceContainer;
     this._queue = options.queue;
     this.context = new ContextBinder(this._queue);
   }

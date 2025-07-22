@@ -83,8 +83,8 @@ export class ChatProcessor {
   public readonly messages: Signal<DataType.Message[]> = computed(() => {
     const messages = [...this._pending.value];
     if (this._block.value && messages.length) {
-      const { content, ...rest } = messages.pop()!;
-      const message = { ...rest, content: [...content, this._block.value] };
+      const { blocks, ...rest } = messages.pop()!;
+      const message = { ...rest, blocks: [...blocks, this._block.value] };
       messages.push(message);
     }
 
@@ -164,33 +164,33 @@ export class ChatProcessor {
         this._pending.value = [...this._pending.value, message];
       });
 
-      session.toolStatusReport.on(({ message, status }) => {
-        const msg = this._pending.peek().find((m) => m.id === message.id);
-        const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-        if (!toolUse) {
-          return;
-        }
+      // session.toolStatusReport.on(({ message, status }) => {
+      //   const msg = this._pending.peek().find((m) => m.id === message.id);
+      //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+      //   if (!toolUse) {
+      //     return;
+      //   }
 
-        const block = msg?.content.find(
-          (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-        );
-        if (block) {
-          this._pending.value = this._pending.value.map((m) => {
-            if (m.id === message.id) {
-              return {
-                ...m,
-                content: m.content.map((block) =>
-                  block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
-                ),
-              };
-            }
+      //   const block = msg?.content.find(
+      //     (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+      //   );
+      //   if (block) {
+      //     this._pending.value = this._pending.value.map((m) => {
+      //       if (m.id === message.id) {
+      //         return {
+      //           ...m,
+      //           content: m.content.map((block) =>
+      //             block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
+      //           ),
+      //         };
+      //       }
 
-            return m;
-          });
-        } else {
-          log.warn('no block for status report');
-        }
-      });
+      //       return m;
+      //     });
+      //   } else {
+      //     log.warn('no block for status report');
+      //   }
+      // });
     });
 
     try {
