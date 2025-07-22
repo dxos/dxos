@@ -121,7 +121,11 @@ const DefaultStory = ({
         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
       });
       executor = new FunctionExecutor(
-        new ServiceContainer().setServices({ ai: { client: AiService }, database: { db: space!.db } }),
+        new ServiceContainer().setServices({
+          // TODO(burdon): !!!
+          // ai: { client: AiService },
+          // database: { db: space!.db },
+        }),
       );
     }
 

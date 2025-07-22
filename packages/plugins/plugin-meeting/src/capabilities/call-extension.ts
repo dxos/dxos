@@ -92,7 +92,7 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  const executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: aiClient } }));
+  const executor = new FunctionExecutor(new ServiceContainer());
 
   return async (message: DataType.Message) => {
     const { objects } = await space.db
