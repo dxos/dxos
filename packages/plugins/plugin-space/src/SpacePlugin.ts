@@ -141,13 +141,15 @@ export const SpacePlugin = ({
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: DataType.StoredSchema,
-            formSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
+            formSchema: SpaceAction.StoredSchemaForm,
             getIntent: (props, options) =>
-              createIntent(SpaceAction.AddSchema, {
-                space: options.space,
-                name: props.name,
-                schema: createDefaultSchema(),
-              }),
+              props.typename
+                ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
+                : createIntent(SpaceAction.AddSchema, {
+                    space: options.space,
+                    name: props.name,
+                    schema: createDefaultSchema(),
+                  }),
           }),
         ),
       ],
@@ -161,12 +163,35 @@ export const SpacePlugin = ({
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [DataType.View, ViewTypeV1, ViewTypeV2]),
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [
+          DataType.View,
+          ViewTypeV1,
+          ViewTypeV2,
+          DataType.Event,
+          DataType.Organization,
+          DataType.Person,
+          DataType.Project,
+          DataType.Task,
+        ]),
     }),
     defineModule({
       id: `${meta.id}/module/migration`,
       activatesOn: ClientEvents.SetupMigration,
       activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/whitelist-schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        // TODO(wittjosiah): Better support these schemas.
+        contributes(ClientCapabilities.SchemaWhiteList, [
+          DataType.Event,
+          DataType.Organization,
+          DataType.Person,
+          DataType.Project,
+          DataType.Task,
+        ]),
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

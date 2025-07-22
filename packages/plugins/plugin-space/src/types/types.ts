@@ -217,6 +217,23 @@ export namespace SpaceAction {
     output: Schema.Boolean,
   }) {}
 
+  export const StoredSchemaForm = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    typename: Schema.optional(
+      Schema.String.annotations({
+        [TypenameAnnotationId]: ['unused-static'],
+      }),
+    ),
+  });
+
+  export class UseStaticSchema extends Schema.TaggedClass<UseStaticSchema>()(`${SPACE_ACTION}/use-static-schema`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      typename: Schema.String,
+    }),
+    output: Schema.Struct({}),
+  }) {}
+
   export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
     input: Schema.Struct({
       space: SpaceSchema,

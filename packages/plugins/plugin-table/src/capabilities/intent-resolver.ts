@@ -12,7 +12,7 @@ import {
   createIntent,
   LayoutAction,
 } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -28,7 +28,9 @@ export default (context: PluginContext) =>
       resolve: ({ space, schema }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object } = yield* dispatch(createIntent(TableAction.Create, { space, typename: schema.typename }));
+          const { object } = yield* dispatch(
+            createIntent(TableAction.Create, { space, typename: Type.getTypename(schema) }),
+          );
           yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object, hidden: true }));
 
           return {

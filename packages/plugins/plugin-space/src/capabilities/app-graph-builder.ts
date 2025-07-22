@@ -3,7 +3,7 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Array, Option, pipe } from 'effect';
+import { Array, Option, pipe, Schema } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
@@ -24,6 +24,8 @@ import {
   constructSpaceActions,
   constructSpaceNode,
   createObjectNode,
+  createStaticSchemaActions,
+  createStaticSchemaNode,
   rxFromQuery,
   SHARED,
   SPACES,
@@ -478,6 +480,74 @@ export default (context: PluginContext) => {
       },
     }),
 
+    // Static schema records.
+    createExtension({
+      id: `${SPACE_PLUGIN}/static-schemas`,
+      connector: (node) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(DataType.QueryCollection, node.data) &&
+              node.data.query.typename === DataType.StoredSchema.typename
+                ? Option.some(node.data)
+                : Option.none(),
+            ),
+            Option.flatMap((collection) => {
+              const space = getSpace(collection);
+              return space?.properties.staticRecords ? Option.some(space) : Option.none();
+            }),
+            Option.map((space) => {
+              return get(rxFromSignal(() => (space.properties.staticRecords ?? []) as string[]))
+                .map((typename) =>
+                  client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename),
+                )
+                .filter(isNonNullable)
+                .map((schema) => createStaticSchemaNode({ schema, space }));
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
+      },
+    }),
+
+    // Create static schema actions.
+    createExtension({
+      id: `${SPACE_PLUGIN}/static-schema-actions`,
+      actions: (node) => {
+        let query: QueryResult<DataType.View> | undefined;
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => {
+              const space = isSpace(node.properties.space) ? node.properties.space : undefined;
+              return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
+            }),
+            Option.map(({ space, schema }) => {
+              if (!query) {
+                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
+                query = space.db.query(Filter.type(DataType.View));
+              }
+
+              const views = get(rxFromQuery(query));
+              const filteredViews = get(
+                rxFromSignal(() =>
+                  // TODO(wittjosiah): Remove cast.
+                  views.filter((view) => view.query.typename === Type.getTypename(schema as Type.Obj.Any)),
+                ),
+              );
+              const deletable = filteredViews.length === 0;
+
+              // TODO(wittjosiah): Remove cast.
+              return createStaticSchemaActions({ schema: schema as Type.Obj.Any, space, deletable });
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
+      },
+    }),
+
     // Create nodes for schema views.
     createExtension({
       id: `${SPACE_PLUGIN}/schema-views`,
@@ -487,8 +557,8 @@ export default (context: PluginContext) => {
           pipe(
             get(node),
             Option.flatMap((node) => {
-              const space = getSpace(node.data);
-              return space && Obj.instanceOf(DataType.StoredSchema, node.data)
+              const space = getSpace(node.data) ?? (isSpace(node.properties.space) ? node.properties.space : undefined);
+              return space && (Obj.instanceOf(DataType.StoredSchema, node.data) || Schema.isSchema(node.data))
                 ? Option.some({ space, schema: node.data })
                 : Option.none();
             }),
@@ -497,8 +567,11 @@ export default (context: PluginContext) => {
                 // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
                 query = space.db.query(Filter.type(DataType.View));
               }
+
+              // TODO(wittjosiah): Remove cast.
+              const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(rxFromQuery(query))
-                .filter((view) => view.query.typename === schema.typename)
+                .filter((view) => view.query.typename === typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>

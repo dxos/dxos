@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
+
 import { type AnyIntentChain, defineCapability, type Label } from '@dxos/app-framework';
-import { type EchoSchema } from '@dxos/echo-schema';
 import { type Space } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 import { type Position, type DeepReadonly } from '@dxos/util';
@@ -21,7 +22,7 @@ export namespace SpaceCapabilities {
   export type OnSpaceCreated = (params: { space: Space; rootCollection: DataType.Collection }) => AnyIntentChain;
   export const OnSpaceCreated = defineCapability<OnSpaceCreated>(`${SPACE_PLUGIN}/capability/on-space-created`);
 
-  export type OnSchemaAdded = (params: { space: Space; schema: EchoSchema }) => AnyIntentChain;
+  export type OnSchemaAdded = (params: { space: Space; schema: Schema.Schema.AnyNoContext }) => AnyIntentChain;
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${SPACE_PLUGIN}/capability/on-schema-added`);
 
   export const ObjectForm = defineCapability<ObjectForm<any>>(`${SPACE_PLUGIN}/capability/object-form`);

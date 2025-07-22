@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { EchoSchema } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType, TypenameAnnotationId } from '@dxos/schema';
 
@@ -25,7 +24,8 @@ export namespace TableAction {
   export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
     input: Schema.Struct({
       space: SpaceSchema,
-      schema: Schema.instanceOf(EchoSchema),
+      // TODO(wittjosiah): Schema for schema?
+      schema: Schema.Any,
     }),
     output: Schema.Void,
   }) {}

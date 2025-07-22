@@ -252,7 +252,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
 
         const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
         const whitelistedTypenames = useMemo(
-          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => type.typename))),
+          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => Type.getTypename(type)))),
           [schemaWhitelists],
         );
 
@@ -263,7 +263,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
               objectForms
                 .map((form) => Type.getTypename(form.objectSchema))
                 // TODO(wittjosiah): Remove.
-                .filter((typename) => !OMIT.includes(typename)),
+                .filter((typename) => !OMIT.includes(typename) && !typename.endsWith('View')),
             ),
           [objectForms],
         );
@@ -271,13 +271,18 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const fixed = client.graph.schemaRegistry.schemas.filter((schema) => {
           const limitedStatic =
             annotation.includes('limited-static') && whitelistedTypenames.has(Type.getTypename(schema));
+          const unusedStatic =
+            annotation.includes('unused-static') &&
+            whitelistedTypenames.has(Type.getTypename(schema)) &&
+            !space.properties.staticRecords?.includes(Type.getTypename(schema));
           const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || objectForm;
+          return annotation.includes('static') || limitedStatic || unusedStatic || objectForm;
         });
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
             ...(annotation.includes('limited-static') ||
+            annotation.includes('unused-static') ||
             annotation.includes('static') ||
             annotation.includes('object-form')
               ? fixed.map((schema) => Type.getTypename(schema))
@@ -288,10 +293,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
 
         const options = useMemo(
           () =>
-            typenames.map((typename) => ({
-              value: typename,
-              label: t('typename label', { ns: typename, defaultValue: typename }),
-            })),
+            typenames
+              .map((typename) => ({
+                value: typename,
+                label: t('typename label', { ns: typename, defaultValue: typename }),
+              }))
+              .toSorted((a, b) => a.label.localeCompare(b.label)),
           [t, typenames],
         );
 

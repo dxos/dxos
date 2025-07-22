@@ -73,9 +73,16 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     [],
   );
 
+  const jsonSchema = useMemo(() => {
+    if (schema instanceof EchoSchema) {
+      return schema.jsonSchema;
+    }
+    return schema ? Type.toJsonSchema(schema) : undefined;
+  }, [schema]);
+
   const model = useTableModel({
     view,
-    schema: schema instanceof EchoSchema ? schema.jsonSchema : schema ? Type.toJsonSchema(schema) : undefined,
+    schema: jsonSchema,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,

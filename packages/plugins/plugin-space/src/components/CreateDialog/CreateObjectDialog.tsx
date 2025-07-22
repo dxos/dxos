@@ -74,11 +74,7 @@ export const CreateObjectDialog = ({
 
         const space = isSpace(target) ? target : getSpace(target);
         invariant(space, 'Missing space');
-        const { object, relation } = yield* dispatch(form.getIntent(data, { space }));
-        if (isLiveObject(relation)) {
-          yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object: relation, hidden: true }));
-        }
-
+        const { object } = yield* dispatch(form.getIntent(data, { space }));
         if (isLiveObject(object) && !Obj.instanceOf(DataType.StoredSchema, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));

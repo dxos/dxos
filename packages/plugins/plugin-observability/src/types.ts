@@ -116,6 +116,13 @@ export namespace ObservabilityAction {
         }),
       }),
       Schema.Struct({
+        name: Schema.Literal('space.schema.use'),
+        properties: Schema.Struct({
+          spaceId: Type.SpaceId,
+          typename: Schema.String,
+        }),
+      }),
+      Schema.Struct({
         name: Schema.Literal('space.schema.add'),
         properties: Schema.Struct({
           spaceId: Type.SpaceId,

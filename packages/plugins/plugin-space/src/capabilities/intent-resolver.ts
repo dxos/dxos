@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -321,6 +321,44 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       },
     }),
     createResolver({
+      intent: SpaceAction.UseStaticSchema,
+      resolve: async ({ space, typename }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const schema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+        invariant(schema, `Schema not found: ${typename}`);
+
+        if (!space.properties.staticRecords) {
+          space.properties.staticRecords = [];
+        }
+
+        if (!space.properties.staticRecords.includes(typename)) {
+          space.properties.staticRecords.push(typename);
+        }
+
+        await context.activatePromise(SpaceEvents.SchemaAdded);
+        const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+
+        return {
+          data: {},
+          intents: [
+            ...schemaAddedIntents,
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.schema.use',
+                    properties: {
+                      spaceId: space.id,
+                      typename: Type.getTypename(schema),
+                    },
+                  }),
+                ]
+              : []),
+          ],
+        };
+      },
+    }),
+    createResolver({
       intent: SpaceAction.AddSchema,
       resolve: async ({ space, name, schema: schemaInput }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
@@ -379,47 +417,6 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
       },
     }),
-    // TODO(wittjosiah): What happens to the views when a schema is deleted?
-    //   Only allow a schema to be deleted if it has no views.
-    // createResolver({
-    //   intent: SpaceAction.AddView,
-    //   resolve: ({ space, name, schema, view }) =>
-    //     Effect.gen(function* () {
-    //       const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-
-    //       yield* context.activate(SpaceEvents.AddView);
-    //       for (const onAddView of context.getCapabilities(SpaceCapabilities.OnAddView)) {
-    //         const projection = createProjection({ name, typename: schema.typename, jsonSchema: schema.jsonSchema });
-    //         yield* dispatch(
-    //           createIntent(SpaceAction.AddObject, {
-    //             target: space,
-    //             object: projection,
-    //             hidden: true,
-    //           }),
-    //         );
-    //         const view = yield* onAddView({ space, projection });
-
-    //         const { relation } = yield* dispatch(
-    //           createIntent(SpaceAction.AddRelation, {
-    //             space,
-    //             schema: HasView,
-    //             // TODO(wittjosiah): Remove this cast.
-    //             source: schema.storedSchema as any,
-    //             target: view,
-    //             fields: { projection },
-    //           }),
-    //         );
-    //       }
-
-    //       return {
-    //         data: {
-    //           id: view.id,
-    //           object: view,
-    //           relation,
-    //         },
-    //       };
-    //     }),
-    // }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
       resolve: ({ target, typename, navigable = true, onCreateObject }) => {

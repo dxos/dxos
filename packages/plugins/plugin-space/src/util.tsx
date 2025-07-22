@@ -356,6 +356,71 @@ export const constructSpaceActions = ({
   return actions;
 };
 
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
+  return {
+    id: `${space.id}/${Type.getTypename(schema)}`,
+    type: `${SPACE_PLUGIN}/static-schema`,
+    data: schema,
+    properties: {
+      label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
+      icon: 'ph--database--regular',
+      role: 'branch',
+      canDrop: () => false,
+      space,
+    },
+  };
+};
+
+export const createStaticSchemaActions = ({
+  schema,
+  space,
+  deletable,
+}: {
+  schema: Type.Obj.Any;
+  space: Space;
+  deletable: boolean;
+}) => {
+  const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
+
+  const actions: NodeArg<ActionData>[] = [
+    {
+      id: getId(SpaceAction.RenameObject._tag),
+      type: ACTION_TYPE,
+      data: async (params?: InvokeParams) => {
+        throw new Error('Not implemented');
+      },
+      properties: {
+        label: ['rename object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        icon: 'ph--pencil-simple-line--regular',
+        disabled: true,
+        disposition: 'list-item',
+        testId: 'spacePlugin.renameObject',
+      },
+    },
+    {
+      id: getId(SpaceAction.RemoveObjects._tag),
+      type: ACTION_TYPE,
+      data: async () => {
+        const index = space.properties.staticRecords.findIndex(
+          (typename: string) => typename === Type.getTypename(schema),
+        );
+        if (index > -1) {
+          space.properties.staticRecords.splice(index, 1);
+        }
+      },
+      properties: {
+        label: ['delete object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        icon: 'ph--trash--regular',
+        disposition: 'list-item',
+        disabled: !deletable,
+        testId: 'spacePlugin.deleteObject',
+      },
+    },
+  ];
+
+  return actions;
+};
+
 export const createObjectNode = ({
   space,
   object,
