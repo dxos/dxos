@@ -9,13 +9,13 @@ import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
-import { FunctionType, type Services } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
+import { ChatProcessor, type ChatServices, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
@@ -24,7 +24,7 @@ type UseChatProcessorProps = {
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: Assistant.Chat;
-  services?: Layer.Layer<Services>;
+  services?: Layer.Layer<ChatServices>;
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
   /** @deprecated */

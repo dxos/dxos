@@ -8,7 +8,6 @@ import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Message } from '@dxos/ai';
 import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
@@ -20,6 +19,7 @@ import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { type ChatProcessor, useContextProvider, useBlueprints } from '../../hooks';
@@ -55,7 +55,7 @@ type ChatContextValue = {
   space: Space;
   chat: Assistant.Chat;
   processor: ChatProcessor;
-  messages: Message[];
+  messages: DataType.Message[];
 
   /** @deprecated Remove and replace with context. */
   artifact?: Expando;
@@ -80,11 +80,11 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
   const space = getSpace(chat);
 
   // Messages.
-  const queue = useQueue<Message>(chat?.queue.dxn);
+  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const messages = useMemo(
     () =>
       dedupeWith(
-        [...(queue?.objects?.filter(Obj.instanceOf(Message)) ?? []), ...(processor?.messages.value ?? [])],
+        [...(queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? []), ...(processor?.messages.value ?? [])],
         (a, b) => a.id === b.id,
       ),
     [queue?.objects, processor?.messages.value],

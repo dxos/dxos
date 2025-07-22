@@ -45,7 +45,7 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
-import { useChatProcessor, useServices } from '../hooks';
+import { useChatProcessor, useChatServices } from '../hooks';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -74,7 +74,7 @@ const ChatContainer = () => {
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
-  const services = useServices({ space });
+  const services = useChatServices({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const processor = useChatProcessor({
     chat,

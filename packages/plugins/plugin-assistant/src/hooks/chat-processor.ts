@@ -20,7 +20,7 @@ import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 
-import { type Services } from './useServices';
+import { type ChatServices } from './useChatServices';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -35,7 +35,7 @@ type RequestOptions = {
 };
 
 export type ChatProcessorOptions = {
-  services: Layer.Layer<Services>;
+  services?: Layer.Layer<ChatServices>;
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
   artifacts?: readonly ArtifactDefinition[];
@@ -43,7 +43,7 @@ export type ChatProcessorOptions = {
   blueprintRegistry?: BlueprintRegistry;
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
-const defaultOptions: ChatProcessorOptions = {
+const defaultOptions: Partial<ChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
