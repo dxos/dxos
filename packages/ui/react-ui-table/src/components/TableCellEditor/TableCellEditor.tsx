@@ -79,8 +79,8 @@ export const TableValueEditor = ({
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
-    fieldProjection?.props.format === FormatEnum.SingleSelect ||
-    fieldProjection?.props.format === FormatEnum.MultiSelect
+    fieldProjection?.props.format === FormatEnum.SingleSelect
+    // TODO(thure): Support `FormatEnum.MultiSelect`
   ) {
     return (
       <FormCellEditor
