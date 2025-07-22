@@ -7,7 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState, useRef } from 'react';
 
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Board, type BoardController, type BoardContentProps, type BoardRootProps } from './Board';
@@ -19,11 +19,10 @@ type TestItem = {
   title: string;
 };
 
-type StoryProps = BoardRootProps & BoardContentProps;
+type StoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
 
 const meta: Meta<StoryProps> = {
   title: 'ui/react-ui-board/Board',
-  component: Board.Root,
   render: ({ layout: _layout, items: _items, ...props }) => {
     const [items, setItems] = useState(_items ?? []);
     const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
@@ -33,7 +32,7 @@ const meta: Meta<StoryProps> = {
     const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
       (position = { x: 0, y: 0 }) => {
         const id = items.length.toString();
-        setItems([...items, { id }]);
+        setItems([...items, { id, title: 'New item' }]);
         setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));
         controller.current?.center(position);
       },
@@ -72,8 +71,14 @@ const meta: Meta<StoryProps> = {
         <Board.Controls classNames='absolute top-3 left-3 z-10 min-bs-0 is-auto' />
         <Board.Container>
           <Board.Viewport>
-            <Board.Background />
-            <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
+            <Board.Backdrop />
+            <Board.Content>
+              {items.map((item: TestItem, index: number) => (
+                <Board.Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }}>
+                  <Card.Heading>{item.title}</Card.Heading>
+                </Board.Cell>
+              ))}
+            </Board.Content>
           </Board.Viewport>
         </Board.Container>
       </Board.Root>

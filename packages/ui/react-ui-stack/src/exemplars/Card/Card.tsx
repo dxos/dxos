@@ -39,9 +39,13 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
 const CardSurfaceRoot = ({ role = 'never', children }: PropsWithChildren<{ role?: string }>) => {
-  if (['popover', 'card--kanban'].includes(role)) {
+  if (['popover', 'card--kanban', 'card--board'].includes(role)) {
     return (
-      <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
+      <div
+        className={
+          role === 'popover' ? 'popover-card-width' : ['card--kanban', 'card--board'].includes(role) ? 'contents' : ''
+        }
+      >
         {children}
       </div>
     );

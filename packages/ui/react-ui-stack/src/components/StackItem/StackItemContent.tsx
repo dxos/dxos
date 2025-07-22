@@ -62,7 +62,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
           'group grid grid-cols-[100%] density-coarse',
           stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
-          toolbar && '[&_.dx-toolbar]:relative [&_.dx-toolbar]:border-be [&_.dx-toolbar]:border-subduedSeparator',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           role === 'section' &&
             toolbar &&
             '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',

@@ -15,6 +15,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type ComponentPropsWithoutRef,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -22,9 +23,9 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Cell, type CellProps } from './Cell';
+import { BoardCell, type BoardCellProps } from './BoardCell';
 import { type BoardGeometry as BoardGrid, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
-import { type HasId, type BoardLayout, type Size, type Position } from './types';
+import { type BoardLayout, type Size, type Position } from './types';
 import { translationKey } from '../../translations';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
@@ -35,6 +36,9 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag edges to resize.
+
+// TODO(thure): This does not conform to the subcomponent patterns established elsewhere. This needs to be refactored to use standard local naming.
+// TODO(thure): IIRC we decided to deprecate iterator patterns e.g. as in `react-ui-list`. Any canonical iterating-for-rendering should be demonstrated in Stories. This should be refactored to just render `children`.
 
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
 const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
@@ -71,11 +75,11 @@ const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>
 // NOTE: The Root is headless, which allows the Controls and Container to be in different subtrees.
 //
 
-type RootProps = PropsWithChildren<
+type BoardRootProps = PropsWithChildren<
   Partial<Pick<BoardContextValue, 'readonly' | 'layout' | 'grid' | 'onSelect' | 'onDelete' | 'onMove' | 'onAdd'>>
 >;
 
-const Root = forwardRef<BoardController, RootProps>(
+const BoardRoot = forwardRef<BoardController, BoardRootProps>(
   (
     { children, readonly, layout = defaultLayout, grid = defaultGrid, onSelect, onDelete, onMove, onAdd },
     forwardedRef,
@@ -135,18 +139,18 @@ const Root = forwardRef<BoardController, RootProps>(
   },
 );
 
-Root.displayName = 'Board.Root';
+BoardRoot.displayName = 'Board.Root';
 
 //
 // Container
 //
 
-type ContainerProps = ThemedClassName<PropsWithChildren>;
+type BoardContainerProps = ThemedClassName<PropsWithChildren>;
 
-const Container = ({ classNames, children }: ContainerProps) => {
+const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useResizeDetector({ targetRef: containerRef });
-  const { bounds, grid, center } = useBoardContext(Container.displayName);
+  const { bounds, grid, center } = useBoardContext(BoardContainer.displayName);
 
   const [mounted, setMounted] = useState(false);
 
@@ -191,16 +195,16 @@ const Container = ({ classNames, children }: ContainerProps) => {
   );
 };
 
-Container.displayName = 'Board.Container';
+BoardContainer.displayName = 'Board.Container';
 
 //
 // Viewport
 //
 
-type ViewportProps = ThemedClassName<PropsWithChildren>;
+type BoardViewportProps = ThemedClassName<PropsWithChildren>;
 
-const Viewport = ({ classNames, children }: ViewportProps) => {
-  const { bounds, zoom } = useBoardContext(Viewport.displayName);
+const BoardViewport = ({ classNames, children }: BoardViewportProps) => {
+  const { bounds, zoom } = useBoardContext(BoardViewport.displayName);
   return (
     <div
       className={mx(
@@ -219,40 +223,32 @@ const Viewport = ({ classNames, children }: ViewportProps) => {
   );
 };
 
-Viewport.displayName = 'Board.Viewport';
+BoardViewport.displayName = 'Board.Viewport';
 
 //
 // Content
 //
 
-type ContentProps<T extends HasId = any> = ThemedClassName<
-  {
-    items?: T[];
-  } & Pick<CellProps, 'getTitle'>
->;
+type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-const Content = <T extends HasId = any>({ classNames, items, ...props }: ContentProps<T>) => {
-  const { layout } = useBoardContext(Viewport.displayName);
-
+const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
   return (
     <div role='none' className={mx(classNames)}>
-      {items?.map((item, index) => (
-        <Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }} {...props} />
-      ))}
+      {children}
     </div>
   );
 };
 
-Content.displayName = 'Board.Content';
+BoardContent.displayName = 'Board.Content';
 
 //
-// Background
+// Backdrop
 //
 
-type BackgroundProps = {};
+type BoardBackdropProps = {};
 
-const Background = () => {
-  const { grid: board, layout, onAdd } = useBoardContext(Background.displayName);
+const BoardBackdropProps = () => {
+  const { grid: board, layout, onAdd } = useBoardContext(BoardBackdropProps.displayName);
 
   const cells = useMemo(() => {
     const cells: { position: Position; rect: Rect }[] = [];
@@ -268,7 +264,7 @@ const Background = () => {
   return (
     <div className='absolute inset-0'>
       {cells.map(({ position, rect }, index) => (
-        <CellDropTarget
+        <BoardDropTarget
           key={index}
           position={position}
           rect={rect}
@@ -280,15 +276,15 @@ const Background = () => {
   );
 };
 
-Background.displayName = 'Board.Background';
+BoardBackdropProps.displayName = 'Board.Backdrop';
 
-type CellDropTargetProps = {
+type BoardDropTargetProps = {
   position: Position;
   rect: Rect;
   onClick?: () => void;
 };
 
-const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
+const BoardDropTarget = ({ position, rect, onClick }: BoardDropTargetProps) => {
   const { t } = useTranslation(translationKey);
 
   const [active, setActive] = useState(false);
@@ -340,12 +336,12 @@ const CellDropTarget = ({ position, rect, onClick }: CellDropTargetProps) => {
 // Controls
 //
 
-type ControlsProps = ThemedClassName;
+type BoardControlsProps = ThemedClassName;
 
 // TODO(burdon): Create variant that can be housed outside of provider?
-const Controls = ({ classNames }: ControlsProps) => {
+const BoardControls = ({ classNames }: BoardControlsProps) => {
   const { t } = useTranslation(translationKey);
-  const { readonly, zoom, controller, onAdd } = useBoardContext(Controls.displayName);
+  const { readonly, zoom, controller, onAdd } = useBoardContext(BoardControls.displayName);
 
   return (
     <Toolbar.Root classNames={classNames}>
@@ -368,30 +364,30 @@ const Controls = ({ classNames }: ControlsProps) => {
   );
 };
 
-Controls.displayName = 'Board.Controls';
+BoardControls.displayName = 'Board.Controls';
 
 //
 // Board
 //
 
 export const Board = {
-  Root,
-  Container,
-  Viewport,
-  Content,
-  Background,
-  Controls,
-  Cell,
+  Root: BoardRoot,
+  Container: BoardContainer,
+  Viewport: BoardViewport,
+  Content: BoardContent,
+  Backdrop: BoardBackdropProps,
+  Controls: BoardControls,
+  Cell: BoardCell,
 };
 
 export type {
-  RootProps as BoardRootProps,
-  ContainerProps as BoardContainerProps,
-  ViewportProps as BoardViewportProps,
-  ContentProps as BoardContentProps,
-  BackgroundProps as BoardBackgroundProps,
-  ControlsProps as BoardControlsProps,
-  CellProps as BoardCellProps,
+  BoardRootProps,
+  BoardContainerProps,
+  BoardViewportProps,
+  BoardContentProps,
+  BoardBackdropProps,
+  BoardControlsProps,
+  BoardCellProps,
   BoardController,
 };
 

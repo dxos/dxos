@@ -5,20 +5,20 @@
 import { effect } from '@preact/signals-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { Obj, Ref, type Type } from '@dxos/echo';
+import { type Obj, Ref, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Board as BoardComponent, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
+import { Board, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board } from '../types';
+import { type Board as BoardType } from '../types';
 
 export type BoardContainerProps = {
   role: string;
-  board: Board.Board;
+  board: BoardType.Board;
 };
 
 export const BoardContainer = ({ role, board }: BoardContainerProps) => {
@@ -82,22 +82,22 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
   );
 
   return (
-    <BoardComponent.Root
-      ref={controller}
-      layout={board.layout}
-      onAdd={handleAdd}
-      onDelete={handleDelete}
-      onMove={handleMove}
-    >
-      <StackItem.Content role={role} toolbar>
-        <BoardComponent.Controls />
-        <BoardComponent.Container>
-          <BoardComponent.Viewport classNames='border-none'>
-            <BoardComponent.Background />
-            <BoardComponent.Content items={items} getTitle={(item) => Obj.getLabel(item) ?? item.id} />
-          </BoardComponent.Viewport>
-        </BoardComponent.Container>
+    <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
+      <StackItem.Content toolbar>
+        <Board.Controls />
+        <Board.Container>
+          <Board.Viewport classNames='border-none'>
+            <Board.Backdrop />
+            <Board.Content>
+              {items?.map((item, index) => (
+                <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
+                  <Surface role='card--board' data={{ subject: item }} />
+                </Board.Cell>
+              ))}
+            </Board.Content>
+          </Board.Viewport>
+        </Board.Container>
       </StackItem.Content>
-    </BoardComponent.Root>
+    </Board.Root>
   );
 };
