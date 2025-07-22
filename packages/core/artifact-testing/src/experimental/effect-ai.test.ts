@@ -11,7 +11,7 @@ import { describe, it } from '@effect/vitest';
 import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
 import { log } from '@dxos/log';
-import { parseGptStream } from '@dxos/ai';
+import { AiParser } from '@dxos/ai';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -219,7 +219,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         What is six times seven?`;
         do {
           // disableToolCallResolution
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(parseGptStream());
+          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseGptStream());
           prompt = AiInput.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));

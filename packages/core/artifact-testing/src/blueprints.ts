@@ -6,6 +6,7 @@ import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 
 import { readDocument, writeDocument } from './tools';
+import { ToolId } from '@dxos/ai';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
@@ -22,7 +23,7 @@ export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
     You do not announce when you read or write the design spec document.
   `,
   // TODO(dmaretskyi): Create tool.
-  tools: [readDocument.id, writeDocument.id],
+  tools: [ToolId.make(readDocument.id), ToolId.make(writeDocument.id)],
   artifacts: [],
 });
 
@@ -40,6 +41,6 @@ export const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
     You do not announce when you read or write the task list document.
   `,
   // TODO(dmaretskyi): Create tool.
-  tools: [readDocument.id, writeDocument.id],
+  tools: [ToolId.make(readDocument.id), ToolId.make(writeDocument.id)],
   artifacts: [],
 });
