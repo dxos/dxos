@@ -64,6 +64,9 @@ export const ChatMessage = ({
     }
 
     const Component = components[block._tag] ?? components.default;
+    if (!Component) {
+      return null;
+    }
 
     return (
       <MessageContainer
@@ -86,7 +89,7 @@ type BlockComponent = FC<{
   onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
-const components: Record<ContentBlock.Any['_tag'] | 'default', BlockComponent> = {
+const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComponent>> = {
   //
   // Text
   //

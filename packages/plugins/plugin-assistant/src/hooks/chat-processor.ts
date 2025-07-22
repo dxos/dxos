@@ -19,6 +19,7 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, type DataType } from '@dxos/schema';
+
 import type { ChatServices } from './useChatServices';
 
 // TODO(burdon): Factor out.
@@ -100,7 +101,7 @@ export class ChatProcessor {
   private _session: AISession | undefined = undefined;
 
   constructor(
-    private readonly _serviceLayer: Layer.Layer<ChatServices>,
+    private readonly _services: Layer.Layer<ChatServices>,
     private readonly _conversation: Conversation,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {
@@ -211,7 +212,7 @@ export class ChatProcessor {
             //
             Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
             Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-            Effect.provide(this._serviceLayer),
+            Effect.provide(this._services),
           ),
       );
 

@@ -88,7 +88,7 @@ export const processEmail = async ({ aiClient, email, context }: ProcessEmailPar
     }),
   );
   const result: any =
-    messages.find((message) => message.role === 'assistant')?.content.find((content) => content.type === 'tool_use')
+    messages.find((message) => message.sender.role === 'assistant')?.blocks.find((block) => block._tag === 'toolCall')
       ?.input ?? raise(new Error('failed to process email'));
 
   return {

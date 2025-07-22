@@ -40,8 +40,8 @@ export const summarizeTranscript = async (ai: AiServiceClient, content: string):
   );
 
   log.info('transcript summary', { output });
-  invariant(output[0].content[0].type === 'text', 'Expected text content');
-  return output[0].content[0].text;
+  invariant(output[0].blocks[0]._tag === 'text', 'Expected text content');
+  return output[0].blocks[0].text;
 };
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
