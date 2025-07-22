@@ -1,0 +1,26 @@
+{
+  "name": "@dxos/dx-build",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "dx-build": "cli.js"
+  },
+  "scripts": {
+    "build": "tsx ./src/main.ts"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "comment-json": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/comment-json": "^2.4.5"
+  }
+}

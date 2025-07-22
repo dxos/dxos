@@ -62,9 +62,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:packages/sdk/client
-      '@dxos/esbuild':
+      '@dxos/dx-build':
         specifier: workspace:*
-        version: link:tools/esbuild
+        version: link:tools/dx-build
+      '@dxos/dx-compile':
+        specifier: workspace:*
+        version: link:tools/dx-compile
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -14550,7 +14553,20 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0
 
-  tools/esbuild:
+  tools/dx-build:
+    dependencies:
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
+      comment-json:
+        specifier: ^4.2.3
+        version: 4.2.3
+    devDependencies:
+      '@types/comment-json':
+        specifier: ^2.4.5
+        version: 2.4.5
+
+  tools/dx-compile:
     dependencies:
       yargs:
         specifier: ~16.2.0
@@ -21263,6 +21279,10 @@ packages:
 
   '@types/columnify@1.5.1':
     resolution: {integrity: sha512-pXWQTEvwcO7GAwFvSvaMOIktLcJ2ajIAUyMR93KDZZVWN2G7uieEDBPJskEmXb0Qv8JMPHhaRA52azCPfiFmQA==}
+
+  '@types/comment-json@2.4.5':
+    resolution: {integrity: sha512-Zc70LYxV8bri2tcIVVAYQ33dsGOvcZ3Hx7MdMKEJ+cWIt5BqpjAi5Kxcxe3rplp+g6qIenPoxx44k9nGqUstmg==}
+    deprecated: This is a stub types definition. comment-json provides its own type definitions, so you do not need this installed.
 
   '@types/connect@3.4.36':
     resolution: {integrity: sha512-P63Zd/JUGq+PdrM1lv0Wv5SBYeA2+CORvbrXbngriYY0jzLUWfQMQQxOhjONEz/wlHOAxOdY7CY65rgQdTjq2w==}
@@ -40610,6 +40630,10 @@ snapshots:
   '@types/color-hash@1.0.2': {}
 
   '@types/columnify@1.5.1': {}
+
+  '@types/comment-json@2.4.5':
+    dependencies:
+      comment-json: 4.2.3
 
   '@types/connect@3.4.36':
     dependencies:
