@@ -23,7 +23,7 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: sha256-FMdXdwX9r3N53oU6qIQxDlJOMbxMGO0Q1P2xJa1V9ls=
+pnpmfileChecksum: sha256-Mz2s5s3xi54wdEigswYUwq1xhWRJ//vpCBFtsdFRKfA=
 
 patchedDependencies:
   random-access-idb@1.2.2:
@@ -16265,7 +16265,7 @@ packages:
   '@effect-rx/rx@0.43.2':
     resolution: {integrity: sha512-jv1G96rwHcjLRVzkuKvJGRTA7WLNgPfl6d1HjpNEYRKJN+7b2p+NIQ+mj5RM4N2rnqz2Zhufs8kDM/EZcYEF9w==}
     peerDependencies:
-      '@effect/platform': 0.88.0
+      '@effect/platform': '*'
       effect: ^3.16.9
 
   '@effect/ai-anthropic@0.12.2':
