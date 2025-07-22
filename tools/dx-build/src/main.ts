@@ -21,14 +21,14 @@ const main = async () => {
 
   const configFileContent = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
   if (configFileContent.error) {
-    // TODO(josh): Pretty-print diagnostic.
+    // TODO(wittjosiah): Pretty-print diagnostic.
     console.error(`Failed to read tsconfig.json: ${configFileContent.error.messageText}`);
     process.exit(1);
   }
 
   const parsedCommandLine = ts.parseJsonConfigFileContent(configFileContent.config, ts.sys, dirname(tsconfigPath));
   if (parsedCommandLine.errors.length > 0) {
-    // TODO(josh): Pretty-print diagnostic.
+    // TODO(wittjosiah): Pretty-print diagnostic.
     console.error(`Failed to parse tsconfig.json: ${parsedCommandLine.errors.map((d) => d.messageText).join('\n')}`);
     process.exit(1);
   }
