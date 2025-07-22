@@ -37,9 +37,6 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag edges to resize.
 
-// TODO(thure): This does not conform to the subcomponent patterns established elsewhere. This needs to be refactored to use standard local naming.
-// TODO(thure): IIRC we decided to deprecate iterator patterns e.g. as in `react-ui-list`. Any canonical iterating-for-rendering should be demonstrated in Stories. This should be refactored to just render `children`.
-
 const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
 const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
 
