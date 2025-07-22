@@ -16,48 +16,46 @@ import { isNonNullable } from '@dxos/util';
 
 import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
-import { type AIChatType, type AssistantSettingsProps, ServiceType } from '../types';
+import { type Assistant, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
+  /** @deprecated Why is this required? */
   part?: 'deck' | 'dialog';
   space?: Space;
-  chat?: AIChatType;
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject.
+  chat?: Assistant.Chat;
+  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
   serviceContainer: ServiceContainer;
   blueprintRegistry?: BlueprintRegistry;
-  settings?: AssistantSettingsProps;
+  settings?: Assistant.Settings;
+  /** @deprecated */
+  instructions?: string;
   /** @deprecated */
   artifact?: AssociatedArtifact;
   /** @deprecated */
   noPluginArtifacts?: boolean;
-
-  /**
-   * Additional instructions to included in the system prompt.
-   */
-  instructions?: string;
 };
 
 /**
  * Configure and create ChatProcessor.
  */
 export const useChatProcessor = ({
-  part,
+  part = 'deck',
   space,
   chat,
   serviceContainer,
   blueprintRegistry,
   settings,
+  instructions,
   artifact,
   noPluginArtifacts,
-  instructions,
 }: UseChatProcessorProps): ChatProcessor | undefined => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
   // TODO(burdon): Spec artifacts.
-  let artifactDefinitions: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
+  let artifacts: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
   if (noPluginArtifacts) {
-    artifactDefinitions = Stable.array;
+    artifacts = Stable.array;
   }
 
   // Services.
@@ -92,11 +90,11 @@ export const useChatProcessor = ({
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({
-        artifacts: artifactDefinitions.map((definition) => `${definition.name}\n${definition.instructions}`),
+        artifacts: artifacts.map((definition) => `${definition.name}\n${definition.instructions}`),
         artifact,
         instructions,
       }),
-    [artifactDefinitions, artifact, instructions],
+    [artifacts, artifact, instructions],
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
@@ -105,32 +103,34 @@ export const useChatProcessor = ({
       ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
       : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
-  const conversation = useMemo(
-    () =>
-      chat?.queue.target &&
-      new Conversation({
-        serviceContainer,
-        queue: chat.queue.target as Queue<any>,
-      }),
-    [chat?.queue.target, serviceContainer],
-  );
+  const conversation = useMemo(() => {
+    if (!chat?.queue.target) {
+      return;
+    }
+
+    return new Conversation({
+      serviceContainer,
+      queue: chat.queue.target as Queue<any>,
+    });
+  }, [chat?.queue.target, serviceContainer]);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
+    if (!conversation) {
+      return undefined;
+    }
+
     log('creating processor...', { settings });
-    return (
-      conversation &&
-      new ChatProcessor(conversation, {
-        tools,
-        extensions,
-        blueprintRegistry,
-        artifacts: artifactDefinitions,
-        systemPrompt,
-        model,
-      })
-    );
-  }, [conversation, tools, blueprintRegistry, artifactDefinitions, extensions, systemPrompt, model]);
+    return new ChatProcessor(conversation, {
+      tools,
+      extensions,
+      blueprintRegistry,
+      artifacts,
+      systemPrompt,
+      model,
+    });
+  }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
 
   return processor;
 };

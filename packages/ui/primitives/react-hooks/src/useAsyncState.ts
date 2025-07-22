@@ -14,7 +14,7 @@ export const useAsyncState = <T>(
   const [value, setValue] = useState<T | undefined>();
   useEffect(() => {
     let disposed = false;
-    queueMicrotask(async () => {
+    const t = setTimeout(async () => {
       const data = await cb();
       if (!disposed) {
         setValue(data);
@@ -23,6 +23,7 @@ export const useAsyncState = <T>(
 
     return () => {
       disposed = true;
+      clearTimeout(t);
     };
   }, deps);
 

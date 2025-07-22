@@ -240,8 +240,8 @@ What follows are instructions on how to setup the certificate for your devices t
     {
       server: {
         https: process.env.HTTPS === 'true' ? {
-          key: './key.pem',
-          cert: './cert.pem'
+          key: '../../../key.pem',
+          cert: '../../../cert.pem'
         } : false,
         ...
       },

@@ -18,7 +18,7 @@ import {
   type AISession,
   type ArtifactDiffResolver,
   type BlueprintRegistry,
-  type BlueprintBinder,
+  type ContextBinder,
   type Conversation,
 } from '@dxos/assistant';
 import { Context } from '@dxos/context';
@@ -114,11 +114,8 @@ export class ChatProcessor {
     return this._conversation;
   }
 
-  /**
-   * Binder of active blueprints attached to this coversation.
-   */
-  get blueprints(): BlueprintBinder {
-    return this._conversation.blueprints;
+  get context(): ContextBinder {
+    return this._conversation.context;
   }
 
   get blueprintRegistry() {

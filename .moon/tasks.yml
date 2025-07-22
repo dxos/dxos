@@ -1,3 +1,4 @@
+# https://moonrepo.dev/docs/config/tasks
 fileGroups:
   assets:
     - assets/**/*

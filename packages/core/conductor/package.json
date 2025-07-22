@@ -55,10 +55,10 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.88.0",
+    "@effect/platform": "0.89.0",
     "@preact/signals-core": "^1.9.0",
     "chalk": "^4.1.2",
-    "effect": "3.16.13",
+    "effect": "3.17.0",
     "jsonpath-plus": "10.2.0",
     "ollama": "^0.5.11"
   },

@@ -10,14 +10,15 @@ import React, { useMemo, type FunctionComponent } from 'react';
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
+  DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
   remoteServiceEndpoints,
   readDocument,
   writeDocument,
-  DESIGN_SPEC_BLUEPRINT,
 } from '@dxos/artifact-testing';
-import { BlueprintBinder, Blueprint, BlueprintRegistry } from '@dxos/assistant';
+import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -26,9 +27,10 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Config } from '@dxos/react-client';
 import { createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext } from '@dxos/react-ui';
 import {
   Editor,
   createBasicExtensions,
@@ -44,9 +46,8 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
 import { useChatProcessor, useServiceContainer } from '../hooks';
-import { meta as pluginMeta } from '../meta';
 import { translations } from '../translations';
-import { AIChatType } from '../types';
+import { Assistant } from '../types';
 
 //
 // Story container
@@ -70,37 +71,25 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 //
 
 const ChatContainer = () => {
-  const { t } = useTranslation(pluginMeta.id);
-
   const space = useSpace();
-  const [chat] = useQuery(space, Filter.type(AIChatType));
-  const documents = useQuery(space, Filter.type(DocumentType));
+  const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
   // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
   const serviceContainer = useServiceContainer({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
-  const processor = useChatProcessor({
-    chat,
-    space,
-    serviceContainer,
-    blueprintRegistry,
-    // TODO(dmaretskyi): This should be part of the context.
-    instructions: `Documents available: ${JSON.stringify(documents.map(Obj.getDXN))}`,
-    noPluginArtifacts: true,
-  });
+  const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
 
-  if (!chat) {
+  if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor}>
+    <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
       <Chat.Thread />
-      <div className='p-4'>
+      <div className='p-2'>
         <Chat.Prompt
+          expandable
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-          placeholder={t('prompt placeholder')}
-          compact={false}
         />
       </div>
     </Chat.Root>
@@ -182,7 +171,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [AIChatType, DocumentType, Blueprint],
+        types: [Assistant.Chat, DocumentType, Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -192,16 +181,25 @@ const getDecorators = ({
           await space.waitUntilReady();
 
           // TODO(burdon): Remove need for this boilerplate. Namespace for types?
-          const chat = space.db.add(Obj.make(AIChatType, { queue: Ref.fromDXN(space.queues.create().dxn) }));
+          const chat = space.db.add(
+            Obj.make(Assistant.Chat, {
+              queue: Ref.fromDXN(space.queues.create().dxn),
+            }),
+          );
 
           // TODO(burdon): Add to conversation context.
-          space.db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
+          space.db.add(
+            Obj.make(DocumentType, {
+              name: 'Tasks',
+              content: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            }),
+          );
 
           // Clone blueprints and bind to conversation.
-          const binder = new BlueprintBinder(await chat.queue.load());
+          const binder = new ContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const obj = space.db.add(Obj.make(Blueprint, { ...blueprint }));
-            await binder.bind(Ref.make(obj));
+            await binder.bind({ blueprints: [Ref.make(obj)] });
           }
         },
       }),
@@ -209,7 +207,10 @@ const getDecorators = ({
       SettingsPlugin(),
       SpacePlugin(),
 
+      TranscriptionPlugin(),
+
       // TODO(burdon): Install capabilities independently?
+      // TODO(burdon): How to mock?
       AssistantPlugin(),
 
       ...plugins,

@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
@@ -244,10 +244,10 @@ export default (context: PluginContext) =>
                     // NOTE: We are not saving the state of the transcription manager here.
                     // We expect the state to be updated through `onCallStateUpdated` once it is propagated through Swarm.
                     // This is done to avoid race conditions and to not handle optimistic updates.
+                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
 
                     let meeting = state.activeMeeting;
                     if (!meeting) {
-                      const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                       const space = getSpace(channel);
                       invariant(space);
                       const intent = pipe(
@@ -261,11 +261,18 @@ export default (context: PluginContext) =>
 
                     const callManager = context.getCapability(ThreadCapabilities.CallManager);
                     const transcript = await meeting.transcript.load();
+                    const transcriptionEnabled = !enabled;
                     callManager.setActivity(Type.getTypename(MeetingType)!, {
                       meetingId: fullyQualifiedId(meeting),
                       transcriptDxn: transcript.queue.dxn.toString(),
-                      transcriptionEnabled: !enabled,
+                      transcriptionEnabled,
                     });
+
+                    if (transcriptionEnabled) {
+                      const primary = fullyQualifiedId(channel);
+                      const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
+                      await dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion }));
+                    }
                   },
                   properties: {
                     label: enabled
