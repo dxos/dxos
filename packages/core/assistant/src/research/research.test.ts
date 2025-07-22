@@ -60,12 +60,7 @@ describe('Research', () => {
   });
 
   test.only('should generate a research report', { timeout: 300_000 }, async () => {
-    db.add(
-      Obj.make(DataType.Organization, {
-        name: 'Notion',
-        website: 'https://www.notion.com',
-      }),
-    );
+    db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
     const result = await executor.invoke(researchFn, {
