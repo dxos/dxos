@@ -1,4 +1,5 @@
 # https://moonrepo.dev/docs/config/tasks
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
 fileGroups:
   assets:
     - assets/**/*
@@ -18,7 +19,7 @@ fileGroups:
   tests:
     - src/test/**/*
     - src/**/*.test.tsx?
-    - src/playwright/**/*
     - src/**/*.spec.ts
+    - src/playwright/**/*
 implicitInputs:
   - package.json
