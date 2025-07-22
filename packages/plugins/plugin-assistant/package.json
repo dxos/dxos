@@ -104,7 +104,8 @@
     "json5": "^2.2.3",
     "jsonpointer": "^5.0.1",
     "lodash.defaultsdeep": "^4.6.1",
-    "unified": "^11.0.0"
+    "unified": "^11.0.0",
+    "use-deep-compare-effect": "^1.8.1"
   },
   "devDependencies": {
     "@dxos/artifact-testing": "workspace:*",

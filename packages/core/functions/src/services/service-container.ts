@@ -60,6 +60,9 @@ const DEFAULT_SERVICES: Partial<ServiceRecord> = {
   tracing: TracingService.noop,
 };
 
+/**
+ * @deprecated
+ */
 export class ServiceContainer {
   private _services: Partial<ServiceRecord> = { ...DEFAULT_SERVICES };
 

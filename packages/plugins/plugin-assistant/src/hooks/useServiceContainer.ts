@@ -15,6 +15,9 @@ interface UseServiceContainerProps {
   space?: Space;
 }
 
+/**
+ * @deprecated
+ */
 export const useServiceContainer = ({ space }: UseServiceContainerProps) => {
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const tools = useCapabilities(Capabilities.Tools).flat();

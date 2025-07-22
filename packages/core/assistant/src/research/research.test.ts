@@ -20,7 +20,6 @@ import { DataType, DataTypes } from '@dxos/schema';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
 
-const REMOTE_AI = true;
 const MOCK_SEARCH = false;
 
 const AnthropicLayer = AnthropicClient.layerConfig({
