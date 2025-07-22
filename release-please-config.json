@@ -89,11 +89,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/feed-store/package.json",
           "jsonpath": "$.version"
         },
