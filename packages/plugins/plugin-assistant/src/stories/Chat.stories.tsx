@@ -74,12 +74,12 @@ const ChatContainer = () => {
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
-  const serviceLayer = useChatServices({ space });
+  const services = useChatServices({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const processor = useChatProcessor({
     chat,
     space,
-    serviceLayer,
+    services,
     blueprintRegistry,
     noPluginArtifacts: true,
   });
