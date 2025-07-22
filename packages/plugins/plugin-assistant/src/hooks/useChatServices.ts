@@ -44,7 +44,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
 
   return useMemo(() => {
     return Layer.mergeAll(
-      AiServiceTestingPreset('direct').pipe(Layer.orDie), // TODO(burdon): !!!
+      AiServiceTestingPreset('edge-local').pipe(Layer.orDie), // TODO(burdon): !!!
       Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
       space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
       space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,
