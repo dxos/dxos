@@ -1,8 +1,9 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   build:
-    command: tsc
+    command: dx-build
     deps:
+      - dx-build:compile
       - ^:build
       - ^:compile
       - compile
@@ -19,7 +20,7 @@ tasks:
     args:
       - --outputPath=dist/lib
     deps:
-      - esbuild:compile
+      - dx-compile:compile
       - ^:compile
     inputs:
       - '@group(production)'

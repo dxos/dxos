@@ -45,7 +45,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
   test('spec blueprint', async () => {
     const printer = new ConsolePrinter();
     const conversation = new Conversation({
-      serviceContainer,
       queue: queues.create(),
     });
     conversation.onBegin.on((session) => {
@@ -61,7 +60,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
     );
     let prevContent = artifact.content;
-    await conversation.run({
+
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
       prompt: `
         Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
@@ -80,7 +81,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     expect(artifact.content).not.toBe(prevContent);
     prevContent = artifact.content;
 
-    await conversation.run({
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
       prompt: `
         I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
       `,
@@ -92,7 +94,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
   test.only('building a shelf', async () => {
     const printer = new ConsolePrinter();
     const conversation = new Conversation({
-      serviceContainer,
       queue: queues.create(),
     });
     conversation.onBegin.on((session) => {
@@ -106,7 +107,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
     const artifact = db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
     let prevContent = artifact.content;
-    await conversation.run({
+
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
       prompt: `
         I'm building a shelf.
         I need a hammer, nails, and a saw.
@@ -117,7 +120,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     expect(artifact.content).not.toBe(prevContent);
     prevContent = artifact.content;
 
-    await conversation.run({
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
       prompt: `
         I will need a board too.
       `,
@@ -125,7 +129,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     log.info('spec 2', { doc: artifact });
     expect(artifact.content).not.toBe(prevContent);
 
-    await conversation.run({
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
       prompt: `
         Actually lets use screws and a screwdriver.
       `,

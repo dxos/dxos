@@ -19,7 +19,7 @@ export interface ConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
   prompt: string;
 
-  toolkit: AiToolkit.ToHandler<Tools>;
+  toolkit?: AiToolkit.ToHandler<Tools>;
 }
 
 export type ConversationOptions = {

@@ -1,0 +1,12 @@
+type: tool
+language: typescript
+tasks:
+  compile:
+    command: pnpm run build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+    outputs:
+      - dist/
+    options:
+      timeout: 60
