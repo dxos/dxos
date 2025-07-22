@@ -92,9 +92,9 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     thread.messages.push(
       Ref.make(
         Obj.make(DataType.Message, {
-          sender: { identityDid: identity.did },
           created: new Date().toISOString(),
-          blocks: [{ type: 'text', text: messageRef.current }],
+          sender: { identityDid: identity.did },
+          blocks: [{ _tag: 'text', text: messageRef.current }],
           properties: context ? { context: Ref.make(context) } : undefined,
         }),
       ),
