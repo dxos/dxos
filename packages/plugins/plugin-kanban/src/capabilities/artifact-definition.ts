@@ -101,7 +101,7 @@ export default () => {
 
               return {
                 id: fullyQualifiedId(view),
-                name: kanban.name ?? 'Unnamed Kanban',
+                name: view.name ?? 'Unnamed Kanban',
                 typename: view.query.typename,
               };
             }),

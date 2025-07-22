@@ -56,7 +56,7 @@ export default () => {
 
               return {
                 id: fullyQualifiedId(view),
-                name: map.name ?? 'Unnamed Map',
+                name: view.name ?? 'Unnamed Map',
                 typename: view.query.typename,
               };
             }),

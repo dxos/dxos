@@ -112,7 +112,7 @@ export default () => {
 
               return {
                 id: fullyQualifiedId(view),
-                name: presentation.name ?? 'Unnamed Table',
+                name: view.name ?? 'Unnamed Table',
                 typename: view.query.typename,
               };
             }),
