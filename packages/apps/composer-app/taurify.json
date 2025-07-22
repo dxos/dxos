@@ -7,8 +7,8 @@
   "identifier": "org.dxos.composer",
   "productionSrc": "./out/composer",
   "devSrc": "http://localhost:5173/",
-  "beforeDevCommand": "pnpm -w nx serve composer-app",
-  "beforeBuildCommand": "pnpm -w nx bundle composer-app",
+  "beforeDevCommand": "moon run composer-app:serve",
+  "beforeBuildCommand": "moon run composer-app:bundle",
   "app": {
     "icon": "./assets/icon-1536x1536.png",
     "windows": [
@@ -44,6 +44,7 @@
       }
     ],
     "arch": "arm64",
-    "infoPlist": "./Info.plist"
+    "infoPlist": "./Info.plist",
+    "entitlements": "./Entitlements.plist"
   }
 }

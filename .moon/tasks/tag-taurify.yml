@@ -1,0 +1,9 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  taurify:
+    command: taurify build
+    args:
+      --cn-api-key $CN_API_KEY
+      --verbose
+    options:
+      cache: false

@@ -725,8 +725,8 @@ importers:
         specifier: ^5.12.0
         version: 5.12.0(rollup@4.40.2)
       taurify:
-        specifier: 1.1.2
-        version: 1.1.2
+        specifier: 1.1.4
+        version: 1.1.4
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
@@ -31033,32 +31033,32 @@ packages:
     resolution: {integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==}
     engines: {node: '>=18'}
 
-  taurify-binding-darwin-arm64@1.1.2:
-    resolution: {integrity: sha512-K/dsNJDkOD+QdoIU4sbCMg7gcDRROI3HvYw3a4JQmk76PDiG2NV2s+3k9l0cILVDitAkz+8/JGzCZV7M+k11tQ==}
+  taurify-binding-darwin-arm64@1.1.4:
+    resolution: {integrity: sha512-GjtJ/j/AH7I/FK9Helo4gDVuhqbKMz6o4dzBhf+uFQBpvf0sgNGCTFE2qmnWFY9GJLRrEEPRjSnbT8CNOv/J/w==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  taurify-binding-darwin-x64@1.1.2:
-    resolution: {integrity: sha512-1+fm44+F+bUU4k1h0Ox0Wrm5x5Pxe2D9GPA4n2q7llPAehqiKJ1bCX1TIV5Q5rZBJKJUz+JbRivS+s8KUVdmZA==}
+  taurify-binding-darwin-x64@1.1.4:
+    resolution: {integrity: sha512-CGfTz/zoRAN14own7nKGxyr55Z7oGAfQLjjuHz0tZ72J30c68LsrFunR+mCuIZ+VHt/MzEytoxC4nJRCJSAIww==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  taurify-binding-linux-x64-gnu@1.1.2:
-    resolution: {integrity: sha512-c5NhhYLlBfNi5NDZNdARBqgGSW+xQm4TcROhOWbApvbyBShDHUbZc+EhCvTXPIV2rkiqpyoxjT+eG8rSPinYyA==}
+  taurify-binding-linux-x64-gnu@1.1.4:
+    resolution: {integrity: sha512-dSKLvlZM9rmKYMeg6GiohcWx/dd5LKuFXgelTYTbuoe2jM1VrwXP31bx276x3n0defpK79BLMQGX9t/JcRblng==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  taurify-binding-win32-x64-msvc@1.1.2:
-    resolution: {integrity: sha512-y1uLO2AXaWcMsrJPb0pNVMGQq+AEk5M3QwRg3pelpQ6nuCnAwnGhBxEzapR0ir6iUT9+m4S/m6YNhbuOxGyRRQ==}
+  taurify-binding-win32-x64-msvc@1.1.4:
+    resolution: {integrity: sha512-1rxykuOrGf7NjKqtLcd/ZOoXFwXPcfnq4GypDo83OuewtY5URGWf/wsxXOq1vKa4vUolLBoJ8BQi6qz6HS5cRw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
 
-  taurify@1.1.2:
-    resolution: {integrity: sha512-LD2f3ekBciTJzek8gfzNJP4xnzcItyYAyDlsopbastUCClMZBN0YC4r1QZ7cGlELAm0TugIb/SNykq3epO+u3Q==}
+  taurify@1.1.4:
+    resolution: {integrity: sha512-S3HCZeqULA0h5OnOdlWCzGnxKd2ooKdUwcgcgWtyZ/393mCcdAn5JhwIMrqf6vimAN78RCGyJevrvsWbosXpyg==}
     engines: {node: '>= 10'}
     hasBin: true
 
@@ -52934,24 +52934,24 @@ snapshots:
       mkdirp: 3.0.1
       yallist: 5.0.0
 
-  taurify-binding-darwin-arm64@1.1.2:
+  taurify-binding-darwin-arm64@1.1.4:
     optional: true
 
-  taurify-binding-darwin-x64@1.1.2:
+  taurify-binding-darwin-x64@1.1.4:
     optional: true
 
-  taurify-binding-linux-x64-gnu@1.1.2:
+  taurify-binding-linux-x64-gnu@1.1.4:
     optional: true
 
-  taurify-binding-win32-x64-msvc@1.1.2:
+  taurify-binding-win32-x64-msvc@1.1.4:
     optional: true
 
-  taurify@1.1.2:
+  taurify@1.1.4:
     optionalDependencies:
-      taurify-binding-darwin-arm64: 1.1.2
-      taurify-binding-darwin-x64: 1.1.2
-      taurify-binding-linux-x64-gnu: 1.1.2
-      taurify-binding-win32-x64-msvc: 1.1.2
+      taurify-binding-darwin-arm64: 1.1.4
+      taurify-binding-darwin-x64: 1.1.4
+      taurify-binding-linux-x64-gnu: 1.1.4
+      taurify-binding-win32-x64-msvc: 1.1.4
 
   temp-dir@2.0.0: {}
 
