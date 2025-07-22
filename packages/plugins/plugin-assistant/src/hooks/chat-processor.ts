@@ -10,7 +10,7 @@ import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import {
   type AISession,
-  type ArtifactDiffResolver,
+  ArtifactDiffResolver,
   type BlueprintRegistry,
   type ContextBinder,
   type Conversation,
@@ -19,10 +19,7 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, type DataType } from '@dxos/schema';
-import type { Layer } from 'effect';
-import type { Services } from './useServices';
-
-import { type ChatServices } from './useChatServices';
+import type { ChatServices } from './useChatServices';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -37,7 +34,6 @@ type RequestOptions = {
 };
 
 export type ChatProcessorOptions = {
-  services?: Layer.Layer<ChatServices>;
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
   artifacts?: readonly ArtifactDefinition[];
@@ -104,7 +100,7 @@ export class ChatProcessor {
   private _session: AISession | undefined = undefined;
 
   constructor(
-    private readonly _serviceLayer: Layer.Layer<Services>,
+    private readonly _serviceLayer: Layer.Layer<ChatServices>,
     private readonly _conversation: Conversation,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {
@@ -171,6 +167,7 @@ export class ChatProcessor {
         this._pending.value = [...this._pending.value, message];
       });
 
+      // TODO(dmaretskyi): Handle tool status reports.
       // session.toolStatusReport.on(({ message, status }) => {
       //   const msg = this._pending.peek().find((m) => m.id === message.id);
       //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
@@ -204,20 +201,18 @@ export class ChatProcessor {
       const messages = await Effect.runPromise(
         this._conversation
           .run({
-            artifacts: [...(this._options.artifacts ?? [])],
-            requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
+            prompt: message,
+            systemPrompt: this._options.systemPrompt,
 
             // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
-            tools: this._tools ?? [],
-            systemPrompt: this._options.systemPrompt,
-            prompt: message,
-            extensions: this._options.extensions,
-            artifactDiffResolver: this._artifactDiffResolver,
-            generationOptions: {
-              model: this._options.model,
-            },
+            // tools: this._tools ?? [],
           })
-          .pipe(Effect.provide(AiService.model(this._options.model)), Effect.provide(this._options.services)),
+          .pipe(
+            //
+            Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+            Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
+            Effect.provide(this._serviceLayer),
+          ),
       );
 
       log('completed', { messages });
@@ -255,28 +250,30 @@ export class ChatProcessor {
     return messages;
   }
 
-  private _artifactDiffResolver: ArtifactDiffResolver = async (artifacts) => {
-    const space = this._options.extensions?.space;
-    if (!space) {
-      return new Map();
-    }
+  private _artifactDiffResolver: ArtifactDiffResolver.Service = {
+    resolve: async (artifacts) => {
+      const space = this._options.extensions?.space;
+      if (!space) {
+        return new Map();
+      }
 
-    const versions = new Map();
-    await Promise.all(
-      artifacts.map(async (artifact) => {
-        const {
-          objects: [object],
-        } = await space.db.query(Filter.ids(artifact.id)).run();
-        if (!object) {
-          return;
-        }
-        versions.set(artifact.id, {
-          version: getVersion(object),
-          diff: `Current state: ${JSON.stringify(object)}`,
-        });
-      }),
-    );
-    return versions;
+      const versions = new Map();
+      await Promise.all(
+        artifacts.map(async (artifact) => {
+          const {
+            objects: [object],
+          } = await space.db.query(Filter.ids(artifact.id)).run();
+          if (!object) {
+            return;
+          }
+          versions.set(artifact.id, {
+            version: getVersion(object),
+            diff: `Current state: ${JSON.stringify(object)}`,
+          });
+        }),
+      );
+      return versions;
+    },
   };
 }
 
