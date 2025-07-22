@@ -72,9 +72,8 @@ const StorybookKanban = () => {
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
-  const kanban = view?.presentation.target as KanbanView | undefined;
   const model = useKanbanModel({
-    kanban,
+    view,
     schema,
     projection,
     items: filteredObjects,

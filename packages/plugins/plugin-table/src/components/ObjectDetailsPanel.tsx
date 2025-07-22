@@ -12,6 +12,7 @@ import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { TABLE_PLUGIN } from '../meta';
 
@@ -23,12 +24,9 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const space = getSpace(view);
   const schema = useSchema(client, space, view.query?.typename);
 
-  // NOTE(ZaymonFC): Since selection is currently a set, the order of these objects may not
-  //  match the order in the selected context.
-  // TODO(burdon): Implement ordered set.
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
-  const selectedObjects = queriedObjects.filter((obj) => selectedRows.includes(obj.id));
+  const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 

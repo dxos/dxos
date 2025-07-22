@@ -15,7 +15,6 @@ import { isNonNullable } from '@dxos/util';
 import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  id?: string;
   view?: DataType.View;
   schema?: JsonSchemaType;
   projection?: ProjectionModel;
@@ -29,7 +28,6 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({
-  id,
   view,
   schema,
   projection,
@@ -42,14 +40,13 @@ export const useTableModel = <T extends TableRow = TableRow>({
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!id || !view || !schema) {
+    if (!view || !schema) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
       model = new TableModel<T>({
-        id,
         view,
         schema,
         projection,
@@ -66,7 +63,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [id, view, schema, projection, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [view, schema, projection, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
@@ -81,7 +78,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
     }
   }, [model, rows]);
 
-  const { multiSelect, clear } = useSelectionActions([id, view?.query.typename].filter(isNonNullable));
+  const { multiSelect, clear } = useSelectionActions([model?.id].filter(isNonNullable));
 
   useEffect(() => {
     if (!model) {

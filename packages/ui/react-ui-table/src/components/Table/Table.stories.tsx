@@ -26,7 +26,7 @@ import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, live, type Space } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -105,7 +105,6 @@ const useTestTableModel = () => {
   );
 
   const model = useTableModel({
-    id: view ? fullyQualifiedId(view) : undefined,
     view,
     schema: jsonSchema,
     projection,

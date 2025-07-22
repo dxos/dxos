@@ -20,6 +20,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -68,7 +69,6 @@ const defaultFeatures: TableFeatures = {
 };
 
 export type TableModelProps<T extends TableRow = TableRow> = {
-  id: string;
   view: DataType.View;
   schema: JsonSchemaType;
   projection?: ProjectionModel;
@@ -86,7 +86,6 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 };
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
-  private readonly _id: string;
   private readonly _view: DataType.View;
   private readonly _projection: ProjectionModel;
   private _table?: TableView;
@@ -114,7 +113,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   private _columnMeta?: ReadonlySignal<DxGridAxisMeta>;
 
   constructor({
-    id,
     view,
     schema,
     projection,
@@ -130,7 +128,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     onRowAction,
   }: TableModelProps<T>) {
     super();
-    this._id = id;
     this._view = view;
     this._projection = projection ?? new ProjectionModel(schema, view.projection);
 
@@ -160,7 +157,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return this._id;
+    return fullyQualifiedId(this._view);
   }
 
   public get view(): DataType.View {

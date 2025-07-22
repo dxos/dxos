@@ -51,7 +51,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
     [schema],
   );
 
-  const model = useTableModel({ id: view?.id, view, schema: schema?.jsonSchema, features });
+  const model = useTableModel({ view, schema: schema?.jsonSchema, features });
 
   const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
     // TODO(dmaretskyi): If no schema query nothing

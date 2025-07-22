@@ -73,7 +73,6 @@ export const DynamicTable = ({
   );
 
   const model = useTableModel({
-    id: view.id,
     rows,
     view,
     schema: jsonSchema,

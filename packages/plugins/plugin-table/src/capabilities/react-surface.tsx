@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
@@ -43,6 +44,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { companionTo: DataType.View; subject: 'selected-objects' } =>
         Obj.instanceOf(DataType.View, data.companionTo) && data.subject === 'selected-objects',
-      component: ({ data }) => <ObjectDetailsPanel objectId={data.companionTo.id} view={data.companionTo} />,
+      component: ({ data }) => (
+        <ObjectDetailsPanel
+          key={fullyQualifiedId(data.companionTo)}
+          objectId={fullyQualifiedId(data.companionTo)}
+          view={data.companionTo}
+        />
+      ),
     }),
   ]);

@@ -10,7 +10,7 @@ import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace } from '@dxos/react-client/echo';
-import { useKanbanModel, Kanban, type KanbanView } from '@dxos/react-ui-kanban';
+import { useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
 import { ProjectionModel, type DataType } from '@dxos/schema';
 
@@ -62,7 +62,7 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
-    kanban: view.presentation.target as KanbanView,
+    view,
     schema: cardSchema,
     projection,
     items: filteredObjects,

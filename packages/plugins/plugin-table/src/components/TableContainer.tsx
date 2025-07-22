@@ -76,7 +76,6 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   );
 
   const model = useTableModel({
-    id: view.id,
     view,
     schema: schema instanceof EchoSchema ? schema.jsonSchema : schema ? Type.toJsonSchema(schema) : undefined,
     features,
@@ -107,7 +106,13 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
         onSave={handleSave}
       />
       <Table.Root role={role}>
-        <Table.Main key={view.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
+        <Table.Main
+          key={fullyQualifiedId(view)}
+          ref={tableRef}
+          model={model}
+          presentation={presentation}
+          schema={schema}
+        />
       </Table.Root>
     </StackItem.Content>
   );

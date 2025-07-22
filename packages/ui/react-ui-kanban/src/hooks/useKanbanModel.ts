@@ -6,19 +6,19 @@ import { type Schema } from 'effect';
 import { useEffect, useState } from 'react';
 
 import { type Live } from '@dxos/react-client/echo';
-import { type ProjectionModel } from '@dxos/schema';
+import { type DataType, type ProjectionModel } from '@dxos/schema';
 
-import { type KanbanView, type BaseKanbanItem, KanbanModel } from '../types';
+import { type BaseKanbanItem, KanbanModel } from '../types';
 
 export type UseKanbanModelProps<T extends BaseKanbanItem = { id: string }> = {
-  kanban?: KanbanView;
+  view?: DataType.View;
   schema?: Schema.Schema.AnyNoContext;
   projection?: ProjectionModel;
   items?: Live<T>[];
 };
 
 export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
-  kanban,
+  view,
   schema,
   projection,
   items,
@@ -26,13 +26,13 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
 }: UseKanbanModelProps<T>): KanbanModel<T> | undefined => {
   const [model, setModel] = useState<KanbanModel<T>>();
   useEffect(() => {
-    if (!kanban || !schema || !projection) {
+    if (!view || !schema || !projection) {
       return;
     }
 
     let model: KanbanModel<T> | undefined;
     const t = setTimeout(async () => {
-      model = new KanbanModel<T>({ kanban, schema, projection, ...props });
+      model = new KanbanModel<T>({ view, schema, projection, ...props });
       await model.open();
       setModel(model);
     });
@@ -41,7 +41,7 @@ export const useKanbanModel = <T extends BaseKanbanItem = { id: string }>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [kanban, schema, projection]);
+  }, [view, schema, projection]);
 
   // Update data.
   useEffect(() => {
