@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema, Struct, Stream } from 'effect';
+import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, Message, ToolId } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, ToolId } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
@@ -13,13 +13,15 @@ import { QueueService, ToolResolverService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { AiService } from '@dxos/ai';
+import { DataType } from '@dxos/schema';
 import { EventLogger } from '../../services';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
-import { AiService } from "@dxos/ai";
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.
-const GptStreamEventSchema = Schema.Any as Schema.Schema<GenerationStreamEvent>;
+// TODO(dmaretskyi): What's the type for the stream output.
+const GptStreamEventSchema = Schema.Any as Schema.Schema<unknown>;
 
 export const GptMessage = Schema.Struct({
   role: Schema.Union(Schema.Literal('system'), Schema.Literal('user')),
@@ -59,7 +61,7 @@ export const GptInput = Schema.Struct({
    * History messages.
    * Cannot be used together with `conversation`.
    */
-  history: Schema.optional(Schema.Array(Message)),
+  history: Schema.optional(Schema.Array(DataType.Message)),
 
   /**
    * Tools to use.
@@ -73,7 +75,7 @@ export const GptOutput = Schema.Struct({
   /**
    * Messages emitted by the model.
    */
-  messages: Schema.Array(Message),
+  messages: Schema.Array(DataType.Message),
 
   /**
    * Artifact emitted by the model.
@@ -122,7 +124,7 @@ export const gptNode = defineComputeNode({
 
       const historyMessages = conversation
         ? yield* Effect.tryPromise({
-            try: () => queues.get<Message>(conversation.dxn).queryObjects(),
+            try: () => queues.get<DataType.Message>(conversation.dxn).queryObjects(),
             catch: (e) => e as Error,
           })
         : history ?? [];
@@ -148,7 +150,8 @@ export const gptNode = defineComputeNode({
         Effect.fnUntraced(function* (push) {
           const ctx = yield* contextFromScope();
           session.streamEvent.on(ctx, (event) => {
-            push.single(event);
+            // TODO(dmaretskyi): Fix streaming.
+            // push.single(event);
           });
 
           session.done.on(ctx, () => {
@@ -159,43 +162,38 @@ export const gptNode = defineComputeNode({
 
       const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
+      // TODO(dmaretskyi): Is there a better way to satisfy deps?
+      const model = AiService.model(DEFAULT_EDGE_MODEL).pipe(Layer.provide(Layer.succeed(AiService, yield* AiService)));
+
+      // TODO(dmaretskyi): Should this use conversation instead?
+      // TODO(dmaretskyi): Tools.
       const resultEffect = Effect.gen(function* () {
-        const messages = yield* Effect.promise(() =>
-          session.run({
+        const messages = yield* session
+          .run({
             systemPrompt,
             prompt: fullPrompt,
-
             history: [...historyMessages],
-
-            tools: [...tools],
-            artifacts: [],
-
-            generationOptions: {
-              model: DEFAULT_EDGE_MODEL,
-            },
-            client: aiClient,
-            toolResolver,
-          }),
-        );
+          })
+          .pipe(Effect.provide(model));
         log.info('messages', { messages });
 
         if (conversation) {
-          yield* Effect.promise(() => queues.get<Message>(conversation.dxn).append([...messages]));
+          yield* Effect.promise(() => queues.get<DataType.Message>(conversation.dxn).append([...messages]));
         }
 
         const text = messages
           .map((message) =>
-            message.role === 'assistant'
-              ? message.content.flatMap((block) => (block.type === 'text' ? [block.text] : []))
+            message.sender.role === 'assistant'
+              ? message.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : []))
               : [],
           )
           .join('\n');
 
         const cot = messages
           .map((message) =>
-            message.role === 'assistant'
-              ? message.content.flatMap((block) =>
-                  block.type === 'text' && block.disposition === 'cot' ? [block.text] : [],
+            message.sender.role === 'assistant'
+              ? message.blocks.flatMap((block) =>
+                  block._tag === 'text' && block.disposition === 'cot' ? [block.text] : [],
                 )
               : [],
           )
@@ -204,7 +202,6 @@ export const gptNode = defineComputeNode({
         return { messages, text, cot, artifact: undefined, tokenCount: 0 };
       });
 
-      // TODO(burdon): Parse COT on the server (message ontology).
       return ValueBag.make<GptOutput>({
         tokenStream: eventStream,
         messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
