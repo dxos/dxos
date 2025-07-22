@@ -28094,9 +28094,6 @@ packages:
     resolution: {integrity: sha512-ypMKuglUrZUD99Tk2bUQ+xNQj43lPEfAeX2o9cTteAmShXy2VHDJpuwu1o0xqoKCt9jLVAvwyFKdLTPXKAfJyA==}
     engines: {node: '>=10'}
 
-  multipasta@0.2.5:
-    resolution: {integrity: sha512-c8eMDb1WwZcE02WVjHoOmUVk7fnKU/RmUcosHACglrWAuPQsEJv+E8430sXj6jNc1jHw0zrS16aCjQh4BcEb4A==}
-
   multipasta@0.2.7:
     resolution: {integrity: sha512-KPA58d68KgGil15oDqXjkUBEBYc00XvbPj5/X+dyzeo/lWm9Nc25pQRlf1D+gv4OpK7NM0J1odrbu9JNNGvynA==}
 
@@ -35156,7 +35153,7 @@ snapshots:
       '@effect/sql': 0.42.1(@effect/experimental@0.52.2(@effect/platform@0.88.2(effect@3.16.16))(effect@3.16.16)(ioredis@5.3.2))(@effect/platform@0.88.2(effect@3.16.16))(effect@3.16.16)
       '@parcel/watcher': 2.5.1
       effect: 3.16.16
-      multipasta: 0.2.5
+      multipasta: 0.2.7
       ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
@@ -49287,8 +49284,6 @@ snapshots:
       array-union: 2.1.0
       arrify: 2.0.1
       minimatch: 3.1.2
-
-  multipasta@0.2.5: {}
 
   multipasta@0.2.7: {}
 
