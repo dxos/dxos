@@ -5,6 +5,7 @@ import { $, chalk, argv } from 'zx';
 const CONFIG = {
   usernameAlias: {
     burdon: 'richburdon',
+    josh: 'wittjosiah',
   },
 };
 
