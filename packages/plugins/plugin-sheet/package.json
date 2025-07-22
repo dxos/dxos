@@ -101,7 +101,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.88.1",
+    "@effect/platform": "0.88.2",
     "@lezer/generator": "^1.7.1",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6",

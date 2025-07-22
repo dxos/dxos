@@ -55,7 +55,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.88.1",
+    "@effect/platform": "0.88.2",
     "@preact/signals-core": "^1.9.0",
     "chalk": "^4.1.2",
     "effect": "3.16.16",

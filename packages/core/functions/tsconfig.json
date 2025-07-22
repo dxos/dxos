@@ -23,9 +23,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/errors"
-    },
-    {
       "path": "../../common/invariant"
     },
     {

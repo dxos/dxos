@@ -25,7 +25,7 @@
   "dependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
-    "@automerge/automerge": "3.0.0-beta.4",
+    "@automerge/automerge": "3.0.0",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -83,7 +83,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.88.1",
+    "@effect/platform": "0.88.2",
     "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

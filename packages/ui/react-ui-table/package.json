@@ -87,7 +87,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.88.1",
+    "@effect/platform": "0.88.2",
     "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
