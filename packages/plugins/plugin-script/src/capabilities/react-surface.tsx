@@ -73,7 +73,7 @@ export default () =>
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (
-          <StackItem.Content role={role}>
+          <StackItem.Content>
             <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );

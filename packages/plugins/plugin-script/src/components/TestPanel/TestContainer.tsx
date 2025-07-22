@@ -19,7 +19,7 @@ export const TestContainer = ({ script, role }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (
-    <StackItem.Content role={role}>
+    <StackItem.Content>
       <TestPanel functionUrl={state.functionUrl} />
     </StackItem.Content>
   );

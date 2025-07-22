@@ -42,7 +42,7 @@ export const FileContainer = ({ role, file }: FileContainerProps) => {
   }
 
   return (
-    <StackItem.Content role={role}>
+    <StackItem.Content>
       <FilePreview type={file.type} url={blobUrl} />
     </StackItem.Content>
   );

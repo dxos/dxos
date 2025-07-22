@@ -26,7 +26,7 @@ export const TranscriptionContainer = ({ role, transcript }: TranscriptionContai
   const model = useQueueModelAdapter(renderMarkdown(members), queue);
 
   return (
-    <StackItem.Content role={role} classNames='container-max-width pli-2'>
+    <StackItem.Content classNames='container-max-width pli-2'>
       <Transcript attendableId={attendableId} space={space} model={model} transcript={transcript} />
     </StackItem.Content>
   );

@@ -28,7 +28,7 @@ export default () =>
         Obj.instanceOf(TableType, data.companionTo) && data.subject === 'schema',
       component: ({ data, role }) => {
         return (
-          <StackItem.Content role={role}>
+          <StackItem.Content>
             <TableViewEditor table={data.companionTo} />
           </StackItem.Content>
         );
