@@ -16,11 +16,11 @@ export const createCommentThread = (identity: Identity): ThreadType => {
       () =>
         Ref.make(
           Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
             sender: {
               identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
             },
-            created: new Date().toISOString(),
-            blocks: [{ type: 'text', text: faker.lorem.sentences(3) }],
+            blocks: [{ _tag: 'text', text: faker.lorem.sentences(3) }],
           }),
         ),
       { count: { min: 2, max: 3 } },

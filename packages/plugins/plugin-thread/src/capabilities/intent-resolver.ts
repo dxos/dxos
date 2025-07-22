@@ -182,9 +182,9 @@ export default (context: PluginContext) =>
         const intents = [];
 
         const message = Obj.make(DataType.Message, {
-          sender,
           created: new Date().toISOString(),
-          blocks: [{ type: 'text', text }],
+          sender,
+          blocks: [{ _tag: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
           // context: context ? Ref.make(context) : undefined,
         });
