@@ -25,6 +25,7 @@ const MOCK_SEARCH = false;
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
   transformClient: tapHttpErrors,
+  // TODO(dmaretskyi): Migrate to FetchHttpClient.
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const AiServiceLayer = Layer.provide(

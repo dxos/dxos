@@ -4,7 +4,7 @@
 
 import { Layer } from 'effect';
 import { useMemo } from 'react';
-import { useDeepCompareMemo } from 'use-deep-compare-effect';
+import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
 import { type AiService, ToolRegistry } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -59,7 +59,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
 // TODO(burdon): Factor out.
 const useToolRegistry = (): ToolRegistry => {
   const tools = useCapabilities(Capabilities.Tools).flat();
-  return useDeepCompareMemo(() => {
+  return useMemo(() => {
     const toolRegistry = new ToolRegistry([]);
     for (const tool of tools) {
       if (!toolRegistry.has(tool)) {
@@ -67,5 +67,5 @@ const useToolRegistry = (): ToolRegistry => {
       }
     }
     return toolRegistry;
-  }, [tools]);
+  }, [useDeepCompareMemoize(tools)]);
 };
