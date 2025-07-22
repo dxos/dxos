@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Sketch',
         'typename label_other': 'Sketches',
         'object name placeholder': 'New sketch',
+        'rename object label': 'Rename sketch',
+        'delete object label': 'Delete sketch',
       },
       [meta.id]: {
         'plugin name': 'Sketch',

@@ -522,12 +522,31 @@ export default (context: PluginContext) => {
     // Create collection actions and action groups.
     createExtension({
       id: `${SPACE_PLUGIN}/object-actions`,
-      actions: (node) =>
-        Rx.make((get) =>
+      actions: (node) => {
+        let query: QueryResult<DataType.View> | undefined;
+        return Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
-            Option.flatMap((object) => {
+            Option.flatMap((node) => {
+              const space = getSpace(node.data);
+              return space && Obj.isObject(node.data) ? Option.some({ space, object: node.data }) : Option.none();
+            }),
+            Option.flatMap(({ space, object }) => {
+              const isSchema = Obj.instanceOf(DataType.StoredSchema, object);
+              if (!query && isSchema) {
+                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
+                query = space.db.query(Filter.type(DataType.View));
+              }
+
+              let deletable = !isSchema;
+              if (isSchema && query) {
+                const views = get(rxFromQuery(query));
+                const filteredViews = get(
+                  rxFromSignal(() => views.filter((view) => view.query.typename === object.typename)),
+                );
+                deletable = filteredViews.length === 0;
+              }
+
               const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
               const [appGraph] = get(context.capabilities(Capabilities.AppGraph));
               const [state] = get(context.capabilities(SpaceCapabilities.State));
@@ -541,6 +560,7 @@ export default (context: PluginContext) => {
                   graph: appGraph.graph,
                   dispatch: dispatcher.dispatchPromise,
                   objectForms,
+                  deletable,
                   navigable: get(rxFromSignal(() => state.navigableCollections)),
                 });
               }
@@ -548,7 +568,8 @@ export default (context: PluginContext) => {
             Option.map((params) => constructObjectActions(params)),
             Option.getOrElse(() => []),
           ),
-        ),
+        );
+      },
     }),
 
     // Object settings plank companion.

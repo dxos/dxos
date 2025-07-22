@@ -327,6 +327,7 @@ export namespace CollectionAction {
 
   export const QueryCollectionForm = Schema.Struct({
     name: Schema.optional(Schema.String),
+    // TODO(wittjosiah): Filter view types from this.
     typename: Schema.optional(
       Schema.String.annotations({
         [TypenameAnnotationId]: ['object-form'],

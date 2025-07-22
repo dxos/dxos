@@ -166,6 +166,13 @@ const getQueryCollectionNodePartials = ({
   };
 };
 
+const getSchemaGraphNodePartials = () => {
+  return {
+    role: 'branch',
+    canDrop: () => false,
+  };
+};
+
 const getViewGraphNodePartials = ({
   view,
   resolve,
@@ -372,9 +379,11 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(DataType.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : Obj.instanceOf(DataType.View, object)
-        ? getViewGraphNodePartials({ view: object, resolve })
-        : metadata.graphProps;
+      : Obj.instanceOf(DataType.StoredSchema, object)
+        ? getSchemaGraphNodePartials()
+        : Obj.instanceOf(DataType.View, object)
+          ? getViewGraphNodePartials({ view: object, resolve })
+          : metadata.graphProps;
 
   return {
     id: fullyQualifiedId(object),
@@ -402,16 +411,21 @@ export const constructObjectActions = ({
   graph,
   dispatch,
   objectForms,
+  deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   objectForms: ObjectForm<any>[];
+  deletable?: boolean;
   navigable?: boolean;
 }) => {
   const space = getSpace(object);
   invariant(space, 'Space not found');
+  const typename = Obj.getTypename(object);
+  invariant(typename, 'Object has no typename');
+
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
@@ -476,10 +490,7 @@ export const constructObjectActions = ({
         await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
       },
       properties: {
-        label: [
-          Obj.instanceOf(DataType.Collection, object) ? 'rename collection label' : 'rename object label',
-          { ns: SPACE_PLUGIN },
-        ],
+        label: ['rename object label', { ns: typename }],
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         // TODO(wittjosiah): Not working.
@@ -499,18 +510,19 @@ export const constructObjectActions = ({
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
-        label: [
-          Obj.instanceOf(DataType.Collection, object) ? 'delete collection label' : 'delete object label',
-          { ns: SPACE_PLUGIN },
-        ],
+        label: ['delete object label', { ns: typename }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
+        disabled: !deletable,
         // TODO(wittjosiah): This is a browser shortcut.
         // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },
     },
-    ...(navigable || (!Obj.instanceOf(DataType.Collection, object) && !Obj.instanceOf(DataType.QueryCollection, object))
+    ...(navigable ||
+    (!Obj.instanceOf(DataType.Collection, object) &&
+      !Obj.instanceOf(DataType.QueryCollection, object) &&
+      !Obj.instanceOf(DataType.StoredSchema, object))
       ? [
           {
             id: getId('copy-link'),
