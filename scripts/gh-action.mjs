@@ -25,62 +25,61 @@ const REPO_ROOT = process.cwd();
 let username = process.env.GITHUB_USERNAME;
 
 const argv = yargs(process.argv.slice(2))
-.option('repo', {
-  type: 'string',
-  default: process.env.GITHUB_REPOSITORY || 'dxos/dxos',
-  description: 'Repository',
-})
-.option('period', {
-  type: 'number',
-  default: 12 * 60,
-  description: 'Period in minutes',
-})
-.option('filter', {
-  type: 'string',
-  default: 'Check',
-  description: 'Job name',
-})
-.option('all', {
-  type: 'boolean',
-  default: false,
-  description: 'List all jobs (not only failures)',
-})
-.option('truncate', {
-  type: 'boolean',
-  default: false,
-  description: 'Truncate trace (skip non package files)',
-})
-.option('watch', {
-  type: 'boolean',
-  default: false,
-  description: 'Watch and poll for updates',
-})
-.option('summary', {
-  type: 'boolean',
-  default: false,
-  description: 'Summary mode',
-})
-.option('interval', {
-  type: 'number',
-  default: 20_000,
-  description: 'Polling interval in milliseconds',
-})
-.option('username', {
-  type: 'string',
-  default: process.env.GITHUB_USERNAME,
-  description: 'Username',
-})
-.option('me', {
-  type: 'boolean',
-  default: true,
-  description: 'Current user',
-})
-.option('verbose', {
-  type: 'boolean',
-  default: false,
-  description: 'Verbose mode',
-})
-.argv;
+  .option('repo', {
+    type: 'string',
+    default: process.env.GITHUB_REPOSITORY || 'dxos/dxos',
+    description: 'Repository',
+  })
+  .option('period', {
+    type: 'number',
+    default: 12 * 60,
+    description: 'Period in minutes',
+  })
+  .option('filter', {
+    type: 'string',
+    default: 'Check',
+    description: 'Job name',
+  })
+  .option('all', {
+    type: 'boolean',
+    default: false,
+    description: 'List all jobs (not only failures)',
+  })
+  .option('truncate', {
+    type: 'boolean',
+    default: false,
+    description: 'Truncate trace (skip non package files)',
+  })
+  .option('watch', {
+    type: 'boolean',
+    default: false,
+    description: 'Watch and poll for updates',
+  })
+  .option('summary', {
+    type: 'boolean',
+    default: false,
+    description: 'Summary mode',
+  })
+  .option('interval', {
+    type: 'number',
+    default: 20000,
+    description: 'Polling interval in milliseconds',
+  })
+  .option('username', {
+    type: 'string',
+    default: process.env.GITHUB_USERNAME,
+    description: 'Username',
+  })
+  .option('me', {
+    type: 'boolean',
+    default: true,
+    description: 'Current user',
+  })
+  .option('verbose', {
+    type: 'boolean',
+    default: false,
+    description: 'Verbose mode',
+  }).argv;
 
 const command = argv._[0];
 
