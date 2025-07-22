@@ -94,6 +94,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
+      MOON_CONCURRENCY: 6
     steps:
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
