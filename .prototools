@@ -1,7 +1,10 @@
 # https://moonrepo.dev/docs/proto/config
 
 node = "20.12.1"
-pnpm = "9.11.0"
+pnpm = "10.13.1"
 
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading
-moon = "1.38.5"
+# NOTE: Moon is also included in the npm packages at the repo root.
+#  This is only for compability purposes (i.e., supporting Cloudflare Pages deploys).
+#  It is expected that developers will be using moon via proto, but they should be kept in sync.
+moon = "1.38.6"

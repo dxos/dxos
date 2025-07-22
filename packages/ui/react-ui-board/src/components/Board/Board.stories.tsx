@@ -69,11 +69,13 @@ const meta: Meta<StoryProps> = {
         onMove={handleMove}
         ref={controller}
       >
-        <Board.Controls />
-        <Board.Viewport>
-          <Board.Background />
-          <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
-        </Board.Viewport>
+        <Board.Controls classNames='absolute top-3 left-3 z-10 min-bs-0 is-auto' />
+        <Board.Container>
+          <Board.Viewport>
+            <Board.Background />
+            <Board.Content<TestItem> items={items} getTitle={(item) => item.title} />
+          </Board.Viewport>
+        </Board.Container>
       </Board.Root>
     );
   },
@@ -109,7 +111,7 @@ export const Default: Story = {
         '0': { x: 0, y: 0 },
         '1': { x: -3, y: -2 },
         '2': { x: 3, y: 2 },
-        '3': { x: -1, y: 0, width: 1, height: 2 },
+        '3': { x: -2, y: 0, width: 2, height: 2 },
         '4': { x: -1, y: -1, width: 3 },
         '5': { x: 1, y: 0 },
         '6': { x: 0, y: 1, width: 2 },

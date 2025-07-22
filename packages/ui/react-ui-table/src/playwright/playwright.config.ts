@@ -12,6 +12,6 @@ export default defineConfig({
   webServer: {
     command: 'moon run storybook:serve-e2e -- --port=9004',
     port: 9004,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });

@@ -9,14 +9,14 @@ import { Obj } from '@dxos/echo';
 
 import { BoardContainer } from '../components';
 import { meta } from '../meta';
-import { BoardType } from '../types';
+import { Board } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
       role: ['article', 'section'],
-      filter: (data): data is { subject: BoardType } => Obj.instanceOf(BoardType, data.subject),
+      filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
       component: ({ data, role }) => <BoardContainer board={data.subject} role={role} />,
     }),
   ]);

@@ -27,7 +27,12 @@ import { ViewProjection } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
-const TableContainer = ({ role, table }: { role?: string; table: TableType }) => {
+export type TableContainerProps = {
+  role: string;
+  table: TableType;
+};
+
+export const TableContainer = ({ role, table }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
