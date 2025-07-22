@@ -69,6 +69,7 @@
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.23.0",
     "@effect/ai-anthropic": "^0.13.0",
+    "@effect/ai-openai": "0.26.1",
     "@effect/platform": "^0.89.0",
     "@effect/platform-node": "^0.92.0",
     "@preact/signals-core": "^1.9.0",

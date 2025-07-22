@@ -39,3 +39,5 @@ export const DEFAULT_OLLAMA_MODELS = [
   'llama3:70b',
   'deepseek-r1:latest',
 ] as const;
+
+export const DEFAULT_LMSTUDIO_MODELS = ['@google/gemma-3-12b'] as const;
