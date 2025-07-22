@@ -82,6 +82,7 @@ const ChatContainer = () => {
     services,
     blueprintRegistry,
     noPluginArtifacts: true,
+    
   });
 
   if (!chat || !processor) {

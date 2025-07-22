@@ -100,10 +100,11 @@ export const useChatProcessor = ({
   );
 
   // TODO(burdon): Remove default (let backend decide if not specified).
-  const model: ChatProcessorOptions['model'] =
-    settings?.llmProvider === 'ollama'
-      ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
-      : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
+  // TODO(dmaretskyi): Fix model selection.
+  const model: ChatProcessorOptions['model'] = '@google/gemma-3-12b';
+  // settings?.llmProvider === 'ollama'
+  //   ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
+  //   : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
