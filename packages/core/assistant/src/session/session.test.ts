@@ -3,14 +3,12 @@
 //
 
 import { AiTool, AiToolkit } from '@effect/ai';
-import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Type, Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { AISession } from './session';
@@ -27,10 +25,6 @@ const CalendarEventSchema = Schema.Struct({
     version: '0.1.0',
   }),
 );
-
-const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
-}).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 

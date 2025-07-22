@@ -28,6 +28,7 @@ const TestLayer = pipe(
       transformClient: tapHttpErrors,
     }),
   ),
+  // TODO(dmaretskyi): Migrate to FetchHttpClient.
   Layer.provide(NodeHttpClient.layerUndici),
 );
 

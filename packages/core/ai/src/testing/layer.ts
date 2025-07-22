@@ -3,8 +3,8 @@
 //
 
 import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
 import { Config, Layer, type ConfigError } from 'effect';
+import { FetchHttpClient } from '@effect/platform';
 
 import { AiServiceRouter } from '../experimental';
 import { type AiService } from '../service';
@@ -23,7 +23,7 @@ export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRou
       apiKey: Config.redacted('ANTHROPIC_API_KEY'),
     }),
   ),
-  Layer.provide(NodeHttpClient.layerUndici),
+  Layer.provide(FetchHttpClient.layer),
 );
 
 /**
@@ -35,7 +35,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiService
       apiUrl: Config.succeed('http://localhost:8788/provider/anthropic'),
     }),
   ),
-  Layer.provide(NodeHttpClient.layerUndici),
+  Layer.provide(FetchHttpClient.layer),
 );
 
 /**
@@ -47,7 +47,7 @@ export const RemoteEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServic
       apiUrl: Config.succeed('https://edge-main.dxos.workers.dev/provider/anthropic'),
     }),
   ),
-  Layer.provide(NodeHttpClient.layerUndici),
+  Layer.provide(FetchHttpClient.layer),
 );
 
 /**
