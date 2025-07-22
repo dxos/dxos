@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Layer } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
 import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
-import { FunctionType, type ServiceContainer } from '@dxos/functions';
+import { FunctionType, type Services } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
@@ -23,8 +24,7 @@ type UseChatProcessorProps = {
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: Assistant.Chat;
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
-  serviceContainer: ServiceContainer;
+  services?: Layer.Layer<Services>;
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
   /** @deprecated */
@@ -42,7 +42,7 @@ export const useChatProcessor = ({
   part = 'deck',
   space,
   chat,
-  serviceContainer,
+  services,
   blueprintRegistry,
   settings,
   instructions,
@@ -59,15 +59,15 @@ export const useChatProcessor = ({
   }
 
   // Services.
-  const services = useQuery(space, Filter.type(ServiceType));
+  const remoteServices = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
   useEffect(() => {
     log('creating service tools...');
     queueMicrotask(async () => {
-      const tools = await Promise.all(services.map((service) => createToolsFromService(service)));
+      const tools = await Promise.all(remoteServices.map((service) => createToolsFromService(service)));
       setServiceTools(tools.flat());
     });
-  }, [services]);
+  }, [remoteServices]);
 
   // Tools and context.
   const config = useConfig();
@@ -109,20 +109,20 @@ export const useChatProcessor = ({
     }
 
     return new Conversation({
-      serviceContainer,
       queue: chat.queue.target as Queue<any>,
     });
-  }, [chat?.queue.target, serviceContainer]);
+  }, [chat?.queue.target]);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
-    if (!conversation) {
+    if (!services || !conversation) {
       return undefined;
     }
 
     log('creating processor...', { settings });
     return new ChatProcessor(conversation, {
+      services,
       tools,
       extensions,
       blueprintRegistry,
