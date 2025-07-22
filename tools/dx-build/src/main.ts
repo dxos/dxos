@@ -58,6 +58,7 @@ const main = async () => {
   // Remove all files except tsconfig.tsbuildinfo.
   await Promise.all(
     files.map(async (file) => {
+      // TODO(dmaretskyi): Keeping this file makes tsc skip emitting any files.
       // if (file === 'tsconfig.tsbuildinfo') {
       //   return;
       // }
