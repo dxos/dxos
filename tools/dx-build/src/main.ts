@@ -4,7 +4,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readdir, stat, rm } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import ts from 'typescript';
