@@ -130,7 +130,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       return {
         update: (cell) => {
           if (cell) {
-            dxGrid.updateIfWithinBounds(cell);
+            dxGrid.updateIfWithinBounds(cell, true);
           } else {
             dxGrid.updateCells(true);
             dxGrid.requestUpdate();
@@ -359,6 +359,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       [model, client, t],
     );
 
+    const handleSave = useCallback(() => {
+      dxGrid?.updateCells(true);
+    }, [dxGrid]);
+
     if (!model || !modals) {
       return <span role='none' className='attention-surface' />;
     }
@@ -372,6 +376,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
+          onSave={handleSave}
         />
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}

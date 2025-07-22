@@ -547,7 +547,10 @@
       "path": "tools/codemorph/tsconfig.json"
     },
     {
-      "path": "tools/esbuild/tsconfig.json"
+      "path": "tools/dx-build/tsconfig.json"
+    },
+    {
+      "path": "tools/dx-compile/tsconfig.json"
     },
     {
       "path": "tools/lit-storybook/tsconfig.json"

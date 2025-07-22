@@ -3,7 +3,7 @@
 //
 
 import { withThemeByClassName } from '@storybook/addon-themes';
-import { type Preview } from '@storybook/web-components';
+import { type Preview } from '@storybook/web-components-vite';
 
 /**
  * Configure Storybook rendering.

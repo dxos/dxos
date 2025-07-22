@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@automerge/automerge': 3.0.0-beta.4
+  '@automerge/automerge': 3.0.0
   ipfs-utils: 9.0.14
   micromatch: ^4.0.8
   nan: 2.19.0
@@ -23,7 +23,7 @@ overrides:
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
 
-pnpmfileChecksum: sha256-lLxmBnkhDRzM/HrJKV9wtjmM2VNagVkwz0u5akMxS28=
+pnpmfileChecksum: sha256-I26ibQHzR4rDQrxFzxv3gV/eiaOj3gHH1boJmPZ5xig=
 
 patchedDependencies:
   random-access-idb@1.2.2:
@@ -62,9 +62,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:packages/sdk/client
-      '@dxos/esbuild':
+      '@dxos/dx-build':
         specifier: workspace:*
-        version: link:tools/esbuild
+        version: link:tools/dx-build
+      '@dxos/dx-compile':
+        specifier: workspace:*
+        version: link:tools/dx-compile
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -95,9 +98,12 @@ importers:
       '@dxos/typings':
         specifier: workspace:*
         version: link:packages/common/typings
+      '@effect/language-service':
+        specifier: ^0.28.0
+        version: 0.28.0
       '@effect/vitest':
-        specifier: ~0.21.4
-        version: 0.21.5(effect@3.16.13)(vitest@3.2.4)
+        specifier: ~0.25.0
+        version: 0.25.0(effect@3.17.0)(vitest@3.2.4)
       '@eslint/js':
         specifier: ^9.30.1
         version: 9.30.1
@@ -228,8 +234,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       esbuild:
         specifier: 0.25.6
         version: 0.25.6
@@ -268,7 +274,7 @@ importers:
         version: 7.37.5(eslint@9.30.1(jiti@2.4.2))
       eslint-plugin-storybook:
         specifier: 9.0.15
-        version: 9.0.15(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
+        version: 9.0.15(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
       eslint-plugin-unused-imports:
         specifier: ^4.1.4
         version: 4.1.4(eslint@9.30.1(jiti@2.4.2))
@@ -351,8 +357,8 @@ importers:
         specifier: ^14.1.2
         version: 14.1.2
       storybook:
-        specifier: 9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+        specifier: 9.0.17
+        version: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       syncpack:
         specifier: ^8.2.4
         version: 8.2.4
@@ -501,6 +507,9 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../../plugins/plugin-automation
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
@@ -652,8 +661,8 @@ importers:
         specifier: ^5.0.20
         version: 5.0.20
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -716,8 +725,8 @@ importers:
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-icons
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1318,8 +1327,8 @@ importers:
         specifier: workspace:*
         version: link:../log
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/common/errors: {}
 
@@ -1507,8 +1516,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -1641,8 +1650,8 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -1706,8 +1715,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -2285,8 +2294,8 @@ importers:
         specifier: ^1.10.9
         version: 1.10.9
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/core/artifact:
     dependencies:
@@ -2309,8 +2318,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/log
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -2380,38 +2389,38 @@ importers:
         version: link:../../common/util
     devDependencies:
       '@effect/ai':
-        specifier: 0.22.0
-        version: 0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@effect/ai-anthropic':
-        specifier: 0.12.1
-        version: 0.12.1(@effect/ai@0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.13.0
+        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/ai-openai':
-        specifier: 0.25.1
-        version: 0.25.1(@effect/ai@0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.26.1
+        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/cluster':
-        specifier: 0.42.0
-        version: 0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.44.0
+        version: 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@effect/experimental':
-        specifier: 0.52.0
-        version: 0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)
+        specifier: 0.53.0
+        version: 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@effect/platform-node':
-        specifier: 0.90.0
-        version: 0.90.0(@effect/cluster@0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.92.0
+        version: 0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@effect/rpc':
-        specifier: 0.65.0
-        version: 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.66.0
+        version: 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/sql':
-        specifier: 0.41.0
-        version: 0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.43.0
+        version: 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/workflow':
-        specifier: 0.5.0
-        version: 0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.6.0
+        version: 0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -2492,8 +2501,8 @@ importers:
         version: 1.7.0(encoding@0.1.13)
     devDependencies:
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       inquirer:
         specifier: ^12.0.0
         version: 12.0.0(@types/node@22.10.2)
@@ -2549,8 +2558,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       hyperformula:
         specifier: ^2.7.1
         version: 2.7.1
@@ -2637,8 +2646,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
@@ -2646,8 +2655,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       jsonpath-plus:
         specifier: 10.2.0
         version: 10.2.0
@@ -2694,17 +2703,17 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/core/echo/echo-db:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2769,8 +2778,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2794,8 +2803,8 @@ importers:
   packages/core/echo/echo-generator:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2824,8 +2833,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -2834,11 +2843,11 @@ importers:
   packages/core/echo/echo-pipeline:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2942,8 +2951,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2982,8 +2991,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/core/echo/echo-query:
     dependencies:
@@ -3037,8 +3046,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -3062,8 +3071,8 @@ importers:
   packages/core/echo/indexing:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3119,8 +3128,8 @@ importers:
         specifier: ^2.17.2
         version: 2.17.2
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3171,8 +3180,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/core/functions:
     dependencies:
@@ -3234,8 +3243,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
@@ -3246,8 +3255,8 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -3395,8 +3404,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/platform':
-        specifier: ^0.87.12
-        version: 0.87.13(effect@3.16.13)
+        specifier: ^0.89.0
+        version: 0.89.0(effect@3.17.0)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.2)
@@ -3877,8 +3886,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/protobuf-compiler
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/devtools/cli:
     dependencies:
@@ -4230,8 +4239,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -4444,8 +4453,8 @@ importers:
   packages/devtools/devtools:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -4552,8 +4561,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -4585,8 +4594,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       flame-chart-js:
         specifier: ^3.3.0
         version: 3.3.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(use-resize-observer@9.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0))
@@ -4827,17 +4836,17 @@ importers:
   packages/e2e/blade-runner:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -4932,8 +4941,8 @@ importers:
         specifier: ^4.3.4
         version: 4.4.1(supports-color@5.5.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       esbuild:
         specifier: 0.25.6
         version: 0.25.6
@@ -5147,8 +5156,8 @@ importers:
         version: link:../../common/log
     devDependencies:
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -5488,10 +5497,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: ^0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5502,8 +5511,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -5544,8 +5553,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@types/react':
         specifier: ~18.2.0
@@ -5634,10 +5643,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -5645,8 +5654,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -5674,6 +5683,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -5731,9 +5743,12 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
+      '@preact/signals-react':
+        specifier: ^3.2.0
+        version: 3.2.1(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -5832,8 +5847,8 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5940,10 +5955,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -5954,8 +5969,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6020,8 +6035,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -6057,8 +6072,8 @@ importers:
         specifier: ^1.2.13
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.6)))
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6224,10 +6239,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6238,8 +6253,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6337,8 +6352,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -6354,10 +6369,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6377,8 +6392,8 @@ importers:
   packages/plugins/plugin-excalidraw:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6446,8 +6461,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6561,8 +6576,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       force-graph:
         specifier: ^1.49.4
         version: 1.49.5
@@ -6699,10 +6714,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6713,8 +6728,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6751,10 +6766,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6762,8 +6777,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -6836,10 +6851,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -6850,8 +6865,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7014,10 +7029,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7025,8 +7040,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7112,8 +7127,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -7241,10 +7256,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7252,8 +7267,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7264,8 +7279,8 @@ importers:
   packages/plugins/plugin-markdown:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@codemirror/search':
         specifier: ^6.5.6
         version: 6.5.6
@@ -7386,10 +7401,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7397,8 +7412,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -7558,16 +7573,16 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       preact:
         specifier: ~10.11.0
         version: 10.11.2
@@ -7608,8 +7623,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       mermaid:
         specifier: ^10.6.1
         version: 10.6.1
@@ -7663,8 +7678,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       vite:
         specifier: 5.4.7
@@ -7763,8 +7778,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/echo-signals':
         specifier: workspace:*
@@ -7798,10 +7813,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -7878,8 +7893,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7895,10 +7910,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8001,10 +8016,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8012,8 +8027,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8125,10 +8140,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8142,8 +8157,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8221,8 +8236,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/storybook-utils
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8248,8 +8263,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8332,10 +8347,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8346,8 +8361,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8564,10 +8579,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8575,8 +8590,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8676,10 +8691,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -8690,8 +8705,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8899,10 +8914,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
@@ -8922,8 +8937,8 @@ importers:
         specifier: ^1.8.8
         version: 1.8.8
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -8937,8 +8952,8 @@ importers:
   packages/plugins/plugin-sketch:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9030,8 +9045,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -9073,8 +9088,8 @@ importers:
   packages/plugins/plugin-space:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -9196,8 +9211,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -9228,10 +9243,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9320,8 +9335,8 @@ importers:
         specifier: 1.1.3
         version: 1.1.3(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       node-fetch:
         specifier: ^2.6.0
         version: 2.7.0(encoding@0.1.13)
@@ -9402,8 +9417,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -9458,8 +9473,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9556,16 +9571,16 @@ importers:
         version: link:../../ui/react-ui-theme
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9612,8 +9627,8 @@ importers:
         specifier: ^1.9.0
         version: 1.11.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9661,8 +9676,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9736,10 +9751,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9747,8 +9762,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -9920,10 +9935,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9931,8 +9946,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10011,10 +10026,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10022,8 +10037,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10216,10 +10231,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/dom-speech-recognition':
         specifier: ^0.0.6
         version: 0.0.6
@@ -10227,8 +10242,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10299,8 +10314,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -10411,8 +10426,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.1
@@ -10531,10 +10546,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10542,8 +10557,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.79
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10613,10 +10628,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -10627,8 +10642,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10642,11 +10657,11 @@ importers:
   packages/sdk/client:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10747,8 +10762,8 @@ importers:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -10826,17 +10841,17 @@ importers:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
 
   packages/sdk/client-services:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11095,11 +11110,11 @@ importers:
   packages/sdk/migrations:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -11421,7 +11436,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.16.13)
+        version: 0.75.5(effect@3.17.0)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
@@ -11429,8 +11444,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -11702,7 +11717,13 @@ importers:
       alea:
         specifier: ^1.0.1
         version: 1.0.1
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
     devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12028,8 +12049,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -12119,8 +12140,8 @@ importers:
         specifier: ^12.8.1
         version: 12.8.1(@types/react@18.2.79)(immer@10.1.1)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -12220,8 +12241,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -12325,8 +12346,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -12356,8 +12377,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/storybook-utils
       '@effect/ai':
-        specifier: 0.22.0
-        version: 0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -12368,8 +12389,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -12501,8 +12522,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -12610,8 +12631,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.14.21
-        version: 3.14.21
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -12711,8 +12732,8 @@ importers:
   packages/ui/react-ui-editor:
     dependencies:
       '@automerge/automerge':
-        specifier: 3.0.0-beta.4
-        version: 3.0.0-beta.4
+        specifier: 3.0.0
+        version: 3.0.0
       '@codemirror/autocomplete':
         specifier: ^6.18.1
         version: 6.18.1(@codemirror/language@6.10.3)(@codemirror/state@6.4.1)(@codemirror/view@6.34.1)
@@ -12847,11 +12868,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.0.8
+        version: 2.0.8
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -12890,10 +12911,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/chai':
         specifier: ^4.2.15
         version: 4.3.5
@@ -12925,8 +12946,8 @@ importers:
         specifier: ^1.11.0
         version: 1.11.0(chai@4.4.1)(mocha@10.6.0)
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       happy-dom:
         specifier: ^13.3.1
         version: 13.3.4
@@ -13061,8 +13082,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -13505,8 +13526,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -13581,8 +13602,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -13640,10 +13661,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -13651,8 +13672,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -14126,10 +14147,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)
+        version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
       '@effect/platform':
-        specifier: 0.88.0
-        version: 0.88.0(effect@3.16.13)
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@types/lodash.orderby':
         specifier: ^4.6.9
         version: 4.6.9
@@ -14140,8 +14161,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.25
       effect:
-        specifier: 3.16.13
-        version: 3.16.13
+        specifier: 3.17.0
+        version: 3.17.0
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -14245,6 +14266,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.25.9)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -14536,7 +14560,20 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0
 
-  tools/esbuild:
+  tools/dx-build:
+    dependencies:
+      chalk:
+        specifier: ^4.1.0
+        version: 4.1.2
+      comment-json:
+        specifier: ^4.2.3
+        version: 4.2.3
+    devDependencies:
+      '@types/comment-json':
+        specifier: ^2.4.5
+        version: 2.4.5
+
+  tools/dx-compile:
     dependencies:
       yargs:
         specifier: ~16.2.0
@@ -14560,32 +14597,32 @@ importers:
         specifier: workspace:*
         version: link:../vite-plugin-icons
       '@storybook/addon-docs':
-        specifier: ~9.0.14
-        version: 9.0.15(@types/react@18.2.79)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
+        specifier: ~9.0.17
+        version: 9.0.18(@types/react@18.2.79)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
       '@storybook/addon-links':
-        specifier: ~9.0.14
-        version: 9.0.15(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+        specifier: ~9.0.17
+        version: 9.0.18(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       '@storybook/addon-themes':
-        specifier: ~9.0.14
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+        specifier: ~9.0.17
+        version: 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       '@storybook/addon-vitest':
-        specifier: ~9.0.14
-        version: 9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)
+        specifier: ~9.0.17
+        version: 9.0.18(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)
       '@storybook/builder-vite':
-        specifier: ~9.0.14
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
-      '@storybook/web-components':
-        specifier: ~9.0.14
-        version: 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+        specifier: ~9.0.17
+        version: 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/web-components-vite':
-        specifier: ~9.0.14
-        version: 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        specifier: ~9.0.17
+        version: 9.0.18(lit@3.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      eslint-plugin-storybook:
+        specifier: 9.0.17
+        version: 9.0.17(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
       lit:
         specifier: ^3.2.0
         version: 3.2.0
       storybook:
-        specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+        specifier: ^9.0.17
+        version: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
@@ -14643,29 +14680,29 @@ importers:
         specifier: workspace:*
         version: link:../vite-plugin-icons
       '@storybook/addon-docs':
-        specifier: ^9.0.15
-        version: 9.0.15(@types/react@18.2.79)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
+        specifier: ^9.0.17
+        version: 9.0.18(@types/react@18.2.79)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
       '@storybook/addon-links':
-        specifier: ^9.0.15
-        version: 9.0.15(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+        specifier: ^9.0.17
+        version: 9.0.18(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       '@storybook/addon-themes':
-        specifier: ^9.0.15
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+        specifier: ^9.0.17
+        version: 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       '@storybook/addon-vitest':
-        specifier: ^9.0.15
-        version: 9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)
+        specifier: ^9.0.17
+        version: 9.0.18(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)
       '@storybook/builder-vite':
-        specifier: ^9.0.15
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        specifier: ^9.0.17
+        version: 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/html-vite':
-        specifier: ^9.0.15
-        version: 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        specifier: ^9.0.17
+        version: 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@storybook/mdx2-csf':
         specifier: ^1.1.0
         version: 1.1.0
       '@storybook/react-vite':
-        specifier: ^9.0.15
-        version: 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+        specifier: ^9.0.17
+        version: 9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
       '@types/lodash.flatten':
         specifier: ^4.4.6
         version: 4.4.7
@@ -14681,6 +14718,9 @@ importers:
       chromatic:
         specifier: ^13.0.1
         version: 13.1.2
+      eslint-plugin-storybook:
+        specifier: 9.0.17
+        version: 9.0.17(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
       lodash.flatten:
         specifier: ^4.4.0
         version: 4.4.0
@@ -14694,8 +14734,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
       storybook:
-        specifier: ^9.0.15
-        version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+        specifier: ^9.0.17
+        version: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
@@ -14944,20 +14984,20 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
-    resolution: {integrity: sha512-YnnO6WStkOj7vPEB6B9IdcxBbUHCxAUttePzSbNALNdEchhPZF6PbEQhhddjqfYzX4LnEAoGpkQvVnPop3w4Gg==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
+    resolution: {integrity: sha512-2pvxSaKfS1Lg8QqRlT/+vDmB/mKBxPewFKBdaa1+zTb4SQ87Akmw2qvYsVB2Aw8kZk5W43GkEIrIwsvuoG6l4Q==}
 
-  '@automerge/automerge-repo-network-websocket@2.0.1':
-    resolution: {integrity: sha512-bO1itzPw6z6+rHKRV6ItEOnGReAoEuk9dRbxQPRKZKg+StyowNBLaOl4R4/yVO49roxMRh+OrFYKfEuZ+B/M3w==}
+  '@automerge/automerge-repo-network-websocket@2.0.8':
+    resolution: {integrity: sha512-Q42Oo4TDvCK8V9c8U020lGw8QR/j9iKB9dWENptxzcmVB3jAtLz5wGzT41kpBsJU0ArDTC3xM6SWGBwTahMIog==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
-    resolution: {integrity: sha512-4e7fnA0rwQ8KJSZV7HsntOixgvh+YkW1pLs1h3XGMGRARKvSo+xZ6bcf3D8jzR/BPawpJkeu9BExH585X+UC8w==}
+  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
+    resolution: {integrity: sha512-35YPDes5GMtV4fmw9+JcfXflT21tBXoUSMcFIbw1yUzwAzajpdRnVhf4JmOv+w7An+9bT84L3Bj5JueN5feffA==}
 
-  '@automerge/automerge-repo@2.0.1':
-    resolution: {integrity: sha512-1V8pyX5s8PtyPDKmkdEaK/lSuwc9j1HWRYxiWwx2/7FYshfKjl3+mMTAEemzKrwQNE3f3+0zKlI4gChBebAevg==}
+  '@automerge/automerge-repo@2.0.8':
+    resolution: {integrity: sha512-DP+irpMjbymPWuKVsR6eopLiSEvq/1JlL8IRIBhTsI8RPTKNco3j4+rjTPtKF3UG/EsZydXi541QmRMYEe/A7w==}
 
-  '@automerge/automerge@3.0.0-beta.4':
-    resolution: {integrity: sha512-eI3aGxd2RxhXJevza5LWi9JFb4pmgdWcijrADasJnhwkzXptAMGlhEaJEalesF5Z789DIDA+BJrXOuKNqOp5yg==}
+  '@automerge/automerge@3.0.0':
+    resolution: {integrity: sha512-vp/LrAzOyS4J+YmEKRjnCjCUqN6itzz9nKvPEcSLJuapZXfPmY72TYg0F05DVnLCvGe+sLuVAoVntJT6K0qutQ==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -16241,47 +16281,47 @@ packages:
   '@effect-rx/rx@0.43.2':
     resolution: {integrity: sha512-jv1G96rwHcjLRVzkuKvJGRTA7WLNgPfl6d1HjpNEYRKJN+7b2p+NIQ+mj5RM4N2rnqz2Zhufs8kDM/EZcYEF9w==}
     peerDependencies:
-      '@effect/platform': 0.88.0
+      '@effect/platform': '*'
       effect: ^3.16.9
 
-  '@effect/ai-anthropic@0.12.1':
-    resolution: {integrity: sha512-JeNhRcxvhaKyB8azxUAUUjit9Kcq4OBS+zLZRrh+2yo0ReSDbc2rdQpkStxTVUFhNa3dxQoI87uLDLvYz3HFlQ==}
+  '@effect/ai-anthropic@0.13.0':
+    resolution: {integrity: sha512-Jeb0nKejC7lX46krfoMhoyC6fE82kqZxIvqgZNSm7OuPVsj9gy9h6WHuKB5QaadOXWEegqCGlgtstI3j1SJhdw==}
     peerDependencies:
-      '@effect/ai': ^0.22.0
-      '@effect/experimental': ^0.52.0
-      '@effect/platform': ^0.88.0
-      effect: ^3.16.13
+      '@effect/ai': ^0.23.0
+      '@effect/experimental': ^0.53.0
+      '@effect/platform': ^0.89.0
+      effect: ^3.17.0
 
-  '@effect/ai-openai@0.25.1':
-    resolution: {integrity: sha512-pHqM9iPI6wl4fapsECPGRKsX5SGkcI/EAjmC4wRQd7Vrq7Dxyj4m6aI2mBtsAdeYoQ/qNalegWKMNlR3H3MvGw==}
+  '@effect/ai-openai@0.26.1':
+    resolution: {integrity: sha512-N4XbcosJU1Qd+evekPL99mwM7OqWZmAiXD8QZFlxAIixQ/uK8CxgG/Vfqukih3znEhFcgJRTS29yXSYO47FGtg==}
     peerDependencies:
-      '@effect/ai': ^0.22.0
-      '@effect/experimental': ^0.52.0
-      '@effect/platform': ^0.88.0
-      effect: ^3.16.13
+      '@effect/ai': ^0.23.0
+      '@effect/experimental': ^0.53.0
+      '@effect/platform': ^0.89.0
+      effect: ^3.17.0
 
-  '@effect/ai@0.22.0':
-    resolution: {integrity: sha512-HvQgRsukxNOX/rVAF40GWjTtTBVK3lVY6rXmC8IWis8WA8G8+yQ8KCvjRLlMdwlxOsE/5blmBwA8CvDdGwnwgA==}
+  '@effect/ai@0.23.0':
+    resolution: {integrity: sha512-Rsh2qOOqIj3FHfrKzub9xmrboMkyfoW7r/B+1wOBI9SR9o+Pnl8SN8GEkUfco0SMyJIGdK9orMd4R3csChYLdw==}
     peerDependencies:
-      '@effect/experimental': ^0.52.0
-      '@effect/platform': ^0.88.0
-      '@effect/rpc': ^0.65.0
-      effect: ^3.16.13
+      '@effect/experimental': ^0.53.0
+      '@effect/platform': ^0.89.0
+      '@effect/rpc': ^0.66.0
+      effect: ^3.17.0
 
-  '@effect/cluster@0.42.0':
-    resolution: {integrity: sha512-p1yLS1A5P112l2JVX8eb1OpO+TBn43EDi9wZu51aO+0Mtfdlo1RrnXrCXQIGeNGLziw8gbrTAgf5nUkzIlF+Cg==}
+  '@effect/cluster@0.44.0':
+    resolution: {integrity: sha512-LQCTKXEoveLTaMXPjQQwYP6B/4HdveLMTYREAzFaCFhFk9iaFWwM4rLK9RPpFwJEfkhOIylYS7MR3DsJaPXq9Q==}
     peerDependencies:
-      '@effect/platform': ^0.88.0
-      '@effect/rpc': ^0.65.0
-      '@effect/sql': ^0.41.0
-      '@effect/workflow': ^0.5.0
-      effect: ^3.16.13
+      '@effect/platform': ^0.89.0
+      '@effect/rpc': ^0.66.0
+      '@effect/sql': ^0.43.0
+      '@effect/workflow': ^0.6.0
+      effect: ^3.17.0
 
-  '@effect/experimental@0.52.0':
-    resolution: {integrity: sha512-SqTmGQMNJTq8IZ0XKu3hDOD09YRiZLDbHfODu4r1yhhAfh93vn2x9waELQtiAbXcsjG/eMpbajcCc0KvFgFFIA==}
+  '@effect/experimental@0.53.0':
+    resolution: {integrity: sha512-EUYWW6g8CsobKDnOyX6a+NIPFOVVU8X1/tGddfagmuB7ukhT0QAppHqnqTqWgvZ6icbN8G5Z1Ui2xB4P80GrAA==}
     peerDependencies:
-      '@effect/platform': ^0.88.0
-      effect: ^3.16.13
+      '@effect/platform': ^0.89.0
+      effect: ^3.17.0
       ioredis: ^5
       lmdb: ^3
     peerDependenciesMeta:
@@ -16290,39 +16330,38 @@ packages:
       lmdb:
         optional: true
 
-  '@effect/platform-node-shared@0.43.0':
-    resolution: {integrity: sha512-kYlGo5eNDsfOkirBC4B4a83OtESc9x4r+JWCHNtnRswBnKKj8GgC90vL1ksNbfTnESzRCQ8/bfjPeyxHAffDAg==}
-    peerDependencies:
-      '@effect/cluster': ^0.42.0
-      '@effect/platform': ^0.88.0
-      '@effect/rpc': ^0.65.0
-      '@effect/sql': ^0.41.0
-      effect: ^3.16.13
+  '@effect/language-service@0.28.0':
+    resolution: {integrity: sha512-Vz3Ax/6sQbzEJDR/wqZkXB0XDfxZQSydWUD/7CRl6HmGCrw0wgIMd0xqKNF7LgE9uX6EgwQASHTOr0BSFCmYZA==}
+    hasBin: true
 
-  '@effect/platform-node@0.90.0':
-    resolution: {integrity: sha512-U6WBUghdXYELtg5h+p5nzRV2ih0oPOoxnVrfvmR4UHQaOtvYbwu/Lexho59HBYdIqnYzHCi5KH12z8b6E0kv+Q==}
+  '@effect/platform-node-shared@0.45.0':
+    resolution: {integrity: sha512-6pChbcUvZBXZY0fUJQ+WJaDhEk0Y0713YLpOQmrmIo92Uth+5ipbfoNHky+ickOsfi6eUOi7UPMaXkUzGHQwIQ==}
     peerDependencies:
-      '@effect/cluster': ^0.42.0
-      '@effect/platform': ^0.88.0
-      '@effect/rpc': ^0.65.0
-      '@effect/sql': ^0.41.0
-      effect: ^3.16.13
+      '@effect/cluster': ^0.44.0
+      '@effect/platform': ^0.89.0
+      '@effect/rpc': ^0.66.0
+      '@effect/sql': ^0.43.0
+      effect: ^3.17.0
 
-  '@effect/platform@0.87.13':
-    resolution: {integrity: sha512-CmeP3DL54lllJenW9CIrvNeUy8D+hY3NFQWDyd+q7t3aAMHmyGznqCnm345uBN21KfsahCOofL8YQYxHHcUGbw==}
+  '@effect/platform-node@0.92.0':
+    resolution: {integrity: sha512-4ZIRY+1PhIY/bux/Khbr0nyTfWjMTYa8a1qHuaHBC2bBa5Ed5LjbP7T+TMrIB5cmp8s6L+pGkdvJTaxjGuoGvQ==}
     peerDependencies:
-      effect: ^3.16.13
+      '@effect/cluster': ^0.44.0
+      '@effect/platform': ^0.89.0
+      '@effect/rpc': ^0.66.0
+      '@effect/sql': ^0.43.0
+      effect: ^3.17.0
 
-  '@effect/platform@0.88.0':
-    resolution: {integrity: sha512-ObTXedf/DshoKtM2ygEcoP7Kj9rop0KeDvLriQE2HD4Fgo1pxjgbOivkCbSq03MErpNE2/lMYTY6Si6bo4qMqQ==}
+  '@effect/platform@0.89.0':
+    resolution: {integrity: sha512-9nTaD1h/X4M4qdl/4E1atwoe+p4VoH0SJiYd2mJrDJC18alwqlI/xaKNGRnJVPbIrhbKC62YJ9h2mqfkE4t2YA==}
     peerDependencies:
-      effect: ^3.16.13
+      effect: ^3.17.0
 
-  '@effect/rpc@0.65.0':
-    resolution: {integrity: sha512-L2ClFG7EKu0PDrsi2t5vYmUUE7f+CDz05sQiZFy05sDINXWw7mZ4y6SwvcDe8A8a00w/BPmqyHdYWnIascMWDw==}
+  '@effect/rpc@0.66.0':
+    resolution: {integrity: sha512-NaMh8FGa5HWl5G56MpPOHEMPrseMNCqz41axy3JxA5wTKBs3RSBCHvfyQCTzHQgulrEWlVADrXUetxWXlSEEXA==}
     peerDependencies:
-      '@effect/platform': ^0.88.0
-      effect: ^3.16.13
+      '@effect/platform': ^0.89.0
+      effect: ^3.17.0
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -16330,25 +16369,25 @@ packages:
     peerDependencies:
       effect: ^3.9.2
 
-  '@effect/sql@0.41.0':
-    resolution: {integrity: sha512-P3RuRm/PHEYInkFE0VUijWCWGyCviq2rnLLcTpdIRCy9quwGTh53kOnh9Go1pL+owGkq3WrP1T1hiAr5LzeNfg==}
+  '@effect/sql@0.43.0':
+    resolution: {integrity: sha512-Q894sLjh7nV/DnbKq2i1HXVA4RQs05OEaN/cCSpLj+37c3ToKR5SmHNMA2Z1HGxauZDi5kenKG1dHKFxRApN5Q==}
     peerDependencies:
-      '@effect/experimental': ^0.52.0
-      '@effect/platform': ^0.88.0
-      effect: ^3.16.13
+      '@effect/experimental': ^0.53.0
+      '@effect/platform': ^0.89.0
+      effect: ^3.17.0
 
-  '@effect/vitest@0.21.5':
-    resolution: {integrity: sha512-hI5e/yHnRUaVfcsQuQokqLDUgmB9H+uy2jiefxlXE+9S6glNrE0xCud11QYE58sv17VtzcA3VfVQA9XzTlcA8A==}
+  '@effect/vitest@0.25.0':
+    resolution: {integrity: sha512-FpOKYdhe3LaOoYn0cm5W9cD9bk2qwr2A+ujMhiDVxN7MMgndFsOd8uxcWjZRX6tWjzU2aKvZXFKGEp93GAmXug==}
     peerDependencies:
-      effect: ^3.14.22
-      vitest: ^3.0.0
+      effect: ^3.17.0
+      vitest: ^3.2.0
 
-  '@effect/workflow@0.5.0':
-    resolution: {integrity: sha512-u50kYN7jt7bpQgywkEba/Oayuio6WInZI39hOhZUycWRVW1/c9MU4EXohhpzaGg0G0F+fRVVP66fx4fwcXnH/Q==}
+  '@effect/workflow@0.6.0':
+    resolution: {integrity: sha512-JS4kd95Qhb/sxNDWB+fzcxaS2V+BP0Iu3JNWJ0MlqbZIjCP1wcsexGvi9oC9udw6Pc5lYzfCWU3L79Vc+Z5vqQ==}
     peerDependencies:
-      '@effect/platform': ^0.88.0
-      '@effect/rpc': ^0.65.0
-      effect: ^3.16.13
+      '@effect/platform': ^0.89.0
+      '@effect/rpc': ^0.66.0
+      effect: ^3.17.0
 
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
@@ -20725,31 +20764,31 @@ packages:
     peerDependencies:
       react: ~18.2.0
 
-  '@storybook/addon-docs@9.0.15':
-    resolution: {integrity: sha512-HOb45DkF23T1tRzakb9q33qnBRso15S/GM28ippPZWi5ZXR9RAyKVgOSMA/ViEpK4ezASxN+Tee+H7m4ksEFZw==}
+  '@storybook/addon-docs@9.0.18':
+    resolution: {integrity: sha512-1mLhaRDx8s1JAF51o56OmwMnIsg4BOQJ8cn+4wbMjh14pDFALrovlFl/BpAXnV1VaZqHjCB4ZWuP+y5CwXEpeQ==}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
-  '@storybook/addon-links@9.0.15':
-    resolution: {integrity: sha512-DedEsoPOiRUupN9yuFaw9vwZe1QqK4QfC0Z9/0TxRNFdKffaakNJnPjnlrQn+R0eojYCRm9U9kdzOthM7/BgvQ==}
+  '@storybook/addon-links@9.0.18':
+    resolution: {integrity: sha512-4Xs/ObvjLQXyrixgxYCleSdcNqKWvncSmNxerib/h1tOPSry7NgJV2oCIc5DLZslolKKqAkAZmgWBY6Qz5Gysw==}
     peerDependencies:
       react: ~18.2.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
     peerDependenciesMeta:
       react:
         optional: true
 
-  '@storybook/addon-themes@9.0.15':
-    resolution: {integrity: sha512-DiJt9JZe8UoUHEq7GQ+LFwdufiowd4e90jkExlcrCe6e0j7OTui87HmII+/kg0XG+40Pq8WekUPoUSzEpfMeNA==}
+  '@storybook/addon-themes@9.0.18':
+    resolution: {integrity: sha512-2FTeyhLWsbDiQBtIsvEXRIi8Rb5iVM/fdV94DXR5XK01DZI+6XULXqtmXmDk4fQd40Iu+bEeM2C4eP587jD5Ng==}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
-  '@storybook/addon-vitest@9.0.15':
-    resolution: {integrity: sha512-4TynzdZgJMsvneT5lZGp+WrUoFtp8+LRL3y35EepJa3GMBc+9WgsKQrso+xnDQh1gLvVNe46n3klZvunVr4AFA==}
+  '@storybook/addon-vitest@9.0.18':
+    resolution: {integrity: sha512-uPLh9H7kRho+raxyIBCm8Ymd3j0VPuWIQ1HSAkdx8itmNafNqs4HE67Z8Cfl259YzdWU/j5BhZqoiT62BCbIDw==}
     peerDependencies:
       '@vitest/browser': ^3.0.0
       '@vitest/runner': ^3.0.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
       vitest: ^3.0.0
     peerDependenciesMeta:
       '@vitest/browser':
@@ -20759,31 +20798,31 @@ packages:
       vitest:
         optional: true
 
-  '@storybook/builder-vite@9.0.15':
-    resolution: {integrity: sha512-ogPec1V+e3MgTY5DBlq/6hBBui0Y4TmolYQh0eL3cATHrwZlwkTTDWQfsOnMALd5w+4Jq8n0gk0cQgR5rh1FHw==}
+  '@storybook/builder-vite@9.0.18':
+    resolution: {integrity: sha512-lfbrozA6UPVizDrgbPEe04WMtxIraESwUkmwW3+Lxh8rKEUj5cXngcrJUW+meQNNaggdZZWEqeEtweuaLIR+Hg==}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
-  '@storybook/csf-plugin@9.0.15':
-    resolution: {integrity: sha512-KszyGjrocMiNbkmpBGARF1ugLYMVaw1J8Z31kmwTHsMgMZwAKcOsofJ0fPgFno0yV59DUVkWxVBdPs9V0hhvxA==}
+  '@storybook/csf-plugin@9.0.18':
+    resolution: {integrity: sha512-MQ3WwXnMua5sX0uYyuO7dC5WOWuJCLqf8CsOn3zQ2ptNoH6hD7DFx5ZOa1uD6VxIuJ3LkA+YqfSRBncomJoRnA==}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
   '@storybook/global@5.0.0':
     resolution: {integrity: sha512-FcOqPAXACP0I3oJ/ws6/rrPT9WGhu915Cg8D02a9YxLo0DE9zI+a9A5gRGvmQ09fiWPukqI8ZAEoQEdWUKMQdQ==}
 
-  '@storybook/html-vite@9.0.15':
-    resolution: {integrity: sha512-zE34ktWF0neOIbrWYJgscCA58esiXle2/zr0Tu4lPkG9b2YENx8elNJKR32wDfiBHIl8QY9SNsrMN0mPfkvjig==}
+  '@storybook/html-vite@9.0.18':
+    resolution: {integrity: sha512-jB1OBrVOg5NZ7lC87Ai6k3MXpHghx8TZNgsrPHgLCFuZyVgx/C2ztgXuFib6C+i8EQe5HnDajdwIsWC8gCORpA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
-  '@storybook/html@9.0.15':
-    resolution: {integrity: sha512-mfzwYLsUdRuqfGIvPbqKYhKYvySuJYOrDjnJXQ337Ss4g7oHYLJsgTVfIC7eUxNvDI4A2wStNbLwlqU8P3b/Xw==}
+  '@storybook/html@9.0.18':
+    resolution: {integrity: sha512-V6eemP5PfXE4PSPMXywI5BvZV16GaHs0duknXPWwZViaF6f0D5hSZqtgaXAKPB/8lVIbQfisY7fgfSnjUvbchQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
   '@storybook/icons@1.4.0':
     resolution: {integrity: sha512-Td73IeJxOyalzvjQL+JXx72jlIYHgs+REaHiREOqfpo3A2AYYG71AUbcv+lg7mEDIweKVCxsMQ0UKo634c8XeA==}
@@ -20795,46 +20834,46 @@ packages:
   '@storybook/mdx2-csf@1.1.0':
     resolution: {integrity: sha512-TXJJd5RAKakWx4BtpwvSNdgTDkKM6RkXU8GK34S/LhidQ5Pjz3wcnqb0TxEkfhK/ztbP8nKHqXFwLfa2CYkvQw==}
 
-  '@storybook/react-dom-shim@9.0.15':
-    resolution: {integrity: sha512-X5VlYKoZSIMU9HEshIwtNzp41nPt4kiJtJ2c5HzFa5F6M8rEHM5n059CGcCZQqff3FnZtK/y6v/kCVZO+8oETA==}
+  '@storybook/react-dom-shim@9.0.18':
+    resolution: {integrity: sha512-qGR/d9x9qWRRxITaBVQkMnb73kwOm+N8fkbZRxc7U4lxupXRvkMIDh247nn71SYVBnvbh6//AL7P6ghiPWZYjA==}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
-  '@storybook/react-vite@9.0.15':
-    resolution: {integrity: sha512-OOAywn5x2Ged3LD84+TMwpjZUelFg7Wb8eHkgHE2SzM20XiZrhoKvreqxlzbfey3weBl+bKNhsiWF9BluT8YHg==}
+  '@storybook/react-vite@9.0.18':
+    resolution: {integrity: sha512-dHzUoeY0/S35TvSYxCkPuBlNQZx4Zj9QDhAZ0qdv+nSll++uPgqSe2y2vF+2p+XVYhjDn+YX5LORv00YtuQezg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
 
-  '@storybook/react@9.0.15':
-    resolution: {integrity: sha512-hewpSH8Ij4Bg7S9Tfw7ecfGPv7YDycRxsfpsDX7Mw3JhLuCdqjpmmTL2RgoNojg7TAW3FPdixcgQi/b4PH50ag==}
+  '@storybook/react@9.0.18':
+    resolution: {integrity: sha512-CCH6Vj/O6I07PrhCHxc1pvCWYMfZhRzK7CVHAtrBP9xxnYA7OoXhM2wymuDogml5HW1BKtyVMeQ3oWZXFNgDXQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
       typescript: '>= 4.9.x'
     peerDependenciesMeta:
       typescript:
         optional: true
 
-  '@storybook/web-components-vite@9.0.15':
-    resolution: {integrity: sha512-MD7Wq5WEJ70QG6DORDrWNuia10TcYPTgLBu9OfBbC1ONJT1BxURSbb+dS0e0J2jpbG58YsZ5M3GuNWKzkgQsKA==}
+  '@storybook/web-components-vite@9.0.18':
+    resolution: {integrity: sha512-xF/EqyPpHwtphDddqpxYOYNpzp3pgdtyQSvyRWLP0T99f63Q5KSsEuXCTKNzQRZE/2nkMzkQVtI3dl1i5wIRkQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
-  '@storybook/web-components@9.0.15':
-    resolution: {integrity: sha512-OMu0UY9dUsGLi1ksjN1RfKXJ0kRpsZr84FEj2yMyWdBF4A/V/Y+qOWou4ecHlw7vtHRK9dSOGhSsvl51DmfPUw==}
+  '@storybook/web-components@9.0.18':
+    resolution: {integrity: sha512-5BpCofTz7iylv/ucbdJCnjRssRxi5TxvXre7swiA+c0zjsbsdHjbg+kO/sXgHXFrY+JVjXzvb9/+KQv+0nf1KA==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       lit: ^2.0.0 || ^3.0.0
-      storybook: ^9.0.15
+      storybook: ^9.0.18
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
@@ -21291,6 +21330,10 @@ packages:
 
   '@types/columnify@1.5.1':
     resolution: {integrity: sha512-pXWQTEvwcO7GAwFvSvaMOIktLcJ2ajIAUyMR93KDZZVWN2G7uieEDBPJskEmXb0Qv8JMPHhaRA52azCPfiFmQA==}
+
+  '@types/comment-json@2.4.5':
+    resolution: {integrity: sha512-Zc70LYxV8bri2tcIVVAYQ33dsGOvcZ3Hx7MdMKEJ+cWIt5BqpjAi5Kxcxe3rplp+g6qIenPoxx44k9nGqUstmg==}
+    deprecated: This is a stub types definition. comment-json provides its own type definitions, so you do not need this installed.
 
   '@types/connect@3.4.36':
     resolution: {integrity: sha512-P63Zd/JUGq+PdrM1lv0Wv5SBYeA2+CORvbrXbngriYY0jzLUWfQMQQxOhjONEz/wlHOAxOdY7CY65rgQdTjq2w==}
@@ -24601,11 +24644,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.14.21:
-    resolution: {integrity: sha512-TKR7zfWcuZgEdWd+oIGA8LdREj/c+1Q0wz4pWqQtYT7VHnkW/QQEYCXgrDI5dT6lJgRTgyQAC1bAnpAf6MdjIA==}
-
-  effect@3.16.13:
-    resolution: {integrity: sha512-xJDgOhD7+3qIY1d8PGfkaPZMfmdJuSp2XAQgc9dVF8pSl1FJL6WK4ZUpMh177R+GH8XgPloT8dlZsEYUYDo1Ag==}
+  effect@3.17.0:
+    resolution: {integrity: sha512-szMlUsbPhP9lsrU+sDPXL9pQT2ew8PhcZvPm0p5dzYFbc+Jn/lH2i5thtmPQdm6Ut1rS4fS67SbuG7Qm0E0oZA==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -25006,6 +25046,13 @@ packages:
     peerDependencies:
       eslint: '>=8'
       storybook: ^9.0.15
+
+  eslint-plugin-storybook@9.0.17:
+    resolution: {integrity: sha512-IuTdlwCEwoDNobdygRCxNhlKXHmsDfPtPvHGcsY35x2Bx8KItrjfekO19gJrjc1VT2CMfcZMYF8OBKaxHELupw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      eslint: '>=8'
+      storybook: ^9.0.17
 
   eslint-plugin-unused-imports@4.1.4:
     resolution: {integrity: sha512-YptD6IzQjDardkl0POxnnRBhU1OEePMV0nd6siHaRBbd+lyh6NAhFEobiznKU7kTsSsDeSD62Pe7kAM1b7dAZQ==}
@@ -28236,8 +28283,8 @@ packages:
     resolution: {integrity: sha512-ypMKuglUrZUD99Tk2bUQ+xNQj43lPEfAeX2o9cTteAmShXy2VHDJpuwu1o0xqoKCt9jLVAvwyFKdLTPXKAfJyA==}
     engines: {node: '>=10'}
 
-  multipasta@0.2.5:
-    resolution: {integrity: sha512-c8eMDb1WwZcE02WVjHoOmUVk7fnKU/RmUcosHACglrWAuPQsEJv+E8430sXj6jNc1jHw0zrS16aCjQh4BcEb4A==}
+  multipasta@0.2.7:
+    resolution: {integrity: sha512-KPA58d68KgGil15oDqXjkUBEBYc00XvbPj5/X+dyzeo/lWm9Nc25pQRlf1D+gv4OpK7NM0J1odrbu9JNNGvynA==}
 
   murmurhash-js@1.0.0:
     resolution: {integrity: sha512-TvmkNhkv8yct0SVBSy+o8wYzXjE4Zz3PCesbfs8HiCXXdcTuocApFv11UWlNFWKYsP2okqrhb7JNlSm9InBhIw==}
@@ -30922,6 +30969,15 @@ packages:
       prettier:
         optional: true
 
+  storybook@9.0.17:
+    resolution: {integrity: sha512-O+9jgJ+Trlq9VGD1uY4OBLKQWHHDKM/A/pA8vMW6PVehhGHNvpzcIC1bngr6mL5gGHZP2nBv+9XG8pTMcggMmg==}
+    hasBin: true
+    peerDependencies:
+      prettier: ^2 || ^3
+    peerDependenciesMeta:
+      prettier:
+        optional: true
+
   stream-replace-string@2.0.0:
     resolution: {integrity: sha512-TlnjJ1C0QrmxRNrON00JvaFFlNh5TTG00APw23j74ET7gkQpTASi6/L2fuiav8pzK715HXtUeClpBTw2NPSn6w==}
 
@@ -33182,15 +33238,15 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.1':
+  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.0.1':
+  '@automerge/automerge-repo-network-websocket@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
       cbor-x: 1.5.4
       debug: 4.4.1(supports-color@5.5.0)
       eventemitter3: 5.0.1
@@ -33201,15 +33257,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.1':
+  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
     dependencies:
-      '@automerge/automerge-repo': 2.0.1
+      '@automerge/automerge-repo': 2.0.8
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.0.1':
+  '@automerge/automerge-repo@2.0.8':
     dependencies:
-      '@automerge/automerge': 3.0.0-beta.4
+      '@automerge/automerge': 3.0.0
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.4.1(supports-color@5.5.0)
@@ -33220,7 +33276,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge@3.0.0-beta.4': {}
+  '@automerge/automerge@3.0.0': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -35256,82 +35312,84 @@ snapshots:
       react: 18.2.0
       tslib: 2.8.1
 
-  '@effect-rx/rx-react@0.38.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(react@18.2.0)(scheduler@0.23.2)':
+  '@effect-rx/rx-react@0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)':
     dependencies:
-      '@effect-rx/rx': 0.43.2(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      effect: 3.16.13
+      '@effect-rx/rx': 0.43.2(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      effect: 3.17.0
       react: 18.2.0
       scheduler: 0.23.2
     transitivePeerDependencies:
       - '@effect/platform'
 
-  '@effect-rx/rx@0.43.2(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)':
+  '@effect-rx/rx@0.43.2(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      effect: 3.17.0
 
-  '@effect/ai-anthropic@0.12.1(@effect/ai@0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)':
+  '@effect/ai-anthropic@0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
       '@anthropic-ai/tokenizer': 0.0.4
-      '@effect/ai': 0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      '@effect/experimental': 0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/ai': 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/experimental': 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      effect: 3.17.0
 
-  '@effect/ai-openai@0.25.1(@effect/ai@0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)':
+  '@effect/ai-openai@0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/ai': 0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      '@effect/experimental': 0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/ai': 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/experimental': 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      effect: 3.17.0
       gpt-tokenizer: 2.9.0
 
-  '@effect/ai@0.22.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)':
+  '@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/experimental': 0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      '@effect/rpc': 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/experimental': 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      '@effect/rpc': 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      effect: 3.17.0
       find-my-way-ts: 0.1.6
 
-  '@effect/cluster@0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)':
+  '@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      '@effect/rpc': 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      '@effect/sql': 0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      '@effect/workflow': 0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      '@effect/rpc': 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/sql': 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/workflow': 0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      effect: 3.17.0
 
-  '@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)':
+  '@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)':
     dependencies:
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      effect: 3.17.0
       uuid: 11.1.0
     optionalDependencies:
       ioredis: 5.3.2
 
-  '@effect/platform-node-shared@0.43.0(@effect/cluster@0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)':
+  '@effect/language-service@0.28.0': {}
+
+  '@effect/platform-node-shared@0.45.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/cluster': 0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      '@effect/rpc': 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      '@effect/sql': 0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
+      '@effect/cluster': 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      '@effect/rpc': 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/sql': 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@parcel/watcher': 2.5.1
-      effect: 3.16.13
-      multipasta: 0.2.5
+      effect: 3.17.0
+      multipasta: 0.2.7
       ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@0.90.0(@effect/cluster@0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)':
+  '@effect/platform-node@0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/cluster': 0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      '@effect/platform-node-shared': 0.43.0(@effect/cluster@0.42.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(effect@3.16.13))(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)
-      '@effect/rpc': 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      '@effect/sql': 0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/cluster': 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      '@effect/platform-node-shared': 0.45.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/rpc': 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/sql': 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      effect: 3.17.0
       mime: 3.0.0
       undici: 7.11.0
       ws: 8.18.2
@@ -35339,48 +35397,42 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform@0.87.13(effect@3.16.13)':
+  '@effect/platform@0.89.0(effect@3.17.0)':
     dependencies:
-      effect: 3.16.13
+      '@opentelemetry/semantic-conventions': 1.34.0
+      effect: 3.17.0
       find-my-way-ts: 0.1.6
       msgpackr: 1.11.4
-      multipasta: 0.2.5
+      multipasta: 0.2.7
 
-  '@effect/platform@0.88.0(effect@3.16.13)':
+  '@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      effect: 3.16.13
-      find-my-way-ts: 0.1.6
-      msgpackr: 1.11.4
-      multipasta: 0.2.5
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      effect: 3.17.0
 
-  '@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)':
+  '@effect/schema@0.75.5(effect@3.17.0)':
     dependencies:
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      effect: 3.16.13
-
-  '@effect/schema@0.75.5(effect@3.16.13)':
-    dependencies:
-      effect: 3.16.13
+      effect: 3.17.0
       fast-check: 3.23.1
 
-  '@effect/sql@0.41.0(@effect/experimental@0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2))(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)':
+  '@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/experimental': 0.52.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)(ioredis@5.3.2)
-      '@effect/platform': 0.88.0(effect@3.16.13)
+      '@effect/experimental': 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
+      '@effect/platform': 0.89.0(effect@3.17.0)
       '@opentelemetry/semantic-conventions': 1.34.0
-      effect: 3.16.13
+      effect: 3.17.0
       uuid: 11.1.0
 
-  '@effect/vitest@0.21.5(effect@3.16.13)(vitest@3.2.4)':
+  '@effect/vitest@0.25.0(effect@3.17.0)(vitest@3.2.4)':
     dependencies:
-      effect: 3.16.13
+      effect: 3.17.0
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
 
-  '@effect/workflow@0.5.0(@effect/platform@0.88.0(effect@3.16.13))(@effect/rpc@0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13))(effect@3.16.13)':
+  '@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)':
     dependencies:
-      '@effect/platform': 0.88.0(effect@3.16.13)
-      '@effect/rpc': 0.65.0(@effect/platform@0.88.0(effect@3.16.13))(effect@3.16.13)
-      effect: 3.16.13
+      '@effect/platform': 0.89.0(effect@3.17.0)
+      '@effect/rpc': 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      effect: 3.17.0
 
   '@emnapi/core@1.4.5':
     dependencies:
@@ -40215,38 +40267,38 @@ snapshots:
     dependencies:
       react: 18.2.0
 
-  '@storybook/addon-docs@9.0.15(@types/react@18.2.79)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)':
+  '@storybook/addon-docs@9.0.18(@types/react@18.2.79)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)':
     dependencies:
       '@mdx-js/react': 3.1.0(@types/react@18.2.79)(react@18.2.0)
-      '@storybook/csf-plugin': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
+      '@storybook/csf-plugin': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
       '@storybook/icons': 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@storybook/react-dom-shim': 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+      '@storybook/react-dom-shim': 9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       ts-dedent: 2.2.0
     transitivePeerDependencies:
       - '@types/react'
       - webpack-sources
 
-  '@storybook/addon-links@9.0.15(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))':
+  '@storybook/addon-links@9.0.18(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))':
     dependencies:
       '@storybook/global': 5.0.0
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
     optionalDependencies:
       react: 18.2.0
 
-  '@storybook/addon-themes@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))':
+  '@storybook/addon-themes@9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))':
     dependencies:
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       ts-dedent: 2.2.0
 
-  '@storybook/addon-vitest@9.0.15(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)':
+  '@storybook/addon-vitest@9.0.18(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vitest@3.2.4)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       prompts: 2.4.2
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       ts-dedent: 2.2.0
     optionalDependencies:
       '@vitest/browser': 3.2.4(playwright@1.54.1)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.8.3))
@@ -40256,37 +40308,37 @@ snapshots:
       - react
       - react-dom
 
-  '@storybook/builder-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/builder-vite@9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@storybook/csf-plugin': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      '@storybook/csf-plugin': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       ts-dedent: 2.2.0
       vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
       - webpack-sources
 
-  '@storybook/csf-plugin@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)':
+  '@storybook/csf-plugin@9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(webpack-sources@3.2.3)':
     dependencies:
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       unplugin: 1.14.1(webpack-sources@3.2.3)
     transitivePeerDependencies:
       - webpack-sources
 
   '@storybook/global@5.0.0': {}
 
-  '@storybook/html-vite@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/html-vite@9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
-      '@storybook/html': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      '@storybook/builder-vite': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/html': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
     transitivePeerDependencies:
       - vite
       - webpack-sources
 
-  '@storybook/html@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))':
+  '@storybook/html@9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))':
     dependencies:
       '@storybook/global': 5.0.0
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       ts-dedent: 2.2.0
 
   '@storybook/icons@1.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
@@ -40296,25 +40348,25 @@ snapshots:
 
   '@storybook/mdx2-csf@1.1.0': {}
 
-  '@storybook/react-dom-shim@9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))':
+  '@storybook/react-dom-shim@9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))':
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
 
-  '@storybook/react-vite@9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/react-vite@9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(rollup@3.23.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
       '@joshwooding/vite-plugin-react-docgen-typescript': 0.6.1(typescript@5.8.3)(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
       '@rollup/pluginutils': 5.1.4(rollup@3.23.0)
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
-      '@storybook/react': 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
+      '@storybook/builder-vite': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/react': 9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)
       find-up: 7.0.0
       magic-string: 0.30.17
       react: 18.2.0
       react-docgen: 8.0.0
       react-dom: 18.2.0(react@18.2.0)
       resolve: 1.22.10
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       tsconfig-paths: 4.2.0
       vite: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
     transitivePeerDependencies:
@@ -40323,31 +40375,31 @@ snapshots:
       - typescript
       - webpack-sources
 
-  '@storybook/react@9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)':
+  '@storybook/react@9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3)':
     dependencies:
       '@storybook/global': 5.0.0
-      '@storybook/react-dom-shim': 9.0.15(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
+      '@storybook/react-dom-shim': 9.0.18(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
     optionalDependencies:
       typescript: 5.8.3
 
-  '@storybook/web-components-vite@9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
+  '@storybook/web-components-vite@9.0.18(lit@3.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)':
     dependencies:
-      '@storybook/builder-vite': 9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
-      '@storybook/web-components': 9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      '@storybook/builder-vite': 9.0.18(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))(webpack-sources@3.2.3)
+      '@storybook/web-components': 9.0.18(lit@3.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
     transitivePeerDependencies:
       - lit
       - vite
       - webpack-sources
 
-  '@storybook/web-components@9.0.15(lit@3.2.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))':
+  '@storybook/web-components@9.0.18(lit@3.2.0)(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))':
     dependencies:
       '@storybook/global': 5.0.0
       lit: 3.2.0
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
       tiny-invariant: 1.3.3
       ts-dedent: 2.2.0
 
@@ -40835,6 +40887,10 @@ snapshots:
   '@types/color-hash@1.0.2': {}
 
   '@types/columnify@1.5.1': {}
+
+  '@types/comment-json@2.4.5':
+    dependencies:
+      comment-json: 4.2.3
 
   '@types/connect@3.4.36':
     dependencies:
@@ -44730,12 +44786,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@3.14.21:
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      fast-check: 3.23.1
-
-  effect@3.16.13:
+  effect@3.17.0:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.1
@@ -45340,11 +45391,20 @@ snapshots:
     dependencies:
       eslint: 9.30.1(jiti@2.4.2)
 
-  eslint-plugin-storybook@9.0.15(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3):
+  eslint-plugin-storybook@9.0.15(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3):
     dependencies:
       '@typescript-eslint/utils': 8.36.0(eslint@9.30.1(jiti@2.4.2))(typescript@5.8.3)
       eslint: 9.30.1(jiti@2.4.2)
-      storybook: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+
+  eslint-plugin-storybook@9.0.17(eslint@9.30.1(jiti@2.4.2))(storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2))(typescript@5.8.3):
+    dependencies:
+      '@typescript-eslint/utils': 8.36.0(eslint@9.30.1(jiti@2.4.2))(typescript@5.8.3)
+      eslint: 9.30.1(jiti@2.4.2)
+      storybook: 9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2)
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -49619,7 +49679,7 @@ snapshots:
       arrify: 2.0.1
       minimatch: 3.1.2
 
-  multipasta@0.2.5: {}
+  multipasta@0.2.7: {}
 
   murmurhash-js@1.0.0: {}
 
@@ -52868,6 +52928,27 @@ snapshots:
   stoppable@1.1.0: {}
 
   storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2):
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@testing-library/jest-dom': 6.6.3
+      '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
+      '@vitest/expect': 3.2.4
+      '@vitest/spy': 3.2.4
+      better-opn: 3.0.2
+      esbuild: 0.25.6
+      esbuild-register: 3.6.0(esbuild@0.25.6)
+      recast: 0.23.9
+      semver: 7.7.2
+      ws: 8.18.2
+    optionalDependencies:
+      prettier: 3.6.2
+    transitivePeerDependencies:
+      - '@testing-library/dom'
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
+  storybook@9.0.17(@testing-library/dom@10.4.0)(prettier@3.6.2):
     dependencies:
       '@storybook/global': 5.0.0
       '@testing-library/jest-dom': 6.6.3

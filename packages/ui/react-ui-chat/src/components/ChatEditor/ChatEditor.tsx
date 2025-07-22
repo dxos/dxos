@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, Prec } from '@codemirror/state';
+import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -11,7 +11,6 @@ import {
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
-  keymap,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -31,7 +30,6 @@ export type ChatEditorProps = ThemedClassName<
   {
     extensions?: Extension;
     references?: ReferencesOptions;
-    onOpenChange?: (open: boolean) => void;
   } & AutocompleteOptions &
     Pick<UseTextEditorProps, 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
@@ -39,18 +37,7 @@ export type ChatEditorProps = ThemedClassName<
 
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (
-    {
-      classNames,
-      extensions,
-      references,
-      autoFocus,
-      lineWrapping = false,
-      placeholder,
-      onSubmit,
-      onSuggest,
-      onCancel,
-      onOpenChange,
-    },
+    { classNames, extensions, references, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
@@ -59,6 +46,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         debug: true,
         autoFocus,
         extensions: [
+          createThemeExtensions({ themeMode }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           references ? referencesExtension({ provider: references.provider }) : [],
           createBasicExtensions({
@@ -66,27 +54,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             lineWrapping,
             placeholder,
           }),
-          createThemeExtensions({ themeMode }),
-          Prec.highest(
-            keymap.of([
-              {
-                key: 'cmd-ArrowUp',
-                preventDefault: true,
-                run: () => {
-                  onOpenChange?.(true);
-                  return true;
-                },
-              },
-              {
-                key: 'cmd-ArrowDown',
-                preventDefault: true,
-                run: () => {
-                  onOpenChange?.(false);
-                  return true;
-                },
-              },
-            ]),
-          ),
           extensions,
         ].filter(isNonNullable),
       },
@@ -115,6 +82,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
       };
     }, [view, onSubmit]);
 
-    return <div ref={parentRef} className={mx('w-full', classNames)} />;
+    return <div ref={parentRef} className={mx('is-full', classNames)} />;
   },
 );

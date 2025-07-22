@@ -15,12 +15,12 @@ import { type DataType } from '@dxos/schema';
 
 import { ScriptCapabilities } from './capabilities';
 import {
+  DEPLOYMENT_DIALOG,
+  DeploymentDialog,
   ScriptContainer,
   ScriptPluginSettings,
   ScriptObjectSettings,
   ScriptProperties,
-  DeploymentDialog,
-  DEPLOYMENT_DIALOG,
   TestContainer,
 } from '../components';
 import { meta } from '../meta';

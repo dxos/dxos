@@ -60,6 +60,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Check for import cycles
+        run: pnpm run check-cycles
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :lint :build --affected --remote
@@ -72,10 +75,6 @@ jobs:
         if: (success() || failure()) && github.event_name == 'pull_request'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check for import cycles
-        if: always()
-        run: pnpm run check-cycles
 
   test:
     strategy:
@@ -95,6 +94,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
+      MOON_CONCURRENCY: 6
     steps:
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
