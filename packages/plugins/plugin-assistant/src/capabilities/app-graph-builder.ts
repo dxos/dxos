@@ -31,13 +31,13 @@ import {
   isSpace,
 } from '@dxos/react-client/echo';
 
-import { ASSISTANT_DIALOG, ASSISTANT_PLUGIN } from '../meta';
-import { AIChatType, AssistantAction, CompanionTo, TemplateType } from '../types';
+import { ASSISTANT_DIALOG, meta } from '../meta';
+import { Assistant, TemplateType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/assistant`,
+      id: `${meta.id}/assistant`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -49,7 +49,6 @@ export default (context: PluginContext) =>
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const client = context.getCapability(ClientCapabilities.Client);
-
                   const space = getActiveSpace(context) ?? client.spaces.default;
                   const chat = await getOrCreateChat(dispatch, space);
                   if (!chat) {
@@ -71,7 +70,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['open assistant label', { ns: ASSISTANT_PLUGIN }],
+                  label: ['open assistant label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
                   disposition: 'pin-end',
                   position: 'hoist',
@@ -88,9 +87,9 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/object-chat-companion`,
+      id: `${meta.id}/object-chat-companion`,
       connector: (node) => {
-        let query: QueryResult<AIChatType> | undefined;
+        let query: QueryResult<Assistant.Chat> | undefined;
         return Rx.make((get) => {
           const nodeOption = get(node);
           if (Option.isNone(nodeOption)) {
@@ -108,7 +107,7 @@ export default (context: PluginContext) =>
           }
 
           if (!query) {
-            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(CompanionTo).source());
+            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
           }
 
           const chat = get(rxFromQuery(query))[0];
@@ -118,7 +117,7 @@ export default (context: PluginContext) =>
               type: PLANK_COMPANION_TYPE,
               data: chat ?? 'assistant-chat',
               properties: {
-                label: ['assistant chat label', { ns: ASSISTANT_PLUGIN }],
+                label: ['assistant chat label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -130,7 +129,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/sequence-logs`,
+      id: `${meta.id}/sequence-logs`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -142,7 +141,7 @@ export default (context: PluginContext) =>
                 type: PLANK_COMPANION_TYPE,
                 data: 'logs',
                 properties: {
-                  label: ['sequence logs label', { ns: ASSISTANT_PLUGIN }],
+                  label: ['sequence logs label', { ns: meta.id }],
                   icon: 'ph--clock-countdown--regular',
                   disposition: 'hidden',
                 },
@@ -154,7 +153,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/root`,
+      id: `${meta.id}/root`,
       connector: (node) => {
         let query: QueryResult<TemplateType> | undefined;
         return Rx.make((get) =>
@@ -172,11 +171,11 @@ export default (context: PluginContext) =>
               return templates.length > 0
                 ? [
                     {
-                      id: `${ASSISTANT_PLUGIN}/templates`,
-                      type: `${ASSISTANT_PLUGIN}/templates`,
+                      id: `${meta.id}/templates`,
+                      type: `${meta.id}/templates`,
                       data: null,
                       properties: {
-                        label: ['templates label', { ns: ASSISTANT_PLUGIN }],
+                        label: ['templates label', { ns: meta.id }],
                         icon: 'ph--file-code--regular',
                         space,
                       },
@@ -191,14 +190,14 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${ASSISTANT_PLUGIN}/templates`,
+      id: `${meta.id}/templates`,
       connector: (node) => {
         let query: QueryResult<TemplateType> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
             Option.flatMap((node) =>
-              node.id === `${ASSISTANT_PLUGIN}/templates` && isSpace(node.properties.space)
+              node.id === `${meta.id}/templates` && isSpace(node.properties.space)
                 ? Option.some(node.properties.space)
                 : Option.none(),
             ),
@@ -214,10 +213,10 @@ export default (context: PluginContext) =>
                 })
                 .map((template) => ({
                   id: fullyQualifiedId(template),
-                  type: `${ASSISTANT_PLUGIN}/template`,
+                  type: `${meta.id}/template`,
                   data: template,
                   properties: {
-                    label: template.name ?? ['object placeholder', { ns: ASSISTANT_PLUGIN }],
+                    label: template.name ?? ['object placeholder', { ns: meta.id }],
                     icon: 'ph--file-code--regular',
                   },
                 }));
@@ -230,10 +229,15 @@ export default (context: PluginContext) =>
   ]);
 
 // TODO(burdon): Factor out.
-const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space): Promise<AIChatType | undefined> => {
+const getOrCreateChat = async (
+  dispatch: PromiseIntentDispatcher,
+  space: Space,
+): Promise<Assistant.Chat | undefined> => {
   // TODO(wittjosiah): This should be possible with a single query.
-  const { objects: allChats } = await space.db.query(Query.type(AIChatType)).run();
-  const { objects: relatedChats } = await space.db.query(Query.type(AIChatType).sourceOf(CompanionTo).source()).run();
+  const { objects: allChats } = await space.db.query(Query.type(Assistant.Chat)).run();
+  const { objects: relatedChats } = await space.db
+    .query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source())
+    .run();
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
   // console.log('objects', JSON.stringify(objects, null, 2));
   if (chats.length > 0) {
@@ -241,8 +245,8 @@ const getOrCreateChat = async (dispatch: PromiseIntentDispatcher, space: Space):
     return chats[chats.length - 1];
   }
 
-  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-  invariant(Obj.instanceOf(AIChatType, data?.object));
+  const { data } = await dispatch(createIntent(Assistant.CreateChat, { space }));
+  invariant(Obj.instanceOf(Assistant.Chat, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;
 };

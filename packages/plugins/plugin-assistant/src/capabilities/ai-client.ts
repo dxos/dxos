@@ -9,8 +9,8 @@ import { Capabilities, contributes, type PluginContext } from '@dxos/app-framewo
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantCapabilities } from './capabilities';
-import { ASSISTANT_PLUGIN } from '../meta';
-import { type AssistantSettingsProps } from '../types';
+import { meta } from '../meta';
+import { type Assistant } from '../types';
 
 // TODO(wittjosiah): Factor out.
 const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';
@@ -21,10 +21,7 @@ export default (context: PluginContext) => {
   const aiClient = signal<AiServiceClient>(new EdgeAiServiceClient({ endpoint }));
 
   const unsubscribe = effect(() => {
-    const settings = context
-      .getCapability(Capabilities.SettingsStore)
-      .getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
-
+    const settings = context.getCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
     if (settings?.llmProvider === 'ollama') {
       aiClient.value = new OllamaAiServiceClient();
     } else {

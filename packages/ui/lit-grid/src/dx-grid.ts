@@ -1335,9 +1335,7 @@ export class DxGrid extends LitElement {
       aria-rowindex=${row}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
-      <div role="none" class="dx-grid__cell__content">
-        ${this.mode !== 'browse' && active ? null : cell?.value}${this.mode !== 'browse' && active ? null : accessory}
-      </div>
+      <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
       ${cell?.resizeHandle &&
       this.mode === 'browse' &&
       this.axisResizeable(resizePlane!, cell.resizeHandle, resizeIndex!)
@@ -1580,8 +1578,9 @@ export class DxGrid extends LitElement {
     }
   }
 
-  public updateIfWithinBounds({ col, row }: { col: number; row: number }): boolean {
+  public updateIfWithinBounds({ col, row }: { col: number; row: number }, includeFixed?: boolean): boolean {
     if (col >= this.visColMin && col <= this.visColMax && row >= this.visRowMin && row <= this.visRowMax) {
+      this.updateCells(includeFixed);
       this.requestUpdate();
       return true;
     }

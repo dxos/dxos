@@ -4,15 +4,17 @@
 
 import React from 'react';
 
-import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';
 import { type TemplateType } from '../types';
 
-export const TemplateContainer = ({
-  role,
-  template,
-}: Pick<StackItemContentProps, 'role'> & { template: TemplateType }) => {
+export type TemplateContainerProps = {
+  role: string;
+  template: TemplateType;
+};
+
+export const TemplateContainer = ({ role, template }: TemplateContainerProps) => {
   return (
     <StackItem.Content role={role} classNames='container-max-width'>
       <TemplateEditor template={template} />

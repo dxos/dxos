@@ -16,7 +16,6 @@ type TagFilterVisibilityEvent = 'toggle_from_toolbar' | 'tag_selected_from_messa
  */
 export const useTagPickerFocusRef = (tagFilterVisibility: TagFilterVisibility) => {
   const tagPickerRef = useRef<TagPickerHandle>(null);
-
   useEffect(() => {
     if (tagFilterVisibility === 'controlled' && tagPickerRef.current) {
       setTimeout(() => tagPickerRef.current?.focus(), 0);
