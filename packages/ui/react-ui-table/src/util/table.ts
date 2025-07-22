@@ -8,13 +8,8 @@ import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } fro
 
 import { TableView } from '../types';
 
-type CreateTableProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
-  name?: string;
-};
+type CreateTableProps = Omit<CreateViewFromSpaceProps, 'presentation'>;
 
-export const createTable = ({
-  name,
-  ...props
-}: CreateTableProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View }> => {
-  return createViewFromSpace({ ...props, presentation: Obj.make(TableView, { name, sizes: {} }) });
+export const createTable = (props: CreateTableProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View }> => {
+  return createViewFromSpace({ ...props, presentation: Obj.make(TableView, { sizes: {} }) });
 };

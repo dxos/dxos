@@ -7,7 +7,6 @@ import { Schema } from 'effect';
 import { Type } from '@dxos/echo';
 
 export const KanbanView = Schema.Struct({
-  name: Schema.optional(Schema.String),
   /**
    * The field the values by which to pivot into columns of the kanban. This should be an enum field on the referred
    * objects, can that be enforced?

@@ -8,16 +8,14 @@ import { KanbanView } from '@dxos/react-ui-kanban';
 import { type DataType, type CreateViewFromSpaceProps, createViewFromSpace, ProjectionModel } from '@dxos/schema';
 
 type InitializeKanbanProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
-  name?: string;
   initialPivotColumn?: string;
 };
 
 export const createKanban = async ({
-  name,
   initialPivotColumn,
   ...props
 }: InitializeKanbanProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View }> => {
-  const kanban = Obj.make(KanbanView, { columnFieldId: undefined, name });
+  const kanban = Obj.make(KanbanView, { columnFieldId: undefined });
   const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: kanban });
   if (initialPivotColumn) {
     const projection = new ProjectionModel(jsonSchema, view.projection);

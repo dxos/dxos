@@ -166,6 +166,24 @@ const getQueryCollectionNodePartials = ({
   };
 };
 
+const getViewGraphNodePartials = ({
+  view,
+  resolve,
+}: {
+  view: DataType.View;
+  resolve: (typename: string) => Record<string, any>;
+}) => {
+  const presentation = view.presentation.target;
+  const typename = presentation ? Obj.getTypename(presentation) : undefined;
+  const metadata = typename ? resolve(typename) : {};
+
+  return {
+    label: view.name || ['object name placeholder', { ns: typename, default: 'New view' }],
+    icon: metadata.icon,
+    canDrop: () => false,
+  };
+};
+
 const checkPendingMigration = (space: Space) => {
   return (
     space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION ||
@@ -350,15 +368,13 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  if (Object.keys(metadata).length === 0) {
-    return undefined;
-  }
-
   const partials = Obj.instanceOf(DataType.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(DataType.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : metadata.graphProps;
+      : Obj.instanceOf(DataType.View, object)
+        ? getViewGraphNodePartials({ view: object, resolve })
+        : metadata.graphProps;
 
   return {
     id: fullyQualifiedId(object),

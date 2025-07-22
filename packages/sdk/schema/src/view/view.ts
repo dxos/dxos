@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -11,6 +11,7 @@ import {
   FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
+  LabelAnnotation,
   type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
@@ -53,6 +54,16 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  */
 export const View = Schema.Struct({
   /**
+   * Name of the view.
+   */
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+      [SchemaAST.ExamplesAnnotationId]: ['Contact'],
+    }),
+  ),
+
+  /**
    * Query used to retrieve data.
    * This includes the base type that the view schema (above) references.
    * It may include predicates that represent a persistent "drill-down" query.
@@ -68,19 +79,15 @@ export const View = Schema.Struct({
    * Reference to the custom view object which is used to store data specific to rendering.
    */
   presentation: Type.Ref(Type.Expando),
-
-  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
-
-  /**
-   * Optional metadata associated with the projection.
-   */
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
+})
+  .pipe(LabelAnnotation.set(['name']))
+  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
 export type View = Schema.Schema.Type<typeof View>;
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
+  name?: string;
   typename: string;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
@@ -92,6 +99,7 @@ type CreateViewProps = {
  * Create view from provided schema.
  */
 export const createView = ({
+  name,
   typename,
   jsonSchema,
   overrideSchema,
@@ -134,6 +142,7 @@ export const createView = ({
   }
 
   return Obj.make(View, {
+    name,
     query: {
       typename,
     },
@@ -148,8 +157,9 @@ export const createView = ({
 export type CreateViewFromSpaceProps = {
   client?: Client;
   space: Space;
-  presentation: Obj.Any;
+  name?: string;
   typename?: string;
+  presentation: Obj.Any;
   fields?: string[];
   createInitial?: number;
 };
@@ -160,6 +170,7 @@ export type CreateViewFromSpaceProps = {
 export const createViewFromSpace = async ({
   client,
   space,
+  name,
   typename,
   presentation,
   fields,
@@ -185,7 +196,7 @@ export const createViewFromSpace = async ({
 
   return {
     jsonSchema,
-    view: createView({ typename, jsonSchema, presentation, fields }),
+    view: createView({ name, typename, jsonSchema, presentation, fields }),
   };
 };
 
