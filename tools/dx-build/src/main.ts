@@ -29,6 +29,7 @@ const main = async () => {
     process.exit(1);
   }
   const outDirPath = resolve(process.cwd(), outDir);
+  console.log(`OutDir: ${outDirPath}`);
 
   // List files in outDir.
   let files: string[] = [];
