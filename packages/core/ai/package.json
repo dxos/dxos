@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.16.16"
+    "effect": "3.17.0"
   },
   "peerDependencies": {
     "effect": "^3.13.3"
