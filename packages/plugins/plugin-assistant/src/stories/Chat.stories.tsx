@@ -45,7 +45,7 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
-import { useChatProcessor, useServiceContainer } from '../hooks';
+import { useChatProcessor, useServices } from '../hooks';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -74,10 +74,15 @@ const ChatContainer = () => {
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
-  // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
-  const serviceContainer = useServiceContainer({ space });
+  const services = useServices({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
-  const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
+  const processor = useChatProcessor({
+    chat,
+    space,
+    services,
+    blueprintRegistry,
+    noPluginArtifacts: true,
+  });
 
   if (!chat || !processor) {
     return null;

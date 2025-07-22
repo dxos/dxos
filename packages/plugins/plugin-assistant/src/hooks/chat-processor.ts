@@ -3,8 +3,9 @@
 //
 
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
+import { Effect, type Layer } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest, type ToolUseContentBlock } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import {
@@ -21,6 +22,8 @@ import { type ContentBlock, type DataType } from '@dxos/schema';
 import type { Layer } from 'effect';
 import type { Services } from './useServices';
 
+import { type Services } from './useServices';
+
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -34,6 +37,7 @@ type RequestOptions = {
 };
 
 export type ChatProcessorOptions = {
+  services: Layer.Layer<Services>;
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
   artifacts?: readonly ArtifactDefinition[];
@@ -197,20 +201,24 @@ export class ChatProcessor {
     });
 
     try {
-      const messages = await this._conversation.run({
-        artifacts: [...(this._options.artifacts ?? [])],
-        requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
+      const messages = await Effect.runPromise(
+        this._conversation
+          .run({
+            artifacts: [...(this._options.artifacts ?? [])],
+            requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
 
-        // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
-        tools: this._tools ?? [],
-        systemPrompt: this._options.systemPrompt,
-        prompt: message,
-        extensions: this._options.extensions,
-        artifactDiffResolver: this._artifactDiffResolver,
-        generationOptions: {
-          model: this._options.model,
-        },
-      });
+            // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
+            tools: this._tools ?? [],
+            systemPrompt: this._options.systemPrompt,
+            prompt: message,
+            extensions: this._options.extensions,
+            artifactDiffResolver: this._artifactDiffResolver,
+            generationOptions: {
+              model: this._options.model,
+            },
+          })
+          .pipe(Effect.provide(AiService.model(this._options.model)), Effect.provide(this._options.services)),
+      );
 
       log('completed', { messages });
     } catch (err) {
