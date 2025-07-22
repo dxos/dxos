@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chat } from './Chat';
-import { useChatProcessor, useServiceContainer } from '../hooks';
+import { useChatProcessor, useChatServices } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
@@ -23,8 +23,8 @@ export type ChatContainerProps = {
 export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'deck', chat, serviceContainer, settings });
+  const services = useChatServices({ space });
+  const processor = useChatProcessor({ part: 'deck', chat, services, settings });
   if (!processor) {
     return null;
   }

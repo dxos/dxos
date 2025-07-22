@@ -6,7 +6,6 @@ export * from './chat-processor';
 
 export * from './useBlueprints';
 export * from './useChatProcessor';
+export * from './useChatServices';
 export * from './useContextProvider';
-export * from './useServiceContainer';
-export * from './useServices';
 export * from './useTextInputEvents';

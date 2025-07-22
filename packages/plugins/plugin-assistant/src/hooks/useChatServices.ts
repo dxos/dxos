@@ -21,11 +21,12 @@ import {
   TracingService,
 } from '@dxos/functions';
 
-export type UseServicesProps = {
+export type UseChatServicesProps = {
   space?: Space;
 };
 
-export type Services =
+// TODO(burdon): Deconstruct into separate layers?
+export type ChatServices =
   | AiService
   | CredentialsService
   | DatabaseService
@@ -38,8 +39,7 @@ export type Services =
 /**
  * Construct service layer.
  */
-// TODO(burdon): Deconstruct into separate layers?
-export const useServices = ({ space }: UseServicesProps): Layer.Layer<Services> | undefined => {
+export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
   const toolRegistry = useToolRegistry();
 
   return useMemo(() => {
