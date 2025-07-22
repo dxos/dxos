@@ -48,7 +48,6 @@ export default tseslint.config(
       'node_modules',
       '**/node_modules',
 
-
       // Docs snippets
       'docs/content/**/*',
       '**/typedoc/assets/**/*',
@@ -116,7 +115,7 @@ export default tseslint.config(
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-use-before-define': 'off',
-      '@typescript-eslint/no-useless-constructor': ['error'],
+      '@typescript-eslint/no-useless-constructor': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
@@ -149,12 +148,11 @@ export default tseslint.config(
       '@typescript-eslint/no-misused-promises': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
-      'no-dupe-else-if': 'off',
       '@typescript-eslint/no-duplicate-type-constituents': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-for-in-array': 'off',
-
       camelcase: 'off',
+      'no-dupe-else-if': 'off',
       'no-empty': 'off',
       'prefer-const': [
         'error',
@@ -224,7 +222,6 @@ export default tseslint.config(
           pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
         },
       ],
-
       // TODO(dmaretskyi): To re-enable.
       'no-unsafe-optional-chaining': 'off',
       '@typescript-eslint/restrict-plus-operands': 'off',
