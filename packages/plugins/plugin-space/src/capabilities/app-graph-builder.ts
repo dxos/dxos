@@ -572,6 +572,31 @@ export default (context: PluginContext) => {
       },
     }),
 
+    // View selected objects.
+    createExtension({
+      id: `${SPACE_PLUGIN}/selected-objects`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (Obj.instanceOf(DataType.View, node.data) ? Option.some(node) : Option.none())),
+            Option.map((node) => [
+              {
+                id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: PLANK_COMPANION_TYPE,
+                data: 'selected-objects',
+                properties: {
+                  label: ['companion selected objects label', { ns: SPACE_PLUGIN }],
+                  icon: 'ph--tree-view--regular',
+                  disposition: 'hidden',
+                },
+              },
+            ]),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+
     // Object settings plank companion.
     createExtension({
       id: `${SPACE_PLUGIN}/settings`,

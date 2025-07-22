@@ -18,9 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { createTable } from '@dxos/react-ui-table';
-import { ProjectionModel } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
 export default (context: PluginContext) =>
@@ -56,29 +54,6 @@ export default (context: PluginContext) =>
         invariant(schema);
         const object = Obj.make(schema, data);
         return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };
-      },
-    }),
-    createResolver({
-      intent: TableAction.DeleteColumn,
-      resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const space = getSpace(view);
-        invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
-        invariant(schema);
-        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-        if (!undo) {
-          const { deleted, index } = projection.deleteFieldProjection(fieldId);
-          return {
-            undoable: {
-              message: ['column deleted label', { ns: TABLE_PLUGIN }],
-              data: { deletionData: { ...deleted, index } },
-            },
-          };
-        } else if (undo && deletionData) {
-          const { field, props, index } = deletionData;
-          projection.setFieldProjection({ field, props }, index);
-        }
       },
     }),
   ]);

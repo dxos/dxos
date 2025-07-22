@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { EchoSchema } from '@dxos/echo-schema';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, TypenameAnnotationId } from '@dxos/schema';
 
 import { TABLE_PLUGIN } from '../meta';
 
@@ -40,24 +40,6 @@ export namespace TableAction {
     output: Schema.Struct({
       object: DataType.View,
     }),
-  }) {}
-
-  export class DeleteColumn extends Schema.TaggedClass<DeleteColumn>()(`${TABLE_ACTION}/delete-column`, {
-    input: Schema.Struct({
-      view: DataType.View,
-      fieldId: Schema.String,
-      // TODO(wittjosiah): Separate fields for undo data?
-      deletionData: Schema.optional(
-        Schema.Struct({
-          field: FieldSchema,
-          // TODO(wittjosiah): This creates a type error.
-          // props: PropertySchema,
-          props: Schema.Any,
-          index: Schema.Number,
-        }),
-      ),
-    }),
-    output: Schema.Void,
   }) {}
 
   export class AddRow extends Schema.TaggedClass<AddRow>()(`${TABLE_ACTION}/add-row`, {

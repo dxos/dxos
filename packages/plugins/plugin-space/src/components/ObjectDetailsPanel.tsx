@@ -14,12 +14,12 @@ import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { TABLE_PLUGIN } from '../meta';
+import { SPACE_PLUGIN } from '../meta';
 
 type RowDetailsPanelProps = { objectId: string; view: DataType.View };
 
 const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
-  const { t } = useTranslation(TABLE_PLUGIN);
+  const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const space = getSpace(view);
   const schema = useSchema(client, space, view.query?.typename);

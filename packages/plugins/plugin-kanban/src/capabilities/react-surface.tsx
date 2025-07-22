@@ -30,6 +30,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
+      position: 'hoist',
       filter: (data): data is { subject: DataType.View } =>
         Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(KanbanView, data.subject.presentation.target),
       component: ({ data }) => <KanbanViewEditor view={data.subject} />,

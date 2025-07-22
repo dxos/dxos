@@ -159,6 +159,10 @@ export const translations = [
         'add key': 'Add Key',
         'open space settings label': 'Open settings',
 
+        'row details no selection label': 'No objects selected',
+        'companion selected objects label': 'Selected',
+        'field deleted label': 'Field deleted',
+
         'members panel label': 'Members',
         'members verbose label': 'Manage space members',
         'members description': 'You can view the current status of space members here as well as invite new members.',

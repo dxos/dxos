@@ -9,14 +9,14 @@ import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { ViewEditor } from '@dxos/react-ui-form';
+import { ViewEditor as NativeViewEditor } from '@dxos/react-ui-form';
 import { DataType } from '@dxos/schema';
 
-import { TableAction } from '../types';
+import { SpaceAction } from '../types';
 
-type TableViewEditorProps = { view: DataType.View };
+type ViewEditorProps = { view: DataType.View };
 
-const TableViewEditor = ({ view }: TableViewEditorProps) => {
+export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
@@ -42,7 +42,7 @@ const TableViewEditor = ({ view }: TableViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { view, fieldId }));
+      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
     },
     [dispatch, view],
   );
@@ -52,14 +52,13 @@ const TableViewEditor = ({ view }: TableViewEditorProps) => {
   }
 
   return (
-    <ViewEditor
+    <NativeViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
+      onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+      outerSpacing={false}
     />
   );
 };
-
-export default TableViewEditor;

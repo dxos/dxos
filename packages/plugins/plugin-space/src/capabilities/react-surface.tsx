@@ -19,7 +19,16 @@ import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isLiveObject, isSpace, parseId, SpaceState, useSpace, type Space } from '@dxos/react-client/echo';
+import {
+  fullyQualifiedId,
+  getSpace,
+  isLiveObject,
+  isSpace,
+  parseId,
+  SpaceState,
+  useSpace,
+  type Space,
+} from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -39,6 +48,7 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
+  ObjectDetailsPanel,
   ObjectSettingsContainer,
   POPOVER_RENAME_OBJECT,
   POPOVER_RENAME_SPACE,
@@ -50,6 +60,7 @@ import {
   SpacePresence,
   SpaceSettingsContainer,
   SyncStatus,
+  ViewEditor,
   type CreateObjectDialogProps,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
@@ -145,6 +156,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
 
         return <SchemaContainer space={space} />;
       },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/selected-objects`,
+      role: 'article',
+      filter: (data): data is { companionTo: DataType.View; subject: 'selected-objects' } =>
+        Obj.instanceOf(DataType.View, data.companionTo) && data.subject === 'selected-objects',
+      component: ({ data }) => (
+        <ObjectDetailsPanel
+          key={fullyQualifiedId(data.companionTo)}
+          objectId={fullyQualifiedId(data.companionTo)}
+          view={data.companionTo}
+        />
+      ),
     }),
     createSurface({
       id: JOIN_DIALOG,
@@ -273,6 +297,12 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
 
         return <SelectInput {...props} options={options} />;
       },
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/object-settings`,
+      role: 'object-settings',
+      filter: (data): data is { subject: DataType.View } => Obj.instanceOf(DataType.View, data.subject),
+      component: ({ data }) => <ViewEditor view={data.subject} />,
     }),
     createSurface({
       id: POPOVER_RENAME_SPACE,

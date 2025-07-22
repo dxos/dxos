@@ -24,8 +24,6 @@ import {
 } from '@dxos/react-ui-table';
 import { type DataType } from '@dxos/schema';
 
-import { TableAction } from '../types';
-
 export type TableContainerProps = {
   role: string;
   view: DataType.View;
@@ -61,7 +59,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { view, fieldId }));
+      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
     },
     [dispatch],
   );

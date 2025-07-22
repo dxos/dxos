@@ -11,7 +11,7 @@ import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -230,6 +230,24 @@ export namespace SpaceAction {
       object: StoredSchema,
       schema: Schema.instanceOf(EchoSchema),
     }),
+  }) {}
+
+  export class DeleteField extends Schema.TaggedClass<DeleteField>()(`${SPACE_ACTION}/delete-field`, {
+    input: Schema.Struct({
+      view: DataType.View,
+      fieldId: Schema.String,
+      // TODO(wittjosiah): Separate fields for undo data?
+      deletionData: Schema.optional(
+        Schema.Struct({
+          field: FieldSchema,
+          // TODO(wittjosiah): This creates a type error.
+          // props: PropertySchema,
+          props: Schema.Any,
+          index: Schema.Number,
+        }),
+      ),
+    }),
+    output: Schema.Void,
   }) {}
 
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
