@@ -4,14 +4,14 @@
 
 import { Effect, pipe, Schema } from 'effect';
 
-import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { createTool, ToolRegistry, ToolResult, AiService, ToolId } from '@dxos/ai';
 import {
-  contributes,
   Capabilities,
-  createResolver,
   type PluginContext,
-  createIntent,
   chain,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/artifact';
 import { getSpace } from '@dxos/client/echo';
@@ -30,7 +30,6 @@ import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
-import { AiService } from "@dxos/ai";
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
@@ -229,6 +228,6 @@ const Label = Schema.Literal('important', 'personal', 'work', 'social', 'promoti
 
 const SEQUENCE = SequenceBuilder.create()
   .step('Analyze the email and assign labels to it', {
-    tools: ['inbox/label'],
+    tools: [ToolId.make('inbox/label')],
   })
   .build();

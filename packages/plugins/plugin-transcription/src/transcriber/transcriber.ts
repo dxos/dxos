@@ -220,10 +220,7 @@ export class Transcriber extends Resource {
     return segments;
   }
 
-  private _alignSegments(
-    segments: WhisperSegment[],
-    originalChunks: AudioChunk[],
-  ): DataType.MessageBlock.Transcription[] {
+  private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): DataType.MessageBlock.Transcript[] {
     // Absolute zero for all relative timestamps in the segments.
     const zeroTimestamp = originalChunks.at(0)!.timestamp;
 
