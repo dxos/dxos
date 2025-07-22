@@ -15,7 +15,7 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
+import { ChatProcessor, type ChatServices, type ChatProcessorOptions } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
