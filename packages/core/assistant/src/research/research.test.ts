@@ -28,11 +28,7 @@ const AnthropicLayer = AnthropicClient.layerConfig({
   // TODO(dmaretskyi): Migrate to FetchHttpClient.
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
-const AiServiceLayer = Layer.provide(
-  //
-  AiServiceRouter.AiServiceRouter,
-  AnthropicLayer,
-);
+const AiServiceLayer = Layer.provide(AiServiceRouter.AiServiceRouter, AnthropicLayer);
 
 describe('Research', () => {
   let runtime: ManagedRuntime.ManagedRuntime<AiService, any>;
