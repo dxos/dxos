@@ -44,11 +44,11 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 10,
-        textSize: 100,
-        mutationAmount: 10,
+        documentAmount: 1000,
+        textSize: 10,
+        mutationAmount: 0,
       },
-      maxDocumentsPerInvocation: 1,
+      maxDocumentsPerInvocation: 100,
       indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
         runtime: {
@@ -111,7 +111,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
             }),
           })
           .then((result) => {
-            log.info('invoked function', { result, totalCreatedDocuments: createdDocuments });
+            log.info('invocation result', { result });
           })
           .catch((error) => {
             log.error('error invoking function', { error });

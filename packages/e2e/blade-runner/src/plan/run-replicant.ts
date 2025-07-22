@@ -39,7 +39,8 @@ const initLogProcessor = (params: ReplicantParams) => {
       }),
     );
   } else {
-    // NOTE: `dx_runner_log` is being exposed by playwright `.exposeFunction()` API. Log chattiness can cause playwright connection overload so we limit it to only trace logs and info and above.
+    // NOTE: `dx_runner_log` is being exposed by playwright `.exposeFunction()` API.
+    // CAUTION: Log chattiness can cause playwright connection overload so we limit it to only trace logs and verbose and above.
     log.addProcessor((config, entry) => {
       if (entry.level === LogLevel.TRACE || entry.level >= LogLevel.INFO) {
         (window as any).dx_runner_log?.(config, entry);
