@@ -48,9 +48,6 @@ export default tseslint.config(
       'node_modules',
       '**/node_modules',
 
-      // Templates
-      // TODO(wittjosiah): Fix lint config to lint these files.
-      '*.t.ts',
 
       // Docs snippets
       'docs/content/**/*',
@@ -65,7 +62,6 @@ export default tseslint.config(
       '**/vendor',
       'packages/common/esbuild-plugins/polyfills',
       'packages/core/mesh/signal/testing/setup.js',
-      // 'packages/sdk/shell',
       'tools/esbuild/cli.js',
       'packages/sdk/shell/react-i18next.d.ts',
       'packages/core/mesh/network-manager/module-stub.mjs',
