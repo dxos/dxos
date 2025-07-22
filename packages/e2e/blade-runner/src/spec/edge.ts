@@ -17,6 +17,7 @@ export type EdgeTestSpec = {
   platform: Platform;
   indexing: IndexConfig;
   config: ConfigProto;
+  maxDocumentsPerInvocation: number;
   dataGeneration: {
     /**
      * Amount of documents to create on edge.
@@ -43,11 +44,12 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 500,
+        documentAmount: 10,
         textSize: 100,
-        mutationAmount: 100,
+        mutationAmount: 10,
       },
-      indexing: { enabled: true, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
+      maxDocumentsPerInvocation: 1,
+      indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
         runtime: {
           client: {
@@ -73,26 +75,55 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
   }
 
   async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeReplicationResult> {
+    const configEnabledEdgeSync = structuredClone(params.spec.config);
+    configEnabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = true;
+
+    const configDisabledEdgeSync = structuredClone(params.spec.config);
+    configDisabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = false;
+
     const replicant = await env.spawn(EdgeReplicant, { platform: params.spec.platform });
-    await replicant.brain.initClient({ config: params.spec.config, indexing: params.spec.indexing });
+    await replicant.brain.initClient({ config: configDisabledEdgeSync, indexing: params.spec.indexing });
     await replicant.brain.createIdentity();
     await replicant.brain.startAgent();
 
     const func = await replicant.brain.deployFunction();
     log.info('uploaded function', { func });
 
-    const spaceId = await replicant.brain.createSpace();
+    const spaceId = await replicant.brain.createSpace({ waitForSpace: false });
     log.info('created spaceId', { spaceId });
 
-    const result = await replicant.brain.invokeFunction({
-      functionId: func.functionId,
-      spaceId,
-      input: JSON.stringify(params.spec.dataGeneration),
-    });
-    log.info('invoked function', { result });
+    let createdDocuments = 0;
+    const promises = [];
+    while (createdDocuments < params.spec.dataGeneration.documentAmount) {
+      const documentsToCreate = Math.min(
+        params.spec.maxDocumentsPerInvocation,
+        params.spec.dataGeneration.documentAmount - createdDocuments,
+      );
+      createdDocuments += documentsToCreate;
+      promises.push(
+        replicant.brain
+          .invokeFunction({
+            functionId: func.functionId,
+            spaceId,
+            input: JSON.stringify({
+              ...params.spec.dataGeneration,
+              documentAmount: documentsToCreate,
+            }),
+          })
+          .then((result) => {
+            log.info('invoked function', { result, totalCreatedDocuments: createdDocuments });
+          })
+          .catch((error) => {
+            log.error('error invoking function', { error });
+          }),
+      );
+    }
+    log.info('waiting for all functions to finish', { amountOfInvocations: promises.length });
+    await Promise.all(promises);
+    await replicant.brain.reinitializeClient({ config: configEnabledEdgeSync, indexing: params.spec.indexing });
 
     performance.mark('sync:start');
-    await replicant.brain.waitForReplication({ spaceId });
+    await replicant.brain.waitForReplication({ spaceId, minDocuments: params.spec.dataGeneration.documentAmount });
     performance.mark('sync:end');
     const allCombinedReplicationTime = performance.measure('sync', 'sync:start', 'sync:end').duration;
 

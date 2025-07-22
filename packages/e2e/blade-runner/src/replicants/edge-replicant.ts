@@ -99,7 +99,7 @@ export class EdgeReplicant {
   }
 
   @trace.span()
-  async createSpace(): Promise<SpaceId> {
+  async createSpace({ waitForSpace = false }: { waitForSpace?: boolean } = {}): Promise<SpaceId> {
     await sleep(1000);
     invariant(this._client, 'no client');
     const agentDevice = this._client.halo.devices
@@ -110,14 +110,16 @@ export class EdgeReplicant {
 
     const response = await this._client!.edge.createSpace({ agentKey });
     log.info('space created', { response });
-    const space = await waitForCondition({
-      condition: () => this._client!.spaces.get(response.spaceId as SpaceId),
-      timeout: 10000,
-      interval: 100,
-    });
-    invariant(space, 'space not found');
 
-    return space.id;
+    if (waitForSpace) {
+      await waitForCondition({
+        condition: () => this._client!.spaces.get(response.spaceId as SpaceId),
+        timeout: 10000,
+        interval: 100,
+      });
+    }
+
+    return response.spaceId as SpaceId;
   }
 
   @trace.span()
@@ -166,20 +168,30 @@ export class EdgeReplicant {
   }
 
   @trace.span()
-  async waitForReplication({ spaceId }: { spaceId: SpaceId }) {
+  async waitForReplication({ spaceId, minDocuments }: { spaceId: SpaceId; minDocuments?: number }) {
+    log.info('waiting for replication', { spaceId, minDocuments });
     invariant(this._client, 'no client');
     const space = this._client!.spaces.get(spaceId);
     invariant(space, 'space not found');
 
     const replicationIsDone = new Trigger();
+    let lastPrintLocalDocumentCount: number = -100;
     const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
-      log.info('sync state', { state });
-      if (state.peers?.every((peer) => peer.differentDocuments === 0)) {
+      if (
+        state.peers?.length === 1 &&
+        state.peers[0].differentDocuments === 0 &&
+        state.peers[0].localDocumentCount >= (minDocuments ?? 0)
+      ) {
+        log.info('replication is done', { state });
         replicationIsDone.wake();
+      }
+      if (state.peers?.length === 1 && state.peers[0].localDocumentCount - lastPrintLocalDocumentCount > 100) {
+        lastPrintLocalDocumentCount = state.peers[0].localDocumentCount;
+        log.info('sync state', { state, time: Date.now() });
       }
     });
 
-    await replicationIsDone.wait({ timeout: 30_000 });
+    await replicationIsDone.wait({ timeout: 300_000 });
     unsub();
   }
 }
