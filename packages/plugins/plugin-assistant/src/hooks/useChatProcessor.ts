@@ -15,16 +15,19 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatServices, type ChatProcessorOptions } from '../hooks';
+import { ChatProcessor, type ChatServices, type ChatProcessorOptions, type Services } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
+import type { Layer } from 'effect';
 
 type UseChatProcessorProps = {
   /** @deprecated Why is this required? */
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: Assistant.Chat;
-  services?: Layer.Layer<ChatServices>;
+  serviceLayer?: Layer.Layer<ChatServices>;
+
+  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
   /** @deprecated */
@@ -42,7 +45,7 @@ export const useChatProcessor = ({
   part = 'deck',
   space,
   chat,
-  services,
+  serviceLayer,
   blueprintRegistry,
   settings,
   instructions,
@@ -116,13 +119,12 @@ export const useChatProcessor = ({
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
-    if (!services || !conversation) {
+    if (!serviceLayer || !conversation) {
       return undefined;
     }
 
     log('creating processor...', { settings });
-    return new ChatProcessor(conversation, {
-      services,
+    return new ChatProcessor(serviceLayer, conversation, {
       tools,
       extensions,
       blueprintRegistry,
@@ -130,7 +132,7 @@ export const useChatProcessor = ({
       systemPrompt,
       model,
     });
-  }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
+  }, [serviceLayer, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
 
   return processor;
 };

@@ -19,6 +19,8 @@ import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, type DataType } from '@dxos/schema';
+import type { Layer } from 'effect';
+import type { Services } from './useServices';
 
 import { type ChatServices } from './useChatServices';
 
@@ -102,6 +104,7 @@ export class ChatProcessor {
   private _session: AISession | undefined = undefined;
 
   constructor(
+    private readonly _serviceLayer: Layer.Layer<Services>,
     private readonly _conversation: Conversation,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {
