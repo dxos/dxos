@@ -14,17 +14,19 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
+import { ChatProcessor, type ChatProcessorOptions, type Services } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
+import type { Layer } from 'effect';
 
 type UseChatProcessorProps = {
   /** @deprecated Why is this required? */
   part?: 'deck' | 'dialog';
   space?: Space;
   chat?: Assistant.Chat;
+  serviceLayer: Layer.Layer<Services>;
+
   // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
-  serviceContainer: ServiceContainer;
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
   /** @deprecated */
@@ -42,7 +44,7 @@ export const useChatProcessor = ({
   part = 'deck',
   space,
   chat,
-  serviceContainer,
+  serviceLayer,
   blueprintRegistry,
   settings,
   instructions,
@@ -109,10 +111,9 @@ export const useChatProcessor = ({
     }
 
     return new Conversation({
-      serviceContainer,
       queue: chat.queue.target as Queue<any>,
     });
-  }, [chat?.queue.target, serviceContainer]);
+  }, [chat?.queue.target]);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
@@ -122,15 +123,18 @@ export const useChatProcessor = ({
     }
 
     log('creating processor...', { settings });
-    return new ChatProcessor(conversation, {
-      tools,
-      extensions,
-      blueprintRegistry,
-      artifacts,
-      systemPrompt,
-      model,
-    });
-  }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
+    return (
+      serviceLayer &&
+      new ChatProcessor(serviceLayer, conversation, {
+        tools,
+        extensions,
+        blueprintRegistry,
+        artifacts,
+        systemPrompt,
+        model,
+      })
+    );
+  }, [serviceLayer, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
 
   return processor;
 };
