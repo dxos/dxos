@@ -91,7 +91,7 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
             <Board.Content>
               {items?.map((item, index) => (
                 <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                  <Surface role='card--board' data={{ subject: item }} />
+                  <Surface role='card--extrinsic' data={{ subject: item }} limit={1} />
                 </Board.Cell>
               ))}
             </Board.Content>

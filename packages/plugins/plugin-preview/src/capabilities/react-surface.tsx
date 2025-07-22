@@ -33,7 +33,7 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
-      role: ['popover', 'card--kanban', 'card--document', 'card--board', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -74,7 +74,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
-      role: ['popover', 'card--kanban', 'card--document', 'card--board', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
         <OrganizationCard role={role} subject={data.subject}>
@@ -84,7 +84,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--project`,
-      role: ['popover', 'card--kanban', 'card--document', 'card--board', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
     }),
@@ -94,7 +94,7 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--kanban', 'card--document', 'card--board', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
@@ -121,7 +121,7 @@ export default () =>
               readonly={role === 'popover'}
               onSave={handleSave}
               autoSave
-              {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
+              {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}
             />
           </Card.SurfaceRoot>
         );

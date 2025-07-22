@@ -181,7 +181,7 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
   const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='card--document' data={data} limit={1} />, el);
+  return createPortal(<Surface role='transclusion' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
