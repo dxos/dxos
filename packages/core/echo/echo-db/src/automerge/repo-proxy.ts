@@ -49,6 +49,11 @@ export class RepoProxy extends Resource {
   private readonly _pendingCreateIds = new Set<DocumentId>();
 
   /**
+   * Document ids that have pending updates.
+   */
+  private readonly _pendingUpdateIds = new Set<DocumentId>();
+
+  /**
    * Document ids that should be subscribed to.
    */
   private readonly _pendingAddIds = new Set<DocumentId>();
@@ -57,11 +62,6 @@ export class RepoProxy extends Resource {
    * Document ids that should be unsubscribed from.
    */
   private readonly _pendingRemoveIds = new Set<DocumentId>();
-
-  /**
-   * Document ids that have pending updates.
-   */
-  private readonly _pendingUpdateIds = new Set<DocumentId>();
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
@@ -172,7 +172,9 @@ export class RepoProxy extends Resource {
     // TODO(burdon): Called even if not mutations.
     const onChange = () => {
       log('onChange', { documentId });
-      this._pendingUpdateIds.add(documentId);
+      if (!this._pendingCreateIds.has(documentId)) {
+        this._pendingUpdateIds.add(documentId);
+      }
       this._sendUpdatesJob?.trigger();
       this._emitSaveStateEvent();
     };
@@ -219,9 +221,9 @@ export class RepoProxy extends Resource {
   private async _sendUpdates(): Promise<void> {
     // Save current state of pending updates to avoid race conditions.
     const createIds = Array.from(this._pendingCreateIds);
+    const updateIds = Array.from(this._pendingUpdateIds);
     const addIds = Array.from(this._pendingAddIds);
     const removeIds = Array.from(this._pendingRemoveIds);
-    const updateIds = Array.from(this._pendingUpdateIds);
 
     this._pendingCreateIds.clear();
     this._pendingAddIds.clear();

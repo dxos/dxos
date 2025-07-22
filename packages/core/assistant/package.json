@@ -49,7 +49,7 @@
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "effect": "3.16.13",
+    "effect": "3.17.0",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

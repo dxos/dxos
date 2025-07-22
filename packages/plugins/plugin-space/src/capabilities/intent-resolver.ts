@@ -399,7 +399,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     // }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, typename, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true, onCreateObject }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -412,6 +412,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 props: {
                   target,
                   typename,
+                  onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
                         const isCollection = Obj.instanceOf(DataType.Collection, object);

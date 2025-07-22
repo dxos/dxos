@@ -106,8 +106,7 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
         ref={forwardedRef}
       >
         <Popover.Viewport>
-          {/* TODO(thure): This skips over `Command`’s root component, which renders a DOM node probably unnecessarily without supporting `asChild`. */}
-          <SearchList.Root {...props} classNames='contents' role='none'>
+          <SearchList.Root {...props} classNames='contents density-fine' role='none'>
             {children}
           </SearchList.Root>
         </Popover.Viewport>
@@ -134,7 +133,20 @@ const PopoverComboboxVirtualTrigger = Popover.VirtualTrigger;
 
 type PopoverComboboxInputProps = SearchListInputProps;
 
-const PopoverComboboxInput = SearchList.Input;
+const PopoverComboboxInput = forwardRef<HTMLInputElement, PopoverComboboxInputProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    return (
+      <SearchList.Input
+        {...props}
+        classNames={[
+          'mli-cardSpacingChrome mbs-cardSpacingChrome is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
+          classNames,
+        ]}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 type PopoverComboboxListProps = SearchListContentProps &
   Pick<PopoverViewportProps, 'constrainBlock' | 'constrainInline'>;
@@ -151,7 +163,17 @@ const PopoverComboboxList = forwardRef<HTMLDivElement, PopoverComboboxListProps>
 
 type PopoverComboboxItemProps = SearchListItemProps;
 
-const PopoverComboboxItem = SearchList.Item;
+const PopoverComboboxItem = forwardRef<HTMLDivElement, PopoverComboboxItemProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    return (
+      <SearchList.Item
+        {...props}
+        classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 type PopoverComboboxArrowProps = PopoverArrowProps;
 

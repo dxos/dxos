@@ -229,7 +229,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   //
 
   protected override async _open(): Promise<void> {
-    const presentation = await this._view.presentation.load();
+    const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
     invariant(Obj.instanceOf(TableView, presentation));
     this._table = presentation;
 

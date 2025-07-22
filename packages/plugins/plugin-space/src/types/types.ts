@@ -237,6 +237,8 @@ export namespace SpaceAction {
       target: Schema.Union(SpaceSchema, DataType.Collection),
       typename: Schema.optional(Schema.String),
       navigable: Schema.optional(Schema.Boolean),
+      // TODO(wittjosiah): This is a function, is there a better way to handle this?
+      onCreateObject: Schema.optional(Schema.Any),
     }),
     output: Schema.Void,
   }) {}

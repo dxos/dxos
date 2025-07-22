@@ -31,6 +31,7 @@ import { SpaceAction } from '../../types';
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'name'> & {
+  onCreateObject?: (object: Obj.Any) => void;
   shouldNavigate?: (object: Obj.Any) => boolean;
 };
 
@@ -38,6 +39,7 @@ export const CreateObjectDialog = ({
   target: initialTarget,
   typename: initialTypename,
   name,
+  onCreateObject,
   shouldNavigate: _shouldNavigate,
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
@@ -87,6 +89,8 @@ export const CreateObjectDialog = ({
           } else {
             yield* dispatch(addObjectIntent);
           }
+
+          onCreateObject?.(object);
         }
       }).pipe(Effect.runPromise),
     [dispatch, target, resolve, hiddenTypenames, _shouldNavigate],

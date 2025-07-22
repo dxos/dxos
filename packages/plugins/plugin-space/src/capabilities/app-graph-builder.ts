@@ -494,9 +494,11 @@ export default (context: PluginContext) => {
             }),
             Option.map(({ space, schema }) => {
               if (!query) {
-                query = space.db.query(Filter.type(DataType.View, { query: { typename: schema.typename } }));
+                // TODO(wittjosiah): Support filtering by nested properties (e.g. `query.typename`).
+                query = space.db.query(Filter.type(DataType.View));
               }
               return get(rxFromQuery(query))
+                .filter((view) => view.query.typename === schema.typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>

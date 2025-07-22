@@ -36,18 +36,23 @@ export const DynamicTable = ({
   name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
   rows,
   properties,
-  jsonSchema,
+  jsonSchema: _jsonSchema,
   schema,
   rowActions,
   onRowClick,
   onRowAction,
   ...props
 }: DynamicTableProps) => {
-  const { projection, view } = useMemo(() => {
-    // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-    const props = getBaseSchema({ typename: name, properties, jsonSchema, schema });
-    return makeDynamicTable({ ...props, properties });
-  }, [name, properties, schema, jsonSchema]);
+  // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
+  const { typename, jsonSchema } = useMemo(
+    () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
+    [name, properties, _jsonSchema, schema],
+  );
+
+  const { projection, view } = useMemo(
+    () => makeDynamicTable({ typename, jsonSchema, properties }),
+    [typename, jsonSchema, properties],
+  );
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
@@ -68,6 +73,7 @@ export const DynamicTable = ({
   );
 
   const model = useTableModel({
+    id: view.id,
     rows,
     view,
     schema: jsonSchema,

@@ -60,6 +60,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Check for import cycles
+        run: pnpm run check-cycles
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :lint :build --affected --remote
@@ -72,10 +75,6 @@ jobs:
         if: (success() || failure()) && github.event_name == 'pull_request'
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check for import cycles
-        if: always()
-        run: pnpm run check-cycles
 
   test:
     strategy:
