@@ -25,13 +25,13 @@ export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
 export const modules = [
-  // 'apps/*/src/**',
-  // 'devtools/*/src/**',
-  // 'experimental/*/src/**',
-  // 'plugins/*/src/**',
+  'apps/*/src/**',
+  'devtools/*/src/**',
+  'experimental/*/src/**',
+  'plugins/*/src/**',
   'plugins/plugin-assistant/src/**',
-  // 'sdk/*/src/**',
-  // 'ui/*/src/**',
+  'sdk/*/src/**',
+  'ui/*/src/**',
 ];
 
 export const stories = modules.map((dir) => join(packages, dir, storyFiles));
