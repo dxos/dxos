@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export const translationKey = 'thread';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+export const translationKey = 'react-ui-thread';
+
+export const translations = [
   {
     'en-US': {
       [translationKey]: {
@@ -21,4 +23,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

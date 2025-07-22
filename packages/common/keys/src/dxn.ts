@@ -179,6 +179,35 @@ export class DXN {
     this.#parts = parts;
   }
 
+  toString(): DXN.String {
+    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
+  }
+
+  toJSON(): string {
+    return this.toString();
+  }
+
+  /**
+   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
+   */
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
+    const printControlCode = (code: number) => {
+      return `\x1b[${code}m`;
+    };
+
+    return (
+      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
+    );
+  }
+
+  get [devtoolsFormatter](): DevtoolsFormatter {
+    return {
+      header: () => {
+        return ['span', { style: 'font-weight: bold;' }, this.toString()];
+      },
+    };
+  }
+
   get parts() {
     return this.#parts;
   }
@@ -236,31 +265,6 @@ export class DXN {
       spaceId: spaceId as SpaceId,
       queueId,
       objectId: objectId as string | undefined,
-    };
-  }
-
-  toString(): DXN.String {
-    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
-  }
-
-  /**
-   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
-   */
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
-    const printControlCode = (code: number) => {
-      return `\x1b[${code}m`;
-    };
-
-    return (
-      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
-    );
-  }
-
-  get [devtoolsFormatter](): DevtoolsFormatter {
-    return {
-      header: () => {
-        return ['span', { style: 'font-weight: bold;' }, this.toString()];
-      },
     };
   }
 }

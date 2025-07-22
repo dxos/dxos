@@ -13,17 +13,23 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
+import { log } from 'console';
 
 // TODO(burdon): Reconcile with tools/x.
 
 const OP_GITHUB_ITEM = 'GitHub';
 const OP_GITHUB_FIELD = 'credential';
 
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'dxos/dxos';
-
 const REPO_ROOT = process.cwd();
 
+let username = process.env.GITHUB_USERNAME;
+
 const argv = yargs(process.argv.slice(2))
+  .option('repo', {
+    type: 'string',
+    default: process.env.GITHUB_REPOSITORY || 'dxos/dxos',
+    description: 'Repository',
+  })
   .option('period', {
     type: 'number',
     default: 12 * 60,
@@ -56,8 +62,23 @@ const argv = yargs(process.argv.slice(2))
   })
   .option('interval', {
     type: 'number',
-    default: 10_000,
+    default: 20000,
     description: 'Polling interval in milliseconds',
+  })
+  .option('username', {
+    type: 'string',
+    default: process.env.GITHUB_USERNAME,
+    description: 'Username',
+  })
+  .option('me', {
+    type: 'boolean',
+    default: true,
+    description: 'Current user',
+  })
+  .option('verbose', {
+    type: 'boolean',
+    default: false,
+    description: 'Verbose mode',
   }).argv;
 
 const command = argv._[0];
@@ -86,6 +107,10 @@ switch (command) {
  */
 async function checkResults() {
   const runs = await listWorkflowRunsForRepo(true);
+  if (!runs) {
+    return false;
+  }
+
   // Find first run that completed with success or failure.
   for (const run of runs) {
     if (run.status === 'queued' || run.status === 'in_progress') {
@@ -128,6 +153,10 @@ async function getPullRequests() {
 async function listWorkflowRunsForRepo(watch = false) {
   try {
     const { octokit, owner, repo } = getOctokit();
+    const actor = argv.me ? await getUsername() : argv.username;
+    if (argv.verbose) {
+      console.log(chalk.gray(`Getting workflow runs for ${owner}/${repo}...`));
+    }
 
     // Get workflow runs.
     const {
@@ -135,7 +164,6 @@ async function listWorkflowRunsForRepo(watch = false) {
     } = await octokit.actions.listWorkflowRunsForRepo({
       owner,
       repo,
-      actor: process.env.GITHUB_ACTOR,
       created: `>${new Date(Date.now() - argv.period * 60 * 1000).toISOString()}`,
       name: argv.filter,
     });
@@ -146,13 +174,14 @@ async function listWorkflowRunsForRepo(watch = false) {
 
     // Output as cli-table3
     const table = new Table({
-      head: ['Workflow', 'Branch', 'Created', 'Duration', 'Status', 'URL'],
+      head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
       style: { head: ['gray'], compact: true },
     });
 
     const rows = workflow_runs
-      .filter((run) => !argv.filter || run.name.match(argv.filter))
+      .filter((run) => (!actor || run.actor?.login === actor) && (!argv.filter || run.name.match(argv.filter)))
       .sort(({ created_at: a }, { created_at: b }) => new Date(b) - new Date(a));
+
     rows.forEach((run) => {
       const now = new Date(new Date().toISOString());
       const created = new Date(run.created_at);
@@ -164,7 +193,9 @@ async function listWorkflowRunsForRepo(watch = false) {
       const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 
       table.push([
+        chalk.blueBright(link(run.html_url, run.id)),
         run.name,
+        run.actor?.login,
         chalk.magenta(run.head_branch),
         run.created_at,
         { hAlign: 'right', content: humanReadable },
@@ -175,13 +206,13 @@ async function listWorkflowRunsForRepo(watch = false) {
               ? chalk.green(run.conclusion)
               : chalk.yellow(run.conclusion)
           : chalk.yellow(run.status),
-        chalk.blueBright(run.html_url),
       ]);
     });
 
-    if (watch) {
+    if (watch && !argv.verbose) {
       console.clear();
     }
+
     console.log(table.toString());
     return rows;
   } catch (err) {
@@ -318,7 +349,7 @@ async function showWorkflowRunReport(run) {
               const match = str.match(/(\s+at) (?:([^.]+)\s+)?(.*)/);
               if (match) {
                 const [_, prefix, method, where] = match;
-                const highlight = where?.indexOf(GITHUB_REPOSITORY) !== -1 && where?.indexOf('node_modules') === -1;
+                const highlight = where?.indexOf(argv.repo) !== -1 && where?.indexOf('node_modules') === -1;
                 if (!highlight && argv.truncate) {
                   break;
                 }
@@ -365,13 +396,25 @@ async function showWorkflowRunReport(run) {
 
 function getOctokit() {
   const token = getGithubToken();
-  const [owner, repo] = GITHUB_REPOSITORY.split('/');
+  const [owner, repo] = argv.repo.split('/');
   if (!token || !owner || !repo) {
     console.error('Missing GITHUB_TOKEN or GITHUB_REPOSITORY environment variables.');
     process.exit(1);
   }
 
-  return { octokit: new Octokit({ auth: token }), owner, repo };
+  const octokit = new Octokit({ auth: token });
+  return { octokit, owner, repo };
+}
+
+async function getUsername() {
+  if (username) {
+    return username;
+  }
+
+  const { octokit } = getOctokit();
+  const { data } = await octokit.users.getAuthenticated();
+  username = data.login;
+  return data.login;
 }
 
 /**
@@ -398,6 +441,10 @@ function chalkJson(obj) {
     .replace(/: "(.*?)"/g, (_, val) => `: ${chalk.yellow(`"${val}"`)}`) // strings
     .replace(/: (\d+)/g, (_, val) => `: ${chalk.cyan(val)}`) // numbers
     .replace(/: (true|false)/g, (_, val) => `: ${chalk.magenta(val)}`); // booleans
+}
+
+function link(url, text) {
+  return `\x1b]8;;${url}\x07${text}\x1b]8;;\x07`;
 }
 
 function comparePathStrings(a, b) {

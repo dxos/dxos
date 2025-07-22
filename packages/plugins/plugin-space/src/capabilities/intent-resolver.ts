@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -76,7 +76,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         }
         await space.waitUntilReady();
         const collection = Obj.make(DataType.Collection, { objects: [] });
-        space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
+        space.properties[DataType.Collection.typename] = Ref.make(collection);
 
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
@@ -311,7 +311,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, typename, navigable = true }) => {
+      resolve: ({ target, typename, navigable = true, onCreateObject }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -324,6 +324,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 props: {
                   target,
                   typename,
+                  onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
                         const isCollection = Obj.instanceOf(DataType.Collection, object);
@@ -381,13 +382,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         } else if (isSpace(target) && hidden) {
           space.db.add(object);
         } else if (isSpace(target)) {
-          const collection = space.properties[Type.getTypename(DataType.Collection)]?.target;
+          const collection = space.properties[DataType.Collection.typename]?.target;
           if (Obj.instanceOf(DataType.Collection, collection)) {
             collection.objects.push(Ref.make(object));
           } else {
             // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
             const collection = Obj.make(DataType.Collection, { objects: [Ref.make(object)] });
-            space.properties[Type.getTypename(DataType.Collection)] = Ref.make(collection);
+            space.properties[DataType.Collection.typename] = Ref.make(collection);
           }
         }
 
@@ -444,7 +445,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         if (!undo) {
           const parentCollection: DataType.Collection =
-            target ?? space.properties[Type.getTypename(DataType.Collection)]?.target;
+            target ?? space.properties[DataType.Collection.typename]?.target;
           const nestedObjectsList = await Promise.all(objects.map((obj) => getNestedObjects(obj, resolve)));
 
           const deletionData = {

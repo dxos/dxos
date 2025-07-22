@@ -4,7 +4,7 @@ export DX_CONFIG=./config/config-local.yml
 
 export PATH=$PATH:./bin
 
-pnpm -w nx build cli
+moon run cli:build
 
 # Device join
 dx halo join

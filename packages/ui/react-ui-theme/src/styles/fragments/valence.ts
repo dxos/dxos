@@ -24,8 +24,6 @@ export const valenceColorText = (valence?: MessageValence) => {
   }
 };
 
-// TODO(burdon): Border colors.
-
 export const neutralMessageColors = 'border border-dashed border-separator text-subdued';
 export const successMessageColors = 'text-successSurfaceText bg-successSurface';
 export const infoMessageColors = 'text-infoSurfaceText bg-infoSurface';

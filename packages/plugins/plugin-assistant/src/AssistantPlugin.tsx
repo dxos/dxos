@@ -13,7 +13,7 @@ import {
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { Sequence } from '@dxos/conductor';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -22,8 +22,8 @@ import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
-import { AssistantAction, AIChatType, ServiceType, TemplateType, CompanionTo } from './types';
+import { translations } from './translations';
+import { Assistant, ServiceType, TemplateType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -42,13 +42,13 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Blueprint),
+          id: Type.getTypename(Sequence),
           metadata: {
-            icon: 'ph--blueprint--regular',
+            icon: 'ph--circuitry--regular',
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(AIChatType),
+          id: Type.getTypename(Assistant.Chat),
           metadata: {
             icon: 'ph--atom--regular',
           },
@@ -62,15 +62,15 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: AIChatType,
-            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
+            objectSchema: Assistant.Chat,
+            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: Blueprint,
-            getIntent: () => createIntent(AssistantAction.CreateBlueprint),
+            objectSchema: Sequence,
+            getIntent: () => createIntent(Assistant.CreateSequence),
           }),
         ),
       ],
@@ -78,7 +78,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
@@ -88,11 +88,11 @@ export const AssistantPlugin = () =>
         return contributes(SpaceCapabilities.OnSpaceCreated, async ({ space, rootCollection }) => {
           const program = Effect.gen(function* () {
             const { object: collection } = yield* dispatch(
-              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(AIChatType) }),
+              createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Assistant.Chat) }),
             );
             rootCollection.objects.push(Ref.make(collection));
 
-            const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+            const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
             space.db.add(chat);
           });
           await Effect.runPromise(program);

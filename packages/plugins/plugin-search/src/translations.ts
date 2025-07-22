@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { SEARCH_PLUGIN } from './meta';
+import { type Resource } from '@dxos/react-ui';
 
-export default [
+import { meta } from './meta';
+
+export const translations = [
   {
     'en-US': {
-      [SEARCH_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Search',
         'search action label': 'Search spaces',
         'search placeholder': 'Search…',
@@ -19,4 +21,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

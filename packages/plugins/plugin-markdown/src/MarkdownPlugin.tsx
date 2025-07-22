@@ -22,7 +22,7 @@ import {
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { DocumentType, MarkdownAction } from './types';
 import { serializer } from './util';
 

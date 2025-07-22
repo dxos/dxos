@@ -2,25 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { EXPLORER_PLUGIN } from './meta';
+import { meta } from './meta';
 import { ViewType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(ViewType)]: {
+      [ViewType.typename]: {
         'typename label': 'Explorer',
         'typename label_zero': 'Explorers',
         'typename label_one': 'Explorer',
         'typename label_other': 'Explorers',
         'object name placeholder': 'New explorer',
       },
-      [EXPLORER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Explorer',
         'object title label': 'Title',
       },
     },
   },
-];
+] as const satisfies Resource[];

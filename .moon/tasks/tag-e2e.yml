@@ -1,0 +1,22 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  e2e:
+    command: playwright test
+    args:
+      - --config=src/playwright/playwright.config.ts
+    deps:
+      - test-utils:compile
+      - target: ^:build
+        optional: true
+      - target: ^:compile
+        optional: true
+      - target: bundle
+        optional: true
+    inputs:
+      - src/playwright/playwright.config.ts
+      - '@group(sources)'
+      - $CONFIG_DYNAMIC
+      - $DX_ENVIRONMENT
+      - $DX_HOST
+      - $DX_HUB_URL
+      - $DX_IPDATA_API_KEY

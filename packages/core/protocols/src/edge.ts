@@ -190,3 +190,33 @@ export enum EdgeWebsocketProtocol {
    */
   V1 = 'edge-ws-v1',
 }
+
+// TODO(mykola): Reconcile with type in EDGE repo.
+export type EdgeStatus = {
+  problems: string[];
+  agent: {
+    agentStatus?: string;
+    agentKey?: string;
+    haloSpaceId?: SpaceId;
+    fetchError?: string;
+  };
+  router: {
+    connectedDevices?: {
+      peerKey: string;
+      topics: string[];
+    }[];
+    metrics?: {
+      sentMessages: number;
+      receivedMessages: number;
+      sentBytes: number;
+      receivedBytes: number;
+      failedMessages: number;
+      failedBytes: number;
+    };
+    fetchError?: string;
+  };
+  spaces: {
+    data: Record<SpaceId, { diagnostics?: any & { redFlags: string[] }; fetchError?: string }>;
+    fetchError?: string;
+  };
+};

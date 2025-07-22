@@ -2,36 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 
-import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, useCapability } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/artifact';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ThreadContainer } from './Thread';
-import { ASSISTANT_PLUGIN } from '../meta';
-import { type AssistantSettingsProps, type AIChatType } from '../types';
+import { Chat } from './Chat';
+import { useChatProcessor, useServiceContainer } from '../hooks';
+import { meta } from '../meta';
+import { type Assistant } from '../types';
 
 export type ChatContainerProps = {
   role: string;
-  chat: AIChatType;
-  associatedArtifact?: AssociatedArtifact;
+  chat: Assistant.Chat;
+  artifact?: AssociatedArtifact;
 };
 
-// TODO(burdon): Attention.
-export const ChatContainer: FC<ChatContainerProps> = ({ role, chat, associatedArtifact }) => {
-  const transcription = useCapabilities(TranscriptionCapabilities.Transcriber).length > 0;
-  const settings = useCapability(Capabilities.SettingsStore).getStore<AssistantSettingsProps>(ASSISTANT_PLUGIN)?.value;
+export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
+  const space = getSpace(chat);
+  const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
+  const serviceContainer = useServiceContainer({ space });
+  const processor = useChatProcessor({ part: 'deck', chat, serviceContainer, settings });
+  if (!processor) {
+    return null;
+  }
 
+  // TODO(burdon): Add attention attributes.
   return (
     <StackItem.Content role={role} classNames='container-max-width'>
-      <ThreadContainer
-        chat={chat}
-        settings={settings}
-        transcription={transcription}
-        associatedArtifact={associatedArtifact}
-      />
+      <Chat.Root chat={chat} processor={processor} artifact={artifact}>
+        <Chat.Thread />
+        <div className='pbe-4 pis-2 pie-2'>
+          <Chat.Prompt classNames='border border-subduedSeparator rounded-md' />
+        </div>
+      </Chat.Root>
     </StackItem.Content>
   );
 };

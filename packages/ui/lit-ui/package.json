@@ -10,12 +10,12 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
     "./react": {
-      "types": "./dist/types/src/react.d.ts",
+      "types": "./dist/src/react.d.ts",
       "browser": "./dist/src/react.js",
       "node": "./dist/src/react.js"
     },
@@ -28,7 +28,7 @@
   "typesVersions": {
     "*": {
       "react": [
-        "./dist/types/src/react.d.ts"
+        "./dist/src/react.d.ts"
       ]
     }
   },

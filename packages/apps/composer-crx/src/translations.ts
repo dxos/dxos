@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export default [
+import { type Resource } from '@dxos/react-ui';
+
+export const translations = [
   {
     'en-US': {
       composer: {
@@ -13,4 +15,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

@@ -23,13 +23,13 @@ import { AnchoredTo } from '@dxos/schema';
 
 import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer } from '../components';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ThreadAction, ThreadType } from '../types';
 
 export const ThreadComplementary = ({ subject }: { subject: any }) => {
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
-  const { t } = useTranslation(THREAD_PLUGIN);
   const { tx } = useThemeContext();
   const subjectId = fullyQualifiedId(subject);
 

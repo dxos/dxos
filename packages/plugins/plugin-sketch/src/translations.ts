@@ -2,22 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { SKETCH_PLUGIN } from './meta';
+import { meta } from './meta';
 import { DiagramType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(DiagramType)]: {
+      [DiagramType.typename]: {
         'typename label': 'Sketch',
         'typename label_zero': 'Sketches',
         'typename label_one': 'Sketch',
         'typename label_other': 'Sketches',
         'object name placeholder': 'New sketch',
       },
-      [SKETCH_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Sketch',
         'settings hover tools label': 'Auto hide controls',
         'settings grid': 'Show grid',
@@ -25,4 +25,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

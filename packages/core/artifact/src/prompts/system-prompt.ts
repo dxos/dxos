@@ -29,7 +29,12 @@ export type SystemPromptOptions = {
   /**
    * Associated artifact to include in the prompt.
    */
-  associatedArtifact?: AssociatedArtifact;
+  artifact?: AssociatedArtifact;
+
+  /**
+   * Additional instructions to include in the prompt.
+   */
+  instructions?: string;
 };
 
 /**

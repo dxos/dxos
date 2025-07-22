@@ -2,29 +2,29 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { type Resource } from '@dxos/react-ui';
 
-import { OUTLINER_PLUGIN } from './meta';
+import { meta } from './meta';
 import { JournalType, OutlineType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(JournalType)]: {
+      [JournalType.typename]: {
         'typename label': 'Journal',
         'typename label_zero': 'Journals',
         'typename label_one': 'Journal',
         'typename label_other': 'Journals',
         'object name placeholder': 'New journal',
       },
-      [Type.getTypename(OutlineType)]: {
+      [OutlineType.typename]: {
         'typename label': 'Outline',
         'typename label_zero': 'Outlines',
         'typename label_one': 'Outline',
         'typename label_other': 'Outlines',
         'object name placeholder': 'New outline',
       },
-      [OUTLINER_PLUGIN]: {
+      [meta.id]: {
         'plugin name': 'Outliner',
         'delete object label': 'Delete item',
         'create entry label': 'Create entry',
@@ -40,4 +40,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

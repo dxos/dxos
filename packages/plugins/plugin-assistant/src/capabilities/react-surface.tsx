@@ -6,47 +6,47 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/assistant';
+import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
+import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Filter, type Key, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, getTypename } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
-  AssistantDialog,
   AssistantSettings,
-  BlueprintContainer,
   ChatContainer,
+  ChatDialog,
   PromptSettings,
+  SequenceContainer,
   TemplateContainer,
 } from '../components';
-import { ASSISTANT_PLUGIN, ASSISTANT_DIALOG } from '../meta';
-import { AIChatType, AssistantAction, type AssistantSettingsProps, CompanionTo, TemplateType } from '../types';
+import { meta, ASSISTANT_DIALOG } from '../meta';
+import { Assistant, TemplateType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<AssistantSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === ASSISTANT_PLUGIN,
+      filter: (data): data is { subject: SettingsStore<Assistant.Settings> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <AssistantSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/chat`,
+      id: `${meta.id}/chat`,
       role: 'article',
-      filter: (data): data is { subject: AIChatType; variant: undefined } =>
-        Obj.instanceOf(AIChatType, data.subject) && data.variant !== 'assistant-chat',
+      filter: (data): data is { subject: Assistant.Chat; variant: undefined } =>
+        Obj.instanceOf(Assistant.Chat, data.subject) && data.variant !== 'assistant-chat',
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/object-chat`,
+      id: `${meta.id}/object-chat`,
       role: 'article',
-      filter: (data): data is { companionTo: Obj.Any; subject: AIChatType | 'assistant-chat' } =>
+      filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
-        (Obj.instanceOf(AIChatType, data.subject) || data.subject === 'assistant-chat'),
+        (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();
         const associatedArtifact = useMemo(
@@ -64,19 +64,19 @@ export default () =>
             const space = getSpace(data.companionTo);
             if (space && data.subject === 'assistant-chat') {
               const result = await space.db
-                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(CompanionTo).source())
+                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
                 .run();
               if (result.objects.length > 0) {
                 return;
               }
 
               const program = Effect.gen(function* () {
-                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+                const { object } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {
                     space,
-                    schema: CompanionTo,
+                    schema: Assistant.CompanionTo,
                     source: object,
                     target: data.companionTo,
                   }),
@@ -93,20 +93,20 @@ export default () =>
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} associatedArtifact={associatedArtifact} />;
+        return <ChatContainer role={role} chat={data.subject} artifact={associatedArtifact} />;
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/blueprint`,
+      id: `${meta.id}/sequence`,
       role: 'article',
-      filter: (data): data is { subject: Blueprint } => Obj.instanceOf(Blueprint, data.subject),
-      component: ({ data, role }) => <BlueprintContainer role={role} blueprint={data.subject} />,
+      filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
+      component: ({ data, role }) => <SequenceContainer role={role} sequence={data.subject} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/companion/logs`,
+      id: `${meta.id}/companion/logs`,
       role: 'article',
-      filter: (data): data is { companionTo: Blueprint } =>
-        Obj.instanceOf(Blueprint, data.companionTo) && data.subject === 'logs',
+      filter: (data): data is { companionTo: Sequence } =>
+        Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (
@@ -117,7 +117,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/template`,
+      id: `${meta.id}/template`,
       role: 'article',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
@@ -125,11 +125,11 @@ export default () =>
     createSurface({
       id: ASSISTANT_DIALOG,
       role: 'dialog',
-      filter: (data): data is { props: { chat: AIChatType } } => data.component === ASSISTANT_DIALOG,
-      component: ({ data }) => <AssistantDialog {...data.props} />,
+      filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
+      component: ({ data }) => <ChatDialog {...data.props} />,
     }),
     createSurface({
-      id: `${ASSISTANT_PLUGIN}/prompt-settings`,
+      id: `${meta.id}/prompt-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
       component: ({ data }) => <PromptSettings template={data.subject} />,

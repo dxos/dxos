@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Blueprint, type BlueprintEvent, type BlueprintLogger } from '@dxos/assistant';
 import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
+import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Key, Obj } from '@dxos/echo';
 import {
   InvocationOutcome,
@@ -16,12 +16,12 @@ import {
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';
 
-export class QueueLogger implements BlueprintLogger {
+export class QueueLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceQueue: Queue<InvocationTraceEvent>;
 
-  constructor(private readonly blueprint: Blueprint) {
-    const space = getSpace(blueprint);
+  constructor(private readonly sequence: Sequence) {
+    const space = getSpace(sequence);
     invariant(space, 'Space not found');
     this._space = space;
     let dxn = this._space.properties.invocationTraceQueue?.dxn;
@@ -32,7 +32,7 @@ export class QueueLogger implements BlueprintLogger {
     this._invocationTraceQueue = this._space.queues.get(dxn);
   }
 
-  log(event: BlueprintEvent) {
+  log(event: SequenceEvent) {
     switch (event.type) {
       case 'begin':
         void this._invocationTraceQueue.append([
@@ -42,7 +42,7 @@ export class QueueLogger implements BlueprintLogger {
             timestampMs: Date.now(),
             input: {},
             invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
-            invocationTarget: Ref.make(this.blueprint),
+            invocationTarget: Ref.make(this.sequence),
           }),
         ]);
         break;

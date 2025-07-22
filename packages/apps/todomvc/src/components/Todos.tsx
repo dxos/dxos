@@ -5,7 +5,7 @@
 import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -23,7 +23,7 @@ export const Todos = () => {
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
   const list: TodoList | undefined =
-    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[Type.getTypename(TodoList)]?.target : undefined;
+    space?.state.get() === SpaceState.SPACE_READY ? space?.properties[TodoList.typename]?.target : undefined;
   const allTodos = list?.todos.map((todo) => todo.target).filter(isNonNullable) ?? [];
   const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 

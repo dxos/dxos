@@ -53,21 +53,15 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    // TODO(wittjosiah): Remove when bumping @effect-rx/rx-react.
+    case '@effect-rx/rx': {
+      packageJson.peerDependencies['@effect/platform'] = '*';
+      break;
+    }
+
     // Package has an unnecessarily strict peer dep of 17.0.1
     case '@hot-loader/react-dom': {
       packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // https://github.com/nrwl/nx/issues/11456#issuecomment-1211214171
-    case '@nx/nx-cloud': {
-      packageJson.dependencies['dotenv'] = '*';
-      break;
-    }
-
-    case '@nx/eslint-plugin':
-    case '@nrwl/eslint-plugin-nx': {
-      packageJson.peerDependencies['@typescript-eslint/parser'] = '^6.5.0';
       break;
     }
 
@@ -95,7 +89,7 @@ function readPackage(packageJson, context) {
     }
 
     case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '^0.23.1';
+      packageJson.peerDependencies['esbuild'] = '0.25.6';
       break;
     }
 

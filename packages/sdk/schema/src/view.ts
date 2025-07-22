@@ -32,8 +32,10 @@ export const FieldSchema = Schema.Struct({
   id: Schema.String,
   path: JsonPath,
   visible: Schema.optional(Schema.Boolean),
-  size: Schema.optional(Schema.Number),
   referencePath: Schema.optional(JsonPath),
+
+  // TODO(burdon): Should this be part of the presentation object (e.g., Table/Kanban).
+  size: Schema.optional(Schema.Number),
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
@@ -176,13 +178,20 @@ export const createView = ({ name, typename, jsonSchema, fields: include }: Crea
   });
 };
 
-export const HasViewSchema = Schema.Struct({});
+// [StoredSchema] ==[HasView]==> []
+
+export const HasViewSchema = Schema.Struct({
+  // TODO(burdon): Refernce View/Projection here?
+});
 
 export const HasView = HasViewSchema.pipe(
   Type.Relation({
     typename: 'dxos.org/type/HasView',
     version: '0.1.0',
+    // TODO(burdon): Also immutable?
     source: StoredSchema,
+    // TODO(burdon): Does view have a ref to the Table?
+    //   Separate Projection from View?
     target: ViewType,
   }),
 );

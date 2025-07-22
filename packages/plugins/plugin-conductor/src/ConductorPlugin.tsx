@@ -12,7 +12,7 @@ import { CanvasBoardType } from '@dxos/react-ui-canvas-editor';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ConductorAction } from './types';
 
 export const ConductorPlugin = () =>

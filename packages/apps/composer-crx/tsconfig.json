@@ -28,6 +28,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/storybook-utils"
+    },
+    {
       "path": "../../core/mesh/rpc"
     },
     {
@@ -35,9 +38,6 @@
     },
     {
       "path": "../../devtools/devtools"
-    },
-    {
-      "path": "../../devtools/storybook-utils"
     },
     {
       "path": "../../sdk/client"

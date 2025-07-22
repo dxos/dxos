@@ -49,4 +49,12 @@ export namespace InboxAction {
     }),
     output: Schema.Void,
   }) {}
+
+  export class RunAssistant extends Schema.TaggedClass<RunAssistant>()(`${INBOX_ACTION}/run-assistant`, {
+    input: Schema.Struct({
+      // TODO(dmaretskyi): Consider making this a ref so it is serializable.
+      mailbox: MailboxType,
+    }),
+    output: Schema.Void,
+  }) {}
 }

@@ -8,13 +8,17 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, type Type } from '@dxos/echo';
 
+/**
+ * @deprecated
+ */
 export type ContextProvider = {
   query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
   resolveMetadata: (params: { uri: string }) => Promise<{ uri: string; label: string }>;
 };
 
-const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());
-
+/**
+ * @deprecated
+ */
 export const useContextProvider = (space?: Space): ContextProvider | undefined => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
@@ -53,3 +57,5 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
     };
   }, [space, artifactDefinitions]);
 };
+
+const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());

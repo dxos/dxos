@@ -8,11 +8,11 @@ import React, { type ChangeEvent, useCallback } from 'react';
 import { debounce } from '@dxos/async';
 import { Input, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 
-import { ASSISTANT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { TemplateKinds, type TemplateType, type TemplateKindSchema } from '../types';
 
 export const PromptSettings = ({ template }: { template: TemplateType }) => {
-  const { t } = useTranslation(ASSISTANT_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const handleKindChange = useCallback(
     (value: string) => {

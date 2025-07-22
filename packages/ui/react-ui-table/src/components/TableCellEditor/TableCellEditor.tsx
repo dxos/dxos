@@ -4,7 +4,7 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -24,7 +24,7 @@ import {
   type GridCellEditorProps,
   type GridScopedProps,
 } from '@dxos/react-ui-grid';
-import { tagPickerExtension, createLinks } from '@dxos/react-ui-tag-picker';
+import { tagPicker, createLinks } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
 import { CellValidationMessage } from './CellValidationMessage';
@@ -49,6 +49,7 @@ export type TableCellEditorProps = {
   schema?: Schema.AnyNoContext;
   onEnter?: (cell: DxGridPlanePosition) => void;
   onFocus?: DxGrid['refocus'];
+  onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
 
@@ -58,6 +59,7 @@ export const TableValueEditor = ({
   schema,
   onEnter,
   onFocus,
+  onSave,
   onQuery,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
@@ -75,8 +77,20 @@ export const TableValueEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  if (fieldProjection?.props.type === TypeEnum.Array) {
-    return <FormCellEditor fieldProjection={fieldProjection} model={model} schema={schema} __gridScope={__gridScope} />;
+  if (
+    fieldProjection?.props.type === TypeEnum.Array ||
+    fieldProjection?.props.format === FormatEnum.SingleSelect
+    // TODO(thure): Support `FormatEnum.MultiSelect`
+  ) {
+    return (
+      <FormCellEditor
+        fieldProjection={fieldProjection}
+        model={model}
+        schema={schema}
+        __gridScope={__gridScope}
+        onSave={onSave}
+      />
+    );
   }
 
   // For all other types, use the existing cell editor
@@ -87,10 +101,13 @@ export const TableValueEditor = ({
       onEnter={onEnter}
       onFocus={onFocus}
       onQuery={onQuery}
+      onSave={onSave}
       __gridScope={__gridScope}
     />
   );
 };
+
+const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
 
 export const TableCellEditor = ({
   model,
@@ -98,12 +115,14 @@ export const TableCellEditor = ({
   onEnter,
   onFocus,
   onQuery,
+  onSave,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
   const [_validationError, setValidationError] = useState<string | null>(null);
+  const [_validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -117,6 +136,38 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
+  useEffect(() => {
+    // Check for existing validation errors when editing starts (for draft rows).
+    if (!model || !editing || !fieldProjection) {
+      setValidationError(null);
+      return;
+    }
+
+    const cell = parseCellIndex(editing.index);
+    const { row, col } = cell;
+
+    if (model.isDraftCell(cell)) {
+      const field = model.projection.view.fields[col];
+      const hasValidationError = model.hasDraftRowValidationError(row, field.path);
+
+      if (hasValidationError) {
+        const draftRows = model.draftRows.value;
+        if (row >= 0 && row < draftRows.length) {
+          const draftRow = draftRows[row];
+          const validationError = draftRow.validationErrors?.find((error) => error.path === field.path);
+          if (validationError) {
+            setValidationError(validationError.message);
+            setValidationVariant('warning');
+          }
+        }
+      } else {
+        setValidationError(null);
+      }
+    } else {
+      setValidationError(null);
+    }
+  }, [model, editing, fieldProjection]);
+
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -124,19 +175,18 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
+      const validationResult = await model.validateCellData(cell, value);
 
-      // Validate the value
-      const result = await model.validateCellData(cell, value);
-
-      if (result.valid) {
+      if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
         onEnter?.(cell);
         onFocus?.();
         setEditing(null);
+        onSave?.();
       } else {
-        setValidationError(result.error);
-        // Editor stays open on validation failure
+        setValidationError(validationResult.error);
+        setValidationVariant('error');
       }
     },
     [model, editing, onEnter, onFocus, setEditing],
@@ -172,22 +222,25 @@ export const TableCellEditor = ({
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
+          onSave?.();
           onEnter?.(cell);
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
           }
         } else {
           setValidationError(result.error);
+          setValidationVariant('error');
         }
       } else {
         setValidationError(null);
         setEditing(null);
+        onSave?.();
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, setEditing],
+    [model, editing, onFocus, onEnter, fieldProjection, setEditing, onSave],
   );
 
   const extension = useMemo(() => {
@@ -214,9 +267,9 @@ export const TableCellEditor = ({
       const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
 
       extension.push(
-        tagPickerExtension({
+        tagPicker({
           mode,
-          inGrid: true,
+          keymap: false,
           onSearch: (text, selectedIds) => {
             return options
               .filter(
@@ -300,9 +353,10 @@ export const TableCellEditor = ({
         if (value !== undefined) {
           const options = fieldProjection.props.options || [];
 
-          if (fieldProjection.props.format === FormatEnum.MultiSelect && Array.isArray(value)) {
+          if (fieldProjection.props.format === FormatEnum.MultiSelect) {
             const tagItems = value
-              .map((id) => {
+              .split(',')
+              .map((id: string) => {
                 const option = options.find((o) => o.id === id);
                 if (option) {
                   return {
@@ -313,7 +367,7 @@ export const TableCellEditor = ({
                 }
                 return undefined;
               })
-              .filter((item): item is { id: any; label: string; hue: any } => item !== undefined);
+              .filter((item: any): item is { id: any; label: string; hue: any } => item !== undefined);
 
             return createLinks(tagItems);
           } else {
@@ -341,8 +395,12 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage validationError={_validationError} __gridScope={__gridScope} />
-      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} />
+      <CellValidationMessage
+        validationError={_validationError}
+        variant={_validationVariant}
+        __gridScope={__gridScope}
+      />
+      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );
 };

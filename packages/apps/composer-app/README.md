@@ -1,9 +1,9 @@
 ## Development
 
-To run the app with HALO.
+To run the app:
 
 ```bash
-pnpm -w nx run composer-app:serve
+moon run composer-app:serve
 ```
 
 ## Native Bundling
@@ -17,7 +17,7 @@ SSC needs to be installed globally:
 Before running SSC, Composer must be built using:
 
 ```bash
-DX_HOST=true pnpm -w nx bundle composer-app
+DX_HOST=true moon run composer-app:bundle
 ```
 
 Then, to bundle the native app, in this directory, run:
@@ -33,7 +33,7 @@ To open the app:
 To run against the vite dev server:
 
 ```bash
-pnpm nx serve composer-app
+moon run composer-app:serve
 ssc build -r --port 5173
 ```
 

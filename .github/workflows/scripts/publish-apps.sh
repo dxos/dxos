@@ -7,11 +7,9 @@ set -euo pipefail
 
 APPS=(
   "./packages/apps/composer-app"
-  "./tools/stories"
+  "./tools/storybook"
 )
 
-# Do not use remote cache
-unset NX_CLOUD_ACCESS_TOKEN
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 GREEN=4783872
@@ -60,9 +58,9 @@ for APP_PATH in "${APPS[@]}"; do
     export LOG_FILTER="error"
   fi
 
-  pnpm -w nx bundle "$APP"
+  # Don't use the cache when bundling the app for deployment to avoid any caching issues causing bad builds.
+  moon run "$APP:bundle" --updateCache
 
-  # TODO(???): extract outdir from project.json?
   outdir=${APP%-app}
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?

@@ -36,7 +36,7 @@
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
-    "effect": "3.14.21",
+    "effect": "3.17.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

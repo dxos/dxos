@@ -23,7 +23,7 @@ import {
   ThreadState,
 } from './capabilities';
 import { meta, THREAD_ITEM } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { ChannelType, ThreadAction, ThreadType } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.

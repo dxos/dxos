@@ -184,6 +184,16 @@
         },
         {
           "type": "json",
+          "path": "packages/common/storybook-addon-logger/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/storybook-utils/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/test-utils/package.json",
           "jsonpath": "$.version"
         },
@@ -399,22 +409,17 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/storybook-addon-logger/package.json",
+          "path": "packages/e2e/blade-runner/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/devtools/storybook-utils/package.json",
+          "path": "packages/e2e/proto-guard/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/cf-labs/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -434,37 +439,12 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/plexus/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/react-metagraph/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/experimental/script-toolbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/spyglass/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/blade-runner/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-publishing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/proto-guard/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -480,6 +460,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-automation/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-board/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -819,6 +804,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-chat/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-components/package.json",
           "jsonpath": "$.version"
         },
@@ -949,22 +939,12 @@
         },
         {
           "type": "json",
-          "path": "tools/executors/esbuild/package.json",
+          "path": "tools/esbuild/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "tools/executors/nx-protobuf-compiler/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/executors/toolbox/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/lit-stories/package.json",
+          "path": "tools/lit-storybook/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -984,17 +964,17 @@
         },
         {
           "type": "json",
-          "path": "tools/ridoculous/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/stories/package.json",
+          "path": "tools/storybook/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "tools/swc-log-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/toolbox/package.json",
           "jsonpath": "$.version"
         },
         {

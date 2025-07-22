@@ -10,59 +10,47 @@
   "type": "module",
   "exports": {
     ".": {
-      "browser": "./dist/esm/src/index.js",
-      "import": "./dist/esm/src/index.js",
-      "require": "./dist/cjs/src/index.js",
-      "node": "./dist/cjs/src/index.js"
+      "browser": "./dist/src/index.js",
+      "import": "./dist/src/index.js"
     },
     "./feed-replication": {
-      "browser": "./dist/esm/src/feed-replication.js",
-      "import": "./dist/esm/src/feed-replication.js",
-      "require": "./dist/cjs/src/feed-replication.js",
-      "node": "./dist/cjs/src/feed-replication.js"
+      "browser": "./dist/src/feed-replication.js",
+      "import": "./dist/src/feed-replication.js"
     },
     "./proto": {
-      "browser": "./dist/esm/src/proto/index.js",
-      "import": "./dist/esm/src/proto/index.js",
-      "require": "./dist/cjs/src/proto/index.js",
-      "node": "./dist/cjs/src/proto/index.js"
+      "browser": "./dist/src/proto/index.js",
+      "import": "./dist/src/proto/index.js"
     },
     "./proto/*": {
-      "browser": "./dist/esm/src/proto/gen/*.js",
-      "import": "./dist/esm/src/proto/gen/*.js",
-      "require": "./dist/cjs/src/proto/gen/*.js",
-      "node": "./dist/cjs/src/proto/gen/*.js"
+      "browser": "./dist/src/proto/gen/*.js",
+      "import": "./dist/src/proto/gen/*.js"
     },
     "./buf": {
-      "browser": "./dist/esm/src/buf/index.js",
-      "import": "./dist/esm/src/buf/index.js",
-      "require": "./dist/cjs/src/buf/index.js",
-      "node": "./dist/cjs/src/buf/index.js"
+      "browser": "./dist/src/buf/index.js",
+      "import": "./dist/src/buf/index.js"
     },
     "./buf/*": {
-      "browser": "./dist/esm/src/buf/proto/gen/*.js",
-      "import": "./dist/esm/src/buf/proto/gen/*.js",
-      "require": "./dist/cjs/src/buf/proto/gen/*.js",
-      "node": "./dist/cjs/src/buf/proto/gen/*.js"
+      "browser": "./dist/src/buf/proto/gen/*.js",
+      "import": "./dist/src/buf/proto/gen/*.js"
     }
   },
-  "types": "dist/esm/src/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "typesVersions": {
     "*": {
       "proto/*": [
-        "dist/esm/src/proto/gen/*"
+        "dist/src/proto/gen/*"
       ],
       "buf/*": [
-        "dist/esm/src/buf/proto/gen/*"
+        "dist/src/buf/proto/gen/*"
       ],
       "feed-replication": [
-        "dist/esm/src/feed-replication.d.ts"
+        "dist/src/feed-replication.d.ts"
       ],
       "buf": [
-        "dist/esm/src/buf/index.d.ts"
+        "dist/src/buf/index.d.ts"
       ],
       "proto": [
-        "dist/esm/src/proto/index.d.ts"
+        "dist/src/proto/index.d.ts"
       ]
     }
   },
@@ -71,8 +59,7 @@
     "src"
   ],
   "scripts": {
-    "compile:buf": "buf generate",
-    "tsc:cjs": "rm -rf dist/cjs; tsc --module commonjs --moduleResolution node --target es2018 --outdir ./dist/cjs && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json"
+    "compile:buf": "buf generate"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.1.0",
@@ -86,7 +73,8 @@
   "devDependencies": {
     "@bufbuild/buf": "^1.43.0",
     "@bufbuild/protoc-gen-es": "^2.1.0",
-    "effect": "3.14.21"
+    "@dxos/protobuf-compiler": "workspace:*",
+    "effect": "3.17.0"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

@@ -8,8 +8,8 @@ import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { ASSISTANT_PLUGIN } from '../../meta';
-import { LLM_PROVIDERS, type AssistantSettingsProps } from '../../types';
+import { meta } from '../../meta';
+import { LLM_PROVIDERS, type Assistant } from '../../types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
@@ -20,8 +20,8 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export const AssistantSettings = ({ settings }: { settings: AssistantSettingsProps }) => {
-  const { t } = useTranslation(ASSISTANT_PLUGIN);
+export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }) => {
+  const { t } = useTranslation(meta.id);
 
   return (
     <DeprecatedFormContainer>

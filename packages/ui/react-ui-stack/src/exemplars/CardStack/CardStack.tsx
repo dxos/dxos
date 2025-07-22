@@ -107,6 +107,22 @@ const CardStackRoot = forwardRef<HTMLDivElement, SharedCardStackProps>(
   },
 );
 
+const cardStackItem = 'contain-layout pli-2 plb-1 first-of-type:pbs-0 last-of-type:pbe-0';
+
+const CardStackItem = forwardRef<HTMLDivElement, SharedCardStackProps>(
+  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    const rootProps = asChild
+      ? { classNames: [cardStackItem, classNames] }
+      : { className: mx(cardStackItem, classNames), role };
+    return (
+      <Root {...props} {...rootProps} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
+
 export const CardStack = {
   Root: CardStackRoot,
   Content: CardStackContent,
@@ -114,6 +130,7 @@ export const CardStack = {
   Heading: CardStackHeading,
   Footer: CardStackFooter,
   DragHandle: CardStackDragHandle,
+  Item: CardStackItem,
 };
 
-export { cardStackRoot, cardStackFooter, cardStackHeading, cardStackContent };
+export { cardStackRoot, cardStackFooter, cardStackHeading, cardStackContent, cardStackItem };

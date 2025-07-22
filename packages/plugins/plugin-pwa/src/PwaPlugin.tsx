@@ -17,7 +17,7 @@ import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
 import { meta, PWA_PLUGIN } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 
 export const PwaPlugin = () =>
   definePlugin(meta, [

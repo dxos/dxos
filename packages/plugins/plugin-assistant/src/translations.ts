@@ -2,37 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint } from '@dxos/assistant';
-import { Type } from '@dxos/echo';
+import { Sequence } from '@dxos/conductor';
+import { type Resource } from '@dxos/react-ui';
 
-import { ASSISTANT_PLUGIN } from './meta';
-import { AIChatType, TemplateType } from './types';
+import { meta } from './meta';
+import { Assistant, TemplateType } from './types';
 
-export default [
+export const translations = [
   {
     'en-US': {
-      [Type.getTypename(AIChatType)]: {
+      [Assistant.Chat.typename]: {
         'typename label': 'Assistant',
         'typename label_zero': 'Assistants',
         'typename label_one': 'Assistant',
         'typename label_other': 'Assistants',
         'object name placeholder': 'New assistant',
       },
-      [Type.getTypename(Blueprint)]: {
-        'typename label': 'Blueprint',
-        'typename label_zero': 'Blueprints',
-        'typename label_one': 'Blueprint',
-        'typename label_other': 'Blueprints',
-        'object name placeholder': 'New blueprint',
+      [Sequence.typename]: {
+        'typename label': 'Sequence',
+        'typename label_zero': 'Sequences',
+        'typename label_one': 'Sequence',
+        'typename label_other': 'Sequences',
+        'object name placeholder': 'New sequence',
       },
-      [Type.getTypename(TemplateType)]: {
+      [TemplateType.typename]: {
         'typename label': 'Template',
         'typename label_zero': 'Templates',
         'typename label_one': 'Template',
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
       },
-      [ASSISTANT_PLUGIN]: {
+      [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',
@@ -50,21 +50,23 @@ export default [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
 
-        'blueprint logs label': 'Logs',
+        'sequence logs label': 'Logs',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
-        'search input placeholder': 'Search...',
-        'chat input placeholder': 'Ask a question...',
-        'chat stop': 'Cancel request.',
+        'no tools': 'No tools are configured.',
 
         'button save': 'Save',
         'button run': 'Run',
 
-        'prompt placeholder': 'Ask a question...',
-        'microphone button': 'Click to speak',
-        'cancel processing button': 'Stop processing',
+        'search placeholder': 'Search...',
+        'prompt placeholder': 'Ask or search for anything...',
+        'context objects placeholder': 'Add to context...',
+        'button add blueprint': 'Configure blueprints',
+        'button microphone': 'Click to speak',
+        'button cancel processing': 'Stop processing',
+        'button scroll down': 'Scroll down',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',
@@ -74,4 +76,4 @@ export default [
       },
     },
   },
-];
+] as const satisfies Resource[];

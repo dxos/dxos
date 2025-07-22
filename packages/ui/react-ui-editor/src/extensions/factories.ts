@@ -83,7 +83,7 @@ const defaultBasicOptions: BasicExtensionsOptions = {
   keymap: 'standard',
   lineWrapping: true,
   search: true,
-};
+} as const;
 
 const keymaps: { [key: string]: readonly KeyBinding[] } = {
   // https://codemirror.net/docs/ref/#commands.standardKeymap
@@ -93,7 +93,7 @@ const keymaps: { [key: string]: readonly KeyBinding[] } = {
 };
 
 export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extension => {
-  const props: BasicExtensionsOptions = defaultsDeep({}, _props, defaultBasicOptions);
+  const props = defaultsDeep({}, _props, defaultBasicOptions);
   return [
     // NOTE: Doesn't catch errors in keymap functions.
     EditorView.exceptionSink.of((err) => {
@@ -157,17 +157,28 @@ export type ThemeExtensionsOptions = {
     scroll?: {
       className?: string;
     };
+    scroller?: {
+      className?: string;
+    };
     content?: {
       className?: string;
     };
   };
 };
 
-const defaultThemeSlots = {
+export const grow = {
   editor: {
-    className: 'w-full bs-full',
+    className: 'is-full bs-full',
   },
-};
+} as const;
+
+export const fullWidth = {
+  editor: {
+    className: 'is-full',
+  },
+} as const;
+
+export const defaultThemeSlots = grow;
 
 /**
  * https://codemirror.net/examples/styling
@@ -192,6 +203,14 @@ export const createThemeExtensions = ({
         class {
           constructor(view: EditorView) {
             view.scrollDOM.classList.add(slots.scroll.className);
+          }
+        },
+      ),
+    slots.scroller?.className &&
+      ViewPlugin.fromClass(
+        class {
+          constructor(view: EditorView) {
+            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(' '));
           }
         },
       ),

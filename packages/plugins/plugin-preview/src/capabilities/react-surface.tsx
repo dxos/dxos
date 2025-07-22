@@ -114,7 +114,7 @@ export default () =>
         }, []);
 
         return (
-          <Card.Container role={role}>
+          <Card.SurfaceRoot role={role}>
             <Form
               schema={schema}
               values={data.subject}
@@ -123,7 +123,7 @@ export default () =>
               autoSave
               {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
             />
-          </Card.Container>
+          </Card.SurfaceRoot>
         );
       },
     }),

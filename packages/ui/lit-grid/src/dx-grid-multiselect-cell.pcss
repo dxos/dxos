@@ -7,14 +7,14 @@ dx-grid-multiselect-cell {
   flex-flow: row nowrap;
   gap: 2px;
   inline-size: 100%;
-  block-size: 100%;
+  block-size: 24px;
   & > span {
     flex: 0 1 auto;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     &.dx-grid__cell__multiselect__value {
-      @apply border border-separator text-xs font-semibold pli-2 plb-1 rounded cursor-default text-neutral-800 dark:text-neutral-150
+      @apply bs-full border border-separator text-xs font-semibold pli-2 plb-0.5 rounded cursor-default text-neutral-800 dark:text-neutral-150
     }
     &.dx-grid__cell__multiselect__placeholder {
       @apply text-description;

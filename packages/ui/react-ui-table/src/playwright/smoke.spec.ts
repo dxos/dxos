@@ -8,7 +8,7 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
 
-const storyUrl = storybookUrl('ui-react-ui-table-table--default');
+const storyUrl = storybookUrl('ui-react-ui-table-table--default', 9004);
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {
@@ -139,8 +139,9 @@ test.describe('Table', () => {
     await table.grid.panByWheel(10000, 0);
 
     await table.grid.cell(4, 0, 'grid').click();
-    await page.keyboard.press('A');
-    await page.keyboard.press('N');
+    // TODO(wittjosiah): Surprisingly long delay needed here.
+    await page.keyboard.press('A', { delay: 1_000 });
+    await page.keyboard.press('n', { delay: 1_000 });
     await page.getByRole('option', { name: 'Anita Mayer' }).click();
 
     // Assert that the value is shown in the cell.
@@ -148,10 +149,11 @@ test.describe('Table', () => {
 
     // Create new object.
     await table.grid.cell(4, 1, 'grid').click();
-    await page.keyboard.type('t');
-    await page.keyboard.type('e');
-    await page.keyboard.type('s');
-    await page.keyboard.type('t');
+    // TODO(wittjosiah): Surprisingly long delay needed here.
+    await page.keyboard.type('t', { delay: 1_000 });
+    await page.keyboard.type('e', { delay: 1_000 });
+    await page.keyboard.type('s', { delay: 1_000 });
+    await page.keyboard.type('t', { delay: 1_000 });
     await page.getByText('Create new object', { exact: false }).click();
     await page.getByTestId('save-button').click();
 

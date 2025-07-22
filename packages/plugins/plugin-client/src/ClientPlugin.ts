@@ -15,7 +15,7 @@ import {
 } from './capabilities';
 import { ClientEvents } from './events';
 import { meta } from './meta';
-import translations from './translations';
+import { translations } from './translations';
 import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = ({

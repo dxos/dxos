@@ -1,0 +1,6 @@
+type: library
+language: typescript
+tags:
+  - typecheck
+  - vite
+  - pack

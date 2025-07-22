@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { DEFAULT_EDGE_MODEL, Message } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { AiService, defineFunction } from '@dxos/functions';
+import { AiService, defineFunction, ToolResolverService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -94,6 +94,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
         }),
       ],
       prompt,
+      toolResolver: context.getService(ToolResolverService).toolResolver,
     });
 
     response.sentences.forEach((sentence) => {
