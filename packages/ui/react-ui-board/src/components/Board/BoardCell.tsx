@@ -17,18 +17,17 @@ import { translationKey } from '../../translations';
 
 type DragState = 'idle' | 'dragging';
 
-export type CellProps<T extends HasId = any> = ThemedClassName<
+export type BoardCellProps<T extends HasId = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
     draggable?: boolean;
-    getTitle?: (item: T) => string;
   }>
 >;
 
-export const Cell = ({ classNames, children, item, layout, draggable: isDraggable, getTitle }: CellProps) => {
+export const BoardCell = ({ classNames, children, item, layout, draggable: isDraggable }: BoardCellProps) => {
   const { t } = useTranslation(translationKey);
-  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(Cell.displayName);
+  const { grid: board, zoom, onSelect, onDelete, onMove } = useBoardContext(BoardCell.displayName);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
@@ -67,15 +66,10 @@ export const Cell = ({ classNames, children, item, layout, draggable: isDraggabl
       onClick={() => onSelect?.(item.id)}
     >
       <Card.Toolbar>
-        {/* TODO(burdon): How to set disabled? */}
         <Card.DragHandle toolbarItem ref={dragHandleRef} />
-        {/* TODO(burdon): Heading has strange padding (makes the Toolbar too tall). */}
-        {/* <Card.Heading classNames='grow truncate'>{title}</Card.Heading> */}
-        <h1 className='grow truncate pli-1'>{getTitle?.(item) ?? item.id}</h1>
+        <Card.ToolbarSeparator variant='gap' />
         {dragState !== 'dragging' && (
           <Card.ToolbarIconButton
-            // TODO(burdon): Should be the same size/padding as the DragHandle (and square by default).
-            classNames='px-2'
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
@@ -89,4 +83,4 @@ export const Cell = ({ classNames, children, item, layout, draggable: isDraggabl
   );
 };
 
-Cell.displayName = 'Board.Cell';
+BoardCell.displayName = 'Board.Cell';
