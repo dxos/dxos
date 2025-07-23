@@ -4,7 +4,7 @@
 
 import { createSystemPrompt } from '@dxos/artifact';
 import { ObjectId } from '@dxos/echo-schema';
-import type { ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
