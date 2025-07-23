@@ -24,7 +24,6 @@
     "src"
   ],
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.0.0",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/lit-theme-editor": "workspace:*",
     "@dxos/lit-ui": "workspace:*",

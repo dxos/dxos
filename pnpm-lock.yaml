@@ -1983,9 +1983,6 @@ importers:
 
   packages/common/storybook-utils:
     dependencies:
-      '@atlaskit/pragmatic-drag-and-drop':
-        specifier: ^1.0.0
-        version: 1.4.0
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
