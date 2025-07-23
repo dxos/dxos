@@ -100,7 +100,7 @@ export default () =>
       id: `${meta.id}/sequence`,
       role: 'article',
       filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
-      component: ({ data, role }) => <SequenceContainer sequence={data.subject} />,
+      component: ({ data }) => <SequenceContainer sequence={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/logs`,

@@ -18,7 +18,7 @@ export type TranscriptionContainerProps = {
   transcript: TranscriptType;
 };
 
-export const TranscriptionContainer = ({ role, transcript }: TranscriptionContainerProps) => {
+export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);

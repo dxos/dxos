@@ -15,7 +15,7 @@ export type TestContainerProps = {
   script: ScriptType;
 };
 
-export const TestContainer = ({ script, role }: TestContainerProps) => {
+export const TestContainer = ({ script }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (

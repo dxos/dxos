@@ -14,7 +14,7 @@ export type JournalContainerProps = {
   journal: JournalType;
 };
 
-export const JournalContainer = ({ role, journal }: JournalContainerProps) => {
+export const JournalContainer = ({ journal }: JournalContainerProps) => {
   return (
     <StackItem.Content classNames='container-max-width'>
       <Journal journal={journal} />

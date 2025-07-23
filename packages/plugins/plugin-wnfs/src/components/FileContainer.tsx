@@ -19,7 +19,7 @@ export type FileContainerProps = {
   file: FileType;
 };
 
-export const FileContainer = ({ role, file }: FileContainerProps) => {
+export const FileContainer = ({ file }: FileContainerProps) => {
   const blockstore = useCapability(WnfsCapabilities.Blockstore);
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();
