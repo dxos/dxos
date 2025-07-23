@@ -1,0 +1,42 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "composer-app",
+  "version": "0.8.3",
+  "identifier": "org.dxos.composer",
+  "build": {
+    "frontendDist": "../out/composer",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "moon run composer-app:serve",
+    "beforeBuildCommand": "moon run composer-app:bundle"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Composer",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "entitlements": "./Entitlements.plist",
+      "signingIdentity": "-"
+    },
+    "iOS": {}
+  }
+}
