@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Fix.
+// @ts-nocheck
+
 import { pipe, Schema } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 

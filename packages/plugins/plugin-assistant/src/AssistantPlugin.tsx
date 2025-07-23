@@ -4,23 +4,14 @@
 
 import { Effect } from 'effect';
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { CollectionAction, defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantEvents } from './events';
+import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, ServiceType, TemplateType } from './types';
@@ -115,11 +106,5 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
       activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/ai-client`,
-      activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
-      activatesAfter: [AssistantEvents.AiClientReady],
-      activate: AiClient,
     }),
   ]);

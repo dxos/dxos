@@ -100,3 +100,5 @@ export const DeckStateFactory = () => {
     contributes(Capabilities.Layout, layout),
   ];
 };
+
+export default DeckStateFactory;

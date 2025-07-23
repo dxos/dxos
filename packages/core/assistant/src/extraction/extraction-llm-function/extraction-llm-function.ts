@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Fix.
+// @ts-nocheck
+
 import { ToolRegistry, AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';

@@ -4,7 +4,7 @@
 
 import { Effect, pipe, Schema } from 'effect';
 
-import { createTool, ToolRegistry, ToolResult, AiService, ToolId } from '@dxos/ai';
+import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
 import {
   Capabilities,
   type PluginContext,
@@ -30,9 +30,6 @@ import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
-
-// TODO(dmaretskyi): Circular dep due to the assistant stories
-// import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -172,10 +169,7 @@ export default (context: PluginContext) =>
         log.info('Run assistant', { mailbox });
 
         const space = getSpace(mailbox) ?? failedInvariant();
-        const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
-
         const serviceContainer = new ServiceContainer().setServices({
-          ai: AiService.make(aiClient.value),
           database: DatabaseService.make(space.db),
           queues: QueueService.make(space.queues, undefined),
           // eventLogger: consoleLogger,
