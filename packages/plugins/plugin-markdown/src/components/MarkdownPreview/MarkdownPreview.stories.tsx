@@ -12,9 +12,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
-import { Icon, Popover } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withTheme, withLayout, PopoverCardContainer } from '@dxos/storybook-utils';
 
 import { MarkdownPreview } from './MarkdownPreview';
 import { translations } from '../../translations';
@@ -22,21 +21,13 @@ import { translations } from '../../translations';
 faker.seed(1234);
 
 const meta: Meta<typeof MarkdownPreview> = {
-  title: 'plugins/plugin-markdown/MarkdownPreview',
+  title: 'Cards/plugin-markdown/Popover',
   component: MarkdownPreview,
   render: ({ subject }) => {
     return (
-      <Popover.Root open>
-        <Popover.Content>
-          <Popover.Viewport>
-            <MarkdownPreview subject={subject} role='popover' />
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-        <Popover.Trigger>
-          <Icon icon='ph--text-aa--regular' size={5} />
-        </Popover.Trigger>
-      </Popover.Root>
+      <PopoverCardContainer icon='ph--text-aa--regular'>
+        <MarkdownPreview subject={subject} role='popover' />
+      </PopoverCardContainer>
     );
   },
   decorators: [
