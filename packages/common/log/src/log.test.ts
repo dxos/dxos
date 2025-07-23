@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { LogLevel } from './config';
 import { log } from './log';
+import { BROWSER_PROCESSOR } from './processors';
 
 class LogError extends Error {
   constructor(
@@ -88,5 +89,10 @@ describe('log', function () {
       title: 'test',
       context: 123,
     });
+  });
+
+  test('error', function () {
+    const myError = new Error('Test error', { cause: new Error('Cause') });
+    log.catch(myError);
   });
 });

@@ -21,6 +21,7 @@ import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 
 import type { ChatServices } from './useChatServices';
+import { runAndForwardErrors } from '@dxos/effect';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -37,9 +38,11 @@ type RequestOptions = {
 export type ChatProcessorOptions = {
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
+  blueprintRegistry?: BlueprintRegistry;
+
+  // TODO(dmaretskyi): Remove.
   artifacts?: readonly ArtifactDefinition[];
   extensions?: ToolContextExtensions;
-  blueprintRegistry?: BlueprintRegistry;
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: Partial<ChatProcessorOptions> = {
@@ -199,20 +202,22 @@ export class ChatProcessor {
     });
 
     try {
-      const messages = await Effect.runPromise(
+      const messages = await runAndForwardErrors(
         this._conversation
           .run({
             prompt: message,
             systemPrompt: this._options.systemPrompt,
-
-            // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
-            // tools: this._tools ?? [],
           })
           .pipe(
             //
             Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+            // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
             Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
             Effect.provide(this._services),
+            Effect.tapErrorCause((cause) => {
+              log.error('error', { cause });
+              return Effect.void;
+            }),
           ),
       );
 

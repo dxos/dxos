@@ -5,8 +5,11 @@
 import { Context } from 'effect';
 
 import { type ToolResolver } from '@dxos/ai';
-
-export class ToolResolverService extends Context.Tag('ToolResolverService')<
+/**
+ * @deprecated
+ */
+// TODO(dmaretskyi): Remove -- this was moved to @dxos/ai.
+export class ToolResolverService extends Context.Tag('@dxos/functions/ToolResolverService')<
   ToolResolverService,
   {
     /**

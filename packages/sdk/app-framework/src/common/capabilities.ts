@@ -19,6 +19,7 @@ import { type SurfaceDefinition } from './surface';
 import { type Resource } from './translations';
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
+import type { FunctionDefinition } from '@dxos/functions';
 
 export namespace Capabilities {
   export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
@@ -100,6 +101,10 @@ export namespace Capabilities {
   export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
   export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
     'dxos.org/app-framework/capability/artifact-definition',
+  );
+
+  export const Functions = defineCapability<FunctionDefinition<any, any>[]>(
+    'dxos.org/app-framework/capability/functions',
   );
 
   export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;

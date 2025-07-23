@@ -13,8 +13,8 @@ import {
   DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
   remoteServiceEndpoints,
-  readDocument,
-  writeDocument,
+  readDocumentFunction,
+  writeDocumentFunction,
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -193,12 +193,13 @@ const getDecorators = ({
           );
 
           // TODO(burdon): Add to conversation context.
-          space.db.add(
+          const doc = space.db.add(
             Obj.make(DocumentType, {
               name: 'Tasks',
               content: Ref.make(Obj.make(DataType.Text, { content: '' })),
             }),
           );
+          log.info('doc', { doc: Obj.getDXN(doc) });
 
           // Clone blueprints and bind to conversation.
           const binder = new ContextBinder(await chat.queue.load());
@@ -220,7 +221,7 @@ const getDecorators = ({
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Tools, [readDocument, writeDocument])],
+    capabilities: [contributes(Capabilities.Functions, [readDocumentFunction, writeDocumentFunction])],
   }),
   withTheme,
   withLayout({

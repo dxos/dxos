@@ -32,7 +32,7 @@ export type FormatParts = {
   line?: number;
   timestamp?: string;
   level: LogLevel;
-  message: string;
+  message?: string;
   context?: any;
   error?: Error;
   scope?: any;

@@ -47,13 +47,29 @@ export const runTool: <Tools extends AiTool.Any>(
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('runTool')(
   function* (toolkit, toolCall) {
-    const handlerEff = toolkit.handle(toolCall.name as any, toolCall.input as any);
-    const result = yield* handlerEff;
-    return {
-      _tag: 'toolResult',
-      toolCallId: toolCall.toolCallId,
-      name: toolCall.name,
-      result,
-    } satisfies ContentBlock.ToolResult;
+    return yield* toolkit.handle(toolCall.name as any, toolCall.input as any).pipe(
+      Effect.map(
+        // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
+        ({ result }) =>
+          ({
+            _tag: 'toolResult',
+            toolCallId: toolCall.toolCallId,
+            name: toolCall.name,
+            result,
+          }) satisfies ContentBlock.ToolResult,
+      ),
+      Effect.catchAll((error) =>
+        Effect.sync(
+          () =>
+            ({
+              // TODO(dmaretskyi): Effect-ai does not support isError flag.
+              _tag: 'toolResult',
+              toolCallId: toolCall.toolCallId,
+              name: toolCall.name,
+              result: error,
+            }) satisfies ContentBlock.ToolResult,
+        ),
+      ),
+    );
   },
 );
