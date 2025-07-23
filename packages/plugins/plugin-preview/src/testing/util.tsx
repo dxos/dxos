@@ -7,6 +7,7 @@ import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 import { IntrinsicCardContainer, PopoverCardContainer } from '@dxos/storybook-utils';
 
@@ -35,9 +36,13 @@ export const render: Meta<StoryProps>['render'] = ({
     case 'popover':
       return <PopoverCardContainer icon={icon}>{component}</PopoverCardContainer>;
     case 'card--intrinsic':
-      return <IntrinsicCardContainer>{component}</IntrinsicCardContainer>;
+      return (
+        <IntrinsicCardContainer>
+          <Card.StaticRoot>{component}</Card.StaticRoot>
+        </IntrinsicCardContainer>
+      );
     default:
-      return component;
+      return <Card.StaticRoot>{component}</Card.StaticRoot>;
   }
 };
 

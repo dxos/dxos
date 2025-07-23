@@ -6,7 +6,6 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
 import { ResizeHandle, resizeAttributes, sizeStyle, type Size } from '@dxos/react-ui-dnd';
-import { Card } from '@dxos/react-ui-stack';
 
 // Default size in rem
 const DEFAULT_SIZE = 24;
@@ -36,7 +35,7 @@ export const IntrinsicCardContainer = ({
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <Card.StaticRoot>{children}</Card.StaticRoot>
+      {children}
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_SIZE}
