@@ -7,7 +7,7 @@ import { Option, pipe } from 'effect';
 
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { createExtension } from '@dxos/plugin-graph';
+import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { DataType } from '@dxos/schema';
 
 import { MAP_PLUGIN } from '../meta';
@@ -23,7 +23,8 @@ export default (context: PluginContext) =>
           pipe(
             get(node),
             Option.flatMap((node) =>
-              Obj.instanceOf(DataType.View, node.data) && Obj.instanceOf(MapView, node.data.presentation.target)
+              Obj.instanceOf(DataType.View, node.data) &&
+              Obj.instanceOf(MapView, get(rxFromSignal(() => node.data.presentation.target)))
                 ? Option.some(node)
                 : Option.none(),
             ),

@@ -9486,9 +9486,6 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

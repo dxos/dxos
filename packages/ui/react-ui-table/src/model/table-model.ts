@@ -139,7 +139,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       'Single selection is not compatible with editable tables.',
     );
 
-    this._sorting = new TableSorting(this._rows, this._view, (fieldId) => this.projection.getFieldProjection(fieldId));
+    this._sorting = new TableSorting(this._rows, this._view, this._projection);
 
     if (sorting.length > 0) {
       const [sort] = sorting;

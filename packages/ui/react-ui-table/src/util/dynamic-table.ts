@@ -70,12 +70,12 @@ export const makeDynamicTable = ({
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
 
-  const model = new ProjectionModel(jsonSchema, view.projection);
-  if (properties && model.fields) {
-    setProperties(view, model, table, properties);
+  const projection = new ProjectionModel(jsonSchema, view.projection);
+  if (properties && projection.fields) {
+    setProperties(view, projection, table, properties);
   }
 
-  return { projection: model, view };
+  return { projection, view };
 };
 
 const setProperties = (

@@ -61,6 +61,7 @@ export default () =>
     createSurface({
       id: `${MAP_PLUGIN}/object-settings`,
       role: 'object-settings',
+      position: 'hoist',
       filter: (data): data is { subject: DataType.View } =>
         Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(MapView, data.subject.presentation.target),
       component: ({ data }) => <MapViewEditor view={data.subject} />,

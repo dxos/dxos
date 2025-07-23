@@ -55,7 +55,7 @@ export const ViewEditor = ({
   outerSpacing = true,
 }: ViewEditorProps) => {
   const { t } = useTranslation(translationKey);
-  const manager = useMemo(() => {
+  const projection = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
     return new ProjectionModel(jsonSchema, view.projection);
@@ -86,9 +86,9 @@ export const ViewEditor = ({
 
   const handleAdd = useCallback(() => {
     invariant(!readonly);
-    const field = manager.createFieldProjection();
+    const field = projection.createFieldProjection();
     setField(field);
-  }, [schema, manager, readonly]);
+  }, [schema, projection, readonly]);
 
   const handleUpdate = useCallback(
     ({ typename }: ViewMetaType) => {
@@ -128,22 +128,22 @@ export const ViewEditor = ({
 
   const handleClose = useCallback(() => setField(undefined), []);
 
-  const hiddenProperties = manager.getHiddenProperties();
+  const hiddenProperties = projection.getHiddenProperties();
 
   const handleHide = useCallback(
     (fieldId: string) => {
       setField(undefined);
-      manager.hideFieldProjection(fieldId);
+      projection.hideFieldProjection(fieldId);
     },
-    [manager],
+    [projection],
   );
 
   const handleShow = useCallback(
     (property: string) => {
       setField(undefined);
-      manager.showFieldProjection(property as JsonProp);
+      projection.showFieldProjection(property as JsonProp);
     },
-    [manager],
+    [projection],
   );
 
   return (
@@ -250,7 +250,7 @@ export const ViewEditor = ({
       </div>
 
       {field && (
-        <FieldEditor key={field.id} projection={manager} field={field} registry={registry} onSave={handleClose} />
+        <FieldEditor key={field.id} projection={projection} field={field} registry={registry} onSave={handleClose} />
       )}
 
       {!readonly && !field && (

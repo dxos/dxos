@@ -19,7 +19,7 @@ const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
-  expect(debugObjects.manager).toBeInstanceOf(ProjectionModel);
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   expect(isInstanceOf(DataType.View, debugObjects.view)).toBeTruthy();
   return debugObjects;
 };
@@ -78,7 +78,7 @@ describe('ViewEditor', () => {
     expect(newPropertyField!.path).toBe('new_property');
 
     // Check projection contains new_property.
-    const fieldProjections = debugObjects.manager.getFieldProjections();
+    const fieldProjections = debugObjects.projection.getFieldProjections();
     const newPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'new_property');
     expect(newPropertyProjection).toBeDefined();
     expect(newPropertyProjection!.props.property).toBe('new_property');
@@ -127,7 +127,7 @@ describe('ViewEditor', () => {
     expect(addedPropertyField!.path).toBe('added_property');
 
     // Check projection contains added_property.
-    const fieldProjections = debugObjects.manager.getFieldProjections();
+    const fieldProjections = debugObjects.projection.getFieldProjections();
     const addedPropertyProjection = fieldProjections.find((proj: any) => proj.field.path === 'added_property');
     expect(addedPropertyProjection).toBeDefined();
     expect(addedPropertyProjection!.props.property).toBe('added_property');
@@ -167,7 +167,7 @@ describe('ViewEditor', () => {
     expect(nameField).toBeUndefined();
 
     // Check projection no longer contains the name property.
-    const fieldProjections = debugObjects.manager.getFieldProjections();
+    const fieldProjections = debugObjects.projection.getFieldProjections();
     const nameProjection = fieldProjections.find((proj: any) => proj.field.path === 'name');
     expect(nameProjection).toBeUndefined();
   });

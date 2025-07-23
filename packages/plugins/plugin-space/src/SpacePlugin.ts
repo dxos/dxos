@@ -115,6 +115,36 @@ export const SpacePlugin = ({
             icon: 'ph--database--regular',
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Event),
+          metadata: {
+            icon: 'ph--calendar-dot--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Organization),
+          metadata: {
+            icon: 'ph--building-office--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Person),
+          metadata: {
+            icon: 'ph--user--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Project),
+          metadata: {
+            icon: 'ph--check-square-offset--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Task),
+          metadata: {
+            icon: 'ph--check-circle--regular',
+          },
+        }),
       ],
     }),
     defineModule({

@@ -91,6 +91,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         });
         collection.objects.push(Ref.make(records));
 
+        // TODO(wittjosiah): Add default record type. Task?
+
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
         const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);

@@ -27,7 +27,7 @@ import { invariant } from '@dxos/invariant';
 
 import { ProjectionModel } from './projection-model';
 import { createView, type Projection } from './view';
-import { Organization } from '../common/organization';
+import { DataType } from '../common';
 
 registerSignalsRuntime();
 
@@ -67,11 +67,11 @@ describe('ProjectionModel', () => {
 
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     expect(view.projection.fields).to.have.length(3);
 
     {
-      const { props } = model.getFieldProjection(getFieldId(view.projection, 'name'));
+      const { props } = projection.getFieldProjection(getFieldId(view.projection, 'name'));
       expect(props).to.deep.eq({
         property: 'name',
         type: TypeEnum.String,
@@ -81,7 +81,7 @@ describe('ProjectionModel', () => {
     }
 
     {
-      const { props } = model.getFieldProjection(getFieldId(view.projection, 'email'));
+      const { props } = projection.getFieldProjection(getFieldId(view.projection, 'email'));
       expect(props).to.include({
         property: 'email',
         type: TypeEnum.String,
@@ -89,7 +89,7 @@ describe('ProjectionModel', () => {
       });
     }
 
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: {
         id: getFieldId(view.projection, 'email'),
         path: 'email' as JsonPath,
@@ -97,7 +97,7 @@ describe('ProjectionModel', () => {
     });
 
     {
-      const { field, props } = model.getFieldProjection(getFieldId(view.projection, 'email'));
+      const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'email'));
       expect(field).to.include({
         path: 'email',
       });
@@ -107,11 +107,11 @@ describe('ProjectionModel', () => {
         format: FormatEnum.Email,
       });
 
-      model.setFieldProjection({ props });
+      projection.setFieldProjection({ props });
     }
 
     {
-      const { props } = model.getFieldProjection(getFieldId(view.projection, 'salary'));
+      const { props } = projection.getFieldProjection(getFieldId(view.projection, 'salary'));
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -121,11 +121,11 @@ describe('ProjectionModel', () => {
       });
 
       props.currency = 'GBP';
-      model.setFieldProjection({ props });
+      projection.setFieldProjection({ props });
     }
 
     {
-      const { props } = model.getFieldProjection(getFieldId(view.projection, 'salary'));
+      const { props } = projection.getFieldProjection(getFieldId(view.projection, 'salary'));
       expect(props).to.include({
         property: 'salary',
         type: TypeEnum.Number,
@@ -160,9 +160,9 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: {
         id: getFieldId(view.projection, 'organization'),
         path: 'organization' as JsonPath,
@@ -170,7 +170,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const { field, props } = model.getFieldProjection(getFieldId(view.projection, 'organization'));
+    const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'organization'));
 
     expect(field).to.deep.eq({
       id: getFieldId(view.projection, 'organization'),
@@ -215,14 +215,14 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Initial state.
     expect(view.projection.fields).to.have.length(2);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.exist;
 
     // Delete and verify.
-    const { deleted } = model.deleteFieldProjection(getFieldId(view.projection, 'email'));
+    const { deleted } = projection.deleteFieldProjection(getFieldId(view.projection, 'email'));
     expect(view.projection.fields).to.have.length(1);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.not.exist;
     expect(deleted.field.path).to.equal('email');
@@ -248,29 +248,29 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Capture initial states.
     const initialFieldsOrder = view.projection.fields.map((f) => f.path);
     const emailIndex = initialFieldsOrder.indexOf('email' as JsonPath);
-    const initialEmail = model.getFieldProjection(getFieldId(view.projection, 'email'));
+    const initialEmail = projection.getFieldProjection(getFieldId(view.projection, 'email'));
     const initialSchemaProps = { ...mutable.jsonSchema.properties! };
 
     // Delete and restore.
-    const { deleted, index } = model.deleteFieldProjection(getFieldId(view.projection, 'email'));
+    const { deleted, index } = projection.deleteFieldProjection(getFieldId(view.projection, 'email'));
 
     // Verify email is deleted but name is unchanged.
     expect(mutable.jsonSchema.properties!.email).to.be.undefined;
     expect(mutable.jsonSchema.properties!.name).to.deep.equal(initialSchemaProps.name);
 
-    model.setFieldProjection(deleted, index);
+    projection.setFieldProjection(deleted, index);
 
     // Verify field position is restored.
     const restoredFieldsOrder = view.projection.fields.map((f) => f.path);
     expect(restoredFieldsOrder.indexOf('email' as JsonPath)).to.equal(emailIndex);
 
     // Verify projection data matches.
-    const restored = model.getFieldProjection(getFieldId(view.projection, 'email'));
+    const restored = projection.getFieldProjection(getFieldId(view.projection, 'email'));
     expect(restored).to.deep.equal(initialEmail);
 
     // Verify all schema properties match initial state.
@@ -295,15 +295,15 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Capture initial state.
     const initialFieldsOrder = view.projection.fields.map((f) => f.path);
     const emailIndex = initialFieldsOrder.indexOf('email' as JsonProp);
-    const { field, props } = model.getFieldProjection(getFieldId(view.projection, 'email'));
+    const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'email'));
 
     // Perform rename.
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field,
       props: { ...props, property: 'primaryEmail' as JsonProp },
     });
@@ -314,7 +314,7 @@ describe('ProjectionModel', () => {
     expect(updatedFieldsOrder[emailIndex]).to.equal('primaryEmail');
 
     // Verify the renamed field preserved all properties.
-    const renamed = model.getFieldProjection(getFieldId(view.projection, 'primaryEmail'));
+    const renamed = projection.getFieldProjection(getFieldId(view.projection, 'primaryEmail'));
     expect(renamed.props).to.deep.equal({
       ...props,
       property: 'primaryEmail',
@@ -344,7 +344,7 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Capture initial state.
     const initialPropertyOrder = [...(mutable.jsonSchema.propertyOrder ?? [])];
@@ -354,8 +354,8 @@ describe('ProjectionModel', () => {
     expect(initialRequired).to.include('email');
 
     // Perform rename: email -> primaryEmail.
-    const { field, props } = model.getFieldProjection(getFieldId(view.projection, 'email'));
-    model.setFieldProjection({
+    const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'email'));
+    projection.setFieldProjection({
       field,
       props: { ...props, property: 'primaryEmail' as JsonProp },
     });
@@ -398,12 +398,12 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
 
     // Set single select format with options.
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: { id: fieldId, path: 'status' as JsonPath },
       props: {
         property: 'status' as JsonProp,
@@ -434,7 +434,7 @@ describe('ProjectionModel', () => {
     });
 
     // Verify projection.
-    const { props } = model.getFieldProjection(fieldId);
+    const { props } = projection.getFieldProjection(fieldId);
 
     expect(props.format).to.equal(FormatEnum.SingleSelect);
     expect(props.options).to.deep.equal([
@@ -443,7 +443,7 @@ describe('ProjectionModel', () => {
     ]);
 
     // Update options.
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: { id: fieldId, path: 'status' as JsonPath },
       props: {
         ...props,
@@ -506,11 +506,11 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'tags');
     invariant(fieldId);
 
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: { id: fieldId, path: 'tags' as JsonPath },
       props: {
         property: 'tags' as JsonProp,
@@ -540,7 +540,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const { props } = model.getFieldProjection(fieldId);
+    const { props } = projection.getFieldProjection(fieldId);
 
     expect(props.format).to.equal(FormatEnum.MultiSelect);
     expect(props.options).to.deep.equal([
@@ -549,7 +549,7 @@ describe('ProjectionModel', () => {
       { id: 'needs-more-info', title: 'Needs More Info', color: 'amber' },
     ]);
 
-    model.setFieldProjection({
+    projection.setFieldProjection({
       field: { id: fieldId, path: 'tags' as JsonPath },
       props: {
         ...props,
@@ -562,7 +562,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const updatedProjection = model.getFieldProjection(fieldId);
+    const updatedProjection = projection.getFieldProjection(fieldId);
     expect(updatedProjection.props.options).to.deep.equal([
       { id: 'draft', title: 'Draft', color: 'indigo' },
       { id: 'published', title: 'Published', color: 'blue' },
@@ -651,7 +651,7 @@ describe('ProjectionModel', () => {
       ],
     });
 
-    const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
     const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
@@ -659,8 +659,8 @@ describe('ProjectionModel', () => {
     expect(view.projection.fields.map((f) => f.path)).to.deep.equal(['name', 'email']);
 
     // Verify we can get projections for visible fields.
-    expect(model.getFieldProjection(getFieldId(view.projection, 'name'))).to.exist;
-    expect(model.getFieldProjection(getFieldId(view.projection, 'email'))).to.exist;
+    expect(projection.getFieldProjection(getFieldId(view.projection, 'name'))).to.exist;
+    expect(projection.getFieldProjection(getFieldId(view.projection, 'email'))).to.exist;
 
     // Verify the hidden field still exists in the schema.
     expect(mutable.jsonSchema.properties?.['createdAt' as const]).to.exist;
@@ -669,22 +669,22 @@ describe('ProjectionModel', () => {
     expect(() => getFieldId(view.projection, 'createdAt')).to.throw();
 
     // Check that hidden fields is correct.
-    const hiddenProps = model.getHiddenProperties();
+    const hiddenProps = projection.getHiddenProperties();
     expect(hiddenProps).to.have.length(1);
     expect(hiddenProps[0]).to.equal('createdAt');
 
     // Verify we can unhide the hidden field.
-    model.showFieldProjection('createdAt' as JsonProp);
-    expect(model.getFieldProjection(getFieldId(view.projection, 'createdAt'))).to.exist;
+    projection.showFieldProjection('createdAt' as JsonProp);
+    expect(projection.getFieldProjection(getFieldId(view.projection, 'createdAt'))).to.exist;
     expect(view.projection.fields).to.have.length(3);
     expect(view.projection.fields.map((f) => f.path)).to.deep.equal(['name', 'email', 'createdAt']);
-    expect(model.getHiddenProperties()).to.deep.equal([]);
+    expect(projection.getHiddenProperties()).to.deep.equal([]);
 
     // Record ID of the createdAt field.
     const createdAtId = getFieldId(view.projection, 'createdAt');
 
     // Hide again.
-    model.hideFieldProjection(createdAtId);
+    projection.hideFieldProjection(createdAtId);
 
     // Now the field should be in hiddenFields.
     expect(view.projection.hiddenFields).to.have.length(1);
@@ -696,7 +696,7 @@ describe('ProjectionModel', () => {
     expect(() => getFieldId(view.projection, 'createdAt')).to.throw();
 
     // Unhide using the same property name.
-    model.showFieldProjection('createdAt' as JsonProp);
+    projection.showFieldProjection('createdAt' as JsonProp);
 
     // Field should be back in visible fields with same ID.
     expect(view.projection.fields).to.have.length(3);
@@ -707,17 +707,17 @@ describe('ProjectionModel', () => {
 
     // Hide the email field.
     const emailId = getFieldId(view.projection, 'email');
-    model.hideFieldProjection(emailId);
-    model.hideFieldProjection(createdAtId);
+    projection.hideFieldProjection(emailId);
+    projection.hideFieldProjection(createdAtId);
 
     // Check both hidden properties are returned.
-    const multipleHidden = model.getHiddenProperties();
+    const multipleHidden = projection.getHiddenProperties();
     expect(multipleHidden).to.have.length(2);
     expect(multipleHidden).to.include('email');
     expect(multipleHidden).to.include('createdAt');
 
     // Unhide email and verify ID is preserved
-    model.showFieldProjection('email' as JsonProp);
+    projection.showFieldProjection('email' as JsonProp);
     expect(getFieldId(view.projection, 'email')).to.equal(emailId);
 
     // Ensure schema still matches.
@@ -827,45 +827,45 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    let model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    let projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Initial state
     expect(view.projection.fields).to.have.length(3);
-    expect(model.getHiddenProperties()).to.have.length(0);
+    expect(projection.getHiddenProperties()).to.have.length(0);
 
     // Delete a field
     const emailId = getFieldId(view.projection, 'email');
-    model.deleteFieldProjection(emailId);
+    projection.deleteFieldProjection(emailId);
 
     // Verify it's deleted from the schema and view.fields
     expect(view.projection.fields).to.have.length(2);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
 
     // Verify it doesn't show up in hidden properties
-    let hiddenProps = model.getHiddenProperties();
+    let hiddenProps = projection.getHiddenProperties();
     expect(hiddenProps).to.not.include('email');
 
     // Reinitialize projection to trigger normalization
-    model = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projection = new ProjectionModel(mutable.jsonSchema, view.projection);
 
     // Verify field is still deleted and not in hidden properties
     expect(view.projection.fields).to.have.length(2);
     expect(mutable.jsonSchema.properties?.['email' as const]).to.be.undefined;
-    hiddenProps = model.getHiddenProperties();
+    hiddenProps = projection.getHiddenProperties();
     expect(hiddenProps).to.not.include('email');
   });
 
   test('create view from static organization schema', async ({ expect }) => {
-    const schema = Organization;
+    const schema = DataType.Organization;
     const jsonSchema = toJsonSchema(schema);
 
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: schema.typename, jsonSchema, presentation });
-    const model = new ProjectionModel(jsonSchema, view.projection);
+    const projection = new ProjectionModel(jsonSchema, view.projection);
     const fieldId = getFieldId(view.projection, 'status');
     invariant(fieldId);
 
-    const { field, props } = model.getFieldProjection(fieldId);
+    const { field, props } = projection.getFieldProjection(fieldId);
     expect(field.path).toEqual('status');
     expect(props).toEqual({
       property: 'status',
@@ -919,10 +919,10 @@ describe('ProjectionModel', () => {
 
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({ typename: ContactWithArrayOfEmails.typename, jsonSchema, presentation });
-    const model = new ProjectionModel(jsonSchema, view.projection);
+    const projection = new ProjectionModel(jsonSchema, view.projection);
 
     const fieldId = getFieldId(view.projection, 'emails');
-    const field = model.getFieldProjection(fieldId!);
+    const field = projection.getFieldProjection(fieldId!);
 
     console.log(field);
   });
@@ -953,12 +953,12 @@ describe('ProjectionModel', () => {
       const [mutable] = await registry.register([schema]);
       const presentation = Obj.make(Type.Expando, {});
       const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-      const model = new ProjectionModel(mutable.jsonSchema, view.projection);
+      const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
       const fieldId = getFieldId(view.projection, fieldName);
       invariant(fieldId);
 
       // Act.
-      model.setFieldProjection({
+      projection.setFieldProjection({
         field: { id: fieldId, path: fieldName as JsonPath },
         props: {
           property: fieldName as JsonProp,
@@ -968,7 +968,7 @@ describe('ProjectionModel', () => {
       });
 
       // Assert.
-      const { props } = model.getFieldProjection(fieldId);
+      const { props } = projection.getFieldProjection(fieldId);
       expect(props.format).to.equal(format);
       expect(props.type).to.equal(expectedType);
 

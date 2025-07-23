@@ -7,7 +7,7 @@ import orderBy from 'lodash.orderby';
 
 import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type { PropertyType, FieldType, DataType, FieldProjection } from '@dxos/schema';
+import type { PropertyType, FieldType, DataType, ProjectionModel } from '@dxos/schema';
 
 import { type TableRow } from './table-model';
 
@@ -50,7 +50,7 @@ export class TableSorting<T extends TableRow> {
   constructor(
     rows: Signal<T[]>,
     private readonly _view: DataType.View,
-    private readonly _getFieldProjection: (fieldId: string) => FieldProjection,
+    private readonly _projection: ProjectionModel,
   ) {
     this._rows = rows;
     this._isDirty = computed(() => {
@@ -149,12 +149,12 @@ export class TableSorting<T extends TableRow> {
         return this._rows.value;
       }
 
-      const field = this._view.projection.fields.find((f) => f.id === sort.fieldId);
+      const field = this._projection.fields.find((f) => f.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }
 
-      const { props } = this._getFieldProjection(field.id);
+      const { props } = this._projection.getFieldProjection(field.id);
 
       const dataWithIndices = this._rows.value.map((item, index) => {
         const sortValue = this.getSortValue(props, field, item);
