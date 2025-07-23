@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
-import { Key, Obj, Ref, Type } from '@dxos/echo';
+import { Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant } from '../types';
