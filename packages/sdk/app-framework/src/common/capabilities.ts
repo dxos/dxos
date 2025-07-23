@@ -10,6 +10,7 @@ import { type ExecutableTool } from '@dxos/ai';
 import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import { type Space } from '@dxos/client-protocol';
+import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type AnchoredTo } from '@dxos/schema';
 
@@ -19,12 +20,11 @@ import { type SurfaceDefinition } from './surface';
 import { type Resource } from './translations';
 import { type PluginManager, defineCapability } from '../core';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
-import type { FunctionDefinition } from '@dxos/functions';
 
 export namespace Capabilities {
-  export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
-
   export const Null = defineCapability<null>('dxos.org/app-framework/capability/null');
+
+  export const PluginManager = defineCapability<PluginManager>('dxos.org/app-framework/capability/plugin-manager');
 
   export const RxRegistry = defineCapability<Registry.Registry>('dxos.org/app-framework/capability/rx-registry');
 

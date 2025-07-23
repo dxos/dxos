@@ -11,16 +11,13 @@ import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { DocumentType } from '@dxos/plugin-markdown/types';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { type ChannelType } from '@dxos/plugin-thread/types';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { getSpace, type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 
 import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
@@ -45,23 +42,22 @@ export default (context: PluginContext) => {
       const space = getSpace(channel);
       invariant(space);
 
-      let messageEnricher;
-      const aiClient = context.getCapabilities(AssistantCapabilities.AiClient).pop();
-      if (aiClient && settings.entityExtraction) {
-        messageEnricher = createEntityExtractionEnricher({
-          aiClient: aiClient.value,
-          // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
-          //  This forced me to add a dependency on markdown plugin.
-          //  This will be replaced with a vector search index anyway, so its not a big deal.
-          contextTypes: [DocumentType, DataType.Person, DataType.Organization],
-          space,
-        });
-      }
+      // let messageEnricher;
+      // if (aiClient && settings.entityExtraction) {
+      //   messageEnricher = createEntityExtractionEnricher({
+      //     aiClient: aiClient.value,
+      //     // TODO(dmaretskyi): Have those be discovered from the schema graph or contributed by capabilities?
+      //     //  This forced me to add a dependency on markdown plugin.
+      //     //  This will be replaced with a vector search index anyway, so its not a big deal.
+      //     contextTypes: [DocumentType, DataType.Person, DataType.Organization],
+      //     space,
+      //   });
+      // }
 
       // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      state.transcriptionManager = await context
-        .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-        .open();
+      // state.transcriptionManager = await context
+      //   .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
+      //   .open();
     },
     onLeave: async () => {
       await state.transcriptionManager?.close();

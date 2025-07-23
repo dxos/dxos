@@ -15,7 +15,8 @@ import { Stack } from '@dxos/react-ui-stack';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Plank, type PlankProps } from './Plank';
-import { DeckStateFactory, translations } from '../../translations';
+import { DeckStateFactory } from '../../capabilities';
+import { translations } from '../../translations';
 
 const meta: Meta<PlankProps> = {
   title: 'plugins/plugin-deck/Plank',

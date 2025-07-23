@@ -10,11 +10,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
-  extractionAnthropicFn,
   type ExtractionFunction,
+  extractionAnthropicFn,
   extractionNerFn,
-  processTranscriptMessage,
   getNer,
+  processTranscriptMessage,
 } from '@dxos/assistant';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';

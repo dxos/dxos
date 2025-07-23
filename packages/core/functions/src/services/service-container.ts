@@ -114,16 +114,6 @@ export class ServiceContainer {
       this._services.toolResolver ?? ToolResolverService.notAvailable,
     );
 
-    return Layer.mergeAll(
-      //
-      ai,
-      credentials,
-      database,
-      queues,
-      tracing,
-      eventLogger,
-      functionCallService,
-      toolResolver,
-    );
+    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService, toolResolver);
   }
 }
