@@ -244,8 +244,8 @@ BoardContent.displayName = 'Board.Content';
 
 type BoardBackdropProps = {};
 
-const BoardBackdropProps = () => {
-  const { grid: board, layout, onAdd } = useBoardContext(BoardBackdropProps.displayName);
+const BoardBackdrop = (props: BoardBackdropProps) => {
+  const { grid: board, layout, onAdd } = useBoardContext(BoardBackdrop.displayName);
 
   const cells = useMemo(() => {
     const cells: { position: Position; rect: Rect }[] = [];
@@ -273,7 +273,7 @@ const BoardBackdropProps = () => {
   );
 };
 
-BoardBackdropProps.displayName = 'Board.Backdrop';
+BoardBackdrop.displayName = 'Board.Backdrop';
 
 type BoardDropTargetProps = {
   position: Position;
@@ -372,7 +372,7 @@ export const Board = {
   Container: BoardContainer,
   Viewport: BoardViewport,
   Content: BoardContent,
-  Backdrop: BoardBackdropProps,
+  Backdrop: BoardBackdrop,
   Controls: BoardControls,
   Cell: BoardCell,
 };
