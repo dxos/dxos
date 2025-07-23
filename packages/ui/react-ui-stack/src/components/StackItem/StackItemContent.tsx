@@ -9,7 +9,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStack, useStackItem } from '../StackContext';
 
-export type StackItemContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+export type StackItemContentProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'role'>> & {
   /**
    * This flag is required in order to clarify a developer experience that seemed like it needed extra boilerplate
    * (`row-span-2`) or was buggy. See the description of the StackItem.Content component itself for more information.
@@ -59,10 +59,10 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
         role='none'
         {...props}
         className={mx(
-          'group grid grid-cols-[100%]',
+          'group grid grid-cols-[100%] density-coarse',
           stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
-          toolbar && '[&_.dx-toolbar]:relative [&_.dx-toolbar]:border-be [&_.dx-toolbar]:border-subduedSeparator',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           role === 'section' &&
             toolbar &&
             '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
