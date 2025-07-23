@@ -187,11 +187,9 @@ export class AISession {
         );
 
         const response = Obj.make(DataType.Message, {
-          sender: {
-            role: 'assistant',
-          },
-          blocks,
           created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks,
         });
         this._pending.push(response);
 
@@ -214,11 +212,9 @@ export class AISession {
         );
         this._pending.push(
           Obj.make(DataType.Message, {
-            sender: {
-              role: 'user',
-            },
-            blocks: toolResults,
             created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: toolResults,
           }),
         );
       } while (true);
@@ -275,9 +271,9 @@ export class AISession {
       }
 
       return Obj.make(DataType.Message, {
+        created: new Date().toUTCString(),
         sender: { role: 'user' },
         blocks: [...prelude, { _tag: 'text', text: prompt }],
-        created: new Date().toUTCString(),
       });
     });
 

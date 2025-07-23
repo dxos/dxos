@@ -59,9 +59,7 @@ export const processEmail = async ({ aiClient, email, context }: ProcessEmailPar
       history: [
         Obj.make(DataType.Message, {
           created: new Date().toISOString(),
-          sender: {
-            role: 'user',
-          },
+          sender: { role: 'user' },
           blocks: [
             {
               _tag: 'text',

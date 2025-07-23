@@ -187,8 +187,6 @@ export type Message = Schema.Schema.Type<typeof Message>;
 export const createUserMessage = (spaceId: Type.SpaceId, threadId: Type.ObjectId, text: string): DataType.Message =>
   Obj.make(DataType.Message, {
     created: new Date().toISOString(),
-    sender: {
-      role: 'user',
-    },
+    sender: { role: 'user' },
     blocks: [{ _tag: 'text', text }],
   });

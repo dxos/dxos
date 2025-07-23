@@ -162,9 +162,7 @@ export class MockAiServiceClient implements AiServiceClient {
       type: 'message_start',
       message: Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: {
-          role: 'assistant',
-        },
+        sender: { role: 'assistant' },
         blocks: [],
       }),
     };

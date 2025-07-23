@@ -66,9 +66,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           conversation.append([
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),
-              sender: {
-                role: 'user',
-              },
+              sender: { role: 'user' },
               blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
             }),
           ]),

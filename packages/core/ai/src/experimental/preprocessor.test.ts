@@ -17,6 +17,7 @@ describe('preprocessor', () => {
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [
           {
@@ -24,7 +25,6 @@ describe('preprocessor', () => {
             text: 'What is 2 + 2?',
           },
         ],
-        created: new Date().toISOString(),
       });
       const input = yield* preprocessAiInput([message]);
       expect(input).toEqual(
@@ -66,7 +66,7 @@ describe('preprocessor', () => {
       const input = yield* preprocessAiInput([message]);
       expect(input.messages).toHaveLength(2);
 
-      // First message should be tool results
+      // First message should be tool results.
       expect(input.messages[0]).toBeInstanceOf(AiInput.ToolMessage);
       const toolMessage = input.messages[0] as AiInput.ToolMessage;
       expect(toolMessage.parts).toHaveLength(2);
@@ -85,7 +85,7 @@ describe('preprocessor', () => {
         }),
       );
 
-      // Second message should be user text
+      // Second message should be user text.
       expect(input.messages[1]).toBeInstanceOf(AiInput.UserMessage);
       const userMessage = input.messages[1] as AiInput.UserMessage;
       expect(userMessage.parts).toEqual([new AiInput.TextPart({ text: 'What do you think about these results?' })]);
@@ -323,17 +323,17 @@ describe('preprocessor', () => {
       const input = yield* preprocessAiInput([message]);
       expect(input.messages).toHaveLength(3);
 
-      // First: user text
+      // First: user text.
       expect(input.messages[0]).toBeInstanceOf(AiInput.UserMessage);
       const firstMessage = input.messages[0] as AiInput.UserMessage;
       expect(firstMessage.parts).toEqual([new AiInput.TextPart({ text: 'Here are the results:' })]);
 
-      // Second: tool results
+      // Second: tool results.
       expect(input.messages[1]).toBeInstanceOf(AiInput.ToolMessage);
       const toolMessage = input.messages[1] as AiInput.ToolMessage;
       expect(toolMessage.parts).toHaveLength(2);
 
-      // Third: user text
+      // Third: user text.
       expect(input.messages[2]).toBeInstanceOf(AiInput.UserMessage);
       const lastMessage = input.messages[2] as AiInput.UserMessage;
       expect(lastMessage.parts).toEqual([new AiInput.TextPart({ text: 'What should I do next?' })]);
@@ -451,7 +451,7 @@ describe('preprocessor', () => {
           {
             _tag: 'reasoning',
             reasoningText: 'Some reasoning',
-            redactedText: 'Some redacted text', // Both should not be present
+            redactedText: 'Some redacted text', // Both should not be present.
           },
         ],
       });

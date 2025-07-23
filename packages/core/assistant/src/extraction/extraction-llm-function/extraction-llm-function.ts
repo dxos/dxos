@@ -33,9 +33,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       history: [
         Obj.make(DataType.Message, {
           created: new Date().toISOString(),
-          sender: {
-            role: 'user',
-          },
+          sender: { role: 'user' },
           blocks: [
             {
               _tag: 'text',

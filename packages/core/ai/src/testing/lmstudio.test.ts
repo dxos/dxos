@@ -21,9 +21,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
     const result = await client.execStream({
       prompt: Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: {
-          role: 'user',
-        },
+        sender: { role: 'user' },
         blocks: [{ _tag: 'text', text: 'What is the capital of France?' }],
       }),
     });
@@ -48,9 +46,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
     const result = await client.execStream({
       prompt: Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: {
-          role: 'user',
-        },
+        sender: { role: 'user' },
         blocks: [{ _tag: 'text', text: 'I want green walls' }],
       }),
       tools: [tool],

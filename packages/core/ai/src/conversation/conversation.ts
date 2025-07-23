@@ -95,9 +95,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
           log.warn('tool error', { message: toolResult.message });
           const resultMessage = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: {
-              role: 'user',
-            },
+            sender: { role: 'user' },
             id: ObjectId.random(),
             blocks: [
               {
@@ -119,9 +117,7 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
           log('tool success', { result: toolResult.result });
           const resultMessage = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: {
-              role: 'user',
-            },
+            sender: { role: 'user' },
             blocks: [
               {
                 _tag: 'toolResult',

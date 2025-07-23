@@ -58,11 +58,9 @@ describe('effect AI client', () => {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
-            sender: {
-              role: 'user',
-            },
-            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
             created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
           }),
         );
 
@@ -77,11 +75,9 @@ describe('effect AI client', () => {
             disableToolCallResolution: true,
           }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
           const message = Obj.make(DataType.Message, {
-            sender: {
-              role: 'assistant',
-            },
-            blocks,
             created: new Date().toISOString(),
+            sender: { role: 'assistant' },
+            blocks,
           });
           log.info('message', { message });
           history.push(message);
@@ -99,11 +95,9 @@ describe('effect AI client', () => {
           );
           history.push(
             Obj.make(DataType.Message, {
-              sender: {
-                role: 'user',
-              },
-              blocks: toolResults,
               created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: toolResults,
             }),
           );
         } while (true);

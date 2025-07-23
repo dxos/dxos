@@ -52,9 +52,7 @@ const summarizationFn = defineFunction({
         history: [
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: {
-              role: 'user',
-            },
+            sender: { role: 'user' },
             blocks: [
               {
                 _tag: 'text',
@@ -121,9 +119,7 @@ const refinementFn = defineFunction({
         history: [
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: {
-              role: 'user',
-            },
+            sender: { role: 'user' },
             blocks: summaries.map(
               (summary) =>
                 ({

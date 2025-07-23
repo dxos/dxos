@@ -83,9 +83,9 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
         created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: context.results.map(
-          (r): ContentBlock.Text => ({
+          (result): ContentBlock.Text => ({
             _tag: 'text',
-            text: `# ${r.title}\n\n${r.text}`,
+            text: `# ${result.title}\n\n${result.text}`,
           }),
         ),
       }),

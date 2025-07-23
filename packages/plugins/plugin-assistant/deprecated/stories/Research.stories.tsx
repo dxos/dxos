@@ -135,15 +135,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
       void queue.append([
         Obj.make(DataType.Message, {
           created: new Date().toISOString(),
-          sender: {
-            role: 'assistant',
-          },
+          sender: { role: 'assistant' },
           blocks: prompts.map(
             (prompt) =>
               ({
                 _tag: 'json',
                 disposition: 'suggest',
-                json: JSON.stringify({ text: prompt }),
+                data: JSON.stringify({ text: prompt }),
               }) as const,
           ),
         }),

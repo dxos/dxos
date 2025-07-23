@@ -48,9 +48,7 @@ export const runTools = async ({
   if (!tool) {
     const resultMessage = Obj.make(DataType.Message, {
       created: new Date().toISOString(),
-      sender: {
-        role: 'user',
-      },
+      sender: { role: 'user' },
       blocks: [
         {
           _tag: 'toolResult',
@@ -82,9 +80,7 @@ export const runTools = async ({
       log('tool error', { message: toolResult.message });
       const resultMessage = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: {
-          role: 'user',
-        },
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'toolResult',
@@ -106,9 +102,7 @@ export const runTools = async ({
       log('tool success', { result: toolResult.result });
       const resultMessage = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: {
-          role: 'user',
-        },
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'toolResult',
