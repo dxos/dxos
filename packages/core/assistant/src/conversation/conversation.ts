@@ -2,10 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { Effect, type Context } from 'effect';
 
-import { type AiInputPreprocessingError } from '@dxos/ai';
+import {
+  ToolExecutionService,
+  ToolResolverService,
+  type AiInputPreprocessingError,
+  type AiToolNotFoundError,
+} from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -20,7 +25,7 @@ export interface ConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
   prompt: string;
 
-  toolkit?: AiToolkit.ToHandler<Tools>;
+  toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
 export type ConversationOptions = {
@@ -51,32 +56,36 @@ export class Conversation {
     this.context = new ContextBinder(this._queue);
   }
 
-  run: <Tools extends AiTool.Any>(
+  run = <Tools extends AiTool.Any>(
     options: ConversationRunOptions<Tools>,
-  ) => Effect.Effect<
+  ): Effect.Effect<
     DataType.Message[],
-    AiAssistantError | AiInputPreprocessingError | AiError.AiError,
-    AiLanguageModel.AiLanguageModel
-  > = (options) =>
+    AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
+    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+  > =>
     Effect.gen(this, function* () {
       const session = new AISession();
       this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
-      if (blueprints.length > 1) {
-        throw new Error('Multiple blueprints are not yet supported.');
-      }
 
-      // TODO(dmaretskyi): Blueprint instructions + tools.
+      const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
+      const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+        yield* ToolExecutionService.handlersFor(blueprintToolkit),
+      );
+      const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
+      const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
+        Effect.provide(blueprintToolkitHandler) as any,
+      ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+
+      const systemPrompt = blueprints.map((bp) => `<blueprint>${bp.instructions}</blueprint>`).join('\n\n');
+
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
-        toolkit: options.toolkit,
-        // systemPrompt: (options.systemPrompt ?? '') + (blueprints.at(0)?.instructions ?? ''),
-        // // TODO(dmaretskyi): Artifacts come from the blueprint.
-        // artifacts: options.artifacts ?? [],
-        // tools: blueprints.at(0)?.tools ?? [],
+        toolkit: toolkitWithBlueprintHandlers,
+        systemPrompt: (options.systemPrompt ?? '') + systemPrompt,
       });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;

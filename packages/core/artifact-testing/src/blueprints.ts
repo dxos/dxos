@@ -6,7 +6,7 @@ import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 
-import { readDocument, writeDocument } from './tools';
+import { readDocumentFunction, writeDocumentFunction } from './functions';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
@@ -22,8 +22,8 @@ export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
     When replying to the user, be terse with your comments about design doc handling.
     You do not announce when you read or write the design spec document.
   `,
-  // TODO(dmaretskyi): Create tool.
-  tools: [ToolId.make(readDocument.id), ToolId.make(writeDocument.id)],
+  // TODO(dmaretskyi): Helper for function -> toolId conversion.
+  tools: [ToolId.make(readDocumentFunction.name), ToolId.make(writeDocumentFunction.name)],
   artifacts: [],
 });
 
@@ -40,7 +40,6 @@ export const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
     When replying to the user, be terse with your comments about task list handling.
     You do not announce when you read or write the task list document.
   `,
-  // TODO(dmaretskyi): Create tool.
-  tools: [ToolId.make(readDocument.id), ToolId.make(writeDocument.id)],
+  tools: [ToolId.make(readDocumentFunction.name), ToolId.make(writeDocumentFunction.name)],
   artifacts: [],
 });

@@ -13,8 +13,8 @@ import {
   DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
   remoteServiceEndpoints,
-  readDocument,
-  writeDocument,
+  readDocumentFunction,
+  writeDocumentFunction,
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -220,7 +220,7 @@ const getDecorators = ({
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Tools, [readDocument, writeDocument])],
+    capabilities: [contributes(Capabilities.Functions, [readDocumentFunction, writeDocumentFunction])],
   }),
   withTheme,
   withLayout({

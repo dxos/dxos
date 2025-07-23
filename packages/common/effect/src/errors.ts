@@ -80,6 +80,9 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
   if (error[originalSymbol]) {
     error = error[originalSymbol];
   }
+  if (error.cause) {
+    error.cause = prettyErrorStack(error.cause);
+  }
 
   Object.defineProperty(error, 'stack', {
     value: out.join('\n'),

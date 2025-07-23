@@ -16,7 +16,6 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { readDocument, writeDocument } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -38,7 +37,12 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       logging: {
         enabled: true,
       },
-      toolResolver: ToolResolverService.make(new ToolRegistry([readDocument, writeDocument])),
+      // TODO(dmaretskyi): Fix me.
+      toolResolver: ToolResolverService.make(
+        new ToolRegistry([
+          /*readDocument, writeDocument*/
+        ]),
+      ),
     });
   });
 
