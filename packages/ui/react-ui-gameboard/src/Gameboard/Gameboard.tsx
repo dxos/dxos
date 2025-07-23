@@ -3,27 +3,24 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import React, { type CSSProperties, forwardRef, type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { GameboardContainer } from './GameboardContainer';
 import { GameboardContext, type GameboardContextType } from './context';
 import { type GameboardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
 
-type GameboardRootProps = ThemedClassName<
-  PropsWithChildren<{
-    model?: GameboardModel;
-    onDrop?: (move: Move) => boolean;
-  }>
->;
+type GameboardRootProps = PropsWithChildren<{
+  model?: GameboardModel;
+  onDrop?: (move: Move) => boolean;
+}>;
 
 /**
  * Generic board container.
  */
-const GameboardRoot = ({ children, classNames, model, onDrop }: GameboardRootProps) => {
+const GameboardRoot = ({ children, model, onDrop }: GameboardRootProps) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
@@ -72,15 +69,35 @@ const GameboardRoot = ({ children, classNames, model, onDrop }: GameboardRootPro
 
   return (
     <GameboardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
-      <GameboardContainer classNames={mx('aspect-square', classNames)}>{children}</GameboardContainer>
+      {children}
     </GameboardContext.Provider>
   );
 };
 
 GameboardRoot.displayName = 'Gameboard.Root';
 
+type GameboardContentsProps = ThemedClassName<
+  PropsWithChildren<{
+    style?: CSSProperties;
+  }>
+>;
+
+/**
+ * Container centers the board.
+ */
+const GameboardContent = forwardRef<HTMLDivElement, GameboardContentsProps>(
+  ({ children, classNames, style }, forwardedRef) => {
+    return (
+      <div ref={forwardedRef} style={style} className='flex w-full h-full justify-center overflow-hidden'>
+        <div className={mx('max-w-full max-h-full content-center aspect-square', classNames)}>{children}</div>
+      </div>
+    );
+  },
+);
+
 export const Gameboard = {
   Root: GameboardRoot,
+  Content: GameboardContent,
 };
 
-export type { GameboardRootProps };
+export type { GameboardRootProps, GameboardContentsProps };

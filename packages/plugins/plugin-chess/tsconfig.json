@@ -76,6 +76,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

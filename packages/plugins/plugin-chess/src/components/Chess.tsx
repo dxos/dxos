@@ -11,7 +11,7 @@ import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxo
 
 import { type ChessType } from '../types';
 
-export const ChessComponent = ({ game }: { game: ChessType }) => {
+const ChessRoot = ({ game }: { game: ChessType }) => {
   const model = useMemo(() => new ChessModel(), []);
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {
@@ -48,7 +48,13 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
 
   return (
     <Gameboard.Root model={model} onDrop={handleDrop}>
-      <Chessboard />
+      {children}
     </Gameboard.Root>
   );
+};
+
+export const Chess = {
+  Root: ChessRoot,
+  Content: Gameboard.Content,
+  Board: Chessboard,
 };

@@ -7,6 +7,5 @@ export * from './types';
 export * from './util';
 
 export * from './Gameboard';
-export * from './GameboardContainer';
 export * from './Square';
 export * from './Piece';
