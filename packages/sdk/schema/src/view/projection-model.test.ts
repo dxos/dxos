@@ -3,7 +3,7 @@
 //
 
 import { Schema, SchemaAST } from 'effect';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 import { EchoSchemaRegistry } from '@dxos/echo-db';
@@ -26,7 +26,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
 import { ProjectionModel } from './projection-model';
-import { createView, createViewWithReferences, type Projection } from './view';
+import { createFieldId, createView, createViewWithReferences, type Projection } from './view';
 import { DataType } from '../common';
 
 registerSignalsRuntime();
@@ -904,10 +904,17 @@ describe('ProjectionModel', () => {
     const view = createView({ typename: ContactWithArrayOfEmails.typename, jsonSchema, presentation });
     const projection = new ProjectionModel(jsonSchema, view.projection);
 
-    const fieldId = getFieldId(view.projection, 'emails');
-    const field = projection.getFieldProjection(fieldId!);
+    const fieldId = createFieldId();
+    projection.setFieldProjection({
+      field: {
+        id: fieldId,
+        path: 'emails' as JsonPath,
+      },
+    });
 
-    console.log(field);
+    const { field, props } = projection.getFieldProjection(fieldId!);
+    expect(field.path).toEqual('emails');
+    expect(props.type).toEqual('array');
   });
 
   test('changing format to missing formats', async ({ expect }) => {

@@ -131,6 +131,11 @@ export const createView = ({
       continue;
     }
 
+    // Omit objects from initial projection as they are difficult to handle automatically.
+    if (property.type === 'object') {
+      continue;
+    }
+
     projection.showFieldProjection(property.name as JsonProp);
   }
 
@@ -182,29 +187,29 @@ export const createViewWithReferences = async ({
   jsonSchema,
   overrideSchema,
   presentation,
-  fields: include,
+  fields,
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
-  const view = Obj.make(View, {
+  const view = await createView({
     name,
-    query: {
-      typename,
-    },
-    projection: {
-      schema: overrideSchema,
-      fields: [],
-      hiddenFields: [],
-    },
-    presentation: Ref.make(presentation),
+    typename,
+    jsonSchema,
+    overrideSchema,
+    presentation,
+    fields,
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   const schema = toEffectSchema(jsonSchema);
-  const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
+  const shouldIncludeId = fields?.find((field) => field === 'id') !== undefined;
   const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
   for (const property of properties) {
-    if (include && !include.includes(property.name)) {
+    if (fields && !fields.includes(property.name)) {
+      continue;
+    }
+
+    if (property.format !== FormatEnum.Ref) {
       continue;
     }
 
@@ -251,15 +256,6 @@ export const createViewWithReferences = async ({
       ),
       Effect.runPromise,
     );
-  }
-
-  // Sort fields to match the order in the params.
-  if (include) {
-    view.projection.fields.sort((a, b) => {
-      const indexA = include.indexOf(a.path);
-      const indexB = include.indexOf(b.path);
-      return indexA - indexB;
-    });
   }
 
   return view;

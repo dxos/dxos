@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { createView } from './view';
+import { createView, createViewWithReferences } from './view';
 import { getSchemaProperties } from '../properties';
 import { Testing } from '../testing';
 
@@ -28,7 +28,11 @@ describe('Projection', () => {
   test('create view from TypedObject', async ({ expect }) => {
     const schema = Testing.Contact;
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({ typename: schema.typename, jsonSchema: Type.toJsonSchema(schema), presentation });
+    const view = await createViewWithReferences({
+      typename: schema.typename,
+      jsonSchema: Type.toJsonSchema(schema),
+      presentation,
+    });
     expect(view.query.typename).to.eq(schema.typename);
     expect(view.projection.fields.map((f) => f.path)).to.deep.eq([
       'name',

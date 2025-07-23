@@ -114,6 +114,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
         <Table.Main
           key={fullyQualifiedId(view)}
           ref={tableRef}
+          client={client}
           model={model}
           presentation={presentation}
           schema={schema}
