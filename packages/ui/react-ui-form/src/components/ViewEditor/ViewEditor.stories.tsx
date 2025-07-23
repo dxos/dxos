@@ -44,6 +44,7 @@ const DefaultStory = (props: StoryProps) => {
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({
+        name: 'Test',
         typename: schema.typename,
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
@@ -76,15 +77,15 @@ const DefaultStory = (props: StoryProps) => {
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined' && schema && projection && view) {
-      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, projection, view } satisfies ViewEditorDebugObjects;
+    if (typeof window !== 'undefined' && schema && view && projection) {
+      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, view, projection } satisfies ViewEditorDebugObjects;
     }
   }, [schema, view, projection]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ schema, projection, view })),
-    [JSON.stringify(schema), JSON.stringify(projection), JSON.stringify(view)],
+    () => JSON.parse(JSON.stringify({ schema, view, projection })),
+    [JSON.stringify(schema), JSON.stringify(view), JSON.stringify(projection)],
   );
 
   if (!schema || !view || !projection) {

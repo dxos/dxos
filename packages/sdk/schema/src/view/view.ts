@@ -19,7 +19,6 @@ import {
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
   toEffectSchema,
-  TypedObject,
   TypeEnum,
 } from '@dxos/echo-schema';
 import { findAnnotation, type JsonProp, type JsonPath } from '@dxos/effect';
@@ -313,10 +312,7 @@ export const createViewFromSpace = async ({
 };
 
 export const createDefaultSchema = () =>
-  TypedObject({
-    typename: `example.com/type/${PublicKey.random().truncate()}`,
-    version: '0.1.0',
-  })({
+  Schema.Struct({
     title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
     status: Schema.optional(
       Schema.Literal('todo', 'in-progress', 'done')
@@ -335,4 +331,4 @@ export const createDefaultSchema = () =>
         }),
     ),
     description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  });
+  }).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));

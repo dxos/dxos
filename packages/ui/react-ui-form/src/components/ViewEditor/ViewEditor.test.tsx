@@ -19,8 +19,8 @@ const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
-  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   expect(isInstanceOf(DataType.View, debugObjects.view)).toBeTruthy();
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;
 };
 
