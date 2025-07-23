@@ -101,7 +101,6 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
   executor = new FunctionExecutor(
     new ServiceContainer().setServices({
-      // TODO(burdon): !!!
       // ai: {
       //   client: this.AiService,
       // },

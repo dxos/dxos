@@ -108,7 +108,7 @@ export const TableContainer = ({ role, table }: TableContainerProps) => {
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
   return (
-    <StackItem.Content role={role} toolbar>
+    <StackItem.Content toolbar>
       <TableToolbar
         attendableId={fullyQualifiedId(table)}
         customActions={customActions}

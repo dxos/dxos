@@ -1995,6 +1995,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../log
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
+      '@radix-ui/react-use-controllable-state':
+        specifier: ^1.0.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5466,9 +5472,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/ai':
-        specifier: 0.23.0
-        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -10533,9 +10536,6 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -16206,6 +16206,7 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
+    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 

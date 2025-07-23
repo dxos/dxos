@@ -169,7 +169,7 @@ describe.skip('Summarization', () => {
                   model: 'llama3.1:8b',
                 },
               }),
-        } as any, // TODO(burdon): !!!
+        } as any, // TODO(burdon): Rewrite test.
         database: {
           db,
         },

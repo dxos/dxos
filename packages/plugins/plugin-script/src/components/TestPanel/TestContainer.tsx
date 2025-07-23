@@ -15,11 +15,11 @@ export type TestContainerProps = {
   script: ScriptType;
 };
 
-export const TestContainer = ({ script, role }: TestContainerProps) => {
+export const TestContainer = ({ script }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (
-    <StackItem.Content role={role}>
+    <StackItem.Content>
       <TestPanel functionUrl={state.functionUrl} />
     </StackItem.Content>
   );

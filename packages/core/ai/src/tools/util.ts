@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): !!!
+// TODO(burdon): Remove file?
 // @ts-nocheck
 
 import { Obj } from '@dxos/echo';

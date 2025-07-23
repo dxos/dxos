@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): !!!
+// TODO(burdon): Needs refactoring.
 // @ts-nocheck
 
 import { Schema } from 'effect';

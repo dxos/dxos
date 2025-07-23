@@ -31,7 +31,7 @@ export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
 
   // TODO(burdon): Add attention attributes.
   return (
-    <StackItem.Content role={role} classNames='container-max-width'>
+    <StackItem.Content classNames='container-max-width'>
       <Chat.Root chat={chat} processor={processor} artifact={artifact}>
         <Chat.Thread />
         <div className='pbe-4 pis-2 pie-2'>

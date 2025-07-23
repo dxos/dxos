@@ -39,15 +39,23 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
 const CardSurfaceRoot = ({ role = 'never', children }: PropsWithChildren<{ role?: string }>) => {
-  if (['popover', 'card--kanban'].includes(role)) {
+  if (['popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
-      <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
+      <div
+        className={
+          role === 'popover'
+            ? 'popover-card-width'
+            : ['card--intrinsic', 'card--extrinsic'].includes(role)
+              ? 'contents'
+              : ''
+        }
+      >
         {children}
       </div>
     );
   } else {
     return (
-      <CardStaticRoot {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
+      <CardStaticRoot {...(role === 'transclusion' && { classNames: ['mlb-[1em]', hoverableControls] })}>
         {children}
       </CardStaticRoot>
     );
