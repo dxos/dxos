@@ -3,4 +3,4 @@
 //
 
 export * from './action';
-export * from './search';
+export type * from './search';

@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './FailReason';
-export * from './IInvitation';
+export type * from './FailReason';
+export type * from './IInvitation';

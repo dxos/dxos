@@ -3,4 +3,4 @@
 //
 
 export * from './hasIosKeyboard';
-export * from './ThemedClassName';
+export type * from './ThemedClassName';

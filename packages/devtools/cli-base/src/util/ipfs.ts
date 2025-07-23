@@ -6,7 +6,7 @@ import type { Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-// eslint-disable-next-line no-new-func
+// eslint-disable-next-line @typescript-eslint/no-implied-eval
 export const importESM = new Function('modulePath', 'return import(modulePath)');
 
 // TODO(nf): make CLI support dx-env.yml

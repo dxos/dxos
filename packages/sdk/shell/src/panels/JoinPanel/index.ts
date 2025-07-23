@@ -3,4 +3,4 @@
 //
 
 export * from './JoinPanel';
-export * from './JoinPanelProps';
+export type * from './JoinPanelProps';

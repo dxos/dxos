@@ -10,10 +10,10 @@ export const getStatus = ({
   needsToUpload,
   needsToDownload,
 }: {
-  offline: Boolean;
-  saved: Boolean;
-  needsToUpload: Boolean;
-  needsToDownload: Boolean;
+  offline: boolean;
+  saved: boolean;
+  needsToUpload: boolean;
+  needsToDownload: boolean;
 }): Status => {
   if (!saved) {
     return 'saving locally';

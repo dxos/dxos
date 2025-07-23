@@ -3,4 +3,4 @@
 //
 
 export * from './SpacePanel';
-export * from './SpacePanelProps';
+export type * from './SpacePanelProps';

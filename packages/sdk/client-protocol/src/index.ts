@@ -4,11 +4,11 @@
 
 export * from './client';
 export * from './config';
-export * from './echo';
-export * from './halo';
+export type * from './echo';
+export type * from './halo';
 export * from './invitations';
 export * from './service-definitions';
-export * from './shell';
-export * from './space';
+export type * from './shell';
+export type * from './space';
 export * from './timeouts';
 export * from './schema';

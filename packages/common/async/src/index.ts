@@ -25,6 +25,6 @@ export * from './timeout';
 export * from './timer';
 export * from './track-leaks';
 export * from './trigger';
-export * from './types';
+export type * from './types';
 export * from './until';
 export * from './update-scheduler';

@@ -105,7 +105,7 @@ export const PlankHeading = memo(
 
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
-        typeof action.data === 'function' && action.data?.({ parent: node, caller: DECK_PLUGIN });
+        typeof action.data === 'function' && void action.data?.({ parent: node, caller: DECK_PLUGIN });
       },
       [node],
     );

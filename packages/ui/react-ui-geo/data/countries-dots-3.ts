@@ -3,7 +3,7 @@
 // Generated from countries.json
 //
 
-import { GeometryCollection } from 'geojson';
+import { type GeometryCollection } from 'geojson';
 
 export default {
   "type": "GeometryCollection",

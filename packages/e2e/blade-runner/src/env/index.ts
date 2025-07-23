@@ -4,5 +4,5 @@
 
 export * from './scheduler-env';
 export * from './replicant-env';
-export * from './interface';
+export type * from './interface';
 export * from './replicant-registry';

@@ -28,7 +28,7 @@ const main = async () => {
     '@dxos/plugin-explorer': await import('@dxos/plugin-explorer'),
   }));
 
-  // eslint-disable-next-line no-new-func
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
   const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
 
   const services = new ClientServicesProxy(

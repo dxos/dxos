@@ -61,7 +61,7 @@ const meta: Meta<StoryProps> = {
   component: ResponsiveGrid,
   render: (args) => {
     const [pinned, setPinned] = useState<string | undefined>(
-      args.pinned ?? args.items.length > 1 ? args.items[0]?.id : undefined,
+      (args.pinned ?? args.items.length > 1) ? args.items[0]?.id : undefined,
     );
     const [items, setItems] = useState<TestItem[]>(args.items);
     useEffect(() => {

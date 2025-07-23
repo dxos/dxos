@@ -3,4 +3,4 @@
 //
 
 export * from './types';
-export * from './util';
+export type * from './util';

@@ -7,7 +7,7 @@ import { tailwindConfig, type TailwindConfig } from './config';
 const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 
 export * from './styles';
-export * from './types';
+export type * from './types';
 export * from './util';
 
 export { userDefaultTokenSet, hues } from './config/tokens';

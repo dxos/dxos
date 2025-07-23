@@ -8,7 +8,7 @@ import { wasmLoader } from 'esbuild-plugin-wasm';
 import { FixGracefulFsPlugin, NodeGlobalsPolyfillPlugin, NodeModulesPlugin } from '@dxos/esbuild-plugins';
 
 export const buildBrowserBundle = async (outfile: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { build } = await import('esbuild');
   const result = await build({
     entryPoints: [process.argv[1]],

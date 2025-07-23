@@ -91,6 +91,6 @@ export const codegen = (
 
   const code = `return function ${name}(${args.join(', ')}) {\n${buf}\n}`;
 
-  // eslint-disable-next-line no-new-func
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
   return Function(...Object.keys(newCtx), code)(...Object.values(newCtx));
 };

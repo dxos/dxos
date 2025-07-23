@@ -3,7 +3,7 @@
 //
 
 export * from './memory-signal-manager';
-export * from './signal-manager';
+export type * from './signal-manager';
 export * from './websocket-signal-manager';
 export * from './edge-signal-manager';
 export * from './utils';

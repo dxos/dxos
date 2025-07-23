@@ -7,4 +7,4 @@ export * from './NavTree';
 export * from './NavTreeContainer';
 export * from './NavTreeContext';
 export * from './NavTreeDocumentTitle';
-export * from './types';
+export type * from './types';

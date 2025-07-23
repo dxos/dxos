@@ -6,5 +6,5 @@ import { translations } from './translations';
 
 export * from './Thread';
 export * from './Message';
-export * from './types';
+export type * from './types';
 export { translations };

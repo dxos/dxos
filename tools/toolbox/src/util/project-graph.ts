@@ -78,8 +78,8 @@ export class ProjectGraph {
   ): string[] {
     const manifest = this.getManifest(name);
     return Object.entries({
-      ...(deps ? manifest?.dependencies ?? {} : {}),
-      ...(devDeps ? manifest?.devDependencies ?? {} : {}),
+      ...(deps ? (manifest?.dependencies ?? {}) : {}),
+      ...(devDeps ? (manifest?.devDependencies ?? {}) : {}),
     })
       .filter(([name, version]) => version.startsWith('workspace:') && this.hasPackage(name))
       .map(([name]) => name);

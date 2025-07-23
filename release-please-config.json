@@ -89,16 +89,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin-rules/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/feed-store/package.json",
           "jsonpath": "$.version"
         },
@@ -945,6 +935,11 @@
         {
           "type": "json",
           "path": "tools/dx-compile/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -131,7 +131,6 @@ describe('ReplicatorExtension', () => {
   });
 
   // TODO: not working yet.
-  // eslint-disable-next-line mocha/no-skipped-tests
   test.skip('enabling upload mid replication', async () => {
     const builder = new TestBuilder();
     const agent1 = builder.createAgent();

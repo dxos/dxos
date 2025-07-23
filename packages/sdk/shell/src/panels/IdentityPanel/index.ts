@@ -3,4 +3,4 @@
 //
 
 export * from './IdentityPanel';
-export * from './IdentityPanelProps';
+export type * from './IdentityPanelProps';

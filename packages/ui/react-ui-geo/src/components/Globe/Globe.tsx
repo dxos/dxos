@@ -188,40 +188,36 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
 
     // External controller.
     const zooming = useRef(false);
-    useImperativeHandle<GlobeController, GlobeController>(
-      forwardRef,
-      () => {
-        return {
-          canvas,
-          projection,
-          center,
-          get scale() {
-            return scaleRef.current;
-          },
-          translation,
-          rotation,
-          setCenter,
-          setScale: (s) => {
-            if (typeof s === 'function') {
-              const is = interpolateNumber(scaleRef.current, s(scaleRef.current));
-              // Stop easing if already zooming.
-              transition()
-                .ease(zooming.current ? easeLinear : easeSinOut)
-                .duration(200)
-                .tween('scale', () => (t) => setScale(is(t)))
-                .on('end', () => {
-                  zooming.current = false;
-                });
-            } else {
-              setScale(s);
-            }
-          },
-          setTranslation,
-          setRotation,
-        };
-      },
-      [canvas],
-    );
+    useImperativeHandle<GlobeController, GlobeController>(forwardRef, () => {
+      return {
+        canvas,
+        projection,
+        center,
+        get scale() {
+          return scaleRef.current;
+        },
+        translation,
+        rotation,
+        setCenter,
+        setScale: (s) => {
+          if (typeof s === 'function') {
+            const is = interpolateNumber(scaleRef.current, s(scaleRef.current));
+            // Stop easing if already zooming.
+            transition()
+              .ease(zooming.current ? easeLinear : easeSinOut)
+              .duration(200)
+              .tween('scale', () => (t) => setScale(is(t)))
+              .on('end', () => {
+                zooming.current = false;
+              });
+          } else {
+            setScale(s);
+          }
+        },
+        setTranslation,
+        setRotation,
+      };
+    }, [canvas]);
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
