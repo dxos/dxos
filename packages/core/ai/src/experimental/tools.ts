@@ -3,7 +3,7 @@
 //
 
 import { type AiTool, AiToolkit, type AiError } from '@effect/ai';
-import { Context, Effect } from 'effect';
+import { Context, Effect, Layer, Record } from 'effect';
 
 import { BaseError } from '@dxos/errors';
 import { type DataType, type ContentBlock } from '@dxos/schema';
@@ -18,6 +18,10 @@ export class ToolResolverService extends Context.Tag('ToolResolverService')<
     readonly resolve: (id: ToolId) => Effect.Effect<AiTool.Any, AiToolNotFoundError>;
   }
 >() {
+  static layerEmpty = Layer.succeed(ToolResolverService, {
+    resolve: (id) => Effect.fail(new AiToolNotFoundError(`Tool ${id} not found`)),
+  });
+
   static resolve = Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
 
   static resolveToolkit: (
@@ -35,6 +39,15 @@ export class ToolExecutionService extends Context.Tag('ToolExecutionService')<
     readonly handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) => AiTool.ToHandler<Tools>;
   }
 >() {
+  static layerEmpty = Layer.succeed(ToolExecutionService, {
+    handlersFor: (toolkit) =>
+      toolkit.of(
+        Record.map(toolkit.tools, (tool, name) =>
+          Effect.fail(new AiToolNotFoundError(`Tool ${name} not found`)),
+        ) as any,
+      ) as any,
+  });
+
   static handlersFor = Effect.serviceFunction(ToolExecutionService, (_) => _.handlersFor);
 }
 

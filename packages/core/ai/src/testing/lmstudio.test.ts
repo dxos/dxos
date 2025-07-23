@@ -12,6 +12,8 @@ import { DataType } from '@dxos/schema';
 import { createTestLMStudioClient } from './lmstudio';
 import { createTool } from '../tools';
 
+// TODO(dmaretskyi): remove this file
+
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('LM Studio', () => {
   test('basic', async () => {
     const client = createTestLMStudioClient();
