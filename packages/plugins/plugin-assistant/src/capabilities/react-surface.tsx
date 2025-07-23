@@ -100,7 +100,7 @@ export default () =>
       id: `${meta.id}/sequence`,
       role: 'article',
       filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
-      component: ({ data, role }) => <SequenceContainer role={role} sequence={data.subject} />,
+      component: ({ data }) => <SequenceContainer sequence={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/logs`,
@@ -110,7 +110,7 @@ export default () =>
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (
-          <StackItem.Content role={role}>
+          <StackItem.Content>
             <InvocationTraceContainer space={space} target={data.companionTo} detailAxis='block' />
           </StackItem.Content>
         );
@@ -120,7 +120,7 @@ export default () =>
       id: `${meta.id}/template`,
       role: 'article',
       filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
-      component: ({ data, role }) => <TemplateContainer role={role} template={data.subject} />,
+      component: ({ data }) => <TemplateContainer template={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

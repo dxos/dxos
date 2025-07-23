@@ -8,14 +8,15 @@ import { type ScriptType } from '@dxos/functions';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
-import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettingsProps } from '../types';
 
-export type ScriptEditorProps = Pick<StackItemContentProps, 'role'> & {
+export type ScriptEditorProps = {
+  role: string;
   script: ScriptType;
   settings?: ScriptSettingsProps;
 } & Pick<TypescriptEditorProps, 'env'>;
