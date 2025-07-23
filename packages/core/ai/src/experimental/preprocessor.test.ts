@@ -1,8 +1,14 @@
-import { Obj } from '@dxos/echo';
-import { DataType } from '@dxos/schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiInput } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Either } from 'effect';
+
+import { Obj } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiInputPreprocessingError } from '../errors';
 

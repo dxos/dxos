@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiInputPreprocessingError } from '@dxos/ai';
-import { Event } from '@dxos/async';
-import { Obj, Ref } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
-import { DatabaseService, type ServiceContainer } from '@dxos/functions';
-
-import { DataType } from '@dxos/schema';
 import type { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
+
+import { type AiInputPreprocessingError } from '@dxos/ai';
+import { Event } from '@dxos/async';
+import { Obj } from '@dxos/echo';
+import { type Queue } from '@dxos/echo-db';
+import { DatabaseService } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
+
 import { ContextBinder, type ContextBinding } from '../context';
 import type { AiAssistantError } from '../errors';
 import { AISession } from '../session';

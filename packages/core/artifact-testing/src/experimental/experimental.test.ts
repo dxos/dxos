@@ -6,7 +6,7 @@ import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
+import { createTool, ToolRegistry, ToolResult, AiService, ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AISession, researchFn } from '@dxos/assistant';
 import {
@@ -29,8 +29,6 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
-import { AiService } from '@dxos/ai';
-import { ToolId } from '@dxos/ai';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
@@ -155,7 +153,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   });
 
   test('conversation', { timeout: 120_000 }, async () => {
-    const { client } = serviceContainer.getService(AiService);
     const session = new AISession({
       operationModel: 'configured',
     });

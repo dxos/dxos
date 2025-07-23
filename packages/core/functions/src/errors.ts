@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { BaseError } from '@dxos/errors';
 
 export class ServiceNotAvailableError extends BaseError.extend('SERVICE_NOT_AVAILABLE') {

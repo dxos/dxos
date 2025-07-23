@@ -1,5 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { describe, it } from '@effect/vitest';
 import { Context, Effect, Layer, Option } from 'effect';
+
 import { ServiceRegistry } from './service-registry';
 
 class MyTag extends Context.Tag('MyTag')<MyTag, { value: string }>() {}

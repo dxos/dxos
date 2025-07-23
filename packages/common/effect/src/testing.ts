@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect } from 'effect';
 import type { TestContext } from 'vitest';
 

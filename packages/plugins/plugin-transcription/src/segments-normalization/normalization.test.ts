@@ -56,6 +56,7 @@ const messages: MessageWithRangeId[] = [
   } as any),
 );
 
+// eslint-disable-next-line no-unused-vars
 const REMOTE_AI = true;
 
 describe.skip('SentenceNormalization', () => {

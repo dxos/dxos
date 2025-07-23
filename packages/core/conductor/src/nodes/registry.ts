@@ -15,6 +15,7 @@ import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { KanbanType } from '@dxos/react-ui-kanban/types';
 import { TableType } from '@dxos/react-ui-table/types';
+import { DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import { executeFunction, resolveFunctionPath } from './function';
@@ -46,7 +47,6 @@ import {
   VoidInput,
   VoidOutput,
 } from '../types';
-import { DataType } from '@dxos/schema';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).

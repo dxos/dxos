@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { EdgeAiServiceClient, ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { ArtifactId } from '@dxos/artifact';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';

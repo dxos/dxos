@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 import Exa from 'exa-js';
 
+import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { CredentialsService } from '@dxos/functions';
-import { AiTool, AiToolkit } from '@effect/ai';
 import { SEARCH_RESULTS } from '../testing';
+
 export class ExaToolkit extends AiToolkit.make(
   AiTool.make('exa_search', {
     description: 'Search the web for information',

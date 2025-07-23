@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiService, AiServiceRouter } from '@dxos/ai';
-import { TestHelpers } from '@dxos/effect';
 import { AnthropicClient } from '@effect/ai-anthropic';
 import { NodeHttpClient } from '@effect/platform-node';
-import { HttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, flow, Layer, pipe } from 'effect';
-import { log } from '@dxos/log';
-import { AISession } from '../session';
-import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
-import { DataType, DataTypes } from '@dxos/schema';
-import { DatabaseService } from '@dxos/functions';
+import { Config, Effect, Layer, pipe } from 'effect';
+
+import { AiService, AiServiceRouter } from '@dxos/ai';
 import { tapHttpErrors } from '@dxos/ai/testing';
+import { TestHelpers } from '@dxos/effect';
+import { DatabaseService } from '@dxos/functions';
+import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
+
+import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
+import { AISession } from '../session';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 

@@ -7,6 +7,7 @@ import { Effect, type Layer } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AiService } from '@dxos/ai';
 import { createTestAiServiceClient } from '@dxos/ai/testing';
 import {
   type ComputeGraph,
@@ -27,7 +28,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
 import { useDevtoolsState } from '../../../hooks';
-import { AiService } from "@dxos/ai";
 
 // TODO: reconcile with DebugPanel in ScriptPlugin
 

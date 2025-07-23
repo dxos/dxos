@@ -7,7 +7,7 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
+import { EdgeAiServiceClient, AiService } from '@dxos/ai';
 import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
@@ -45,7 +45,6 @@ import {
   createTemplateCircuit,
   createArtifactCircuit,
 } from './testing';
-import { AiService } from "@dxos/ai";
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
 

@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { AiResponse } from '@effect/ai';
 import { describe, it, vi } from '@effect/vitest';
 import { Chunk, Effect, Function, Stream } from 'effect';
-import { parseGptStream } from './AiParser';
-import { AiResponse } from '@effect/ai';
+
 import type { ContentBlock } from '@dxos/schema';
+
+import { parseGptStream } from './AiParser';
 
 describe('parser', () => {
   describe('accumulation', () => {

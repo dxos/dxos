@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 
 import { readDocument, writeDocument } from './tools';
-import { ToolId } from '@dxos/ai';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',

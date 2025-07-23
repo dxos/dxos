@@ -56,6 +56,7 @@ export const SequenceContainer = ({ role, sequence }: Pick<StackItemContentProps
     }
 
     // TODO(burdon): How should the queue be created?
+    // eslint-disable-next-line no-unused-vars
     const queue = space.queues.create();
 
     return new ToolRegistry([

@@ -3,8 +3,8 @@
 //
 
 import { AnthropicClient } from '@effect/ai-anthropic';
-import { Config, Layer, type ConfigError } from 'effect';
 import { FetchHttpClient } from '@effect/platform';
+import { Config, Layer, type ConfigError } from 'effect';
 
 import { AiServiceRouter } from '../experimental';
 import { type AiService } from '../service';

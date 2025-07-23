@@ -3,6 +3,7 @@
 //
 
 import { AnthropicClient } from '@effect/ai-anthropic';
+import { FetchHttpClient } from '@effect/platform';
 import { Config, Layer, ManagedRuntime } from 'effect';
 import { inspect } from 'node:util';
 import { afterAll, beforeAll, describe, test } from 'vitest';
@@ -16,7 +17,6 @@ import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { FetchHttpClient } from '@effect/platform';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
 

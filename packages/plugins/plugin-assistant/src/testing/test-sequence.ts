@@ -3,12 +3,10 @@
 //
 
 import { ToolId, ToolRegistry } from '@dxos/ai';
-import { EXA_API_KEY } from '@dxos/ai/testing';
 // import { createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { SequenceParser, type SequenceDefinition } from '@dxos/conductor';
 import { type DXN } from '@dxos/keys';
-import { DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 // TODO(dmaretskyi): make db available through services (same as function executor).

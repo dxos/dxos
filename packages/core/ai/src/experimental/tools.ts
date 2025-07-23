@@ -1,7 +1,13 @@
-import { BaseError } from '@dxos/errors';
-import { DataType, type ContentBlock } from '@dxos/schema';
-import { AiTool, AiToolkit, type AiError } from '@effect/ai';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type AiTool, AiToolkit, type AiError } from '@effect/ai';
 import { Context, Effect } from 'effect';
+
+import { BaseError } from '@dxos/errors';
+import { type DataType, type ContentBlock } from '@dxos/schema';
+
 import type { ToolId } from '../tools';
 
 export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}

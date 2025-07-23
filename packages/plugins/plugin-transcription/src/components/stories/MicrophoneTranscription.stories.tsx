@@ -117,6 +117,7 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
+      // eslint-disable-next-line no-unused-vars
       const AiService = new EdgeAiServiceClient({
         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
       });

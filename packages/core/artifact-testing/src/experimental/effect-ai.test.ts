@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { TestHelpers } from '@dxos/effect';
 import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
@@ -10,8 +9,9 @@ import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
 
-import { log } from '@dxos/log';
 import { AiParser } from '@dxos/ai';
+import { TestHelpers } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md

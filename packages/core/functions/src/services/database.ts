@@ -5,7 +5,7 @@
 import { Context, Effect, Layer } from 'effect';
 
 import type { Filter, Live, Obj, Query, Ref, Relation } from '@dxos/echo';
-import type { EchoDatabase, OneShotQueryResult, QueryFn, QueryResult } from '@dxos/echo-db';
+import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
 
 export class DatabaseService extends Context.Tag('DatabaseService')<

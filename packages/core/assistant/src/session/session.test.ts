@@ -231,6 +231,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
 });
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
+// eslint-disable-next-line no-unused-vars
 const CALENDAR_EVENTS: CalendarEvent[] = [
   Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',

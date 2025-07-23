@@ -1,10 +1,15 @@
-import { describe, it } from '@effect/vitest';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiTool, AiToolkit } from '@effect/ai';
-import { Context, Effect, Layer, Schema } from 'effect';
-import { BaseError } from '@dxos/errors';
+import { describe, it } from '@effect/vitest';
+import { Effect, Layer, Schema } from 'effect';
+
 import { log } from '@dxos/log';
-import { Tool, ToolId } from '../tools';
+
 import { ToolResolverService, ToolExecutionService } from './tools';
+import { ToolId } from '../tools';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (id: ToolId) =>

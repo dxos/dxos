@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type { AiResponse } from '@effect/ai';
+import { Effect, Function, Predicate, Stream } from 'effect';
+
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/schema';
-import type { AiResponse } from '@effect/ai';
-import { Effect, Function, Predicate, Stream } from 'effect';
+
 import { StreamTransform, type StreamBlock } from '../service';
 
 /**
@@ -205,7 +211,7 @@ export const parseGptStream =
                     input: part.params,
                   } satisfies ContentBlock.ToolCall);
                   break;
-                case 'ReasoningPart':
+                case 'ReasoningPart': {
                   yield* flushText();
                   const block: ContentBlock.Reasoning = {
                     _tag: 'reasoning',
@@ -216,6 +222,7 @@ export const parseGptStream =
                   }
                   yield* emitFullBlock(block);
                   break;
+                }
                 case 'RedactedReasoningPart':
                   yield* flushText();
                   yield* emitFullBlock({

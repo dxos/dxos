@@ -1,4 +1,9 @@
-import { Context, Effect, flow, Option } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Context, Effect, flow, type Option } from 'effect';
+
 import { ServiceNotAvailableError } from '../errors';
 
 export namespace ServiceRegistry {

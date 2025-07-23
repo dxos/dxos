@@ -5,6 +5,7 @@
 import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, ToolId } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { AISession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
@@ -12,9 +13,8 @@ import { contextFromScope } from '@dxos/effect';
 import { QueueService, ToolResolverService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
-
-import { AiService } from '@dxos/ai';
 import { DataType } from '@dxos/schema';
+
 import { EventLogger } from '../../services';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
@@ -117,10 +117,9 @@ export const gptNode = defineComputeNode({
   exec: (input) =>
     Effect.gen(function* () {
       const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
-      const { client: aiClient } = yield* AiService;
-      const { queues } = yield* QueueService;
-      const { toolResolver } = yield* ToolResolverService;
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
+
+      const { queues } = yield* QueueService;
 
       const historyMessages = conversation
         ? yield* Effect.tryPromise({

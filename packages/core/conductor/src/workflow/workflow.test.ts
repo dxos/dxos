@@ -5,6 +5,7 @@
 import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
+import { AiService } from '@dxos/ai';
 import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
@@ -28,7 +29,6 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
-import { AiService } from "@dxos/ai";
 
 describe('workflow', () => {
   test('run', async () => {

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, identity, Option, Schema, SchemaAST } from 'effect';
 
 import type { Obj, Relation } from '@dxos/echo';
@@ -29,7 +30,6 @@ import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable } from '@dxos/util';
-import { AiTool, AiToolkit } from '@effect/ai';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -157,7 +157,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
 
 export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWriterToolkit>) => {
   const { schema } = Context.get(
-    toolkit.tools['graph_writer'].annotations as Context.Context<GraphWriterSchema>,
+    toolkit.tools.graph_writer.annotations as Context.Context<GraphWriterSchema>,
     GraphWriterSchema,
   );
   return toolkit.toLayer({

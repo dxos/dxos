@@ -1,6 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Context, Effect, Layer } from 'effect';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
+
 import type { Resource } from '@dxos/context';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+
 import { DatabaseService, QueueService } from '../services';
 
 // TODO(dmaretskyi): Extract to effect-utils.

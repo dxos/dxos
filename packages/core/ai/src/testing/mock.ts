@@ -7,15 +7,15 @@
 
 import { type Signal, signal } from '@preact/signals-core';
 
-declare const createGenerationStream: any;
-declare const GenerationStreamImpl: any;
-
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { createReplaySSEStream } from './test-stream';
 import { type GenerationStream, type AiServiceClient } from '../service';
 import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
+
+declare const createGenerationStream: any;
+declare const GenerationStreamImpl: any;
 
 export type SpyAiServiceMode = 'mock' | 'spy';
 

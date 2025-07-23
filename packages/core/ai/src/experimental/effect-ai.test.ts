@@ -1,14 +1,20 @@
-import { Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
-import { AiService } from '../service';
-import { AiServiceTestingPreset } from '../testing';
+
+import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { DataType, type ContentBlock } from '@dxos/schema';
+
 import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { getToolCalls, runTool } from './tools';
+import { AiService } from '../service';
+import { AiServiceTestingPreset } from '../testing';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -49,7 +55,7 @@ describe('effect AI client', () => {
     'streaming',
     Effect.fn(
       function* ({ expect }) {
-        let history: DataType.Message[] = [];
+        const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
             sender: {
