@@ -14,6 +14,7 @@ import { Board, type BoardController, type BoardRootProps } from '@dxos/react-ui
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
+// TODO(thure): There is debate about having to rename either the type or the React component. A best practice should be chosen and either Board or Kanban (or both) should be refactored to apply it.
 import { type Board as BoardType } from '../types';
 
 export type BoardContainerProps = {
