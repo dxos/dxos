@@ -28,7 +28,7 @@ describe.skip('LLM EntityExtraction', () => {
               model: '@anthropic/claude-3-5-haiku-20241022',
             },
           }),
-        } as any, // TODO(burdon): !!!
+        } as any, // TODO(burdon): Rewrite test.
       }),
     );
   });

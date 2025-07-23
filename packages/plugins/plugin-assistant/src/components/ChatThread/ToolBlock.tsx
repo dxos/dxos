@@ -49,7 +49,7 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
 
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
           return {
-            title: getToolCaption(request.tool, undefined), // block.status), // TODO(burdon): !!!
+            title: getToolCaption(request.tool, undefined), // block.status), // TODO(burdon): Get status?
             block,
           };
         }

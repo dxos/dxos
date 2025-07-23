@@ -63,7 +63,6 @@ describe.skip('SentenceNormalization', () => {
   const getExecutor = () => {
     return new FunctionExecutor(
       new ServiceContainer().setServices({
-        // TODO(burdon): !!!
         // ai: {
         //   client: REMOTE_AI
         //     ? new EdgeAiServiceClient({

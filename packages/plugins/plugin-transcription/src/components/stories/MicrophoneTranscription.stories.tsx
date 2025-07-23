@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
@@ -117,14 +115,13 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
-      // eslint-disable-next-line no-unused-vars
-      const AiService = new EdgeAiServiceClient({
-        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-      });
       executor = new FunctionExecutor(
         new ServiceContainer().setServices({
-          // TODO(burdon): !!!
-          // ai: { client: AiService },
+          // ai: {
+          //   client: new EdgeAiServiceClient({
+          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+          //   }),
+          // },
           // database: { db: space!.db },
         }),
       );

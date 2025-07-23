@@ -49,7 +49,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       prompt: '',
       tools: [],
       toolResolver: new ToolRegistry([]),
-    } as any); // TODO(burdon): !!!
+    } as any); // TODO(burdon): Rewrite test.
 
     return {
       message: create(DataType.Message, {

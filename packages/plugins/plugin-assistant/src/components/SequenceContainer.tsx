@@ -60,7 +60,6 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     const queue = space.queues.create();
 
     return new ToolRegistry([
-      // TODO(burdon): !!!
       // createExaTool({ apiKey: EXA_API_KEY }),
       // createLocalSearchTool(space.db, queue),
       // createGraphWriterTool({

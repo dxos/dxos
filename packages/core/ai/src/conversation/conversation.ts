@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): !!!
+// TODO(burdon): Remove file?
 // @ts-nocheck
 
 import { Obj } from '@dxos/echo';
@@ -61,7 +61,6 @@ export const runLLM = async ({ aiClient, system, model, history = [], tools, log
       logger?.(event);
     }
 
-    // TODO(burdon): !!!
     await stream.complete();
     const messages: DataType.Message[] = [];
     const message = messages.at(-1);
