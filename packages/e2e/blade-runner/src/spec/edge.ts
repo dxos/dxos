@@ -37,6 +37,8 @@ export type EdgeTestSpec = {
 
 type EdgeReplicationResult = {
   allCombinedReplicationTime: number;
+  functionUploadTime: number;
+  objectsCreationTime: number;
 };
 
 export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationResult> {
@@ -44,11 +46,11 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 1000,
-        textSize: 10,
+        documentAmount: 2000,
+        textSize: 100,
         mutationAmount: 0,
       },
-      maxDocumentsPerInvocation: 100,
+      maxDocumentsPerInvocation: 2000,
       indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
         runtime: {
@@ -63,10 +65,12 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
           services: {
             agentHosting: {
               type: 'AGENTHOSTING_API',
-              server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              // server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              server: 'http://localhost:8787/v1alpha1/',
             },
             edge: {
-              url: 'https://edge.dxos.workers.dev',
+              // url: 'https://edge.dxos.workers.dev',
+              url: 'http://localhost:8787',
             },
           },
         },
@@ -86,12 +90,14 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     await replicant.brain.createIdentity();
     await replicant.brain.startAgent();
 
+    performance.mark('upload:start');
     const func = await replicant.brain.deployFunction();
-    log.info('uploaded function', { func });
+    performance.mark('upload:end');
+    const functionUploadTime = performance.measure('upload', 'upload:start', 'upload:end').duration;
 
     const spaceId = await replicant.brain.createSpace({ waitForSpace: false });
-    log.info('created spaceId', { spaceId });
 
+    performance.mark('objects:start');
     let createdDocuments = 0;
     const promises = [];
     while (createdDocuments < params.spec.dataGeneration.documentAmount) {
@@ -120,17 +126,19 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     }
     log.info('waiting for all functions to finish', { amountOfInvocations: promises.length });
     await Promise.all(promises);
-    await replicant.brain.reinitializeClient({ config: configEnabledEdgeSync, indexing: params.spec.indexing });
+    log.info('all functions finished');
+    performance.mark('objects:end');
+    const objectsCreationTime = performance.measure('objects', 'objects:start', 'objects:end').duration;
 
+    await replicant.brain.reinitializeClient({ config: configEnabledEdgeSync, indexing: params.spec.indexing });
     performance.mark('sync:start');
     await replicant.brain.waitForReplication({ spaceId, minDocuments: params.spec.dataGeneration.documentAmount });
     performance.mark('sync:end');
     const allCombinedReplicationTime = performance.measure('sync', 'sync:start', 'sync:end').duration;
 
-    await replicant.brain.destroyClient();
     replicant.kill();
 
-    return { allCombinedReplicationTime };
+    return { allCombinedReplicationTime, functionUploadTime, objectsCreationTime };
   }
 
   async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeReplicationResult) {

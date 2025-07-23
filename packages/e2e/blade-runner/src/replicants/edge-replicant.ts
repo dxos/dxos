@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { asyncTimeout, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { asyncTimeout, Trigger, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';
@@ -100,7 +100,7 @@ export class EdgeReplicant {
 
   @trace.span()
   async createSpace({ waitForSpace = false }: { waitForSpace?: boolean } = {}): Promise<SpaceId> {
-    await sleep(1000);
+    log.info('creating space');
     invariant(this._client, 'no client');
     const agentDevice = this._client.halo.devices
       .get()
@@ -175,19 +175,19 @@ export class EdgeReplicant {
     invariant(space, 'space not found');
 
     const replicationIsDone = new Trigger();
-    let lastPrintLocalDocumentCount: number = -100;
+    let lastDifferentDocuments: number = Infinity;
     const unsub = space.db.coreDatabase.subscribeToSyncState(Context.default(), (state) => {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&
         state.peers[0].localDocumentCount >= (minDocuments ?? 0)
       ) {
-        log.info('replication is done', { state });
+        log.info('replication is done', { state, time: Date.now() });
         replicationIsDone.wake();
       }
-      if (state.peers?.length === 1 && state.peers[0].localDocumentCount - lastPrintLocalDocumentCount > 100) {
-        lastPrintLocalDocumentCount = state.peers[0].localDocumentCount;
+      if (state.peers?.length === 1 && lastDifferentDocuments - state.peers[0].differentDocuments > 100) {
         log.info('sync state', { state, time: Date.now() });
+        lastDifferentDocuments = state.peers[0].differentDocuments;
       }
     });
 
