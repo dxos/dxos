@@ -214,7 +214,6 @@ export const SpacePlugin = ({
       id: `${meta.id}/module/whitelist-schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () =>
-        // TODO(wittjosiah): Better support these schemas.
         contributes(ClientCapabilities.SchemaWhiteList, [
           DataType.Event,
           DataType.Organization,
