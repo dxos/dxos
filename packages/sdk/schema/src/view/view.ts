@@ -2,29 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Effect, Option, pipe, Schema, SchemaAST } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, Type } from '@dxos/echo';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
   LabelAnnotation,
-  type PropertyMetaAnnotation,
   PropertyMetaAnnotationId,
   QueryType,
+  ReferenceAnnotationId,
+  type ReferenceAnnotationValue,
+  type RuntimeSchemaRegistry,
   toEffectSchema,
   TypedObject,
+  TypeEnum,
 } from '@dxos/echo-schema';
-import { findAnnotation, type JsonPath } from '@dxos/effect';
+import { findAnnotation, type JsonProp, type JsonPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { live, type Live } from '@dxos/live-object';
-import { stripUndefined } from '@dxos/util';
 
-import { FieldSchema, type FieldType } from './field';
+import { FieldSchema } from './field';
+import { ProjectionModel } from './projection-model';
 import { getSchemaProperties } from '../properties';
 
 export const Projection = Schema.Struct({
@@ -106,61 +110,165 @@ export const createView = ({
   presentation,
   fields: include,
 }: CreateViewProps): Live<View> => {
-  const fields: FieldType[] = [];
-  if (jsonSchema) {
-    const schema = toEffectSchema(jsonSchema);
-    const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
-    const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
-    for (const property of properties) {
-      if (include && !include.includes(property.name)) {
-        continue;
-      }
-
-      const referencePath =
-        property.format === FormatEnum.Ref
-          ? (findAnnotation<PropertyMetaAnnotation>(property.ast, PropertyMetaAnnotationId)
-              ?.referenceProperty as JsonPath)
-          : undefined;
-
-      fields.push(
-        stripUndefined({
-          id: createFieldId(),
-          path: property.name as JsonPath,
-          referencePath,
-        }),
-      );
-    }
-  }
-
-  // Sort fields to match the order in the params.
-  if (include) {
-    fields.sort((a, b) => {
-      const indexA = include.indexOf(a.path);
-      const indexB = include.indexOf(b.path);
-      return indexA - indexB;
-    });
-  }
-
-  return Obj.make(View, {
+  const view = Obj.make(View, {
     name,
     query: {
       typename,
     },
     projection: {
       schema: overrideSchema,
-      fields,
+      fields: [],
+      hiddenFields: [],
     },
     presentation: Ref.make(presentation),
   });
+
+  const projection = new ProjectionModel(jsonSchema, view.projection);
+  const schema = toEffectSchema(jsonSchema);
+  const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  for (const property of properties) {
+    if (include && !include.includes(property.name)) {
+      continue;
+    }
+
+    projection.showFieldProjection(property.name as JsonProp);
+  }
+
+  // Sort fields to match the order in the params.
+  if (include) {
+    view.projection.fields.sort((a, b) => {
+      const indexA = include.indexOf(a.path);
+      const indexB = include.indexOf(b.path);
+      return indexA - indexB;
+    });
+  }
+
+  return view;
 };
 
-export type CreateViewFromSpaceProps = {
+const getSchema = async (
+  dxn: DXN,
+  registry?: RuntimeSchemaRegistry,
+  echoRegistry?: EchoSchemaRegistry,
+): Promise<Type.Obj.Any | undefined> => {
+  const staticSchema = registry?.getSchemaByDXN(dxn);
+  if (staticSchema) {
+    return staticSchema;
+  }
+
+  const typeDxn = dxn.asTypeDXN();
+  if (!typeDxn) {
+    return;
+  }
+
+  const { type, version } = typeDxn;
+  const echoSchema = await echoRegistry?.query({ typename: type, version }).firstOrUndefined();
+  return echoSchema?.snapshot;
+};
+
+type CreateViewWithReferencesProps = CreateViewProps & {
+  // TODO(wittjosiah): Unify these.
+  registry?: RuntimeSchemaRegistry;
+  echoRegistry?: EchoSchemaRegistry;
+};
+
+/**
+ * Create view from provided schema with references for fields that are references.
+ * Referenced schemas are resolved in the provided registries.
+ */
+export const createViewWithReferences = async ({
+  name,
+  typename,
+  jsonSchema,
+  overrideSchema,
+  presentation,
+  fields: include,
+  registry,
+  echoRegistry,
+}: CreateViewWithReferencesProps): Promise<Live<View>> => {
+  const view = Obj.make(View, {
+    name,
+    query: {
+      typename,
+    },
+    projection: {
+      schema: overrideSchema,
+      fields: [],
+      hiddenFields: [],
+    },
+    presentation: Ref.make(presentation),
+  });
+
+  const projection = new ProjectionModel(jsonSchema, view.projection);
+  const schema = toEffectSchema(jsonSchema);
+  const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
+  const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  for (const property of properties) {
+    if (include && !include.includes(property.name)) {
+      continue;
+    }
+
+    projection.showFieldProjection(property.name as JsonProp);
+
+    await Effect.gen(function* () {
+      const referenceDxn = yield* pipe(
+        findAnnotation<ReferenceAnnotationValue>(property.ast, ReferenceAnnotationId),
+        Option.fromNullable,
+        Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
+      );
+
+      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
+
+      const referencePath = pipe(
+        Option.fromNullable(referenceSchema),
+        Option.flatMap(LabelAnnotation.get),
+        Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
+        // TODO(wittjosiah): Remove. Currently needed because `LabelAnnotation` is being overridden.
+        Option.getOrElse(() => 'name'),
+      );
+
+      if (referenceSchema && referencePath) {
+        const fieldId = yield* Option.fromNullable(view.projection.fields?.find((f) => f.path === property.name)?.id);
+        projection.setFieldProjection({
+          field: {
+            id: fieldId,
+            path: property.name as JsonPath,
+            referencePath: referencePath as JsonPath,
+          },
+          props: {
+            property: property.name as JsonProp,
+            type: TypeEnum.Ref,
+            format: FormatEnum.Ref,
+            referenceSchema: Type.getTypename(referenceSchema),
+            title: property.title,
+          },
+        });
+      }
+    }).pipe(
+      Effect.catchIf(
+        (error) => error._tag === 'NoSuchElementException',
+        () => Effect.succeed('Recovering from NoSuchElementException'),
+      ),
+      Effect.runPromise,
+    );
+  }
+
+  // Sort fields to match the order in the params.
+  if (include) {
+    view.projection.fields.sort((a, b) => {
+      const indexA = include.indexOf(a.path);
+      const indexB = include.indexOf(b.path);
+      return indexA - indexB;
+    });
+  }
+
+  return view;
+};
+
+export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'jsonSchema' | 'registry'> & {
   client?: Client;
   space: Space;
-  name?: string;
-  typename?: string;
-  presentation: Obj.Any;
-  fields?: string[];
   createInitial?: number;
 };
 
@@ -170,11 +278,9 @@ export type CreateViewFromSpaceProps = {
 export const createViewFromSpace = async ({
   client,
   space,
-  name,
   typename,
-  presentation,
-  fields,
   createInitial = 1,
+  ...props
 }: CreateViewFromSpaceProps): Promise<{ jsonSchema: JsonSchemaType; view: View }> => {
   if (!typename) {
     const [schema] = await space.db.schemaRegistry.register([createDefaultSchema()]);
@@ -196,7 +302,13 @@ export const createViewFromSpace = async ({
 
   return {
     jsonSchema,
-    view: createView({ name, typename, jsonSchema, presentation, fields }),
+    view: await createViewWithReferences({
+      ...props,
+      typename,
+      jsonSchema,
+      registry: client?.graph.schemaRegistry,
+      echoRegistry: space.db.schemaRegistry,
+    }),
   };
 };
 

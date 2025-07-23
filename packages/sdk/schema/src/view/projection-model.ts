@@ -281,8 +281,7 @@ export class ProjectionModel {
 
         if (referenceSchema) {
           Object.assign(jsonProperty, createSchemaReference(referenceSchema));
-          type = undefined;
-          format = undefined;
+          return;
         } else if (format) {
           type = formatToType[format];
         }

@@ -41,7 +41,7 @@ describe('ViewEditor', () => {
   test('renders view editor', async () => {
     await Default.run();
     await waitForViewEditor();
-    expect(screen.getByText('View')).toBeInTheDocument();
+    expect(screen.getByText('Typename')).toBeInTheDocument();
   });
 
   test('change property name', async () => {

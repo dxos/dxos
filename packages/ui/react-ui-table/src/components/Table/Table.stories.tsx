@@ -16,11 +16,7 @@ import {
   EchoObject,
   GeneratorAnnotation,
   FormatAnnotation,
-  TypedObject,
   PropertyMetaAnnotationId,
-  type JsonPath,
-  type JsonProp,
-  TypeEnum,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -30,7 +26,7 @@ import { Filter, useQuery, useSchema, live, type Space } from '@dxos/react-clien
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, DataType, ProjectionModel, createFieldId } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, DataType, ProjectionModel } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -147,31 +143,32 @@ const useTestTableModel = () => {
   };
 };
 
-const createTestSchema = () =>
-  TypedObject({
-    typename: `example.com/type/${PublicKey.random().truncate()}`,
-    version: '0.1.0',
-  })({
-    title: Schema.optional(Schema.String).annotations({ title: 'Title' }),
-    urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
-    status: Schema.optional(
-      Schema.Literal('todo', 'in-progress', 'done')
-        .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-        .annotations({
-          title: 'Status',
-          [PropertyMetaAnnotationId]: {
-            singleSelect: {
-              options: [
-                { id: 'todo', title: 'Todo', color: 'indigo' },
-                { id: 'in-progress', title: 'In Progress', color: 'purple' },
-                { id: 'done', title: 'Done', color: 'amber' },
-              ],
-            },
+const TestSchema = Schema.Struct({
+  // TODO(wittjosiah): Should be title. Currently name to work with default label.
+  name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+  urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
+  status: Schema.optional(
+    Schema.Literal('todo', 'in-progress', 'done')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'todo', title: 'Todo', color: 'indigo' },
+              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'done', title: 'Done', color: 'amber' },
+            ],
           },
-        }),
-    ),
-    description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  });
+        },
+      }),
+  ),
+  description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  parent: Schema.optional(Schema.suspend((): Type.Ref<TestSchema> => Type.Ref(TestSchema))).annotations({
+    title: 'Parent',
+  }),
+}).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
 const StoryViewEditor = ({
   view,
@@ -283,35 +280,14 @@ const meta: Meta<StoryProps> = {
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const [schema] = await space.db.schemaRegistry.register([createTestSchema()]);
+        const [schema] = await space.db.schemaRegistry.register([TestSchema]);
         const { view } = await createTable({ client, space, typename: schema.typename });
-        // TODO(wittjosiah): `createTable` should automatically size columns based on type.
-        const table = view.presentation.target as TableView;
-        table.sizes['urgent' as JsonPath] = 100;
-
         space.db.add(view);
-
-        // TODO(wittjosiah): `createView` should automatically setup ref fields properly.
-        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
-        projection.setFieldProjection({
-          field: {
-            id: createFieldId(),
-            path: 'parent' as JsonPath,
-            referencePath: 'title' as JsonPath,
-          },
-          props: {
-            property: 'parent' as JsonProp,
-            type: TypeEnum.Ref,
-            format: FormatEnum.Ref,
-            referenceSchema: schema.typename,
-            title: 'Parent',
-          },
-        });
 
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(schema, {
-              title: faker.lorem.sentence(),
+              name: faker.lorem.sentence(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.paragraph(),
             }),

@@ -15,18 +15,18 @@ import {
   Ref,
   TypeAnnotationId,
   TypeEnum,
-  TypedObject,
   getPropertyMetaAnnotation,
   toJsonSchema,
   type JsonPath,
   type JsonProp,
   EchoObject,
+  RuntimeSchemaRegistry,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
 import { ProjectionModel } from './projection-model';
-import { createView, type Projection } from './view';
+import { createView, createViewWithReferences, type Projection } from './view';
 import { DataType } from '../common';
 
 registerSignalsRuntime();
@@ -137,39 +137,22 @@ describe('ProjectionModel', () => {
   });
 
   test('gets and updates references', async ({ expect }) => {
-    const { db } = await builder.createDatabase();
-    const registry = new EchoSchemaRegistry(db);
+    const registry = new RuntimeSchemaRegistry();
+    registry.addSchema([DataType.Organization]);
 
-    class Organization extends TypedObject({ typename: 'example.com/type/Organization', version: '0.1.0' })({
-      name: Schema.String,
-    }) {}
-
+    const typename = 'example.com/type/Person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
-      organization: Ref(Organization),
-    }).annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
-        typename: 'example.com/type/Person',
-        version: '0.1.0',
-      },
-    });
+      organization: Ref(DataType.Organization),
+    }).pipe(Type.Obj({ typename, version: '0.1.0' }));
+    const jsonSchema = toJsonSchema(schema);
 
-    const [mutable] = await registry.register([schema]);
     const presentation = Obj.make(Type.Expando, {});
-    const view = createView({ typename: mutable.typename, jsonSchema: mutable.jsonSchema, presentation });
-    const projection = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const view = await createViewWithReferences({ typename, jsonSchema, presentation, registry });
 
-    projection.setFieldProjection({
-      field: {
-        id: getFieldId(view.projection, 'organization'),
-        path: 'organization' as JsonPath,
-        referencePath: 'name' as JsonPath,
-      },
-    });
-
+    const projection = new ProjectionModel(jsonSchema, view.projection);
     const { field, props } = projection.getFieldProjection(getFieldId(view.projection, 'organization'));
 
     expect(field).to.deep.eq({
@@ -182,16 +165,16 @@ describe('ProjectionModel', () => {
       property: 'organization',
       type: TypeEnum.Ref,
       format: FormatEnum.Ref,
-      referenceSchema: 'example.com/type/Organization',
+      referenceSchema: 'dxos.org/type/Organization',
       referencePath: 'name',
     });
 
     // Note: `referencePath` is stripped from schema.
-    expect(mutable.jsonSchema.properties?.['organization' as const]).to.deep.eq({
+    expect(jsonSchema.properties?.['organization' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Organization',
+          $ref: 'dxn:type:dxos.org/type/Organization',
         },
         schemaVersion: '0.1.0',
       },
