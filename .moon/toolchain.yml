@@ -1,4 +1,5 @@
 # https://moonrepo.dev/docs/config/toolchain
+$schema: 'https://moonrepo.dev/schemas/toolchain.json'
 node:
   packageManager: pnpm
   # TODO(wittjosiah): Doesn't seem to always produce stable package.json.
