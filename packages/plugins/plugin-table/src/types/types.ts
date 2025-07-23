@@ -21,6 +21,13 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 export namespace TableAction {
   const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
 
+  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${TABLE_ACTION}/on-space-created`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
+  }) {}
+
   export class OnSchemaAdded extends Schema.TaggedClass<OnSchemaAdded>()(`${TABLE_ACTION}/on-schema-added`, {
     input: Schema.Struct({
       space: SpaceSchema,

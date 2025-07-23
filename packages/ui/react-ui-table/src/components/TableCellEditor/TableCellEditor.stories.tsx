@@ -7,10 +7,11 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { type EchoSchema, isMutable } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { Filter, useQuery, live } from '@dxos/react-client/echo';
+import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { defaultRowSize, Grid, type GridEditing } from '@dxos/react-ui-grid';
 import { createDefaultSchema, DataType } from '@dxos/schema';
@@ -94,7 +95,7 @@ const meta: Meta<StoryProps> = {
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
-            live(schema, {
+            Obj.make(schema, {
               title: faker.person.fullName(),
               status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
               description: faker.lorem.sentence(),

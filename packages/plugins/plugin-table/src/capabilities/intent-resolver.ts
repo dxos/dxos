@@ -18,11 +18,24 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { createTable } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: TableAction.OnSpaceCreated,
+      resolve: ({ space }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object } = yield* dispatch(
+            createIntent(TableAction.Create, { space, typename: DataType.Task.typename }),
+          );
+          space.db.add(object);
+          space.properties.staticRecords = [DataType.Task.typename];
+        }),
+    }),
     createResolver({
       intent: TableAction.OnSchemaAdded,
       resolve: ({ space, schema }) =>

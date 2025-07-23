@@ -261,11 +261,12 @@ export const createViewWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'jsonSchema' | 'registry'> & {
-  client?: Client;
-  space: Space;
-  createInitial?: number;
-};
+export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'typename' | 'jsonSchema' | 'registry'> &
+  Partial<Pick<CreateViewWithReferencesProps, 'typename'>> & {
+    client?: Client;
+    space: Space;
+    createInitial?: number;
+  };
 
 /**
  * Create view from a schema in provided space or client.
