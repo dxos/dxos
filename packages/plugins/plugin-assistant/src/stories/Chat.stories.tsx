@@ -193,12 +193,13 @@ const getDecorators = ({
           );
 
           // TODO(burdon): Add to conversation context.
-          space.db.add(
+          const doc = space.db.add(
             Obj.make(DocumentType, {
               name: 'Tasks',
               content: Ref.make(Obj.make(DataType.Text, { content: '' })),
             }),
           );
+          log.info('doc', { doc: Obj.getDXN(doc) });
 
           // Clone blueprints and bind to conversation.
           const binder = new ContextBinder(await chat.queue.load());

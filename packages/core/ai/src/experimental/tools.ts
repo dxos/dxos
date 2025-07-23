@@ -49,7 +49,8 @@ export const runTool: <Tools extends AiTool.Any>(
   function* (toolkit, toolCall) {
     return yield* toolkit.handle(toolCall.name as any, toolCall.input as any).pipe(
       Effect.map(
-        (result) =>
+        // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
+        ({ result }) =>
           ({
             _tag: 'toolResult',
             toolCallId: toolCall.toolCallId,
