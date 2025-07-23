@@ -18,9 +18,9 @@ const DefaultStory = () => {
   return (
     <div className='flex grow mx-8 gap-8 items-center overflow-hidden'>
       <Gameboard.Root model={model} onDrop={(move) => model.makeMove(move)}>
-        <Gameboard.Contents>
+        <Gameboard.Content>
           <Chessboard />
-        </Gameboard.Contents>
+        </Gameboard.Content>
       </Gameboard.Root>
       <ChessPanel model={model} classNames='w-[200px]' />
     </div>

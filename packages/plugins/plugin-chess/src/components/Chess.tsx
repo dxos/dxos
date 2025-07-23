@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { Chess as ChessJS } from 'chess.js';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
@@ -11,11 +11,11 @@ import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxo
 
 import { type ChessType } from '../types';
 
-const ChessRoot = ({ game }: { game: ChessType }) => {
+const ChessRoot = ({ game, children }: PropsWithChildren<{ game: ChessType }>) => {
   const model = useMemo(() => new ChessModel(), []);
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {
-      const chess = new Chess();
+      const chess = new ChessJS();
       if (game.pgn) {
         try {
           chess.loadPgn(game.pgn);
