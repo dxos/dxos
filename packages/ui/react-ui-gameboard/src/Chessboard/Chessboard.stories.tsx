@@ -44,7 +44,9 @@ const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps)
         </Button>
       </Toolbar.Root>
       <Gameboard.Root model={model} onDrop={handleDrop}>
-        <Chessboard orientation={orientation} {...props} />
+        <Gameboard.Content>
+          <Chessboard orientation={orientation} {...props} />
+        </Gameboard.Content>
       </Gameboard.Root>
     </div>
   );
