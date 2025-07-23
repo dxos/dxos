@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiLanguageModel } from '@effect/ai';
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { Context, Effect, Layer, Option } from 'effect';
 
 import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
-import type { LLMModel as ModelName } from '../types';
-import type { AiLanguageModel } from '@effect/ai';
+import { type LLMModel as ModelName } from '../types';
 
 const LmStudioClient = OpenAiClient.layer({
   apiUrl: 'http://localhost:1234/v1',
@@ -39,9 +39,6 @@ export const AiServiceRouter = Layer.effect(
             return Layer.fail(new AiModelNotAvailableError(model));
         }
       },
-      get client(): never {
-        throw new Error('Client not available');
-      },
     });
   }),
 );
@@ -58,11 +55,6 @@ export class AiModelResolver extends Context.Tag('AiModelResolver')<
       const resolver = yield* AiModelResolver;
       return {
         model: (name) => resolver.model(name),
-
-        // TODO(dmaretskyi): Remove.
-        get client(): never {
-          throw new Error('Client not available');
-        },
       } satisfies Context.Tag.Service<AiService>;
     }),
   );

@@ -11,7 +11,7 @@ import { beforeAll, describe, test } from 'vitest';
 import { EdgeAiServiceClient, MixedStreamParser, OllamaAiServiceClient, AiService } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
@@ -32,9 +32,10 @@ const summarizationFn = defineFunction({
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',
+        // TODO(burdon): Factor out and test prompts.
         systemPrompt: trim`
-          You are a Transcript Summarizer.
-          Transcript Summarizer update an existing summary within <summary> tags with a new transcript that is placed in <transcript> tags.
+          Your job is to summarize a meeting transcript.
+          Transcript Summarizer updates an existing summary within <summary> tags with a new transcript that is placed in <transcript> tags.
           Transcript Summarizer updates only the relevant parts of the summary.
           If there's no summary, create a new one.
           Transcript Summarizer outputs only the summary texts and nothing else.
@@ -42,10 +43,9 @@ const summarizationFn = defineFunction({
           Transcript Summarizer keeps the unrelated parts of the summary untouched.
           The Transcript Summarizer errs on the side of being too verbose.
           The Transcript Summarizer outputs the entire update summary.
-          Transcript Summarizer outputs the entire update summary.
           The summary is formatted as hierarchical markdown bullet points with no headings.
           The hierarchical structure is deeply nested.
-          The summarizer formats the bullets with "-" symbol as prefix and two spaces indentation.
+          The Transcript Summarizer formats the bullets with "-" symbol as prefix and two spaces indentation.
           The Transcript Summarizer knows that the content of transcript will be updated solely by its output.
           The Transcript Summarizer outputs only the summary text.
         `,
@@ -100,6 +100,7 @@ const refinementFn = defineFunction({
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',
+        // TODO(burdon): Factor out and test prompts.
         systemPrompt: trim`
           You are a Transcript Summary Refiner.
           Transcript Summary Refiner works on a history of evolving summaries that were generated based on the transcript.
@@ -110,8 +111,8 @@ const refinementFn = defineFunction({
           The Transcript Summary Refiner updates the summary to be more structured.
           The Transcript Summary Refiner errs on the side of being too verbose.
           The Transcript Summary Refiner errs on keeping the original summary structure.
-          Transcript Summary Refiner outputs the entire update summary.
-          The summary is formatted as hierarchical markdown bullet points with no headings.
+          The Transcript Summary Refiner outputs the entire update summary.
+          The Transcript Summary is formatted as hierarchical markdown bullet points with no headings.
           The hierarchical structure is deeply nested.
           The Transcript Summary Refiner formats the bullets with "-" symbol as prefix and two spaces indentation.
           The Transcript Summary Refiner knows that the content of transcript will be updated solely by its output.

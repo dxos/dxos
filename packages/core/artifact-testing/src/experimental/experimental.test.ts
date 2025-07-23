@@ -6,17 +6,17 @@ import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
 import { beforeAll, describe, test } from 'vitest';
 
-import { createTool, ToolRegistry, ToolResult, AiService, ToolId } from '@dxos/ai';
+import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AISession, researchFn } from '@dxos/assistant';
 import {
+  DEFAULT_INPUT,
   NODE_INPUT,
   NODE_OUTPUT,
   ComputeGraphModel,
   type GptOutput,
   ValueBag,
   computeGraphToGraphViz,
-  DEFAULT_INPUT,
 } from '@dxos/conductor';
 import { compileSequence, SequenceMachine, SequenceParser, setConsolePrinter } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
@@ -125,11 +125,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     await db.flush({ indexes: true });
 
     const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
-    const { client } = serviceContainer.getService(AiService);
     setConsolePrinter(machine, true);
-    console.log(client);
-
-    await machine.runToCompletion({ aiClient: client, input: [org] });
+    // const { client } = serviceContainer.getService(AiService);
+    // await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });
   });
 

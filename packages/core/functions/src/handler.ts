@@ -79,7 +79,7 @@ export interface SpaceAPI {
 
   get db(): EchoDatabase;
 
-  // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
+  // TODO(dmaretskyi): Align with echo api: queues.get(id).append(items);
   get queues(): QueuesAPI;
 }
 

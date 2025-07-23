@@ -5,11 +5,11 @@
 import { type Context } from 'effect';
 
 import {
+  AiService,
+  type AiServiceClient,
   type AiServiceEdgeClientOptions,
   EdgeAiServiceClient,
-  type AiServiceClient,
   ToolRegistry,
-  AiService,
 } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';

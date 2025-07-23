@@ -5,18 +5,16 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
-import type { AiModelNotAvailableError } from '../errors';
+import { type AiModelNotAvailableError } from '../errors';
 import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
 
+/**
+ *
+ */
 export class AiService extends Context.Tag('AiService')<
   AiService,
   {
     readonly model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
-
-    /**
-     * @deprecated
-     */
-    readonly client: AiServiceClient;
   }
 >() {
   static model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, AiService> =
@@ -26,28 +24,21 @@ export class AiService extends Context.Tag('AiService')<
         Layer.unwrapEffect,
       );
 
+  /** @deprecated */
   static make = (client: AiServiceClient): Context.Tag.Service<AiService> => {
     return {
       model(model) {
         throw new Error('Not implemented');
       },
-
-      get client() {
-        return client;
-      },
     };
   };
 
-  static makeLayer = (client: AiServiceClient): Layer.Layer<AiService> =>
-    Layer.succeed(AiService, AiService.make(client));
+  // static makeLayer = (client: AiServiceClient): Layer.Layer<AiService> =>
+  //   Layer.succeed(AiService, AiService.make(client));
 
   static notAvailable = Layer.succeed(AiService, {
     model(model) {
       throw new Error('Not implemented');
-    },
-
-    get client(): AiServiceClient {
-      throw new Error('AiService not available');
     },
   });
 }

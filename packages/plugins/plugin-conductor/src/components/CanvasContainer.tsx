@@ -56,6 +56,7 @@ const useGraphController = (canvas: CanvasBoardType) => {
     if (!controller) {
       return;
     }
+
     void controller.open();
     return () => {
       void controller.close();
