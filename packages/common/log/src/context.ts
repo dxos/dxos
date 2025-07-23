@@ -16,7 +16,7 @@ export type LogContext = Record<string, any> | Error | any;
  */
 export interface LogEntry {
   level: LogLevel;
-  message: string;
+  message?: string;
   context?: LogContext;
   meta?: CallMetadata;
   error?: Error;
