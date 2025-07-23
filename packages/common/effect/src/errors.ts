@@ -6,14 +6,16 @@ import { Cause, Chunk, Effect, Exit, GlobalValue, Option } from 'effect';
 import type { AnySpan, Span } from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
+const originalSymbol = Symbol.for('effect/OriginalAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());
 const locationRegex = /\((.*)\)/g;
 
 /**
  * Adds effect spans.
  * Removes effect internal functions.
+ * Unwraps error proxy.
  */
-const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
+const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
   const span = error[spanSymbol];
 
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
@@ -75,12 +77,18 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
 
   out.push(...appendStacks);
 
+  if (error[originalSymbol]) {
+    error = error[originalSymbol];
+  }
+
   Object.defineProperty(error, 'stack', {
     value: out.join('\n'),
     writable: true,
     enumerable: false,
     configurable: true,
   });
+
+  return error;
 };
 
 /**
@@ -116,14 +124,12 @@ export const runAndForwardErrors = async <A, E>(
     };
 
     const stackFrames = getStackFrames();
-    for (const error of errors) {
-      prettyErrorStack(error, stackFrames);
-    }
+    const newErrors = errors.map((error) => prettyErrorStack(error, stackFrames));
 
-    if (errors.length === 1) {
-      throw errors[0];
+    if (newErrors.length === 1) {
+      throw newErrors[0];
     } else {
-      throw new AggregateError(errors);
+      throw new AggregateError(newErrors);
     }
   }
 };
