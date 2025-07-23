@@ -3,7 +3,6 @@
 //
 
 import { AnthropicClient } from '@effect/ai-anthropic';
-import { NodeHttpClient } from '@effect/platform-node';
 import { Config, Layer, ManagedRuntime } from 'effect';
 import { inspect } from 'node:util';
 import { afterAll, beforeAll, describe, test } from 'vitest';
@@ -17,6 +16,7 @@ import { getSchemaDXN } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
 import { DataType, DataTypes } from '@dxos/schema';
 
+import { FetchHttpClient } from '@effect/platform';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
 
@@ -25,10 +25,13 @@ const MOCK_SEARCH = false;
 const AnthropicLayer = AnthropicClient.layerConfig({
   apiKey: Config.redacted('ANTHROPIC_API_KEY'),
   transformClient: tapHttpErrors,
-  // TODO(dmaretskyi): Migrate to FetchHttpClient.
-}).pipe(Layer.provide(NodeHttpClient.layerUndici));
+});
 
-const AiServiceLayer = Layer.provide(AiServiceRouter.AiServiceRouter, AnthropicLayer);
+const AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
+  Layer.provide(AnthropicLayer),
+  // TODO(dmaretskyi): Migrate to FetchHttpClient.
+  Layer.provide(FetchHttpClient.layer),
+);
 
 describe('Research', () => {
   let runtime: ManagedRuntime.ManagedRuntime<AiService, any>;
