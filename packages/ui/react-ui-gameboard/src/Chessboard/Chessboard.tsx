@@ -19,8 +19,8 @@ import {
   Square,
   getRelativeBounds,
   locationToString,
-} from '../Board';
-import { useBoardContext } from '../Board';
+  useBoardContext,
+} from '../Gameboard';
 
 export type ChessboardProps = PropsWithChildren<{
   orientation?: Player;

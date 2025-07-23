@@ -13,7 +13,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Chessboard, type ChessboardProps } from './Chessboard';
 import { ChessModel } from './chess';
-import { Board, type BoardRootProps, type Player, type Move } from '../Board';
+import { Gameboard, type GameboardRootProps, type Player, type Move } from '../Gameboard';
 
 type RenderProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   fen: string;
@@ -23,7 +23,7 @@ const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps)
   const model = useMemo(() => new ChessModel(fen), [fen]);
   const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
 
-  const handleDrop = useCallback<NonNullable<BoardRootProps['onDrop']>>(
+  const handleDrop = useCallback<NonNullable<GameboardRootProps['onDrop']>>(
     (move: Move) => {
       log.info('handleDrop', { move });
       return model.makeMove(move);
@@ -43,9 +43,9 @@ const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps)
           Toggle
         </Button>
       </Toolbar.Root>
-      <Board.Root model={model} onDrop={handleDrop}>
+      <Gameboard.Root model={model} onDrop={handleDrop}>
         <Chessboard orientation={orientation} {...props} />
-      </Board.Root>
+      </Gameboard.Root>
     </div>
   );
 };
@@ -65,9 +65,9 @@ const Grid = (props: RenderProps) => {
       <div className='grid grid-cols-3 gap-2'>
         {models.map((model, i) => (
           <div key={i} className='aspect-square'>
-            <Board.Root model={model}>
+            <Gameboard.Root model={model}>
               <Chessboard />
-            </Board.Root>
+            </Gameboard.Root>
           </div>
         ))}
       </div>

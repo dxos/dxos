@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { ChessModel, Board, Chessboard, type BoardRootProps } from '@dxos/react-ui-gameboard';
+import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxos/react-ui-gameboard';
 
 import { type ChessType } from '../types';
 
@@ -33,7 +33,7 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
     return null;
   }
 
-  const handleDrop = useCallback<NonNullable<BoardRootProps['onDrop']>>(
+  const handleDrop = useCallback<NonNullable<GameboardRootProps['onDrop']>>(
     (move) => {
       if (model.makeMove(move)) {
         game.pgn = model.game.pgn();
@@ -47,8 +47,8 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
   );
 
   return (
-    <Board.Root model={model} onDrop={handleDrop}>
+    <Gameboard.Root model={model} onDrop={handleDrop}>
       <Chessboard />
-    </Board.Root>
+    </Gameboard.Root>
   );
 };
