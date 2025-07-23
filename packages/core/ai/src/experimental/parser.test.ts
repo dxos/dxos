@@ -6,7 +6,7 @@ import { AiResponse } from '@effect/ai';
 import { describe, it, vi } from '@effect/vitest';
 import { Chunk, Effect, Function, Stream } from 'effect';
 
-import type { ContentBlock } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/schema';
 
 import { parseGptStream } from './AiParser';
 
@@ -15,10 +15,7 @@ describe('parser', () => {
     it.effect(
       'single text block',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          //
-          text('Hello, world!'),
-        ])
+        const result = yield* makeInputStream([text('Hello, world!')])
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -35,11 +32,7 @@ describe('parser', () => {
     it.effect(
       'consecutive text blocks get combined',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          //
-          text('Hello,'),
-          text(' world!'),
-        ])
+        const result = yield* makeInputStream([text('Hello,'), text(' world!')])
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -56,10 +49,7 @@ describe('parser', () => {
     it.effect(
       'status parsed',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          //
-          text('<status>I am thinking...</status>'),
-        ])
+        const result = yield* makeInputStream([text('<status>I am thinking...</status>')])
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -77,7 +67,6 @@ describe('parser', () => {
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          //
           text('Hello, world!'),
           new AiResponse.ToolCallPart({
             id: AiResponse.ToolCallId.make('123'),
@@ -108,7 +97,6 @@ describe('parser', () => {
       'unterminated status tag followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          //
           text('<status>I am thinking...'),
           new AiResponse.ToolCallPart({
             id: AiResponse.ToolCallId.make('123'),
@@ -142,7 +130,6 @@ describe('parser', () => {
           new AiResponse.ReasoningPart({
             reasoningText: 'My thoughts are...',
           }),
-          //
           text('Hello, world!'),
         ])
           .pipe(parseGptStream())
@@ -165,10 +152,7 @@ describe('parser', () => {
     it.effect(
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          //
-          text('<cot>My thoughts are...</cot>'),
-        ])
+        const result = yield* makeInputStream([text('<cot>My thoughts are...</cot>')])
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -185,10 +169,7 @@ describe('parser', () => {
     it.effect(
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          //
-          text('<think>My thoughts are...</think>'),
-        ])
+        const result = yield* makeInputStream([text('<think>My thoughts are...</think>')])
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -205,14 +186,7 @@ describe('parser', () => {
     it.effect(
       'tool list',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream(
-          [
-            //
-            '<tool-list/>',
-          ]
-            .flatMap(splitByWord)
-            .map(text),
-        )
+        const result = yield* makeInputStream(['<tool-list/>'].flatMap(splitByWord).map(text))
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -229,12 +203,7 @@ describe('parser', () => {
       'multi choice select',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream(
-          [
-            //
-            '<select><option>Yes</option><option>No</option></select>',
-          ]
-            .flatMap(splitByWord)
-            .map(text),
+          ['<select><option>Yes</option><option>No</option></select>'].flatMap(splitByWord).map(text),
         )
           .pipe(parseGptStream())
           .pipe(Stream.runCollect)
@@ -254,7 +223,6 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream(
           [
-            //
             '<status>I am thinking...</status>',
             'Hello, world!',
             '<tool-list/>',
@@ -357,7 +325,7 @@ describe('parser', () => {
 const makeInputStream = (parts: readonly AiResponse.Part[]): Stream.Stream<AiResponse.AiResponse, never, never> =>
   Stream.fromIterable(parts).pipe(Stream.map((part) => new AiResponse.AiResponse({ parts: [part] })));
 
-const text = (text: string) => new AiResponse.TextPart({ text });
-
 const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
 const splitByCharacter = (text: string): string[] => text.split('');
+
+const text = (text: string) => new AiResponse.TextPart({ text });

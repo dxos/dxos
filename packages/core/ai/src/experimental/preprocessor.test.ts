@@ -17,10 +17,13 @@ describe('preprocessor', () => {
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
-        blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
+        sender: { role: 'user' },
+        blocks: [
+          {
+            _tag: 'text',
+            text: 'What is 2 + 2?',
+          },
+        ],
         created: new Date().toISOString(),
       });
       const input = yield* preprocessAiInput([message]);
@@ -38,9 +41,8 @@ describe('preprocessor', () => {
     'should handle multiple tool results at the start of a message',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'toolResult',
@@ -59,7 +61,6 @@ describe('preprocessor', () => {
             text: 'What do you think about these results?',
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -95,20 +96,24 @@ describe('preprocessor', () => {
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
         blocks: [
-          { _tag: 'text', text: 'I need to calculate something.' },
+          {
+            _tag: 'text',
+            text: 'I need to calculate something.',
+          },
           {
             _tag: 'toolCall',
             toolCallId: 'call_1',
             name: 'calculator',
             input: { operation: 'add', a: 2, b: 2 },
           },
-          { _tag: 'text', text: 'Let me process that for you.' },
+          {
+            _tag: 'text',
+            text: 'Let me process that for you.',
+          },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -132,18 +137,19 @@ describe('preprocessor', () => {
     'should handle assistant message with reasoning',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
         blocks: [
           {
             _tag: 'reasoning',
             reasoningText: 'Let me think about this step by step...',
             signature: 'reasoning_sig_1',
           },
-          { _tag: 'text', text: 'Based on my reasoning, the answer is 4.' },
+          {
+            _tag: 'text',
+            text: 'Based on my reasoning, the answer is 4.',
+          },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -161,16 +167,14 @@ describe('preprocessor', () => {
     'should handle redacted reasoning',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
         blocks: [
           {
             _tag: 'reasoning',
             redactedText: '[Reasoning redacted]',
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -187,9 +191,8 @@ describe('preprocessor', () => {
     'should handle user message with image (base64)',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'image',
@@ -200,7 +203,6 @@ describe('preprocessor', () => {
             },
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -216,9 +218,8 @@ describe('preprocessor', () => {
     'should handle user message with image (URL)',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'image',
@@ -228,7 +229,6 @@ describe('preprocessor', () => {
             },
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -245,16 +245,14 @@ describe('preprocessor', () => {
     'should handle user message with file reference',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'file',
             url: 'https://example.com/document.pdf',
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -271,9 +269,8 @@ describe('preprocessor', () => {
     'should handle user message with transcript',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
           {
             _tag: 'transcript',
@@ -281,7 +278,6 @@ describe('preprocessor', () => {
             started: new Date().toISOString(),
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -298,11 +294,13 @@ describe('preprocessor', () => {
     'should handle mixed content with tool results and text',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
         blocks: [
-          { _tag: 'text', text: 'Here are the results:' },
+          {
+            _tag: 'text',
+            text: 'Here are the results:',
+          },
           {
             _tag: 'toolResult',
             toolCallId: 'call_1',
@@ -315,9 +313,11 @@ describe('preprocessor', () => {
             name: 'search',
             result: 'Second result',
           },
-          { _tag: 'text', text: 'What should I do next?' },
+          {
+            _tag: 'text',
+            text: 'What should I do next?',
+          },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
@@ -344,9 +344,8 @@ describe('preprocessor', () => {
     'should handle assistant message with various block types',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
         blocks: [
           { _tag: 'status', statusText: 'Processing...' },
           { _tag: 'suggest', text: 'Try this approach' },
@@ -355,23 +354,42 @@ describe('preprocessor', () => {
           { _tag: 'toolList' },
           { _tag: 'json', data: '{"key": "value"}' },
         ],
-        created: new Date().toISOString(),
       });
 
       const input = yield* preprocessAiInput([message]);
       const assistantMessage = input.messages[0] as AiInput.AssistantMessage;
       expect(assistantMessage.parts).toHaveLength(6);
 
-      expect(assistantMessage.parts[0]).toEqual(new AiInput.TextPart({ text: '<status>Processing...</status>' }));
-      expect(assistantMessage.parts[1]).toEqual(new AiInput.TextPart({ text: '<suggest>Try this approach</suggest>' }));
+      expect(assistantMessage.parts[0]).toEqual(
+        new AiInput.TextPart({
+          text: '<status>Processing...</status>',
+        }),
+      );
+      expect(assistantMessage.parts[1]).toEqual(
+        new AiInput.TextPart({
+          text: '<suggest>Try this approach</suggest>',
+        }),
+      );
       expect(assistantMessage.parts[2]).toEqual(
-        new AiInput.TextPart({ text: '<select><option>Option A</option><option>Option B</option></select>' }),
+        new AiInput.TextPart({
+          text: '<select><option>Option A</option><option>Option B</option></select>',
+        }),
       );
       expect(assistantMessage.parts[3]).toEqual(
-        new AiInput.TextPart({ text: '<proposal>I propose we do this</proposal>' }),
+        new AiInput.TextPart({
+          text: '<proposal>I propose we do this</proposal>',
+        }),
       );
-      expect(assistantMessage.parts[4]).toEqual(new AiInput.TextPart({ text: '<tool-list/>' }));
-      expect(assistantMessage.parts[5]).toEqual(new AiInput.TextPart({ text: '{"key": "value"}' }));
+      expect(assistantMessage.parts[4]).toEqual(
+        new AiInput.TextPart({
+          text: '<tool-list/>',
+        }),
+      );
+      expect(assistantMessage.parts[5]).toEqual(
+        new AiInput.TextPart({
+          text: '{"key": "value"}',
+        }),
+      );
     }),
   );
 
@@ -379,11 +397,16 @@ describe('preprocessor', () => {
     'should fail when user message contains invalid blocks',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'user',
-        },
-        blocks: [{ _tag: 'toolCall', toolCallId: 'call_1', name: 'test', input: {} }],
         created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [
+          {
+            _tag: 'toolCall',
+            toolCallId: 'call_1',
+            name: 'test',
+            input: {},
+          },
+        ],
       });
 
       const result = yield* Effect.either(preprocessAiInput([message]));
@@ -398,11 +421,16 @@ describe('preprocessor', () => {
     'should fail when assistant message contains invalid blocks',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
-        blocks: [{ _tag: 'toolResult', toolCallId: 'call_1', name: 'test', result: 'Invalid in assistant' }],
         created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'test',
+            result: 'Invalid in assistant',
+          },
+        ],
       });
 
       const result = yield* Effect.either(preprocessAiInput([message]));
@@ -417,9 +445,8 @@ describe('preprocessor', () => {
     'should fail on invalid reasoning block',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
-        sender: {
-          role: 'assistant',
-        },
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
         blocks: [
           {
             _tag: 'reasoning',
@@ -427,7 +454,6 @@ describe('preprocessor', () => {
             redactedText: 'Some redacted text', // Both should not be present
           },
         ],
-        created: new Date().toISOString(),
       });
 
       const result = yield* Effect.either(preprocessAiInput([message]));
@@ -443,14 +469,14 @@ describe('preprocessor', () => {
     Effect.fn(function* ({ expect }) {
       const messages = [
         Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
           sender: { role: 'user' },
           blocks: [{ _tag: 'text', text: 'Hello' }],
-          created: new Date().toISOString(),
         }),
         Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks: [{ _tag: 'text', text: 'Hi there!' }],
-          created: new Date().toISOString(),
         }),
       ];
 
