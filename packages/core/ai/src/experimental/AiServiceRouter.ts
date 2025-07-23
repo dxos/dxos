@@ -4,10 +4,12 @@
 
 import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { Effect, Layer } from 'effect';
+import { Context, Effect, Layer, Option } from 'effect';
 
 import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
+import type { LLMModel as ModelName } from '../types';
+import type { AiLanguageModel } from '@effect/ai';
 
 const LmStudioClient = OpenAiClient.layer({
   apiUrl: 'http://localhost:1234/v1',
@@ -43,3 +45,52 @@ export const AiServiceRouter = Layer.effect(
     });
   }),
 );
+
+export class AiModelResolver extends Context.Tag('AiModelResolver')<
+  AiModelResolver,
+  {
+    readonly model: (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
+  }
+>() {
+  static buildAiService: Layer.Layer<AiService, never, AiModelResolver> = Layer.effect(
+    AiService,
+    Effect.gen(function* () {
+      const resolver = yield* AiModelResolver;
+      return {
+        model: (name) => resolver.model(name),
+
+        // TODO(dmaretskyi): Remove.
+        get client(): never {
+          throw new Error('Client not available');
+        },
+      } satisfies Context.Tag.Service<AiService>;
+    }),
+  );
+
+  static resolver = <R>(
+    impl: Effect.Effect<
+      (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>,
+      never,
+      R
+    >,
+  ): Layer.Layer<AiModelResolver, never, R> =>
+    Layer.effect(
+      AiModelResolver,
+      Effect.gen(function* () {
+        const getModel = yield* impl;
+        const upstream = yield* Effect.serviceOption(AiModelResolver);
+        return {
+          model: (name) =>
+            getModel(name).pipe(
+              Layer.catchAll(() => {
+                if (Option.isSome(upstream)) {
+                  return upstream.value.model(name);
+                } else {
+                  return Layer.fail(new AiModelNotAvailableError(name));
+                }
+              }),
+            ),
+        };
+      }),
+    );
+}
