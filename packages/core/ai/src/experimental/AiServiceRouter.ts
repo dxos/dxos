@@ -11,9 +11,8 @@ import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
 import { type LLMModel as ModelName } from '../types';
 
-const LmStudioClient = OpenAiClient.layer({
-  apiUrl: 'http://localhost:1234/v1',
-});
+/** @internal */
+export const LMSTUDIO_ENDPOINT = 'http://localhost:1234/v1';
 
 // TODO(dmaretskyi): Make this generic.
 export const AiServiceRouter = Layer.effect(
@@ -24,7 +23,13 @@ export const AiServiceRouter = Layer.effect(
     // TODO(dmaretskyi): If this is pushed into requirements this will conflict with the real OpenAiClient.
     const lmStudioClient = Layer.succeed(
       OpenAiClient.OpenAiClient,
-      yield* OpenAiClient.OpenAiClient.pipe(Effect.provide(LmStudioClient)),
+      yield* OpenAiClient.OpenAiClient.pipe(
+        Effect.provide(
+          OpenAiClient.layer({
+            apiUrl: LMSTUDIO_ENDPOINT,
+          }),
+        ),
+      ),
     );
 
     return AiService.of({

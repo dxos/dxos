@@ -12,6 +12,7 @@ import { type ToolId } from '../tools';
 
 export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}
 
+// TODO(burdon): Ai prefix?
 export class ToolResolverService extends Context.Tag('ToolResolverService')<
   ToolResolverService,
   {

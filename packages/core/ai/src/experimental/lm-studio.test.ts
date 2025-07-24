@@ -14,10 +14,7 @@ import { DataType } from '@dxos/schema';
 
 import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
-
-const OpenAiLayer = OpenAiClient.layer({
-  apiUrl: 'http://localhost:1234/v1',
-}).pipe(Layer.provide(FetchHttpClient.layer));
+import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
 describeWrapped('lmstudio', () => {
   it.effect(
@@ -53,7 +50,14 @@ describeWrapped('lmstudio', () => {
         log.info('message', { message });
         history.push(message);
       },
-      Effect.provide(Layer.provide(OpenAiLanguageModel.model('google/gemma-3-12b' as any), OpenAiLayer)),
+      Effect.provide(
+        Layer.provide(
+          OpenAiLanguageModel.model('google/gemma-3-12b' as any),
+          OpenAiClient.layer({
+            apiUrl: LMSTUDIO_ENDPOINT,
+          }).pipe(Layer.provide(FetchHttpClient.layer)),
+        ),
+      ),
     ),
   );
 });

@@ -1,15 +1,17 @@
-import { describe, expect, it } from '@effect/vitest';
+//
+// Copyright 2025 DXOS.org
+//
 
-import { AnthropicLanguageModel } from '@effect/ai-anthropic';
+import { AiLanguageModel } from '@effect/ai';
+import { AnthropicLanguageModel, AnthropicClient } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { Config, Effect, Layer } from 'effect';
+import { FetchHttpClient } from '@effect/platform';
+import { describe, expect, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
-import { AnthropicClient } from '@effect/ai-anthropic';
+import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
-import { AiModelResolver } from './AiServiceRouter';
-import { FetchHttpClient } from '@effect/platform';
-import { AiLanguageModel } from '@effect/ai';
 
 const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
@@ -33,7 +35,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
         const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-12b' as any).pipe(
           Effect.provide(
             OpenAiClient.layer({
-              apiUrl: 'http://localhost:1234/v1',
+              apiUrl: LMSTUDIO_ENDPOINT,
             }),
           ),
         );
