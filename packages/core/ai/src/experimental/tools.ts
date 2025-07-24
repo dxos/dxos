@@ -20,7 +20,7 @@ export class ToolResolverService extends Context.Tag('ToolResolverService')<
   }
 >() {
   static layerEmpty = Layer.succeed(ToolResolverService, {
-    resolve: (id) => Effect.fail(new AiToolNotFoundError(`Tool ${id} not found`)),
+    resolve: (id) => Effect.fail(new AiToolNotFoundError(`Tool not found: ${id}`)),
   });
 
   static resolve = Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
@@ -44,7 +44,7 @@ export class ToolExecutionService extends Context.Tag('ToolExecutionService')<
     handlersFor: (toolkit) =>
       toolkit.of(
         Record.map(toolkit.tools, (tool, name) =>
-          Effect.fail(new AiToolNotFoundError(`Tool ${name} not found`)),
+          Effect.fail(new AiToolNotFoundError(`Tool not found: ${name}`)),
         ) as any,
       ) as any,
   });

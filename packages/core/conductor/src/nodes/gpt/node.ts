@@ -10,7 +10,7 @@ import { AISession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { contextFromScope } from '@dxos/effect';
-import { QueueService, ToolResolverService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
