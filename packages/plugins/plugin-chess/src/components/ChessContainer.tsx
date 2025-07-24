@@ -7,14 +7,45 @@ import React from 'react';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ChessComponent } from './ChessComponent';
+import { Chess } from './Chess';
 import { PlayerSelector } from './PlayerSelector';
 import { type ChessType } from '../types';
 
-const ChessContainer = ({ game }: { game: ChessType; role?: string }) => {
+const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
+
+const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
   const space = getSpace(game);
+
   if (!space) {
     return null;
+  }
+
+  if (role === 'popover') {
+    return (
+      <Chess.Root game={game}>
+        <div role='none' className='popover-square size-container'>
+          <Chess.Board classNames={containFragment} />
+        </div>
+      </Chess.Root>
+    );
+  }
+
+  if (role === 'card--extrinsic') {
+    return (
+      <Chess.Root game={game}>
+        <div role='none' className='grid is-full bs-full size-container place-content-center'>
+          <Chess.Board classNames={containFragment} />
+        </div>
+      </Chess.Root>
+    );
+  }
+
+  if (role === 'card--intrinsic') {
+    return (
+      <Chess.Root game={game}>
+        <Chess.Board />
+      </Chess.Root>
+    );
   }
 
   return (
@@ -23,7 +54,11 @@ const ChessContainer = ({ game }: { game: ChessType; role?: string }) => {
         <div />
 
         <div className='flex m-4 overflow-hidden'>
-          <ChessComponent game={game} />
+          <Chess.Root game={game}>
+            <Chess.Content>
+              <Chess.Board />
+            </Chess.Content>
+          </Chess.Root>
         </div>
 
         <PlayerSelector space={space} game={game} />

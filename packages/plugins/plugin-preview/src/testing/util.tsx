@@ -9,7 +9,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { IntrinsicCardContainer, PopoverCardContainer } from '@dxos/storybook-utils';
+import { IntrinsicCardContainer, PopoverCardContainer, ExtrinsicCardContainer } from '@dxos/storybook-utils';
 
 import type { PreviewProps } from '../types';
 
@@ -40,6 +40,12 @@ export const render: Meta<StoryProps>['render'] = ({
         <IntrinsicCardContainer>
           <Card.StaticRoot>{component}</Card.StaticRoot>
         </IntrinsicCardContainer>
+      );
+    case 'card--extrinsic':
+      return (
+        <ExtrinsicCardContainer>
+          <Card.StaticRoot>{component}</Card.StaticRoot>
+        </ExtrinsicCardContainer>
       );
     default:
       return <Card.StaticRoot>{component}</Card.StaticRoot>;

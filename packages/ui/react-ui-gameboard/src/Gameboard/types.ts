@@ -50,7 +50,7 @@ export const isEqualLocation = (l1: Location, l2: Location): boolean => l1[0] ==
 /**
  * Generic board model.
  */
-export interface BoardModel<T extends PieceType = PieceType> {
+export interface GameboardModel<T extends PieceType = PieceType> {
   turn: Player;
   pieces: ReadonlySignal<PieceMap<T>>;
   isValidMove: (move: Move) => boolean;
