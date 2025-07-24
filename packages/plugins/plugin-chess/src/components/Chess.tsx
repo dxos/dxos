@@ -2,20 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Chess } from 'chess.js';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { Chess as ChessJS } from 'chess.js';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { ChessModel, Board, Chessboard, type BoardRootProps } from '@dxos/react-ui-gameboard';
+import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxos/react-ui-gameboard';
 
 import { type ChessType } from '../types';
 
-export const ChessComponent = ({ game }: { game: ChessType }) => {
+const ChessRoot = ({ game, children }: PropsWithChildren<{ game: ChessType }>) => {
   const model = useMemo(() => new ChessModel(), []);
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {
-      const chess = new Chess();
+      const chess = new ChessJS();
       if (game.pgn) {
         try {
           chess.loadPgn(game.pgn);
@@ -33,7 +33,7 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
     return null;
   }
 
-  const handleDrop = useCallback<NonNullable<BoardRootProps['onDrop']>>(
+  const handleDrop = useCallback<NonNullable<GameboardRootProps['onDrop']>>(
     (move) => {
       if (model.makeMove(move)) {
         game.pgn = model.game.pgn();
@@ -47,8 +47,14 @@ export const ChessComponent = ({ game }: { game: ChessType }) => {
   );
 
   return (
-    <Board.Root model={model} onDrop={handleDrop}>
-      <Chessboard />
-    </Board.Root>
+    <Gameboard.Root model={model} onDrop={handleDrop}>
+      {children}
+    </Gameboard.Root>
   );
+};
+
+export const Chess = {
+  Root: ChessRoot,
+  Content: Gameboard.Content,
+  Board: Chessboard,
 };
