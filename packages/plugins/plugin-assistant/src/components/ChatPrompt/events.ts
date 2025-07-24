@@ -9,4 +9,5 @@ export type ChatEvent =
   | { type: 'thread-close' }
   | { type: 'scroll-to-bottom' }
   | { type: 'record-start' }
-  | { type: 'record-stop' };
+  | { type: 'record-stop' }
+  | { type: 'preset'; preset: string };

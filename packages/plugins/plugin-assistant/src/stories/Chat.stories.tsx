@@ -5,15 +5,15 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import React, { useMemo, type FunctionComponent } from 'react';
+import React, { useMemo, useState, type FunctionComponent } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
-  remoteServiceEndpoints,
   readDocumentFunction,
+  remoteServiceEndpoints,
   writeDocumentFunction,
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
@@ -45,6 +45,7 @@ import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat } from '../components';
+import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
 import { translations } from '../translations';
 import { Assistant } from '../types';
@@ -74,7 +75,8 @@ const ChatContainer = () => {
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
-  const services = useChatServices({ space });
+  const [preset, setPreset] = useState<AiServicePreset>('direct');
+  const services = useChatServices({ preset, space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
   const processor = useChatProcessor({
     chat,
@@ -94,6 +96,9 @@ const ChatContainer = () => {
       <div className='p-2'>
         <Chat.Prompt
           expandable
+          presets={AiServicePresets.map(({ id, label }) => ({ id, label }))}
+          preset={preset}
+          onChange={setPreset}
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
         />
       </div>

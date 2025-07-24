@@ -21,15 +21,13 @@ import {
   type FunctionContext,
   type FunctionDefinition,
   FunctionError,
-  ToolResolverService as FunctionsToolResolverService,
   QueueService,
   type Services,
+  ToolResolverService as FunctionsToolResolverService,
   TracingService,
 } from '@dxos/functions';
 
-export type UseChatServicesProps = {
-  space?: Space;
-};
+import { type AiServicePreset } from './presets';
 
 // TODO(burdon): Deconstruct into separate layers?
 export type ChatServices =
@@ -44,10 +42,15 @@ export type ChatServices =
   | ToolResolverService
   | ToolExecutionService;
 
+export type UseChatServicesProps = {
+  space?: Space;
+  preset?: AiServicePreset;
+};
+
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
+export const useChatServices = ({ space, preset }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
   const toolRegistry = useToolRegistry();
   // TODO(dmaretskyi): We can provide the plugin registry as a layer and then build the entire layer stack from there. We need to think how plugin reactivity affect our layer structure.
   const toolResolver = useToolResolver();
@@ -55,7 +58,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
 
   return useMemo(() => {
     return Layer.mergeAll(
-      AiServiceTestingPreset('edge-local').pipe(Layer.orDie), // TODO(burdon): Error management?
+      AiServiceTestingPreset(preset ?? 'direct').pipe(Layer.orDie), // TODO(burdon): Error management?
       Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
       space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
       space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,
@@ -67,7 +70,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       // TODO(dmaretskyi): Remove.
       Layer.succeed(FunctionsToolResolverService, FunctionsToolResolverService.make(toolRegistry)),
     );
-  }, [space, toolRegistry, toolResolver]);
+  }, [space, preset, toolRegistry, toolResolver]);
 };
 
 const useToolResolver = (): Context.Tag.Service<ToolResolverService> => {

@@ -30,6 +30,8 @@ import {
   type ChatActionsProps,
   type ChatEvent,
   ChatOptionsMenu,
+  ChatPresets,
+  type ChatPresetsProps,
   ChatReferences,
   type ChatReferencesProps,
   ChatStatusIndicator,
@@ -199,9 +201,11 @@ ChatThread.displayName = 'Chat.Thread';
 // Prompt
 //
 
-type ChatPromptProps = ThemedClassName<Pick<ChatEditorProps, 'placeholder'> & { expandable?: boolean }>;
+type ChatPromptProps = ThemedClassName<
+  Pick<ChatEditorProps, 'placeholder'> & ChatPresetsProps & { expandable?: boolean }
+>;
 
-const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) => {
+const ChatPrompt = ({ classNames, placeholder, expandable, presets, preset, onChange }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
@@ -297,7 +301,7 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
       )}
     >
       <Endcap>
-        <ChatStatusIndicator error={processor.error.value} processing={processor.streaming.value} />
+        <ChatStatusIndicator preset={preset} error={processor.error.value} processing={processor.streaming.value} />
       </Endcap>
 
       <ChatEditor
@@ -323,12 +327,9 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatActions
-        microphone={true}
-        recording={recording}
-        processing={processor.streaming.value}
-        onEvent={handleEvent}
-      />
+      <ChatActions microphone={true} recording={recording} processing={processor.streaming.value} onEvent={handleEvent}>
+        {presets && <ChatPresets preset={preset} presets={presets} onChange={onChange} />}
+      </ChatActions>
     </div>
   );
 };
