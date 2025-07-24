@@ -1462,8 +1462,8 @@ importers:
         specifier: ^4.6.1
         version: 4.6.1
       race-as-promised:
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       streamx:
         specifier: ^2.12.5
         version: 2.15.6
@@ -29402,8 +29402,8 @@ packages:
   quote-unquote@1.0.0:
     resolution: {integrity: sha512-twwRO/ilhlG/FIgYeKGFqyHhoEhqgnKVkcmqMKi2r524gz3ZbDTcyFt38E9xjJI2vT+KbRNHVbnJ/e0I25Azwg==}
 
-  race-as-promised@0.0.2:
-    resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
+  race-as-promised@0.0.3:
+    resolution: {integrity: sha512-BH1qgNWMG4Mhp4wlX2uYE6reVsIXogb+aPEcosVDmnPjpkQVcWRxqDIlP1hGUiGZG8ohoiyaUlwX3xiu8O7tzw==}
 
   radix3@1.1.2:
     resolution: {integrity: sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA==}
@@ -50686,7 +50686,7 @@ snapshots:
 
   quote-unquote@1.0.0: {}
 
-  race-as-promised@0.0.2: {}
+  race-as-promised@0.0.3: {}
 
   radix3@1.1.2: {}
 
