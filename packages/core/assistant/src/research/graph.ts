@@ -282,15 +282,21 @@ const SoftRef = Schema.Struct({
 const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
   const isRelationSchema = getEntityKind(schema) === 'relation';
 
-  const go = (ast: SchemaAST.AST): SchemaAST.AST => {
+  const go = (ast: SchemaAST.AST, visited = new Set<SchemaAST.AST>()): SchemaAST.AST => {
+    if (visited.has(ast)) {
+      // Already visited this node, prevent infinite recursion.
+      return ast;
+    }
+    visited.add(ast);
+
     if (SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome)) {
       return SoftRef.ast;
     }
 
-    return mapAst(ast, go);
+    return mapAst(ast, (child) => go(child, visited));
   };
 
-  return Schema.make<any, any, never>(mapAst(schema.ast, go)).pipe(
+  return Schema.make<any, any, never>(mapAst(schema.ast, (ast) => go(ast))).pipe(
     Schema.omit('id'),
     Schema.extend(
       Schema.Struct({

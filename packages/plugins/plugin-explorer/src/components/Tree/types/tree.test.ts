@@ -123,8 +123,8 @@ describe('tree', () => {
   });
 
   test('task', ({ expect }) => {
-    const task = Obj.make(DataType.Task, { text: 'Test task.' });
-    expect(task.text).to.eq('Test task.');
+    const task = Obj.make(DataType.Task, { title: 'Test task.' });
+    expect(task.title).to.eq('Test task.');
 
     const tree = createTree();
     const node = tree.addNode(tree.root);

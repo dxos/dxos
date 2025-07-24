@@ -16,9 +16,11 @@ import React, {
 } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Filter } from '@dxos/echo';
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter } from '@dxos/react-client/echo';
+// TODO(wittjosiah): Remove dependency on react-client.
+import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -321,7 +323,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
       async ({ field, props }, text) => {
         if (model && props.referenceSchema && field.referencePath) {
-          const space = model.space;
+          const space = getSpace(model.view);
           invariant(space);
 
           let schema;
@@ -387,7 +389,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
-          limitColumns={model.view?.fields?.length ?? 0}
+          limitColumns={model.projection.fields.length}
           overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}

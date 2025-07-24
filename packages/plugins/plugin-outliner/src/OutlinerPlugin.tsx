@@ -6,7 +6,6 @@ import { createIntent, definePlugin, contributes, Capabilities, Events, defineMo
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { DataType } from '@dxos/schema';
 
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -61,13 +60,7 @@ export const OutlinerPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(ClientCapabilities.Schema, [DataType.Task, JournalEntryType, JournalType, OutlineType]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/whitelist-schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Task]),
+      activate: () => contributes(ClientCapabilities.Schema, [JournalEntryType, JournalType, OutlineType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

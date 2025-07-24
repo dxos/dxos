@@ -7,7 +7,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Capabilities, Surface, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { fullyQualifiedId, getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -83,7 +84,15 @@ const MarkdownContainer = ({
   );
   const space = getSpace(object);
   const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
-  const filter = useMemo(() => Filter.or(...objectForms.map((form) => Filter.type(form.objectSchema))), [objectForms]);
+  const schemaWhiteList = useCapabilities(ClientCapabilities.SchemaWhiteList);
+  const filter = useMemo(
+    () =>
+      Filter.or(
+        ...objectForms.map((form) => Filter.type(form.objectSchema)),
+        ...schemaWhiteList.flat().map((schema) => Filter.typename(Type.getTypename(schema))),
+      ),
+    [objectForms, schemaWhiteList],
+  );
   const onLinkQuery = useCallback(
     async (query?: string): Promise<CommandMenuGroup[]> => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';

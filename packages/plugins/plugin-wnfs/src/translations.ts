@@ -13,6 +13,8 @@ export const translations = [
       [FileType.typename]: {
         'typename label': 'File',
         'object name placeholder': 'New file',
+        'rename object label': 'Rename file',
+        'delete object label': 'Delete file',
       },
       [meta.id]: {
         'plugin name': 'Files',

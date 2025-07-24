@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Meeting',
         'typename label_other': 'Meetings',
         'object name placeholder': 'New meeting',
+        'rename object label': 'Rename meeting',
+        'delete object label': 'Delete meeting',
       },
       [meta.id]: {
         'plugin name': 'Meeting',
