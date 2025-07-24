@@ -25,10 +25,10 @@ export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
   const handleDone = useCallback(() => {
     try {
       object.name = name;
-    } catch {
+    } catch (err) {
       try {
         object.title = name;
-      } catch (err) {
+      } catch {
         log.error('Failed to rename object', { err });
       }
     }

@@ -8,11 +8,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 
+import { Obj, Type } from '@dxos/echo';
 import { Format, type EchoSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { ViewProjection, ViewType, createView } from '@dxos/schema';
+import { DataType, ProjectionModel, createView } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
@@ -22,8 +23,8 @@ import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
   schema: EchoSchema;
-  view: ViewType;
-  projection: ViewProjection;
+  view: DataType.View;
+  projection: ProjectionModel;
 };
 
 type StoryProps = Pick<ViewEditorProps, 'readonly'>;
@@ -31,8 +32,8 @@ type StoryProps = Pick<ViewEditorProps, 'readonly'>;
 const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [schema, setSchema] = useState<EchoSchema>();
-  const [view, setView] = useState<ViewType>();
-  const [projection, setProjection] = useState<ViewProjection>();
+  const [view, setView] = useState<DataType.View>();
+  const [projection, setProjection] = useState<ProjectionModel>();
   useAsyncEffect(async () => {
     if (space) {
       class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
@@ -42,8 +43,13 @@ const DefaultStory = (props: StoryProps) => {
       }) {}
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
-      const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: toJsonSchema(TestSchema) });
-      const projection = new ViewProjection(schema.jsonSchema, view);
+      const view = createView({
+        name: 'Test',
+        typename: schema.typename,
+        jsonSchema: toJsonSchema(TestSchema),
+        presentation: Obj.make(Type.Expando, {}),
+      });
+      const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
       setSchema(schema);
       setView(view);
@@ -51,7 +57,7 @@ const DefaultStory = (props: StoryProps) => {
     }
   }, [space]);
 
-  const views = useQuery(space, Filter.type(ViewType));
+  const views = useQuery(space, Filter.type(DataType.View));
   const currentTypename = useMemo(() => view?.query?.typename, [view]);
   const updateViewTypename = useCallback(
     (newTypename: string) => {

@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Channel',
         'typename label_other': 'Channels',
         'object name placeholder': 'New channel',
+        'rename object label': 'Rename channel',
+        'delete object label': 'Delete channel',
       },
       [meta.id]: {
         'plugin name': 'Chat',

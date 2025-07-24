@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
@@ -80,13 +80,6 @@ export const InboxPlugin = () =>
         ),
       ],
     }),
-    // TODO(wittjosiah): Factor out.
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(ClientCapabilities.Schema, [DataType.Person, DataType.Organization, DataType.Project]),
-    }),
     defineModule({
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
@@ -106,10 +99,5 @@ export const InboxPlugin = () =>
       id: `${meta.id}/module/artifact-definition`,
       activatesOn: Events.SetupArtifactDefinition,
       activate: ArtifactDefinition,
-    }),
-    defineModule({
-      id: `${meta.id}/module/whitelist-schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.SchemaWhiteList, [DataType.Organization, DataType.Person]),
     }),
   ]);

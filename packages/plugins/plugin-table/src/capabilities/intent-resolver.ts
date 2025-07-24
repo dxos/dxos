@@ -2,58 +2,73 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Effect } from 'effect';
+
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  type PluginContext,
+  createIntent,
+  LayoutAction,
+} from '@dxos/app-framework';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { getSpace } from '@dxos/react-client/echo';
-import { initializeTable, TableType } from '@dxos/react-ui-table';
-import { ViewProjection } from '@dxos/schema';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { createTable } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
 import { TableAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
+      intent: TableAction.OnSpaceCreated,
+      resolve: ({ space }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object } = yield* dispatch(
+            createIntent(TableAction.Create, { space, typename: DataType.Task.typename }),
+          );
+          space.db.add(object);
+          space.properties.staticRecords = [DataType.Task.typename];
+        }),
+    }),
+    createResolver({
+      intent: TableAction.OnSchemaAdded,
+      resolve: ({ space, schema }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object } = yield* dispatch(
+            createIntent(TableAction.Create, { space, typename: Type.getTypename(schema) }),
+          );
+          yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object, hidden: true }));
+
+          return {
+            intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
+          };
+        }),
+    }),
+    createResolver({
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const table = Obj.make(TableType, { name, threads: [] });
-        await initializeTable({ client, space, table, typename });
-        return { data: { object: table } };
+        const { view } = await createTable({ client, space, typename, name });
+        return { data: { object: view } };
       },
     }),
     createResolver({
       intent: TableAction.AddRow,
-      resolve: async ({ table, data }) => {
-        const space = getSpace(table);
+      resolve: async ({ view, data }) => {
+        const space = getSpace(view);
         invariant(space);
-        invariant(table.view?.target);
-        const schema = space.db.schemaRegistry.getSchema(table.view.target.query.typename!);
+        invariant(view.query.typename);
+        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
         invariant(schema);
-        space.db.add(Obj.make(schema, data));
-      },
-    }),
-    createResolver({
-      intent: TableAction.DeleteColumn,
-      resolve: ({ table, fieldId, deletionData }, undo) => {
-        invariant(table.view);
-        const schema = getSpace(table)?.db.schemaRegistry.getSchema(table.view.target!.query.typename!);
-        invariant(schema);
-        const projection = new ViewProjection(schema.jsonSchema, table.view.target!);
-        if (!undo) {
-          const { deleted, index } = projection.deleteFieldProjection(fieldId);
-          return {
-            undoable: {
-              message: ['column deleted label', { ns: TABLE_PLUGIN }],
-              data: { deletionData: { ...deleted, index } },
-            },
-          };
-        } else if (undo && deletionData) {
-          const { field, props, index } = deletionData;
-          projection.setFieldProjection({ field, props }, index);
-        }
+        const object = Obj.make(schema, data);
+        return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };
       },
     }),
   ]);

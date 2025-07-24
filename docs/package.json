@@ -11,9 +11,9 @@
     "astro": "astro",
     "bundle": "astro build",
     "dev": "astro dev",
-    "prebuild": "./scripts/collect-typedoc.sh",
     "preview": "astro preview",
-    "start": "astro dev"
+    "start": "astro dev",
+    "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.32.5",

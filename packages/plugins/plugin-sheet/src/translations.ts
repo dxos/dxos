@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Sheet',
         'typename label_other': 'Sheets',
         'object name placeholder': 'New sheet',
+        'rename object label': 'Rename sheet',
+        'delete object label': 'Delete sheet',
       },
       [meta.id]: {
         'plugin name': 'Sheets',
