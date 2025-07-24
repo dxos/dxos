@@ -59,6 +59,9 @@
       "path": "../echo/echo-db"
     },
     {
+      "path": "../echo/echo-pipeline"
+    },
+    {
       "path": "../echo/echo-protocol"
     },
     {
