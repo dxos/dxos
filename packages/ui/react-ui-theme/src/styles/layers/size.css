@@ -10,10 +10,26 @@
   inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
 }
 
+.popover-card-height {
+  block-size: min(var(--radix-popper-available-height), 100dvh);
+}
+
+.popover-square {
+  inline-size: min(min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth)), min(var(--radix-popper-available-height), 100dvh));
+  block-size: min(min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth)), min(var(--radix-popper-available-height), 100dvh));
+}
+
+.popover-card-max-width {
+  max-inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
+}
+
+.size-container {
+  container-type: size;
+}
+
 @layer dx-components {
 
   /* Block size */
-
   [data-size="0"], [data-block-size="0"] {
     @apply bs-0;
   }
@@ -155,7 +171,6 @@
   }
 
   /* Inline size */
-
   [data-size="0"], [data-inline-size="0"] {
     @apply is-0;
   }

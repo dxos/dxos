@@ -5891,6 +5891,9 @@ importers:
         specifier: 3.17.0
         version: 3.17.0
     devDependencies:
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
