@@ -12,8 +12,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
+import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
-import { withTheme, withLayout, PopoverCardContainer } from '@dxos/storybook-utils';
+import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPreview } from './MarkdownPreview';
 import { translations } from '../../translations';
@@ -21,13 +22,13 @@ import { translations } from '../../translations';
 faker.seed(1234);
 
 const meta: Meta<typeof MarkdownPreview> = {
-  title: 'Cards/plugin-markdown/Popover',
+  title: 'Cards/plugin-markdown',
   component: MarkdownPreview,
-  render: ({ subject }) => {
+  render: ({ role, subject, ...args }) => {
     return (
-      <PopoverCardContainer icon='ph--text-aa--regular'>
-        <MarkdownPreview subject={subject} role='popover' />
-      </PopoverCardContainer>
+      <CardContainer icon='ph--text-aa--regular' role={role}>
+        <MarkdownPreview subject={subject} role={role} />
+      </CardContainer>
     );
   },
   decorators: [
@@ -58,8 +59,23 @@ const data = (() => {
   return { document };
 })();
 
-export const Default = {
+export const Popover = {
   args: {
     subject: Obj.make(DocumentType, data.document),
+    role: 'popover',
+  },
+};
+
+export const Extrinsic = {
+  args: {
+    subject: Obj.make(DocumentType, data.document),
+    role: 'card--extrinsic',
+  },
+};
+
+export const Intrinsic = {
+  args: {
+    subject: Obj.make(DocumentType, data.document),
+    role: 'card--intrinsic',
   },
 };

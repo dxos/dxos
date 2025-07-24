@@ -44,6 +44,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
     "@preact-signals/safe-react": "^0.9.0",
