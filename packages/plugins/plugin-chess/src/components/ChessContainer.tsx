@@ -5,11 +5,13 @@
 import React from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
-import { StackItem, Card } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chess } from './Chess';
 import { PlayerSelector } from './PlayerSelector';
 import { type ChessType } from '../types';
+
+const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
 
 const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
   const space = getSpace(game);
@@ -18,13 +20,31 @@ const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
     return null;
   }
 
-  if (role && ['card--intrinsic', 'card--extrinsic', 'popover', 'transclusion'].includes(role)) {
+  if (role === 'popover') {
     return (
-      <Card.SurfaceRoot role={role}>
-        <Chess.Root game={game}>
-          <Chess.Board />
-        </Chess.Root>
-      </Card.SurfaceRoot>
+      <Chess.Root game={game}>
+        <div role='none' className='popover-square size-container'>
+          <Chess.Board classNames={containFragment} />
+        </div>
+      </Chess.Root>
+    );
+  }
+
+  if (role === 'card--extrinsic') {
+    return (
+      <Chess.Root game={game}>
+        <div role='none' className='grid is-full bs-full size-container place-content-center'>
+          <Chess.Board classNames={containFragment} />
+        </div>
+      </Chess.Root>
+    );
+  }
+
+  if (role === 'card--intrinsic') {
+    return (
+      <Chess.Root game={game}>
+        <Chess.Board />
+      </Chess.Root>
     );
   }
 
