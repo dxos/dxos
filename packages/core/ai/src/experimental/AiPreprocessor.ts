@@ -10,6 +10,7 @@ import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
 import { AiInputPreprocessingError } from '../errors';
+import { getSnapshot } from '@dxos/live-object';
 
 /**
  * Preprocesses messages for AI input.
@@ -36,7 +37,6 @@ export const preprocessAiInput: (
                 (arr) => splitBy(arr, (left, right) => isToolResult(left) !== isToolResult(right)),
                 Effect.forEach(
                   Effect.fnUntraced(function* (chunk) {
-                    log.info('chunk', { chunk });
                     switch (chunk[0]._tag) {
                       case 'toolResult':
                         assumeType<ContentBlock.ToolResult[]>(chunk);
@@ -45,8 +45,9 @@ export const preprocessAiInput: (
                             (block) =>
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
-                                name: block.toolCallId,
-                                result: block.result,
+                                name: block.name,
+                                // TODO(dmaretskyi): Fix getSnapshot typing.
+                                result: getSnapshot(block.result as any),
                               }),
                           ),
                         });
@@ -161,7 +162,8 @@ const convertAssistantMessagePart: (
         return new AiInput.ToolCallPart({
           id: block.toolCallId,
           name: block.name,
-          params: block.input,
+          // TODO(dmaretskyi): Fix getSnapshot typing.
+          params: getSnapshot(block.input as any),
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.
