@@ -232,12 +232,12 @@ export const parseGptStream =
                 case 'MetadataPart':
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
-                  log.info('metadata', { metadata: part });
+                  log('metadata', { metadata: part });
                   break;
                 case 'FinishPart':
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
-                  log.info('finish', { finish: part });
+                  log('finish', { finish: part });
                   break;
               }
             }
