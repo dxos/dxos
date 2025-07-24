@@ -4,20 +4,26 @@
 
 import { beforeAll, describe, expect, it } from '@effect/vitest';
 
-import { AiService, ConsolePrinter, ToolRegistry, ToolResolverService, ToolExecutionService } from '@dxos/ai';
-import { Blueprint, Conversation } from '@dxos/assistant';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import {
+  Blueprint,
+  Conversation,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type ServiceContainer } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
-import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { Effect, Layer } from 'effect';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { Effect, Layer } from 'effect';
+import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
+import { readDocumentFunction, writeDocumentFunction } from '../functions';
+import { DatabaseService, QueueService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions/testing';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -82,7 +88,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     'building a shelf',
     Effect.fn(
       function* ({ expect }) {
-        const printer = new ConsolePrinter();
+        const { queues } = yield* QueueService;
+        const { db } = yield* DatabaseService;
+
+        const printer = new ConsolePrinter({ mode: 'json' });
         const conversation = new Conversation({
           queue: queues.create(),
         });
@@ -90,6 +99,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           session.message.on((message) => printer.printMessage(message));
           session.userMessage.on((message) => printer.printMessage(message));
           session.block.on((block) => printer.printContentBlock(block));
+          session.streamEvent.on((part) => {
+            log.info('part', { part });
+          });
         });
 
         db.add(TASK_LIST_BLUEPRINT);
@@ -107,7 +119,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
         Store the shopping list in ${Obj.getDXN(artifact)}
       `,
         });
-        log.info('spec 1', { doc: artifact });
+        log.info('conv 1', {
+          messages: yield* Effect.promise(() => conversation.getHistory()),
+        });
+        log.info('spec 1', { doc: artifact.content.target?.content });
         expect(artifact.content).not.toBe(prevContent);
         prevContent = artifact.content;
 
@@ -116,7 +131,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
         I will need a board too.
       `,
         });
-        log.info('spec 2', { doc: artifact });
+        log.info('conv 2', {
+          messages: yield* Effect.promise(() => conversation.getHistory()),
+        });
+        log.info('spec 2', { doc: artifact.content.target?.content });
         expect(artifact.content).not.toBe(prevContent);
 
         yield* conversation.run({
@@ -124,7 +142,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
         Actually lets use screws and a screwdriver.
       `,
         });
-        log.info('spec 3', { doc: artifact });
+        log.info('conv 3', {
+          messages: yield* Effect.promise(() => conversation.getHistory()),
+        });
+        log.info('spec 3', { doc: artifact.content.target?.content });
         expect(artifact.content).not.toBe(prevContent);
 
         const { content } = yield* Effect.promise(() => artifact.content.load());
@@ -137,14 +158,17 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           hammer: false,
           nails: false,
         }).forEach(([item, expected]) => {
-          expect(content.toLowerCase().includes(item)).toBe(expected);
+          expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
         });
       },
       Effect.provide(
         Layer.mergeAll(
-          ToolResolverService.layerEmpty,
-          ToolExecutionService.layerEmpty,
-          AiService.model('@google/gemma-3-12b').pipe(Layer.provideMerge(AiServiceTestingPreset('edge-local'))),
+          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
+          makeToolResolverFromFunctions([readDocumentFunction, writeDocumentFunction]),
+          makeToolExecutionServiceFromFunctions([readDocumentFunction, writeDocumentFunction]),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
         ),
       ),
     ),
