@@ -5,3 +5,5 @@ node:
   #   Conflicting with toolbox?
   syncPackageManagerField: false
   addEnginesConstraint: false
+typescript:
+  rootOptionsConfigFileName: 'tsconfig.base.json'
