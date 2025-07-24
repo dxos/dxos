@@ -14059,6 +14059,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-search
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14129,12 +14135,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/plugin-search':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-search
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
