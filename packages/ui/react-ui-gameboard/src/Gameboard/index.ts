@@ -6,7 +6,6 @@ export * from './context';
 export * from './types';
 export * from './util';
 
-export * from './Board';
-export * from './Container';
+export * from './Gameboard';
 export * from './Square';
 export * from './Piece';

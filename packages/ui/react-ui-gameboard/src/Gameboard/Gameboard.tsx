@@ -3,32 +3,29 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import React, { type CSSProperties, forwardRef, type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Container } from './Container';
-import { BoardContext, type BoardContextType } from './context';
-import { type BoardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
+import { GameboardContext, type GameboardContextType } from './context';
+import { type GameboardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
 
-type RootProps = ThemedClassName<
-  PropsWithChildren<{
-    model?: BoardModel;
-    onDrop?: (move: Move) => boolean;
-  }>
->;
+type GameboardRootProps = PropsWithChildren<{
+  model?: GameboardModel;
+  onDrop?: (move: Move) => boolean;
+}>;
 
 /**
  * Generic board container.
  */
-const Root = ({ children, classNames, model, onDrop }: RootProps) => {
+const GameboardRoot = ({ children, model, onDrop }: GameboardRootProps) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
   // Handle promotion.
-  const onPromotion = useCallback<BoardContextType['onPromotion']>((move) => {
+  const onPromotion = useCallback<GameboardContextType['onPromotion']>((move) => {
     log('onPromotion', { move });
     setPromoting(undefined);
     onDrop?.(move);
@@ -71,16 +68,36 @@ const Root = ({ children, classNames, model, onDrop }: RootProps) => {
   }, [model]);
 
   return (
-    <BoardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
-      <Container classNames={mx('aspect-square', classNames)}>{children}</Container>
-    </BoardContext.Provider>
+    <GameboardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
+      {children}
+    </GameboardContext.Provider>
   );
 };
 
-Root.displayName = 'Board.Root';
+GameboardRoot.displayName = 'Gameboard.Root';
 
-export const Board = {
-  Root,
+type GameboardContentsProps = ThemedClassName<
+  PropsWithChildren<{
+    style?: CSSProperties;
+  }>
+>;
+
+/**
+ * Container centers the board.
+ */
+const GameboardContent = forwardRef<HTMLDivElement, GameboardContentsProps>(
+  ({ children, classNames, style }, forwardedRef) => {
+    return (
+      <div ref={forwardedRef} style={style} className='flex w-full h-full justify-center overflow-hidden'>
+        <div className={mx('max-w-full max-h-full content-center aspect-square', classNames)}>{children}</div>
+      </div>
+    );
+  },
+);
+
+export const Gameboard = {
+  Root: GameboardRoot,
+  Content: GameboardContent,
 };
 
-export type { RootProps as BoardRootProps };
+export type { GameboardRootProps, GameboardContentsProps };
