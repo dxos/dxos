@@ -12,6 +12,7 @@ import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream }
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -100,7 +101,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         yield* Console.log('Testing API connectivity...');
         const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
         yield* Console.log('API Response received:', text);
-
         expect(text).to.contain('API is working');
       },
       Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
@@ -202,21 +202,22 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
     'with parser',
     Effect.fn(
       function* ({ expect }) {
-        const system = `
+        const system = trim`
           Before you answer I want you to emit your current status (what are you doing?) inside <status></status> XML tags.
-
           After your answer emit the suggestions for follow-up user prompts inside <suggest></suggest> XML tags.
         `;
 
         const chat = yield* AiChat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = `
-        <instructions>
-          ${system}
-        </instructions>
-        
-        What is six times seven?`;
+        let prompt: AiInput.Raw = trim`
+          <instructions>
+            ${system}
+          </instructions>
+          
+          What is six times seven?
+        `;
+
         do {
           // disableToolCallResolution
           const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseGptStream());

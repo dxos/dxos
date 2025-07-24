@@ -8,7 +8,7 @@ import { Context, Effect, Layer, Record } from 'effect';
 import { BaseError } from '@dxos/errors';
 import { type DataType, type ContentBlock } from '@dxos/schema';
 
-import type { ToolId } from '../tools';
+import { type ToolId } from '../tools';
 
 export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}
 

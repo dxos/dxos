@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { AiResponse } from '@effect/ai';
+import { type AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { ContentBlock } from '@dxos/schema';
+import { type ContentBlock } from '@dxos/schema';
 
 import { StreamTransform, type StreamBlock } from '../service';
 
@@ -24,7 +24,6 @@ enum ModelTags {
 
   /**
    * Chain of thought.
-   *
    * Used by DeepSeek.
    */
   THINK = 'think',
