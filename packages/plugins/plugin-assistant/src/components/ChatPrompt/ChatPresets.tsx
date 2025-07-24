@@ -4,13 +4,12 @@
 
 import React from 'react';
 
-import { type AiServicePreset } from '@dxos/ai/testing';
 import { Select } from '@dxos/react-ui';
 
 export type ChatPresetsProps = {
-  presets?: { id: AiServicePreset; label: string }[];
-  preset?: AiServicePreset;
-  onChange?: (preset: AiServicePreset) => void;
+  presets?: { id: string; label: string }[];
+  preset?: string;
+  onChange?: (id: string) => void;
 };
 
 export const ChatPresets = ({ presets, preset, onChange }: ChatPresetsProps) => {

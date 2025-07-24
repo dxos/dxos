@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -202,10 +202,25 @@ ChatThread.displayName = 'Chat.Thread';
 //
 
 type ChatPromptProps = ThemedClassName<
-  Pick<ChatEditorProps, 'placeholder'> & ChatPresetsProps & { expandable?: boolean }
+  Pick<ChatEditorProps, 'placeholder'> &
+    Omit<ChatPresetsProps, 'onChange'> & {
+      expandable?: boolean;
+      online?: boolean;
+      onChangeOnline?: (online: boolean) => void;
+      onChangePreset: ChatPresetsProps['onChange'];
+    }
 >;
 
-const ChatPrompt = ({ classNames, placeholder, expandable, presets, preset, onChange }: ChatPromptProps) => {
+const ChatPrompt = ({
+  classNames,
+  placeholder,
+  expandable,
+  online,
+  presets,
+  preset,
+  onChangePreset,
+  onChangeOnline,
+}: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
@@ -328,7 +343,14 @@ const ChatPrompt = ({ classNames, placeholder, expandable, presets, preset, onCh
       />
 
       <ChatActions microphone={true} recording={recording} processing={processor.streaming.value} onEvent={handleEvent}>
-        {presets && <ChatPresets preset={preset} presets={presets} onChange={onChange} />}
+        <>
+          {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
+          {online !== undefined && (
+            <Input.Root>
+              <Input.Switch classNames='mis-1 mie-1' checked={online} onCheckedChange={onChangeOnline} />
+            </Input.Root>
+          )}
+        </>
       </ChatActions>
     </div>
   );

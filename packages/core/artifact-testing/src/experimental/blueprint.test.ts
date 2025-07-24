@@ -3,21 +3,19 @@
 //
 
 import { beforeAll, describe, expect, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, ToolRegistry, ToolResolverService, ToolExecutionService } from '@dxos/ai';
+import { AiService, ConsolePrinter, ToolResolverService, ToolExecutionService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Blueprint, Conversation } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { type ServiceContainer } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { Effect, Layer } from 'effect';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
