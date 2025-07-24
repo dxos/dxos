@@ -5,7 +5,9 @@
 import { Schema } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { live } from '@dxos/react-client/echo';
+import { live } from '@dxos/live-object';
+// TODO(wittjosiah): Remove dependency on react-client.
+import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
@@ -17,7 +19,7 @@ export type CreateRefPanelProps = { model?: TableModel; modals: ModalController 
 // TODO(burdon): Factor out Space dependency (to plugin?)
 export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
-  const space = model?.space;
+  const space = model && getSpace(model?.view);
   const state = modals.state.value;
 
   const schema = useMemo<Schema.Schema<any> | undefined>(() => {
@@ -54,7 +56,7 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
     }
   }, [modals]);
 
-  if (!model?.view || !model.projection) {
+  if (!model?.projection) {
     return null;
   }
 

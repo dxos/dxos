@@ -17,6 +17,8 @@ export const translations = [
         'typename label_one': 'Assistant',
         'typename label_other': 'Assistants',
         'object name placeholder': 'New assistant',
+        'rename object label': 'Rename assistant',
+        'delete object label': 'Delete assistant',
       },
       [Sequence.typename]: {
         'typename label': 'Sequence',
@@ -24,6 +26,8 @@ export const translations = [
         'typename label_one': 'Sequence',
         'typename label_other': 'Sequences',
         'object name placeholder': 'New sequence',
+        'rename object label': 'Rename sequence',
+        'delete object label': 'Delete sequence',
       },
       [TemplateType.typename]: {
         'typename label': 'Template',
@@ -31,6 +35,8 @@ export const translations = [
         'typename label_one': 'Template',
         'typename label_other': 'Templates',
         'object name placeholder': 'New template',
+        'rename object label': 'Rename template',
+        'delete object label': 'Delete template',
       },
       [meta.id]: {
         'templates label': 'Templates',

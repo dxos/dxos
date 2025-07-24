@@ -10,17 +10,17 @@ import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { useQuery, getSpace } from '@dxos/react-client/echo';
-import { type KanbanType, useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
+import { useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionModel, type DataType } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
-export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }) => {
+export const KanbanContainer = ({ view }: { view: DataType.View; role: string }) => {
   const client = useClient();
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const [projection, setProjection] = useState<ViewProjection>();
-  const space = getSpace(kanban);
+  const [projection, setProjection] = useState<ProjectionModel>();
+  const space = getSpace(view);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const jsonSchema = useMemo(() => {
@@ -31,7 +31,7 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
   }, [cardSchema]);
 
   useEffect(() => {
-    const typename = kanban.cardView?.target?.query?.typename;
+    const typename = view.query.typename;
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
@@ -49,20 +49,20 @@ export const KanbanContainer = ({ kanban }: { kanban: KanbanType; role: string }
       );
       return unsubscribe;
     }
-  }, [kanban.cardView?.target?.query, space]);
+  }, [view.query.typename, space]);
 
   useEffect(() => {
-    if (kanban.cardView?.target && jsonSchema) {
-      setProjection(new ViewProjection(jsonSchema, kanban.cardView.target));
+    if (jsonSchema) {
+      setProjection(new ProjectionModel(jsonSchema, view.projection));
     }
     // TODO(ZaymonFC): Is there a better way to get notified about deep changes in the json schema?
-  }, [kanban.cardView?.target, JSON.stringify(jsonSchema)]);
+  }, [view.projection, JSON.stringify(jsonSchema)]);
 
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   const model = useKanbanModel({
-    kanban,
+    view,
     schema: cardSchema,
     projection,
     items: filteredObjects,

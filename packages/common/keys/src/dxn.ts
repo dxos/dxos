@@ -233,6 +233,7 @@ export class DXN {
 
     const [type, version] = this.#parts;
     return {
+      // TODO(wittjosiah): Should be `typename` for consistency.
       type,
       version: version as string | undefined,
     };

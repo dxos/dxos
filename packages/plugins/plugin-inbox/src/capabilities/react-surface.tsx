@@ -16,7 +16,6 @@ import {
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
 
 import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
@@ -128,8 +127,9 @@ export default () =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
 
-        const currentSpaceTables = useQuery(space, Filter.type(TableType));
-        const defaultSpaceTables = useQuery(defaultSpace, Filter.type(TableType));
+        // TODO(wittjosiah): Restore related.
+        const currentSpaceTables = [] as any[]; // useQuery(space, Filter.type(TableType));
+        const defaultSpaceTables = [] as any[]; // useQuery(defaultSpace, Filter.type(TableType));
         const currentSpaceContactTable = currentSpaceTables?.find((table) => {
           return table.view?.target?.query?.typename === DataType.Person.typename;
         });

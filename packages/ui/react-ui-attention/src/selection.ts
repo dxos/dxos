@@ -110,7 +110,7 @@ export class SelectionManager {
     untracked(() => {
       const selection = this.getSelection(contextId, 'multi');
       invariant(selection?.mode === 'multi', 'Selection mode is not multi');
-      selection.ids = ids;
+      selection.ids.splice(0, selection.ids.length, ...ids);
     });
   }
 
@@ -134,9 +134,25 @@ export class SelectionManager {
   clearSelection(contextId: string): void {
     untracked(() => {
       const selection = this.getSelection(contextId);
-      if (selection) {
-        this._state.selections[contextId] = defaultSelection(selection.mode);
-      }
+      Match.type<Selection | undefined>().pipe(
+        Match.when(undefined, () => {
+          // No-op.
+        }),
+        Match.when({ mode: 'single' }, (s) => {
+          s.id = undefined;
+        }),
+        Match.when({ mode: 'multi' }, (s) => {
+          s.ids.splice(0, s.ids.length);
+        }),
+        Match.when({ mode: 'range' }, (s) => {
+          s.from = undefined;
+          s.to = undefined;
+        }),
+        Match.when({ mode: 'multi-range' }, (s) => {
+          s.ranges.splice(0, s.ranges.length);
+        }),
+        Match.exhaustive,
+      )(selection);
     });
   }
 
