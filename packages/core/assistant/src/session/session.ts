@@ -152,7 +152,7 @@ export class AISession {
         });
 
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
-
+      
         // Open request stream.
         // this._stream = await options.client.execStream({
         //   ...(options.generationOptions ?? {}),
@@ -180,6 +180,10 @@ export class AISession {
                 } else {
                   this.block.emit(block);
                 }
+              }),
+            onPart: (part) =>
+              Effect.gen(this, function* () {
+                this.streamEvent.emit(part);
               }),
           }),
           Stream.runCollect,
