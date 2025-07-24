@@ -82,7 +82,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div {...{ inert: '' }} className='contents pointer-events-none'>
+      <div role='none' {...{ inert: '' }} className='pointer-events-none min-bs-0 min-is-0'>
         {children}
       </div>
     </Card.StaticRoot>
