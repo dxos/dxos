@@ -39,6 +39,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
         />
       )) || (
         <IconButton
+          disabled
           classNames='px-1.5'
           variant='ghost'
           size={5}

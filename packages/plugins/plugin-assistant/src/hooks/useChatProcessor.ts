@@ -23,11 +23,12 @@ type UseChatProcessorProps = {
   preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;
-  services?: Layer.Layer<ChatServices>;
 
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
+  // TODO(burdon): Move into layer?
+  services?: Layer.Layer<ChatServices>;
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
+
   /** @deprecated */
   instructions?: string;
   /** @deprecated */

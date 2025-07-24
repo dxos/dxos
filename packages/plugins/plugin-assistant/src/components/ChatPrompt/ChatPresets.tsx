@@ -15,7 +15,7 @@ export type ChatPresetsProps = {
 export const ChatPresets = ({ presets, preset, onChange }: ChatPresetsProps) => {
   return (
     <Select.Root value={preset} onValueChange={onChange}>
-      <Select.TriggerButton classNames='mie-2 text-sm' />
+      <Select.TriggerButton classNames='text-sm' />
       <Select.Content>
         {presets?.map(({ id, label }) => (
           <Select.Option key={id} value={id} classNames='text-sm'>

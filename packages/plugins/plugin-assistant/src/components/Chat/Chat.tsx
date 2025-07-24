@@ -22,7 +22,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ChatProcessor, useContextProvider, useBlueprints } from '../../hooks';
+import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
@@ -249,19 +249,13 @@ const ChatPrompt = ({
     },
   });
 
-  const [blueprints, handleUpdateBlueprints] = useBlueprints(processor.context);
+  const [blueprints, handleUpdateBlueprints] = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
-  const contextProvider = useContextProvider(space);
+  const contextProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      contextProvider &&
-        references({
-          provider: {
-            getReferences: async ({ query }) => contextProvider.query({ query }),
-            resolveReference: async ({ uri }) => contextProvider.resolveMetadata({ uri }),
-          },
-        }),
+      contextProvider && references({ provider: contextProvider }),
       expandable &&
         Prec.highest(
           keymap.of([
@@ -347,7 +341,7 @@ const ChatPrompt = ({
           {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
           {online !== undefined && (
             <Input.Root>
-              <Input.Switch classNames='mis-1 mie-1' checked={online} onCheckedChange={onChangeOnline} />
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
             </Input.Root>
           )}
         </>

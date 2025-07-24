@@ -97,8 +97,6 @@ const ChatContainer = () => {
     noPluginArtifacts: true,
   });
 
-  console.log(presets.length);
-
   const handleChangePreset = useCallback<NonNullable<ChatPromptProps['onChangePreset']>>(
     (id) => {
       const preset = presets.find((preset) => preset.id === id);
@@ -229,12 +227,14 @@ const getDecorators = ({
               content: Ref.make(Obj.make(DataType.Text, { content: '' })),
             }),
           );
-          log.info('doc', { doc: Obj.getDXN(doc) });
 
-          // Clone blueprints and bind to conversation.
           const binder = new ContextBinder(await chat.queue.load());
+          await binder.bind({ objects: [Ref.make(doc)] });
           for (const blueprint of blueprints) {
-            const obj = space.db.add(Obj.make(Blueprint, { ...blueprint }));
+            // Clone blueprints and bind to conversation.
+            // TODO(dmaretskyi): This should be done by Obj.clone.
+            const { id: _id, ...data } = blueprint;
+            const obj = space.db.add(Obj.make(Blueprint, data));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
         },
@@ -244,9 +244,6 @@ const getDecorators = ({
       SpacePlugin(),
 
       TranscriptionPlugin(),
-
-      // TODO(burdon): Install capabilities independently?
-      // TODO(burdon): How to mock?
       AssistantPlugin(),
 
       ...plugins,
