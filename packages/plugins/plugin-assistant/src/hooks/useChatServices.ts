@@ -22,7 +22,6 @@ import {
 } from '@dxos/functions';
 
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { type AiServicePreset } from './presets';
 export * from '@dxos/assistant';
 
 // TODO(burdon): Deconstruct into separate layers?
@@ -40,13 +39,12 @@ export type ChatServices =
 
 export type UseChatServicesProps = {
   space?: Space;
-  preset?: AiServicePreset;
 };
 
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space, preset }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
+export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
   const toolRegistry = useToolRegistry();
   // TODO(dmaretskyi): We can provide the plugin registry as a layer and then build the entire layer stack from there. We need to think how plugin reactivity affect our layer structure.
   const toolResolver = useToolResolver();
@@ -54,7 +52,7 @@ export const useChatServices = ({ space, preset }: UseChatServicesProps): Layer.
 
   return useMemo(() => {
     return Layer.mergeAll(
-      AiServiceTestingPreset(preset ?? 'direct').pipe(Layer.orDie), // TODO(burdon): Error management?
+      AiServiceTestingPreset('direct').pipe(Layer.orDie), // TODO(burdon): Error management?
       Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
       space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
       space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,
@@ -66,7 +64,7 @@ export const useChatServices = ({ space, preset }: UseChatServicesProps): Layer.
       // TODO(dmaretskyi): Remove.
       Layer.succeed(FunctionsToolResolverService, FunctionsToolResolverService.make(toolRegistry)),
     );
-  }, [space, preset, toolRegistry, toolResolver]);
+  }, [space, toolRegistry, toolResolver]);
 };
 
 const useToolResolver = (): Layer.Layer<ToolResolverService> => {

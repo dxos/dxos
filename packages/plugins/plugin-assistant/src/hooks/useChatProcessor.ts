@@ -15,20 +15,20 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatServices, type ChatProcessorOptions } from '../hooks';
+import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
-  /** @deprecated Why is this required? */
-  part?: 'deck' | 'dialog';
+  preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;
-  services?: Layer.Layer<ChatServices>;
 
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
+  // TODO(burdon): Move into layer?
+  services?: Layer.Layer<ChatServices>;
   blueprintRegistry?: BlueprintRegistry;
   settings?: Assistant.Settings;
+
   /** @deprecated */
   instructions?: string;
   /** @deprecated */
@@ -41,7 +41,7 @@ type UseChatProcessorProps = {
  * Configure and create ChatProcessor.
  */
 export const useChatProcessor = ({
-  part = 'deck',
+  preset,
   space,
   chat,
   services,
@@ -84,7 +84,7 @@ export const useChatProcessor = ({
         .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
-    const extensions = { part, space, dispatch, pivotId: chatId };
+    const extensions = { space, dispatch, pivotId: chatId };
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
@@ -98,13 +98,6 @@ export const useChatProcessor = ({
       }),
     [artifacts, artifact, instructions],
   );
-
-  // TODO(burdon): Remove default (let backend decide if not specified).
-  // TODO(dmaretskyi): Fix model selection.
-  const model: ChatProcessorOptions['model'] = '@google/gemma-3-12b';
-  // settings?.llmProvider === 'ollama'
-  //   ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
-  //   : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
 
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
@@ -123,16 +116,16 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    log('creating processor...', { settings });
+    log.info('creating processor', { preset, settings });
     return new ChatProcessor(services, conversation, {
       tools,
       extensions,
       blueprintRegistry,
       artifacts,
       systemPrompt,
-      model,
+      model: preset?.model,
     });
-  }, [services, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
+  }, [services, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, preset]);
 
   return processor;
 };

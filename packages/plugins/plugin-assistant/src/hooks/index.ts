@@ -8,5 +8,4 @@ export * from './presets';
 export * from './useBlueprints';
 export * from './useChatProcessor';
 export * from './useChatServices';
-export * from './useContextProvider';
-export * from './useTextInputEvents';
+export * from './useReferencesProvider';

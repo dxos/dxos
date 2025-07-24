@@ -3,6 +3,7 @@
 //
 
 import { beforeAll, describe, expect, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
@@ -17,7 +18,6 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
-
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Effect, Layer } from 'effect';
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
