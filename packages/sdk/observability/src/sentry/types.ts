@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Event, Transport } from '@sentry/types';
+import type { Event, SamplingContext, Transport } from '@sentry/types';
 
 export type InitOptions = {
   enable?: boolean;
@@ -10,8 +10,12 @@ export type InitOptions = {
   installationId?: string;
   release?: string;
   environment?: string;
-  tracing?: boolean;
   sampleRate?: number;
+  tracing?: boolean;
+  tracesSampler?: (samplingContext: SamplingContext) => number;
+  profiling?: boolean;
+  // NOTE: This is relative to the trace sample.
+  profilesSampleRate?: number;
   replay?: boolean;
   replaySampleRate?: number;
   replaySampleRateOnError?: number;
