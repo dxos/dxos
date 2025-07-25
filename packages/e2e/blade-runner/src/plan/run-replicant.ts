@@ -35,14 +35,15 @@ const initLogProcessor = (params: ReplicantParams) => {
     log.addProcessor(
       createFileProcessor({
         pathOrFd: params.logFile,
-        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.VERBOSE, LogLevel.INFO, LogLevel.TRACE],
       }),
     );
   } else {
-    // NOTE: `dxgravity_log` is being exposed by playwright `.exposeFunction()` API. Log chattiness can cause playwright connection overload so we limit it to only trace logs and info and above.
+    // NOTE: `dx_runner_log` is being exposed by playwright `.exposeFunction()` API.
+    // CAUTION: Log chattiness can cause playwright connection overload so we limit it to only trace logs and verbose and above.
     log.addProcessor((config, entry) => {
       if (entry.level === LogLevel.TRACE || entry.level >= LogLevel.INFO) {
-        (window as any).dxgravity_log?.(config, entry);
+        (window as any).dx_runner_log?.(config, entry);
       }
     });
   }
@@ -52,7 +53,7 @@ const finish = (code: number) => {
   if (isNode()) {
     process.exit(code);
   } else {
-    // NOTE: `dxgravity_done` is being exposed by playwright `.exposeFunction()` API.
-    (window as any).dxgravity_done?.(code);
+    // NOTE: `dx_runner_done` is being exposed by playwright `.exposeFunction()` API.
+    (window as any).dx_runner_done?.(code);
   }
 };

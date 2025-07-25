@@ -64,13 +64,14 @@ export default class Upload extends BaseCommand<typeof Upload> {
 
         const existingFunctionObject = await this._loadFunctionObject(space);
 
-        const uploadResult = await this._upload(client, space.key, existingFunctionObject, bundledScript);
+        const uploadResult = await this._upload(client, identity.identityKey, existingFunctionObject, bundledScript);
 
         const functionObject = this._updateFunctionObject(space, existingFunctionObject, uploadResult);
 
         if (this.flags.composerScript) {
           await this._updateComposerScript(client, space, functionObject, basename(this.args.file), scriptFileContent);
         }
+        return uploadResult;
       },
       { spaceKeys: this.flags.spaceKey ? [this.flags.spaceKey] : undefined },
     );
@@ -112,9 +113,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
     functionObject: FunctionType | undefined,
     bundledSource: string,
   ): Promise<UploadFunctionResponseBody> {
-    let result: UploadFunctionResponseBody;
     try {
-      result = await asyncTimeout(
+      const result = await asyncTimeout(
         uploadWorkerFunction({
           client,
           ownerPublicKey,
