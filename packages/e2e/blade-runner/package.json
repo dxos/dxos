@@ -30,7 +30,7 @@
     }
   },
   "scripts": {
-    "run-tests": "moon run blade-runner:compile && tsx ./src/main.ts"
+    "run-tests": "tsx ./src/main.ts"
   },
   "dependencies": {
     "@automerge/automerge": "3.0.0",
@@ -41,6 +41,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -48,6 +49,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -57,6 +59,7 @@
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/plugin-script": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",

@@ -61,7 +61,7 @@ export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   if (options.repeatAnalysis) {
     // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
-    await plan.analyze(
+    await plan.analyze?.(
       { spec: summary.spec, outDir: summary.testParams?.outDir, testId: summary.testParams?.testId },
       summary.results,
     );
@@ -86,7 +86,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     spec,
   };
 
-  {
+  if (options.shouldBuildBrowser) {
     // TODO(mykola): Detect somehow if we need to build the browser bundle.
     const begin = Date.now();
     const pathToBundle = join(outDir, 'artifacts', 'browser.js');
@@ -122,7 +122,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
 
   let stats: any;
   try {
-    stats = await plan.analyze({ spec, outDir, testId }, replicants, result);
+    stats = await plan.analyze?.({ spec, outDir, testId }, replicants, result);
   } catch (err) {
     log.warn('error finishing plan', err);
   }

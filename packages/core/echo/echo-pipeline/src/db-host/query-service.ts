@@ -96,6 +96,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx }) => {
+      if (this._params.indexer.config?.enabled !== true) {
+        log.error('indexer is disabled', { config: this._params.indexer.config });
+        close();
+        return;
+      }
+
       const queryEntry = this._createQuery(ctx, request, next, close, close);
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
