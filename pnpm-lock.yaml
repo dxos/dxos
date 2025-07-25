@@ -13901,6 +13901,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13950,9 +13953,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -14059,6 +14059,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-search
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14129,12 +14135,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/plugin-search':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-search
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

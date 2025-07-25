@@ -52,15 +52,17 @@ import { createOption, TableValueEditor, type TableCellEditorProps } from '../Ta
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ children, role }: TableRootProps) => {
+const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
   return (
     <div
       role='none'
       className={mx(
-        'relative !border-separator',
-        role === 'section' // TODO(burdon): This leaks composer plugin concepts? Standardize for react-ui?
-          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-[--dx-grid-content-inline-size]'
-          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+        role === 'popover' && 'popover-card-height',
+        role === 'section' && 'attention-surface',
+        role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
+        ['popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
       )}
     >
       {children}

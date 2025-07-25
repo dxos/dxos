@@ -6,142 +6,33 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import {
   FormatEnum,
-  isMutable,
-  toJsonSchema,
   EchoObject,
   GeneratorAnnotation,
   FormatAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { PublicKey, useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live, type Space } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { PublicKey } from '@dxos/react-client';
+import { live, type Space } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, DataType, ProjectionModel } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table, type TableController } from './Table';
-import { useTableModel, useAddRow } from '../../hooks';
-import { TablePresentation } from '../../model';
+import { Table } from './Table';
+import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
 import { TableView } from '../../types';
 import { createTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
-
-faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
-
-/**
- * Custom hook to create and manage a test table model for storybook demonstrations.
- * Provides table data, schema, and handlers for table operations.
- */
-const useTestTableModel = () => {
-  const client = useClient();
-  const { space } = useClientProvider();
-
-  const views = useQuery(space, Filter.type(DataType.View));
-  const view = useMemo(() => views.at(0), [views]);
-  const schema = useSchema(client, space, view?.query.typename);
-  const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
-
-  const projection = useMemo(() => {
-    if (schema && view?.projection) {
-      return new ProjectionModel(toJsonSchema(schema), view.projection);
-    }
-  }, [schema, view?.projection]);
-
-  const features = useMemo(
-    () => ({
-      selection: { enabled: true, mode: 'multiple' as const },
-      dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
-    }),
-    [schema],
-  );
-
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
-  const tableRef = useRef<TableController>(null);
-  const handleCellUpdate = useCallback((cell: any) => {
-    tableRef.current?.update?.(cell);
-  }, []);
-
-  const handleRowOrderChange = useCallback(() => {
-    tableRef.current?.update?.();
-  }, []);
-
-  const addRow = useAddRow({ space, schema });
-
-  const handleDeleteRows = useCallback(
-    (_: number, objects: any[]) => {
-      for (const object of objects) {
-        space?.db.remove(object);
-      }
-    },
-    [space],
-  );
-
-  const handleDeleteColumn = useCallback(
-    (fieldId: string) => {
-      if (projection) {
-        projection.deleteFieldProjection(fieldId);
-      }
-    },
-    [projection],
-  );
-
-  const model = useTableModel({
-    view,
-    schema: jsonSchema,
-    projection,
-    features,
-    rows: filteredObjects,
-    onInsertRow: addRow,
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: handleCellUpdate,
-    onRowOrderChange: handleRowOrderChange,
-  });
-
-  const handleInsertRow = useCallback(() => {
-    model?.insertRow();
-  }, [model]);
-
-  const handleSaveView = useCallback(() => {
-    model?.saveView();
-  }, [model]);
-
-  const presentation = useMemo(() => {
-    if (model) {
-      return new TablePresentation(model);
-    }
-  }, [model]);
-
-  return {
-    schema,
-    view,
-    projection,
-    tableRef,
-    model,
-    presentation,
-    space,
-    client,
-    handleInsertRow,
-    handleSaveView,
-    handleDeleteRows,
-    handleDeleteColumn,
-  };
-};
 
 const TestSchema = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
