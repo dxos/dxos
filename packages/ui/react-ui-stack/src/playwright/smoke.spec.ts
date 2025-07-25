@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { StackManager } from '../testing';
+import { StackManager } from './stack-manager';
 
 const PORT = 9003;
 
