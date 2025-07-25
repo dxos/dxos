@@ -41,7 +41,7 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
  * It makes requests to the model, its a state machine.
  * It keeps track of the current goal.
  * It manages the context window.
- * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
+ * Tracks the success criteria of reaching the goal, exposing metrics (stretch).
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
@@ -115,6 +115,8 @@ export class AiSession {
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
       this.userMessage.emit(promptMessages);
+
+      // Potential tool use loop.
       do {
         log('request', {
           pending: this._pending.length,
@@ -137,9 +139,11 @@ export class AiSession {
         //       operationModel: this._options.operationModel,
         //     }),
         // });
+
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           toolkit: options.toolkit,
+          // TODO(burdon): Why is this hardcoded?
           system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
         }).pipe(
@@ -167,6 +171,7 @@ export class AiSession {
           blocks,
         });
         this._pending.push(response);
+        this.message.emit(response);
 
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
@@ -185,6 +190,7 @@ export class AiSession {
         const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
           runTool(toolkit, toolCall),
         );
+
         this._pending.push(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),

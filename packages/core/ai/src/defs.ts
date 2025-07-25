@@ -48,8 +48,7 @@ export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
 export const DEFAULT_LMSTUDIO_MODELS = [
   //
   '@google/gemma-3-12b',
-  'deepseek/deepseek-r1-0528-qwen3-8b',
-  'llama-3.2-3b-instruct',
+  '@mlx-community/llama-3.2-3b-instruct',
 ] as const;
 
 export const DEFAULT_LMSTUDIO_MODEL = '@google/gemma-3-12b';

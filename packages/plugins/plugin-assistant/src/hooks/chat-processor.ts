@@ -16,12 +16,13 @@ import {
   type Conversation,
 } from '@dxos/assistant';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import type { ChatServices } from './useChatServices';
-import { runAndForwardErrors } from '@dxos/effect';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -65,16 +66,16 @@ export class ChatProcessor {
   private readonly _pending: Signal<DataType.Message[]> = signal([]);
 
   /**
-   * Current streaming block (from the AI service).
+   * Current streaming message (from the AI service).
    * @reactive
    */
-  private readonly _block: Signal<ContentBlock.Any | undefined> = signal(undefined);
+  private readonly _streaming: Signal<DataType.Message | undefined> = signal(undefined);
 
   /**
    * Streaming state.
    * @reactive
    */
-  public readonly streaming: Signal<boolean> = computed(() => this._block.value !== undefined);
+  public readonly streaming: Signal<boolean> = computed(() => this._streaming.value !== undefined);
 
   /**
    * Last error.
@@ -88,10 +89,8 @@ export class ChatProcessor {
    */
   public readonly messages: Signal<DataType.Message[]> = computed(() => {
     const messages = [...this._pending.value];
-    if (this._block.value && messages.length) {
-      const { blocks, ...rest } = messages.pop()!;
-      const message = { ...rest, blocks: [...blocks, this._block.value] };
-      messages.push(message);
+    if (this._streaming.value) {
+      messages.push(this._streaming.value);
     }
 
     return messages;
@@ -151,24 +150,35 @@ export class ChatProcessor {
         }
       });
 
+      // User message.
+      session.userMessage.on((message) => {
+        log.info('userMessage', { message });
+        this._pending.value = [...this._pending.value, message];
+      });
+
       // Message complete.
       session.message.on((message) => {
         batch(() => {
           this._pending.value = [...this._pending.value, message];
-          this._block.value = undefined;
+          this._streaming.value = undefined;
         });
       });
 
       // Streaming update (happens before message complete).
       session.update.on((block) => {
         batch(() => {
-          this._block.value = block;
+          if (!this._streaming.value) {
+            // TODO(burdon): Hack to create temp message; better for session to send initial partial object?
+            this._streaming.value = Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'assistant' },
+              blocks: [block],
+            });
+          } else {
+            const { blocks: _, ...rest } = this._streaming.value;
+            this._streaming.value = { ...rest, blocks: [block] };
+          }
         });
-      });
-
-      session.userMessage.on((message) => {
-        log.info('userMessage', { message });
-        this._pending.value = [...this._pending.value, message];
       });
 
       // TODO(dmaretskyi): Handle tool status reports.
@@ -250,7 +260,7 @@ export class ChatProcessor {
     const messages = this._pending.value;
     batch(() => {
       this._pending.value = [];
-      this._block.value = undefined;
+      this._streaming.value = undefined;
     });
 
     return messages;

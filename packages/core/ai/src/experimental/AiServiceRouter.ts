@@ -2,14 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiLanguageModel, type AiModel } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
+import { type AiLanguageModel } from '@effect/ai';
+import { AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { Context, Effect, Layer, Option } from 'effect';
 
 import { AiModelNotAvailableError } from '../errors';
 import { AiService } from '../service';
 import { type LLMModel as ModelName } from '../types';
+
+// TODO(burdon): Determine canoncical naming and resolution of different models by provider.
+//  Consider: Base model (e.g., claude-opus-4-0), Provider (e.g., anhtropic), Registry (cloudflare), Runtime (dxos-remote).
+//  Examples:
+//  https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct                     => huggingface.co/meta-llama/Llama-3.2-3B-Instruct
+//  https://developers.cloudflare.com/workers-ai/models/llama-3.2-3b-instruct   => cloudflare.com/llama-3.2-3b-instruct
+//  https://ollama.com/library/llama3.2                                         => ollama.com/llama3.2
 
 export class AiModelResolver extends Context.Tag('AiModelResolver')<
   AiModelResolver,
@@ -88,6 +95,7 @@ export const LMStudioResolver = AiModelResolver.fromModelMap(
     return {
       // TODO(dmaretskyi): Add more LMStudio models.
       '@google/gemma-3-12b': yield* OpenAiLanguageModel.model('google/gemma-3-12b' as any),
+      '@meta/llama-3.2-3b-instruct': yield* OpenAiLanguageModel.model('llama-3.2-3b-instruct' as any),
     };
   }).pipe(
     Effect.provide(
@@ -113,5 +121,5 @@ export const OpenAiResolver = AiModelResolver.fromModelMap(
 export const AiServiceRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver),
   Layer.provide(LMStudioResolver),
-  Layer.provide(OpenAiResolver),
+  // Layer.provide(OpenAiResolver),
 );

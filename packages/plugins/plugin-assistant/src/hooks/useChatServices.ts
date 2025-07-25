@@ -6,9 +6,10 @@ import { Layer } from 'effect';
 import { useMemo } from 'react';
 import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
-import { type AiService, ToolExecutionService, ToolRegistry, ToolResolverService } from '@dxos/ai';
+import { type AiService, type ToolExecutionService, ToolRegistry, type ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import {
   ConfiguredCredentialsService,
@@ -21,7 +22,6 @@ import {
   TracingService,
 } from '@dxos/functions';
 
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 export * from '@dxos/assistant';
 
 // TODO(burdon): Deconstruct into separate layers?
@@ -52,7 +52,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
 
   return useMemo(() => {
     return Layer.mergeAll(
-      AiServiceTestingPreset('direct').pipe(Layer.orDie), // TODO(burdon): Error management?
+      AiServiceTestingPreset('edge-local').pipe(Layer.orDie), // TODO(burdon): Error management?
       Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
       space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
       space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,

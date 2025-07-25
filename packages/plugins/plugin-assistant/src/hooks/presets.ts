@@ -31,7 +31,7 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b' as const,
+    model: '@anthropic/claude-opus-4-0' as const,
   },
   {
     provider: 'lm-studio' as const,
@@ -39,11 +39,7 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'lm-studio' as const,
-    model: 'deepseek/deepseek-r1-0528-qwen3-8b' as const,
-  },
-  {
-    provider: 'lm-studio' as const,
-    model: 'llama-3.2-3b-instruct' as const,
+    model: '@mlx-community/llama-3.2-3b-instruct' as const,
   },
 ].map(
   ({ model, provider }, i) =>

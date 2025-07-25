@@ -27,6 +27,7 @@ type UseChatProcessorProps = {
   // TODO(burdon): Move into layer?
   services?: Layer.Layer<ChatServices>;
   blueprintRegistry?: BlueprintRegistry;
+  // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
 
   /** @deprecated */
@@ -88,7 +89,6 @@ export const useChatProcessor = ({
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
-  // Prompt.
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({
@@ -116,7 +116,13 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    log.info('creating processor', { preset, settings });
+    log.info('creating processor', {
+      preset,
+      artifacts: artifacts.length,
+      systemPrompt: systemPrompt.length,
+      model: preset?.model,
+      settings,
+    });
     return new ChatProcessor(services, conversation, {
       tools,
       extensions,

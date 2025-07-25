@@ -137,7 +137,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
 
   return (
     <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages} {...props}>
-      <div role='none' className={mx('flex flex-col grow', classNames)}>
+      <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
         {children}
       </div>
     </ChatContextProvider>
@@ -305,7 +305,7 @@ const ChatPrompt = ({
   return (
     <div
       className={mx(
-        'is-full grid grid-cols-[var(--rail-action)_1fr_min-content] grid-rows-[min-content_var(--rail-action)]',
+        'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
         classNames,
       )}
     >
@@ -323,21 +323,28 @@ const ChatPrompt = ({
         onSubmit={handleSubmit}
       />
 
-      <ChatOptionsMenu
-        blueprintRegistry={processor.blueprintRegistry}
-        blueprints={blueprints}
-        onChange={handleUpdateBlueprints}
-      />
-
+      <div />
       <ChatReferences
-        classNames='flex pis-1 items-center'
+        classNames='col-span-2 flex pis-1 items-center'
         space={space}
         context={processor.context}
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatActions microphone={true} recording={recording} processing={processor.streaming.value} onEvent={handleEvent}>
+      <ChatOptionsMenu
+        blueprintRegistry={processor.blueprintRegistry}
+        blueprints={blueprints}
+        onChange={handleUpdateBlueprints}
+      />
+      <ChatActions
+        classNames='col-span-2'
+        microphone={true}
+        recording={recording}
+        processing={processor.streaming.value}
+        onEvent={handleEvent}
+      >
         <>
+          <div className='grow' />
           {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
           {online !== undefined && (
             <Input.Root>

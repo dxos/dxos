@@ -24,10 +24,10 @@ import { type ChatProcessor } from '../../hooks';
 import { ToolboxContainer } from '../Toolbox';
 
 export type ChatMessageProps = ThemedClassName<{
+  debug?: boolean;
   space?: Space;
   processor?: ChatProcessor;
   message: DataType.Message;
-  debug?: boolean;
   tools?: Tool[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
@@ -35,6 +35,7 @@ export type ChatMessageProps = ThemedClassName<{
 }>;
 
 export const ChatMessage = ({
+  debug,
   classNames,
   space,
   processor,
@@ -71,9 +72,10 @@ export const ChatMessage = ({
     return (
       <MessageContainer
         key={idx}
-        classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
+        classNames={mx(classNames, '__animate-[fadeIn_0.5s]')}
         user={block._tag === 'text' && role === 'user'}
       >
+        {debug && <div className='text-xs'>{JSON.stringify({ block: block._tag, role })}</div>}
         <Component space={space} processor={processor} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
@@ -98,7 +100,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
     // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
-      return <MarkdownViewer classNames='[&>p]:animate-[fadeIn_0.5s]' content={block.text} />;
+      return <MarkdownViewer content={block.text} />;
     }
 
     // TOOD(burdon): Store last time user opened/closed COT.
