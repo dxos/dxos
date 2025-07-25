@@ -149,10 +149,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
+        console.log('[grid click]', rowIndex);
         if (rowIndex != null) {
           if (onRowClick) {
             const row = model?.getRowAt(rowIndex);
+            console.log('[row click]', row, model);
             row && onRowClick(row);
           }
 
