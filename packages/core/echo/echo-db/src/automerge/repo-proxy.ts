@@ -251,6 +251,9 @@ export class RepoProxy extends Resource {
       addMutations(updateIds);
       if (updates.length > 0) {
         await this._dataService.update({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
+        if (this._lifecycleState === LifecycleState.CLOSED) {
+          return;
+        }
         for (const { documentId } of updates) {
           this._handles[documentId]._confirmSync();
         }

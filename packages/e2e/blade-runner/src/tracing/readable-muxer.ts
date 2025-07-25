@@ -4,7 +4,6 @@
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 
 /**
  * Muxes multiple readable streams together into one.
@@ -39,7 +38,6 @@ export class ReadableMuxer<T> {
         this._readableController.enqueue(value);
       }
     });
-    log.info('done');
   }
 
   async close(): Promise<void> {
