@@ -18,6 +18,7 @@ export type EdgeTestSpec = {
   indexing: IndexConfig;
   config: ConfigProto;
   maxDocumentsPerInvocation: number;
+  simultaneousInvocations: boolean;
   dataGeneration: {
     /**
      * Amount of documents to create on edge.
@@ -50,7 +51,8 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
         textSize: 100,
         mutationAmount: 0,
       },
-      maxDocumentsPerInvocation: 2000,
+      maxDocumentsPerInvocation: 500,
+      simultaneousInvocations: false,
       indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
         runtime: {
@@ -63,14 +65,14 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
             },
           },
           services: {
-            agentHosting: {
+            agentHosting: { 
               type: 'AGENTHOSTING_API',
-              // server: 'https://edge.dxos.workers.dev/v1alpha1/',
-              server: 'http://localhost:8787/v1alpha1/',
+              server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              // server: 'http://localhost:8787/v1alpha1/',
             },
             edge: {
-              // url: 'https://edge.dxos.workers.dev',
-              url: 'http://localhost:8787',
+              url: 'https://edge.dxos.workers.dev',
+              // url: 'http://localhost:8787',
             },
           },
         },
@@ -79,12 +81,18 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
   }
 
   async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeReplicationResult> {
+    //
+    // Config.
+    //
     const configEnabledEdgeSync = structuredClone(params.spec.config);
     configEnabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = true;
 
     const configDisabledEdgeSync = structuredClone(params.spec.config);
     configDisabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = false;
 
+    //
+    // Spawn replicant and setup.
+    //
     const replicant = await env.spawn(EdgeReplicant, { platform: params.spec.platform });
     await replicant.brain.initClient({ config: configDisabledEdgeSync, indexing: params.spec.indexing });
     await replicant.brain.createIdentity();
@@ -97,6 +105,9 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
 
     const spaceId = await replicant.brain.createSpace({ waitForSpace: false });
 
+    //
+    // Objects creation.
+    //
     performance.mark('objects:start');
     let createdDocuments = 0;
     const promises = [];
@@ -106,30 +117,38 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
         params.spec.dataGeneration.documentAmount - createdDocuments,
       );
       createdDocuments += documentsToCreate;
-      promises.push(
-        replicant.brain
-          .invokeFunction({
-            functionId: func.functionId,
-            spaceId,
-            input: JSON.stringify({
-              ...params.spec.dataGeneration,
-              documentAmount: documentsToCreate,
-            }),
-          })
-          .then((result) => {
-            log.info('invocation result', { result });
-          })
-          .catch((error) => {
-            log.error('error invoking function', { error });
+      const promise = replicant.brain
+        .invokeFunction({
+          functionId: func.functionId,
+          spaceId,
+          input: JSON.stringify({
+            ...params.spec.dataGeneration,
+            documentAmount: documentsToCreate,
           }),
-      );
+        })
+        .then((result) => {
+          log.info('invocation result', { result });
+        })
+        .catch((error) => {
+          log.error('error invoking function', { error });
+        });
+      if (!params.spec.simultaneousInvocations) {
+        await promise;
+      } else {
+        promises.push(promise);
+      }
     }
-    log.info('waiting for all functions to finish', { amountOfInvocations: promises.length });
-    await Promise.all(promises);
-    log.info('all functions finished');
+    if (params.spec.simultaneousInvocations) {
+      log.info('waiting for all functions to finish', { amountOfInvocations: promises.length });
+      await Promise.all(promises);
+      log.info('all functions finished');
+    }
     performance.mark('objects:end');
     const objectsCreationTime = performance.measure('objects', 'objects:start', 'objects:end').duration;
 
+    //
+    // Replication.
+    //
     await replicant.brain.reinitializeClient({ config: configEnabledEdgeSync, indexing: params.spec.indexing });
     performance.mark('sync:start');
     await replicant.brain.waitForReplication({ spaceId, minDocuments: params.spec.dataGeneration.documentAmount });
