@@ -3,6 +3,7 @@
 //
 
 import { log } from '@dxos/log';
+
 import { BaseCommand } from '../../base';
 
 export default class List extends BaseCommand<typeof List> {
