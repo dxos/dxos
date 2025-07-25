@@ -10,7 +10,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "default": "dist/lib/browser/index.mjs"
+      "default": "./dist/lib/browser/index.mjs"
     },
     "./plugin": {
       "types": "./dist/types/src/plugins/plugin.d.ts",
