@@ -24,6 +24,17 @@ import { DataType, type ContentBlock } from '@dxos/schema';
 
 import { AiAssistantError } from '../errors';
 
+export type AiSessionOptions = {};
+
+export type SessionRunOptions<Tools extends AiTool.Any> = {
+  prompt: string;
+  history: DataType.Message[];
+  systemPrompt?: string;
+  toolkit?: AiToolkit.ToHandler<Tools>;
+
+  // TODO(dmaretskyi): Blueprints.
+};
+
 /**
  * Contains message history, tools, current context.
  * Current context means the state of the app, time of day, and other contextual information.
@@ -34,48 +45,10 @@ import { AiAssistantError } from '../errors';
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
+export class AiSession {
+  // TODO(burdon): Move to conversation.
+  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
-/**
- * Resolves artifact ids to their versions.
- * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
- * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
- * a diff is inserted into the conversation.
- *
- * Can be optionally provided to the session run call.
- */
-// TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
-  ArtifactDiffResolver,
-  ArtifactDiffResolver.Service
->() {}
-
-export namespace ArtifactDiffResolver {
-  export type Service = {
-    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
-      Map<
-        ObjectId,
-        {
-          version: ObjectVersion;
-          diff?: string;
-        }
-      >
-    >;
-  };
-}
-
-export type SessionRunOptions<Tools extends AiTool.Any> = {
-  prompt: string;
-  history: DataType.Message[];
-
-  // TODO(dmaretskyi): Blueprints.
-
-  toolkit?: AiToolkit.ToHandler<Tools>;
-  systemPrompt?: string;
-};
-
-export type AiSessionOptions = {};
-
-export class AISession {
   /** Pending messages (incl. the current user request). */
   private _pending: DataType.Message[] = [];
 
@@ -121,8 +94,6 @@ export class AISession {
    */
   public readonly done = new Event<void>();
 
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
-
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
   /**
@@ -152,7 +123,7 @@ export class AISession {
         });
 
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
-      
+
         // Open request stream.
         // this._stream = await options.client.execStream({
         //   ...(options.generationOptions ?? {}),
@@ -224,7 +195,7 @@ export class AISession {
       } while (true);
 
       return this._pending;
-    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AISession.run'));
+    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     schema: S,
@@ -314,3 +285,31 @@ const createArtifactUpdateBlock = (
     `,
   };
 };
+
+/**
+ * Resolves artifact ids to their versions.
+ * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
+ * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
+ * a diff is inserted into the conversation.
+ *
+ * Can be optionally provided to the session run call.
+ */
+// TODO(dmaretskyi): Convert to Context.Reference
+export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
+  ArtifactDiffResolver,
+  ArtifactDiffResolver.Service
+>() {}
+
+export namespace ArtifactDiffResolver {
+  export type Service = {
+    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
+      Map<
+        ObjectId,
+        {
+          version: ObjectVersion;
+          diff?: string;
+        }
+      >
+    >;
+  };
+}

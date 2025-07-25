@@ -8,7 +8,7 @@
 import { Match, Schema } from 'effect';
 
 import { createTool, type AiServiceClient, ToolResult, type ToolRegistry } from '@dxos/ai';
-import { AISession } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
@@ -158,7 +158,7 @@ export class SequenceMachine {
       execute: async (input) => ToolResult.Break(input),
     });
 
-    const session = new AISession({
+    const session = new AiSession({
       operationModel: 'configured',
     });
 

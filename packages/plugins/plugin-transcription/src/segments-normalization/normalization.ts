@@ -8,7 +8,7 @@
 import { Schema } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, AiService } from '@dxos/ai';
-import { AISession } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { defineFunction, ToolResolverService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
@@ -83,7 +83,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
   handler: async ({ data: { messages }, context }) => {
     log.info('input', { messages });
     const ai = context.getService(AiService);
-    const session = new AISession({ operationModel: 'configured' });
+    const session = new AiSession({ operationModel: 'configured' });
 
     const response = await session.runStructured(NormalizationOutput, {
       generationOptions: {

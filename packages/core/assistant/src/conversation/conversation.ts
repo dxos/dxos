@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiError, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { type AiError, type AiLanguageModel, type AiTool, AiToolkit } from '@effect/ai';
 import { Effect, type Context } from 'effect';
 
 import {
@@ -19,7 +19,7 @@ import { DataType } from '@dxos/schema';
 
 import { ContextBinder, type ContextBinding } from '../context';
 import type { AiAssistantError } from '../errors';
-import { AISession } from '../session';
+import { AiSession } from '../session';
 
 export interface ConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
@@ -44,7 +44,7 @@ export class Conversation {
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
    */
-  public readonly onBegin = new Event<AISession>();
+  public readonly onBegin = new Event<AiSession>();
 
   /**
    * Blueprints bound to the conversation.
@@ -56,6 +56,11 @@ export class Conversation {
     this.context = new ContextBinder(this._queue);
   }
 
+  async getHistory(): Promise<DataType.Message[]> {
+    const queueItems = await this._queue.queryObjects();
+    return queueItems.filter(Obj.instanceOf(DataType.Message));
+  }
+
   run = <Tools extends AiTool.Any>(
     options: ConversationRunOptions<Tools>,
   ): Effect.Effect<
@@ -64,7 +69,7 @@ export class Conversation {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      const session = new AISession();
+      const session = new AiSession();
       this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
@@ -90,9 +95,4 @@ export class Conversation {
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('Conversation.run'));
-
-  async getHistory(): Promise<DataType.Message[]> {
-    const queueItems = await this._queue.queryObjects();
-    return queueItems.filter(Obj.instanceOf(DataType.Message));
-  }
 }

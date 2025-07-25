@@ -12,7 +12,7 @@ import { defineFunction, type FunctionDefinition } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
 import PROMPT from './instructions.tpl?raw';
-import { AISession } from '../../session';
+import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { insertReferences, ReferencedQuotes } from '../quotes';
 
@@ -23,7 +23,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
   handler: async ({ data: { message, objects }, context }) => {
     const startTime = performance.now();
     const ai = context.getService(AiService);
-    const session = new AISession({ operationModel: 'configured' });
+    const session = new AiSession({ operationModel: 'configured' });
     const result = await session.runStructured(ReferencedQuotes, {
       generationOptions: {
         model: '@anthropic/claude-3-5-haiku-20241022',

@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
-import { AISession } from '../session';
+import { AiSession } from '../session';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
@@ -47,7 +47,7 @@ describe('graph', () => {
         const graphWriteToolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
         const toolkit = yield* graphWriteToolkit.pipe(Effect.provide(makeGraphWriterHandler(graphWriteToolkit)));
 
-        const session = new AISession();
+        const session = new AiSession();
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
           history: [],

@@ -11,7 +11,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { AISession } from './session';
+import { AiSession } from './session';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -60,12 +60,12 @@ const toolkitLayer = TestToolkit.toLayer({
     }),
 });
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
+describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
   it.effect(
     'no tools',
     Effect.fn(
       function* ({ expect }) {
-        const session = new AISession({ operationModel: 'configured' });
+        const session = new AiSession({ operationModel: 'configured' });
 
         const response = yield* session.run({
           prompt: 'Hello world!',
@@ -85,7 +85,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
     'calculator',
     Effect.fn(
       function* ({ expect }) {
-        const session = new AISession({ operationModel: 'configured' });
+        const session = new AiSession({ operationModel: 'configured' });
 
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
@@ -111,7 +111,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AISession', () => {
     // const aiClient = new OllamaAiServiceClient({
     //   overrides: { model: 'llama3.1:8b' },
     // });
-    const session = new AISession({ operationModel: 'configured' });
+    const session = new AiSession({ operationModel: 'configured' });
 
     const objects = new Set<string>();
 

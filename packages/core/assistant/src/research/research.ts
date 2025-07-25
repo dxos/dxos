@@ -18,7 +18,7 @@ import { ExaToolkit, LiveExaHandler, MockExaHandler } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
-import { AISession } from '../session';
+import { AiSession } from '../session';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -60,7 +60,7 @@ export const researchFn = defineFunction({
       );
 
       const printer = new ConsolePrinter();
-      const session = new AISession();
+      const session = new AiSession();
       session.message.on((message) => printer.printMessage(message));
       session.userMessage.on((message) => printer.printMessage(message));
       session.block.on((block) => printer.printContentBlock(block));

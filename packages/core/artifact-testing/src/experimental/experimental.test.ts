@@ -8,7 +8,7 @@ import { beforeAll, describe, test } from 'vitest';
 
 import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AISession, researchFn } from '@dxos/assistant';
+import { AiSession, researchFn } from '@dxos/assistant';
 import {
   DEFAULT_INPUT,
   NODE_INPUT,
@@ -151,7 +151,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
   });
 
   test('conversation', { timeout: 120_000 }, async () => {
-    const session = new AISession({
+    const session = new AiSession({
       operationModel: 'configured',
     });
 

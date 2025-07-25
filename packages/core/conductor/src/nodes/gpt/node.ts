@@ -6,7 +6,7 @@ import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
 import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, ToolId } from '@dxos/ai';
 import { AiService } from '@dxos/ai';
-import { AISession } from '@dxos/assistant';
+import { AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { contextFromScope } from '@dxos/effect';
@@ -130,7 +130,7 @@ export const gptNode = defineComputeNode({
 
       log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
-      const session = new AISession({
+      const session = new AiSession({
         operationModel: 'configured',
       });
 

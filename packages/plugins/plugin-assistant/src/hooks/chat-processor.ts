@@ -9,7 +9,7 @@ import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateReques
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/artifact';
 import {
-  type AISession,
+  type AiSession,
   ArtifactDiffResolver,
   type BlueprintRegistry,
   type ContextBinder,
@@ -101,7 +101,7 @@ export class ChatProcessor {
   private _tools?: ExecutableTool[];
 
   /** Current session. */
-  private _session: AISession | undefined = undefined;
+  private _session: AiSession | undefined = undefined;
 
   constructor(
     private readonly _services: Layer.Layer<ChatServices>,
