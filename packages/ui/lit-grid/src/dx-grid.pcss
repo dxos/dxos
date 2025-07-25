@@ -137,31 +137,34 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &:focus,
-      &:focus-within {
-        & > .dx-grid__cell__content {
-          min-block-size: 100%;
-          block-size: min-content;
-          max-block-size: min(12em, 50vh);
+      &:not(.dx-grid__cell--no-focus-unfurl){
+        &:focus,
+        &:focus-within {
+          & > .dx-grid__cell__content {
+            min-block-size: 100%;
+            block-size: min-content;
+            max-block-size: min(12em, 50vh);
 
-          min-inline-size: 100%;
-          inline-size: min-content;
-          max-inline-size: min(60ch, 90vw);
+            min-inline-size: 100%;
+            inline-size: min-content;
+            max-inline-size: min(60ch, 90vw);
 
-          overflow: auto;
-          scrollbar-width: thin;
-          overscroll-behavior: contain;
+            overflow: auto;
+            scrollbar-width: thin;
+            overscroll-behavior: contain;
 
-          white-space: normal;
-          hyphens: auto;
-          overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: auto;
+            overflow-wrap: break-word;
 
-          z-index: 1;
-        }
+            z-index: 1;
 
-        &:not([aria-readonly='true']) > .dx-grid__cell__content {
-          background: var(--dx-grid-cell-surface);
-          border-color: var(--dx-accentSurface);
+            background: var(--dx-grid-cell-surface);
+          }
+
+          &:not([aria-readonly='true']) > .dx-grid__cell__content {
+            border-color: var(--dx-accentSurface);
+          }
         }
       }
 
