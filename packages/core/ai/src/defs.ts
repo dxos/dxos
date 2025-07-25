@@ -12,6 +12,9 @@ export const DEFAULT_EDGE_MODELS = [
   '@anthropic/claude-3-7-sonnet-20250219',
   '@anthropic/claude-sonnet-4-20250514',
   '@anthropic/claude-opus-4-20250514',
+  '@anthropic/claude-3-5-haiku-latest',
+  '@anthropic/claude-sonnet-4-0',
+  '@anthropic/claude-opus-4-0',
 
   // Workers AI.
   // https://developers.cloudflare.com/workers-ai/models
@@ -50,3 +53,11 @@ export const DEFAULT_LMSTUDIO_MODELS = [
 ] as const;
 
 export const DEFAULT_LMSTUDIO_MODEL = '@google/gemma-3-12b';
+
+export const DEFAULT_OPENAI_MODELS = [
+  '@openai/gpt-4o',
+  '@openai/gpt-4o-mini',
+  '@openai/o1',
+  '@openai/o3',
+  '@openai/o3-mini',
+] as const;
