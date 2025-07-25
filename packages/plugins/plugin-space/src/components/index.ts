@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { lazy } from 'react';
+
 export * from './AwaitingObject';
 export * from './CreateDialog';
-export * from './CollectionMain';
 export * from './CollectionSection';
 export * from './JoinDialog';
 export * from './MembersContainer';
@@ -18,3 +19,7 @@ export * from './SpacePresence';
 export * from './SpacePluginSettings';
 export * from './SpaceSettings';
 export * from './SyncStatus';
+export * from './ViewEditor';
+
+export const CollectionMain = lazy(() => import('./CollectionMain'));
+export const ObjectDetailsPanel = lazy(() => import('./ObjectDetailsPanel'));

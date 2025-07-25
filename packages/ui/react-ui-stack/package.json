@@ -14,18 +14,23 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./playwright": {
+      "types": "./dist/types/src/playwright/index.d.ts",
+      "browser": "./dist/lib/browser/playwright/index.mjs",
+      "node": "./dist/lib/node-esm/playwright/index.mjs"
+    },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      }
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "playwright": [
+        "dist/types/src/playwright/index.d.ts"
+      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ]
@@ -44,6 +49,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
     "@preact-signals/safe-react": "^0.9.0",

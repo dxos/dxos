@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { StoredSchema } from '@dxos/echo-schema';
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
@@ -17,6 +18,8 @@ export const translations = [
         'typename label_one': 'Collection',
         'typename label_other': 'Collections',
         'object name placeholder': 'New collection',
+        'rename object label': 'Rename collection',
+        'delete object label': 'Delete collection',
       },
       [DataType.QueryCollection.typename]: {
         'typename label': 'Smart Collection',
@@ -24,6 +27,61 @@ export const translations = [
         'typename label_one': 'Smart Collection',
         'typename label_other': 'Smart Collections',
         'object name placeholder': 'New smart collection',
+        'rename object label': 'Rename smart collection',
+        'delete object label': 'Delete smart collection',
+      },
+      [StoredSchema.typename]: {
+        'typename label': 'Record',
+        'typename label_zero': 'Records',
+        'typename label_one': 'Record',
+        'typename label_other': 'Records',
+        'object name placeholder': 'New record type',
+        'rename object label': 'Rename record type',
+        'delete object label': 'Delete record type',
+      },
+      [DataType.View.typename]: {
+        'typename label': 'View',
+        'typename label_zero': 'Views',
+        'typename label_one': 'View',
+        'typename label_other': 'Views',
+        'object name placeholder': 'New view',
+        'rename object label': 'Rename view',
+        'delete object label': 'Delete view',
+      },
+      [DataType.Event.typename]: {
+        'typename label': 'Event',
+        'typename label_zero': 'Events',
+        'typename label_one': 'Event',
+        'typename label_other': 'Events',
+        'object name placeholder': 'New event',
+      },
+      [DataType.Organization.typename]: {
+        'typename label': 'Organization',
+        'typename label_zero': 'Organizations',
+        'typename label_one': 'Organization',
+        'typename label_other': 'Organizations',
+        'object name placeholder': 'New organization',
+      },
+      [DataType.Person.typename]: {
+        'typename label': 'Person',
+        'typename label_zero': 'People',
+        'typename label_one': 'Person',
+        'typename label_other': 'People',
+        'object name placeholder': 'New person',
+      },
+      [DataType.Project.typename]: {
+        'typename label': 'Project',
+        'typename label_zero': 'Projects',
+        'typename label_one': 'Project',
+        'typename label_other': 'Projects',
+        'object name placeholder': 'New project',
+      },
+      [DataType.Task.typename]: {
+        'typename label': 'Task',
+        'typename label_zero': 'Tasks',
+        'typename label_one': 'Task',
+        'typename label_other': 'Tasks',
+        'object name placeholder': 'New task',
       },
       [meta.id]: {
         'plugin name': 'Spaces',
@@ -135,6 +193,10 @@ export const translations = [
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
         'open space settings label': 'Open settings',
+
+        'row details no selection label': 'No objects selected',
+        'companion selected objects label': 'Selected',
+        'field deleted label': 'Field deleted',
 
         'members panel label': 'Members',
         'members verbose label': 'Manage space members',

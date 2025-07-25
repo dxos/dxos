@@ -9,22 +9,21 @@ import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { ViewEditor } from '@dxos/react-ui-form';
-import { type TableType } from '@dxos/react-ui-table';
-import { ViewType } from '@dxos/schema';
+import { ViewEditor as NativeViewEditor } from '@dxos/react-ui-form';
+import { DataType } from '@dxos/schema';
 
-import { TableAction } from '../types';
+import { SpaceAction } from '../types';
 
-type TableViewEditorProps = { table: TableType };
+type ViewEditorProps = { view: DataType.View };
 
-const TableViewEditor = ({ table }: TableViewEditorProps) => {
+export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const space = getSpace(table);
-  const schema = useSchema(client, space, table.view?.target?.query.typename);
+  const space = getSpace(view);
+  const schema = useSchema(client, space, view.query.typename);
 
-  const views = useQuery(space, Filter.type(ViewType));
-  const currentTypename = useMemo(() => table?.view?.target?.query?.typename, [table?.view?.target?.query?.typename]);
+  const views = useQuery(space, Filter.type(DataType.View));
+  const currentTypename = useMemo(() => view.query?.typename, [view.query?.typename]);
 
   const handleUpdateTypename = useCallback(
     (typename: string) => {
@@ -43,24 +42,23 @@ const TableViewEditor = ({ table }: TableViewEditorProps) => {
 
   const handleDelete = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
     },
-    [dispatch, table],
+    [dispatch, view],
   );
 
-  if (!space || !schema || !table.view) {
+  if (!space || !schema) {
     return null;
   }
 
   return (
-    <ViewEditor
+    <NativeViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
-      view={table.view.target!}
-      onTypenameChanged={Type.isMutable(schema) ? undefined : handleUpdateTypename}
+      view={view}
+      onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
+      outerSpacing={false}
     />
   );
 };
-
-export default TableViewEditor;

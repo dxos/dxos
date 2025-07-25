@@ -14,9 +14,9 @@ import {
   type PieceMap,
   locationToString,
   type PieceType,
-  type BoardModel,
+  type GameboardModel,
   type Player,
-} from '../Board';
+} from '../Gameboard';
 import * as Alpha from '../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
@@ -82,7 +82,7 @@ const makeMove = (game: Chess, move: Move): Chess | null => {
 /**
  * Chess model.
  */
-export class ChessModel implements BoardModel<ChessPiece> {
+export class ChessModel implements GameboardModel<ChessPiece> {
   private _game!: Chess;
   private readonly _pieces = signal<PieceMap<ChessPiece>>({});
 

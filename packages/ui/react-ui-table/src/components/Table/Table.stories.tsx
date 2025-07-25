@@ -6,148 +6,84 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { FormatEnum, isMutable, toJsonSchema, EchoObject, GeneratorAnnotation } from '@dxos/echo-schema';
+import {
+  FormatEnum,
+  EchoObject,
+  GeneratorAnnotation,
+  FormatAnnotation,
+  PropertyMetaAnnotationId,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { Filter, useQuery, useSchema, live } from '@dxos/react-client/echo';
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { PublicKey } from '@dxos/react-client';
+import { live, type Space } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, ViewProjection, ViewType } from '@dxos/schema';
+import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table, type TableController } from './Table';
-import { useTableModel, useAddRow } from '../../hooks';
-import { TablePresentation } from '../../model';
+import { Table } from './Table';
+import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
-import { TableType } from '../../types';
-import { initializeTable } from '../../util';
+import { TableView } from '../../types';
+import { createTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
 
-faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
+const TestSchema = Schema.Struct({
+  // TODO(wittjosiah): Should be title. Currently name to work with default label.
+  name: Schema.optional(Schema.String).annotations({ title: 'Title' }),
+  urgent: Schema.optional(Schema.Boolean).annotations({ title: 'Urgent' }),
+  status: Schema.optional(
+    Schema.Literal('todo', 'in-progress', 'done')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'todo', title: 'Todo', color: 'indigo' },
+              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'done', title: 'Done', color: 'amber' },
+            ],
+          },
+        },
+      }),
+  ),
+  description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
+  parent: Schema.optional(Schema.suspend((): Type.Ref<TestSchema> => Type.Ref(TestSchema))).annotations({
+    title: 'Parent',
+  }),
+}).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
-/**
- * Custom hook to create and manage a test table model for storybook demonstrations.
- * Provides table data, schema, and handlers for table operations.
- */
-const useTestTableModel = () => {
-  const client = useClient();
-  const { space } = useClientProvider();
-
-  const filter = useMemo(() => Filter.type(TableType), []);
-  const tables = useQuery(space, filter);
-  const table = useMemo(() => tables.at(0), [tables]);
-  const schema = useSchema(client, space, table?.view?.target?.query.typename);
-
-  const projection = useMemo(() => {
-    if (schema && table?.view?.target) {
-      return new ViewProjection(toJsonSchema(schema), table.view.target);
-    }
-  }, [schema, table?.view?.target]);
-
-  const features = useMemo(
-    () => ({
-      selection: { enabled: true, mode: 'multiple' as const },
-      dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
-    }),
-    [schema],
-  );
-
-  const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
-
-  const tableRef = useRef<TableController>(null);
-  const handleCellUpdate = useCallback((cell: any) => {
-    tableRef.current?.update?.(cell);
-  }, []);
-
-  const handleRowOrderChange = useCallback(() => {
-    tableRef.current?.update?.();
-  }, []);
-
-  const addRow = useAddRow({ space, schema });
-
-  const handleDeleteRows = useCallback(
-    (_: number, objects: any[]) => {
-      for (const object of objects) {
-        space?.db.remove(object);
-      }
-    },
-    [space],
-  );
-
-  const handleDeleteColumn = useCallback(
-    (fieldId: string) => {
-      if (projection) {
-        projection.deleteFieldProjection(fieldId);
-      }
-    },
-    [projection],
-  );
-
-  const model = useTableModel({
-    table,
-    projection,
-    features,
-    rows: filteredObjects,
-    onInsertRow: addRow,
-    onDeleteRows: handleDeleteRows,
-    onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: handleCellUpdate,
-    onRowOrderChange: handleRowOrderChange,
-  });
-
-  const handleInsertRow = useCallback(() => {
-    model?.insertRow();
-  }, [model]);
-
-  const handleSaveView = useCallback(() => {
-    model?.saveView();
-  }, [model]);
-
-  const presentation = useMemo(() => {
-    if (model) {
-      return new TablePresentation(model);
-    }
-  }, [model]);
-
-  return {
-    schema,
-    table,
-    tableRef,
-    model,
-    presentation,
-    space,
-    client,
-    handleInsertRow,
-    handleSaveView,
-    handleDeleteRows,
-    handleDeleteColumn,
-  };
-};
-
-const StoryViewEditor = () => {
-  const { table, space, schema, handleDeleteColumn } = useTestTableModel();
-
+const StoryViewEditor = ({
+  view,
+  schema,
+  space,
+  handleDeleteColumn,
+}: {
+  view?: DataType.View;
+  schema?: Schema.Schema.AnyNoContext;
+  space?: Space;
+  handleDeleteColumn: (fieldId: string) => void;
+}) => {
   const handleTypenameChanged = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       schema.updateTypename(typename);
-      invariant(table?.view?.target);
-      table.view.target.query.typename = typename;
+      invariant(view);
+      view.query.typename = typename;
     },
-    [schema, table?.view?.target],
+    [schema, view],
   );
 
-  if (!table || !schema || !table.view?.target) {
+  if (!view || !schema) {
     return null;
   }
 
@@ -155,7 +91,7 @@ const StoryViewEditor = () => {
     <ViewEditor
       registry={space?.db.schemaRegistry}
       schema={schema}
-      view={table.view.target!}
+      view={view}
       onTypenameChanged={handleTypenameChanged}
       onDelete={handleDeleteColumn}
     />
@@ -167,9 +103,20 @@ const StoryViewEditor = () => {
 //
 
 const DefaultStory = () => {
-  const { schema, table, tableRef, model, presentation, client, handleInsertRow, handleSaveView } = useTestTableModel();
+  const {
+    space,
+    schema,
+    view,
+    tableRef,
+    model,
+    presentation,
+    client,
+    handleInsertRow,
+    handleSaveView,
+    handleDeleteColumn,
+  } = useTestTableModel();
 
-  if (!schema || !table) {
+  if (!schema || !view) {
     return <div />;
   }
 
@@ -189,9 +136,9 @@ const DefaultStory = () => {
         </Table.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
-        <StoryViewEditor />
+        <StoryViewEditor view={view} schema={schema} space={space} handleDeleteColumn={handleDeleteColumn} />
         <SyntaxHighlighter language='json' className='w-full text-xs'>
-          {JSON.stringify({ view: table.view?.target, schema }, null, 2)}
+          {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
     </div>
@@ -220,16 +167,20 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout({ fullscreen: true }),
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [DataType.View, TableView],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        const schema = await initializeTable({ client, space, table, initialRow: false });
+        const [schema] = await space.db.schemaRegistry.register([TestSchema]);
+        const { view } = await createTable({ client, space, typename: schema.typename });
+        space.db.add(view);
+
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            live(schema, {
-              name: faker.person.fullName(),
+            Obj.make(schema, {
+              name: faker.lorem.sentence(),
+              status: faker.helpers.arrayElement(['todo', 'in-progress', 'done'] as const),
+              description: faker.lorem.paragraph(),
             }),
           );
         });
@@ -247,18 +198,17 @@ export const StaticSchema: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization],
+      types: [DataType.View, TableView, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, typename: Testing.Organization.typename });
+        const { view } = await createTable({ client, space, typename: Testing.Contact.typename });
+        space.db.add(view);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
-          // { type: Testing.Contact, count: 10 },
+          { type: Testing.Contact, count: 10 },
           // { type: Testing.Organization, count: 1 },
-          { type: ContactWithArrayOfEmails, count: 10 },
         ]);
       },
     }),
@@ -289,12 +239,12 @@ export const ArrayOfObjects: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [DataType.View, TableView, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, typename: ContactWithArrayOfEmails.typename });
+        const { view } = await createTable({ client, space, typename: ContactWithArrayOfEmails.typename });
+        space.db.add(view);
 
         const factory = createObjectFactory(space.db, faker as any);
         await factory([
@@ -315,7 +265,7 @@ export const Tags: Meta<StoryProps> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType],
+      types: [DataType.View, TableView],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -346,8 +296,8 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const table = space.db.add(Obj.make(TableType, {}));
-        await initializeTable({ client, space, table, initialRow: false, typename });
+        const { view } = await createTable({ client, space, typename });
+        space.db.add(view);
 
         // Populate.
         Array.from({ length: 10 }).map(() => {

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { EchoObjectSchema } from '@dxos/react-client/echo';
+import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { ChannelType, ThreadType } from './schema';
@@ -13,6 +13,14 @@ import { THREAD_PLUGIN } from '../meta';
 
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
+
+  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${THREAD_ACTION}/on-space-created`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      rootCollection: DataType.Collection,
+    }),
+    output: Schema.Void,
+  }) {}
 
   export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
     input: Schema.Struct({

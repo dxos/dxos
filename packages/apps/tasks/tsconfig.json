@@ -3,13 +3,35 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "dist/types",
-    "types": ["node", "sharedworker"],
+    "types": [
+      "node",
+      "sharedworker"
+    ]
   },
-  "include": ["src"],
-  "exclude": ["vite.config.ts"],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "vite.config.ts"
+  ],
   "references": [
     {
-      "path": "./tsconfig.node.json",
+      "path": "./tsconfig.node.json"
     },
-  ],
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/shell"
+    }
+  ]
 }

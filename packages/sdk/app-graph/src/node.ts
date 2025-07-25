@@ -4,6 +4,8 @@
 
 import { type MaybePromise, type MakeOptional } from '@dxos/util';
 
+import { ACTION_GROUP_TYPE, ACTION_TYPE } from './graph';
+
 /**
  * Represents a node in the graph.
  */
@@ -84,7 +86,7 @@ export type Action<TProperties extends Record<string, any> = Record<string, any>
 >;
 
 export const isAction = (data: unknown): data is Action =>
-  isGraphNode(data) ? typeof data.data === 'function' : false;
+  isGraphNode(data) ? typeof data.data === 'function' && data.type === ACTION_TYPE : false;
 
 export const actionGroupSymbol = Symbol('ActionGroup');
 
@@ -95,7 +97,7 @@ export type ActionGroup<TProperties extends Record<string, any> = Record<string,
 >;
 
 export const isActionGroup = (data: unknown): data is ActionGroup =>
-  isGraphNode(data) ? data.data === actionGroupSymbol : false;
+  isGraphNode(data) ? data.data === actionGroupSymbol && data.type === ACTION_GROUP_TYPE : false;
 
 export type ActionLike = Action | ActionGroup;
 

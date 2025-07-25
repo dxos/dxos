@@ -61,7 +61,11 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     <Card.StaticRoot
       ref={rootRef}
       // TODO(burdon): Common fragment for placeholder opacity?
-      classNames={mx('absolute p-0', dragState === 'dragging' && 'opacity-50', classNames)}
+      classNames={mx(
+        'absolute p-0 grid grid-rows-[min-content_1fr]',
+        dragState === 'dragging' && 'opacity-50',
+        classNames,
+      )}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
     >
@@ -78,7 +82,9 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      {children}
+      <div role='none' {...{ inert: '' }} className='pointer-events-none min-bs-0 min-is-0'>
+        {children}
+      </div>
     </Card.StaticRoot>
   );
 };

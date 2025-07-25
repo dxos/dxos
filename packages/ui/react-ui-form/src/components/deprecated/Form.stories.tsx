@@ -40,14 +40,14 @@ type Story = StoryObj<DeprecatedFormProps<TestType>>;
 export const Default: Story = {
   args: {
     object: live(testData),
-    view: live(testView),
+    projection: live(testView).projection,
     schema: TestSchema,
   },
 };
 
 export const Empty: Story = {
   args: {
-    view: live(testView),
+    projection: live(testView).projection,
     schema: TestSchema,
   },
 };
@@ -55,7 +55,7 @@ export const Empty: Story = {
 export const Readonly: Story = {
   args: {
     object: live(testData),
-    view: live(testView),
+    projection: live(testView).projection,
     schema: TestSchema,
     readonly: true,
   },

@@ -2635,12 +2635,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
-      '@dxos/react-ui-kanban':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-kanban
-      '@dxos/react-ui-table':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-table
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -5852,6 +5846,9 @@ importers:
         specifier: 3.17.0
         version: 3.17.0
     devDependencies:
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -13463,9 +13460,15 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13901,6 +13904,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13950,9 +13956,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -14035,6 +14038,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -14059,9 +14065,9 @@ importers:
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/plugin-search
-      '@dxos/plugin-space':
+      '@dxos/random':
         specifier: workspace:*
-        version: link:../../plugins/plugin-space
+        version: link:../../common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14132,9 +14138,6 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

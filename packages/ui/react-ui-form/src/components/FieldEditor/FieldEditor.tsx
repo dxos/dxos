@@ -14,8 +14,7 @@ import {
   sortProperties,
   type FieldType,
   type PropertyType,
-  type ViewType,
-  type ViewProjection,
+  type ProjectionModel,
   type SchemaProperty,
 } from '@dxos/schema';
 
@@ -23,8 +22,7 @@ import { translationKey } from '../../translations';
 import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
-  view: ViewType;
-  projection: ViewProjection;
+  projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry;
   onSave: () => void;
@@ -34,15 +32,7 @@ export type FieldEditorProps = {
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({
-  view,
-  projection,
-  field,
-  registry,
-  onSave,
-  onCancel,
-  outerSpacing,
-}: FieldEditorProps) => {
+export const FieldEditor = ({ projection, field, registry, onSave, onCancel, outerSpacing }: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -112,7 +102,7 @@ export const FieldEditor = ({
 
   const handleValidate = useCallback<NonNullable<FormProps<PropertyType>['onValidate']>>(
     ({ property }) => {
-      if (property && view.fields.find((f) => f.path === property && f.path !== field.path)) {
+      if (property && projection.fields.find((f) => f.path === property && f.path !== field.path)) {
         return [
           {
             path: 'property',
@@ -121,7 +111,7 @@ export const FieldEditor = ({
         ];
       }
     },
-    [view.fields, field],
+    [projection.fields, field],
   );
 
   const handleSave = useCallback<NonNullable<FormProps<PropertyType>['onSave']>>(

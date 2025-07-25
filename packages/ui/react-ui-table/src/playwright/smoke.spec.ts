@@ -28,12 +28,12 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.sortColumn(0, 'descending');
-    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Uwe Øvergård');
-    await expect(table.grid.cell(0, 9, 'grid')).toContainText('Anita');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sit.');
+    await expect(table.grid.cell(0, 9, 'grid')).toContainText('Aut.');
 
     await table.sortColumn(0, 'ascending');
-    await expect(table.grid.cell(0, 0, 'grid')).toContainText('Anita');
-    await expect(table.grid.cell(0, 9, 'grid')).toHaveText('Uwe Øvergård');
+    await expect(table.grid.cell(0, 0, 'grid')).toContainText('Aut.');
+    await expect(table.grid.cell(0, 9, 'grid')).toHaveText('Sit.');
     await page.close();
   });
 
@@ -65,7 +65,7 @@ test.describe('Table', () => {
 
     await table.grid.ready();
     await table.deleteRow(0);
-    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
     await page.close();
   });
 
@@ -80,8 +80,8 @@ test.describe('Table', () => {
     // Delete action affects all selected rows.
     await table.deleteRow(0);
 
-    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' })).toHaveCount(0);
-    await expect(page.getByRole('gridcell', { name: 'Phonthip Sigurjónsson' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Sapiente.' })).toHaveCount(0);
+    await expect(page.getByRole('gridcell', { name: 'Beatae.' })).toHaveCount(0);
     await expect(table.grid.cellsWithinPlane('grid')).toHaveCount(0);
     await page.close();
   });
@@ -112,7 +112,6 @@ test.describe('Table', () => {
   });
 
   // Rest of add column test remains the same as it's a more complex flow.
-  // TODO(ZaymonFC): Restore this after fixing format selection.
   test('add column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: storyUrl });
@@ -141,11 +140,11 @@ test.describe('Table', () => {
     await table.grid.cell(4, 0, 'grid').click();
     // TODO(wittjosiah): Surprisingly long delay needed here.
     await page.keyboard.press('A', { delay: 1_000 });
-    await page.keyboard.press('n', { delay: 1_000 });
-    await page.getByRole('option', { name: 'Anita Mayer' }).click();
+    await page.keyboard.press('u', { delay: 1_000 });
+    await page.getByRole('option', { name: 'Aut.' }).click();
 
     // Assert that the value is shown in the cell.
-    await expect(page.getByRole('gridcell', { name: 'Anita Mayer' }).first()).toBeVisible();
+    await expect(page.getByRole('gridcell', { name: 'Aut.' }).first()).toBeVisible();
 
     // Create new object.
     await table.grid.cell(4, 1, 'grid').click();
@@ -174,13 +173,13 @@ test.describe('Table', () => {
     await page.getByTestId('table-switch').nth(7).click();
 
     // Test that checks are durable in the data model by sorting.
-    await table.sortColumn(3, 'descending');
+    await table.sortColumn(1, 'descending');
 
     // Assert the first two switch checkboxes are checked.
     await expect(page.getByTestId('table-switch').first()).toBeChecked();
     await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
-    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Anita Mayer');
-    await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Uwe Øvergård');
+    await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sapiente.');
+    await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
 
     await page.close();
   });

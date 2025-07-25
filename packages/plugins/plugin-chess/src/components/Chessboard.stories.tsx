@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Board, Chessboard, ChessModel } from '@dxos/react-ui-gameboard';
+import { Gameboard, Chessboard, ChessModel } from '@dxos/react-ui-gameboard';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { ChessPanel } from './ChessPanel';
@@ -17,9 +17,11 @@ const DefaultStory = () => {
 
   return (
     <div className='flex grow mx-8 gap-8 items-center overflow-hidden'>
-      <Board.Root model={model} onDrop={(move) => model.makeMove(move)}>
-        <Chessboard />
-      </Board.Root>
+      <Gameboard.Root model={model} onDrop={(move) => model.makeMove(move)}>
+        <Gameboard.Content>
+          <Chessboard />
+        </Gameboard.Content>
+      </Gameboard.Root>
       <ChessPanel model={model} classNames='w-[200px]' />
     </div>
   );
