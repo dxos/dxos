@@ -63,9 +63,8 @@ export default (context: PluginContext) =>
       intent: InboxAction.ExtractContact,
       resolve: async ({ space, message }) => {
         log.info('Extract contact', { message });
-        const email = message.sender.email;
         const name = message.sender.name;
-
+        const email = message.sender.email;
         if (!email) {
           log.warn('Email is required for contact extraction', { sender: message.sender });
           return;

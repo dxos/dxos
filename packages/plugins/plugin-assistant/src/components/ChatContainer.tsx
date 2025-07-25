@@ -24,7 +24,7 @@ export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
-  const processor = useChatProcessor({ part: 'deck', chat, services, settings });
+  const processor = useChatProcessor({ chat, services, settings });
   if (!processor) {
     return null;
   }
