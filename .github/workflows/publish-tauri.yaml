@@ -1,0 +1,91 @@
+name: Composer Tauri Release
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - labs
+      - production
+      - staging
+      - tauri
+      - jdw/tauri
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CN_APPLICATION: "dxos/composer"
+
+jobs:
+  draft:
+    runs-on: depot-ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: create draft release
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          command: release draft ${{ env.CN_APPLICATION }} --framework tauri
+          api-key: ${{ secrets.CN_API_KEY }}
+          path: ./packages/apps/composer-app/src-tauri/
+
+  build:
+    needs: draft
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - depot-macos-latest
+          # - depot-ubuntu-24.04-4
+          # - depot-windows-2022-4
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: 'moonrepo/setup-toolchain@v0'
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'depot-ubuntu-24.04-4'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webkit2gtk-4.1
+
+      - name: Build Tauri app
+        run: moon run composer-app:tauri-build
+        env:
+          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+          NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: upload assets
+        uses: crabnebula-dev/cloud-release@v0
+        with:
+          command: release upload ${{ env.CN_APPLICATION }} --framework tauri
+          api-key: ${{ secrets.CN_API_KEY }}
+          path: ./packages/apps/composer-app/src-tauri/
+
+  # TODO(wittjosiah): Uncomment this when we want to automatically publish the release.
+  # publish:
+  #   needs: build
+
+  #   runs-on: depot-ubuntu-24.04
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: publish release
+  #       uses: crabnebula-dev/cloud-release@v0
+  #       with:
+  #         command: release publish ${{ env.CN_APPLICATION }} --framework tauri
+  #         api-key: ${{ secrets.CN_API_KEY }}
