@@ -6,11 +6,10 @@ import { contributes, Capabilities, createResolver, type PluginContext } from '@
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
-import { initializeKanban } from '../testing';
-import { KanbanAction } from '../types';
+import { createKanban, KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -18,22 +17,22 @@ export default (context: PluginContext) =>
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { kanban } = await initializeKanban({ client, space, name, typename, initialPivotColumn });
-        return { data: { object: kanban } };
+        const { view } = await createKanban({
+          client,
+          space,
+          name,
+          typename,
+          initialPivotColumn,
+        });
+        return { data: { object: view } };
       },
     }),
     createResolver({
       intent: KanbanAction.DeleteCardField,
-      resolve: ({ kanban, fieldId, deletionData }, undo) => {
-        invariant(kanban.cardView);
-        invariant(kanban.cardView.target?.query.typename);
-
-        const schema =
-          kanban.cardView.target &&
-          getSpace(kanban)?.db.schemaRegistry.getSchema(kanban.cardView.target.query.typename);
+      resolve: async ({ view, fieldId, deletionData }, undo) => {
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(view.query.typename!);
         invariant(schema);
-        invariant(kanban.cardView.target);
-        const projection = new ViewProjection(schema.jsonSchema, kanban.cardView.target);
+        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);

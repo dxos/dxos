@@ -13,8 +13,6 @@ import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
-import { KanbanType } from '@dxos/react-ui-kanban/types';
-import { TableType } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
@@ -272,26 +270,11 @@ export const registry: Record<NodeType, Executable> = {
             const {
               objects: [container],
             } = yield* Effect.promise(() => db.query(Filter.ids(echoId)).run());
-            if (isInstanceOf(TableType, container)) {
+            if (isInstanceOf(DataType.View, container)) {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({
-                    typename: (await container.view?.load())?.query.typename,
-                  })
-                  .first(),
-              );
-
-              for (const item of items) {
-                const { id: _id, '@type': _type, ...rest } = item as any;
-                // TODO(dmaretskyi): Forbid type on create.
-                db.add(live(schema, rest));
-              }
-              yield* Effect.promise(() => db.flush());
-            } else if (isInstanceOf(KanbanType, container)) {
-              const schema = yield* Effect.promise(async () =>
-                db.schemaRegistry
-                  .query({
-                    typename: (await container.cardView?.load())?.query.typename,
+                    typename: container.query.typename,
                   })
                   .first(),
               );

@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
@@ -18,6 +20,22 @@ import { ChannelType, ThreadAction, ThreadType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: ThreadAction.OnSpaceCreated,
+      resolve: ({ space, rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: collection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(ChannelType) }),
+          );
+          rootCollection.objects.push(Ref.make(collection));
+
+          const { object: channel } = yield* dispatch(
+            createIntent(ThreadAction.CreateChannel, { name: 'General', spaceId: space.id }),
+          );
+          space.db.add(channel);
+        }),
+    }),
     createResolver({
       intent: ThreadAction.CreateChannel,
       resolve: ({ name }) => ({

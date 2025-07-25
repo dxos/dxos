@@ -20,3 +20,10 @@ tasks:
       - /test-results/$project/**
     options:
       timeout: 600
+  test-watch:
+    command: vitest
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - ^:compile
+    local: true

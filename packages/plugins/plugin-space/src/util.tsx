@@ -7,7 +7,7 @@ import { pipe } from 'effect';
 
 import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -36,7 +36,7 @@ export const SHARED = 'shared-spaces';
 /**
  * Convert a query result to an Rx value of the objects.
  */
-export const rxFromQuery = <T extends Obj.Any>(query: QueryResult<T>): Rx.Rx<T[]> => {
+export const rxFromQuery = <T extends AnyEchoObject>(query: QueryResult<T>): Rx.Rx<T[]> => {
   return Rx.make((get) => {
     const unsubscribe = query.subscribe((result) => {
       get.setSelf(result.objects);
@@ -163,6 +163,31 @@ const getQueryCollectionNodePartials = ({
     onTransferEnd: (child: Node<Obj.Any>, destination: Node) => {
       // No-op. Objects are moved out of query collections by being added to another collection.
     },
+  };
+};
+
+const getSchemaGraphNodePartials = () => {
+  return {
+    role: 'branch',
+    canDrop: () => false,
+  };
+};
+
+const getViewGraphNodePartials = ({
+  view,
+  resolve,
+}: {
+  view: DataType.View;
+  resolve: (typename: string) => Record<string, any>;
+}) => {
+  const presentation = view.presentation.target;
+  const typename = presentation ? Obj.getTypename(presentation) : undefined;
+  const metadata = typename ? resolve(typename) : {};
+
+  return {
+    label: view.name || ['object name placeholder', { ns: typename, default: 'New view' }],
+    icon: metadata.icon,
+    canDrop: () => false,
   };
 };
 
@@ -331,6 +356,71 @@ export const constructSpaceActions = ({
   return actions;
 };
 
+export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
+  return {
+    id: `${space.id}/${Type.getTypename(schema)}`,
+    type: `${SPACE_PLUGIN}/static-schema`,
+    data: schema,
+    properties: {
+      label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
+      icon: 'ph--database--regular',
+      role: 'branch',
+      canDrop: () => false,
+      space,
+    },
+  };
+};
+
+export const createStaticSchemaActions = ({
+  schema,
+  space,
+  deletable,
+}: {
+  schema: Type.Obj.Any;
+  space: Space;
+  deletable: boolean;
+}) => {
+  const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
+
+  const actions: NodeArg<ActionData>[] = [
+    {
+      id: getId(SpaceAction.RenameObject._tag),
+      type: ACTION_TYPE,
+      data: async (params?: InvokeParams) => {
+        throw new Error('Not implemented');
+      },
+      properties: {
+        label: ['rename object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        icon: 'ph--pencil-simple-line--regular',
+        disabled: true,
+        disposition: 'list-item',
+        testId: 'spacePlugin.renameObject',
+      },
+    },
+    {
+      id: getId(SpaceAction.RemoveObjects._tag),
+      type: ACTION_TYPE,
+      data: async () => {
+        const index = space.properties.staticRecords.findIndex(
+          (typename: string) => typename === Type.getTypename(schema),
+        );
+        if (index > -1) {
+          space.properties.staticRecords.splice(index, 1);
+        }
+      },
+      properties: {
+        label: ['delete object label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        icon: 'ph--trash--regular',
+        disposition: 'list-item',
+        disabled: !deletable,
+        testId: 'spacePlugin.deleteObject',
+      },
+    },
+  ];
+
+  return actions;
+};
+
 export const createObjectNode = ({
   space,
   object,
@@ -350,15 +440,15 @@ export const createObjectNode = ({
   }
 
   const metadata = resolve(type);
-  if (Object.keys(metadata).length === 0) {
-    return undefined;
-  }
-
   const partials = Obj.instanceOf(DataType.Collection, object)
     ? getCollectionGraphNodePartials({ collection: object, space, resolve })
     : Obj.instanceOf(DataType.QueryCollection, object)
       ? getQueryCollectionNodePartials({ collection: object, space, resolve })
-      : metadata.graphProps;
+      : Obj.instanceOf(DataType.StoredSchema, object)
+        ? getSchemaGraphNodePartials()
+        : Obj.instanceOf(DataType.View, object)
+          ? getViewGraphNodePartials({ view: object, resolve })
+          : metadata.graphProps;
 
   return {
     id: fullyQualifiedId(object),
@@ -386,16 +476,21 @@ export const constructObjectActions = ({
   graph,
   dispatch,
   objectForms,
+  deletable = true,
   navigable = false,
 }: {
   object: Obj.Any;
   graph: ReadableGraph;
   dispatch: PromiseIntentDispatcher;
   objectForms: ObjectForm<any>[];
+  deletable?: boolean;
   navigable?: boolean;
 }) => {
   const space = getSpace(object);
   invariant(space, 'Space not found');
+  const typename = Obj.getTypename(object);
+  invariant(typename, 'Object has no typename');
+
   const getId = (id: string) => `${id}/${fullyQualifiedId(object)}`;
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
@@ -460,10 +555,7 @@ export const constructObjectActions = ({
         await dispatch(createIntent(SpaceAction.RenameObject, { object, caller: params?.caller }));
       },
       properties: {
-        label: [
-          Obj.instanceOf(DataType.Collection, object) ? 'rename collection label' : 'rename object label',
-          { ns: SPACE_PLUGIN },
-        ],
+        label: ['rename object label', { ns: typename }],
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         // TODO(wittjosiah): Not working.
@@ -483,18 +575,19 @@ export const constructObjectActions = ({
         await dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object], target: collection }));
       },
       properties: {
-        label: [
-          Obj.instanceOf(DataType.Collection, object) ? 'delete collection label' : 'delete object label',
-          { ns: SPACE_PLUGIN },
-        ],
+        label: ['delete object label', { ns: typename }],
         icon: 'ph--trash--regular',
         disposition: 'list-item',
+        disabled: !deletable,
         // TODO(wittjosiah): This is a browser shortcut.
         // keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
         testId: 'spacePlugin.deleteObject',
       },
     },
-    ...(navigable || (!Obj.instanceOf(DataType.Collection, object) && !Obj.instanceOf(DataType.QueryCollection, object))
+    ...(navigable ||
+    (!Obj.instanceOf(DataType.Collection, object) &&
+      !Obj.instanceOf(DataType.QueryCollection, object) &&
+      !Obj.instanceOf(DataType.StoredSchema, object))
       ? [
           {
             id: getId('copy-link'),

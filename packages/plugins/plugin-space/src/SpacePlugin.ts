@@ -16,8 +16,8 @@ import {
 } from '@dxos/app-framework';
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { createDefaultSchema, DataType, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2 } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -37,7 +37,7 @@ import {
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, defineObjectForm } from './types';
+import { CollectionAction, defineObjectForm, SpaceAction } from './types';
 
 export type SpacePluginOptions = {
   /**
@@ -109,6 +109,42 @@ export const SpacePlugin = ({
             icon: 'ph--funnel-simple--regular',
           },
         }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.StoredSchema),
+          metadata: {
+            icon: 'ph--database--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Event),
+          metadata: {
+            icon: 'ph--calendar-dot--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Organization),
+          metadata: {
+            icon: 'ph--building-office--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Person),
+          metadata: {
+            icon: 'ph--user--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Project),
+          metadata: {
+            icon: 'ph--check-square-offset--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(DataType.Task),
+          metadata: {
+            icon: 'ph--check-circle--regular',
+          },
+        }),
       ],
     }),
     defineModule({
@@ -131,13 +167,60 @@ export const SpacePlugin = ({
             getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
           }),
         ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: DataType.StoredSchema,
+            formSchema: SpaceAction.StoredSchemaForm,
+            getIntent: (props, options) =>
+              props.typename
+                ? createIntent(SpaceAction.UseStaticSchema, { space: options.space, typename: props.typename })
+                : createIntent(SpaceAction.AddSchema, {
+                    space: options.space,
+                    name: props.name,
+                    schema: createDefaultSchema(),
+                  }),
+          }),
+        ),
       ],
     }),
     defineModule({
-      id: `${meta.id}/module/schema`,
+      id: `${meta.id}/module/schema-defs`,
       activatesOn: ClientEvents.ClientReady,
       activatesBefore: [ClientEvents.SetupSchema],
       activate: SchemaDefs,
+    }),
+    defineModule({
+      id: `${meta.id}/module/schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(ClientCapabilities.Schema, [
+          DataType.View,
+          ViewTypeV1,
+          ViewTypeV2,
+          DataType.Event,
+          DataType.Organization,
+          DataType.Person,
+          DataType.Project,
+          DataType.Task,
+        ]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/migration`,
+      activatesOn: ClientEvents.SetupMigration,
+      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/whitelist-schema`,
+      activatesOn: ClientEvents.SetupSchema,
+      activate: () =>
+        contributes(ClientCapabilities.SchemaWhiteList, [
+          DataType.Event,
+          DataType.Organization,
+          DataType.Person,
+          DataType.Project,
+          DataType.Task,
+        ]),
     }),
     defineModule({
       id: `${meta.id}/module/react-root`,

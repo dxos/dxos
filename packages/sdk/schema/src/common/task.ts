@@ -5,35 +5,62 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { FormatAnnotation, FormatEnum, LabelAnnotation } from '@dxos/echo-schema';
+import { FormatAnnotation, FormatEnum, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo-schema';
 
-export enum TaskStatus {
-  STARTED = 'S',
-  BLOCKED = 'B',
-  COMPLETE = 'C',
-}
+import { Person } from './person';
 
 /**
  * Task schema.
  */
 const TaskSchema = Schema.Struct({
-  text: Schema.String,
-  // TODO(wittjosiah): Why closed and status?
-  closed: Schema.optional(Schema.Boolean),
-  status: Schema.optional(Schema.Enums(TaskStatus)),
-  priority: Schema.optional(Schema.Number),
-  estimate: Schema.optional(Schema.Number),
-  assigned: Schema.optional(Schema.String.pipe(FormatAnnotation.set(FormatEnum.DID))),
+  title: Schema.String.annotations({ title: 'Title' }),
+  priority: Schema.optional(
+    Schema.Literal('none', 'low', 'medium', 'high', 'urgent')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Priority',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'none', title: 'None', color: 'gray' },
+              { id: 'low', title: 'Low', color: 'indigo' },
+              { id: 'medium', title: 'Medium', color: 'purple' },
+              { id: 'high', title: 'High', color: 'amber' },
+              { id: 'urgent', title: 'Urgent', color: 'red' },
+            ],
+          },
+        },
+      }),
+  ),
+  status: Schema.optional(
+    Schema.Literal('todo', 'in-progress', 'done')
+      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
+      .annotations({
+        title: 'Status',
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: [
+              { id: 'todo', title: 'Todo', color: 'indigo' },
+              { id: 'in-progress', title: 'In Progress', color: 'purple' },
+              { id: 'done', title: 'Done', color: 'amber' },
+            ],
+          },
+        },
+      }),
+  ),
+  assigned: Schema.optional(Type.Ref(Person).annotations({ title: 'Assigned' })),
+  estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
+  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
-}).pipe(LabelAnnotation.set(['text']));
+}).pipe(LabelAnnotation.set(['title']));
 
 export const Task = TaskSchema.pipe(
   Type.Obj({
     typename: 'dxos.org/type/Task',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
 );
 

@@ -12,14 +12,18 @@ import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
-import { createView, DataType } from '@dxos/schema';
+import { createTable } from '@dxos/react-ui-table';
+import { DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
+
+const findViewByTypename = async (views: DataType.View[], typename: string) => {
+  return views.find((view) => view.query.typename === typename);
+};
 
 export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
   return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
@@ -33,12 +37,12 @@ export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): Object
     const objects = await generate.createObjects(n);
 
     // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
-    if (!table) {
+    const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
+    const view = await findViewByTypename(views, type.typename);
+    if (!view) {
       const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
+      const { view } = await createTable({ space, typename: type.typename, name });
+      space.db.add(view);
     }
 
     return objects;
