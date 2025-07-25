@@ -116,13 +116,13 @@ const ChatContainer = () => {
       <Chat.Thread />
       <div className='p-2'>
         <Chat.Prompt
+          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           expandable
           online={online}
           presets={presets.map(({ id, model, label }) => ({ id, label: label ?? model }))}
-          preset={preset.id}
-          onChangePreset={handleChangePreset}
+          preset={preset?.id}
           onChangeOnline={setOnline}
-          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
+          onChangePreset={handleChangePreset}
         />
       </div>
     </Chat.Root>

@@ -8,11 +8,13 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
+import { TableView } from '@dxos/react-ui-table/types';
+import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 import { TableAction } from '../types';
@@ -42,7 +44,7 @@ export default () => {
       - When adding rows you must not include the 'id' field -- it is automatically generated.
       - BEFORE adding rows, always make sure the table has been shown to the user.
     `,
-    schema: TableType,
+    schema: TableView,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -99,23 +101,28 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
+          // TODO(wittjosiah): This query needs to be able to filter to just the table view, post-filtering is awkward.
+          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
           const tableInfo = await Promise.all(
-            tables.map(async (table) => {
-              const view = await table.view?.load();
+            objects.map(async (view) => {
+              const presentation = await view.presentation.load();
+              if (!Obj.instanceOf(TableView, presentation)) {
+                return null;
+              }
+
               return {
-                id: fullyQualifiedId(table),
-                name: table.name ?? 'Unnamed Table',
-                typename: view?.query.typename,
+                id: fullyQualifiedId(view),
+                name: view.name ?? 'Unnamed Table',
+                typename: view.query.typename,
               };
             }),
           );
 
-          return ToolResult.Success(tableInfo);
+          return ToolResult.Success(tableInfo.filter(isNonNullable));
         },
       }),
       createTool(meta.id, {
-        name: 'inpect',
+        name: 'inspect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
         description: 'Get the current schema of the table.',
         caption: 'Loading table...',
@@ -123,15 +130,16 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
-          const view = await table.view?.load();
-          invariant(view);
-          const typename = view?.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
+
+          const typename = view.query.typename;
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
           return ToolResult.Success(schema);
         },
       }),
@@ -149,17 +157,16 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
-          const view = await table.view?.load();
-          invariant(view);
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
 
           const typename = view.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
-
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
           const { objects: rows } = await space.db.query(Filter.type(schema)).run();
           return ToolResult.Success(rows);
         },
@@ -180,17 +187,16 @@ export default () => {
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
           const space = extensions.space;
-          const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-          const table = tables.find((table) => fullyQualifiedId(table) === id);
-          invariant(Obj.instanceOf(TableType, table));
-
-          const view = await table.view?.load();
-          invariant(view);
-
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
           // Get schema for validation.
           const typename = view.query.typename;
-          const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
-          invariant(schema);
+          const schema = await space.db.schemaRegistry.query({ typename }).first();
+
+          const table = await view.presentation.load();
+          invariant(Obj.instanceOf(TableView, table));
 
           // Validate all rows.
           // TODO(ZaymonFC): There should be a nicer way to do this!
@@ -202,7 +208,7 @@ export default () => {
 
           // Add rows sequentially.
           for (const row of data) {
-            const intent = createIntent(TableAction.AddRow, { table, data: row });
+            const intent = createIntent(TableAction.AddRow, { view, data: row });
             const { error } = await extensions.dispatch(intent);
             if (error) {
               return ToolResult.Error(error?.message ?? 'Failed to add rows to table');

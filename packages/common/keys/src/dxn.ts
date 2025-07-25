@@ -83,11 +83,11 @@ export class DXN {
      * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      */
     QUEUE: 'queue',
-  });
+  })
 
   get kind() {
     return this.#kind;
-  }
+  };
 
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
@@ -234,6 +234,7 @@ export class DXN {
 
     const [type, version] = this.#parts;
     return {
+      // TODO(wittjosiah): Should be `typename` for consistency.
       type,
       version: version as string | undefined,
     };

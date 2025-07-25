@@ -66,7 +66,7 @@ Examples of ways to start up different workloads in dev mode:
 | Command | Description |
 | :-- | :-- |
 | `moon run tasks-app:serve` | Runs the `tasks-app` in dev mode |
-| `moon run composer-app:server` | Runs the `composer-app` in dev mode |
+| `moon run composer-app:serve` | Runs the `composer-app` in dev mode |
 | `moon run docs:serve` | Runs the `docs` astro app in dev mode |
 
 ## Test commands

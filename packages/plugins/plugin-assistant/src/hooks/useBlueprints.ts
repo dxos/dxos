@@ -27,7 +27,6 @@ export const useBlueprints = (
     effect(() => {
       const refs = [...(context.blueprints.value ?? [])];
       t = setTimeout(async () => {
-        console.log(refs);
         const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
         setBlueprints(blueprints);
       });
@@ -46,7 +45,6 @@ export const useBlueprints = (
           // TODO(dmaretskyi): This should be done by Obj.clone.
           const { id: _id, ...data } = blueprint;
           const obj = space.db.add(Obj.make(Blueprint, data));
-          log.info('bind', { obj });
           void context.bind({ blueprints: [Ref.make(obj)] });
         }
       }

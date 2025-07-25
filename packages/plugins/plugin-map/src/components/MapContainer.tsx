@@ -11,39 +11,39 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
-import { type MapType } from '../types';
-import { getLocationProperty } from '../util';
+import { type MapView } from '../types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = { role?: string; type?: MapControlType; map?: MapType } & Pick<
+export type MapContainerProps = { role?: string; type?: MapControlType; view?: DataType.View } & Pick<
   MapCanvasProps,
   'zoom' | 'center' | 'onChange'
 >;
 
 // TODO(burdon): Error: Map container is already initialized.
 
-export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const client = useClient();
-  const space = getSpace(map);
+  const space = getSpace(view);
+  const map = view?.presentation.target as MapView | undefined;
 
-  const schema = useSchema(client, space, map?.view?.target?.query.typename);
+  const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 
   useEffect(() => {
-    const locationProperty = getLocationProperty(map?.view?.target);
-    if (!locationProperty) {
+    if (!map) {
       return;
     }
 
     const newMarkers: MapMarker[] = (objects ?? [])
       .map((row) => {
-        const geopoint = row[locationProperty];
+        const geopoint = row[map.locationFieldId];
         if (!geopoint) {
           return undefined;
         }
@@ -62,10 +62,10 @@ export const MapContainer = ({ role, type: _type = 'map', map, ...props }: MapCo
       .filter(isNotNullable);
 
     setMarkers(newMarkers);
-  }, [objects, map?.view?.target]);
+  }, [objects, map?.locationFieldId]);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selected = useSelected(map?.view?.target?.query.typename, 'multi');
+  const selected = useSelected(view?.query.typename, 'multi');
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>

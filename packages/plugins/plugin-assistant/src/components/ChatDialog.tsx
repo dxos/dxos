@@ -24,7 +24,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
-  const processor = useChatProcessor({ part: 'dialog', chat, services, settings });
+  const processor = useChatProcessor({ chat, services, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

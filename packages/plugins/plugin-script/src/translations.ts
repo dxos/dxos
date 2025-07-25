@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Script',
         'typename label_other': 'Scripts',
         'object name placeholder': 'New script',
+        'rename object label': 'Rename script',
+        'delete object label': 'Delete script',
       },
       [meta.id]: {
         'plugin name': 'Scripts',

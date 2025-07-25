@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { type TypedObject } from '@dxos/echo-schema';
+import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from './capabilities';
 
@@ -12,7 +12,7 @@ export default (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
 
   // TODO(wittjosiah): Unregister schemas when they are disabled.
-  let previous: TypedObject[] = [];
+  let previous: Type.Obj.Any[] = [];
   const cancel = registry.subscribe(
     context.capabilities(ClientCapabilities.Schema),
     (_schemas) => {

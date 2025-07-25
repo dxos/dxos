@@ -19,33 +19,30 @@ import {
   type TableFeatures,
   TablePresentation,
   TableToolbar,
-  type TableType,
   useTableModel,
   useAddRow,
 } from '@dxos/react-ui-table';
-import { ViewProjection } from '@dxos/schema';
-
-import { TableAction } from '../types';
+import { type DataType } from '@dxos/schema';
 
 export type TableContainerProps = {
   role: string;
-  table: TableType;
+  view: DataType.View;
 };
 
-export const TableContainer = ({ role, table }: TableContainerProps) => {
+export const TableContainer = ({ role, view }: TableContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
-  const space = getSpace(table);
-  const schema = useSchema(client, space, table.view?.target?.query.typename);
+  const space = getSpace(view);
+  const schema = useSchema(client, space, view.query.typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
-      const actions = get(graph.actions(fullyQualifiedId(table)));
+      const actions = get(graph.actions(fullyQualifiedId(view)));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
     });
@@ -62,19 +59,10 @@ export const TableContainer = ({ role, table }: TableContainerProps) => {
 
   const handleDeleteColumn = useCallback(
     (fieldId: string) => {
-      void dispatch(createIntent(TableAction.DeleteColumn, { table, fieldId }));
+      void dispatch(createIntent(SpaceAction.DeleteField, { view, fieldId }));
     },
     [dispatch],
   );
-
-  const projection = useMemo(() => {
-    if (!schema || !table.view?.target) {
-      return;
-    }
-
-    const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-    return new ViewProjection(jsonSchema, table.view.target);
-  }, [table.view?.target, JSON.stringify(schema)]);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({
@@ -85,9 +73,16 @@ export const TableContainer = ({ role, table }: TableContainerProps) => {
     [],
   );
 
+  const jsonSchema = useMemo(() => {
+    if (schema instanceof EchoSchema) {
+      return schema.jsonSchema;
+    }
+    return schema ? Type.toJsonSchema(schema) : undefined;
+  }, [schema]);
+
   const model = useTableModel({
-    table,
-    projection,
+    view,
+    schema: jsonSchema,
     features,
     rows: filteredObjects,
     onInsertRow: addRow,
@@ -110,13 +105,20 @@ export const TableContainer = ({ role, table }: TableContainerProps) => {
   return (
     <StackItem.Content toolbar>
       <TableToolbar
-        attendableId={fullyQualifiedId(table)}
+        attendableId={fullyQualifiedId(view)}
         customActions={customActions}
         onAdd={handleInsertRow}
         onSave={handleSave}
       />
       <Table.Root role={role}>
-        <Table.Main key={table.id} ref={tableRef} model={model} presentation={presentation} schema={schema} />
+        <Table.Main
+          key={fullyQualifiedId(view)}
+          ref={tableRef}
+          client={client}
+          model={model}
+          presentation={presentation}
+          schema={schema}
+        />
       </Table.Root>
     </StackItem.Content>
   );

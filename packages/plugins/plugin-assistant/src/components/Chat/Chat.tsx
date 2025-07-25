@@ -207,7 +207,7 @@ type ChatPromptProps = ThemedClassName<
       expandable?: boolean;
       online?: boolean;
       onChangeOnline?: (online: boolean) => void;
-      onChangePreset: ChatPresetsProps['onChange'];
+      onChangePreset?: ChatPresetsProps['onChange'];
     }
 >;
 

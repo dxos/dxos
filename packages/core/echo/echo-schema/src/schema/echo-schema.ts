@@ -270,6 +270,13 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
     return this._storedSchema.id;
   }
 
+  /**
+   * Short name of the schema.
+   */
+  public get name(): string | undefined {
+    return this._storedSchema.name;
+  }
+
   public get [SchemaMetaSymbol](): SchemaMeta {
     return { id: this.id, typename: this.typename, version: this._storedSchema.version };
   }

@@ -8,11 +8,13 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
+import { KanbanView } from '@dxos/react-ui-kanban';
+import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 import { KanbanAction } from '../types';
@@ -37,7 +39,7 @@ export default () => {
       - When adding items, you must not include the 'id' field -- it is automatically generated
       - BEFORE adding items, always make sure the board has been shown to the user!
     `,
-    schema: KanbanType,
+    schema: KanbanView,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -88,19 +90,24 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
+          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
 
           const boardInfo = await Promise.all(
-            boards.map(async (board: KanbanType) => {
-              const view = await board.cardView?.load();
+            objects.map(async (view) => {
+              const kanban = await view.presentation.load();
+              if (!Obj.instanceOf(KanbanView, kanban)) {
+                return null;
+              }
+
               return {
-                id: fullyQualifiedId(board),
-                typename: view?.query.typename,
+                id: fullyQualifiedId(view),
+                name: view.name ?? 'Unnamed Kanban',
+                typename: view.query.typename,
               };
             }),
           );
 
-          return ToolResult.Success(boardInfo);
+          return ToolResult.Success(boardInfo.filter(isNonNullable));
         },
       }),
       createTool(meta.id, {
@@ -111,12 +118,13 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: boards } = await space.db.query(Filter.type(KanbanType)).run();
-          const board = boards.find((board: KanbanType) => fullyQualifiedId(board) === id);
-          invariant(Obj.instanceOf(KanbanType, board));
+          const view = (await space.db
+            // TODO(wittjosiah): Filter.and should aggregate type
+            .query(Query.select(Filter.and(Filter.type(DataType.View), Filter.ids(id))))
+            .first()) as DataType.View;
 
-          const view = await board.cardView?.load();
-          invariant(view);
+          const kanban = await view.presentation.load();
+          invariant(Obj.instanceOf(KanbanView, kanban));
 
           const typename = view.query.typename;
           const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -124,8 +132,8 @@ export default () => {
 
           return ToolResult.Success({
             schema,
-            columnField: board.columnFieldId,
-            viewFields: view.fields,
+            columnField: kanban.columnFieldId,
+            viewFields: view.projection.fields,
           });
         },
       }),
