@@ -4,7 +4,7 @@
 
 import { type Page } from '@playwright/test';
 
-import { StackManager } from '@dxos/react-ui-stack/testing';
+import { StackManager } from '@dxos/react-ui-stack/playwright';
 
 // TODO(wittjosiah): If others find this useful, factor out the stack plugin.
 export const Stack = {
