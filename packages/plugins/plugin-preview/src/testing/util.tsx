@@ -7,9 +7,8 @@ import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
-import { Card } from '@dxos/react-ui-stack';
+import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
-import { IntrinsicCardContainer, PopoverCardContainer, ExtrinsicCardContainer } from '@dxos/storybook-utils';
 
 import type { PreviewProps } from '../types';
 
@@ -31,25 +30,11 @@ export const render: Meta<StoryProps>['render'] = ({
   subject,
   ...args
 }) => {
-  const component = <Component {...args} subject={withImage ? data[subject] : omitImage(data[subject])} role={role} />;
-  switch (role) {
-    case 'popover':
-      return <PopoverCardContainer icon={icon}>{component}</PopoverCardContainer>;
-    case 'card--intrinsic':
-      return (
-        <IntrinsicCardContainer>
-          <Card.StaticRoot>{component}</Card.StaticRoot>
-        </IntrinsicCardContainer>
-      );
-    case 'card--extrinsic':
-      return (
-        <ExtrinsicCardContainer>
-          <Card.StaticRoot>{component}</Card.StaticRoot>
-        </ExtrinsicCardContainer>
-      );
-    default:
-      return <Card.StaticRoot>{component}</Card.StaticRoot>;
-  }
+  return (
+    <CardContainer icon={icon} role={role}>
+      <Component {...args} subject={withImage ? data[subject] : omitImage(data[subject])} role={role} />
+    </CardContainer>
+  );
 };
 
 export const omitImage = ({ image, ...rest }: any) => rest;
