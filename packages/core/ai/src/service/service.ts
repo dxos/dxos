@@ -9,7 +9,7 @@ import { type AiModelNotAvailableError } from '../errors';
 import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
 
 /**
- *
+ * AI Model Factory.
  */
 export class AiService extends Context.Tag('AiService')<
   AiService,
