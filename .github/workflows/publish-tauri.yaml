@@ -42,6 +42,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    timeout-minutes: 45
+
     steps:
       - uses: actions/checkout@v4
 
@@ -59,15 +61,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y webkit2gtk-4.1
 
+      - name: Cache Homebrew
+        if: matrix.os == 'depot-macos-latest'
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/homebrew/Cellar
+            /opt/homebrew/Caskroom
+            /opt/homebrew/Homebrew
+            ~/.cache/Homebrew
+          key: ${{ runner.os }}-homebrew-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
+
       - name: Install macOS dependencies
         if: matrix.os == 'depot-macos-latest'
         run: |
-          # Install Homebrew if not available
-          if ! command -v brew &> /dev/null; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-          fi
           brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
 
       - name: Build Tauri app
@@ -79,7 +88,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: upload assets
+      - name: Upload Assets
         uses: crabnebula-dev/cloud-release@v0
         with:
           command: release upload ${{ env.CN_APPLICATION }} --framework tauri
