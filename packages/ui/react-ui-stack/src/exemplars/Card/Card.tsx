@@ -38,16 +38,31 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
  * in a Popover) and knows this based on the `role` it receives. This will render a `Card.StaticRoot` by default, otherwise
  * it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
-const CardSurfaceRoot = ({ role = 'never', children }: PropsWithChildren<{ role?: string }>) => {
-  if (['popover', 'card--kanban'].includes(role)) {
+const CardSurfaceRoot = ({
+  role = 'never',
+  children,
+  classNames,
+}: ThemedClassName<PropsWithChildren<{ role?: string }>>) => {
+  if (['popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
-      <div className={role === 'popover' ? 'popover-card-width' : role === 'card--kanban' ? 'contents' : ''}>
+      <div
+        className={mx(
+          role === 'popover'
+            ? 'popover-card-width'
+            : ['card--intrinsic', 'card--extrinsic'].includes(role)
+              ? 'contents'
+              : '',
+          classNames,
+        )}
+      >
         {children}
       </div>
     );
   } else {
     return (
-      <CardStaticRoot {...(role === 'card--document' && { classNames: ['mlb-[1em]', hoverableControls] })}>
+      <CardStaticRoot
+        classNames={[role === 'transclusion' && 'mlb-[1em]', role === 'transclusion' && hoverableControls, classNames]}
+      >
         {children}
       </CardStaticRoot>
     );

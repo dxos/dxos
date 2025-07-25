@@ -19,6 +19,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./testing": {
+      "types": "./dist/types/src/testing/index.d.ts",
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "node": "./dist/lib/node-esm/testing/index.mjs"
+    },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
@@ -30,6 +35,9 @@
     "*": {
       "deprecated": [
         "dist/types/src/deprecated/index.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ],
       "types": [
         "dist/types/src/types/index.d.ts"
@@ -47,6 +55,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -55,7 +64,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -81,6 +90,7 @@
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

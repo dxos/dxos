@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType } from '@dxos/schema';
+import { DataType, ProjectionModel } from '@dxos/schema';
 
 import { SpaceCapabilities } from './capabilities';
 import {
@@ -75,17 +75,27 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
         }
         await space.waitUntilReady();
+
+        // Create root collection.
         const collection = Obj.make(DataType.Collection, { objects: [] });
         space.properties[DataType.Collection.typename] = Ref.make(collection);
 
+        // Set current migration version.
         if (Migrations.versionProperty) {
           space.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
 
+        // Create records smart collection.
+        const records = Obj.make(DataType.QueryCollection, {
+          query: { typename: DataType.StoredSchema.typename },
+        });
+        collection.objects.push(Ref.make(records));
+
+        // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
         const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
-        await Promise.all(
-          onSpaceCreatedCallbacks.map((onSpaceCreated) => onSpaceCreated({ space, rootCollection: collection })),
+        const spaceCreatedIntents = onSpaceCreatedCallbacks.map((onSpaceCreated) =>
+          onSpaceCreated({ space, rootCollection: collection }),
         );
 
         return {
@@ -95,6 +105,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
             space,
           },
           intents: [
+            ...spaceCreatedIntents,
             ...(observability
               ? [
                   createIntent(ObservabilityAction.SendEvent, {
@@ -307,6 +318,103 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               : []),
           ],
         };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.UseStaticSchema,
+      resolve: async ({ space, typename }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const schema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+        invariant(schema, `Schema not found: ${typename}`);
+
+        if (!space.properties.staticRecords) {
+          space.properties.staticRecords = [];
+        }
+
+        if (!space.properties.staticRecords.includes(typename)) {
+          space.properties.staticRecords.push(typename);
+        }
+
+        await context.activatePromise(SpaceEvents.SchemaAdded);
+        const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+
+        return {
+          data: {},
+          intents: [
+            ...schemaAddedIntents,
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.schema.use',
+                    properties: {
+                      spaceId: space.id,
+                      typename: Type.getTypename(schema),
+                    },
+                  }),
+                ]
+              : []),
+          ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.AddSchema,
+      resolve: async ({ space, name, schema: schemaInput }) => {
+        const [schema] = await space.db.schemaRegistry.register([schemaInput]);
+        if (name) {
+          schema.storedSchema.name = name;
+        }
+
+        await context.activatePromise(SpaceEvents.SchemaAdded);
+        const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+
+        return {
+          data: {
+            id: schema.id,
+            object: schema.storedSchema,
+            schema,
+          },
+          intents: [
+            ...schemaAddedIntents,
+            ...(observability
+              ? [
+                  createIntent(ObservabilityAction.SendEvent, {
+                    name: 'space.schema.add',
+                    properties: {
+                      spaceId: space.id,
+                      objectId: schema.id,
+                      typename: schema.typename,
+                    },
+                  }),
+                ]
+              : []),
+          ],
+        };
+      },
+    }),
+    createResolver({
+      intent: SpaceAction.DeleteField,
+      resolve: async ({ view, fieldId, deletionData }, undo) => {
+        const space = getSpace(view);
+        invariant(space);
+        invariant(view.query.typename);
+        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        invariant(schema);
+        const projection = new ProjectionModel(schema.jsonSchema, view.projection);
+        if (!undo) {
+          const { deleted, index } = projection.deleteFieldProjection(fieldId);
+          return {
+            undoable: {
+              message: ['field deleted label', { ns: SPACE_PLUGIN }],
+              data: { deletionData: { ...deleted, index } },
+            },
+          };
+        } else if (undo && deletionData) {
+          const { field, props, index } = deletionData;
+          projection.setFieldProjection({ field, props }, index);
+        }
       },
     }),
     createResolver({

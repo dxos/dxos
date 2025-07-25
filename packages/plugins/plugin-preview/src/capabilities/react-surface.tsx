@@ -4,22 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  LayoutAction,
-  Surface,
-  contributes,
-  createIntent,
-  createSurface,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
-import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
-import { Obj, Filter } from '@dxos/echo';
+import { Capabilities, Surface, contributes, createSurface } from '@dxos/app-framework';
+import { getSchema } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { TableType } from '@dxos/react-ui-table';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -33,40 +24,41 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
-        const handleOrgClick = useCallback(
-          async (org: DataType.Organization) => {
-            const space = getSpace(org);
-            const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
-            const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-              return table.view?.target?.query?.typename === DataType.Organization.typename;
-            });
-            await dispatch(
-              createIntent(LayoutAction.UpdatePopover, {
-                part: 'popover',
-                options: {
-                  state: false,
-                  anchorId: '',
-                },
-              }),
-            );
-            if (currentSpaceOrgTable) {
-              return dispatch(
-                createIntent(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [fullyQualifiedId(currentSpaceOrgTable)],
-                  options: { workspace: space?.id },
-                }),
-              );
-            }
-          },
-          [dispatch],
-        );
+        // TODO(wittjosiah): Handle org click.
+        // const { dispatchPromise: dispatch } = useIntentDispatcher();
+        // const handleOrgClick = useCallback(
+        //   async (org: DataType.Organization) => {
+        //     const space = getSpace(org);
+        //     const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
+        //     const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
+        //       return table.view?.target?.query?.typename === DataType.Organization.typename;
+        //     });
+        //     await dispatch(
+        //       createIntent(LayoutAction.UpdatePopover, {
+        //         part: 'popover',
+        //         options: {
+        //           state: false,
+        //           anchorId: '',
+        //         },
+        //       }),
+        //     );
+        //     if (currentSpaceOrgTable) {
+        //       return dispatch(
+        //         createIntent(LayoutAction.Open, {
+        //           part: 'main',
+        //           subject: [fullyQualifiedId(currentSpaceOrgTable)],
+        //           options: { workspace: space?.id },
+        //         }),
+        //       );
+        //     }
+        //   },
+        //   [dispatch],
+        // );
         return (
-          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
+          <ContactCard role={role} subject={data.subject}>
             {role === 'popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );
@@ -74,7 +66,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
         <OrganizationCard role={role} subject={data.subject}>
@@ -84,7 +76,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--project`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
     }),
@@ -94,7 +86,7 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
@@ -121,7 +113,7 @@ export default () =>
               readonly={role === 'popover'}
               onSave={handleSave}
               autoSave
-              {...(role === 'card--kanban' && { outerSpacing: 'blockStart-0' })}
+              {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}
             />
           </Card.SurfaceRoot>
         );

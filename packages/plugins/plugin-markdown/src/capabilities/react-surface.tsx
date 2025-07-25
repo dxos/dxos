@@ -105,7 +105,7 @@ export default () =>
     }),
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
-      role: ['popover', 'card--kanban', 'card--document', 'card'],
+      role: ['popover', 'card--intrinsic', 'card--extrinsic', 'transclusion', 'card'],
       filter: (data): data is { subject: DocumentType | DataType.Text } =>
         Obj.instanceOf(DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,

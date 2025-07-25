@@ -28,3 +28,5 @@ export const CollectionMain = ({ collection }: { collection: DataType.Collection
     </div>
   );
 };
+
+export default CollectionMain;

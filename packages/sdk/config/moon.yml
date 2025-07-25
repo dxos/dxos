@@ -20,7 +20,7 @@ tasks:
       - '--platform=node'
     deps:
       - ^:compile
-      - esbuild:compile
+      - dx-compile:compile
     inputs:
       - '@group(production)'
     outputs:

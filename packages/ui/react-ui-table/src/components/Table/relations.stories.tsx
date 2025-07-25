@@ -5,17 +5,14 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import { SchemaAST } from 'effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Obj, Ref, type Type } from '@dxos/echo';
-import { getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
-import { getAnnotation } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { Type } from '@dxos/echo';
+import { type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { DataType, createView, ViewProjection, ViewType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -23,7 +20,8 @@ import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
-import { TableType } from '../../types';
+import { TableView } from '../../types';
+import { createTable } from '../../util';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
@@ -33,35 +31,30 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
 const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
+  const client = useClient();
   const { space } = useClientProvider();
-
-  const jsonSchema = useMemo(() => toJsonSchema(schema), [schema]);
-  const table = useMemo(() => {
-    if (!space) {
-      return undefined;
-    }
-    const typename = getSchemaTypename(schema);
-    invariant(typename);
-    const name = getAnnotation<string>(SchemaAST.TitleAnnotationId)(schema.ast) ?? typename;
-    const view = createView({ name, typename, jsonSchema });
-    return space.db.add(Obj.make(TableType, { view: Ref.make(view) }));
-  }, [schema, space, jsonSchema]);
-
-  const projection = useMemo(() => {
-    if (!table?.view?.target) {
-      return undefined;
-    }
-
-    // TODO(burdon): Just pass in view? Reuse same jsonSchema instance? View determines if mutable, etc.
-    return new ViewProjection(jsonSchema, table.view.target);
-  }, [jsonSchema, table]);
+  const [view, setView] = useState<DataType.View>();
+  const [jsonSchema, setJsonSchema] = useState<JsonSchemaType>();
 
   const features = useMemo<TableFeatures>(
     () => ({ schemaEditable: false, dataEditable: true, selection: { enabled: false } }),
     [],
   );
 
-  const model = useTableModel<TableRow>({ table, projection, rows: [], features });
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      const { jsonSchema, view } = await createTable({ client, space, typename: Type.getTypename(schema) });
+      setJsonSchema(jsonSchema);
+      setView(view);
+    });
+    return () => clearTimeout(timeout);
+  }, [client, space, schema]);
+
+  const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
   useEffect(() => {
     if (!model || !space) {
       return;
@@ -107,7 +100,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
-      types: [TableType, ViewType, DataType.Organization, DataType.Person],
+      types: [DataType.View, DataType.Organization, DataType.Person, TableView],
       createIdentity: true,
       createSpace: true,
     }),

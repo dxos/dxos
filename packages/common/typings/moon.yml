@@ -1,9 +1,5 @@
 type: library
 language: typescript
 tags:
-  - ts-build
+  - typecheck
   - pack
-workspace:
-  inheritedTasks:
-    exclude:
-      - compile

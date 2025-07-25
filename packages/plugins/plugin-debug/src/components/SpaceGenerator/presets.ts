@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
-import { FunctionTrigger, TriggerKind, EmailTriggerOutput, type TriggerType } from '@dxos/functions';
+import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
   createAppend,
@@ -31,7 +31,6 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
-import { TableType } from '@dxos/react-ui-table';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
@@ -125,72 +124,73 @@ export const generator = () => ({
       },
     ],
 
-    [
-      PresetName.EMAIL_TABLE,
-      async (space, n, cb) => {
-        const objects = range(n, () => {
-          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+    // TODO(wittjosiah): Remove?
+    // [
+    //   PresetName.EMAIL_TABLE,
+    //   async (space, n, cb) => {
+    //     const objects = range(n, () => {
+    //       const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          const results = space.db.query(Filter.type(TableType)).runSync();
-          const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
-          invariant(emailTable, 'Email table not found.');
+    //       const results = space.db.query(Filter.type(TableType)).runSync();
+    //       const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
+    //       invariant(emailTable, 'Email table not found.');
 
-          const template = canvasModel.createNode(
-            createTemplate({
-              valueType: 'object',
-              ...rawPosition({ centerX: -80, centerY: -64, width: 320, height: 320 }),
-            }),
-          );
-          const templateContent = ['{'];
+    //       const template = canvasModel.createNode(
+    //         createTemplate({
+    //           valueType: 'object',
+    //           ...rawPosition({ centerX: -80, centerY: -64, width: 320, height: 320 }),
+    //         }),
+    //       );
+    //       const templateContent = ['{'];
 
-          let functionTrigger: FunctionTrigger | undefined;
-          canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({
-              spaceId: space.id,
-              triggerKind: TriggerKind.Email,
-              ...position({ x: -18, y: -2 }),
-            });
-            const trigger = canvasModel.createNode(triggerShape);
+    //       let functionTrigger: FunctionTrigger | undefined;
+    //       canvasModel.builder.call((builder) => {
+    //         const triggerShape = createTrigger({
+    //           spaceId: space.id,
+    //           triggerKind: TriggerKind.Email,
+    //           ...position({ x: -18, y: -2 }),
+    //         });
+    //         const trigger = canvasModel.createNode(triggerShape);
 
-            const tableId = canvasModel.createNode(
-              createConstant({
-                value: DXN.fromLocalObjectId(emailTable.id).toString(),
-                ...position({ x: -18, y: 5, width: 8, height: 6 }),
-              }),
-            );
+    //         const tableId = canvasModel.createNode(
+    //           createConstant({
+    //             value: DXN.fromLocalObjectId(emailTable.id).toString(),
+    //             ...position({ x: -18, y: 5, width: 8, height: 6 }),
+    //           }),
+    //         );
 
-            const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
+    //         const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 6 })));
 
-            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
-            for (let i = 0; i < properties.length; i++) {
-              const propName = properties[i].name.toString();
-              builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
-              templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
-            }
-            templateContent.push('}');
+    //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
+    //         for (let i = 0; i < properties.length; i++) {
+    //           const propName = properties[i].name.toString();
+    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
+    //         }
+    //         templateContent.push('}');
 
-            builder
-              .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
-              .createEdge({ source: template.id, target: appendToTable.id, input: 'items' });
+    //         builder
+    //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+    //           .createEdge({ source: template.id, target: appendToTable.id, input: 'items' });
 
-            functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+    //         functionTrigger = triggerShape.functionTrigger!.target!;
+    //       });
 
-          const computeModel = createComputeGraph(canvasModel);
+    //       const computeModel = createComputeGraph(canvasModel);
 
-          const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
-          invariant(templateComputeNode, 'Template compute node was not created.');
-          templateComputeNode.value = templateContent.join('\n');
-          templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
+    //       const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
+    //       invariant(templateComputeNode, 'Template compute node was not created.');
+    //       templateComputeNode.value = templateContent.join('\n');
+    //       templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
 
-          attachTrigger(functionTrigger, computeModel);
+    //       attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(PresetName.EMAIL_TABLE, space, canvasModel, computeModel);
-        });
-        cb?.(objects);
-        return objects;
-      },
-    ],
+    //       return addToSpace(PresetName.EMAIL_TABLE, space, canvasModel, computeModel);
+    //     });
+    //     cb?.(objects);
+    //     return objects;
+    //   },
+    // ],
 
     [
       PresetName.CHAT_GPT,
@@ -222,99 +222,100 @@ export const generator = () => ({
       },
     ],
 
-    [
-      PresetName.EMAIL_WITH_SUMMARY,
-      async (space, n, cb) => {
-        const objects = range(n, () => {
-          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+    // TODO(wittjosiah): Remove?
+    // [
+    //   PresetName.EMAIL_WITH_SUMMARY,
+    //   async (space, n, cb) => {
+    //     const objects = range(n, () => {
+    //       const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          const results = space.db.query(Filter.type(TableType)).runSync();
-          const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
-          invariant(emailTable, 'Email table not found.');
+    //       const results = space.db.query(Filter.type(TableType)).runSync();
+    //       const emailTable = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Email'));
+    //       invariant(emailTable, 'Email table not found.');
 
-          const template = canvasModel.createNode(
-            createTemplate({
-              valueType: 'object',
-              ...rawPosition({ centerX: 192, centerY: -176, width: 320, height: 320 }),
-            }),
-          );
-          const templateContent = ['{'];
+    //       const template = canvasModel.createNode(
+    //         createTemplate({
+    //           valueType: 'object',
+    //           ...rawPosition({ centerX: 192, centerY: -176, width: 320, height: 320 }),
+    //         }),
+    //       );
+    //       const templateContent = ['{'];
 
-          let functionTrigger: FunctionTrigger | undefined;
-          canvasModel.builder.call((builder) => {
-            const gpt = canvasModel.createNode(
-              createGpt(rawPosition({ centerX: -400, centerY: -112, width: 256, height: 202 })),
-            );
-            const systemPrompt = canvasModel.createNode(
-              createConstant({
-                value: "use one word to describe content category. don't write anything else",
-                ...rawPosition({ centerX: -800, centerY: -160, width: 192, height: 128 }),
-              }),
-            );
-            const triggerShape = createTrigger({
-              spaceId: space.id,
-              triggerKind: TriggerKind.Email,
-              ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
-            });
-            const trigger = canvasModel.createNode(triggerShape);
+    //       let functionTrigger: FunctionTrigger | undefined;
+    //       canvasModel.builder.call((builder) => {
+    //         const gpt = canvasModel.createNode(
+    //           createGpt(rawPosition({ centerX: -400, centerY: -112, width: 256, height: 202 })),
+    //         );
+    //         const systemPrompt = canvasModel.createNode(
+    //           createConstant({
+    //             value: "use one word to describe content category. don't write anything else",
+    //             ...rawPosition({ centerX: -800, centerY: -160, width: 192, height: 128 }),
+    //           }),
+    //         );
+    //         const triggerShape = createTrigger({
+    //           spaceId: space.id,
+    //           triggerKind: TriggerKind.Email,
+    //           ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
+    //         });
+    //         const trigger = canvasModel.createNode(triggerShape);
 
-            const { queueId } = setupQueue(space, canvasModel, {
-              idPosition: { centerX: -720, centerY: 224, width: 192, height: 256 },
-              queuePosition: { centerX: -144, centerY: 416, width: 320, height: 448 },
-            });
-            const appendToQueue = canvasModel.createNode(
-              createAppend(rawPosition({ centerX: -80, centerY: 96, width: 122, height: 128 })),
-            );
+    //         const { queueId } = setupQueue(space, canvasModel, {
+    //           idPosition: { centerX: -720, centerY: 224, width: 192, height: 256 },
+    //           queuePosition: { centerX: -144, centerY: 416, width: 320, height: 448 },
+    //         });
+    //         const appendToQueue = canvasModel.createNode(
+    //           createAppend(rawPosition({ centerX: -80, centerY: 96, width: 122, height: 128 })),
+    //         );
 
-            const tableId = canvasModel.createNode(
-              createConstant({
-                value: DXN.fromLocalObjectId(emailTable.id).toString(),
-                ...rawPosition({ centerX: -112, centerY: -544, width: 192, height: 256 }),
-              }),
-            );
+    //         const tableId = canvasModel.createNode(
+    //           createConstant({
+    //             value: DXN.fromLocalObjectId(emailTable.id).toString(),
+    //             ...rawPosition({ centerX: -112, centerY: -544, width: 192, height: 256 }),
+    //           }),
+    //         );
 
-            const appendToTable = canvasModel.createNode(
-              createAppend(rawPosition({ centerX: 560, centerY: -416, width: 128, height: 122 })),
-            );
+    //         const appendToTable = canvasModel.createNode(
+    //           createAppend(rawPosition({ centerX: 560, centerY: -416, width: 128, height: 122 })),
+    //         );
 
-            templateContent.push('  "category": "{{text}}",');
-            builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
+    //         templateContent.push('  "category": "{{text}}",');
+    //         builder.createEdge({ source: gpt.id, target: template.id, input: 'text', output: 'text' });
 
-            const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
-            for (let i = 0; i < properties.length; i++) {
-              const propName = properties[i].name.toString();
-              builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
-              templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
-            }
-            templateContent.push('}');
+    //         const properties = SchemaAST.getPropertySignatures(EmailTriggerOutput.ast);
+    //         for (let i = 0; i < properties.length; i++) {
+    //           const propName = properties[i].name.toString();
+    //           builder.createEdge({ source: trigger.id, target: template.id, input: propName, output: propName });
+    //           templateContent.push(`  "${propName}": "{{${propName}}}"` + (i === properties.length - 1 ? '' : ','));
+    //         }
+    //         templateContent.push('}');
 
-            builder
-              .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
-              .createEdge({ source: queueId.id, target: appendToQueue.id, input: 'id' })
-              .createEdge({ source: gpt.id, target: appendToQueue.id, output: 'messages', input: 'items' })
-              .createEdge({ source: systemPrompt.id, target: gpt.id, input: 'systemPrompt' })
-              .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
-              .createEdge({ source: template.id, target: appendToTable.id, input: 'items' });
+    //         builder
+    //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+    //           .createEdge({ source: queueId.id, target: appendToQueue.id, input: 'id' })
+    //           .createEdge({ source: gpt.id, target: appendToQueue.id, output: 'messages', input: 'items' })
+    //           .createEdge({ source: systemPrompt.id, target: gpt.id, input: 'systemPrompt' })
+    //           .createEdge({ source: trigger.id, target: gpt.id, input: 'prompt', output: 'body' })
+    //           .createEdge({ source: template.id, target: appendToTable.id, input: 'items' });
 
-            functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+    //         functionTrigger = triggerShape.functionTrigger!.target!;
+    //       });
 
-          const computeModel = createComputeGraph(canvasModel);
+    //       const computeModel = createComputeGraph(canvasModel);
 
-          const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
-          invariant(templateComputeNode, 'Template compute node was not created.');
-          templateComputeNode.value = templateContent.join('\n');
-          const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-          templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
+    //       const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
+    //       invariant(templateComputeNode, 'Template compute node was not created.');
+    //       templateComputeNode.value = templateContent.join('\n');
+    //       const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
+    //       templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
 
-          attachTrigger(functionTrigger, computeModel);
+    //       attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(PresetName.EMAIL_WITH_SUMMARY, space, canvasModel, computeModel);
-        });
-        cb?.(objects);
-        return objects;
-      },
-    ],
+    //       return addToSpace(PresetName.EMAIL_WITH_SUMMARY, space, canvasModel, computeModel);
+    //     });
+    //     cb?.(objects);
+    //     return objects;
+    //   },
+    // ],
 
     [
       PresetName.FOREX_FUNCTION_CALL,
@@ -395,54 +396,55 @@ export const generator = () => ({
       },
     ],
 
-    [
-      PresetName.KANBAN_QUEUE,
-      async (space, n, cb) => {
-        const objects = range(n, () => {
-          const canvasModel = CanvasGraphModel.create<ComputeShape>();
+    // TODO(wittjosiah): Remove?
+    // [
+    //   PresetName.KANBAN_QUEUE,
+    //   async (space, n, cb) => {
+    //     const objects = range(n, () => {
+    //       const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          // TODO(wittjosiah): Integrate directly w/ Kanban.
-          // const results = space.db.query(Filter.type(KanbanType)).runSync();
-          // const kanban = results.find((r) => r.object?.cardView?.target?.query?.type?.endsWith('Message'));
-          // invariant(kanban, 'Kanban not found.');
+    //       // TODO(wittjosiah): Integrate directly w/ Kanban.
+    //       // const results = space.db.query(Filter.type(KanbanType)).runSync();
+    //       // const kanban = results.find((r) => r.object?.cardView?.target?.query?.type?.endsWith('Message'));
+    //       // invariant(kanban, 'Kanban not found.');
 
-          const results = space.db.query(Filter.type(TableType)).runSync();
-          const messages = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Message'));
-          invariant(messages, 'Table not found.');
+    //       const results = space.db.query(Filter.type(TableType)).runSync();
+    //       const messages = results.find((r) => r.object?.view?.target?.query?.typename?.endsWith('Message'));
+    //       invariant(messages, 'Table not found.');
 
-          let functionTrigger: FunctionTrigger | undefined;
-          canvasModel.builder.call((builder) => {
-            const triggerShape = createTrigger({
-              spaceId: space.id,
-              triggerKind: TriggerKind.Queue,
-              ...position({ x: -10, y: -5 }),
-            });
-            const trigger = canvasModel.createNode(triggerShape);
+    //       let functionTrigger: FunctionTrigger | undefined;
+    //       canvasModel.builder.call((builder) => {
+    //         const triggerShape = createTrigger({
+    //           spaceId: space.id,
+    //           triggerKind: TriggerKind.Queue,
+    //           ...position({ x: -10, y: -5 }),
+    //         });
+    //         const trigger = canvasModel.createNode(triggerShape);
 
-            const tableId = canvasModel.createNode(
-              createConstant({
-                value: DXN.fromLocalObjectId(messages.id).toString(),
-                ...position({ x: -10, y: 5 }),
-              }),
-            );
-            const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 0 })));
+    //         const tableId = canvasModel.createNode(
+    //           createConstant({
+    //             value: DXN.fromLocalObjectId(messages.id).toString(),
+    //             ...position({ x: -10, y: 5 }),
+    //           }),
+    //         );
+    //         const appendToTable = canvasModel.createNode(createAppend(position({ x: 10, y: 0 })));
 
-            builder
-              .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
-              .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
+    //         builder
+    //           .createEdge({ source: tableId.id, target: appendToTable.id, input: 'id' })
+    //           .createEdge({ source: trigger.id, target: appendToTable.id, input: 'items', output: 'item' });
 
-            functionTrigger = triggerShape.functionTrigger!.target!;
-          });
+    //         functionTrigger = triggerShape.functionTrigger!.target!;
+    //       });
 
-          const computeModel = createComputeGraph(canvasModel);
-          attachTrigger(functionTrigger, computeModel);
+    //       const computeModel = createComputeGraph(canvasModel);
+    //       attachTrigger(functionTrigger, computeModel);
 
-          return addToSpace(PresetName.KANBAN_QUEUE, space, canvasModel, computeModel);
-        });
-        cb?.(objects);
-        return objects;
-      },
-    ],
+    //       return addToSpace(PresetName.KANBAN_QUEUE, space, canvasModel, computeModel);
+    //     });
+    //     cb?.(objects);
+    //     return objects;
+    //   },
+    // ],
   ] as [PresetName, ObjectGenerator<any>][],
 });
 

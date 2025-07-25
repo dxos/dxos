@@ -5,13 +5,13 @@
 import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
-import { Type, type Obj } from '@dxos/echo';
-import { type BaseObject, type TypedObject } from '@dxos/echo-schema';
+import { type Obj, Type } from '@dxos/echo';
+import { EchoSchema, StoredSchema, type TypedObject, type BaseObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/invitations';
-import { DataType, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -217,6 +217,56 @@ export namespace SpaceAction {
     output: Schema.Boolean,
   }) {}
 
+  export const StoredSchemaForm = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    typename: Schema.optional(
+      Schema.String.annotations({
+        [TypenameAnnotationId]: ['unused-static'],
+      }),
+    ),
+  });
+
+  export class UseStaticSchema extends Schema.TaggedClass<UseStaticSchema>()(`${SPACE_ACTION}/use-static-schema`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      typename: Schema.String,
+    }),
+    output: Schema.Struct({}),
+  }) {}
+
+  export class AddSchema extends Schema.TaggedClass<AddSchema>()(`${SPACE_ACTION}/add-schema`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      name: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Schema for schema?
+      schema: Schema.Any,
+    }),
+    output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
+      id: Schema.String,
+      object: StoredSchema,
+      schema: Schema.instanceOf(EchoSchema),
+    }),
+  }) {}
+
+  export class DeleteField extends Schema.TaggedClass<DeleteField>()(`${SPACE_ACTION}/delete-field`, {
+    input: Schema.Struct({
+      view: DataType.View,
+      fieldId: Schema.String,
+      // TODO(wittjosiah): Separate fields for undo data?
+      deletionData: Schema.optional(
+        Schema.Struct({
+          field: FieldSchema,
+          // TODO(wittjosiah): This creates a type error.
+          // props: PropertySchema,
+          props: Schema.Any,
+          index: Schema.Number,
+        }),
+      ),
+    }),
+    output: Schema.Void,
+  }) {}
+
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
@@ -235,6 +285,7 @@ export namespace SpaceAction {
       hidden: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
+      // TODO(wittjosiah): ObjectId.
       id: Schema.String,
       subject: Schema.Array(Schema.String),
       object: EchoObjectSchema,

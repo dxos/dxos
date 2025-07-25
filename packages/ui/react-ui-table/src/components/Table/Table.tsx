@@ -16,9 +16,11 @@ import React, {
 } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Filter } from '@dxos/echo';
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Filter } from '@dxos/react-client/echo';
+// TODO(wittjosiah): Remove dependency on react-client.
+import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -50,15 +52,17 @@ import { createOption, TableValueEditor, type TableCellEditorProps } from '../Ta
 
 export type TableRootProps = PropsWithChildren<{ role?: string }>;
 
-const TableRoot = ({ children, role }: TableRootProps) => {
+const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
   return (
     <div
       role='none'
       className={mx(
-        'relative !border-separator',
-        role === 'section' // TODO(burdon): This leaks composer plugin concepts? Standardize for react-ui?
-          ? 'attention-surface overflow-hidden [&_.dx-grid]:max-is-[--dx-grid-content-inline-size]'
-          : 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:bs-0 [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
+        role === 'popover' && 'popover-card-height',
+        role === 'section' && 'attention-surface',
+        role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
+        ['popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
       )}
     >
       {children}
@@ -321,7 +325,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
       async ({ field, props }, text) => {
         if (model && props.referenceSchema && field.referencePath) {
-          const space = model.space;
+          const space = getSpace(model.view);
           invariant(space);
 
           let schema;
@@ -387,7 +391,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           frozen={frozen}
           columns={model.columnMeta.value}
           limitRows={model.getRowCount() ?? 0}
-          limitColumns={model.view?.fields?.length ?? 0}
+          limitColumns={model.projection.fields.length}
           overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}

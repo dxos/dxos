@@ -8,12 +8,15 @@ import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
-import { MapAction, MapType } from '../types';
+import { MapAction, MapView } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -32,7 +35,7 @@ export default () => {
       - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
       - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
     `,
-    schema: MapType,
+    schema: MapView,
     tools: [
       createTool(meta.id, {
         name: 'list',
@@ -41,9 +44,25 @@ export default () => {
         schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects } = await extensions.space.db.query(Filter.type(MapType)).run();
-          invariant(objects.length > 0, 'No maps found');
-          return ToolResult.Success(objects);
+          const space = extensions.space;
+          const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+
+          const mapInfo = await Promise.all(
+            objects.map(async (view) => {
+              const map = await view.presentation.load();
+              if (!Obj.instanceOf(MapView, map)) {
+                return null;
+              }
+
+              return {
+                id: fullyQualifiedId(view),
+                name: view.name ?? 'Unnamed Map',
+                typename: view.query.typename,
+              };
+            }),
+          );
+
+          return ToolResult.Success(mapInfo.filter(isNonNullable));
         },
       }),
       createTool(meta.id, {
@@ -61,11 +80,11 @@ export default () => {
           typename: Schema.optional(Schema.String).annotations({
             description: 'Optional fully qualified typename of the schema to use for map points.',
           }),
-          locationProperty: Schema.optional(Schema.String).annotations({
-            description: 'Optional field name to use as the location property.',
+          locationFieldId: Schema.String.annotations({
+            description: 'Field name to use as the location property.',
           }),
         }),
-        execute: async ({ center, typename, locationProperty }, { extensions }) => {
+        execute: async ({ center, typename, locationFieldId }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
@@ -77,19 +96,11 @@ export default () => {
             }
           }
 
-          // Don't supply coordinates if typename is supplied.
-          const coordinates = typename
-            ? undefined
-            : center
-              ? ([center.longitude, center.latitude] as const)
-              : undefined;
-
           const intent = pipe(
             createIntent(MapAction.Create, {
               space: extensions.space,
-              coordinates,
-              initialSchema: typename,
-              locationProperty,
+              typename,
+              locationFieldId,
             }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );

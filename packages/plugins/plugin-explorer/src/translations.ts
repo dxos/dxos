@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Explorer',
         'typename label_other': 'Explorers',
         'object name placeholder': 'New explorer',
+        'rename object label': 'Rename explorer',
+        'delete object label': 'Delete explorer',
       },
       [meta.id]: {
         'plugin name': 'Explorer',

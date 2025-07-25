@@ -394,9 +394,6 @@
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
       ],
-      "@dxos/react-ui-table/types": [
-        "packages/ui/react-ui-table/src/types/index.ts"
-      ],
       "@dxos/react-ui-tabs": [
         "packages/ui/react-ui-tabs/src/index.ts"
       ],

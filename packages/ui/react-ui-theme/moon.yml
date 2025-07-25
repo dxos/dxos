@@ -23,7 +23,7 @@ tasks:
       - '--preactSignalTracking'
     deps:
       - ^:compile
-      - esbuild:compile
+      - dx-compile:compile
     options:
       mergeArgs: replace
     outputs:

@@ -186,8 +186,8 @@ export class AppManager {
     }
   }
 
-  toggleCollectionCollapsed(nth = 0): Promise<void> {
-    return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
+  toggleCollectionCollapsed(nth = 0, delay = 100): Promise<void> {
+    return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click({ delay });
   }
 
   async createObject({ type, name, nth = 0 }: { type: string; name?: string; nth?: number }): Promise<void> {
@@ -207,8 +207,8 @@ export class AppManager {
     await objectForm.getByTestId('save-button').click();
   }
 
-  async navigateToObject(nth = 0): Promise<void> {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click();
+  async navigateToObject(nth = 0, delay = 100): Promise<void> {
+    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ delay });
   }
 
   async renameObject(newName: string, nth = 0): Promise<void> {

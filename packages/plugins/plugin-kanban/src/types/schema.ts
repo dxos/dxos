@@ -5,8 +5,7 @@
 import { Schema } from 'effect';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { KanbanType } from '@dxos/react-ui-kanban';
-import { FieldSchema, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
 
@@ -44,13 +43,13 @@ export namespace KanbanAction {
   export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
     input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),
     output: Schema.Struct({
-      object: KanbanType,
+      object: DataType.View,
     }),
   }) {}
 
   export class DeleteCardField extends Schema.TaggedClass<DeleteCardField>()(`${KANBAN_ACTION}/delete-card-field`, {
     input: Schema.Struct({
-      kanban: KanbanType,
+      view: DataType.View,
       fieldId: Schema.String,
       // TODO(wittjosiah): Separate fields for undo data?
       deletionData: Schema.optional(

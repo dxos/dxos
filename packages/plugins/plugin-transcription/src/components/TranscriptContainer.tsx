@@ -18,7 +18,7 @@ export type TranscriptionContainerProps = {
   transcript: TranscriptType;
 };
 
-export const TranscriptionContainer = ({ role, transcript }: TranscriptionContainerProps) => {
+export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
   const attendableId = fullyQualifiedId(transcript);
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
@@ -26,7 +26,7 @@ export const TranscriptionContainer = ({ role, transcript }: TranscriptionContai
   const model = useQueueModelAdapter(renderMarkdown(members), queue);
 
   return (
-    <StackItem.Content role={role} classNames='container-max-width pli-2'>
+    <StackItem.Content classNames='container-max-width pli-2'>
       <Transcript attendableId={attendableId} space={space} model={model} transcript={transcript} />
     </StackItem.Content>
   );
