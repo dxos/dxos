@@ -4,7 +4,6 @@
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 
 /**
  * Muxes multiple readable streams together into one.

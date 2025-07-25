@@ -65,7 +65,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
             },
           },
           services: {
-            agentHosting: { 
+            agentHosting: {
               type: 'AGENTHOSTING_API',
               server: 'https://edge.dxos.workers.dev/v1alpha1/',
               // server: 'http://localhost:8787/v1alpha1/',

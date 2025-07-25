@@ -4,8 +4,6 @@
 
 import fs from 'node:fs';
 
-import { log } from '@dxos/log';
-
 import { type Event as PerfettoEvent } from '../tracing';
 
 type Trace = {
