@@ -27,7 +27,7 @@ jobs:
         with:
           command: release draft ${{ env.CN_APPLICATION }} --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
-          path: ./packages/apps/composer-app/src-tauri/
+          working-directory: ./packages/apps/composer-app/src-tauri/
 
   build:
     needs: draft
@@ -93,7 +93,7 @@ jobs:
         with:
           command: release upload ${{ env.CN_APPLICATION }} --framework tauri
           api-key: ${{ secrets.CN_API_KEY }}
-          path: ./packages/apps/composer-app/src-tauri/
+          working-directory: ./packages/apps/composer-app/src-tauri/
 
   # TODO(wittjosiah): Uncomment this when we want to automatically publish the release.
   # publish:
