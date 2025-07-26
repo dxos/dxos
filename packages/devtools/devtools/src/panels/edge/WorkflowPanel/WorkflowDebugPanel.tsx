@@ -7,6 +7,7 @@ import { Effect, type Layer } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AiService } from '@dxos/ai';
 import { createTestAiServiceClient } from '@dxos/ai/testing';
 import {
   type ComputeGraph,
@@ -16,7 +17,7 @@ import {
   type WorkflowLoader,
 } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log, LogLevel } from '@dxos/log';

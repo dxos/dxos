@@ -6,11 +6,11 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
-import { Message, type MessageContentBlock } from '../tools';
 import { type GenerationStreamEvent } from '../types';
 
 /**
@@ -20,39 +20,39 @@ export class MixedStreamParser {
   /**
    * New message.
    */
-  public message = new Event<Message>();
+  public message = new Event<DataType.Message>();
 
   /**
    * Complete block added to Message.
    */
-  public block = new Event<MessageContentBlock>();
+  public block = new Event<ContentBlock.Any>();
 
   /**
    * Update partial block (while streaming).
    */
-  public update = new Event<MessageContentBlock>();
+  public update = new Event<ContentBlock.Any>();
 
   public streamEvent = new Event<GenerationStreamEvent>();
 
   /**
    * Current message.
    */
-  private _message?: Message | undefined;
+  private _message?: DataType.Message | undefined;
 
-  private _emitBlock(contentBlock: MessageContentBlock, streamBlock?: StreamBlock): void {
+  private _emitBlock(contentBlock: ContentBlock.Any, streamBlock?: StreamBlock): void {
     const messageBlock = streamBlock ? mergeMessageBlock(contentBlock, streamBlock) : contentBlock;
     if (messageBlock) {
-      if (messageBlock.type === 'text' && messageBlock.text.length === 0) {
+      if (messageBlock._tag === 'text' && messageBlock.text.length === 0) {
         return;
       }
 
       invariant(this._message);
-      this._message.content.push(messageBlock);
+      this._message.blocks.push(messageBlock);
       this.block.emit(messageBlock);
     }
   }
 
-  private _emitUpdate(contentBlock: MessageContentBlock, streamBlock: StreamBlock): void {
+  private _emitUpdate(contentBlock: ContentBlock.Any, streamBlock: StreamBlock): void {
     const messageBlock = mergeMessageBlock(contentBlock, streamBlock);
     if (messageBlock) {
       messageBlock.pending = true;
@@ -63,13 +63,13 @@ export class MixedStreamParser {
   /**
    * Parse stream until end.
    */
-  async parse(stream: GenerationStream): Promise<Message[]> {
+  async parse(stream: GenerationStream): Promise<DataType.Message[]> {
     const transformer = new StreamTransform();
 
     /**
      * Current content message block.
      */
-    let contentBlock: MessageContentBlock | undefined;
+    let contentBlock: ContentBlock.Any | undefined;
 
     /**
      * Current partial block used to accumulate content.
@@ -77,7 +77,7 @@ export class MixedStreamParser {
     let streamBlock: StreamBlock | undefined;
     const stack: StreamBlock[] = [];
 
-    const messagesCollected: Message[] = [];
+    const messagesCollected: DataType.Message[] = [];
 
     for await (const event of stream) {
       log('streamEvent', { event });
@@ -94,7 +94,11 @@ export class MixedStreamParser {
             log.warn('unexpected message_start');
           }
 
-          this._message = Obj.make(Message, { role: event.message.role, content: [...event.message.content] });
+          this._message = Obj.make(DataType.Message, {
+            created: event.message.created,
+            sender: event.message.sender,
+            blocks: [...event.message.blocks],
+          });
           this.message.emit(this._message);
           break;
         }
@@ -266,9 +270,9 @@ export class MixedStreamParser {
  * Convert stream block to message content block.
  */
 export const mergeMessageBlock = (
-  contentBlock: MessageContentBlock,
+  contentBlock: ContentBlock.Any,
   streamBlock: StreamBlock,
-): MessageContentBlock | undefined => {
+): ContentBlock.Any | undefined => {
   log('mergeMessageBlock', { contentBlock, streamBlock });
 
   switch (streamBlock.type) {
@@ -276,7 +280,7 @@ export const mergeMessageBlock = (
     // Text
     //
     case 'text': {
-      return { ...contentBlock, type: 'text', text: streamBlock.content };
+      return { ...contentBlock, _tag: 'text', text: streamBlock.content };
     }
 
     //
@@ -297,7 +301,7 @@ export const mergeMessageBlock = (
             .filter(isNotFalsy)
             .join('\n');
 
-          return { ...contentBlock, type: 'text', disposition: 'cot', text: content };
+          return { ...contentBlock, _tag: 'text', disposition: 'cot', text: content };
         }
 
         case 'status': {
@@ -313,20 +317,20 @@ export const mergeMessageBlock = (
             .filter(isNotFalsy)
             .join('\n');
 
-          return { ...contentBlock, type: 'text', disposition: 'status', text: content };
+          return { ...contentBlock, _tag: 'text', disposition: 'status', text: content };
         }
 
         case 'artifact': {
           const { attributes } = streamBlock;
-          return { type: 'json', disposition: 'artifact', json: JSON.stringify(attributes) };
+          return { _tag: 'json', disposition: 'artifact', data: JSON.stringify(attributes) };
         }
 
         case 'suggest': {
           if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
             return {
-              type: 'json',
+              _tag: 'json',
               disposition: 'suggest',
-              json: JSON.stringify({ text: streamBlock.content[0].content }),
+              data: JSON.stringify({ text: streamBlock.content[0].content }),
             };
           }
           break;
@@ -335,9 +339,9 @@ export const mergeMessageBlock = (
         case 'proposal': {
           if (streamBlock.content.length === 1 && streamBlock.content[0].type === 'text') {
             return {
-              type: 'json',
+              _tag: 'json',
               disposition: 'proposal',
-              json: JSON.stringify({ text: streamBlock.content[0].content }),
+              data: JSON.stringify({ text: streamBlock.content[0].content }),
             };
           }
           break;
@@ -345,9 +349,9 @@ export const mergeMessageBlock = (
 
         case 'select': {
           return {
-            type: 'json',
+            _tag: 'json',
             disposition: 'select',
-            json: JSON.stringify({
+            data: JSON.stringify({
               options: streamBlock.content.flatMap((content) =>
                 content.type === 'tag' && content.content.length === 1 && content.content[0].type === 'text'
                   ? [content.content[0].content]
@@ -359,9 +363,9 @@ export const mergeMessageBlock = (
 
         case 'tool-list': {
           return {
-            type: 'json',
+            _tag: 'json',
             disposition: 'tool_list',
-            json: JSON.stringify({}),
+            data: JSON.stringify({}),
           };
         }
       }
@@ -373,13 +377,13 @@ export const mergeMessageBlock = (
     // JSON
     //
     case 'json': {
-      switch (contentBlock.type) {
-        case 'tool_use': {
+      switch (contentBlock._tag) {
+        case 'toolCall': {
           return { ...contentBlock, input: safeParseJson(streamBlock.content) ?? {} };
         }
       }
 
-      return { ...contentBlock, type: 'json', disposition: 'artifact', json: streamBlock.content };
+      return { ...contentBlock, _tag: 'json', disposition: 'artifact', data: streamBlock.content };
     }
   }
 };

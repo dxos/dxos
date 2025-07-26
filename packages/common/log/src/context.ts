@@ -16,7 +16,7 @@ export type LogContext = Record<string, any> | Error | any;
  */
 export interface LogEntry {
   level: LogLevel;
-  message: string;
+  message?: string;
   context?: LogContext;
   meta?: CallMetadata;
   error?: Error;
@@ -64,8 +64,7 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
   }
 
   if (entry.error) {
-    const errorContext = (entry.error as any).context;
-    context = Object.assign(context ?? {}, { error: entry.error, ...errorContext });
+    context = Object.assign(context ?? {}, { error: entry.error });
   }
 
   return context && Object.keys(context).length > 0 ? context : undefined;

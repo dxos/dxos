@@ -4,7 +4,7 @@
 
 import React, { type FC, type PropsWithChildren } from 'react';
 
-import { type MessageContentBlock, type Message, type Tool } from '@dxos/ai';
+import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -16,6 +16,7 @@ import {
   type ToggleContainerProps,
 } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
@@ -23,10 +24,10 @@ import { type ChatProcessor } from '../../hooks';
 import { ToolboxContainer } from '../Toolbox';
 
 export type ChatMessageProps = ThemedClassName<{
+  debug?: boolean;
   space?: Space;
   processor?: ChatProcessor;
-  message: Message;
-  debug?: boolean;
+  message: DataType.Message;
   tools?: Tool[];
   onPrompt?: (text: string) => void;
   onDelete?: (id: string) => void;
@@ -34,6 +35,7 @@ export type ChatMessageProps = ThemedClassName<{
 }>;
 
 export const ChatMessage = ({
+  debug,
   classNames,
   space,
   processor,
@@ -42,7 +44,10 @@ export const ChatMessage = ({
   onPrompt,
   onAddToGraph,
 }: ChatMessageProps) => {
-  const { role, content = [] } = message;
+  const {
+    sender: { role },
+    blocks,
+  } = message;
 
   // TODO(burdon): Restructure types to make check unnecessary.
   if (isToolMessage(message)) {
@@ -53,20 +58,24 @@ export const ChatMessage = ({
     );
   }
 
-  return content.map((block, idx) => {
+  return blocks.map((block, idx) => {
     // TODO(burdon): Filter empty messages.
-    if (block.type === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
+    if (block._tag === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
       return null;
     }
 
-    const Component = components[block.type] ?? components.default;
+    const Component = components[block._tag] ?? components.default;
+    if (!Component) {
+      return null;
+    }
 
     return (
       <MessageContainer
         key={idx}
-        classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}
-        user={block.type === 'text' && role === 'user'}
+        classNames={mx(classNames, '__animate-[fadeIn_0.5s]')}
+        user={block._tag === 'text' && role === 'user'}
       >
+        {debug && <div className='text-xs'>{JSON.stringify({ block: block._tag, role })}</div>}
         <Component space={space} processor={processor} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
       </MessageContainer>
     );
@@ -77,21 +86,21 @@ type BlockComponent = FC<{
   space?: Space;
   /** @deprecated Replace with context */
   processor?: ChatProcessor;
-  block: MessageContentBlock;
+  block: ContentBlock.Any;
   onPrompt?: (text: string) => void;
   onAddToGraph?: (object: Obj.Any) => void;
 }>;
 
-const components: Record<string, BlockComponent> = {
+const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComponent>> = {
   //
   // Text
   //
   ['text' as const]: ({ block }) => {
-    invariant(block.type === 'text');
+    invariant(block._tag === 'text');
     // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
-      return <MarkdownViewer classNames='[&>p]:animate-[fadeIn_0.5s]' content={block.text} />;
+      return <MarkdownViewer content={block.text} />;
     }
 
     // TOOD(burdon): Store last time user opened/closed COT.
@@ -125,7 +134,7 @@ const components: Record<string, BlockComponent> = {
   // JSON
   //
   ['json' as const]: ({ space, processor, block, onPrompt, onAddToGraph }) => {
-    invariant(block.type === 'json');
+    invariant(block._tag === 'json');
 
     switch (block.disposition) {
       case 'tool_list': {
@@ -137,12 +146,12 @@ const components: Record<string, BlockComponent> = {
       }
 
       case 'suggest': {
-        const { text = '' }: { text: string } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        const { text = '' }: { text: string } = safeParseJson(block.data ?? '{}') ?? ({} as any);
         return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt?.(text)} />;
       }
 
       case 'select': {
-        const { options = [] }: { options: string[] } = safeParseJson(block.json ?? '{}') ?? ({} as any);
+        const { options = [] }: { options: string[] } = safeParseJson(block.data ?? '{}') ?? ({} as any);
         return (
           <div className='flex flex-wrap gap-1'>
             {options.map((option, idx) => (
@@ -163,15 +172,15 @@ const components: Record<string, BlockComponent> = {
           <div className='flex flex-wrap gap-1'>
             <Surface
               role='card'
-              data={{ subject: JSON.parse(block.json ?? '{}') }}
+              data={{ subject: JSON.parse(block.data ?? '{}') }}
               limit={1}
-              fallback={<div className='font-mono text-xs text-pre'>{block.json}</div>}
+              fallback={<div className='font-mono text-xs text-pre'>{block.data}</div>}
             />
             {onAddToGraph && (
               <IconButton
                 icon='ph--plus--regular'
                 label='Add to graph'
-                onClick={() => onAddToGraph?.(JSON.parse(block.json ?? '{}'))}
+                onClick={() => onAddToGraph?.(JSON.parse(block.data ?? '{}'))}
               />
             )}
           </div>
@@ -182,7 +191,7 @@ const components: Record<string, BlockComponent> = {
         const title = block.disposition ? titles[block.disposition] : undefined;
         return (
           <ToggleContainer title={title ?? 'JSON'}>
-            <Json data={safeParseJson(block.json ?? block)} />
+            <Json data={safeParseJson(block.data ?? block)} />
           </ToggleContainer>
         );
       }
@@ -193,8 +202,8 @@ const components: Record<string, BlockComponent> = {
   // Default
   //
   default: ({ block }) => {
-    let title = titles[block.type];
-    if (block.type === 'tool_use') {
+    let title = titles[block._tag];
+    if (block._tag === 'toolCall') {
       title = `Tool [${block.name}]`; // TODO(burdon): Get label from tool.
     }
 

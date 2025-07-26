@@ -4,9 +4,9 @@
 
 import {
   type TokenClassificationOutput,
+  type TokenClassificationPipelineType,
   type TokenClassificationSingle,
   pipeline,
-  type TokenClassificationPipelineType,
 } from '@xenova/transformers';
 
 import { log } from '@dxos/log';

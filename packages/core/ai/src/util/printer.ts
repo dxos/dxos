@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import type { Message, MessageContentBlock } from '../tools';
+import type { ContentBlock, DataType } from '@dxos/schema';
 
 type Mode = 'text' | 'json';
 
@@ -30,11 +30,11 @@ export class ConsolePrinter {
     this.logger(...data);
   }
 
-  printMessage = (message: Message) => {
+  printMessage = (message: DataType.Message) => {
     switch (this.mode) {
       case 'text': {
-        this.log(`${message.role.toUpperCase()}\n`);
-        for (const content of message.content) {
+        this.log(`${message.sender.role?.toUpperCase()}\n`);
+        for (const content of message.blocks) {
           this.printContentBlock(content);
         }
         break;
@@ -47,24 +47,29 @@ export class ConsolePrinter {
     }
   };
 
-  printContentBlock = (content: MessageContentBlock) => {
+  printContentBlock = (content: ContentBlock.Any) => {
     switch (this.mode) {
       case 'text': {
-        switch (content.type) {
+        switch (content._tag) {
           case 'text':
             this.log(`${content.disposition ? `[${content.disposition}] ` : ''}${content.text}`);
             break;
-          case 'tool_use':
+          case 'reasoning':
+            this.log(
+              `💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
+                content.signature ? ' [signed]' : ''
+              }`,
+            );
+            break;
+          case 'toolCall':
             this.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
             break;
-          case 'tool_result': {
-            let data: any;
-            try {
-              data = JSON.parse(content.content);
-            } catch {
-              data = content.content;
-            }
-            this.log(`⚙️ [Tool Result] ${content.toolUseId} ${inspect(data, { depth: null, colors: true })}`);
+          case 'toolResult': {
+            this.log(`⚙️ [Tool Result] ${content.name} ${inspect(content.result, { depth: null, colors: true })}`);
+            break;
+          }
+          default: {
+            this.log(`[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
             break;
           }
         }

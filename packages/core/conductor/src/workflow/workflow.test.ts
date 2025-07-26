@@ -5,11 +5,12 @@
 import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, test, expect } from 'vitest';
 
+import { AiService } from '@dxos/ai';
 import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
 

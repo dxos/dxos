@@ -15,7 +15,7 @@ import { Stack } from '@dxos/react-ui-stack';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { Plank, type PlankProps } from './Plank';
-import DeckStateFactory from '../../capabilities/state'; // TODO(burdon): !!!
+import { DeckStateFactory } from '../../capabilities';
 import { translations } from '../../translations';
 
 const meta: Meta<PlankProps> = {

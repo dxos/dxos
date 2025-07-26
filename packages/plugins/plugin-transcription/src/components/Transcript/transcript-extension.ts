@@ -38,7 +38,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
             const block = model.getChunkAtLine(line.number)?.blocks[0];
-            const timestamp = block?.type === 'transcription' && block.started;
+            const timestamp = block?._tag === 'transcript' && block.started;
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
@@ -218,7 +218,7 @@ const getStartTime = (started?: Date, message?: DataType.Message): Date | undefi
     return started;
   }
 
-  if (message?.blocks[0]?.type === 'transcription' && message.blocks[0].started) {
+  if (message?.blocks[0]?._tag === 'transcript' && message.blocks[0].started) {
     return new Date(message.blocks[0].started);
   }
 

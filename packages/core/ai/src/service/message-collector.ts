@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Message } from '../tools';
-import type { GenerationStreamEvent } from '../types';
+import { type DataType } from '@dxos/schema';
+
+import { type GenerationStreamEvent } from '../types';
 
 export class MessageCollector {
-  private _messages: Message[] = [];
-  private _pendingMessage?: Message = undefined;
+  private _messages: DataType.Message[] = [];
+  private _pendingMessage?: DataType.Message = undefined;
 
   public get messages() {
     return this._messages;
@@ -33,16 +34,16 @@ export class MessageCollector {
       case 'content_block_start':
         if (this._pendingMessage) {
           // Ensure the content array exists
-          this._pendingMessage.content = this._pendingMessage.content || [];
+          this._pendingMessage.blocks = this._pendingMessage.blocks || [];
           // Add the new content block at the specified index
-          this._pendingMessage.content[event.index] = event.content;
+          this._pendingMessage.blocks[event.index] = event.content;
         }
         break;
 
       case 'content_block_delta':
-        if (this._pendingMessage && this._pendingMessage.content) {
-          const block = this._pendingMessage.content[event.index];
-          if (block && event.delta.type === 'text_delta' && block.type === 'text') {
+        if (this._pendingMessage && this._pendingMessage.blocks) {
+          const block = this._pendingMessage.blocks[event.index];
+          if (block && event.delta.type === 'text_delta' && block._tag === 'text') {
             block.text = (block.text || '') + event.delta.text;
           }
         }
@@ -50,8 +51,8 @@ export class MessageCollector {
 
       case 'content_block_stop':
         // Mark the block as no longer pending if needed
-        if (this._pendingMessage && this._pendingMessage.content) {
-          const block = this._pendingMessage.content[event.index];
+        if (this._pendingMessage && this._pendingMessage.blocks) {
+          const block = this._pendingMessage.blocks[event.index];
           if (block) {
             block.pending = false;
           }
@@ -67,12 +68,12 @@ export class MessageCollector {
     }
   }
 
-  pushMessage(message: Message): void {
+  pushMessage(message: DataType.Message): void {
     this._messages.push(message);
   }
 }
 
-export function* emitMessageAsEvents(message: Message): Iterable<GenerationStreamEvent> {
+export function* emitMessageAsEvents(message: DataType.Message): Iterable<GenerationStreamEvent> {
   yield {
     type: 'message_start',
     message,

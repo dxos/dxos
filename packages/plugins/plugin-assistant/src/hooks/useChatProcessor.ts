@@ -2,31 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Layer } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { DEFAULT_EDGE_MODEL, DEFAULT_OLLAMA_MODEL, type ExecutableTool } from '@dxos/ai';
+import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
 import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
-import { FunctionType, type ServiceContainer } from '@dxos/functions';
+import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatProcessor, type ChatProcessorOptions } from '../hooks';
+import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
 type UseChatProcessorProps = {
-  /** @deprecated Why is this required? */
-  part?: 'deck' | 'dialog';
+  preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;
-  // TODO(burdon): Reconcile all of below (overlapping concepts). Figure out how to inject vie effect layers.
-  serviceContainer: ServiceContainer;
+
+  // TODO(burdon): Move into layer?
+  services?: Layer.Layer<ChatServices>;
   blueprintRegistry?: BlueprintRegistry;
+  // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
+
   /** @deprecated */
   instructions?: string;
   /** @deprecated */
@@ -39,10 +42,10 @@ type UseChatProcessorProps = {
  * Configure and create ChatProcessor.
  */
 export const useChatProcessor = ({
-  part = 'deck',
+  preset,
   space,
   chat,
-  serviceContainer,
+  services,
   blueprintRegistry,
   settings,
   instructions,
@@ -59,15 +62,15 @@ export const useChatProcessor = ({
   }
 
   // Services.
-  const services = useQuery(space, Filter.type(ServiceType));
+  const remoteServices = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
   useEffect(() => {
     log('creating service tools...');
     queueMicrotask(async () => {
-      const tools = await Promise.all(services.map((service) => createToolsFromService(service)));
+      const tools = await Promise.all(remoteServices.map((service) => createToolsFromService(service)));
       setServiceTools(tools.flat());
     });
-  }, [services]);
+  }, [remoteServices]);
 
   // Tools and context.
   const config = useConfig();
@@ -82,11 +85,10 @@ export const useChatProcessor = ({
         .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
         .filter(isNonNullable),
     ];
-    const extensions = { part, space, dispatch, pivotId: chatId };
+    const extensions = { space, dispatch, pivotId: chatId };
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
-  // Prompt.
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({
@@ -97,40 +99,39 @@ export const useChatProcessor = ({
     [artifacts, artifact, instructions],
   );
 
-  // TODO(burdon): Remove default (let backend decide if not specified).
-  const model: ChatProcessorOptions['model'] =
-    settings?.llmProvider === 'ollama'
-      ? ((settings?.ollamaModel ?? DEFAULT_OLLAMA_MODEL) as ChatProcessorOptions['model'])
-      : ((settings?.edgeModel ?? DEFAULT_EDGE_MODEL) as ChatProcessorOptions['model']);
-
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
       return;
     }
 
     return new Conversation({
-      serviceContainer,
       queue: chat.queue.target as Queue<any>,
     });
-  }, [chat?.queue.target, serviceContainer]);
+  }, [chat?.queue.target]);
 
   // Create processor.
   // TODO(burdon): Updated on each query update above; should just update current processor.
   const processor = useMemo(() => {
-    if (!conversation) {
+    if (!services || !conversation) {
       return undefined;
     }
 
-    log('creating processor...', { settings });
-    return new ChatProcessor(conversation, {
+    log.info('creating processor', {
+      preset,
+      artifacts: artifacts.length,
+      systemPrompt: systemPrompt.length,
+      model: preset?.model,
+      settings,
+    });
+    return new ChatProcessor(services, conversation, {
       tools,
       extensions,
       blueprintRegistry,
       artifacts,
       systemPrompt,
-      model,
+      model: preset?.model,
     });
-  }, [conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, model]);
+  }, [services, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, preset]);
 
   return processor;
 };

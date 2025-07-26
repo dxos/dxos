@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import type { inspect, InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 
 import { ObjectId } from './object-id';
 import { SpaceId } from './space-id';
@@ -83,11 +83,11 @@ export class DXN {
      * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
      */
     QUEUE: 'queue',
-  });
+  })
 
   get kind() {
     return this.#kind;
-  }
+  };
 
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
@@ -143,6 +143,7 @@ export class DXN {
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
   static fromLocalObjectId(id: string): DXN {
+    assertArgument(ObjectId.isValid(id), `Invalid object ID: ${id}`);
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 

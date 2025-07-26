@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
+// TODO(dmaretskyi): Fix this.
+// @ts-nocheck
 
-import { Message } from '../tools';
+import { Obj } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
 import { type GenerationStreamEvent } from '../types';
 
 /**
@@ -40,9 +43,10 @@ export const createTestSSEStream = (
 
       push({
         type: 'message_start',
-        message: Obj.make(Message, {
-          role: 'assistant',
-          content: [],
+        message: Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks: [],
         }),
       });
 

@@ -88,6 +88,7 @@ export default defineConfig((env) => ({
     alias: {
       'node-fetch': 'isomorphic-fetch',
       'node:util': '@dxos/node-std/util',
+      'tiktoken/lite': resolve(__dirname, 'stub.mjs'),
     },
   },
   worker: {
@@ -140,7 +141,7 @@ export default defineConfig((env) => ({
         ],
         // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
         [
-          '@preact-signals/safe-react/swc', 
+          '@preact-signals/safe-react/swc',
           {
             mode: 'all',
           },
@@ -310,7 +311,9 @@ export default defineConfig((env) => ({
         join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
-  ].filter(isNonNullable).flat(), // Plugins
+  ]
+    .filter(isNonNullable)
+    .flat(), // Plugins
 }));
 
 /**

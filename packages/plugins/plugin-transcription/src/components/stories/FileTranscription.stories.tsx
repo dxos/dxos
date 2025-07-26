@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
@@ -88,8 +86,13 @@ const AudioFile = ({
   const model = useQueueModelAdapter(renderMarkdown([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
-      void queue?.append([message]);
+      void queue?.append([
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: actor,
+          blocks,
+        }),
+      ]);
     },
     [queue],
   );
@@ -108,14 +111,14 @@ const AudioFile = ({
     }
     const executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: {
-          client: new EdgeAiServiceClient({
-            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-            defaultGenerationOptions: {
-              model: '@anthropic/claude-3-5-sonnet-20241022',
-            },
-          }),
-        },
+        // ai: {
+        //   client: new EdgeAiServiceClient({
+        //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+        //     defaultGenerationOptions: {
+        //       model: '@anthropic/claude-3-5-sonnet-20241022',
+        //     },
+        //   }),
+        // },
       }),
     );
 

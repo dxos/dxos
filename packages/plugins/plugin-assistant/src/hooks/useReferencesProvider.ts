@@ -7,31 +7,25 @@ import { useMemo } from 'react';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, type Type } from '@dxos/echo';
+import { type ReferencesProvider } from '@dxos/react-ui-chat';
 
 /**
- * @deprecated
+ * Resolve references to objects in the space.
  */
-export type ContextProvider = {
-  query: (params: { query: string }) => Promise<Array<{ uri: string; label: string }>>;
-  resolveMetadata: (params: { uri: string }) => Promise<{ uri: string; label: string }>;
-};
-
-/**
- * @deprecated
- */
-export const useContextProvider = (space?: Space): ContextProvider | undefined => {
+export const useReferencesProvider = (space?: Space): ReferencesProvider | undefined => {
+  // TODO(burdon): Pass in.
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
 
-  return useMemo<ContextProvider | undefined>((): ContextProvider | undefined => {
+  return useMemo<ReferencesProvider | undefined>((): ReferencesProvider | undefined => {
     if (!space) {
       return undefined;
     }
 
     return {
-      query: async ({ query }) => {
-        const artifactSchemas = artifactDefinitions.map((artifact) => artifact.schema);
+      getReferences: async ({ query }) => {
+        const schemas = artifactDefinitions.map((artifact) => artifact.schema);
         const { objects } = await space.db
-          .query(Filter.or(...artifactSchemas.map((schema) => Filter.type(schema as Type.Schema))))
+          .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
           .run();
 
         return (
@@ -50,11 +44,11 @@ export const useContextProvider = (space?: Space): ContextProvider | undefined =
             }))
         );
       },
-      resolveMetadata: async ({ uri }) => {
+      resolveReference: async ({ uri }) => {
         const object = await space.db.query(Filter.ids(uri)).first();
         return { uri, label: Obj.getLabel(object) ?? '' };
       },
-    };
+    } satisfies ReferencesProvider;
   }, [space, artifactDefinitions]);
 };
 

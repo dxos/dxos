@@ -160,7 +160,7 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/S.
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;

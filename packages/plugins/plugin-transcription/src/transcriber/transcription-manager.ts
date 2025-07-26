@@ -133,7 +133,7 @@ export class TranscriptionManager extends Resource {
       // TODO(burdon): Started and stopped blocks appear twice.
       const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Started', started: new Date().toISOString() }],
+        blocks: [{ _tag: 'transcript', text: 'Started', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
       await this._queue?.append([block]);
@@ -141,7 +141,7 @@ export class TranscriptionManager extends Resource {
       await this._transcriber?.close();
       const block = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        blocks: [{ type: 'transcription', text: 'Stopped', started: new Date().toISOString() }],
+        blocks: [{ _tag: 'transcript', text: 'Stopped', started: new Date().toISOString() }],
         sender: { role: 'assistant' },
       });
       await this._queue?.append([block]);
@@ -175,7 +175,7 @@ export class TranscriptionManager extends Resource {
     }
   }
 
-  private async _onSegments(segments: DataType.MessageBlock.Transcription[]): Promise<void> {
+  private async _onSegments(segments: DataType.MessageBlock.Transcript[]): Promise<void> {
     if (!this.isOpen || !this._queue) {
       return;
     }

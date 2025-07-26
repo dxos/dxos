@@ -71,8 +71,8 @@ export const createMessage = (space?: Space) => {
     },
     // First block plain text (with links stripped), second block enriched text (with links)
     blocks: [
-      { type: 'text', text },
-      { type: 'text', text: enrichedText },
+      { _tag: 'text', text },
+      { _tag: 'text', text: enrichedText },
     ],
     properties: { tags },
   });

@@ -16,7 +16,7 @@ export type UpdateSchedulerOptions = {
 /**
  * Time period for update counting.
  */
-const TIME_PERIOD = 1000;
+const TIME_PERIOD = 1_000;
 
 export class UpdateScheduler {
   /**

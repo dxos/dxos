@@ -2,34 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Remove file?
+// @ts-nocheck
+
 import { Match, Schema } from 'effect';
 
-import {
-  createTool,
-  type AiServiceClient,
-  Message,
-  type MessageContentBlock,
-  ToolResult,
-  type ToolUseContentBlock,
-  type ToolRegistry,
-} from '@dxos/ai';
-import { AISession } from '@dxos/assistant';
+import { createTool, type AiServiceClient, ToolResult, type ToolRegistry } from '@dxos/ai';
+import { AiSession } from '@dxos/assistant';
 import { Event } from '@dxos/async';
 import { Key, Obj } from '@dxos/echo';
 import { type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type ContentBlock, DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 import type { Sequence, SequenceStep } from './sequence';
 
-const SYSTEM_PROMPT = `
-You are a smart Rule-Following Agent.
-Rule-Following Agent executes the command that the user sent in the last message.
-After doing the work, the Rule-Following Agent calls report tool.
-If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
-If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
-Rule-Following Agent explains the reason it is unable to perform the task before bailing.
-The Rule-Following Agent can express creativity and imagination in the way it performs the task.
-The Rule-Following Agent precisely follows the instructions.
+const SYSTEM_PROMPT = trim`
+  You are a smart Rule-Following Agent.
+  Rule-Following Agent executes the command that the user sent in the last message.
+  After doing the work, the Rule-Following Agent calls report tool.
+  If the Rule-Following agent believes that no action is needed, it calls the report tool with "skipped" status.
+  If the Rule-Following Agent is unable to perform the task, it calls the report tool with "bail" status.
+  Rule-Following Agent explains the reason it is unable to perform the task before bailing.
+  The Rule-Following Agent can express creativity and imagination in the way it performs the task.
+  The Rule-Following Agent precisely follows the instructions.
 `;
 
 export type SequenceTraceStep = {
@@ -39,7 +36,7 @@ export type SequenceTraceStep = {
 };
 
 export type SequenceMachineState = {
-  history: Message[];
+  history: DataType.Message[];
   trace: SequenceTraceStep[];
   state: 'working' | 'bail' | 'done';
 };
@@ -64,8 +61,8 @@ export type SequenceEvent =
   | { type: 'end'; invocationId: string }
   | { type: 'step-start'; invocationId: string; step: SequenceStep }
   | { type: 'step-complete'; invocationId: string; step: SequenceStep }
-  | { type: 'message'; invocationId: string; message: Message }
-  | { type: 'block'; invocationId: string; block: MessageContentBlock };
+  | { type: 'message'; invocationId: string; message: DataType.Message }
+  | { type: 'block'; invocationId: string; block: ContentBlock.Any };
 
 export interface SequenceLogger {
   log(event: SequenceEvent): void;
@@ -80,8 +77,8 @@ export class SequenceMachine {
   public readonly end = new Event<void>();
   public readonly stepStart = new Event<SequenceStep>();
   public readonly stepComplete = new Event<SequenceStep>();
-  public readonly message = new Event<Message>();
-  public readonly block = new Event<MessageContentBlock>();
+  public readonly message = new Event<DataType.Message>();
+  public readonly block = new Event<ContentBlock.Any>();
 
   // TODO(burdon): Replace events with logger?
   private logger?: SequenceLogger;
@@ -115,7 +112,6 @@ export class SequenceMachine {
       firstStep = false;
 
       this._state = await this._execStep(invocationId, this._state, { input, aiClient: options.aiClient });
-
       const step = this.sequence.steps.find((step) => step.id === this._state.trace.at(-1)?.stepId)!;
       this.stepComplete.emit(step);
       this.logger?.log({ type: 'step-complete', invocationId, step });
@@ -162,7 +158,7 @@ export class SequenceMachine {
       execute: async (input) => ToolResult.Break(input),
     });
 
-    const session = new AISession({
+    const session = new AiSession({
       operationModel: 'configured',
     });
 
@@ -172,9 +168,10 @@ export class SequenceMachine {
 
     const inputMessages = options.input
       ? [
-          Obj.make(Message, {
-            role: 'user',
-            content: [taggedDataBlock('input', options.input)],
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: [taggedDataBlock('input', options.input)],
           }),
         ]
       : [];
@@ -223,16 +220,18 @@ export class SequenceMachine {
   }
 }
 
-const taggedDataBlock = (tag: string, data: unknown): MessageContentBlock => {
+const taggedDataBlock = (tag: string, data: unknown): ContentBlock.Text => {
   return {
-    type: 'text',
+    _tag: 'text',
     text: `<${tag}>\n${JSON.stringify(data, null, 2)}\n</${tag}>`,
-  } satisfies MessageContentBlock;
+  } satisfies ContentBlock.Text;
 };
 
-const popLastToolCall = (messages: Message[]): { messages: Message[]; call?: ToolUseContentBlock } => {
-  const lastBlock = messages.at(-1)?.content.at(-1);
-  if (lastBlock?.type !== 'tool_use') {
+const popLastToolCall = (
+  messages: DataType.Message[],
+): { messages: DataType.Message[]; call?: ContentBlock.ToolCall } => {
+  const lastBlock = messages.at(-1)?.blocks.at(-1);
+  if (lastBlock?._tag !== 'toolCall') {
     return { messages };
   }
 
@@ -240,8 +239,8 @@ const popLastToolCall = (messages: Message[]): { messages: Message[]; call?: Too
     ...messages.slice(0, -1),
     {
       ...messages.at(-1)!,
-      content: [...messages.at(-1)!.content.slice(0, -1)],
-    } satisfies Message,
+      blocks: [...messages.at(-1)!.blocks.slice(0, -1)],
+    } satisfies DataType.Message,
   ];
 
   return {

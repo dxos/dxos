@@ -3,9 +3,9 @@
 //
 
 export * from './chat-processor';
+export * from './presets';
 
 export * from './useBlueprints';
 export * from './useChatProcessor';
-export * from './useContextProvider';
-export * from './useServiceContainer';
-export * from './useTextInputEvents';
+export * from './useChatServices';
+export * from './useReferencesProvider';

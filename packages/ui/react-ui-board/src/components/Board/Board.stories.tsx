@@ -68,7 +68,7 @@ const meta: Meta<StoryProps> = {
         onMove={handleMove}
         ref={controller}
       >
-        <Board.Controls classNames='absolute top-3 left-3 z-10 min-bs-0 is-auto' />
+        <Board.Controls classNames='absolute top-3 left-3 z-10 min-bs-0 !is-auto' />
         <Board.Container>
           <Board.Viewport>
             <Board.Backdrop />

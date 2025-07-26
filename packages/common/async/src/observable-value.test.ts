@@ -5,12 +5,12 @@
 import { describe, expect, test } from 'vitest';
 
 import { type AsyncEvents, TimeoutError } from './errors';
-import { latch } from './latch';
 import {
   type CancellableObservable,
   type CancellableObservableEvents,
   CancellableObservableProvider,
 } from './observable-value';
+import { latch } from './trigger';
 
 interface ConnectionEvents extends AsyncEvents, CancellableObservableEvents {
   onConnected(connectionId: string): void;

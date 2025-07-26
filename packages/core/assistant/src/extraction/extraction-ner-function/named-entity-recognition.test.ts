@@ -57,7 +57,7 @@ describe('NamedEntityRecognition', () => {
     const { transcriptWoflram, transcriptJosiah } = await createTestData();
 
     const blocks = [...transcriptWoflram, ...transcriptJosiah].flatMap((message) =>
-      message.blocks.flatMap((block) => (block.type === 'transcription' ? [block.text] : [])),
+      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
     );
 
     for (const block of blocks) {
@@ -70,7 +70,7 @@ describe('NamedEntityRecognition', () => {
     const { transcriptMessages } = await createTestData();
 
     const blocks = transcriptMessages.flatMap((message) =>
-      message.blocks.flatMap((block) => (block.type === 'transcription' ? [block.text] : [])),
+      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
     );
 
     for (const block of blocks) {

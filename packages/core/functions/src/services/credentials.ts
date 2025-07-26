@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import { Context, Effect } from 'effect';
 
 type CredentialQuery = {
   service?: string;
@@ -31,7 +31,13 @@ export class CredentialsService extends Context.Tag('CredentialsService')<
      */
     getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
   }
->() {}
+>() {
+  static getCredential = (query: CredentialQuery): Effect.Effect<ServiceCredential, never, CredentialsService> =>
+    Effect.gen(function* () {
+      const credentials = yield* CredentialsService;
+      return yield* Effect.promise(() => credentials.getCredential(query));
+    });
+}
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<CredentialsService> {
   constructor(private readonly credentials: ServiceCredential[] = []) {}

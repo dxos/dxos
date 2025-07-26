@@ -12,17 +12,19 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Spinner, type SpinnerProps } from './Spinner';
 
-const DefaultStory = ({ active: _active }: SpinnerProps) => {
-  const [active, setActive] = useState(_active);
+const DefaultStory = ({ state: _state }: SpinnerProps) => {
+  const [state, setState] = useState(_state);
 
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button onClick={() => setActive((active) => !active)}>Toggle</Button>
+        <Button onClick={() => setState('pulse')}>Pulse</Button>
+        <Button onClick={() => setState('spin')}>Spin</Button>
+        <Button onClick={() => setState('flash')}>Flash</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
         <div className='flex w-6 h-6'>
-          <Spinner active={active} />
+          <Spinner state={state} />
         </div>
       </div>
     </div>
@@ -40,8 +42,4 @@ export default meta;
 
 type Story = StoryObj<SpinnerProps>;
 
-export const Default: Story = {
-  args: {
-    active: false,
-  },
-};
+export const Default: Story = {};

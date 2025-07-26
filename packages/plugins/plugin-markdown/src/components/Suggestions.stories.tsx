@@ -8,7 +8,6 @@ import { type Meta } from '@storybook/react-vite';
 import { Match, Option, pipe, Schema } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Message } from '@dxos/ai';
 import {
   Capabilities,
   CollaborationActions,
@@ -34,6 +33,7 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { command, type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import MarkdownContainer from './MarkdownContainer';
@@ -68,12 +68,18 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
-  const queue = useQueue<Message>(queueDxn);
+  const queue = useQueue<DataType.Message>(queueDxn);
 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
-    await queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    await queue.append([
+      Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [{ _tag: 'text', text: 'Hello' }],
+      }),
+    ]);
     const message = queue.objects.at(-1);
     invariant(message);
 

@@ -2,50 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
-import { ConsolePrinter, ToolRegistry } from '@dxos/ai';
-import { Blueprint, Conversation } from '@dxos/assistant';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import {
+  Blueprint,
+  Conversation,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
-import { createTestServices } from '@dxos/functions/testing';
+import { DatabaseService, QueueService } from '@dxos/functions';
+import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { readDocument, writeDocument } from '../tools';
+import { readDocumentFunction, writeDocumentFunction } from '../functions';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let queues: QueueFactory;
-  let serviceContainer: ServiceContainer;
 
   beforeAll(async () => {
     builder = await new EchoTestBuilder().open();
     ({ db, queues } = await builder.createDatabase({ types: [DocumentType, Blueprint] }));
-
-    // TODO(dmaretskyi): Helper to scaffold this from a config.
-    serviceContainer = createTestServices({
-      ai: {
-        provider: 'edge',
-      },
-      db,
-      queues,
-      logging: {
-        enabled: true,
-      },
-      toolResolver: ToolResolverService.make(new ToolRegistry([readDocument, writeDocument])),
-    });
   });
 
-  test('spec blueprint', async () => {
+  it('spec blueprint', async () => {
     const printer = new ConsolePrinter();
     const conversation = new Conversation({
-      serviceContainer,
       queue: queues.create(),
     });
     conversation.onBegin.on((session) => {
@@ -54,15 +47,17 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       session.block.on((block) => printer.printContentBlock(block));
     });
 
-    await db.add(DESIGN_SPEC_BLUEPRINT);
-    await conversation.context.bind({ blueprints: [Ref.make(DESIGN_SPEC_BLUEPRINT)] });
+    const blueprint = db.add(DESIGN_SPEC_BLUEPRINT);
+    await conversation.context.bind({ blueprints: [Ref.make(blueprint)] });
 
     const artifact = db.add(
       Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
     );
     let prevContent = artifact.content;
-    await conversation.run({
-      prompt: `
+
+    // TODO(dmaretskyi): Fix with effect
+    void conversation.run({
+      prompt: trim`
         Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
         1. Users should be able to create and edit their profiles
@@ -80,8 +75,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     expect(artifact.content).not.toBe(prevContent);
     prevContent = artifact.content;
 
-    await conversation.run({
-      prompt: `
+    // TODO(dmaretskyi): Fix with effect.
+    void conversation.run({
+      prompt: trim`
         I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
       `,
     });
@@ -89,61 +85,100 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
     expect(artifact.content).not.toBe(prevContent);
   });
 
-  test.only('building a shelf', async () => {
-    const printer = new ConsolePrinter();
-    const conversation = new Conversation({
-      serviceContainer,
-      queue: queues.create(),
-    });
-    conversation.onBegin.on((session) => {
-      session.message.on((message) => printer.printMessage(message));
-      session.userMessage.on((message) => printer.printMessage(message));
-      session.block.on((block) => printer.printContentBlock(block));
-    });
+  it.effect.only(
+    'building a shelf',
+    Effect.fn(
+      function* ({ expect }) {
+        const { queues } = yield* QueueService;
+        const { db } = yield* DatabaseService;
 
-    await db.add(TASK_LIST_BLUEPRINT);
-    await conversation.context.bind({ blueprints: [Ref.make(TASK_LIST_BLUEPRINT)] });
+        const printer = new ConsolePrinter({ mode: 'json' });
+        const conversation = new Conversation({
+          queue: queues.create(),
+        });
+        conversation.onBegin.on((session) => {
+          session.message.on((message) => printer.printMessage(message));
+          session.userMessage.on((message) => printer.printMessage(message));
+          session.block.on((block) => printer.printContentBlock(block));
+          session.streamEvent.on((part) => {
+            log.info('part', { part });
+          });
+        });
 
-    const artifact = db.add(Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }));
-    let prevContent = artifact.content;
-    await conversation.run({
-      prompt: `
-        I'm building a shelf.
-        I need a hammer, nails, and a saw.
-        Store the shopping list in ${Obj.getDXN(artifact)}
-      `,
-    });
-    log.info('spec 1', { doc: artifact });
-    expect(artifact.content).not.toBe(prevContent);
-    prevContent = artifact.content;
+        const blueprint = db.add(TASK_LIST_BLUEPRINT);
+        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-    await conversation.run({
-      prompt: `
-        I will need a board too.
-      `,
-    });
-    log.info('spec 2', { doc: artifact });
-    expect(artifact.content).not.toBe(prevContent);
+        const artifact = db.add(
+          Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: '' })) }),
+        );
 
-    await conversation.run({
-      prompt: `
-        Actually lets use screws and a screwdriver.
-      `,
-    });
-    log.info('spec 3', { doc: artifact });
-    expect(artifact.content).not.toBe(prevContent);
+        let prevContent = artifact.content;
+        {
+          yield* conversation.run({
+            prompt: trim`
+            I'm building a shelf.
+            I need a hammer, nails, and a saw.
+            Store the shopping list in ${Obj.getDXN(artifact)}
+          `,
+          });
+          log.info('conv 1', {
+            messages: yield* Effect.promise(() => conversation.getHistory()),
+          });
+          log.info('spec 1', { doc: artifact.content.target?.content });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
 
-    const { content } = await artifact.content.load();
+        {
+          yield* conversation.run({
+            prompt: trim`
+            I will need a board too.
+          `,
+          });
+          log.info('conv 2', {
+            messages: yield* Effect.promise(() => conversation.getHistory()),
+          });
+          log.info('spec 2', { doc: artifact.content.target?.content });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
 
-    Object.entries({
-      screwdriver: true,
-      screws: true,
-      board: true,
-      saw: true,
-      hammer: false,
-      nails: false,
-    }).forEach(([item, expected]) => {
-      expect(content.toLowerCase().includes(item)).toBe(expected);
-    });
-  });
+        {
+          yield* conversation.run({
+            prompt: trim`
+            Actually lets use screws and a screwdriver.
+          `,
+          });
+          log.info('conv 3', {
+            messages: yield* Effect.promise(() => conversation.getHistory()),
+          });
+          log.info('spec 3', { doc: artifact.content.target?.content });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
+
+        const { content } = yield* Effect.promise(() => artifact.content.load());
+        Object.entries({
+          screwdriver: true,
+          screws: true,
+          board: true,
+          saw: true,
+          hammer: false,
+          nails: false,
+        }).forEach(([item, expected]) => {
+          expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
+        });
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
+          makeToolResolverFromFunctions([readDocumentFunction, writeDocumentFunction]),
+          makeToolExecutionServiceFromFunctions([readDocumentFunction, writeDocumentFunction]),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+        ),
+      ),
+    ),
+  );
 });

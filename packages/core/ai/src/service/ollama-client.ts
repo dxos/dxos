@@ -2,27 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Remove file?
+// @ts-nocheck
+
 import { Schema } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AiServiceClient, type GenerationStream } from './service';
-import { GenerationStreamImpl } from './stream';
 import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
-import {
-  createTool,
-  type ExecutableTool,
-  isToolUse,
-  Message,
-  type MessageContentBlock,
-  runTools,
-  type Tool,
-  ToolResult,
-} from '../tools';
+import { createTool, type ExecutableTool, isToolUse, runTools, type Tool, ToolResult } from '../tools';
 import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
 
 export type OllamaClientParams = {
@@ -221,16 +215,17 @@ export class OllamaAiServiceClient implements AiServiceClient {
       // Send message_start event with proper message structure.
       yield {
         type: 'message_start',
-        message: Obj.make(Message, {
+        message: Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
           id: messageId,
-          role: 'assistant',
-          content: [],
+          blocks: [],
         }),
       } as GenerationStreamEvent;
 
       // Initialize text content block.
-      const textBlock: MessageContentBlock = {
-        type: 'text',
+      const textBlock: ContentBlock.Text = {
+        _tag: 'text',
         text: '',
       };
 
@@ -279,7 +274,7 @@ export class OllamaAiServiceClient implements AiServiceClient {
             type: 'content_block_start',
             index: currentBlockIndex,
             content: {
-              type: 'tool_use',
+              _tag: 'toolCall',
               id: ObjectId.random(),
               name: data.message.tool_calls[0].function.name,
               input: sanitizeToolArguments(data.message.tool_calls[0].function.arguments),

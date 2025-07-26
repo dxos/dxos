@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { Message, Tool } from '@dxos/ai';
+import { Tool } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';
 
@@ -24,7 +25,7 @@ export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 //
 
 export const QueueInput = Schema.Struct({ [DEFAULT_INPUT]: ObjectId });
-export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Message) });
+export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(DataType.Message) });
 
 //
 // Function

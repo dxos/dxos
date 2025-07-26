@@ -66,7 +66,9 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     args.push(`%c${processPrefix}${scopeName}`, 'color:#C026D3;font-weight:bold');
   }
 
-  args.push(entry.message);
+  if (entry.message) {
+    args.push(entry.message);
+  }
 
   const context = getContextFromEntry(entry);
   if (context) {

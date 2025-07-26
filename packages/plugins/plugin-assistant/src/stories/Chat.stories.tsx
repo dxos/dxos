@@ -5,16 +5,16 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import React, { useMemo, type FunctionComponent } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type FunctionComponent } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
+  readDocumentFunction,
   remoteServiceEndpoints,
-  readDocument,
-  writeDocument,
+  writeDocumentFunction,
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -44,8 +44,9 @@ import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
-import { Chat } from '../components';
-import { useChatProcessor, useServiceContainer } from '../hooks';
+import { Chat, type ChatPromptProps } from '../components';
+import { type AiServicePreset, AiServicePresets } from '../hooks';
+import { useChatProcessor, useChatServices } from '../hooks';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -74,10 +75,37 @@ const ChatContainer = () => {
   const space = useSpace();
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
 
-  // TODO(burdon): Figure out how to use effect to inject serviceContainer, blueprintRegistry into the processor.
-  const serviceContainer = useServiceContainer({ space });
+  // TODO(burdon): Memo preset for provider.
+  const [online, setOnline] = useState(true);
+  const [preset, setPreset] = useState<AiServicePreset>();
+  const presets = useMemo(
+    () => AiServicePresets.filter((preset) => online === (preset.provider === 'dxos-remote')),
+    [online],
+  );
+  useEffect(() => {
+    setPreset(presets[0]);
+  }, [presets]);
+
+  const services = useChatServices({ space });
   const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
-  const processor = useChatProcessor({ chat, space, serviceContainer, blueprintRegistry, noPluginArtifacts: true });
+  const processor = useChatProcessor({
+    preset,
+    chat,
+    space,
+    services,
+    blueprintRegistry,
+    noPluginArtifacts: true,
+  });
+
+  const handleChangePreset = useCallback<NonNullable<ChatPromptProps['onChangePreset']>>(
+    (id) => {
+      const preset = presets.find((preset) => preset.id === id);
+      if (preset) {
+        setPreset(preset);
+      }
+    },
+    [presets],
+  );
 
   if (!chat || !processor) {
     return null;
@@ -88,8 +116,13 @@ const ChatContainer = () => {
       <Chat.Thread />
       <div className='p-2'>
         <Chat.Prompt
-          expandable
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
+          expandable
+          online={online}
+          presets={presets.map(({ id, model, label }) => ({ id, label: label ?? model }))}
+          preset={preset?.id}
+          onChangeOnline={setOnline}
+          onChangePreset={handleChangePreset}
         />
       </div>
     </Chat.Root>
@@ -188,17 +221,20 @@ const getDecorators = ({
           );
 
           // TODO(burdon): Add to conversation context.
-          space.db.add(
+          const doc = space.db.add(
             Obj.make(DocumentType, {
               name: 'Tasks',
               content: Ref.make(Obj.make(DataType.Text, { content: '' })),
             }),
           );
 
-          // Clone blueprints and bind to conversation.
           const binder = new ContextBinder(await chat.queue.load());
+          await binder.bind({ objects: [Ref.make(doc)] });
           for (const blueprint of blueprints) {
-            const obj = space.db.add(Obj.make(Blueprint, { ...blueprint }));
+            // Clone blueprints and bind to conversation.
+            // TODO(dmaretskyi): This should be done by Obj.clone.
+            const { id: _id, ...data } = blueprint;
+            const obj = space.db.add(Obj.make(Blueprint, data));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
         },
@@ -208,14 +244,11 @@ const getDecorators = ({
       SpacePlugin(),
 
       TranscriptionPlugin(),
-
-      // TODO(burdon): Install capabilities independently?
-      // TODO(burdon): How to mock?
       AssistantPlugin(),
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Tools, [readDocument, writeDocument])],
+    capabilities: [contributes(Capabilities.Functions, [readDocumentFunction, writeDocumentFunction])],
   }),
   withTheme,
   withLayout({

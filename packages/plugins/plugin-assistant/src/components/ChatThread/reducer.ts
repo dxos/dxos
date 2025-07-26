@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Message } from '@dxos/ai';
+import { type DataType } from '@dxos/schema';
 
 // TODO(burdon): Move to util?
 type Reducer<R, I> = (acc: R, value: I) => R;
@@ -11,24 +11,24 @@ type Reducer<R, I> = (acc: R, value: I) => R;
  * Reducer that collapses related message blocks into single messages.
  * For example, combines tool request/response pairs into a single message.
  */
-export const messageReducer: Reducer<{ messages: Message[]; current?: Message }, Message> = (
+export const messageReducer: Reducer<{ messages: DataType.Message[]; current?: DataType.Message }, DataType.Message> = (
   { current, messages },
   message,
 ) => {
   let i = 0;
-  for (const block of message.content) {
-    switch (block.type) {
-      case 'tool_use':
-      case 'tool_result': {
+  for (const block of message.blocks) {
+    switch (block._tag) {
+      case 'toolCall':
+      case 'toolResult': {
         if (current) {
-          current.content.push(block);
+          current.blocks.push(block);
         } else {
           current = {
+            ...message,
             id: [message.id, i].join('_'),
-            role: message.role,
-            content: [block],
-          } as any;
-          messages.push(current as any);
+            blocks: [block],
+          };
+          messages.push(current);
         }
         break;
       }
@@ -37,10 +37,10 @@ export const messageReducer: Reducer<{ messages: Message[]; current?: Message },
       default: {
         current = undefined;
         messages.push({
+          ...message,
           id: [message.id, i].join('_'),
-          role: message.role,
-          content: [block],
-        } as any);
+          blocks: [block],
+        });
         break;
       }
     }

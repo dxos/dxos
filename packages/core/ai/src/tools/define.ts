@@ -20,6 +20,7 @@ export const parseToolName = (name: string) => {
 
 /**
  * Creates a well-formed tool definition.
+ * @deprecated
  */
 export const defineTool = (namespace: string, { name, ...props }: Omit<Tool, 'id' | 'namespace'>): Tool => {
   const id = [namespace, name].join('/');

@@ -35,7 +35,7 @@ const main = async () => {
 
   // Resolve outDir from tsconfig.
   const outDir = parsedCommandLine.options.outDir;
-  console.log(`OutDir: ${outDir}`);
+  VERBOSE && console.log(`OutDir: ${outDir}`);
   if (!outDir) {
     console.error('No outDir found in tsconfig.json.');
     process.exit(1);

@@ -7,18 +7,20 @@ import { describe, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
 import { createTestAiServiceClient } from './ollama';
-import { createTool, Message } from '../tools';
+import { createTool } from '../tools';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
   test('basic', async () => {
     const client = createTestAiServiceClient();
 
     const result = await client.execStream({
-      prompt: Obj.make(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: 'What is the capital of France?' }],
+      prompt: Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [{ _tag: 'text', text: 'What is the capital of France?' }],
       }),
     });
 
@@ -40,9 +42,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Ollama', () => {
     });
 
     const result = await client.execStream({
-      prompt: Obj.make(Message, {
-        role: 'user',
-        content: [{ type: 'text', text: 'I want green walls' }],
+      prompt: Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [{ _tag: 'text', text: 'I want green walls' }],
       }),
       tools: [tool],
     });

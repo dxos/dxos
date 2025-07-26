@@ -5,7 +5,7 @@
 import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
+import { defineTool, type Tool, ToolTypes } from '@dxos/ai';
 import { Filter, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
@@ -223,7 +223,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(Message),
+      messages: Schema.Array(DataType.Message),
     }),
   }),
 

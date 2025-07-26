@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import tsconfigPaths from 'vite-tsconfig-paths';
+// import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -32,9 +32,10 @@ export default defineConfig({
     ],
   },
   plugins: [
-    tsconfigPaths({
-      projects: [new URL('./tsconfig.paths.json', import.meta.url).pathname],
-    }),
+    // TODO(dmaretskyi): Disabled due to an ESM error in the vscode extension.
+    // tsconfigPaths({
+    //   projects: [new URL('./tsconfig.paths.json', import.meta.url).pathname],
+    // }),
   ],
 });
 
