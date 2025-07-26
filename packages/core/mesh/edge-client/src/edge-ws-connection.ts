@@ -30,6 +30,7 @@ export class EdgeWsConnection extends Resource {
   private _inactivityTimeoutCtx: Context | undefined;
   private _ws: WebSocket | undefined;
   private _wsMuxer: WebSocketMuxer | undefined;
+  private _lastReceivedMessageTimestamp = Date.now();
 
   constructor(
     private readonly _identity: EdgeIdentity,
@@ -111,6 +112,7 @@ export class EdgeWsConnection extends Resource {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
       }
+      this._lastReceivedMessageTimestamp = Date.now();
       if (event.data === '__pong__') {
         this._rescheduleHeartbeatTimeout();
         return;
@@ -172,8 +174,14 @@ export class EdgeWsConnection extends Resource {
       this._inactivityTimeoutCtx,
       () => {
         if (this.isOpen) {
-          log.warn('restart due to inactivity timeout');
-          this._callbacks.onRestartRequired();
+          if (Date.now() - this._lastReceivedMessageTimestamp > SIGNAL_KEEPALIVE_TIMEOUT) {
+            log.warn('restart due to inactivity timeout', {
+              lastReceivedMessageTimestamp: this._lastReceivedMessageTimestamp,
+            });
+            this._callbacks.onRestartRequired();
+          } else {
+            this._rescheduleHeartbeatTimeout();
+          }
         }
       },
       SIGNAL_KEEPALIVE_TIMEOUT,

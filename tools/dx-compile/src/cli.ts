@@ -22,7 +22,7 @@ void (async () => {
       .option('importGlobals', { type: 'boolean', default: false, describe: 'Import globals into module scope' })
       .option('metafile', { type: 'boolean', default: true, describe: 'Output a build meta file' })
       .option('outputPath', { type: 'string', demandOption: true, describe: 'Directory to output build files' })
-      .option('platforms', { type: 'array', default: ['browser', 'node'], describe: 'Platforms to create bundles for' })
+      .option('platform', { type: 'array', default: ['browser', 'node'], describe: 'Platforms to create bundles for' })
       .option('moduleFormat', { type: 'array', default: ['esm'], describe: 'Module formats to emit' })
       .option('sourcemap', { type: 'boolean', default: true, describe: 'Output sourcemaps' })
       .option('watch', { type: 'boolean', default: false, describe: 'Watch mode' })
@@ -47,7 +47,7 @@ void (async () => {
       importGlobals: argv.importGlobals as boolean,
       metafile: argv.metafile as boolean,
       outputPath: argv.outputPath as string,
-      platforms: argv.platforms as any[],
+      platforms: argv.platform as any[],
       moduleFormat: argv.moduleFormat as any[],
       sourcemap: argv.sourcemap as boolean,
       watch: argv.watch as boolean,

@@ -8,5 +8,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/playwright/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--preactSignalTracking'

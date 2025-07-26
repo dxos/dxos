@@ -16,14 +16,9 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-stack';
+import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import {
-  withLayout,
-  PopoverCardContainer,
-  IntrinsicCardContainer,
-  ExtrinsicCardContainer,
-} from '@dxos/storybook-utils';
+import { withLayout } from '@dxos/storybook-utils';
 
 import ChessContainer from './ChessContainer';
 import { ChessType } from '../types';
@@ -50,30 +45,15 @@ const render: Meta<StoryProps>['render'] = ({ role }) => {
     return <span>…</span>;
   }
 
-  const component = <ChessContainer game={game} role={role} />;
-
-  switch (role) {
-    case 'popover':
-      return <PopoverCardContainer icon='ph--castle-turret--regular'>{component}</PopoverCardContainer>;
-    case 'card--intrinsic':
-      return (
-        <IntrinsicCardContainer>
-          <Card.StaticRoot>{component}</Card.StaticRoot>
-        </IntrinsicCardContainer>
-      );
-    case 'card--extrinsic':
-      return (
-        <ExtrinsicCardContainer>
-          <Card.StaticRoot>{component}</Card.StaticRoot>
-        </ExtrinsicCardContainer>
-      );
-    default:
-      return <Card.StaticRoot>{component}</Card.StaticRoot>;
-  }
+  return (
+    <CardContainer icon='ph--castle-turret--regular' role={role}>
+      <ChessContainer game={game} role={role} />
+    </CardContainer>
+  );
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'Cards/plugin-chess/ChessContainer',
+  title: 'Cards/plugin-chess',
   render,
   decorators: [
     withLayout(),

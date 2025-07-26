@@ -100,16 +100,16 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
 
   const fileProcessor = createFileProcessor({
     pathOrFd: replicantParams.logFile,
-    levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+    levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.VERBOSE, LogLevel.INFO, LogLevel.TRACE],
   });
 
   const apis: EposedApis = {
-    dxgravity_done: (signal?: NodeJS.Signals | number) => {
+    dx_runner_done: (signal?: NodeJS.Signals | number) => {
       log.trace('dxos.blade-runner.kill-replicant', { signal });
       void ctx.dispose();
     },
     // Expose log hook for playwright.
-    dxgravity_log: (config, entry) => {
+    dx_runner_log: (config, entry) => {
       fileProcessor(config, entry);
       CONSOLE_PROCESSOR(config, entry);
     },
@@ -160,7 +160,7 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   });
 
   return {
-    kill: apis.dxgravity_done,
+    kill: apis.dx_runner_done,
   };
 };
 
@@ -253,6 +253,6 @@ const servePage = async (resources: Record<string, WebResource>, port = 5176) =>
 };
 
 type EposedApis = {
-  dxgravity_done: (signal?: NodeJS.Signals | number) => void;
-  dxgravity_log: LogProcessor;
+  dx_runner_done: (signal?: NodeJS.Signals | number) => void;
+  dx_runner_log: LogProcessor;
 };
