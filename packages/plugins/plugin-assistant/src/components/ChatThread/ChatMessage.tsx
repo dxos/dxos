@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { Fragment, type FC, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
@@ -58,28 +58,46 @@ export const ChatMessage = ({
     );
   }
 
-  return blocks.map((block, idx) => {
-    // TODO(burdon): Filter empty messages.
-    if (block._tag === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
-      return null;
-    }
+  return (
+    <>
+      {debug && (
+        <div className='flex justify-end pis-2 pie-2 pbe-4 text-subdued'>
+          <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
+        </div>
+      )}
 
-    const Component = components[block._tag] ?? components.default;
-    if (!Component) {
-      return null;
-    }
+      {blocks.map((block, idx) => {
+        // TODO(burdon): Filter empty messages.
+        if (block._tag === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
+          return null;
+        }
 
-    return (
-      <MessageContainer
-        key={idx}
-        classNames={mx(classNames, '__animate-[fadeIn_0.5s]')}
-        user={block._tag === 'text' && role === 'user'}
-      >
-        {debug && <div className='text-xs'>{JSON.stringify({ block: block._tag, role })}</div>}
-        <Component space={space} processor={processor} block={block} onPrompt={onPrompt} onAddToGraph={onAddToGraph} />
-      </MessageContainer>
-    );
-  });
+        const Component = components[block._tag] ?? components.default;
+        if (!Component) {
+          return null;
+        }
+
+        return (
+          <Fragment key={idx}>
+            <MessageContainer classNames={classNames} user={block._tag === 'text' && role === 'user'}>
+              <Component
+                space={space}
+                processor={processor}
+                block={block}
+                onPrompt={onPrompt}
+                onAddToGraph={onAddToGraph}
+              />
+            </MessageContainer>
+            {debug && (
+              <div className='flex justify-end pis-2 pie-2 pbe-4 text-subdued'>
+                <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
+              </div>
+            )}
+          </Fragment>
+        );
+      })}
+    </>
+  );
 };
 
 type BlockComponent = FC<{

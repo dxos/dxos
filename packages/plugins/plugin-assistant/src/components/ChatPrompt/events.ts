@@ -5,6 +5,7 @@
 export type ChatEvent =
   | { type: 'submit'; text: string }
   | { type: 'cancel' }
+  | { type: 'toggle-debug' }
   | { type: 'thread-open' }
   | { type: 'thread-close' }
   | { type: 'scroll-to-bottom' }

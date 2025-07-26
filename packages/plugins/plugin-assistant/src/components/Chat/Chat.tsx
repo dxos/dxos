@@ -53,6 +53,7 @@ const Endcap = ({ children }: PropsWithChildren) => {
 
 // TODO(burdon): Inject via effect layer.
 type ChatContextValue = {
+  debug?: boolean;
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
@@ -79,6 +80,7 @@ type ChatRootProps = ThemedClassName<
 >;
 
 const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ...props }: ChatRootProps) => {
+  const [debug, setDebug] = useState(false);
   const space = getSpace(chat);
 
   // Messages.
@@ -114,6 +116,11 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
+        case 'toggle-debug': {
+          setDebug((debug) => !debug);
+          break;
+        }
+
         case 'submit': {
           if (!processor.streaming.value) {
             void processor.request(event.text);
@@ -136,7 +143,15 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
   }
 
   return (
-    <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages} {...props}>
+    <ChatContextProvider
+      debug={debug}
+      event={event}
+      chat={chat}
+      space={space}
+      processor={processor}
+      messages={messages}
+      {...props}
+    >
       <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
         {children}
       </div>
@@ -153,7 +168,7 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onPrompt'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { event, space, processor, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, processor, messages } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
 
   const scrollerRef = useRef<ScrollController>(null);
@@ -186,6 +201,7 @@ const ChatThread = (props: ChatThreadProps) => {
     <NativeChatThread
       {...props}
       ref={scrollerRef}
+      debug={debug}
       identity={identity}
       space={space}
       messages={messages}
@@ -259,6 +275,14 @@ const ChatPrompt = ({
       expandable &&
         Prec.highest(
           keymap.of([
+            {
+              key: 'cmd-d',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'toggle-debug' });
+                return true;
+              },
+            },
             {
               key: 'cmd-ArrowUp',
               preventDefault: true,

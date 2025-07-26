@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { type ArtifactDefinition, type AssociatedArtifact, createSystemPrompt } from '@dxos/artifact';
-import { type BlueprintRegistry, Conversation } from '@dxos/assistant';
+import { Conversation, type BlueprintRegistry } from '@dxos/assistant';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -104,13 +104,11 @@ export const useChatProcessor = ({
       return;
     }
 
-    return new Conversation({
-      queue: chat.queue.target as Queue<any>,
-    });
+    return new Conversation({ queue: chat.queue.target as Queue<any> });
   }, [chat?.queue.target]);
 
   // Create processor.
-  // TODO(burdon): Updated on each query update above; should just update current processor.
+  // TODO(burdon): Updated on each query update above; should just update current processor?
   const processor = useMemo(() => {
     if (!services || !conversation) {
       return undefined;

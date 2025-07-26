@@ -134,7 +134,10 @@ const Section: FC<{
   );
 };
 
-export type ToolboxContainerProps = ThemedClassName<{ space?: Space; processor?: ChatProcessor }>;
+export type ToolboxContainerProps = ThemedClassName<{
+  space?: Space;
+  processor?: ChatProcessor;
+}>;
 
 export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
   // Plugin artifacts.

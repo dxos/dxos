@@ -18,6 +18,7 @@ import {
 } from '@dxos/artifact-testing';
 import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -30,7 +31,7 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Config } from '@dxos/react-client';
 import { createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
-import { useThemeContext } from '@dxos/react-ui';
+import { Toolbar, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   createBasicExtensions,
@@ -47,6 +48,7 @@ import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat, type ChatPromptProps } from '../components';
 import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
+import { meta as AssistantMeta } from '../meta';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -72,8 +74,16 @@ const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
 //
 
 const ChatContainer = () => {
+  const { t } = useTranslation(AssistantMeta.id);
   const space = useSpace();
-  const [chat] = useQuery(space, Filter.type(Assistant.Chat));
+
+  const [chat, setChat] = useState<Assistant.Chat>();
+  useEffect(() => {
+    const results = space?.db.query(Filter.type(Assistant.Chat)).runSync();
+    if (results?.length) {
+      setChat(results[0].object);
+    }
+  }, [space]);
 
   // TODO(burdon): Memo preset for provider.
   const [online, setOnline] = useState(true);
@@ -107,12 +117,33 @@ const ChatContainer = () => {
     [presets],
   );
 
+  const handleNewChat = useCallback(() => {
+    invariant(space);
+    const chat = space.db.add(
+      Obj.make(Assistant.Chat, {
+        queue: Ref.fromDXN(space.queues.create().dxn),
+      }),
+    );
+    setChat(chat);
+  }, [space]);
+
+  const handleBranchChat = useCallback(() => {}, [space]);
+
   if (!chat || !processor) {
     return null;
   }
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
+      <Toolbar.Root>
+        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
+        <Toolbar.IconButton
+          icon='ph--git-branch--regular'
+          iconOnly
+          label={t('button branch thread')}
+          onClick={handleBranchChat}
+        />
+      </Toolbar.Root>
       <Chat.Thread />
       <div className='p-2'>
         <Chat.Prompt
