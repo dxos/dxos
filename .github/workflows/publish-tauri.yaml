@@ -61,18 +61,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y webkit2gtk-4.1
 
-      - name: Cache Homebrew
-        if: matrix.os == 'depot-macos-latest'
-        uses: actions/cache@v4
-        with:
-          path: |
-            /opt/homebrew/Cellar
-            /opt/homebrew/Caskroom
-            /opt/homebrew/Homebrew
-            ~/.cache/Homebrew
-          key: ${{ runner.os }}-homebrew-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-homebrew-
+      # TODO(wittjosiah): Try to make this work to speed up the install.
+      # - name: Cache Homebrew
+      #   if: matrix.os == 'depot-macos-latest'
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       /opt/homebrew/Cellar
+      #       /opt/homebrew/Caskroom
+      #       /opt/homebrew/Homebrew
+      #       ~/.cache/Homebrew
+      #     key: ${{ runner.os }}-homebrew-${{ hashFiles('**/pnpm-lock.yaml') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-homebrew-
 
       - name: Install macOS dependencies
         if: matrix.os == 'depot-macos-latest'
