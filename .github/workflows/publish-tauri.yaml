@@ -84,6 +84,7 @@ jobs:
         run: moon run composer-app:tauri-build
         env:
           DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+          DX_HOST: true
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
