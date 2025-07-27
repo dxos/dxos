@@ -16,7 +16,7 @@ import {
   remoteServiceEndpoints,
   writeDocument,
 } from '@dxos/artifact-testing';
-import { Blueprint, BlueprintRegistry, ContextBinder, Template } from '@dxos/assistant';
+import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -189,17 +189,11 @@ const DocumentContainer = () => {
 const BlueprintContainer = () => {
   const space = useSpace();
   const [blueprint] = useQuery(space, Filter.type(Blueprint));
-  const [template, setTemplate] = useState<Template.Template>();
-  useEffect(() => {
-    const template = space?.db.add(Template.make({ source: blueprint?.instructions ?? 'xxx' }));
-    setTemplate(template);
-  }, [space, blueprint]);
-
-  if (!template) {
+  if (!blueprint?.instructions.target) {
     return null;
   }
 
-  return <TemplateEditor template={template} />;
+  return <TemplateEditor template={blueprint.instructions.target} />;
 };
 
 //
