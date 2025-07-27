@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { SpaceSchema } from '@dxos/react-client/echo';
 
-import { AUTOMATION_PLUGIN } from './meta';
+import { meta } from '../meta';
 
 const TriggerTemplate = Schema.Union(
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
@@ -14,10 +14,8 @@ const TriggerTemplate = Schema.Union(
 );
 
 export namespace AutomationAction {
-  const AUTOMATION_ACTION = `${AUTOMATION_PLUGIN}/action`;
-
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${AUTOMATION_ACTION}/create-trigger-from-template`,
+    `${meta.id}/action/create-trigger-from-template`,
     {
       input: Schema.Struct({
         space: SpaceSchema,

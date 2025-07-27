@@ -22,14 +22,14 @@ export type SystemPromptOptions = {
   artifacts?: string[];
 
   /**
-   * Whether to include suggestions in the prompt.
-   */
-  suggestions?: boolean;
-
-  /**
    * Associated artifact to include in the prompt.
    */
   artifact?: AssociatedArtifact;
+
+  /**
+   * Whether to include suggestions in the prompt.
+   */
+  suggestions?: boolean;
 
   /**
    * Additional instructions to include in the prompt.

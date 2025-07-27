@@ -23,7 +23,7 @@ import {
   TemplateContainer,
 } from '../components';
 import { meta, ASSISTANT_DIALOG } from '../meta';
-import { Assistant, TemplateType } from '../types';
+import { Assistant, Template } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -119,19 +119,19 @@ export default () =>
     createSurface({
       id: `${meta.id}/template`,
       role: 'article',
-      filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
+      filter: (data): data is { subject: Template.Template } => Obj.instanceOf(Template.Template, data.subject),
       component: ({ data }) => <TemplateContainer template={data.subject} />,
+    }),
+    createSurface({
+      id: `${meta.id}/prompt-settings`,
+      role: 'object-settings',
+      filter: (data): data is { subject: Template.Template } => Obj.instanceOf(Template.Template, data.subject),
+      component: ({ data }) => <PromptSettings template={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,
       role: 'dialog',
       filter: (data): data is { props: { chat: Assistant.Chat } } => data.component === ASSISTANT_DIALOG,
       component: ({ data }) => <ChatDialog {...data.props} />,
-    }),
-    createSurface({
-      id: `${meta.id}/prompt-settings`,
-      role: 'object-settings',
-      filter: (data): data is { subject: TemplateType } => Obj.instanceOf(TemplateType, data.subject),
-      component: ({ data }) => <PromptSettings template={data.subject} />,
     }),
   ]);

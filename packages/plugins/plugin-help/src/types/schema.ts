@@ -8,7 +8,7 @@ import { type Step as BaseStep } from 'react-joyride';
 
 import { type PluginContext } from '@dxos/app-framework';
 
-import { HELP_PLUGIN } from './meta';
+import { meta } from '../meta';
 
 export type Step = BaseStep & {
   before?: (context: PluginContext) => void;
@@ -32,9 +32,8 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   stop: () => {},
 });
 
-export const HELP_ACTION = `${HELP_PLUGIN}/action`;
 export namespace HelpAction {
-  export class Start extends Schema.TaggedClass<Start>()(`${HELP_ACTION}/start`, {
+  export class Start extends Schema.TaggedClass<Start>()(`${meta.id}/action/start`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}

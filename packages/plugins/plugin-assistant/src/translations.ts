@@ -6,7 +6,7 @@ import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant, TemplateType } from './types';
+import { Assistant, Template } from './types';
 
 export const translations = [
   {
@@ -20,6 +20,15 @@ export const translations = [
         'rename object label': 'Rename assistant',
         'delete object label': 'Delete assistant',
       },
+      [Template.Template.typename]: {
+        'typename label': 'Template',
+        'typename label_zero': 'Templates',
+        'typename label_one': 'Template',
+        'typename label_other': 'Templates',
+        'object name placeholder': 'New template',
+        'rename object label': 'Rename template',
+        'delete object label': 'Delete template',
+      },
       [Sequence.typename]: {
         'typename label': 'Sequence',
         'typename label_zero': 'Sequences',
@@ -28,15 +37,6 @@ export const translations = [
         'object name placeholder': 'New sequence',
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
-      },
-      [TemplateType.typename]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
-        'rename object label': 'Rename template',
-        'delete object label': 'Delete template',
       },
       [meta.id]: {
         'templates label': 'Templates',

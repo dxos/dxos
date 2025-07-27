@@ -10,6 +10,8 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { omit } from '@dxos/util';
 
+// TODO(burdon): Benchmark vs. codemirror, which would be more consistent.
+
 export type MarkdownViewerProps = ThemedClassName<{
   content?: string;
 }>;
@@ -19,7 +21,6 @@ export type MarkdownViewerProps = ThemedClassName<{
  * https://github.com/remarkjs/react-markdown
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  */
-// TODO(burdon): Benchmark vs. codemirror, which would be more consistent.
 export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps) => {
   return (
     <div className={mx('gap-2', classNames)}>

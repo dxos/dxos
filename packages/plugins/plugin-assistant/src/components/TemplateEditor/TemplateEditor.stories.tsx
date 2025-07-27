@@ -8,44 +8,39 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/artifact';
-import { Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 import { translations } from '../../translations';
-import { TemplateType } from '../../types';
+import { Template } from '../../types';
 
-const TEMPLATE = [
-  '{{! System Prompt }}',
-  '',
-  'You are a machine that is an expert chess player.',
-  'The move history of the current game is: {{history}}',
-  'If asked to suggest a move explain why it is a good move.',
-  '',
-  '{{#each artifacts}}',
-  '- {{this}}',
-  '{{/each}}',
-  '',
-  '---',
-  '',
-  '{{input}}',
-  '',
-].join('\n');
+const TEMPLATE = trim`
+  {{! System Prompt }}
+  
+  You are a machine that is an expert chess player.
+  The move history of the current game is: {{history}}
+  If asked to suggest a move explain why it is a good move.
 
-const DefaultStory = ({ text }: TemplateEditorProps & { text: string }) => {
+  {{#each artifacts}}
+  - {{this}}
+  {{/each}}
+
+  ---
+
+  {{input}}
+`;
+
+const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
   const [template] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Obj.make(TemplateType, { source: text, kind: { include: 'manual' } }));
+    return space.db.add(Template.make({ source }));
   });
 
-  return (
-    <div role='none' className='flex w-[50rem] overflow-hidden border-x border-separator'>
-      <TemplateEditor template={template} />
-    </div>
-  );
+  return <TemplateEditor template={template} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
@@ -56,9 +51,9 @@ const meta: Meta<typeof DefaultStory> = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [TemplateType],
+      types: [Template.Template],
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
+    withLayout({ fullscreen: true, Container: ColumnContainer }),
     withTheme,
   ],
   parameters: {
@@ -72,12 +67,12 @@ type Story = Meta<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {
-    text: TEMPLATE,
+    source: TEMPLATE,
   },
 };
 
 export const System: Story = {
   args: {
-    text: createSystemPrompt(),
+    source: createSystemPrompt(),
   },
 };

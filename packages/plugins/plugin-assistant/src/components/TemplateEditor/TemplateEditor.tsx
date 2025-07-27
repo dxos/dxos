@@ -7,6 +7,7 @@ import { styleTags, tags } from '@lezer/highlight';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import React from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import {
@@ -18,7 +19,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import { type TemplateType } from '../../types';
+import { type Template } from '../../types';
 
 handlebarsLanguage.configure({
   props: [
@@ -29,23 +30,26 @@ handlebarsLanguage.configure({
 });
 
 export type TemplateEditorProps = ThemedClassName<{
-  template: TemplateType;
+  template: Template.Template;
 }>;
 
 export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: template.source,
+  const { parentRef } = useTextEditor(() => {
+    invariant(template.source.target);
+    return {
+      initialValue: template.source.target.content,
       extensions: [
         createDataExtensions({
           id: template.id,
-          text: template.source !== undefined ? createDocAccessor(template, ['template']) : undefined,
+          text: createDocAccessor(template.source.target, ['content']),
         }),
         createBasicExtensions({
           bracketMatching: false,
+          lineNumbers: true,
           lineWrapping: true,
+          monospace: true,
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({
@@ -58,9 +62,8 @@ export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) =>
         // https://github.com/xiechao/lang-handlebars
         new LanguageSupport(handlebarsLanguage, syntaxHighlighting(handlebarsHighlightStyle)),
       ],
-    }),
-    [themeMode, prompt],
-  );
+    };
+  }, [themeMode, template]);
 
   return <div ref={parentRef} className={mx(classNames)} />;
 };
@@ -69,8 +72,21 @@ export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) =>
  * https://github.com/xiechao/lang-handlebars/blob/direct/src/highlight.js
  */
 export const handlebarsHighlightStyle = HighlightStyle.define([
-  { tag: tags.tagName, class: 'text-redText' }, // Braces.
-  { tag: tags.variableName, class: 'text-blueText' },
-  { tag: tags.keyword, class: 'text-greenText' },
-  { tag: tags.comment, class: 'text-subdued' },
+  {
+    // Braces.
+    tag: tags.tagName,
+    class: 'text-redText',
+  },
+  {
+    tag: tags.variableName,
+    class: 'text-blueText',
+  },
+  {
+    tag: tags.keyword,
+    class: 'text-greenText',
+  },
+  {
+    tag: tags.comment,
+    class: 'text-subdued',
+  },
 ]);

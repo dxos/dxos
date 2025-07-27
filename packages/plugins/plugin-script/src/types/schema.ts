@@ -8,14 +8,9 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { ScriptType } from '@dxos/functions';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
-import { SCRIPT_PLUGIN } from './meta';
-
-// TODO(burdon): Standardize export (e.g., @dxos/plugin-script/meta)?
-export { SCRIPT_PLUGIN };
+import { meta } from '../meta';
 
 export namespace ScriptAction {
-  const SCRIPT_ACTION = `${SCRIPT_PLUGIN}/action`;
-
   export const CreateScriptSchema = Schema.Struct({
     name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Placeholder annotation?
@@ -25,7 +20,7 @@ export namespace ScriptAction {
 
   export type CreateScriptProps = Schema.Schema.Type<typeof CreateScriptSchema>;
 
-  export class Create extends Schema.TaggedClass<Create>()(`${SCRIPT_ACTION}/create`, {
+  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: Schema.extend(CreateScriptSchema, Schema.Struct({ space: SpaceSchema })),
     output: Schema.Struct({
       object: ScriptType,

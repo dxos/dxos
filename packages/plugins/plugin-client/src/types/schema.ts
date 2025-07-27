@@ -8,7 +8,7 @@ import { type PluginContext } from '@dxos/app-framework';
 import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
 import { type MaybePromise } from '@dxos/util';
 
-import { CLIENT_PLUGIN } from './meta';
+import { meta } from '../meta';
 
 // TODO(wittjosiah): Factor out. Generate?
 const IdentitySchema = Schema.Struct({
@@ -23,7 +23,6 @@ const IdentitySchema = Schema.Struct({
   ),
 });
 
-const CLIENT_ACTION = `${CLIENT_PLUGIN}/action`;
 export namespace ClientAction {
   const ProfileSchema = Schema.Struct({
     displayName: Schema.optional(Schema.String),
@@ -31,59 +30,59 @@ export namespace ClientAction {
     data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   });
 
-  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${CLIENT_ACTION}/create-identity`, {
+  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${meta.id}/action/create-identity`, {
     input: ProfileSchema,
     output: IdentitySchema,
   }) {}
 
-  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${CLIENT_ACTION}/join-identity`, {
+  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${meta.id}/action/join-identity`, {
     input: Schema.Struct({
       invitationCode: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
   }) {}
 
-  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${CLIENT_ACTION}/share-identity`, {
+  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${meta.id}/action/share-identity`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${CLIENT_ACTION}/recover-identity`, {
+  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${meta.id}/action/recover-identity`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${CLIENT_ACTION}/reset-storage`, {
+  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${meta.id}/action/reset-storage`, {
     input: Schema.Struct({
       mode: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
   }) {}
 
-  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${CLIENT_ACTION}/create-agent`, {
+  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${meta.id}/action/create-agent`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
   export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(
-    `${CLIENT_ACTION}/create-recovery-code`,
+    `${meta.id}/action/create-recovery-code`,
     {
       input: Schema.Void,
       output: Schema.Void,
     },
   ) {}
 
-  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${CLIENT_ACTION}/create-passkey`, {
+  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${meta.id}/action/create-passkey`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${CLIENT_ACTION}/redeem-passkey`, {
+  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${meta.id}/action/redeem-passkey`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${CLIENT_ACTION}/redeem-token`, {
+  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${meta.id}/action/redeem-token`, {
     input: Schema.Struct({
       token: Schema.String,
     }),

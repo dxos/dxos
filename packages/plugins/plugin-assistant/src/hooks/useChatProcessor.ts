@@ -89,6 +89,7 @@ export const useChatProcessor = ({
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
+  // TODO(burdon): Create from template.
   const systemPrompt = useMemo(
     () =>
       createSystemPrompt({

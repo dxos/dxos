@@ -12,7 +12,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType, TemplateType } from './types';
+import { Assistant, ServiceType, Template } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -67,7 +67,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Template.Template, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,

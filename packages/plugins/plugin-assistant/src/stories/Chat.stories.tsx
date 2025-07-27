@@ -45,12 +45,12 @@ import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
-import { Chat, type ChatPromptProps } from '../components';
+import { Chat, TemplateEditor, type ChatPromptProps } from '../components';
 import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
 import { meta as AssistantMeta } from '../meta';
 import { translations } from '../translations';
-import { Assistant } from '../types';
+import { Assistant, Template } from '../types';
 
 //
 // Story container
@@ -183,6 +183,21 @@ const DocumentContainer = () => {
       ]}
     />
   );
+};
+
+const BlueprintContainer = () => {
+  const space = useSpace();
+  const [blueprint] = useQuery(space, Filter.type(Blueprint));
+  const [template, setTemplate] = useState<Template.Template>();
+  useEffect(() => {
+    setTemplate(Template.make({ source: blueprint?.instructions ?? 'xxx' }));
+  }, [blueprint]);
+
+  if (!template) {
+    return null;
+  }
+
+  return <TemplateEditor template={template} />;
 };
 
 //
@@ -318,7 +333,7 @@ export const WithBlueprints = {
     blueprints: [TASK_LIST_BLUEPRINT],
   }),
   args: {
-    components: [ChatContainer, DocumentContainer],
+    components: [ChatContainer, DocumentContainer, BlueprintContainer],
   },
 } satisfies Story;
 

@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
-import { OBSERVABILITY_PLUGIN } from './meta';
+import { meta } from '../meta';
 
 const nonEmpty = <S extends Schema.Schema.Any>(field: string) =>
   Schema.nonEmptyString<S>({ message: () => `Missing field: ${field}` });
@@ -20,10 +20,8 @@ export const UserFeedback = Schema.Struct({
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
 
-const OBSERVABILITY_ACTION = `${OBSERVABILITY_PLUGIN}/action`;
-
 export namespace ObservabilityAction {
-  export class Toggle extends Schema.TaggedClass<Toggle>()(`${OBSERVABILITY_ACTION}/toggle`, {
+  export class Toggle extends Schema.TaggedClass<Toggle>()(`${meta.id}/action/toggle`, {
     input: Schema.Struct({
       state: Schema.optional(Schema.Boolean),
     }),
@@ -31,7 +29,7 @@ export namespace ObservabilityAction {
   }) {}
 
   export class CaptureUserFeedback extends Schema.TaggedClass<CaptureUserFeedback>()(
-    `${OBSERVABILITY_ACTION}/capture-feedback`,
+    `${meta.id}/action/capture-feedback`,
     {
       input: UserFeedback,
       output: Schema.Void,
@@ -39,7 +37,7 @@ export namespace ObservabilityAction {
   ) {}
 
   /** Base intent for sending events. */
-  export class BaseSendEvent extends Schema.TaggedClass<BaseSendEvent>()(`${OBSERVABILITY_ACTION}/send-event`, {
+  export class BaseSendEvent extends Schema.TaggedClass<BaseSendEvent>()(`${meta.id}/action/send-event`, {
     input: Schema.Struct({
       name: Schema.String,
       properties: Schema.optional(Schema.Object),
@@ -48,7 +46,7 @@ export namespace ObservabilityAction {
   }) {}
 
   /** Intent with strict types for first-party events. */
-  export class SendEvent extends Schema.TaggedClass<SendEvent>()(`${OBSERVABILITY_ACTION}/send-event`, {
+  export class SendEvent extends Schema.TaggedClass<SendEvent>()(`${meta.id}/action/send-event`, {
     // NOTE: Sort alphabetically by name.
     input: Schema.Union(
       Schema.Struct({

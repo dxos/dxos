@@ -7,10 +7,10 @@ import React from 'react';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';
-import { type TemplateType } from '../types';
+import { type Template } from '../types';
 
 export type TemplateContainerProps = {
-  template: TemplateType;
+  template: Template.Template;
 };
 
 export const TemplateContainer = ({ template }: TemplateContainerProps) => {

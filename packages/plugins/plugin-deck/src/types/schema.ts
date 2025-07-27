@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { LayoutAction } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
-import { DECK_PLUGIN } from './meta';
+import { meta } from '../meta';
 
 export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
@@ -111,8 +111,6 @@ export const DeckPluginState = Schema.Struct({
 
 export type DeckPluginState = Schema.Schema.Type<typeof DeckPluginState>;
 
-export const DECK_ACTION = `${DECK_PLUGIN}/action`;
-
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
@@ -127,12 +125,12 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${DECK_ACTION}/adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}/action/adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${DECK_ACTION}/update-plank-size`, {
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}/action/update-plank-size`, {
     input: Schema.Struct({
       id: Schema.String,
       size: Schema.Number,
@@ -140,7 +138,7 @@ export namespace DeckAction {
     output: Schema.Void,
   }) {}
 
-  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${DECK_ACTION}/change-companion`, {
+  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}/action/change-companion`, {
     input: Schema.Struct({
       primary: Schema.String,
       companion: Schema.Union(Schema.String, Schema.Null),
