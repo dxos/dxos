@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Template } from '@dxos/assistant';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -12,7 +13,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType, Template } from './types';
+import { Assistant, ServiceType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [

@@ -5,13 +5,13 @@
 import { type Schema } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
+import { Template } from '@dxos/assistant';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { TemplateEditor } from './TemplateEditor';
 import { meta } from '../../meta';
-import { Template } from '../../types';
 
 export type TemplateFormProps = {
   template: Template.Template;

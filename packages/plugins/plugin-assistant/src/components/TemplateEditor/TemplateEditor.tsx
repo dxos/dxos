@@ -7,6 +7,7 @@ import { styleTags, tags } from '@lezer/highlight';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import React from 'react';
 
+import { type Template } from '@dxos/assistant';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
@@ -19,7 +20,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import { type Template } from '../../types';
 
 handlebarsLanguage.configure({
   props: [

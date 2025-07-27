@@ -8,6 +8,7 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/artifact';
+import { Template } from '@dxos/assistant';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -15,7 +16,6 @@ import { trim } from '@dxos/util';
 
 import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 import { translations } from '../../translations';
-import { Template } from '../../types';
 
 const TEMPLATE = trim`
   {{! System Prompt }}

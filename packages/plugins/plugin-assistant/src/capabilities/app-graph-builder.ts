@@ -13,6 +13,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
+import { Template } from '@dxos/assistant';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +33,7 @@ import {
 } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant, Template } from '../types';
+import { Assistant } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

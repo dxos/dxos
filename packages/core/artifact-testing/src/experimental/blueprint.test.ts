@@ -24,7 +24,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from '../blueprints';
-import { readDocumentFunction, writeDocumentFunction } from '../functions';
+import { readDocument, writeDocument } from '../functions';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
   let builder: EchoTestBuilder;
@@ -172,8 +172,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
-          makeToolResolverFromFunctions([readDocumentFunction, writeDocumentFunction]),
-          makeToolExecutionServiceFromFunctions([readDocumentFunction, writeDocumentFunction]),
+          makeToolResolverFromFunctions([readDocument, writeDocument]),
+          makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),

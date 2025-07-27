@@ -4,3 +4,4 @@
 
 export * from './blueprint';
 export * from './registry';
+export * from './template';

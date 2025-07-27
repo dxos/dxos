@@ -60,11 +60,11 @@ export namespace Template {
     inputs: Schema.optional(Schema.mutable(Schema.Array(InputSchema))),
     // command: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
     Type.Obj({
       typename: 'dxos.org/type/Template',
       version: '0.1.0',
     }),
+    LabelAnnotation.set(['name']),
   );
 
   export interface Template extends Schema.Schema.Type<typeof Template> {}

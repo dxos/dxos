@@ -4,10 +4,10 @@
 
 import React from 'react';
 
+import { type Template } from '@dxos/assistant';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../meta';
-import { type Template } from '../types';
 
 export const PromptSettings = ({ template }: { template: Template.Template }) => {
   const { t } = useTranslation(meta.id);

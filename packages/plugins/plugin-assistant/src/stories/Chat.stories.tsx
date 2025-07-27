@@ -12,11 +12,11 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   DESIGN_SPEC_BLUEPRINT,
   TASK_LIST_BLUEPRINT,
-  readDocumentFunction,
+  readDocument,
   remoteServiceEndpoints,
-  writeDocumentFunction,
+  writeDocument,
 } from '@dxos/artifact-testing';
-import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
+import { Blueprint, BlueprintRegistry, ContextBinder, Template } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -50,7 +50,7 @@ import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
 import { meta as AssistantMeta } from '../meta';
 import { translations } from '../translations';
-import { Assistant, Template } from '../types';
+import { Assistant } from '../types';
 
 //
 // Story container
@@ -296,7 +296,7 @@ const getDecorators = ({
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Functions, [readDocumentFunction, writeDocumentFunction])],
+    capabilities: [contributes(Capabilities.Functions, [readDocument, writeDocument])],
   }),
   withTheme,
   withLayout({

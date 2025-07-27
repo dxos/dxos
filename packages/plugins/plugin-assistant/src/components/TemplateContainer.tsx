@@ -4,10 +4,10 @@
 
 import React from 'react';
 
+import { type Template } from '@dxos/assistant';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';
-import { type Template } from '../types';
 
 export type TemplateContainerProps = {
   template: Template.Template;

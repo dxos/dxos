@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { Template } from '@dxos/assistant';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -14,7 +15,6 @@ import { trim } from '@dxos/util';
 
 import { TemplateForm } from './TemplateForm';
 import { translations } from '../../translations';
-import { Template } from '../../types';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.

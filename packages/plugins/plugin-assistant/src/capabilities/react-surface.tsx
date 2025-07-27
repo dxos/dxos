@@ -6,6 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
+import { Template } from '@dxos/assistant';
 import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -23,7 +24,7 @@ import {
   TemplateContainer,
 } from '../components';
 import { meta, ASSISTANT_DIALOG } from '../meta';
-import { Assistant, Template } from '../types';
+import { Assistant } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
