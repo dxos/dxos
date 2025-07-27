@@ -5,7 +5,6 @@
 import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
@@ -15,20 +14,17 @@ import { keyToFallback } from '@dxos/util';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
-import { type ChatProcessor } from '../../hooks';
 
-export type ChatThreadProps = ThemedClassName<{
-  identity?: Identity;
-  space?: Space;
-  // TODO(burdon): Replace with context.
-  processor?: ChatProcessor;
-  messages?: DataType.Message[];
-  collapse?: boolean;
-}> &
-  Pick<ChatMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
+export type ChatThreadProps = ThemedClassName<
+  {
+    identity?: Identity;
+    messages?: DataType.Message[];
+    collapse?: boolean;
+  } & Pick<ChatMessageProps, 'debug' | 'space' | 'processor' | 'tools' | 'onEvent'>
+>;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, space, processor, messages, collapse = true, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages, collapse = true, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -48,18 +44,11 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
       <ScrollContainer ref={forwardedRef} classNames={classNames} fade>
         <div
           role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6')}
+          className={mx(filteredMessages.length > 0 && 'pbs-4 pbe-4')}
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              classNames='px-4 pbe-4'
-              space={space}
-              processor={processor}
-              message={message}
-              {...props}
-            />
+            <ChatMessage key={message.id} message={message} {...props} />
           ))}
         </div>
       </ScrollContainer>

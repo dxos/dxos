@@ -6,10 +6,9 @@ import React, { Fragment, type FC, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
-import { type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -21,29 +20,22 @@ import { safeParseJson } from '@dxos/util';
 
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 import { type ChatProcessor } from '../../hooks';
+import { meta } from '../../meta';
+import { type ChatEvent } from '../Chat';
 import { ToolboxContainer } from '../Toolbox';
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
-  processor?: ChatProcessor;
   message: DataType.Message;
+  // TODO(burdon): Move to context.
+  processor?: ChatProcessor;
   tools?: Tool[];
-  onPrompt?: (text: string) => void;
-  onDelete?: (id: string) => void;
-  onAddToGraph?: (object: Obj.Any) => void;
+  onEvent?: (event: ChatEvent) => void;
 }>;
 
-export const ChatMessage = ({
-  debug,
-  classNames,
-  space,
-  processor,
-  message,
-  tools,
-  onPrompt,
-  onAddToGraph,
-}: ChatMessageProps) => {
+export const ChatMessage = ({ classNames, debug, space, message, processor, tools, onEvent }: ChatMessageProps) => {
+  const { t } = useTranslation(meta.id);
   const {
     sender: { role },
     blocks,
@@ -53,7 +45,7 @@ export const ChatMessage = ({
   if (isToolMessage(message)) {
     return (
       <MessageContainer classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
-        <ToolBlock classNames={panelClassNames} message={message} tools={tools} />
+        <ToolBlock classNames={panelClasses} message={message} tools={tools} />
       </MessageContainer>
     );
   }
@@ -61,7 +53,7 @@ export const ChatMessage = ({
   return (
     <>
       {debug && (
-        <div className='flex justify-end pis-2 pie-2 pbe-4 text-subdued'>
+        <div className='flex justify-end text-subdued'>
           <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
         </div>
       )}
@@ -72,7 +64,7 @@ export const ChatMessage = ({
           return null;
         }
 
-        const Component = components[block._tag] ?? components.default;
+        const Component: BlockComponent = components[block._tag] ?? components.default!;
         if (!Component) {
           return null;
         }
@@ -80,34 +72,38 @@ export const ChatMessage = ({
         return (
           <Fragment key={idx}>
             <MessageContainer classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <Component
-                space={space}
-                processor={processor}
-                block={block}
-                onPrompt={onPrompt}
-                onAddToGraph={onAddToGraph}
-              />
+              <Component space={space} processor={processor} block={block} onEvent={onEvent} />
             </MessageContainer>
             {debug && (
-              <div className='flex justify-end pis-2 pie-2 pbe-4 text-subdued'>
+              <div className='flex justify-end text-subdued'>
                 <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
               </div>
             )}
           </Fragment>
         );
       })}
+      <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
+        <IconButton
+          classNames='animate-[fadeIn_0.5s]'
+          icon='ph--trash--regular'
+          iconOnly
+          label={t('button delete message')}
+          onClick={() => onEvent?.({ type: 'delete', id: message.id })}
+        />
+      </div>
     </>
   );
 };
 
-type BlockComponent = FC<{
+type BlockComponentProps = {
   space?: Space;
+  block: ContentBlock.Any;
   /** @deprecated Replace with context */
   processor?: ChatProcessor;
-  block: ContentBlock.Any;
-  onPrompt?: (text: string) => void;
-  onAddToGraph?: (object: Obj.Any) => void;
-}>;
+  onEvent?: (event: ChatEvent) => void;
+};
+
+type BlockComponent = FC<BlockComponentProps>;
 
 const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComponent>> = {
   //
@@ -136,7 +132,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
         title={title}
         icon={
           block.pending ? (
-            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
           ) : undefined
         }
       >
@@ -151,7 +147,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
   //
   // JSON
   //
-  ['json' as const]: ({ space, processor, block, onPrompt, onAddToGraph }) => {
+  ['json' as const]: ({ space, processor, block, onEvent }) => {
     invariant(block._tag === 'json');
 
     switch (block.disposition) {
@@ -165,20 +161,22 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
 
       case 'suggest': {
         const { text = '' }: { text: string } = safeParseJson(block.data ?? '{}') ?? ({} as any);
-        return <IconButton icon='ph--lightning--regular' label={text} onClick={() => onPrompt?.(text)} />;
+        return (
+          <IconButton icon='ph--lightning--regular' label={text} onClick={() => onEvent?.({ type: 'submit', text })} />
+        );
       }
 
       case 'select': {
         const { options = [] }: { options: string[] } = safeParseJson(block.data ?? '{}') ?? ({} as any);
         return (
           <div className='flex flex-wrap gap-1'>
-            {options.map((option, idx) => (
+            {options.map((text, idx) => (
               <Button
                 classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
-                key={option}
-                onClick={() => onPrompt?.(option)}
+                key={idx}
+                onClick={() => onEvent?.({ type: 'submit', text })}
               >
-                {option}
+                {text}
               </Button>
             ))}
           </div>
@@ -194,11 +192,11 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
               limit={1}
               fallback={<div className='font-mono text-xs text-pre'>{block.data}</div>}
             />
-            {onAddToGraph && (
+            {onEvent && (
               <IconButton
                 icon='ph--plus--regular'
                 label='Add to graph'
-                onClick={() => onAddToGraph?.(JSON.parse(block.data ?? '{}'))}
+                onClick={() => onEvent?.({ type: 'add', object: JSON.parse(block.data ?? '{}') })}
               />
             )}
           </div>
@@ -245,21 +243,24 @@ const titles: Record<string, string> = {
 
 const systemDispositions: string[] = ['cot', 'artifact-update'];
 
-const panelClassNames = 'flex flex-col w-full px-2 bg-activeSurface rounded-sm';
-const userClassNames = 'bg-[--user-fill] text-accentSurfaceText';
+const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
+const marginClasses = 'pie-4 pis-4';
+const paddingClasses = 'pis-2 pie-2 pbs-1 pbe-1';
 
-const ToggleContainer = (props: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(panelClassNames, props.classNames)} />;
-};
-
-const MessageContainer = ({ children, classNames, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {
     return null;
   }
 
   return (
-    <div role='list-item' className={mx('flex w-full', user && 'justify-end', classNames)}>
-      <div className={mx(user ? ['px-2 py-1 rounded-sm', userClassNames] : 'w-full')}>{children}</div>
+    <div role='list-item' className={mx('flex is-full', user && 'justify-end', marginClasses, classNames)}>
+      <div className={mx(user ? ['rounded-sm', 'bg-[--user-fill] text-accentSurfaceText', paddingClasses] : 'is-full')}>
+        {children}
+      </div>
     </div>
   );
+};
+
+const ToggleContainer = (props: ToggleContainerProps) => {
+  return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
 };

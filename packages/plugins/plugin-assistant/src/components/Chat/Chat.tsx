@@ -22,13 +22,13 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
+import { type ChatEvent } from './events';
 import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
-  type ChatEvent,
   ChatOptionsMenu,
   ChatPresets,
   type ChatPresetsProps,
@@ -132,9 +132,11 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
           void processor.cancel();
           break;
         }
-      }
 
-      onEvent?.(event);
+        default: {
+          onEvent?.(event);
+        }
+      }
     });
   }, [event, onEvent]);
 
@@ -165,7 +167,7 @@ ChatRoot.displayName = 'Chat.Root';
 // Thread
 //
 
-type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onPrompt'>;
+type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
   const { debug, event, space, processor, messages } = useChatContext(ChatThread.displayName);
@@ -183,16 +185,6 @@ const ChatThread = (props: ChatThreadProps) => {
     });
   }, [event]);
 
-  const handlePrompt = useCallback<NonNullable<NativeChatThreadProps['onPrompt']>>(
-    (text) => {
-      if (!processor.streaming.value) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
-    },
-    [processor, event],
-  );
-
   if (!identity) {
     return null;
   }
@@ -206,7 +198,7 @@ const ChatThread = (props: ChatThreadProps) => {
       space={space}
       messages={messages}
       tools={processor?.tools}
-      onPrompt={handlePrompt}
+      onEvent={(ev) => event.emit(ev)}
     />
   );
 };
