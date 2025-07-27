@@ -26,7 +26,7 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
       <ReactMarkdown
         components={{
           p: ({ node, children, ...props }) => {
-            return children;
+            return <div className='pbs-1 pbe-1'>{children}</div>;
           },
           a: ({ node, children, href, ...props }) => (
             <a
@@ -40,12 +40,12 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
             </a>
           ),
           ol: ({ node, children, ...props }) => (
-            <ol className='leading-tight list-decimal pis-6' {...omit(props, ['ordered'])}>
+            <ol className='leading-tight list-decimal pbs-1 pbe-1 pis-6' {...omit(props, ['ordered'])}>
               {children}
             </ol>
           ),
           ul: ({ node, children, ...props }) => (
-            <ul className='leading-tight list-disc pis-6' {...omit(props, ['ordered'])}>
+            <ul className='leading-tight list-disc pbs-1 pbe-1 pis-6' {...omit(props, ['ordered'])}>
               {children}
             </ul>
           ),
@@ -59,10 +59,16 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
               {children}
             </blockquote>
           ),
+          pre: ({ node, children, ...props }) => children,
           code: ({ children, className }) => {
             const [_, language] = /language-(\w+)/.exec(className || '') || [];
+            // TODO(burdon): Copy/paste button.
             return (
-              <SyntaxHighlighter PreTag='div' language={language} className='p-0'>
+              <SyntaxHighlighter
+                PreTag='div'
+                language={language}
+                className='mbs-2 mbe-2 bg-inputSurface border border-separator rounded-sm'
+              >
                 {children}
               </SyntaxHighlighter>
             );
