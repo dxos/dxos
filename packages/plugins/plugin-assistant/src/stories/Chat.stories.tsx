@@ -138,6 +138,7 @@ const ChatContainer = () => {
       <Toolbar.Root>
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton
+          disabled
           icon='ph--git-branch--regular'
           iconOnly
           label={t('button branch thread')}
@@ -190,8 +191,9 @@ const BlueprintContainer = () => {
   const [blueprint] = useQuery(space, Filter.type(Blueprint));
   const [template, setTemplate] = useState<Template.Template>();
   useEffect(() => {
-    setTemplate(Template.make({ source: blueprint?.instructions ?? 'xxx' }));
-  }, [blueprint]);
+    const template = space?.db.add(Template.make({ source: blueprint?.instructions ?? 'xxx' }));
+    setTemplate(template);
+  }, [space, blueprint]);
 
   if (!template) {
     return null;

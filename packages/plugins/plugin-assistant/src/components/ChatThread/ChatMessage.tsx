@@ -53,7 +53,7 @@ export const ChatMessage = ({ classNames, debug, space, message, processor, tool
   return (
     <>
       {debug && (
-        <div className='flex justify-end text-subdued'>
+        <div className={mx('flex justify-end text-subdued', marginClasses)}>
           <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
         </div>
       )}
@@ -75,7 +75,7 @@ export const ChatMessage = ({ classNames, debug, space, message, processor, tool
               <Component space={space} processor={processor} block={block} onEvent={onEvent} />
             </MessageContainer>
             {debug && (
-              <div className='flex justify-end text-subdued'>
+              <div className={mx('flex justify-end text-subdued', marginClasses)}>
                 <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
               </div>
             )}
@@ -245,7 +245,7 @@ const systemDispositions: string[] = ['cot', 'artifact-update'];
 
 const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
 const marginClasses = 'pie-4 pis-4';
-const paddingClasses = 'pis-2 pie-2 pbs-1 pbe-1';
+const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
 
 const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {

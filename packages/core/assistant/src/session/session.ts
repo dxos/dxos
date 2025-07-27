@@ -252,7 +252,7 @@ export class AiSession {
       }
 
       return Obj.make(DataType.Message, {
-        created: new Date().toUTCString(),
+        created: new Date().toISOString(),
         sender: { role: 'user' },
         blocks: [...prelude, { _tag: 'text', text: prompt }],
       });

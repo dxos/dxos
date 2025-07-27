@@ -5,6 +5,7 @@
 import { ToolId } from '@dxos/ai';
 import { Blueprint } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
+import { trim } from '@dxos/util';
 
 import { readDocumentFunction, writeDocumentFunction } from './functions';
 
@@ -12,7 +13,7 @@ export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
-  instructions: `
+  instructions: trim`
     You manage a design spec based on the conversation.
     The design spec is a document that captures the design of a product.
     The design spec document is a markdown file.
@@ -31,7 +32,7 @@ export const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/task-list',
   name: 'Task List',
   description: 'Manages a list of tasks.',
-  instructions: `
+  instructions: trim`
     You manage a list of tasks.
     The task list is a document that captures list of tasks.
     The task list document is a markdown file.
