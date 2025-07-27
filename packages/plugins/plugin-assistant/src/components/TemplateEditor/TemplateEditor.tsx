@@ -54,9 +54,6 @@ export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) =>
         }),
         createThemeExtensions({
           themeMode,
-          slots: {
-            content: { className: '!p-3' },
-          },
         }),
 
         // https://github.com/xiechao/lang-handlebars
