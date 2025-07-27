@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useMemo, useState, type FunctionComponent } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, type FC } from 'react';
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -56,15 +56,31 @@ import { Assistant } from '../types';
 // Story container
 //
 
-const DefaultStory = ({ components }: { components: FunctionComponent[] }) => {
+const DefaultStory = ({ components }: { components: (FC | FC[])[] }) => {
   return (
     <div
       className={mx('grid grid-cols border-x border-separator divide-x divide-separator')}
       style={{ gridTemplateColumns: `repeat(${components.length}, minmax(0, 40rem))` }}
     >
-      {components.map((Component, index) => (
-        <Component key={index} />
-      ))}
+      {components.map((Component, index) =>
+        Array.isArray(Component) ? (
+          <div
+            key={index}
+            className='grid grid-rows divide-y divide-separator'
+            style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
+          >
+            {Component.map((Component, index) => (
+              <div key={index}>
+                <Component />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div key={index}>
+            <Component />
+          </div>
+        ),
+      )}
     </div>
   );
 };
@@ -186,6 +202,7 @@ const DocumentContainer = () => {
   );
 };
 
+// TODO(burdon): Show all active blueprints from context?
 const BlueprintContainer = () => {
   const space = useSpace();
   const [blueprint] = useQuery(space, Filter.type(Blueprint));
@@ -193,7 +210,14 @@ const BlueprintContainer = () => {
     return null;
   }
 
-  return <TemplateEditor template={blueprint.instructions.target} />;
+  return (
+    <div className='flex flex-col h-full'>
+      <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <h2>{blueprint.name}</h2>
+      </Toolbar.Root>
+      <TemplateEditor template={blueprint.instructions.target} />
+    </div>
+  );
 };
 
 //
@@ -329,7 +353,7 @@ export const WithBlueprints = {
     blueprints: [TASK_LIST_BLUEPRINT],
   }),
   args: {
-    components: [ChatContainer, DocumentContainer, BlueprintContainer],
+    components: [ChatContainer, [DocumentContainer, BlueprintContainer]],
   },
 } satisfies Story;
 

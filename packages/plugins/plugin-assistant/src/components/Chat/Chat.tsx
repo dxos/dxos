@@ -154,7 +154,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
       messages={messages}
       {...props}
     >
-      <div role='none' className={mx('flex flex-col grow overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
         {children}
       </div>
     </ChatContextProvider>

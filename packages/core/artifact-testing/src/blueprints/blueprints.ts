@@ -7,7 +7,7 @@ import { Blueprint, Template } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { readDocument, writeDocument } from './functions';
+import { readDocument, writeDocument } from '../functions';
 
 export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',

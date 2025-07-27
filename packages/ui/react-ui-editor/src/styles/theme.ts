@@ -79,7 +79,7 @@ export const defaultTheme: ThemeStyles = {
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-separator)',
+    borderRight: '1px solid var(--dx-subduedSeparator)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',

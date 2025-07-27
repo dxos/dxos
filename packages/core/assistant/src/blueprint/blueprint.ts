@@ -42,7 +42,6 @@ export const Blueprint = Schema.Struct({
    * Instructions that guide the AI assistant's behavior and responses.
    * These are system prompts or guidelines that the AI should follow.
    */
-  // TODO(burdon): Change to ref to template.
   instructions: Type.Ref(Template).annotations({
     description: "Instructions that guide the AI assistant's behavior and responses",
   }),

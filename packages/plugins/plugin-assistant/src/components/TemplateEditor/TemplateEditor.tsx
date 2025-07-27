@@ -62,7 +62,7 @@ export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) =>
     };
   }, [themeMode, template]);
 
-  return <div ref={parentRef} className={mx(classNames)} />;
+  return <div ref={parentRef} className={mx('h-full', classNames)} />;
 };
 
 /**
