@@ -111,13 +111,13 @@ export const Pacman = {
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
               <div>
-                <Icon icon='ph--ghost--duotone' className='w-[180px] h-[180px] text-blue-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
               </div>
               <div>
-                <Icon icon='ph--ghost--duotone' className='w-[180px] h-[180px] text-purple-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
               </div>
               <div>
-                <Icon icon='ph--ghost--duotone' className='w-[180px] h-[180px] text-red-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
               </div>
             </div>
 
@@ -126,7 +126,7 @@ export const Pacman = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Icon icon='ph--square--duotone' className='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>
