@@ -68,11 +68,11 @@ export const TraceView: FC<{
         </div>
         {showThreads && graphs.length > 1 && (
           <>
-            <IconButton icon='ph--arrow-left--regular' className='ml-4' onClick={handleBack} />
+            <IconButton icon='ph--arrow-left--regular' classNames='ml-4' iconOnly label='Previous' onClick={handleBack} />
             <div className='flex-1 text-center'>
               Thread {selectedFlameIndex + 1} / {graphs.length}
             </div>
-            <IconButton icon='ph--arrow-right--regular' onClick={handleForward} />
+            <IconButton icon='ph--arrow-right--regular' iconOnly label='Next' onClick={handleForward} />
           </>
         )}
       </div>

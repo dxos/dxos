@@ -38,7 +38,7 @@ export const ChessPanel: FC<ChessPanelProps> = ({ classNames, model, orientation
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
           size={4}
-          className={mx(turn && (game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
+          classNames={mx(turn && (game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
         />
       </div>
     );

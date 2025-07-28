@@ -54,7 +54,7 @@ const Sidebar = () => {
                     id === pathname && styles.selected,
                   )}
                 >
-                  <Icon className={getSize(4)} />
+                  <Icon icon={Icon} size={4} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>

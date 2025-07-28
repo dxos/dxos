@@ -5,7 +5,6 @@
 import React, { type FC, useEffect } from 'react';
 
 import { Button, useControlledState, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 export type PagerProps = {
   index?: number;
@@ -78,16 +77,16 @@ export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, o
   return (
     <div className='flex items-center text-neutral-500'>
       <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(0)}>
-        <Icon icon='ph--caret-double-left--regular' size={6} className={mx()} />
+        <Icon icon='ph--caret-double-left--regular' size={6} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(-1)}>
-        <Icon icon='ph--caret-left--regular' size={6} className={mx()} />
+        <Icon icon='ph--caret-left--regular' size={6} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => handleChangeIndex(1)}>
-        <Icon icon='ph--caret-right--regular' size={6} className={mx()} />
+        <Icon icon='ph--caret-right--regular' size={6} />
       </Button>
       <Button variant='ghost' classNames='p-0' onClick={() => onChange?.(count - 1)}>
-        <Icon icon='ph--caret-double-right--regular' size={6} className={mx()} />
+        <Icon icon='ph--caret-double-right--regular' size={6} />
       </Button>
     </div>
   );
@@ -115,9 +114,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
 export const StartButton: FC<{ running?: boolean; onClick?: (start: boolean) => void }> = ({ running, onClick }) => {
   return (
     <Button variant='ghost' classNames='p-0' onClick={() => onClick?.(!running)}>
-      {(running && <Icon icon='ph--x--regular' size={6} className={mx()} />) || (
-        <Icon icon='ph--play--regular' size={6} className={mx()} />
-      )}
+      {(running && <Icon icon='ph--x--regular' size={6} />) || <Icon icon='ph--play--regular' size={6} />}
     </Button>
   );
 };

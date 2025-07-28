@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type IconName } from '@dxos/react-ui';
+// import { type IconName } from '@dxos/react-ui';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon: IconName;
+  Icon: string;
   items?: SectionItem[];
 };
 

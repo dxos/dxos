@@ -126,7 +126,7 @@ const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: ()
     {connection === ConnectionState.ONLINE ? (
       <Icon icon='ph--wifi-high--regular' size={6} />
     ) : (
-      <Icon icon='ph--wifi-slash--regular' size={6} className='text-selection-text' />
+      <Icon icon='ph--wifi-slash--regular' size={6} classNames='text-selection-text' />
     )}
     <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
   </Toolbar.Button>

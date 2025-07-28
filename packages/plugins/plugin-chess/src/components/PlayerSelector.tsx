@@ -55,10 +55,9 @@ const PlayerSelect = ({
     <Input.Root>
       <Input.Label>
         <Icon
+          aria-label={`Chess icon for side ${side}`}
           icon={`ph--crown-cross--${iconFillMode || 'regular'}`}
           size={6}
-          className={mx(getSize(6))}
-          aria-label={`Chess icon for side ${side}`}
         />
       </Input.Label>
       <Select.Root value={value} onValueChange={onValueChange}>

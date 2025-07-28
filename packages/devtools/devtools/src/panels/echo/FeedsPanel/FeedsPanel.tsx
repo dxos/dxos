@@ -112,7 +112,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
             onChange={handleSelect}
           />
 
-          <IconButton icon='ph--arrow-clockwise--regular' onClick={handleRefresh} />
+          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={handleRefresh} />
         </Toolbar.Root>
       }
     >

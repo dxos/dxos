@@ -28,7 +28,7 @@ export const IconButton = ({
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon icon={iconName} className={mx('cursor-pointer', getSize(size))} weight={weight} />
+      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
 };

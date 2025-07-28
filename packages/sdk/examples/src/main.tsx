@@ -96,7 +96,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Icon icon='ph--airplane' size={28} className={offline ? 'active' : ''} />
+                    <Icon icon='ph--airplane--regular' size={28} classNames={offline ? 'active' : ''} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>
@@ -111,7 +111,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Icon icon='ph--stack' size={28} className={batching ? 'active' : ''} />
+                    <Icon icon='ph--stack--regular' size={28} classNames={batching ? 'active' : ''} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>

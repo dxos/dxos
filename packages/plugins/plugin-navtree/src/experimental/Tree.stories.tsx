@@ -48,7 +48,7 @@ const data: TreeNodeData[] = [
         id: faker.string.uuid(),
         title: 'plugins/Personal Space',
         color: 'text-green-400',
-        Icon: (props: any) => <Icon icon='ph--house--regular' {...props} />,
+        iconName: 'ph--house--regular',
         children: [
           {
             id: faker.string.uuid(),
@@ -83,7 +83,7 @@ const data: TreeNodeData[] = [
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: (props: any) => <Icon icon='ph--planet--regular' {...props} />,
+        iconName: 'ph--planet--regular',
         children: [
           {
             id: faker.string.uuid(),
@@ -94,12 +94,12 @@ const data: TreeNodeData[] = [
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: (props: any) => <Icon icon='ph--sailboat--regular' {...props} />,
+        iconName: 'ph--sailboat--regular',
       },
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: (props: any) => <Icon icon='ph--planet--regular' {...props} />,
+        iconName: 'ph--planet--regular',
       },
     ],
   },
@@ -181,7 +181,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     setItems((items) => {
       items[0].children?.push({
         id: faker.string.uuid(),
-        Icon: (props: any) => <Icon icon='ph--planet--regular' {...props} />,
+        iconName: 'ph--planet--regular',
         title: faker.commerce.productName(),
       });
 
@@ -213,9 +213,12 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       </div>
 
       <div className='flex items-center my-2 px-2 gap-2'>
-        <IconButton onClick={handleCreateSpace}>
-          <Icon icon='ph--plus-circle--regular' />
-        </IconButton>
+        <IconButton
+          icon='ph--plus-circle--regular'
+          iconOnly
+          label='Create space'
+          onClick={handleCreateSpace}
+        />
         <span className='grow text-sm' onClick={handleCreateSpace}>
           New space
         </span>

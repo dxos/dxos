@@ -49,26 +49,28 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
           <h2 className='grow pli-2 plb-1 text-lg font-medium text-accentSurfaceText'>{title}</h2>
           <IconButton
             density='fine'
-            variant='primary'
+            icon='ph--x--bold'
+            iconOnly
+            label={closeProps['aria-label']}
             onClick={closeProps.onClick}
-            title={closeProps['aria-label']}
+            size={4}
+            variant='primary'
             data-testid='helpPlugin.tooltip.close'
-          >
-            <Icon icon='ph--x--bold' size={4} />
-          </IconButton>
+          />
         </div>
         <div className='flex grow pli-4 mlb-2'>{content}</div>
         <div className='flex p-2 items-center justify-between' {...arrowNavigationAttrs}>
           {
             <IconButton
-              variant='primary'
-              onClick={backProps.onClick}
-              title={backProps['aria-label']}
               classNames={[!(index > 0 && backProps) && 'invisible']}
+              icon='ph--caret-left--regular'
+              iconOnly
+              label={backProps['aria-label']}
+              onClick={backProps.onClick}
+              size={5}
+              variant='primary'
               data-testid='helpPlugin.tooltip.back'
-            >
-              <Icon icon='ph--caret-left--regular' size={5} />
-            </IconButton>
+            />
           }
           <div className='flex grow gap-2 justify-center'>
             <div className='flex'>
@@ -77,7 +79,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
                   key={i}
                   icon={index === i ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size={2}
-                  className='mli-1 cursor-pointer'
+                  classNames='mli-1 cursor-pointer'
                 />
               ))}
             </div>
@@ -94,14 +96,15 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
             </Button>
           ) : (
             <IconButton
-              variant='primary'
-              onClick={primaryProps.onClick}
-              title={primaryProps['aria-label']}
               autoFocus
+              icon='ph--caret-right--regular'
+              iconOnly
+              label={primaryProps['aria-label']}
+              onClick={primaryProps.onClick}
+              size={6}
+              variant='primary'
               data-testid='helpPlugin.tooltip.next'
-            >
-              <Icon icon='ph--caret-right--regular' size={6} />
-            </IconButton>
+            />
           )}
         </div>
       </div>
