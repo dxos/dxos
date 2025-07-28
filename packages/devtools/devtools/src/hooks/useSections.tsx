@@ -2,40 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import {
-  ChartLine,
-  ComputerTower,
-  CreditCard,
-  Database,
-  GearSix,
-  Devices,
-  FireSimple,
-  Gear,
-  Graph,
-  HardDrive,
-  HardDrives,
-  type Icon,
-  IdentificationBadge,
-  Key,
-  Planet,
-  Polygon,
-  Queue,
-  Receipt,
-  Robot,
-  Users,
-  UsersThree,
-  WifiHigh,
-  MagnifyingGlass,
-  Cloud,
-  Function,
-  LineSegments,
-  Flask,
-} from '@phosphor-icons/react';
+import { type IconName } from '@dxos/react-ui';
 
 export type SectionItem = {
   id: string;
   title: string;
-  Icon: Icon;
+  Icon: IconName;
   items?: SectionItem[];
 };
 
@@ -47,101 +19,101 @@ export const useSections = (): SectionItem[] => {
     {
       id: 'client',
       title: 'Client',
-      Icon: Users,
+      Icon: 'ph--users--regular',
       items: [
         {
           id: '/client/config',
           title: 'Config',
-          Icon: Gear,
+          Icon: 'ph--gear--regular',
         },
         {
           id: '/client/storage',
           title: 'Storage',
-          Icon: HardDrives,
+          Icon: 'ph--hard-drives--regular',
         },
         {
           id: '/client/logs',
           title: 'Logs',
-          Icon: Receipt,
+          Icon: 'ph--receipt--regular',
         },
         {
           id: '/client/diagnostics',
           title: 'Diagnostics',
-          Icon: ChartLine,
+          Icon: 'ph--chart-line--regular',
         },
         {
           id: '/client/tracing',
           title: 'Tracing',
-          Icon: FireSimple,
+          Icon: 'ph--fire-simple--regular',
         },
       ],
     },
     {
       id: 'halo',
       title: 'HALO',
-      Icon: IdentificationBadge,
+      Icon: 'ph--identification-badge--regular',
       items: [
         {
           id: '/halo/identity',
           title: 'Identity',
-          Icon: IdentificationBadge,
+          Icon: 'ph--identification-badge--regular',
         },
         {
           id: '/halo/devices',
           title: 'Devices',
-          Icon: Devices,
+          Icon: 'ph--devices--regular',
         },
         {
           id: '/halo/keyring',
           title: 'Keyring',
-          Icon: Key,
+          Icon: 'ph--key--regular',
         },
         {
           id: '/halo/credentials',
           title: 'Credentials',
-          Icon: CreditCard,
+          Icon: 'ph--credit-card--regular',
         },
       ],
     },
     {
       id: 'echo',
       title: 'ECHO',
-      Icon: Database,
+      Icon: 'ph--database--regular',
       items: [
         {
           id: '/echo/spaces',
           title: 'Spaces',
-          Icon: Graph,
+          Icon: 'ph--graph--regular',
         },
         {
           id: '/echo/space',
           title: 'Space',
-          Icon: Planet,
+          Icon: 'ph--planet--regular',
         },
         {
           id: '/echo/feeds',
           title: 'Feeds',
-          Icon: Queue,
+          Icon: 'ph--queue--regular',
         },
         {
           id: '/echo/objects',
           title: 'Objects',
-          Icon: Database,
+          Icon: 'ph--database--regular',
         },
         {
           id: '/echo/automerge',
           title: 'Automerge',
-          Icon: GearSix,
+          Icon: 'ph--gear-six--regular',
         },
         {
           id: '/echo/members',
           title: 'Members',
-          Icon: Users,
+          Icon: 'ph--users--regular',
         },
         {
           id: '/echo/metadata',
           title: 'Metadata',
-          Icon: HardDrive,
+          Icon: 'ph--hard-drive--regular',
         },
         // {
         //   id: '/echo/snapshots',
@@ -153,66 +125,66 @@ export const useSections = (): SectionItem[] => {
     {
       id: 'mesh',
       title: 'MESH',
-      Icon: Graph,
+      Icon: 'ph--graph--regular',
       items: [
         {
           id: '/mesh/signal',
           title: 'Signal',
-          Icon: WifiHigh,
+          Icon: 'ph--wifi-high--regular',
         },
         {
           id: '/mesh/swarm',
           title: 'Swarm',
-          Icon: UsersThree,
+          Icon: 'ph--users-three--regular',
         },
         {
           id: '/mesh/network',
           title: 'Network',
-          Icon: Polygon,
+          Icon: 'ph--polygon--regular',
         },
       ],
     },
     {
       id: 'agent',
       title: 'AGENT',
-      Icon: Robot,
+      Icon: 'ph--robot--regular',
       items: [
         {
           id: '/agent/dashboard',
           title: 'Dashboard',
-          Icon: ComputerTower,
+          Icon: 'ph--computer-tower--regular',
         },
         {
           id: '/agent/search',
           title: 'Search',
-          Icon: MagnifyingGlass,
+          Icon: 'ph--magnifying-glass--regular',
         },
       ],
     },
     {
       id: 'edge',
       title: 'EDGE',
-      Icon: Cloud,
+      Icon: 'ph--cloud--regular',
       items: [
         {
           id: '/edge/workflows',
           title: 'Workflows',
-          Icon: Function,
+          Icon: 'ph--function--regular',
         },
         {
           id: '/edge/dashboard',
           title: 'Dashboard',
-          Icon: ComputerTower,
+          Icon: 'ph--computer-tower--regular',
         },
         {
           id: '/edge/traces',
           title: 'Traces',
-          Icon: LineSegments,
+          Icon: 'ph--line-segments--regular',
         },
         {
           id: '/edge/testing',
           title: 'Testing',
-          Icon: Flask,
+          Icon: 'ph--flask--regular',
         },
       ],
     },

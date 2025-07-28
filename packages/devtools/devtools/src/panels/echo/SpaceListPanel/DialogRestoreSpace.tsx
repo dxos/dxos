@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FilePlus } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { Button, Dialog } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Button, Dialog, Icon } from '@dxos/react-ui';
 
 export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: File) => Promise<void> }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,7 +27,7 @@ export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: Fi
               dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
               handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setDialogOpen(false))}
             >
-              <FilePlus weight='duotone' className={getSize(8)} />
+              <Icon icon='ph--file-plus--duotone' size={8} />
               <span>{'Drag file here or click to browse'}</span>
             </FileUploader>
             <Dialog.Close asChild>

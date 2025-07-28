@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -17,9 +16,8 @@ import { type Client, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type Space } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -114,9 +112,7 @@ export const FeedsPanel = (props: { space?: Space }) => {
             onChange={handleSelect}
           />
 
-          <Toolbar.Button onClick={handleRefresh}>
-            <ArrowClockwise className={getSize(5)} />
-          </Toolbar.Button>
+          <IconButton icon='ph--arrow-clockwise--regular' onClick={handleRefresh} />
         </Toolbar.Root>
       }
     >

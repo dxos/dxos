@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trash } from '@phosphor-icons/react';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
@@ -10,9 +9,8 @@ import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { Toolbar } from '@dxos/react-ui';
+import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
 
@@ -113,9 +111,7 @@ export const LoggingPanel = () => {
           {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
           <Select items={presets} onValueChange={onSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
-          <Toolbar.Button onClick={() => setLogs([])}>
-            <Trash className={getSize(5)} />
-          </Toolbar.Button>
+          <IconButton icon='ph--trash--regular' onClick={() => setLogs([])} />
         </Toolbar.Root>
       }
     >

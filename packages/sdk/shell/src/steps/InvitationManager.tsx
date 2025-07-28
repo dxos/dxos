@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Check, X } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Clipboard, useId, useTranslation } from '@dxos/react-ui';
+import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -93,9 +92,9 @@ export const InvitationManager = ({
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>
             {statusValue > 0 ? (
-              <Check className={mx('m-1.5', getSize(6))} />
+              <Icon icon='ph--check--regular' classNames={mx('m-1.5', getSize(6))} />
             ) : (
-              <X className={mx('m-1.5', getSize(6))} />
+              <Icon icon='ph--x--regular' classNames={mx('m-1.5', getSize(6))} />
             )}
           </InvitationManagerView>
         </Viewport.Views>

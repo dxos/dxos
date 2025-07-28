@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Circle, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Icon, type IconProps } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
@@ -44,7 +44,11 @@ export const ErrorIndicator = (props: IconProps) => {
         forceUpdate({});
       }}
     >
-      <Circle weight='fill' className={mx(errorRef.current ? styles.error : styles.default, getSize(3))} {...props} />
+      <Icon
+        icon='ph--circle--fill'
+        className={mx(errorRef.current ? styles.error : styles.default, getSize(3))}
+        {...props}
+      />
     </span>
   );
 };

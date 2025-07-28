@@ -82,7 +82,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -97,8 +96,7 @@
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5"
+    "@dxos/react-ui-theme": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

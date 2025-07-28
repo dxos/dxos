@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretUp } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
@@ -43,7 +42,7 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
           <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
-            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
+            <Icon icon='ph--caret-down--bold' className={tx('select.triggerIcon', 'select__trigger__icon', {})} />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
@@ -83,7 +82,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
         className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretUp weight='bold' />}
+        {children ?? <Icon icon='ph--caret-up--bold' />}
       </SelectPrimitive.SelectScrollUpButton>
     );
   },
@@ -100,7 +99,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
         className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretDown weight='bold' />}
+        {children ?? <Icon icon='ph--caret-down--bold' />}
       </SelectPrimitive.SelectScrollDownButton>
     );
   },

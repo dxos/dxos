@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
@@ -11,9 +10,8 @@ import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, Icon } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
 
@@ -126,9 +124,9 @@ const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: ()
     onClick={onToggleConnection}
   >
     {connection === ConnectionState.ONLINE ? (
-      <WifiHigh className={getSize(6)} />
+      <Icon icon='ph--wifi-high--regular' size={6} />
     ) : (
-      <WifiSlash className={mx(getSize(6), 'text-selection-text')} />
+      <Icon icon='ph--wifi-slash--regular' size={6} className='text-selection-text' />
     )}
     <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
   </Toolbar.Button>

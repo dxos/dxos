@@ -2,7 +2,6 @@
 // Copyright 2021 DXOS.org
 //
 
-import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArchive } from '@phosphor-icons/react';
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
@@ -18,7 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
+import { DropdownMenu, Icon, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
 
@@ -41,7 +40,7 @@ type SelectionValue =
 
 type Node = {
   id: string;
-  Icon: FC;
+  iconName: string;
   Element: ReactNode;
   items?: Node[];
   value?: SelectionValue;
@@ -55,7 +54,7 @@ const getInfoTree = (
 ): Node[] => [
   {
     id: 'origin',
-    Icon: GitCommit,
+    iconName: 'ph--git-commit--regular',
     Element: (
       <TreeItemText
         primary='origin'
@@ -67,27 +66,27 @@ const getInfoTree = (
     items: [
       {
         id: 'storage',
-        Icon: HardDrive,
+        iconName: 'ph--hard-drive--regular',
         Element: <TreeItemText primary={storageInfo.type} secondary={bytes.format(storageInfo.storageUsage)} />,
         items: [
           {
             id: 'feeds',
-            Icon: Queue,
+            iconName: 'ph--queue--regular',
             Element: <TreeItemText primary='feeds' secondary={feedInfo.feeds?.length ?? 0} />,
             items: feedInfo.feeds?.map((feed) => ({
               id: feed.feedKey.toHex(),
-              Icon: Rows,
+              iconName: 'ph--rows--regular',
               Element: <TreeItemText primary={feed.feedKey.truncate()} secondary={bytes.format(feed.bytes)} />,
               value: { kind: 'feed', feed },
             })),
           },
           {
             id: 'blobs',
-            Icon: Files,
+            iconName: 'ph--files--regular',
             Element: <TreeItemText primary='blobs' secondary={blobs.length} />,
             items: blobs.map((blob) => ({
               id: PublicKey.from(blob.id).toHex(),
-              Icon: FileArchive,
+              iconName: 'ph--file-archive--regular',
               Element: (
                 <TreeItemText primary={PublicKey.from(blob.id).truncate()} secondary={bytes.format(blob.length)} />
               ),
@@ -96,11 +95,11 @@ const getInfoTree = (
           },
           {
             id: 'snapshots',
-            Icon: Bookmarks,
+            iconName: 'ph--bookmarks--regular',
             Element: <TreeItemText primary='snapshots' secondary={snapshots.length} />,
             items: snapshots.map((snapshot) => ({
               id: snapshot.key,
-              Icon: Bookmark,
+              iconName: 'ph--bookmark--regular',
               Element: <TreeItemText primary={snapshot.key} secondary={bytes.format(snapshot.size)} />,
               value: { kind: 'snapshot' },
             })),
@@ -307,11 +306,11 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
   return (
     <>
       {items.map((item) => {
-        const { id, Icon, Element, items } = item;
+        const { id, iconName, Element, items } = item;
         return (
           <TreeItem.Root key={id} collapsible={!!items?.length} open>
             <div role='none' className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Icon />
+              <Icon icon={iconName} />
               {Element}
             </div>
             <TreeItem.Body className='pis-4'>

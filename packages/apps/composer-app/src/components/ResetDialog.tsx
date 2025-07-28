@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -14,6 +13,7 @@ import {
   type AlertDialogRootProps,
   Button,
   DropdownMenu,
+  Icon,
   IconButton,
   Message,
   Popover,
@@ -95,7 +95,7 @@ export const ResetDialog = ({
     }
   }, [needRefresh, updateServiceWorker]);
 
-  const Caret = showStack ? CaretDown : CaretRight;
+  const caretIcon = showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
 
   return (
     <AlertDialog.Root
@@ -114,7 +114,7 @@ export const ResetDialog = ({
                 onClick={() => setShowStack((showStack) => !showStack)}
                 data-testid='resetDialog.showStackTrace'
               >
-                <Caret />
+                <Icon icon={caretIcon} />
                 <span className='mis-2'>{t('show stack label')}</span>
               </button>
               {showStack && (
@@ -127,7 +127,7 @@ export const ResetDialog = ({
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
                   <Tooltip.Trigger asChild content={t('copy error label')}>
                     <Button onClick={handleCopyError} classNames='absolute top-2 right-2'>
-                      <Clipboard weight='duotone' size='1em' />
+                      <Icon icon='ph--clipboard--duotone' size='1em' />
                     </Button>
                   </Tooltip.Trigger>
                 </Message.Root>

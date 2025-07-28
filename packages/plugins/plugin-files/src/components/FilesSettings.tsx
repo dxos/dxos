@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
+import { Icon, Button, Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -29,17 +28,17 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
       >
         {state.rootHandle && <Input.Label>{state.rootHandle.name}</Input.Label>}
         <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}>
-          <Folder className={getSize(5)} />
+          <Icon icon='ph--folder' className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger export label')}>
         <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Export))}>
-          <FloppyDisk className={getSize(5)} />
+          <Icon icon='ph--floppy-disk' className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger import label')}>
         <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Import))}>
-          <FolderOpen className={getSize(5)} />
+          <Icon icon='ph--folder-open' className={getSize(5)} />
         </Button>
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('auto export label')}>

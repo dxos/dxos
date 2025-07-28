@@ -3,7 +3,6 @@
 //
 
 import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
-import { CaretLeft, CaretRight, Circle, X } from '@phosphor-icons/react';
 import React, { forwardRef } from 'react';
 // TODO(thure): This needed to be imported in the package.json specifically to pacify TS2742. See if this is resolved with typescript@5.5.x.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -13,8 +12,7 @@ import { type TooltipRenderProps, type Props } from 'react-joyride';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import _typefest from 'type-fest';
 
-import { Button } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, IconButton } from '@dxos/react-ui';
 
 // https://docs.react-joyride.com/styling
 // https://github.com/gilbarbara/react-floater
@@ -49,36 +47,37 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
       >
         <div className='flex p-2'>
           <h2 className='grow pli-2 plb-1 text-lg font-medium text-accentSurfaceText'>{title}</h2>
-          <Button
+          <IconButton
             density='fine'
             variant='primary'
             onClick={closeProps.onClick}
             title={closeProps['aria-label']}
             data-testid='helpPlugin.tooltip.close'
           >
-            <X weight='bold' className={getSize(4)} />
-          </Button>
+            <Icon icon='ph--x--bold' size={4} />
+          </IconButton>
         </div>
         <div className='flex grow pli-4 mlb-2'>{content}</div>
         <div className='flex p-2 items-center justify-between' {...arrowNavigationAttrs}>
           {
-            <Button
+            <IconButton
               variant='primary'
               onClick={backProps.onClick}
               title={backProps['aria-label']}
               classNames={[!(index > 0 && backProps) && 'invisible']}
               data-testid='helpPlugin.tooltip.back'
             >
-              <CaretLeft className={getSize(5)} />
-            </Button>
+              <Icon icon='ph--caret-left--regular' size={5} />
+            </IconButton>
           }
           <div className='flex grow gap-2 justify-center'>
             <div className='flex'>
               {Array.from({ length: size }).map((_, i) => (
-                <Circle
+                <Icon
                   key={i}
-                  weight={index === i ? 'fill' : 'regular'}
-                  className={mx(getSize(2), 'mli-1 cursor-pointer')}
+                  icon={index === i ? 'ph--circle--fill' : 'ph--circle--regular'}
+                  size={2}
+                  className='mli-1 cursor-pointer'
                 />
               ))}
             </div>
@@ -94,15 +93,15 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
               Done
             </Button>
           ) : (
-            <Button
+            <IconButton
               variant='primary'
               onClick={primaryProps.onClick}
               title={primaryProps['aria-label']}
               autoFocus
               data-testid='helpPlugin.tooltip.next'
             >
-              <CaretRight className={getSize(6)} />
-            </Button>
+              <Icon icon='ph--caret-right--regular' size={6} />
+            </IconButton>
           )}
         </div>
       </div>

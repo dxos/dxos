@@ -1,7 +1,6 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { X } from '@phosphor-icons/react';
 import { formatDistanceToNow } from 'date-fns';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
@@ -12,17 +11,18 @@ import {
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
 import {
+  Avatar,
   Button,
   Clipboard,
+  Icon,
   ListItem,
-  useTranslation,
-  Avatar,
-  useThemeContext,
   Tooltip,
-  type ThemedClassName,
   type AvatarContentProps,
+  type ThemedClassName,
+  useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
-import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { type SharedInvitationListProps } from './InvitationListProps';
@@ -204,7 +204,7 @@ export const InvitationListItemImpl = ({
       {isCancellable ? (
         <Button variant='ghost' classNames='flex gap-1 pli-0' onClick={cancel} data-testid='cancel-invitation'>
           <span className='sr-only'>{t('cancel invitation label')}</span>
-          <X className={getSize(4)} />
+          <Icon icon='ph--x--regular' size={4} />
         </Button>
       ) : (
         <Button
@@ -214,7 +214,7 @@ export const InvitationListItemImpl = ({
           data-testid='remove-invitation'
         >
           <span className='sr-only'>{t('remove invitation label')}</span>
-          <X className={getSize(4)} />
+          <Icon icon='ph--x--regular' size={4} />
         </Button>
       )}
     </ListItem.Root>

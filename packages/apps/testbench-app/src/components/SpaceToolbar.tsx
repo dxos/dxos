@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ClockCounterClockwise, DownloadSimple, Plus, Trash, UploadSimple, UserPlus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/react-client/echo';
-import { Select, Toolbar } from '@dxos/react-ui';
+import { IconButton, Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
   spaces?: Space[];
@@ -51,9 +50,7 @@ export const SpaceToolbar = ({
 
   return (
     <Toolbar.Root classNames='p-1'>
-      <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
-        <Plus />
-      </Toolbar.Button>
+      <IconButton icon='ph--plus--regular' title='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
           <Select.TriggerButton classNames='is-full' />
@@ -77,18 +74,19 @@ export const SpaceToolbar = ({
       <div className='grow' />
       {space && (
         <>
-          <Toolbar.Button onClick={() => onToggleOpen(selected)} title={space.isOpen ? 'Close space.' : 'Open space.'}>
-            {space.isOpen ? <Trash /> : <ClockCounterClockwise />}
-          </Toolbar.Button>
-          <Toolbar.Button onClick={handleImport} title='Import space.'>
-            <UploadSimple />
-          </Toolbar.Button>
-          <Toolbar.Button onClick={() => onExport(selected)} title='Download backup.'>
-            <DownloadSimple />
-          </Toolbar.Button>
-          <Toolbar.Button onClick={() => onInvite(selected)} title='Share.' variant='primary'>
-            <UserPlus />
-          </Toolbar.Button>
+          <IconButton
+            icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
+            onClick={() => onToggleOpen(selected)}
+            title={space.isOpen ? 'Close space.' : 'Open space.'}
+          />
+          <IconButton icon='ph--upload-simple--regular' onClick={handleImport} title='Import space.' />
+          <IconButton icon='ph--download-simple--regular' onClick={() => onExport(selected)} title='Download backup.' />
+          <IconButton
+            icon='ph--user-plus--regular'
+            onClick={() => onInvite(selected)}
+            title='Share.'
+            variant='primary'
+          />
         </>
       )}
     </Toolbar.Root>

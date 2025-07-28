@@ -2,8 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Check, Stop } from '@phosphor-icons/react';
 import React from 'react';
 
+import { Icon } from '@dxos/react-ui';
+
 // TODO(burdon): Use theme.
-export const BooleanIcon = ({ value }: { value: boolean | undefined }) => (value ? <Check /> : <Stop />);
+export const BooleanIcon = ({ value }: { value: boolean | undefined }) => (
+  <Icon icon={value ? 'ph--check--regular' : 'ph--stop--regular'} />
+);

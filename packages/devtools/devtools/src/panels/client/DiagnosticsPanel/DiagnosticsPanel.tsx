@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ClipboardText, Download } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Input, Toolbar, useFileDownload } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon, IconButton, Input, Toolbar, useFileDownload } from '@dxos/react-ui';
 
 import { JsonView, PanelContainer, Tree } from '../../../components';
 
@@ -68,9 +66,7 @@ export const DiagnosticsPanel = () => {
           </Input.Root>
           <div className='grow' />
           <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
-          <Toolbar.Button onClick={handleDownload}>
-            <Download className={getSize(5)} />
-          </Toolbar.Button>
+          <IconButton icon='ph--download--regular' onClick={handleDownload} />
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       }
@@ -79,7 +75,7 @@ export const DiagnosticsPanel = () => {
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text, i) => (
               <div key={i} className='inline-flex items-center gap-1 cursor-pointer' onClick={() => handleCopy(text)}>
-                <ClipboardText />
+                <Icon icon='ph--clipboard-text--regular' />
                 {text}
               </div>
             ))}

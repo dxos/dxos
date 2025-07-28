@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
 import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { Input, type TextInputProps } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Input, type TextInputProps, Icon } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   classes?: {
@@ -61,7 +60,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSu
 
         {/* TODO(burdon): Margin should be density specific. */}
         <div role='button' className='-ml-7 p-0 cursor-pointer' onClick={handleReset}>
-          <MagnifyingGlass className={getSize(5)} />
+          <Icon icon='ph--magnifying-glass--regular' size={5} />
         </div>
       </Input.Root>
     </div>

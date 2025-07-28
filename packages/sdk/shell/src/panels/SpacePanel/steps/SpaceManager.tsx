@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Placeholder, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { type Dispatch, type FC, type SetStateAction, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -55,7 +54,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
     inviteOne: {
       label: t('invite one label'),
       description: t('invite one description'),
-      icon: UserPlus,
+      icon: 'ph--user-plus--regular',
       testId: 'spaces-panel.invite-one',
       onClick: useCallback(() => {
         const invitation = space.share?.({
@@ -74,7 +73,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
     inviteMany: {
       label: t('invite many label'),
       description: t('invite many description'),
-      icon: UsersThree,
+      icon: 'ph--users-three--regular',
       testId: 'spaces-panel.invite-many',
       onClick: useCallback(() => {
         const invitation = space.share?.({
@@ -117,7 +116,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
       noopInvite: {
         label: t('create space invitation label'),
         description: '',
-        icon: Placeholder,
+        icon: 'ph--placeholder--regular',
         onClick: () => {},
       },
     } as Record<string, ActionMenuItem>);

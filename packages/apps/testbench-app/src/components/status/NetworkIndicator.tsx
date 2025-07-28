@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
+import { Icon, type IconProps } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
@@ -25,13 +25,13 @@ export const NetworkIndicator = (props: IconProps) => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Lightning className={getSize(4)} {...props} />
+        <Icon icon='ph--lightning--regular' className={getSize(4)} {...props} />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <LightningSlash className={mx(styles.warning, getSize(4))} {...props} />
+        <Icon icon='ph--lightning-slash--regular' className={mx(styles.warning, getSize(4))} {...props} />
       </span>
     );
   }
