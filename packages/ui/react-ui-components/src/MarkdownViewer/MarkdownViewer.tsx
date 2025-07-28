@@ -41,12 +41,12 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
             </a>
           ),
           ol: ({ node, children, ...props }) => (
-            <ol className='leading-tight list-decimal pbs-1 pbe-1 pis-6' {...omit(props, ['ordered'])}>
+            <ol className='pbs-1 pbe-1 pis-6 leading-tight list-decimal' {...omit(props, ['ordered'])}>
               {children}
             </ol>
           ),
           ul: ({ node, children, ...props }) => (
-            <ul className='leading-tight list-disc pbs-1 pbe-1 pis-6' {...omit(props, ['ordered'])}>
+            <ul className='pbs-1 pbe-1 pis-6 leading-tight list-disc' {...omit(props, ['ordered'])}>
               {children}
             </ul>
           ),
@@ -56,7 +56,7 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
             </li>
           ),
           blockquote: ({ node, children, ...props }) => (
-            <blockquote className='border-l-4 border-primary-500 pis-4 pbs-4 pbe-4 text-primary-500' {...props}>
+            <blockquote className='pis-4 pbs-4 pbe-4 border-l-4 border-primary-500 text-primary-500' {...props}>
               {children}
             </blockquote>
           ),
@@ -68,7 +68,7 @@ export const MarkdownViewer = ({ classNames, content = '' }: MarkdownViewerProps
               <SyntaxHighlighter
                 PreTag='div'
                 language={language}
-                className='mbs-2 mbe-2 bg-inputSurface border border-separator rounded-sm'
+                className='mbs-2 mbe-2 border border-separator rounded-sm'
               >
                 {children}
               </SyntaxHighlighter>
