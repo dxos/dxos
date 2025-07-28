@@ -7,7 +7,7 @@ on:
       - production
       - staging
       - tauri
-      - jdw/tauri
+      - jdw/homebrew
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,94 +55,37 @@ jobs:
           toolchain: stable
           cache: true
 
-      - name: Install Linux dependencies
-        if: matrix.os == 'depot-ubuntu-24.04-4'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y webkit2gtk-4.1
-
-      - name: Import Apple Developer Certificate
+      - name: Cache Homebrew
         if: matrix.os == 'depot-macos-latest'
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
-          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
-          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-        
-      - name: Verify Certificate
-        if: matrix.os == 'depot-macos-latest'
-        run: |
-          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep -E "(Developer ID Application)" | head -1)
-          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
-          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
-
-      - name: Save Apple API Key
-        if: matrix.os == 'depot-macos-latest'
-        env:
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-        run: echo "$APPLE_API_KEY" > apple-api-key.p8
-
-      # TODO(wittjosiah): Try to make this work to speed up the install.
-      # - name: Cache Homebrew
-      #   if: matrix.os == 'depot-macos-latest'
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       /opt/homebrew/Cellar
-      #       /opt/homebrew/Caskroom
-      #       /opt/homebrew/Homebrew
-      #       ~/.cache/Homebrew
-      #     key: ${{ runner.os }}-homebrew-${{ hashFiles('**/pnpm-lock.yaml') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-homebrew-
+        uses: actions/cache@v4
+        id: homebrew-cache
+        with:
+          path: |
+            /opt/homebrew/Cellar
+            /opt/homebrew/Caskroom
+            /opt/homebrew/Homebrew
+            ~/.cache/Homebrew
+          key: ${{ runner.os }}-homebrewA-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrewA-
 
       - name: Install macOS dependencies
         if: matrix.os == 'depot-macos-latest'
         run: |
-          brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+          # Install Homebrew if not available
+          if ! command -v brew &> /dev/null; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          fi
+          
+          # If cache was restored, reinstall packages to ensure proper linking
+          if [ "${{ steps.homebrew-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "Cache hit - reinstalling packages to ensure proper linking"
+            brew reinstall cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+          else
+            echo "Cache miss - installing packages fresh"
+            brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+          fi
 
-      - name: Build Tauri app
-        run: moon run composer-app:tauri-build
-        env:
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_KEY_PATH: ./apple-api-key.p8
-          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
-          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
-          DX_HOST: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_ENV: production
-          NODE_OPTIONS: '--max_old_space_size=12288'
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-
-      - name: Upload Assets
-        uses: crabnebula-dev/cloud-release@v0
-        with:
-          command: release upload ${{ env.CN_APPLICATION }} --framework tauri
-          api-key: ${{ secrets.CN_API_KEY }}
-          working-directory: ./packages/apps/composer-app/src-tauri/
-
-  # TODO(wittjosiah): Uncomment this when we want to automatically publish the release.
-  # publish:
-  #   needs: build
-
-  #   runs-on: depot-ubuntu-24.04
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: publish release
-  #       uses: crabnebula-dev/cloud-release@v0
-  #       with:
-  #         command: release publish ${{ env.CN_APPLICATION }} --framework tauri
-  #         api-key: ${{ secrets.CN_API_KEY }}
+      - run: moon run async:build
