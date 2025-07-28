@@ -26,7 +26,7 @@ export const TicTacToePlugin = () =>
         contributes(Capabilities.Metadata, {
           id: TicTacToeType.typename,
           metadata: {
-            icon: 'ph--tic-tac-toe--regular',
+            icon: 'ph--dots-nine--regular',
           },
         }),
     }),
