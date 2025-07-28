@@ -105,8 +105,12 @@ jobs:
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
+          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
           DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
           DX_HOST: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
