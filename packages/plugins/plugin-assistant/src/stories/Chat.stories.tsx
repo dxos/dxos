@@ -59,24 +59,24 @@ import { Assistant } from '../types';
 const DefaultStory = ({ components }: { components: (FC | FC[])[] }) => {
   return (
     <div
-      className={mx('grid grid-cols border-x border-separator divide-x divide-separator')}
+      className={mx('grid grid-cols gap-2 m-2')}
       style={{ gridTemplateColumns: `repeat(${components.length}, minmax(0, 40rem))` }}
     >
       {components.map((Component, index) =>
         Array.isArray(Component) ? (
           <div
             key={index}
-            className='grid grid-rows divide-y divide-separator'
+            className='grid grid-rows gap-2 overflow-hidden'
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index}>
+              <div key={index} className='overflow-hidden bg-baseSurface border border-separator'>
                 <Component />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index}>
+          <div key={index} className='overflow-hidden bg-baseSurface border border-separator'>
             <Component />
           </div>
         ),
@@ -151,7 +151,7 @@ const ChatContainer = () => {
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='border-b border-subduedSeparator'>
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton
           disabled
@@ -162,7 +162,7 @@ const ChatContainer = () => {
         />
       </Toolbar.Root>
       <Chat.Thread />
-      <div className='p-2'>
+      <div className='p-4'>
         <Chat.Prompt
           classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           expandable
@@ -186,19 +186,24 @@ const DocumentContainer = () => {
   }
 
   return (
-    <Editor
-      id={document.id}
-      text={document.content.target}
-      classNames='p-2'
-      extensions={[
-        // TODO(burdon): Create util.
-        createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
-        createBasicExtensions({ readOnly: false }),
-        createMarkdownExtensions({ themeMode }),
-        createThemeExtensions({ themeMode }),
-        outliner(),
-      ]}
-    />
+    <>
+      <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <h2>{Obj.getLabel(document)}</h2>
+      </Toolbar.Root>
+      <Editor
+        id={document.id}
+        text={document.content.target}
+        classNames='p-2'
+        extensions={[
+          // TODO(burdon): Create util.
+          createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
+          createBasicExtensions({ readOnly: false }),
+          createMarkdownExtensions({ themeMode }),
+          createThemeExtensions({ themeMode }),
+          outliner(),
+        ]}
+      />
+    </>
   );
 };
 
@@ -213,7 +218,7 @@ const BlueprintContainer = () => {
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root classNames='border-b border-subduedSeparator'>
-        <h2>{blueprint.name}</h2>
+        <h2>{Obj.getLabel(blueprint)}</h2>
       </Toolbar.Root>
       <TemplateEditor template={blueprint.instructions.target} />
     </div>

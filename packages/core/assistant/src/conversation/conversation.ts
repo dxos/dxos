@@ -71,6 +71,7 @@ export class Conversation {
     Effect.gen(this, function* () {
       const session = new AiSession();
       this.onBegin.emit(session);
+
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
@@ -84,7 +85,14 @@ export class Conversation {
         Effect.provide(blueprintToolkitHandler) as any,
       ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
 
-      const systemPrompt = blueprints.map((bp) => `<blueprint>${bp.instructions}</blueprint>`).join('\n\n');
+      yield* pipe(
+        blueprints,
+        Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
+      );
+
+      const systemPrompt = blueprints
+        .map((blueprint) => `<blueprint>${blueprint.instructions}</blueprint>`)
+        .join('\n\n');
 
       const messages = yield* session.run({
         prompt: options.prompt,
