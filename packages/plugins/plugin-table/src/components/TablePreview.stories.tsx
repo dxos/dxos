@@ -105,7 +105,7 @@ export default meta;
 
 export const Popover = {
   args: {
-    role: 'popover',
+    role: 'card--popover',
   },
 };
 

@@ -21,7 +21,7 @@ const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
   }
 
   switch (role) {
-    case 'popover': {
+    case 'card--popover': {
       return (
         <Chess.Root game={game}>
           <div role='none' className='popover-square size-container'>

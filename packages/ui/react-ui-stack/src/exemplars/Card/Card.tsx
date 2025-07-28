@@ -43,11 +43,11 @@ const CardSurfaceRoot = ({
   children,
   classNames,
 }: ThemedClassName<PropsWithChildren<{ role?: string }>>) => {
-  if (['popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
+  if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
       <div
         className={mx(
-          role === 'popover'
+          role === 'card--popover'
             ? 'popover-card-width'
             : ['card--intrinsic', 'card--extrinsic'].includes(role)
               ? 'contents'
