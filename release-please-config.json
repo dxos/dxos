@@ -654,6 +654,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-tictactoe/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-token-manager/package.json",
           "jsonpath": "$.version"
         },

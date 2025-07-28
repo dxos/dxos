@@ -123,7 +123,7 @@ export const TicTacToeContainer = ({ game, role }: TicTacToeContainerProps) => {
       [null, null, null],
     ];
     game.currentPlayer = 'X';
-    game.winner = undefined;
+    game.winner = null;
     game.gameOver = false;
   }, [game, space]);
 

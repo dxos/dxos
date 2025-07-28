@@ -3,7 +3,7 @@
 //
 
 import { createIntent, Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -41,11 +41,6 @@ export const TicTacToePlugin = () =>
             getIntent: () => createIntent(TicTacToeAction.Create),
           }),
         ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TicTacToeType]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

@@ -2,23 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, type Intent } from '@dxos/app-framework';
-import { getSpace } from '@dxos/react-client/echo';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 
 import { TicTacToeAction, TicTacToeType } from '../types';
 
 export default () =>
-  contributes(Capabilities.IntentResolver, (intent: Intent) => {
-    switch (intent.action.class) {
-      case TicTacToeAction.Create: {
-        const { name } = intent.action.input;
-        const space = getSpace(intent.target);
-        if (!space) {
-          return false;
-        }
-
-        const object = space.db.add(
-          new TicTacToeType({
+  contributes(
+    Capabilities.IntentResolver,
+    createResolver({
+      intent: TicTacToeAction.Create,
+      resolve: ({ name }) => ({
+        data: {
+          object: Obj.make(TicTacToeType, {
             name: name ?? 'New TicTacToe Game',
             board: [
               [null, null, null],
@@ -26,14 +22,10 @@ export default () =>
               [null, null, null],
             ],
             currentPlayer: 'X',
-            winner: undefined,
+            winner: null,
             gameOver: false,
           }),
-        );
-
-        return { object };
-      }
-    }
-
-    return false;
-  });
+        },
+      }),
+    }),
+  );
