@@ -90,7 +90,7 @@ const DefaultStory = () => {
   return (
     <div className='flex gap-4 p-8 ring'>
       <CustomIcon weight={'regular'} className={mx(getSize(8))} />
-      <Icon icon='ph--github-logo--regular' className={mx(getSize(8))} />
+      <Icon icon='ph--github-logo--regular' classNames={mx(getSize(8))} />
     </div>
   );
 };
