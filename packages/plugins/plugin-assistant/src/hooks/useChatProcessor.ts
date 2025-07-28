@@ -122,6 +122,7 @@ export const useChatProcessor = ({
       model: preset?.model,
       settings,
     });
+
     return new ChatProcessor(services, conversation, {
       tools,
       extensions,

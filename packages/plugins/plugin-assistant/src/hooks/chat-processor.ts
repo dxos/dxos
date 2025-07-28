@@ -44,6 +44,7 @@ export type ChatProcessorOptions = {
   // TODO(dmaretskyi): Remove.
   artifacts?: readonly ArtifactDefinition[];
   extensions?: ToolContextExtensions;
+  // TODO(burdon): Remove systemPrompt -- should come from blueprint.
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: Partial<ChatProcessorOptions> = {
@@ -216,6 +217,7 @@ export class ChatProcessor {
         this._conversation
           .run({
             prompt: message,
+            // TODO(burdon): Construct from blueprints?
             systemPrompt: this._options.systemPrompt,
           })
           .pipe(
