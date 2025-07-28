@@ -193,6 +193,7 @@ export namespace ContentBlock {
   /**
    * Suggestion for a follow-up prompt for the user.
    */
+  // TODO(burdon): Rename Suggestion.
   export const Suggest = Schema.TaggedStruct('suggest', {
     text: Schema.String,
 
@@ -204,6 +205,7 @@ export namespace ContentBlock {
    * Multiple choice selection.
    * Usually an answer to assistant's question.
    */
+  // TODO(burdon): Rename Option/Choice.
   export const Select = Schema.TaggedStruct('select', {
     options: Schema.Array(Schema.String),
 
@@ -241,6 +243,7 @@ export namespace ContentBlock {
   /**
    * Model printing info about the list of available tools.
    */
+  // TODO(burdon): Rename Toolkit.
   export const ToolList = Schema.TaggedStruct('toolList', {
     ...Base.fields,
   }).pipe(Schema.mutable);
