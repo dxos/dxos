@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# Usage:   killorphans <cmd> [args...]
+# Example: killorphans node server.js
+#
+# 1.  We create a new process-group, so we can later kill everything in one shot.
+# 2.  We forward INT/TERM to the children, so Ctrl-C behaves normally.
+# 3.  When the main process exits, we send SIGTERM (then SIGKILL as a fallback)
+#     to the entire group and wait for a tidy shutdown.
+
+set -euo pipefail
+
+# ① Become a group leader (this script’s PID == PGID)
+if [[ "$(ps -o pgid= $$)" != "$$" ]]; then
+  exec setsid "$0" "$@"   # re-exec in a fresh group
+fi
+PGID=$$
+
+# ② Start the user command in the background
+"$@" &
+MAIN_PID=$!
+
+# ③ Forward INT/TERM so Ctrl-C still works
+forward() { kill -s "$1" -"${PGID}" 2>/dev/null || true; }
+trap 'forward INT'  INT
+trap 'forward TERM' TERM
+
+# ④ Wait for the main process to end
+wait "$MAIN_PID"
+exit_code=$?
+
+# ⑤ Kill anything still running in the group
+kill -TERM -"${PGID}" 2>/dev/null || true
+# Give them a moment to clean up gracefully
+sleep 2
+kill -KILL -"${PGID}" 2>/dev/null || true
+
+# ⑥ Reap the corpses so we don’t leave zombies,
+#    then exit with the main process’ status
+wait || true
+exit "$exit_code"

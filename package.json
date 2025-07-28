@@ -19,6 +19,7 @@
     "format-package": "syncpack format",
     "postinstall": "[ \"$CI\" != \"true\" ] && tsx tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
+    "killorphans": "./scripts/killorphans",
     "lint": "moon run :lint -- --fix",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
