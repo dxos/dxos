@@ -5,7 +5,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 export type DataView = 'table' | 'list' | 'debug';
 
@@ -68,13 +67,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <Toolbar.ToggleGroupItem value='table'>
-            <Icon icon='ph--table--regular' className={getSize(5)} />
+            <Icon icon='ph--table--regular' size={5} />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='list'>
-            <Icon icon='ph--list--regular' className={getSize(5)} />
+            <Icon icon='ph--list--regular' size={5} />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='debug'>
-            <Icon icon='ph--list-magnifying-glass--regular' className={getSize(5)} />
+            <Icon icon='ph--list-magnifying-glass--regular' size={5} />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
       )}

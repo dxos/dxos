@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Icon, type IconProps } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
 
@@ -46,7 +46,8 @@ export const ErrorIndicator = (props: IconProps) => {
     >
       <Icon
         icon='ph--circle--fill'
-        className={mx(errorRef.current ? styles.error : styles.default, getSize(3))}
+        size={3}
+        className={mx(errorRef.current ? styles.error : styles.default)}
         {...props}
       />
     </span>

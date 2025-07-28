@@ -6,7 +6,6 @@ import React from 'react';
 
 import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 export type AppToolbarProps = {
   onHome: () => void;
@@ -28,7 +27,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         classNames='pli-[5px] text-primary-500'
         onClick={onHome}
         iconOnly
-        className={getSize(6)}
+        size={6}
         label='Home'
       />
       <IconButton
@@ -37,7 +36,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         classNames='pli-[5px] text-primary-500'
         onClick={onDevtools}
         iconOnly
-        className={getSize(6)}
+        size={6}
         label='Developer tools'
       />
       <div className='grow' />
@@ -48,7 +47,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
           classNames='pli-[7px]'
           onClick={onProfile}
           iconOnly
-          className={getSize(5)}
+          size={5}
           label='Profile'
         />
       </div>

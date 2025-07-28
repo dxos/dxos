@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton, Button } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 
 import { ErrorIndicator } from './ErrorIndicator';
 import { NetworkIndicator } from './NetworkIndicator';
