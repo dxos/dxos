@@ -87,7 +87,9 @@ jobs:
         if: matrix.os == 'depot-macos-latest'
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-        run: echo $APPLE_API_KEY > ${{ github.workspace }}/apple-api-key.p8
+        run: |
+          echo $APPLE_API_KEY > ${{ github.workspace }}/apple-api-key.p8
+          sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
 
       - name: Verify Apple API Key
         run: |
@@ -105,7 +107,7 @@ jobs:
         run: moon run composer-app:tauri-build
         env:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_KEY_PATH: ${{ github.workspace }}/apple-api-key.p8
           APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
