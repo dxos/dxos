@@ -16,7 +16,7 @@ export type LargeButtonProps = ButtonProps & {
 export type ActionMenuItem = {
   label: string;
   description: string;
-  icon: FC<IconProps>;
+  icon: FC<IconProps> | string;
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
@@ -72,7 +72,12 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <activeAction.icon className={getSize(5)} />}
+        {activeAction.icon &&
+          (typeof activeAction.icon === 'string' ? (
+            <Icon icon={activeAction.icon} size={5} />
+          ) : (
+            <activeAction.icon className={getSize(5)} />
+          ))}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
@@ -97,7 +102,12 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <action.icon className={getSize(5)} />}
+                    {action.icon &&
+                      (typeof action.icon === 'string' ? (
+                        <Icon icon={action.icon} size={5} />
+                      ) : (
+                        <action.icon className={getSize(5)} />
+                      ))}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (

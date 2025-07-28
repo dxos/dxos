@@ -204,9 +204,11 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <IconButton onClick={() => setGenerating((generating) => !generating)}>
-          <Icon icon={generating ? 'ph--pause--regular' : 'ph--play--regular'} />
-        </IconButton>
+        <IconButton
+          icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={generating ? 'Pause' : 'Play'}
+          onClick={() => setGenerating((generating) => !generating)}
+        />
         <div className='relative' title='mutation period'>
           <Input.Root>
             <Input.TextInput
@@ -218,11 +220,9 @@ const Controls = ({ children }: PropsWithChildren) => {
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Input.Root>
-          <Icon icon='ph--timer--regular' className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          <Icon icon='ph--timer--regular' classNames={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
         </div>
-        <IconButton onClick={() => action && runAction(client, action)}>
-          <Icon icon='ph--plus--regular' />
-        </IconButton>
+        <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
           <Select.TriggerButton placeholder='Select value' />
           <Select.Portal>

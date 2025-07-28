@@ -30,8 +30,8 @@ export const Default = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Icon icon='ph--clock-counter-clockwise' className='w-5 h-5' />,
-    after: <Icon icon='ph--arrow-right' className='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
   },
 };
@@ -41,8 +41,8 @@ export const Primary = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <Icon icon='ph--clock-counter-clockwise' className='w-5 h-5' />,
-    after: <Icon icon='ph--arrow-right' className='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
     variant: 'primary',
   },
