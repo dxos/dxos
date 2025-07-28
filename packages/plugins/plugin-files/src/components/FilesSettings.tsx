@@ -27,7 +27,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
       >
         {state.rootHandle && <Input.Label>{state.rootHandle.name}</Input.Label>}
         <IconButton
-          icon='ph--folder'
+          icon='ph--folder--regular'
           classNames='mis-2'
           onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}
           label={t('save files to directory label')}
@@ -36,7 +36,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger export label')}>
         <IconButton
-          icon='ph--floppy-disk'
+          icon='ph--floppy-disk--regular'
           classNames='mis-2'
           onClick={() => dispatch(createIntent(LocalFilesAction.Export))}
           label={t('trigger export label')}
@@ -45,7 +45,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger import label')}>
         <IconButton
-          icon='ph--folder-open'
+          icon='ph--folder-open--regular'
           classNames='mis-2'
           onClick={() => dispatch(createIntent(LocalFilesAction.Import))}
           label={t('trigger import label')}
