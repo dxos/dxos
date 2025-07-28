@@ -7,7 +7,6 @@ import jp from 'jsonpath';
 import React, { useEffect, useState } from 'react';
 
 import { Input, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
