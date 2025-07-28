@@ -27,29 +27,29 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
       >
         {state.rootHandle && <Input.Label>{state.rootHandle.name}</Input.Label>}
         <IconButton
-          icon='ph--folder--regular'
           classNames='mis-2'
-          onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}
-          label={t('save files to directory label')}
+          icon='ph--folder--regular'
           iconOnly
+          label={t('save files to directory label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}
         />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger export label')}>
         <IconButton
-          icon='ph--floppy-disk--regular'
           classNames='mis-2'
-          onClick={() => dispatch(createIntent(LocalFilesAction.Export))}
-          label={t('trigger export label')}
+          icon='ph--floppy-disk--regular'
           iconOnly
+          label={t('trigger export label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.Export))}
         />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger import label')}>
         <IconButton
-          icon='ph--folder-open--regular'
           classNames='mis-2'
-          onClick={() => dispatch(createIntent(LocalFilesAction.Import))}
-          label={t('trigger import label')}
+          icon='ph--folder-open--regular'
           iconOnly
+          label={t('trigger import label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.Import))}
         />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('auto export label')}>

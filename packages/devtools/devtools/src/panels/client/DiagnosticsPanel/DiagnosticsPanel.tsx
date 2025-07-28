@@ -66,7 +66,7 @@ export const DiagnosticsPanel = () => {
           </Input.Root>
           <div className='grow' />
           <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
-          <Toolbar.IconButton icon='ph--download--regular' onClick={handleDownload} label='Download diagnostics' />
+          <Toolbar.IconButton icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
           <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
         </Toolbar.Root>
       }

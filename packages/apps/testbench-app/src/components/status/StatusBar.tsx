@@ -34,24 +34,24 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
     <div className='flex items-center'>
       <IconButton
         icon='ph--chart-bar--regular'
-        variant='ghost'
-        onClick={() => onShowStats?.(!showStats)}
         iconOnly
         label='Toggle stats'
+        onClick={() => onShowStats?.(!showStats)}
+        variant='ghost'
       />
       {flushing && (
         <IconButton
-          icon='ph--arrows-clockwise--regular'
-          variant='ghost'
-          iconOnly
           className='animate-spin'
+          icon='ph--arrows-clockwise--regular'
+          iconOnly
           label='Syncing'
+          variant='ghost'
         />
       )}
-      <IconButton variant='ghost' label='Network status' iconOnly>
+      <IconButton iconOnly label='Network status' variant='ghost'>
         <NetworkIndicator />
       </IconButton>
-      <IconButton variant='ghost' label='Error status' iconOnly>
+      <IconButton iconOnly label='Error status' variant='ghost'>
         <ErrorIndicator />
       </IconButton>
     </div>

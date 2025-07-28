@@ -22,33 +22,33 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
   return (
     <div className='flex shrink-0 items-center p-1'>
       <IconButton
-        icon='ph--bug--regular'
-        variant='ghost'
         classNames='pli-[5px] text-primary-500'
-        onClick={onHome}
+        icon='ph--bug--regular'
         iconOnly
-        size={6}
         label='Home'
+        onClick={onHome}
+        size={6}
+        variant='ghost'
       />
       <IconButton
-        icon='ph--hammer--regular'
-        variant='ghost'
         classNames='pli-[5px] text-primary-500'
-        onClick={onDevtools}
+        icon='ph--hammer--regular'
         iconOnly
-        size={6}
         label='Developer tools'
+        onClick={onDevtools}
+        size={6}
+        variant='ghost'
       />
       <div className='grow' />
       <div className='flex gap-2 items-center'>
         <div className='font-mono'>{identity?.identityKey.truncate()}</div>
         <IconButton
-          icon='ph--user--regular'
           classNames='pli-[7px]'
-          onClick={onProfile}
+          icon='ph--user--regular'
           iconOnly
-          size={5}
           label='Profile'
+          onClick={onProfile}
+          size={5}
         />
       </div>
     </div>

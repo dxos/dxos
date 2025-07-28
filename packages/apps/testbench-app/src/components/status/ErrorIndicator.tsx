@@ -38,16 +38,16 @@ export const ErrorIndicator = (props: IconProps) => {
 
   return (
     <IconButton
-      variant='ghost'
-      icon='ph--circle--fill'
-      size={3}
       className={mx(errorRef.current ? styles.error : styles.default)}
+      icon='ph--circle--fill'
+      iconOnly
+      label={errorRef.current?.message ?? 'No errors.'}
       onClick={() => {
         errorRef.current = undefined;
         forceUpdate({});
       }}
-      label={errorRef.current?.message ?? 'No errors.'}
-      iconOnly
+      size={3}
+      variant='ghost'
       {...props}
     />
   );

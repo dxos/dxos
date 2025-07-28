@@ -25,13 +25,19 @@ export const NetworkIndicator = (props: IconProps) => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Icon icon='ph--lightning--regular' size={4} label='Connected to swarm.' {...props} />
+        <Icon icon='ph--lightning--regular' label='Connected to swarm.' size={4} {...props} />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <Icon icon='ph--lightning-slash--regular' size={4} className={mx(styles.warning)} label='Disconnected from swarm.' {...props} />
+        <Icon
+          className={mx(styles.warning)}
+          icon='ph--lightning-slash--regular'
+          label='Disconnected from swarm.'
+          size={4}
+          {...props}
+        />
       </span>
     );
   }
