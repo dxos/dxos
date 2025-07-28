@@ -42,7 +42,7 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonPro
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
           <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
-            <Icon icon='ph--caret-down--bold' className={tx('select.triggerIcon', 'select__trigger__icon', {})} />
+            <Icon icon='ph--caret-down--bold' classNames={tx('select.triggerIcon', 'select__trigger__icon', {})} />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>

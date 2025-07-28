@@ -41,11 +41,11 @@ const UniformListItem = ({ id, text }: { id: string; text: string }) => {
       style={{ transform: CSS.Transform.toString(transform) }}
     >
       <ListItem.Endcap>
-        <Icon icon='ph--dots-six-vertical--regular' className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--dots-six-vertical--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
       <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
       <ListItem.Endcap>
-        <Icon icon='ph--push-pin--regular' className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
     </ListItem.Root>
   );
@@ -103,13 +103,13 @@ const ManySizesDraggableListItem = ({
       style={{ transform: CSS.Translate.toString(transform) }}
     >
       <ListItem.Endcap>
-        <Icon icon='ph--dots-six-vertical--regular' className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--dots-six-vertical--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
       <ListItem.Heading classNames='grow pbs-2' asChild>
         {text}
       </ListItem.Heading>
       <ListItem.Endcap>
-        <Icon icon='ph--push-pin--regular' className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
     </ListItem.Root>
   );
@@ -181,7 +181,7 @@ export const Collapsible = {
               {index !== 2 ? <ListItem.OpenTrigger /> : <ListItem.MockOpenTrigger />}
               <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
               <ListItem.Endcap>
-                <Icon icon='ph--push-pin--regular' className={mx(getSize(5), 'mbs-2.5')} />
+                <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
               </ListItem.Endcap>
             </div>
             {index !== 2 && <ListItem.CollapsibleContent>{body}</ListItem.CollapsibleContent>}

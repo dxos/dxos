@@ -114,7 +114,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
         ref={forwardedRef}
       >
         {children || (
-          <Icon icon={iconName} className={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})} />
+          <Icon icon={iconName} classNames={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})} />
         )}
       </ListPrimitiveItemOpenTrigger>
     );
