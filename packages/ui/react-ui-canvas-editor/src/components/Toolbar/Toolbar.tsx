@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 
 import { Icon, Select, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 import { type ActionHandler } from '../../actions';
 import { type LayoutKind, LAYOUTS } from '../../layout';

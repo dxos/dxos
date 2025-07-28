@@ -8,7 +8,6 @@ import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ListItem, Avatar, useId, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 type IdentityListItemProps = {

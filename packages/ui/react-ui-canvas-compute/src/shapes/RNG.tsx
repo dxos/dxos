@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon, type IconProps } from '@dxos/react-ui';
 import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { mx } from '@dxos/react-ui-theme';
 
 import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';

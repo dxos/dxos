@@ -5,7 +5,6 @@
 import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { Input, type TextInputProps, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   classes?: {

@@ -4,8 +4,6 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
-
 import { type FrameProps, ReadonlyTextBox, TextBox } from '../components';
 import { type Polygon } from '../types';
 

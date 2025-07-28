@@ -5,7 +5,6 @@
 import React from 'react';
 
 import { Button, type ButtonProps, Icon, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> & { onDone?: () => void }) => {
   const { t } = useTranslation('os');

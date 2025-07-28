@@ -21,7 +21,6 @@ import {
   ControlSection,
 } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
