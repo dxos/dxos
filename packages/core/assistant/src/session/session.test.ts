@@ -232,7 +232,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
 // eslint-disable-next-line no-unused-vars
-const CALENDAR_EVENTS: CalendarEvent[] = [
+const _CALENDAR_EVENTS: CalendarEvent[] = [
   Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',
