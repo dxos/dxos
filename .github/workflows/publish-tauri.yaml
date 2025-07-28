@@ -88,7 +88,10 @@ jobs:
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
-          echo $APPLE_API_KEY > ${{ github.workspace }}/apple-api-key.p8
+          # Use heredoc to preserve exact formatting including newlines
+          cat > ${{ github.workspace }}/apple-api-key.p8 << EOF
+          $APPLE_API_KEY
+          EOF
           sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
 
       - name: Verify Apple API Key
