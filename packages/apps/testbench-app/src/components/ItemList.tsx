@@ -97,7 +97,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} />
+        <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
       </div>
     </div>
   );
@@ -127,7 +127,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} />
+      <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

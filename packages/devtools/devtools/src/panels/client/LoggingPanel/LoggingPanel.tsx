@@ -111,7 +111,7 @@ export const LoggingPanel = () => {
           {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
           <Select items={presets} onValueChange={onSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
-          <IconButton icon='ph--trash--regular' onClick={() => setLogs([])} />
+          <Toolbar.IconButton icon='ph--trash--regular' onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       }
     >

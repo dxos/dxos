@@ -29,6 +29,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         onClick={onHome}
         iconOnly
         className={getSize(6)}
+        label='Home'
       />
       <IconButton
         icon='ph--hammer--regular'
@@ -37,6 +38,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         onClick={onDevtools}
         iconOnly
         className={getSize(6)}
+        label='Developer tools'
       />
       <div className='grow' />
       <div className='flex gap-2 items-center'>
@@ -47,6 +49,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
           onClick={onProfile}
           iconOnly
           className={getSize(5)}
+          label='Profile'
         />
       </div>
     </div>

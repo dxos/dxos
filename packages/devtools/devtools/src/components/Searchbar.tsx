@@ -39,7 +39,7 @@ export const Searchbar: FC<SearchbarProps> = ({ placeholder, value, onChange }) 
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
         {/* TODO(burdon): Embedded icon. */}
-        <IconButton icon='ph--x--regular' onClick={handleReset} variant='ghost' />
+        <IconButton icon='ph--x--regular' onClick={handleReset} variant='ghost' label='Clear search' iconOnly />
       </Input.Root>
     </div>
   );

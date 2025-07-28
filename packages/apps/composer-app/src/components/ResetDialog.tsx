@@ -123,11 +123,7 @@ export const ResetDialog = ({
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
-                  <Tooltip.Trigger asChild content={t('copy error label')}>
-                    <Button onClick={handleCopyError} classNames='absolute top-2 right-2'>
-                      <Icon icon='ph--clipboard--duotone' size='1em' />
-                    </Button>
-                  </Tooltip.Trigger>
+                  <IconButton label={t('copy error label')} onClick={handleCopyError} classNames='absolute top-2 right-2' icon='ph--clipboard--duotone' iconOnly />
                 </Message.Root>
               )}
             </>

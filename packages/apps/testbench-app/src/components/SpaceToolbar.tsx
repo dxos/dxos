@@ -6,7 +6,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, Select, Toolbar } from '@dxos/react-ui';
+import { Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
   spaces?: Space[];
@@ -50,7 +50,7 @@ export const SpaceToolbar = ({
 
   return (
     <Toolbar.Root classNames='p-1'>
-      <IconButton icon='ph--plus--regular' title='Create space.' onClick={() => onCreate()} />
+      <Toolbar.IconButton icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
           <Select.TriggerButton classNames='is-full' />
@@ -74,17 +74,21 @@ export const SpaceToolbar = ({
       <div className='grow' />
       {space && (
         <>
-          <IconButton
+          <Toolbar.IconButton
             icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
             onClick={() => onToggleOpen(selected)}
-            title={space.isOpen ? 'Close space.' : 'Open space.'}
+            label={space.isOpen ? 'Close space.' : 'Open space.'}
           />
-          <IconButton icon='ph--upload-simple--regular' onClick={handleImport} title='Import space.' />
-          <IconButton icon='ph--download-simple--regular' onClick={() => onExport(selected)} title='Download backup.' />
-          <IconButton
+          <Toolbar.IconButton icon='ph--upload-simple--regular' onClick={handleImport} label='Import space.' />
+          <Toolbar.IconButton
+            icon='ph--download-simple--regular'
+            onClick={() => onExport(selected)}
+            label='Download backup.'
+          />
+          <Toolbar.IconButton
             icon='ph--user-plus--regular'
             onClick={() => onInvite(selected)}
-            title='Share.'
+            label='Share.'
             variant='primary'
           />
         </>

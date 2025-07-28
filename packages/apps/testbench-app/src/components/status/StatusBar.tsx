@@ -32,9 +32,21 @@ export type StatusBarProps = {
 export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) => {
   return (
     <div className='flex items-center'>
-      <IconButton icon='ph--chart-bar--regular' variant='ghost' onClick={() => onShowStats?.(!showStats)} iconOnly />
+      <IconButton
+        icon='ph--chart-bar--regular'
+        variant='ghost'
+        onClick={() => onShowStats?.(!showStats)}
+        iconOnly
+        label='Toggle stats'
+      />
       {flushing && (
-        <IconButton icon='ph--arrows-clockwise--regular' variant='ghost' iconOnly className='animate-spin' />
+        <IconButton
+          icon='ph--arrows-clockwise--regular'
+          variant='ghost'
+          iconOnly
+          className='animate-spin'
+          label='Syncing'
+        />
       )}
       <Button variant='ghost'>
         <NetworkIndicator />

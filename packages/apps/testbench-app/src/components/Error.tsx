@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouteError } from 'react-router-dom';
 
 import { Icon } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 export type ErrorProps = { noJoke?: boolean };
 
