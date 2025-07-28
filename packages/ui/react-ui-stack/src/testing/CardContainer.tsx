@@ -14,7 +14,7 @@ export const CardContainer = ({
   role,
 }: PropsWithChildren<{ icon?: string; role?: string }>) => {
   switch (role) {
-    case 'popover':
+    case 'card--popover':
       return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
     case 'card--intrinsic':
       return (
