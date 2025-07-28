@@ -48,6 +48,7 @@ import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
 import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
 import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
 import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin, TRANSCRIPTION_PLUGIN } from '@dxos/plugin-transcription';
 import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
@@ -179,6 +180,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     TablePlugin(),
     ThemePlugin({ appName: 'Composer', noCache: isDev }),
     ThreadPlugin(),
+    TicTacToePlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
     WelcomePlugin(),
