@@ -103,6 +103,11 @@ jobs:
         with:
           tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
