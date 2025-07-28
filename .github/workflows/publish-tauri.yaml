@@ -55,37 +55,9 @@ jobs:
           toolchain: stable
           cache: true
 
-      - name: Cache Homebrew
+      - uses: tecolicom/actions-use-homebrew-tools@v1
         if: matrix.os == 'depot-macos-latest'
-        uses: actions/cache@v4
-        id: homebrew-cache
         with:
-          path: |
-            /opt/homebrew/Cellar
-            /opt/homebrew/Caskroom
-            /opt/homebrew/Homebrew
-            ~/.cache/Homebrew
-          key: ${{ runner.os }}-homebrewA-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-homebrewA-
-
-      - name: Install macOS dependencies
-        if: matrix.os == 'depot-macos-latest'
-        run: |
-          # Install Homebrew if not available
-          if ! command -v brew &> /dev/null; then
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-            eval "$(/opt/homebrew/bin/brew shellenv)"
-          fi
-          
-          # If cache was restored, reinstall packages to ensure proper linking
-          if [ "${{ steps.homebrew-cache.outputs.cache-hit }}" == "true" ]; then
-            echo "Cache hit - reinstalling packages to ensure proper linking"
-            brew reinstall cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
-          else
-            echo "Cache miss - installing packages fresh"
-            brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
-          fi
+          tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
 
       - run: moon run async:build
