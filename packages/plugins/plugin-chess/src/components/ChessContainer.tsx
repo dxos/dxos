@@ -13,9 +13,13 @@ import { type ChessType } from '../types';
 
 const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
 
-const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
-  const space = getSpace(game);
+type ChessContainerProps = {
+  game: ChessType;
+  role?: string;
+};
 
+const ChessContainer = ({ game, role }: ChessContainerProps) => {
+  const space = getSpace(game);
   if (!space) {
     return null;
   }

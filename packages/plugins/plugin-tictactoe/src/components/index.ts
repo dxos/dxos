@@ -2,5 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './TicTacToeBoard';
-export * from './TicTacToeContainer';
+import { lazy } from 'react';
+
+export const TicTacToeContainer = lazy(() => import('./TicTacToeContainer'));

@@ -19,10 +19,4 @@ export default () =>
       filter: (data): data is { subject: TicTacToeType } => Obj.instanceOf(TicTacToeType, data.subject),
       component: ({ data, role }) => <TicTacToeContainer game={data.subject} role={role} />,
     }),
-    createSurface({
-      id: 'plugin-tictactoe',
-      role: 'canvas-node',
-      filter: Obj.instanceOf(TicTacToeType),
-      component: ({ data }) => <TicTacToeContainer game={data} />,
-    }),
   ]);
