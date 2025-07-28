@@ -53,7 +53,7 @@ describe('preprocessor', () => {
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
-            name: 'search',
+            name: 'calculator',
             result: 'Result of tool 2',
           },
           {
@@ -73,14 +73,14 @@ describe('preprocessor', () => {
       expect(toolMessage.parts[0]).toEqual(
         new AiInput.ToolCallResultPart({
           id: AiInput.ToolCallId.make('call_1'),
-          name: 'call_1',
+          name: 'calculator',
           result: 'Result of tool 1',
         }),
       );
       expect(toolMessage.parts[1]).toEqual(
         new AiInput.ToolCallResultPart({
           id: AiInput.ToolCallId.make('call_2'),
-          name: 'call_2',
+          name: 'calculator',
           result: 'Result of tool 2',
         }),
       );

@@ -15,6 +15,7 @@ import { preprocessAiInput } from './AiPreprocessor';
 import { getToolCalls, runTool } from './tools';
 import { AiService } from '../service';
 import { AiServiceTestingPreset } from '../testing';
+import { TestHelpers } from '@dxos/effect';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -110,6 +111,7 @@ describe('effect AI client', () => {
           ),
         ),
       ),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
 });
