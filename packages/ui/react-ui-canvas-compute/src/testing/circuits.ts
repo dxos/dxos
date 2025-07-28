@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createSystemPrompt } from '@dxos/artifact';
+import { createSystemPrompt } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
 import { type ServiceContainer } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
