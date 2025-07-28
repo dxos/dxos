@@ -11,6 +11,9 @@ import { log } from '@dxos/log';
 import type { AiServiceClient, GenerationStream } from './service';
 import { type GenerateRequest, type GenerateResponse, type LLMModel } from '../types';
 
+/**
+ * @deprecated
+ */
 export type AiServiceEdgeClientOptions = {
   endpoint: string;
   defaultGenerationOptions?: {
@@ -18,6 +21,9 @@ export type AiServiceEdgeClientOptions = {
   };
 };
 
+/**
+ * @deprecated
+ */
 export class EdgeAiServiceClient implements AiServiceClient {
   private readonly _endpoint: string;
   private readonly _defaultGenerationOptions: AiServiceEdgeClientOptions['defaultGenerationOptions'];
