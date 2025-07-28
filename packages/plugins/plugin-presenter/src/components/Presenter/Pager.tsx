@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import { Button, useControlledState, Icon } from '@dxos/react-ui';
 
@@ -111,7 +111,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   );
 };
 
-export const StartButton: FC<{ running?: boolean; onClick?: (start: boolean) => void }> = ({ running, onClick }) => {
+export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
     <Button variant='ghost' classNames='p-0' onClick={() => onClick?.(!running)}>
       {(running && <Icon icon='ph--x--regular' size={6} />) || <Icon icon='ph--play--regular' size={6} />}
