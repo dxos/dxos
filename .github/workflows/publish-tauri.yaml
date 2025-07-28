@@ -115,6 +115,11 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-pnpm-store-
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
+
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
