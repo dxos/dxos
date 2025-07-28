@@ -87,7 +87,14 @@ jobs:
         if: matrix.os == 'depot-macos-latest'
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-        run: echo "$APPLE_API_KEY" > apple-api-key.p8
+        run: echo $APPLE_API_KEY > ./packages/apps/composer-app/apple-api-key.p8
+
+      - name: Verify Apple API Key
+        run: |
+          if [ ! -f ./packages/apps/composer-app/apple-api-key.p8 ]; then
+            echo "Apple API Key not found!"
+            exit 1
+          fi
 
       # TODO(wittjosiah): Try to make this work to speed up the install.
       # - name: Cache Homebrew
