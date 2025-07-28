@@ -1,3 +1,3 @@
-# Clean
+# Tools
 
-Removes all files from the TypeScript outDir except for tsconfig.tsbuildinfo. 
+Collection of tools for DXOS monorepo.
