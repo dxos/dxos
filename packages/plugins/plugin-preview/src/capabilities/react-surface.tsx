@@ -24,7 +24,7 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      role: ['popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
         // TODO(wittjosiah): Handle org click.
@@ -66,7 +66,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      role: ['popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => (
         <OrganizationCard role={role} subject={data.subject}>
@@ -76,7 +76,7 @@ export default () =>
     }),
     createSurface({
       id: `${PREVIEW_PLUGIN}/schema-popover--project`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      role: ['popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
     }),
@@ -86,7 +86,7 @@ export default () =>
     //
     createSurface({
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      role: ['popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data, role }) => {

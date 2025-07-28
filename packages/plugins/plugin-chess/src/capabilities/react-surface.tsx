@@ -15,7 +15,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: meta.id,
-      role: ['article', 'section', 'card--intrinsic', 'card--extrinsic', 'popover', 'transclusion'],
+      role: ['article', 'section', 'card--intrinsic', 'card--extrinsic', 'popover', 'card--transclusion'],
       // TODO(burdon): Could this be standardized so that we don't require a subject property (like below)?
       filter: (data): data is { subject: ChessType } => Obj.instanceOf(ChessType, data.subject),
       component: ({ data, role }) => <ChessContainer game={data.subject} role={role} />,
