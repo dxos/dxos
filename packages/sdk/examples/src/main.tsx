@@ -16,9 +16,9 @@ import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
 
@@ -96,7 +96,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Icon icon='ph--airplane--regular' size={28} classNames={offline ? 'active' : ''} />
+                    <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>
@@ -111,7 +111,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Icon icon='ph--stack--regular' size={28} classNames={batching ? 'active' : ''} />
+                    <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>
