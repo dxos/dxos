@@ -11,10 +11,10 @@ import { StackItem } from '@dxos/react-ui-stack';
 // import { TicTacToeBoard } from './TicTacToeBoard';
 import { type TicTacToeType, type Player, type CellValue } from '../types';
 
-export interface TicTacToeContainerProps {
+export type TicTacToeContainerProps = {
   game: TicTacToeType;
   role?: string;
-}
+};
 
 export const TicTacToeContainer = ({ game, role }: TicTacToeContainerProps) => {
   const space = getSpace(game);

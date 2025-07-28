@@ -6,3 +6,4 @@
 - create a new branch before starting work
 - use `gh pr create` to create a pull request
 - use "Conventional Commits" for PR titles
+- the PR body should contain a reference to the GH or Linear issue: e.g., "Fixes DX-123"
