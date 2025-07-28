@@ -68,6 +68,9 @@ importers:
       '@dxos/dx-compile':
         specifier: workspace:*
         version: link:tools/dx-compile
+      '@dxos/dx-tools':
+        specifier: workspace:*
+        version: link:tools/dx-tools
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -14650,6 +14653,8 @@ importers:
       '@types/yargs':
         specifier: ~16.0.1
         version: 16.0.4
+
+  tools/dx-tools: {}
 
   tools/lit-storybook:
     devDependencies:
