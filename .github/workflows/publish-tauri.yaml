@@ -95,24 +95,22 @@ jobs:
           sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
 
       - name: Verify Apple API Key
+        if: matrix.os == 'depot-macos-latest'
         run: |
           if [ ! -f ${{ github.workspace }}/apple-api-key.p8 ]; then
             echo "Apple API Key not found!"
             exit 1
           fi
 
-      - uses: tecolicom/actions-use-homebrew-tools@v1
+      - name: Apple Environment Variables
         if: matrix.os == 'depot-macos-latest'
-        with:
-          tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          detached: true
-
-      - name: Build Tauri app
-        run: moon run composer-app:tauri-build
+        run: |
+          echo "APPLE_API_ISSUER=$APPLE_API_ISSUER" >> $GITHUB_ENV
+          echo "APPLE_API_KEY=$APPLE_API_KEY" >> $GITHUB_ENV
+          echo "APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH" >> $GITHUB_ENV
+          echo "APPLE_CERTIFICATE=$APPLE_CERTIFICATE" >> $GITHUB_ENV
+          echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD" >> $GITHUB_ENV
+          echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY" >> $GITHUB_ENV
         env:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
@@ -120,9 +118,18 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
-          DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+
+      - uses: tecolicom/actions-use-homebrew-tools@v1
+        if: matrix.os == 'depot-macos-latest'
+        with:
+          tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+
+      - name: Build Tauri app
+        run: moon run composer-app:tauri-build
+        env:
+          # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
+          DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
           DX_HOST: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
