@@ -112,15 +112,19 @@ jobs:
           fi
           
           echo "=== Attempting to extract certificate info ==="
-          CERT_INFO=$(security find-identity -v -p codesigning build.keychain 2>/dev/null | grep "Apple Development" || echo "No Apple Development certificate found")
+          # Look for any valid codesigning certificate (Apple Development, Developer ID, etc.)
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain 2>/dev/null | grep -E "(Apple Development|Developer ID Application|Mac Developer)" | head -1 || echo "No valid codesigning certificate found")
           echo "CERT_INFO: $CERT_INFO"
           
-          if [ "$CERT_INFO" != "No Apple Development certificate found" ]; then
+          if [ "$CERT_INFO" != "No valid codesigning certificate found" ]; then
             CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
             echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
             echo "Certificate imported successfully with ID: $CERT_ID"
+            echo "Certificate type: $(echo "$CERT_INFO" | sed 's/.*"\([^"]*\)".*/\1/')"
           else
-            echo "ERROR: No Apple Development certificate found in keychain"
+            echo "ERROR: No valid codesigning certificate found in keychain"
+            echo "Available certificates:"
+            security find-identity -v -p codesigning build.keychain 2>/dev/null || echo "None found"
             exit 1
           fi
 
