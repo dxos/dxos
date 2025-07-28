@@ -7,7 +7,6 @@ import React from 'react';
 import { generateName } from '@dxos/display-name';
 import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/echo';
 import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { type ChessType } from '../types';
 

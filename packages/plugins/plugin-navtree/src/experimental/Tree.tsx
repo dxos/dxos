@@ -5,7 +5,7 @@
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
 import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Rounded border if first/last.
 const styles = {

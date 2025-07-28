@@ -8,7 +8,6 @@ import { createIntent, LayoutAction, useIntentDispatcher, useLayout } from '@dxo
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction } from '../types';

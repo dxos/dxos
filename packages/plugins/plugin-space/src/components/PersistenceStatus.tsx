@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { debounce } from '@dxos/async';
 import { type EchoDatabase } from '@dxos/react-client/echo';
 import { Icon, Tooltip, useTranslation } from '@dxos/react-ui';
-import { getSize, mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
+import { mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 

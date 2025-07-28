@@ -6,7 +6,6 @@ import React from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../../meta';
 
