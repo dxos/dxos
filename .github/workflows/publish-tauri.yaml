@@ -101,20 +101,6 @@ jobs:
         with:
           tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
 
-      # TODO(wittjosiah): Factor out.
-      - name: PNPM Store Path
-        id: pnpm-store
-        run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-store.outputs.pnpm-store }}
-          key: ${{ matrix.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ matrix.os }}-pnpm-store-
-
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
