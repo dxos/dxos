@@ -68,65 +68,20 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          echo "=== Starting certificate import ==="
-          echo "Certificate length: ${#APPLE_CERTIFICATE}"
-          echo "Certificate starts with: ${APPLE_CERTIFICATE:0:50}..."
-          
           echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
-          echo "Certificate file size: $(ls -la certificate.p12)"
-          
-          echo "=== Creating keychain ==="
           security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
-          
-          echo "=== Importing certificate ==="
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-          
-          echo "=== Listing keychain contents ==="
-          security list-keychain -d user -s build.keychain
-          security find-identity -v -p codesigning build.keychain
         
       - name: Verify Certificate
         if: matrix.os == 'depot-macos-latest'
         run: |
-          echo "=== Verifying certificate ==="
-          echo "Current keychain: $(security default-keychain -d user)"
-          echo "Available keychains:"
-          security list-keychain -d user
-          
-          echo "=== Searching for Apple Development certificates ==="
-          security find-identity -v -p codesigning build.keychain || echo "No codesigning identities found"
-          
-          echo "=== Searching for any certificates ==="
-          security find-identity -v build.keychain || echo "No identities found"
-          
-          echo "=== Checking certificate file ==="
-          if [ -f certificate.p12 ]; then
-            echo "Certificate file exists, size: $(ls -la certificate.p12)"
-            file certificate.p12
-          else
-            echo "Certificate file not found!"
-          fi
-          
-          echo "=== Attempting to extract certificate info ==="
-          # Look for any valid codesigning certificate (Apple Development, Developer ID, etc.)
-          CERT_INFO=$(security find-identity -v -p codesigning build.keychain 2>/dev/null | grep -E "(Apple Development|Developer ID Application|Mac Developer)" | head -1 || echo "No valid codesigning certificate found")
-          echo "CERT_INFO: $CERT_INFO"
-          
-          if [ "$CERT_INFO" != "No valid codesigning certificate found" ]; then
-            CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
-            echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
-            echo "Certificate imported successfully with ID: $CERT_ID"
-            echo "Certificate type: $(echo "$CERT_INFO" | sed 's/.*"\([^"]*\)".*/\1/')"
-          else
-            echo "ERROR: No valid codesigning certificate found in keychain"
-            echo "Available certificates:"
-            security find-identity -v -p codesigning build.keychain 2>/dev/null || echo "None found"
-            exit 1
-          fi
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep -E "(Developer ID Application)" | head -1)
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
 
       # TODO(wittjosiah): Try to make this work to speed up the install.
       # - name: Cache Homebrew
