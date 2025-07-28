@@ -60,7 +60,7 @@ export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | D
     <Card.SurfaceRoot role={role}>
       <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
       {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
-      {role === 'popover' && (
+      {role === 'card--popover' && (
         <Card.Chrome>
           <Button onClick={handleNavigate}>
             <span className='grow'>{t('navigate to document label')}</span>

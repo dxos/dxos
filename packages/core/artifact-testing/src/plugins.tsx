@@ -60,7 +60,7 @@ export const capabilities: AnyCapability[] = [
     Capabilities.ReactSurface,
     createSurface({
       id: 'plugin-image',
-      role: 'canvas-node',
+      role: 'card--extrinsic',
       filter: (data: any): data is any => isImage(data.value),
       component: ({ data }) => (
         <img
@@ -79,7 +79,7 @@ export const capabilities: AnyCapability[] = [
     Capabilities.ReactSurface,
     createSurface({
       id: 'plugin-default',
-      role: 'canvas-node',
+      role: 'card--extrinsic',
       position: 'fallback',
       component: ({ role, data }) => <JsonFilter data={data} />,
     }),

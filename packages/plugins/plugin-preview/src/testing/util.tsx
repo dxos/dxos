@@ -19,7 +19,7 @@ export type StoryProps = {
   icon?: string;
   withImage?: boolean;
   subject: 'project' | 'contact' | 'organization';
-  role: 'popover' | 'card--intrinsic' | 'card--extrinsic' | 'transclusion';
+  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
 };
 
 export const render: Meta<StoryProps>['render'] = ({
