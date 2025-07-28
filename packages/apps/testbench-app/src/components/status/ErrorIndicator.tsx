@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Icon, type IconProps } from '@dxos/react-ui';
+import { IconButton, type IconProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
@@ -37,19 +37,18 @@ export const ErrorIndicator = (props: IconProps) => {
   }, []);
 
   return (
-    <span
-      title={errorRef.current?.message ?? 'No errors.'}
+    <IconButton
+      variant='ghost'
+      icon='ph--circle--fill'
+      size={3}
+      className={mx(errorRef.current ? styles.error : styles.default)}
       onClick={() => {
         errorRef.current = undefined;
         forceUpdate({});
       }}
-    >
-      <Icon
-        icon='ph--circle--fill'
-        size={3}
-        className={mx(errorRef.current ? styles.error : styles.default)}
-        {...props}
-      />
-    </span>
+      label={errorRef.current?.message ?? 'No errors.'}
+      iconOnly
+      {...props}
+    />
   );
 };
