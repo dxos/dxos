@@ -5,7 +5,7 @@
 import { AiLanguageModel } from '@effect/ai';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { FetchHttpClient } from '@effect/platform';
-import { describeWrapped, it } from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import { Chunk, Console, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
-describeWrapped('lmstudio', () => {
+describe.skip('lmstudio', () => {
   it.effect(
     'streaming',
     Effect.fn(
