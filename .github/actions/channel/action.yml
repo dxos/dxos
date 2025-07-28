@@ -1,0 +1,17 @@
+name: Release Channel
+description: Set the release channel for the current branch
+
+outputs:
+  channel:
+    description: 'Release channel'
+    value: ${{ steps.release-channel.outputs.channel }}
+
+runs:
+  using: 'composite'
+  steps:
+    # Replace all slashes with dashes.
+    - name: Set channel
+      id: release-channel
+      if: github.ref_name != 'production'
+      run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
+      shell: bash
