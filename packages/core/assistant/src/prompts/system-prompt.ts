@@ -42,5 +42,5 @@ export type SystemPromptOptions = {
  */
 export const createSystemPrompt = (options: SystemPromptOptions = {}): string => {
   const template = createTemplate(SYSTEM_PROMPT);
-  return template(defaultsDeep({}, options, { suggestions: true }));
+  return template(defaultsDeep({}, options, { suggestions: true })).trim();
 };

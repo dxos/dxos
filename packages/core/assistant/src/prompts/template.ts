@@ -6,7 +6,7 @@ import handlebars from 'handlebars';
 
 import { invariant } from '@dxos/invariant';
 
-export const createTemplate = (template: string) => {
+export const createTemplate = (template: string): HandlebarsTemplateDelegate => {
   invariant(template);
 
   let section = 0;

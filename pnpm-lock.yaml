@@ -2534,7 +2534,16 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
     devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       effect:
         specifier: 3.17.0
         version: 3.17.0
@@ -16241,6 +16250,7 @@ packages:
 
   '@crxjs/vite-plugin@2.0.0-beta.28':
     resolution: {integrity: sha512-JUoB1431PvruQqVpxvJ5j6qh0NNx5sXafAXo+VltORtJQrS6wprI5QK4k6PLKV+WacsFuPLveM2ydBCEopU49w==}
+    deprecated: Beta versions are no longer maintained. Please upgrade to the stable 2.0.0 release
     peerDependencies:
       vite: ^5.0.0
 

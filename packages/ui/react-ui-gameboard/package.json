@@ -25,8 +25,8 @@
   "scripts": {
     "gen:pieces": "pnpm gen:pieces:chess",
     "gen:pieces:chess": "pnpm gen:pieces:chess:alpha && pnpm gen:pieces:chess:cburnett",
-    "gen:pieces:chess:alpha": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/alpha ./assets/pieces/chess/alpha",
-    "gen:pieces:chess:cburnett": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/cburnett ./assets/pieces/chess/cburnett"
+    "gen:pieces:chess:alpha": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/alpha ./assets/pieces/chess/alpha > /dev/null",
+    "gen:pieces:chess:cburnett": "pnpm svgr --typescript --filename-case=camel --out-dir ./src/gen/pieces/chess/cburnett ./assets/pieces/chess/cburnett > /dev/null"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",

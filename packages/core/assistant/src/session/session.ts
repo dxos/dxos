@@ -143,8 +143,7 @@ export class AiSession {
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           toolkit: options.toolkit,
-          // TODO(burdon): Why is this hardcoded?
-          system: 'You are a helpful assistant.',
+          system: options.systemPrompt,
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseGptStream({

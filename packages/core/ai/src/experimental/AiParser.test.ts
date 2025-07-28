@@ -153,7 +153,7 @@ describe('parser', () => {
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('<cot>My thoughts are...</cot>')])
-          .pipe(parseGptStream())
+          .pipe(parseGptStream({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -170,7 +170,7 @@ describe('parser', () => {
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('<think>My thoughts are...</think>')])
-          .pipe(parseGptStream())
+          .pipe(parseGptStream({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 

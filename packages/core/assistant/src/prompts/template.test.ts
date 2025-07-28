@@ -5,22 +5,23 @@
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
 import { createSystemPrompt } from './system-prompt';
 import { createTemplate } from './template';
 
-const TEMPLATE = `
-# Test
+const TEMPLATE = trim`
+  # Test
 
-## {{section}}. Rules
+  ## {{section}}. Rules
 
-Create artifacts.
+  Create artifacts.
 
-## {{section}}. Artifacts
+  ## {{section}}. Artifacts
 
-{{#each artifacts}}
-- {{this}}
-{{/each}}
+  {{#each artifacts}}
+  - {{this}}
+  {{/each}}
 `;
 
 const ARTIFACTS = [

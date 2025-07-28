@@ -1,9 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { AiTool } from '@effect/ai';
+import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
+
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { FunctionError, type FunctionContext, type FunctionDefinition, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { AiTool } from '@effect/ai';
-import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],

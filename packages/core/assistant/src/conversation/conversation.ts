@@ -3,7 +3,7 @@
 //
 
 import { type AiError, type AiLanguageModel, type AiTool, AiToolkit } from '@effect/ai';
-import { Effect, pipe, type Context } from 'effect';
+import { Array, Effect, pipe, type Context, String } from 'effect';
 
 import {
   ToolExecutionService,
@@ -15,6 +15,7 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { ContextBinder, type ContextBinding } from '../context';
@@ -85,19 +86,24 @@ export class Conversation {
         Effect.provide(blueprintToolkitHandler) as any,
       ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
 
-      const instructions = yield* pipe(
+      // Build system prompt from blueprint templates.
+      const systemPrompt = yield* pipe(
         blueprints,
         Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
-        Effect.forEach((template) => DatabaseService.loadRef(template.source)),
+        Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
+        Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
+        Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
       );
 
-      const systemPrompt = instructions.map((instruction) => `<blueprint>${instruction}</blueprint>`).join('\n\n');
+      log.info('run', {
+        systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
+      });
 
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
         toolkit: toolkitWithBlueprintHandlers,
-        systemPrompt: (options.systemPrompt ?? '') + systemPrompt,
+        systemPrompt,
       });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;

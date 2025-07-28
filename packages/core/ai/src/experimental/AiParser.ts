@@ -38,6 +38,11 @@ enum ModelTags {
 
 export interface ParseGptStreamOptions {
   /**
+   * Whether to parse reasoning tags: <cot> <think>
+   */
+  parseReasoningTags?: boolean;
+
+  /**
    * Called when the stream begins.
    */
   onBegin?: () => Effect.Effect<void>;
@@ -67,6 +72,7 @@ export interface ParseGptStreamOptions {
  */
 export const parseGptStream =
   ({
+    parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
@@ -89,7 +95,7 @@ export const parseGptStream =
         });
 
         const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
-          const contentBlock = makeContentBlock(block);
+          const contentBlock = makeContentBlock(block, { parseReasoningTags });
           if (contentBlock) {
             yield* emitFullBlock(contentBlock);
           }
@@ -103,7 +109,7 @@ export const parseGptStream =
         });
 
         const emitPartialBlock = Effect.fnUntraced(function* (block: StreamBlock) {
-          const contentBlock = makeContentBlock(block);
+          const contentBlock = makeContentBlock(block, { parseReasoningTags });
           if (contentBlock) {
             contentBlock.pending = true;
             yield* onBlock(contentBlock);
@@ -253,7 +259,10 @@ export const parseGptStream =
 /**
  * @returns Content block made from stream block.
  */
-const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
+const makeContentBlock = (
+  block: StreamBlock,
+  { parseReasoningTags }: Pick<ParseGptStreamOptions, 'parseReasoningTags'>,
+): ContentBlock.Any | undefined => {
   switch (block.type) {
     //
     // Text
@@ -284,6 +293,12 @@ const makeContentBlock = (block: StreamBlock): ContentBlock.Any | undefined => {
             .filter(Predicate.isTruthy)
             .join('\n');
 
+          if (!parseReasoningTags) {
+            return {
+              _tag: 'text',
+              text: content,
+            } satisfies ContentBlock.Text;
+          }
           return {
             _tag: 'reasoning',
             reasoningText: content,
