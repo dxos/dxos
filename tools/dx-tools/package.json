@@ -1,0 +1,16 @@
+{
+  "name": "@dxos/dx-tools",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "main": "dist/src/main.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "dx-killorphans": "src/killorphans.mjs"
+  }
+}
