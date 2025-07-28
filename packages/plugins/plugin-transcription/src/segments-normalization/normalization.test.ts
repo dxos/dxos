@@ -51,13 +51,12 @@ const messages: MessageWithRangeId[] = [
   Obj.make(DataType.Message, {
     created: new Date(Date.now() + 1000 * index).toISOString(),
     sender,
-    blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
-    rangeId: [],
-  } as any),
+    blocks: [{ _tag: 'transcript', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+  }),
 );
 
 // eslint-disable-next-line no-unused-vars
-const REMOTE_AI = true;
+const _REMOTE_AI = true;
 
 describe.skip('SentenceNormalization', () => {
   const getExecutor = () => {

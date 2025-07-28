@@ -52,7 +52,7 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
 
     // TODO(burdon): How should the queue be created?
     // eslint-disable-next-line no-unused-vars
-    const queue = space.queues.create();
+    const _queue = space.queues.create();
 
     return new ToolRegistry([
       // createExaTool({ apiKey: EXA_API_KEY }),

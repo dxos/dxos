@@ -121,7 +121,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     );
 
     // TODO(dmaretskyi): Store in ECHO.
-    const org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
+    const _org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
     const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
@@ -155,7 +155,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       operationModel: 'configured',
     });
 
-    const sage = createTool('test', {
+    const _sage = createTool('test', {
       name: 'sage',
       description: 'Can say what the meaning of life is.',
       schema: Schema.Struct({

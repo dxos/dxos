@@ -3,13 +3,13 @@
 //
 
 import { Context, Effect, Layer } from 'effect';
+import type { Schema } from 'effect';
 
 import type { Resource } from '@dxos/context';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 
 import { DatabaseService, QueueService } from '../services';
-import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
-import type { Schema } from 'effect';
 
 // TODO(dmaretskyi): Extract to effect-utils.
 const accuireReleaseResource = <T extends Resource>(getResource: () => T) =>

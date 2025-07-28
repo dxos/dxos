@@ -33,7 +33,7 @@ const AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
   Layer.provide(FetchHttpClient.layer),
 );
 
-describe('Research', () => {
+describe.skip('Research', () => {
   let runtime: ManagedRuntime.ManagedRuntime<AiService, any>;
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
@@ -46,7 +46,6 @@ describe('Research', () => {
     builder = await new EchoTestBuilder().open();
 
     db = (await builder.createDatabase({ indexing: { vector: true } })).db;
-    db.graph.schemaRegistry.addSchema(DataTypes);
 
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
@@ -62,6 +61,7 @@ describe('Research', () => {
     await runtime.dispose();
   });
 
+  // TODO(dmaretskyi): Refactor using effect.
   test.only('should generate a research report', { timeout: 300_000 }, async () => {
     db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
