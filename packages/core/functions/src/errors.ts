@@ -10,8 +10,4 @@ export class ServiceNotAvailableError extends BaseError.extend('SERVICE_NOT_AVAI
   }
 }
 
-export class FunctionError extends BaseError.extend('FUNCTION_ERROR') {
-  constructor(message: string, options?: BaseErrorOptions) {
-    super(message, options);
-  }
-}
+export class FunctionError extends BaseError.extend('FUNCTION_ERROR') {}
