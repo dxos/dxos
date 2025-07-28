@@ -48,12 +48,12 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
           label='Syncing'
         />
       )}
-      <Button variant='ghost'>
+      <IconButton variant='ghost' label='Network status' iconOnly>
         <NetworkIndicator />
-      </Button>
-      <Button variant='ghost'>
+      </IconButton>
+      <IconButton variant='ghost' label='Error status' iconOnly>
         <ErrorIndicator />
-      </Button>
+      </IconButton>
     </div>
   );
 };

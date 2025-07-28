@@ -107,14 +107,15 @@ export const ResetDialog = ({
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <button
+              <Button
+                variant='ghost'
                 className='flex items-center'
                 onClick={() => setShowStack((showStack) => !showStack)}
                 data-testid='resetDialog.showStackTrace'
               >
                 <Icon icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} />
                 <span className='mis-2'>{t('show stack label')}</span>
-              </button>
+              </Button>
               {showStack && (
                 <Message.Root
                   key={error.message}
