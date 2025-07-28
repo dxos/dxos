@@ -3,7 +3,7 @@
 //
 
 import { type AiError, type AiLanguageModel, type AiTool, AiToolkit } from '@effect/ai';
-import { Effect, type Context } from 'effect';
+import { Effect, pipe, type Context } from 'effect';
 
 import {
   ToolExecutionService,
@@ -85,14 +85,13 @@ export class Conversation {
         Effect.provide(blueprintToolkitHandler) as any,
       ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
 
-      yield* pipe(
+      const instructions = yield* pipe(
         blueprints,
         Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
+        Effect.forEach((template) => DatabaseService.loadRef(template.source)),
       );
 
-      const systemPrompt = blueprints
-        .map((blueprint) => `<blueprint>${blueprint.instructions}</blueprint>`)
-        .join('\n\n');
+      const systemPrompt = instructions.map((instruction) => `<blueprint>${instruction}</blueprint>`).join('\n\n');
 
       const messages = yield* session.run({
         prompt: options.prompt,
