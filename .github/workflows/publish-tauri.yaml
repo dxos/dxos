@@ -83,6 +83,12 @@ jobs:
           CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
 
+      - name: Save Apple API Key
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: echo "$APPLE_API_KEY" > apple-api-key.p8
+
       # TODO(wittjosiah): Try to make this work to speed up the install.
       # - name: Cache Homebrew
       #   if: matrix.os == 'depot-macos-latest'
@@ -105,6 +111,9 @@ jobs:
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_PATH: ./apple-api-key.p8
           APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ env.CERT_ID }}
