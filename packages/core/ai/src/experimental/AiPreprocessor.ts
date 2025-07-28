@@ -5,12 +5,11 @@
 import { AiInput } from '@effect/ai';
 import { Array, Effect, pipe, Predicate } from 'effect';
 
-import { log } from '@dxos/log';
+import { getSnapshot } from '@dxos/live-object';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
 import { AiInputPreprocessingError } from '../errors';
-import { getSnapshot } from '@dxos/live-object';
 
 /**
  * Preprocesses messages for AI input.

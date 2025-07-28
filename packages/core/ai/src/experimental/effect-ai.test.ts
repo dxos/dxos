@@ -7,6 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { DataType, type ContentBlock } from '@dxos/schema';
 
@@ -15,7 +16,6 @@ import { preprocessAiInput } from './AiPreprocessor';
 import { getToolCalls, runTool } from './tools';
 import { AiService } from '../service';
 import { AiServiceTestingPreset } from '../testing';
-import { TestHelpers } from '@dxos/effect';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(

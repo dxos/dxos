@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 
 import { LogLevel } from './config';
 import { log } from './log';
-import { BROWSER_PROCESSOR } from './processors';
 
 class LogError extends Error {
   constructor(
