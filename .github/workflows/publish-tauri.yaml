@@ -96,24 +96,24 @@ jobs:
             exit 1
           fi
 
-      # TODO(wittjosiah): Try to make this work to speed up the install.
-      # - name: Cache Homebrew
-      #   if: matrix.os == 'depot-macos-latest'
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       /opt/homebrew/Cellar
-      #       /opt/homebrew/Caskroom
-      #       /opt/homebrew/Homebrew
-      #       ~/.cache/Homebrew
-      #     key: ${{ runner.os }}-homebrew-${{ hashFiles('**/pnpm-lock.yaml') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-homebrew-
-
-      - name: Install macOS dependencies
+      - uses: tecolicom/actions-use-homebrew-tools@v1
         if: matrix.os == 'depot-macos-latest'
-        run: |
-          brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+        with:
+          tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+
+      # TODO(wittjosiah): Factor out.
+      - name: PNPM Store Path
+        id: pnpm-store
+        run: echo "pnpm-store=$(pnpm store path)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.pnpm-store }}
+          key: ${{ matrix.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ matrix.os }}-pnpm-store-
 
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
