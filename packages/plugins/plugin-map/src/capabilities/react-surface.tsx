@@ -51,7 +51,7 @@ export default () =>
     }),
     // createSurface({
     //   id: 'plugin-map',
-    //   role: 'canvas-node',
+    //   role: 'card--extrinsic',
     //   filter: (data) => Obj.instanceOf(MapType, data),
     //   component: ({ data }) => {
     //     const [lng = 0, lat = 0] = data?.coordinates ?? [];
