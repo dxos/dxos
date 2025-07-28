@@ -31,7 +31,7 @@ export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const settings = context
+  const _settings = context
     .getCapability(Capabilities.SettingsStore)
     .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
 
@@ -87,7 +87,7 @@ type EntityExtractionEnricherFactoryOptions = {
   space: Space;
 };
 
-const createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+const _createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   const executor = new FunctionExecutor(new ServiceContainer());
 
   return async (message: DataType.Message) => {
