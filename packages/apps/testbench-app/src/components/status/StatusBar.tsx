@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import { Button, IconButton } from '@dxos/react-ui';
 
 import { ErrorIndicator } from './ErrorIndicator';
 import { NetworkIndicator } from './NetworkIndicator';
@@ -41,19 +41,19 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
       />
       {flushing && (
         <IconButton
-          className='animate-spin'
+          classNames='animate-spin'
           icon='ph--arrows-clockwise--regular'
           iconOnly
           label='Syncing'
           variant='ghost'
         />
       )}
-      <IconButton iconOnly label='Network status' variant='ghost'>
+      <Button variant='ghost'>
         <NetworkIndicator />
-      </IconButton>
-      <IconButton iconOnly label='Error status' variant='ghost'>
+      </Button>
+      <Button variant='ghost'>
         <ErrorIndicator />
-      </IconButton>
+      </Button>
     </div>
   );
 };

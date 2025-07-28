@@ -6,6 +6,7 @@ import React, { Suspense } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { DeviceKind, useDevices, useIdentity } from '@dxos/react-client/halo';
+import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
@@ -45,7 +46,7 @@ const Sidebar = () => {
           <div key={section.id}>
             <div className='flex text-sm pis-4 py-1'>{section.title}</div>
             <div>
-              {section.items?.map(({ id, title, Icon }) => (
+              {section.items?.map(({ id, title, icon }) => (
                 <div
                   key={id}
                   className={mx(
@@ -54,7 +55,7 @@ const Sidebar = () => {
                     id === pathname && styles.selected,
                   )}
                 >
-                  <Icon icon={Icon} size={4} />
+                  <Icon icon={icon} size={4} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
                   </Link>

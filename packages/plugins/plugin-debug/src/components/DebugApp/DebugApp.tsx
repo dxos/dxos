@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
-import { Button, ToggleGroup, ToggleGroupItem, Toolbar, Icon } from '@dxos/react-ui';
+import { ToggleGroup, ToggleGroupItem, Toolbar, Icon, IconButton } from '@dxos/react-ui';
 
 import { Json, Tree } from './Tree';
 import { Container } from '../Container';
@@ -58,12 +58,21 @@ export const DebugApp: FC<{ graph: Graph }> = ({ graph }) => {
           </ToggleGroup>
 
           <Toolbar.Separator variant='gap' />
-          <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
-            <Icon icon='ph--warning--regular' size={5} className='text-red-700' />
-          </Button>
-          <Button onClick={handleOpenDevtools} title='Open Devtools'>
-            <Icon icon='ph--toolbox--duotone' size={5} className='text-700' />
-          </Button>
+          <IconButton
+            icon='ph--warning--regular'
+            iconOnly
+            size={5}
+            classNames='text-red-700'
+            onClick={(event) => handleResetClient(event.shiftKey)}
+            label='Reset client'
+          />
+          <IconButton
+            icon='ph--toolbox--duotone'
+            iconOnly
+            size={5}
+            onClick={handleOpenDevtools}
+            label='Open Devtools'
+          />
         </Toolbar.Root>
       }
     >

@@ -4,13 +4,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { IconButton, type IconProps } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
 
 // TODO(burdon): Reconcile with DebugPlugin.
-export const ErrorIndicator = (props: IconProps) => {
+export const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
   const errorRef = useRef<Error>();
   useEffect(() => {
@@ -38,7 +38,7 @@ export const ErrorIndicator = (props: IconProps) => {
 
   return (
     <IconButton
-      className={mx(errorRef.current ? styles.error : styles.default)}
+      classNames={mx(errorRef.current ? styles.error : styles.default)}
       icon='ph--circle--fill'
       iconOnly
       label={errorRef.current?.message ?? 'No errors.'}
@@ -48,7 +48,6 @@ export const ErrorIndicator = (props: IconProps) => {
       }}
       size={3}
       variant='ghost'
-      {...props}
     />
   );
 };

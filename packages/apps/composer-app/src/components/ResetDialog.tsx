@@ -13,7 +13,6 @@ import {
   type AlertDialogRootProps,
   Button,
   DropdownMenu,
-  Icon,
   IconButton,
   Message,
   Popover,
@@ -106,15 +105,14 @@ export const ResetDialog = ({
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <Button
+              <IconButton
+                icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                 variant='ghost'
-                className='flex items-center'
+                classNames='flex items-center'
+                label={t('show stack label')}
                 onClick={() => setShowStack((showStack) => !showStack)}
                 data-testid='resetDialog.showStackTrace'
-              >
-                <Icon icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} />
-                <span className='mis-2'>{t('show stack label')}</span>
-              </Button>
+              />
               {showStack && (
                 <Message.Root
                   key={error.message}

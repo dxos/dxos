@@ -9532,6 +9532,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
         version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)

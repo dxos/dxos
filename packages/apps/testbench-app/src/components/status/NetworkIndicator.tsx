@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon, type IconProps } from '@dxos/react-ui';
+import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
@@ -15,7 +15,7 @@ import { styles } from './styles';
  * Swarm connection handler.
  */
 // TODO(burdon): Add network toggle.
-export const NetworkIndicator = (props: IconProps) => {
+export const NetworkIndicator = () => {
   const [state, setState] = useState(0);
   const { swarm } = useNetworkStatus();
   useEffect(() => {
@@ -25,19 +25,13 @@ export const NetworkIndicator = (props: IconProps) => {
   if (state === 0) {
     return (
       <span title='Connected to swarm.'>
-        <Icon icon='ph--lightning--regular' label='Connected to swarm.' size={4} {...props} />
+        <Icon icon='ph--lightning--regular' size={4} />
       </span>
     );
   } else {
     return (
       <span title='Disconnected from swarm.'>
-        <Icon
-          className={mx(styles.warning)}
-          icon='ph--lightning-slash--regular'
-          label='Disconnected from swarm.'
-          size={4}
-          {...props}
-        />
+        <Icon icon='ph--lightning-slash--regular' size={4} classNames={mx(styles.warning)} />
       </span>
     );
   }

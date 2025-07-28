@@ -8,7 +8,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useR
 
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, Input, useTranslation, Icon } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
 import { hero } from './hero-image';
@@ -168,8 +168,8 @@ export const Welcome = ({
             </div>
             <CompoundButton
               slots={{ root: { className: 'is-full' } }}
-              after={<Icon icon='ph--caret-right--bold' className={getSize(4)} />}
-              before={<Icon icon='ph--planet--regular' className={getSize(6)} />}
+              after={<Icon icon='ph--caret-right--bold' />}
+              before={<Icon icon='ph--planet--regular' />}
               onClick={onSpaceInvitation}
             >
               {t('join space button label')}
@@ -180,8 +180,8 @@ export const Welcome = ({
             </div>
             <CompoundButton
               slots={{ root: { className: 'is-full' } }}
-              after={<Icon icon='ph--caret-right--bold' className={getSize(4)} />}
-              before={<Icon icon='ph--user--regular' className={getSize(6)} />}
+              after={<Icon icon='ph--caret-right--bold' />}
+              before={<Icon icon='ph--user--regular' />}
               onClick={onGoToLogin}
             >
               {t('go to login button label')}
