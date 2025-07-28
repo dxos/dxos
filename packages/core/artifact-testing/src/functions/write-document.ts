@@ -10,8 +10,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/writeDocument',
-  description: 'Write the design spec document.',
+  name: 'dxos.org/function/markdown/write-document',
+  description: 'Updates the entire contents of the document.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({ description: 'The ID of the document to write.' }),
     content: Schema.String.annotations({ description: 'New content to write to the document.' }),
@@ -23,8 +23,8 @@ export default defineFunction({
       throw new Error('Document not found.');
     }
 
-    const contentDoc = yield* DatabaseService.loadRef(doc.content);
-    contentDoc.content = content;
+    const text = yield* DatabaseService.loadRef(doc.content);
+    text.content = content;
 
     // eslint-disable-next-line no-console
     console.log('writeDocument', content);

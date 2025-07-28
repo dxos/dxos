@@ -10,7 +10,7 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/readDocument',
+  name: 'dxos.org/function/markdown/read-document',
   description: 'Read the design spec document.',
   inputSchema: Schema.Struct({
     // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
@@ -24,6 +24,7 @@ export default defineFunction({
     if (!doc || !Obj.instanceOf(DocumentType, doc)) {
       throw new Error('Document not found.');
     }
+
     const { content } = yield* DatabaseService.loadRef(doc.content);
     return { content };
   }),
