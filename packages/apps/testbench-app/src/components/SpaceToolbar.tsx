@@ -76,18 +76,21 @@ export const SpaceToolbar = ({
         <>
           <Toolbar.IconButton
             icon={space.isOpen ? 'ph--trash--regular' : 'ph--clock-counter-clockwise--regular'}
-            label={space.isOpen ? 'Close space.' : 'Open space.'}
+            iconOnly
+            label={space.isOpen ? 'Close space' : 'Open space'}
             onClick={() => onToggleOpen(selected)}
           />
           <Toolbar.IconButton icon='ph--upload-simple--regular' label='Import space.' onClick={handleImport} />
           <Toolbar.IconButton
             icon='ph--download-simple--regular'
-            label='Download backup.'
+            iconOnly
+            label='Download backup'
             onClick={() => onExport(selected)}
           />
           <Toolbar.IconButton
             icon='ph--user-plus--regular'
-            label='Share.'
+            iconOnly
+            label='Share'
             onClick={() => onInvite(selected)}
             variant='primary'
           />

@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, IconButton, Input, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Icon, Input, Toolbar, useFileDownload } from '@dxos/react-ui';
 
 import { JsonView, PanelContainer, Tree } from '../../../components';
 

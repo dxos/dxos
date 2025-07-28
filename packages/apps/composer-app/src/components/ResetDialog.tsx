@@ -17,7 +17,6 @@ import {
   IconButton,
   Message,
   Popover,
-  Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -124,7 +123,13 @@ export const ResetDialog = ({
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
-                  <IconButton classNames='absolute top-2 right-2' icon='ph--clipboard--duotone' iconOnly label={t('copy error label')} onClick={handleCopyError} />
+                  <IconButton
+                    classNames='absolute top-2 right-2'
+                    icon='ph--clipboard--duotone'
+                    iconOnly
+                    label={t('copy error label')}
+                    onClick={handleCopyError}
+                  />
                 </Message.Root>
               )}
             </>
