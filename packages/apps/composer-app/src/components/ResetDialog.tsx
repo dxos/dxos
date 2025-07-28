@@ -95,8 +95,6 @@ export const ResetDialog = ({
     }
   }, [needRefresh, updateServiceWorker]);
 
-  const caretIcon = showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular';
-
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -114,7 +112,7 @@ export const ResetDialog = ({
                 onClick={() => setShowStack((showStack) => !showStack)}
                 data-testid='resetDialog.showStackTrace'
               >
-                <Icon icon={caretIcon} />
+                <Icon icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} />
                 <span className='mis-2'>{t('show stack label')}</span>
               </button>
               {showStack && (

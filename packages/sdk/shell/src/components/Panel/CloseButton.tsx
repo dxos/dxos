@@ -12,7 +12,7 @@ export const CloseButton = ({ onDone, ...props }: Omit<ButtonProps, 'onClick'> &
   return (
     <Button
       variant='ghost'
-      classNames={mx('plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
+      classNames='plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]'
       onClick={() => onDone?.()}
       {...props}
     >

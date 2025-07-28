@@ -36,7 +36,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon='ph--sun--regular'
-        classNames={mx('transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500')}
+        classNames={['transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500']}
         size={8}
       />
     </div>

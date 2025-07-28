@@ -14,7 +14,7 @@ export const DefaultFrameComponent = ({ debug, shape, editing, onClose, onCancel
     return <TextBox value={shape.text} centered onEnter={onClose} onCancel={onCancel} />;
   }
 
-  return <ReadonlyTextBox classNames={mx(debug && 'font-mono text-xs')} value={getLabel(shape, debug)} />;
+  return <ReadonlyTextBox classNames={debug && 'font-mono text-xs'} value={getLabel(shape, debug)} />;
 };
 
 const getLabel = (shape: Polygon, debug = false) => {

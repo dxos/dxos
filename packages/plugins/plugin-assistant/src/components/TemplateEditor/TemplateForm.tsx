@@ -31,7 +31,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
           <Input.Root>
             <Input.TextInput
               placeholder={t('command placeholder')}
-              classNames={mx('is-full bg-transparent m-2')}
+              classNames='is-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
                 template.command = event.target.value.replace(/\w/g, '');
@@ -83,7 +83,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
                       <Input.Root>
                         <Input.TextInput
                           placeholder={t('command placeholder')}
-                          classNames={mx('is-full bg-transparent')}
+                          classNames='is-full bg-transparent'
                           value={input.value ?? ''}
                           onChange={(event) => {
                             input.value = event.target.value;

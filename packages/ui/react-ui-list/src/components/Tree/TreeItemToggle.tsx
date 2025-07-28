@@ -5,7 +5,6 @@
 import React, { forwardRef, memo } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 export type TreeItemToggleProps = {
   open?: boolean;
@@ -23,10 +22,10 @@ export const TreeItemToggle = memo(
         aria-expanded={open}
         variant='ghost'
         density='fine'
-        classNames={mx('is-6 pli-0 dx-focus-ring-inset', hidden ? 'hidden' : !isBranch && 'invisible')}
+        classNames={['is-6 pli-0 dx-focus-ring-inset', hidden ? 'hidden' : !isBranch && 'invisible']}
         onClick={onToggle}
       >
-        <Icon icon='ph--caret-right--bold' size={3} classNames={mx('transition duration-200', open && 'rotate-90')} />
+        <Icon icon='ph--caret-right--bold' size={3} classNames={['transition duration-200', open && 'rotate-90']} />
       </Button>
     );
   }),

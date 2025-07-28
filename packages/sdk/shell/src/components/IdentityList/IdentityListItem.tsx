@@ -27,7 +27,7 @@ export const IdentityListItem = forwardRef<
   return (
     <ListItem.Root
       {...props}
-      classNames={mx('flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer', classNames)}
+      classNames={['flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer', classNames]}
       onClick={() => onClick?.()}
       data-testid='identity-list-item'
       labelId={labelId}

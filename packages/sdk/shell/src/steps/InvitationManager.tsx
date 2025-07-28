@@ -92,9 +92,9 @@ export const InvitationManager = ({
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>
             {statusValue > 0 ? (
-              <Icon icon='ph--check--regular' classNames={mx('m-1.5', getSize(6))} />
+              <Icon icon='ph--check--regular' classNames={['m-1.5', getSize(6)]} />
             ) : (
-              <Icon icon='ph--x--regular' classNames={mx('m-1.5', getSize(6))} />
+              <Icon icon='ph--x--regular' classNames={['m-1.5', getSize(6)]} />
             )}
           </InvitationManagerView>
         </Viewport.Views>

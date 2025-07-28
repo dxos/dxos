@@ -18,7 +18,6 @@ import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { DropdownMenu, Icon, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -207,7 +206,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      classNames={mx('grid grid-cols-2 divide-x divide-separator')}
+      classNames='grid grid-cols-2 divide-x divide-separator'
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>

@@ -22,7 +22,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
 
   // TODO(burdon): Translations.
   return (
-    <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
+    <NaturalToolbar.Root classNames={['p-1', classNames]}>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
         <Icon icon='ph--bug--regular' />
       </NaturalToolbar.Button>

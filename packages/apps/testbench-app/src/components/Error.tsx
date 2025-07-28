@@ -38,7 +38,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
     <div className='flex flex-col m-8 overflow-hidden divide-y border shadow-md'>
       {!noJoke && (
         <div className='flex items-center p-4'>
-          <Icon icon={faceIcon} className={mx(getSize(12), 'text-neutral-500')} />
+          <Icon icon={faceIcon} classNames={[getSize(12), 'text-neutral-500']} />
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>

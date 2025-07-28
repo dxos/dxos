@@ -1,4 +1,8 @@
-- Project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name)
+- project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name)
 - check the `moon.yml` for any package to see available tasks
 - lint task takes `--fix` argument to fix issues
+- use `moon :build --quiet --no-bail` to build all packages
 - when reaching a natural stopping point, run the linter for impacted packages
+- create a new branch before starting work
+- use `gh pr create` to create a pull request
+- use "Conventional Commits" for PR titles

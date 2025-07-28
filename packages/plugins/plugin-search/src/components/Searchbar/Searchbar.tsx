@@ -53,7 +53,7 @@ export const Searchbar = ({ classes, variant, placeholder, value, onChange, onSu
           placeholder={placeholder}
           variant={variant}
           value={text ?? ''}
-          classNames={mx('pl-3 pr-10', classes?.input)}
+          classNames={['pl-3 pr-10', classes?.input]}
           onChange={({ target }) => handleChange(target.value)}
           onKeyDown={handleKeyDown}
         />

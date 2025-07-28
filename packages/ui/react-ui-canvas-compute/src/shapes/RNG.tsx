@@ -69,7 +69,7 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
 
   return (
     <div className='flex grow items-center justify-center'>
-      <Icon icon={icon} classNames={mx(spin && 'animate-[spin_1s]')} size={10} onClick={handleClick} />
+      <Icon icon={icon} classNames={spin && 'animate-[spin_1s]'} size={10} onClick={handleClick} />
     </div>
   );
 };

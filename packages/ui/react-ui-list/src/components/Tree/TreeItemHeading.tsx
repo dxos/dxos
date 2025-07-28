@@ -6,7 +6,6 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallba
 
 import { Button, Icon, toLocalizedString, useTranslation, type Label } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { mx } from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
 //   rather than just making the item unselectable.
@@ -55,11 +54,11 @@ export const TreeItemHeading = memo(
             data-testid='treeItem.heading'
             variant='ghost'
             density='fine'
-            classNames={mx(
+            classNames={[
               'grow gap-2 pis-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',
               className,
-            )}
+            ]}
             disabled={disabled}
             onClick={handleSelect}
             onKeyDown={handleButtonKeydown}
