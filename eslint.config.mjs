@@ -178,7 +178,12 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
-      'prefer-arrow-functions/prefer-arrow-functions': 'error',
+      'prefer-arrow-functions/prefer-arrow-functions': [
+        'error',
+        {
+          allowNamedFunctions: true,
+        },
+      ],
       'require-yield': 'off',
       '@typescript-eslint/only-throw-error': 'off',
       'no-unused-vars': 'off',

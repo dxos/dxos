@@ -17,7 +17,7 @@ const LOG_MAX_DEPTH = 7;
 /**
  * JSON.stringify replacer.
  */
-export const jsonReplacer = (this: any, key: string, value: any): any => {
+export const jsonReplacer = (key: string, value: any): any => {
   // TODO(burdon): Why is this represented as `{ type: 'Buffer', data }`.
   if (value !== null && typeof value === 'object' && typeof value[inspect.custom] === 'function') {
     return value[inspect.custom]();
