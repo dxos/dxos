@@ -22,7 +22,7 @@ export class SentryLogProcessor {
       if (entry.level > LogLevel.DEBUG) {
         this._addBreadcrumb(
           undefined,
-          entry.message ?? (entry.error ? entry.error.message ?? String(entry.error) : ''),
+          entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           convertLevel(entry.level),
           undefined,
         );
@@ -71,7 +71,7 @@ export class SentryLogProcessor {
         return;
       }
 
-      const message = entry.message ?? (entry.error ? entry.error.message ?? String(entry.error) : '');
+      const message = entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : '');
       scope.setFingerprint([message]);
       const eventId = captureMessage(extendedMessage);
       this._addBreadcrumb(eventId, extendedMessage, severity, entry.context);
@@ -124,7 +124,7 @@ export class SentryLogProcessor {
 }
 
 const formatMessageForSentry = (entry: LogEntry): string => {
-  const message = entry.message ?? (entry.error ? entry.error.message ?? String(entry.error) : '');
+  const message = entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : '');
 
   let scopePrefix: string | undefined;
   if (entry.meta?.S) {

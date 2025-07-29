@@ -38,15 +38,15 @@ type EventMap<T> = T extends Window
  * Add the event listener and return a cleanup function.
  * Can be used in effect hooks in conjunction with `combine`.
  */
-export function addEventListener<T extends EventTarget, K extends keyof EventMap<T>>(
+export const addEventListener = <T extends EventTarget, K extends keyof EventMap<T>>(
   target: T,
   type: K,
   listener: (this: T, ev: EventMap<T>[K]) => any,
   options?: boolean | AddEventListenerOptions,
-): CleanupFn {
+): CleanupFn => {
   target.addEventListener(type as string, listener as EventListener, options);
   return () => target.removeEventListener(type as string, listener as EventListener, options);
-}
+};
 
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
