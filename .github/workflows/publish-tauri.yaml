@@ -1,0 +1,153 @@
+name: Composer Tauri Release
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - labs
+      - production
+      - staging
+      - tauri
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CN_APPLICATION: "dxos/composer"
+
+jobs:
+  draft:
+    runs-on: depot-ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create draft non-production release
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: draft
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+  build:
+    needs: draft
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - depot-macos-latest
+          # - depot-ubuntu-24.04-4
+          # - depot-windows-2022-4
+
+    runs-on: ${{ matrix.os }}
+
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: 'moonrepo/setup-toolchain@v0'
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'depot-ubuntu-24.04-4'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y webkit2gtk-4.1
+
+      - name: Import Apple Developer Certificate
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+        
+      - name: Verify Certificate
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep -E "(Developer ID Application)" | head -1)
+          CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
+          echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
+
+      - name: Save Apple API Key
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          # Use heredoc to preserve exact formatting including newlines
+          cat > ${{ github.workspace }}/apple-api-key.p8 << EOF
+          $APPLE_API_KEY
+          EOF
+          sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
+
+      - name: Verify Apple API Key
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          if [ ! -f ${{ github.workspace }}/apple-api-key.p8 ]; then
+            echo "Apple API Key not found!"
+            exit 1
+          fi
+
+      - uses: tecolicom/actions-use-homebrew-tools@v1
+        if: matrix.os == 'depot-macos-latest'
+        with:
+          tools: cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
+
+      - name: Build Tauri app
+        run: moon run composer-app:tauri-build
+        env:
+          # The following environment variables are only set when building on macOS runners (depot-macos-latest).
+          # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
+          # and are skipped on other platforms (Linux, Windows).
+          APPLE_API_ISSUER: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_ISSUER || '' }}
+          APPLE_API_KEY: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_KEY_ID || '' }}
+          APPLE_API_KEY_PATH: ${{ matrix.os == 'depot-macos-latest' && format('{0}/apple-api-key.p8', github.workspace) || '' }}
+          APPLE_CERTIFICATE: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
+          # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
+          DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
+          DX_HOST: true
+          NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Upload assets
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: upload
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+  publish:
+    needs: build
+
+    runs-on: depot-ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish release
+        uses: ./.github/actions/cn-release
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: publish
+          working-directory: ./packages/apps/composer-app/src-tauri/
