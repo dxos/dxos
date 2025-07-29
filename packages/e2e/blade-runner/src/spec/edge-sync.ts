@@ -4,6 +4,7 @@
 
 import path from 'node:path';
 
+import { sleep } from '@dxos/async';
 import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -33,23 +34,30 @@ export type EdgeTestSpec = {
      * Amount of mutations to perform on each document.
      */
     mutationAmount: number;
+
+    /**
+     * Wait after creation of the documents.
+     * [ms]
+     */
+    waitAfterCreation?: number;
   };
 };
 
-type EdgeReplicationResult = {
+type EdgeSyncResult = {
   allCombinedReplicationTime: number;
   functionUploadTime: number;
   objectsCreationTime: number;
 };
 
-export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationResult> {
+export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
   defaultSpec(): EdgeTestSpec {
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 2000,
+        documentAmount: 1000,
         textSize: 100,
         mutationAmount: 0,
+        waitAfterCreation: 2_000,
       },
       maxDocumentsPerInvocation: 500,
       simultaneousInvocations: false,
@@ -80,7 +88,7 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     };
   }
 
-  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeReplicationResult> {
+  async run(env: SchedulerEnvImpl<EdgeTestSpec>, params: TestParams<EdgeTestSpec>): Promise<EdgeSyncResult> {
     //
     // Config.
     //
@@ -155,12 +163,13 @@ export class EdgeReplication implements TestPlan<EdgeTestSpec, EdgeReplicationRe
     performance.mark('sync:end');
     const allCombinedReplicationTime = performance.measure('sync', 'sync:start', 'sync:end').duration;
 
+    await sleep(10_000);
     replicant.kill();
 
     return { allCombinedReplicationTime, functionUploadTime, objectsCreationTime };
   }
 
-  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeReplicationResult) {
+  async analyze(params: TestParams<EdgeTestSpec>, summary: ReplicantsSummary, result: EdgeSyncResult) {
     const reader = new TraceReader();
     await reader.addFile(path.join(params.outDir, 'perfetto.json'));
     const traces = reader.getTraces('collection-sync-automerge-replicator');
