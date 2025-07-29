@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Avatar, Button, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { type AgentFormProps } from './DeviceList';
@@ -87,9 +86,9 @@ export const AgentConfig = ({
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
-                <Plus weight='light' className={getSize(6)} />
+                <Icon icon='ph--plus--light' size={6} />
               ) : (
-                <ArrowsClockwise weight='light' className={getSize(6)} />
+                <Icon icon='ph--arrows-clockwise--light' size={6} />
               )}
             </div>
             <span className='grow font-medium text-start'>

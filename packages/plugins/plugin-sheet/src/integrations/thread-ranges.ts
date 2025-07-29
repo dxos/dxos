@@ -19,7 +19,7 @@ import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
 import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
-import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
+import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
 
 import { useSheetContext } from '../components';
@@ -111,13 +111,14 @@ export const useSelectThreadOnCellFocus = () => {
   );
 
   const debounced = useMemo(() => {
-    return debounce((cellCoords: DxGridPosition) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
+    return debounce((cellCoords: CellAddress) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
   }, [selectClosestThread]);
 
   useEffect(() => {
     if (!cursor) {
       return;
     }
+
     debounced(cursor);
   }, [cursor, debounced]);
 };

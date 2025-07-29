@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "composer-app",
+  "productName": "Composer",
   "version": "0.8.3",
   "identifier": "org.dxos.composer",
   "build": {

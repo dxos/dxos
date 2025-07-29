@@ -166,13 +166,13 @@ export type ThemeExtensionsOptions = {
   };
 };
 
-export const grow = {
+export const grow: ThemeExtensionsOptions['slots'] = {
   editor: {
     className: 'is-full bs-full',
   },
 } as const;
 
-export const fullWidth = {
+export const fullWidth: ThemeExtensionsOptions['slots'] = {
   editor: {
     className: 'is-full',
   },

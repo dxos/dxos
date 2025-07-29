@@ -2,5 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './prompts';
+// TODO(burdon): REMOVE THIS PACKAGE OR RENAME dxos/blueprint
+
 export * from './types';

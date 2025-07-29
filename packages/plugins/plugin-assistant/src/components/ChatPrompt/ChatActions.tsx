@@ -2,35 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
-import { IconButton, Select, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ChatEvent } from './events';
 import { meta } from '../../meta';
+import { type ChatEvent } from '../Chat';
 
-export type ChatActionsProps = {
-  microphone?: boolean;
-  recording?: boolean;
-  processing?: boolean;
-  onEvent?: (event: ChatEvent) => void;
-};
+export type ChatActionsProps = ThemedClassName<
+  PropsWithChildren<{
+    microphone?: boolean;
+    recording?: boolean;
+    processing?: boolean;
+    onEvent?: (event: ChatEvent) => void;
+  }>
+>;
 
-export const ChatActions = ({ microphone, recording, processing, onEvent }: ChatActionsProps) => {
+export const ChatActions = ({ classNames, children, microphone, recording, processing, onEvent }: ChatActionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='flex items-center mie-1'>
-      {/* TODO(burdon): Modes (models and/or presets for blueprints?). */}
-      <Select.Root value={'ollama'} disabled>
-        <Select.TriggerButton classNames='mie-2 text-sm' />
-        <Select.Content>
-          <Select.Option value={'ollama'} classNames='text-sm'>
-            Ollama
-          </Select.Option>
-        </Select.Content>
-      </Select.Root>
+    <div className={mx('flex items-center mie-1', classNames)}>
+      {children}
 
       {(processing && (
         <IconButton
@@ -45,6 +39,7 @@ export const ChatActions = ({ microphone, recording, processing, onEvent }: Chat
         />
       )) || (
         <IconButton
+          disabled
           classNames='px-1.5'
           variant='ghost'
           size={5}

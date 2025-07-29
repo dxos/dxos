@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { createIntent, LayoutAction, useIntentDispatcher, useLayout } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
-import { Button, Toast, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction } from '../types';
@@ -66,17 +64,17 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
             <>
-              <CheckCircle className={getSize(5)} />
+              <Icon icon='ph--check-circle--regular' size={5} />
               <span>{t('found object label')}</span>
             </>
           ) : waiting ? (
             <>
-              <CircleNotch className={mx(getSize(5), 'animate-spin')} />
+              <Icon icon='ph--circle-notch--regular' size={5} classNames='animate-spin' />
               <span>{t('waiting for object label')}</span>
             </>
           ) : (
             <>
-              <CircleDashed className={getSize(5)} />
+              <Icon icon='ph--circle-dashed--regular' size={5} />
               <span>{t('object not found label')}</span>
             </>
           )}

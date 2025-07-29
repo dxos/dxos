@@ -94,11 +94,7 @@ export const SpaceRow = ({
       }}
     >
       <span className='is-1/2 truncate'>{spaceName}</span>
-      <Icon
-        icon='ph--arrow-fat-line-left--bold'
-        size={3}
-        classNames={mx(downActive && 'animate-[pulse_1s_infinite]')}
-      />
+      <Icon icon='ph--arrow-fat-line-left--bold' size={3} classNames={downActive && 'animate-[pulse_1s_infinite]'} />
       <Candle
         up={{ count: remoteDocumentCount, total: remoteDocumentCount + missingOnRemote }}
         down={{ count: localDocumentCount, total: localDocumentCount + missingOnLocal }}
@@ -107,7 +103,7 @@ export const SpaceRow = ({
       <Icon
         icon='ph--arrow-fat-line-right--bold'
         size={3}
-        classNames={mx(upActive && 'animate-[pulse_1s_step-start_infinite]')}
+        classNames={upActive && 'animate-[pulse_1s_step-start_infinite]'}
       />
     </div>
   );

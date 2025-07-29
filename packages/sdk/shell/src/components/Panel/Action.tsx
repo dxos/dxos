@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check, type IconProps, Placeholder } from '@phosphor-icons/react';
+import { type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type Dispatch, type FC, forwardRef, type SetStateAction } from 'react';
 
-import { type ButtonProps, Button, DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { type ButtonProps, Button, DropdownMenu, useTranslation, Icon } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 export type LargeButtonProps = ButtonProps & {
@@ -16,7 +16,7 @@ export type LargeButtonProps = ButtonProps & {
 export type ActionMenuItem = {
   label: string;
   description: string;
-  icon: FC<IconProps>;
+  icon: FC<IconProps> | string;
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
@@ -72,14 +72,19 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <activeAction.icon className={getSize(5)} />}
+        {activeAction.icon &&
+          (typeof activeAction.icon === 'string' ? (
+            <Icon icon={activeAction.icon} size={5} />
+          ) : (
+            <activeAction.icon className={getSize(5)} />
+          ))}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button classNames={['bs-11 flex-none rounded-is-none', classNames]} data-testid={dropdownTestId}>
             <span className='sr-only'>{t('invite options label')}</span>
-            <CaretDown className={getSize(4)} />
+            <Icon icon='ph--caret-down--regular' size={4} />
           </Button>
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
@@ -97,7 +102,12 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <action.icon className={getSize(5)} />}
+                    {action.icon &&
+                      (typeof action.icon === 'string' ? (
+                        <Icon icon={action.icon} size={5} />
+                      ) : (
+                        <action.icon className={getSize(5)} />
+                      ))}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
@@ -107,7 +117,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                       )}
                     </div>
                     <DropdownMenu.ItemIndicator asChild>
-                      <Check weight='bold' className={getSize(4)} />
+                      <Icon icon='ph--check--regular' size={4} />
                     </DropdownMenu.ItemIndicator>
                   </DropdownMenu.CheckboxItem>
                 );

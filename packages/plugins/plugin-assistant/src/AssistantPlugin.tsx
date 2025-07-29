@@ -2,26 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Template } from '@dxos/assistant';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantEvents } from './events';
+import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType, TemplateType } from './types';
+import { Assistant, ServiceType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -76,7 +68,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Template.Template, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
@@ -102,11 +94,5 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
       activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/ai-client`,
-      activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
-      activatesAfter: [AssistantEvents.AiClientReady],
-      activate: AiClient,
     }),
   ]);

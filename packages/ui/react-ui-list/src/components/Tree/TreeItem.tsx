@@ -21,7 +21,6 @@ import {
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-  mx,
 } from '@dxos/react-ui-theme';
 
 import { useTree } from './TreeContext';
@@ -223,7 +222,7 @@ const RawTreeItem = <T extends HasId = any>({
         id={id}
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
-        classNames={mx(
+        classNames={[
           'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-activeSurface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
@@ -231,7 +230,7 @@ const RawTreeItem = <T extends HasId = any>({
           hoverableDescriptionIcons,
           ghostHover,
           className,
-        )}
+        ]}
         data-itemid={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS

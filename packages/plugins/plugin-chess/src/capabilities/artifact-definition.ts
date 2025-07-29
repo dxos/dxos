@@ -7,8 +7,8 @@ import { pipe, Schema } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { createArtifactElement, VersionPin } from '@dxos/assistant';
+import { defineArtifact } from '@dxos/artifact';
+import { createArtifactElement, VersionPin, ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
