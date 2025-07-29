@@ -9,5 +9,3 @@ export * from './hooks';
 export * from './util';
 
 export { translations };
-
-// TODO(dmaretskyi): Nuke cache.

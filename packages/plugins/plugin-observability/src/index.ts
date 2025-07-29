@@ -7,5 +7,3 @@ export { ObservabilityEvents } from './events';
 export * from './components';
 export * from './meta';
 export * from './ObservabilityPlugin';
-
-// TODO(dmaretskyi): Nuke cache.
