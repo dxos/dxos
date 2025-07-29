@@ -14,7 +14,7 @@ import { NATIVE_PLUGIN } from '../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-export default (context: PluginContext) => {
+export default async (context: PluginContext) => {
   const platform = type();
   if (!SUPPORTS_OTA.includes(platform)) {
     return contributes(Capabilities.Null, null);
