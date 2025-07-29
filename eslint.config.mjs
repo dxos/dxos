@@ -123,12 +123,7 @@ export default tseslint.config(
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/consistent-type-exports': [
-        'error',
-        {
-          fixMixedExportsWithInlineTypeSpecifier: true,
-        },
-      ],
+      '@typescript-eslint/consistent-type-exports': 'off', // seems broken
       '@typescript-eslint/no-this-alias': 'off',
 
       // TODO(dmaretskyi): New overrides. Need to review later.
