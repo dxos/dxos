@@ -221,6 +221,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
     let title = titles[block._tag];
     if (block._tag === 'toolCall') {
       title = `Tool [${block.name}]`; // TODO(burdon): Get label from tool.
+    } else {
+      title = block._tag;
     }
 
     return (

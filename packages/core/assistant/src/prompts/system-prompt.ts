@@ -35,6 +35,12 @@ export type SystemPromptOptions = {
    * Additional instructions to include in the prompt.
    */
   instructions?: string;
+
+  /**
+   * Emit chain-of-thought inside <cot> tag.
+   * Should be off for models with built-in reasoning: Claude, deepseek, o1.
+   */
+  cot?: boolean;
 };
 
 /**

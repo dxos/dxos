@@ -8,7 +8,9 @@ Follow these guidelines carefully:
 
 {{section}}. Decision-making:
 
+{{#if cot}}
 Before responding, explain your reasoning and include your detailed chain-of-thought in a <cot> tag.
+{{/if}}
 
 Include the following steps:
 
@@ -94,8 +96,10 @@ For example:
 
 It is very important to respond in the correct format.
 
+{{#if cot}}
 - Your detailed chain-of-thought must be in the form of a markdown list enclosed in <cot> tags.
 - The <cot> tag should be the first thing in your response.
+{{/if}}
 - Suggested actions must be enclosed in a <suggest> tag and on a separate line.
 - Content proposals must be enclosed in a <proposal> tag and on a separate line.
 
