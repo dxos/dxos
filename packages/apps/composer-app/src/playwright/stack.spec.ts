@@ -32,7 +32,7 @@ test.describe('Stack tests', () => {
     await host.createObject({ type: 'Collection', nth: 0 });
     const stack = Stack.getStack(host.page);
     await expect(stack.sections()).toHaveCount(0);
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
   });
 
   test('create new document section', async () => {
@@ -44,7 +44,7 @@ test.describe('Stack tests', () => {
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await expect(host.getObjectLinks()).toHaveCount(5);
     await expect(stack.sections()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
@@ -79,7 +79,7 @@ test.describe('Stack tests', () => {
     await Stack.createSection(host.page, 'Document');
     await Stack.createSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
-    await expect(host.getObjectLinks()).toHaveCount(3);
+    await expect(host.getObjectLinks()).toHaveCount(4);
     await expect(stack.sections()).toHaveCount(2);
 
     const originalOrder = await stack.order();

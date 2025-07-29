@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react';
 import { screen, cleanup, fireEvent, act } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { ViewProjection } from '@dxos/schema';
+import { ProjectionModel } from '@dxos/schema';
 
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
@@ -18,7 +18,7 @@ const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
   const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
   expect(debugObjects).toBeDefined();
   expect(debugObjects.props).toBeInstanceOf(Object); // Props object
-  expect(debugObjects.projection).toBeInstanceOf(ViewProjection);
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;
 };
 
@@ -49,7 +49,7 @@ describe('FieldEditor', () => {
     // Access the live objects directly from window using symbol.
     const debugObjects = getFieldEditorDebugObjects();
 
-    const name = debugObjects.projection.schema.properties!.name;
+    const name = debugObjects.projection.baseSchema.properties!.name;
     expect(name.type).toBe('number');
     expect(name.format).toBe('number');
     expect(name.description).toBe('Full name.');

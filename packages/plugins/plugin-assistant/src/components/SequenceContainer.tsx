@@ -14,7 +14,7 @@ import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/c
 import { DXN, Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { getSelectionSet, useSelectionManager } from '@dxos/react-ui-attention';
-import { StackItem, type StackItemContentProps } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { SequenceEditor } from './SequenceEditor';
 import { AssistantCapabilities } from '../capabilities';
@@ -35,7 +35,7 @@ const parseSequence = (text: string): SequenceDefinition | undefined => {
   }
 };
 
-export const SequenceContainer = ({ role, sequence }: Pick<StackItemContentProps, 'role'> & { sequence: Sequence }) => {
+export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
   const { t } = useTranslation(meta.id);
   const aiClient = useCapability(AssistantCapabilities.AiClient);
   const selectionManager = useSelectionManager();
@@ -126,7 +126,7 @@ export const SequenceContainer = ({ role, sequence }: Pick<StackItemContentProps
   }, [aiClient.value, sequence, formatAndSave, selectionManager, toolRegistry]);
 
   return (
-    <StackItem.Content role={role} toolbar>
+    <StackItem.Content toolbar>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleSave}>{t('button save')}</Toolbar.Button>
         <Toolbar.Button onClick={handleRun}>{t('button run')}</Toolbar.Button>

@@ -59,10 +59,9 @@ const getItems = (graph: ReadableGraph, node?: Node, disposition?: string) => {
 
 const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean }) => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, node?.id ?? ROOT_ID).filter((node) =>
-    filterItems(node, options?.disposition),
-  );
-  return options?.sort ? connections.toSorted((a, b) => byPosition(a.properties, b.properties)) : connections;
+  const connections = useConnections(graph, node?.id ?? ROOT_ID);
+  const filtered = connections.filter((node) => filterItems(node, options?.disposition));
+  return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };
 
 export type NavTreeContainerProps = {

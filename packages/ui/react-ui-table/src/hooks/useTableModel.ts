@@ -6,17 +6,18 @@ import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 import { useEffect, useState } from 'react';
 
-import { fullyQualifiedId, getSpace, type Live } from '@dxos/react-client/echo';
+import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type Live } from '@dxos/live-object';
 import { useSelectionActions } from '@dxos/react-ui-attention';
-import { type ViewProjection } from '@dxos/schema';
+import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
-import { type TableType } from '../types';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
-  table?: TableType;
-  projection?: ViewProjection;
+  view?: DataType.View;
+  schema?: JsonSchemaType;
+  projection?: ProjectionModel;
   rows?: Live<T>[];
   rowActions?: TableRowAction[];
   onSelectionChanged?: (selection: string[]) => void;
@@ -27,7 +28,8 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 >;
 
 export const useTableModel = <T extends TableRow = TableRow>({
-  table,
+  view,
+  schema,
   projection,
   rows,
   rowActions,
@@ -38,16 +40,15 @@ export const useTableModel = <T extends TableRow = TableRow>({
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!table || !projection) {
+    if (!view || !schema) {
       return;
     }
 
     let model: TableModel<T> | undefined;
     const t = setTimeout(async () => {
       model = new TableModel<T>({
-        id: fullyQualifiedId(table),
-        space: getSpace(table),
-        view: table.view?.target,
+        view,
+        schema,
         projection,
         features,
         rowActions,
@@ -62,7 +63,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [table, projection, table?.view?.target, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [view, schema, projection, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {
@@ -77,9 +78,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
     }
   }, [model, rows]);
 
-  const { multiSelect, clear } = useSelectionActions(
-    [table?.id, table?.view?.target?.query.typename].filter(isNonNullable),
-  );
+  const { multiSelect, clear } = useSelectionActions([model?.id].filter(isNonNullable));
 
   useEffect(() => {
     if (!model) {

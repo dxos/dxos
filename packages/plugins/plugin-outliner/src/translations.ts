@@ -16,6 +16,8 @@ export const translations = [
         'typename label_one': 'Journal',
         'typename label_other': 'Journals',
         'object name placeholder': 'New journal',
+        'rename object label': 'Rename journal',
+        'delete object label': 'Delete journal',
       },
       [OutlineType.typename]: {
         'typename label': 'Outline',
@@ -23,6 +25,8 @@ export const translations = [
         'typename label_one': 'Outline',
         'typename label_other': 'Outlines',
         'object name placeholder': 'New outline',
+        'rename object label': 'Rename outline',
+        'delete object label': 'Delete outline',
       },
       [meta.id]: {
         'plugin name': 'Outliner',

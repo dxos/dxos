@@ -7,7 +7,7 @@ import orderBy from 'lodash.orderby';
 
 import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type { PropertyType, FieldType, ViewProjection, ViewType } from '@dxos/schema';
+import type { PropertyType, FieldType, DataType, ProjectionModel } from '@dxos/schema';
 
 import { type TableRow } from './table-model';
 
@@ -49,13 +49,13 @@ export class TableSorting<T extends TableRow> {
 
   constructor(
     rows: Signal<T[]>,
-    private readonly _view: ViewType | undefined,
-    private readonly _projection: ViewProjection,
+    private readonly _view: DataType.View,
+    private readonly _projection: ProjectionModel,
   ) {
     this._rows = rows;
     this._isDirty = computed(() => {
       const local = this._localSort.value;
-      const viewSort = this._view?.query.sort?.[0];
+      const viewSort = this._view.query.sort?.[0];
       if (local?.type === 'cleared') {
         return viewSort !== undefined;
       }
@@ -83,7 +83,7 @@ export class TableSorting<T extends TableRow> {
       return local.sort;
     }
 
-    return this._view?.query.sort?.[0];
+    return this._view.query.sort?.[0];
   }
 
   /**
@@ -106,7 +106,7 @@ export class TableSorting<T extends TableRow> {
   }
 
   public toggleSort(fieldId: string): void {
-    if (!this._view || !this.sorting || this.sorting.fieldId !== fieldId) {
+    if (!this.sorting || this.sorting.fieldId !== fieldId) {
       return;
     }
 
@@ -127,7 +127,7 @@ export class TableSorting<T extends TableRow> {
   }
 
   public save(): void {
-    if (this._view && this._localSort.value !== undefined) {
+    if (this._localSort.value !== undefined) {
       if (this._localSort.value.type === 'active') {
         this._view.query.sort = [this._localSort.value.sort];
       } else {
@@ -145,11 +145,11 @@ export class TableSorting<T extends TableRow> {
     return computed(() => {
       this._displayToDataIndex.clear();
       const sort = this.sorting;
-      if (!sort || !this._view) {
+      if (!sort) {
         return this._rows.value;
       }
 
-      const field = this._view.fields.find((f) => f.id === sort.fieldId);
+      const field = this._projection.fields.find((f) => f.id === sort.fieldId);
       if (!field) {
         return this._rows.value;
       }

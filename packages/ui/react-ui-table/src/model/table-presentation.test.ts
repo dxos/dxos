@@ -5,15 +5,15 @@
 import { Schema } from 'effect';
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
-import { createView, ViewProjection } from '@dxos/schema';
+import { createView } from '@dxos/schema';
 
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
-import { TableType } from '../types';
+import { TableView } from '../types';
 
 describe('TablePresentation', () => {
   describe('row reactivity', () => {
@@ -97,8 +97,7 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const view = createView({ name: 'Test', typename: schema.typename, jsonSchema: schema.jsonSchema });
-  const projection = new ViewProjection(schema.jsonSchema, view);
-  const table = Obj.make(TableType, { view: Ref.make(view) });
-  return new TableModel({ id: table.id, view, projection, ...props });
+  const table = Obj.make(TableView, { sizes: {} });
+  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema, presentation: table });
+  return new TableModel({ view, schema: schema.jsonSchema, ...props });
 };

@@ -2,18 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo-schema';
 import { DocumentType } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
+import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { TableType } from '@dxos/react-ui-table';
-import { createView, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -21,27 +23,31 @@ const generator: ValueGenerator = faker as any;
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
-  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
-    // Find or create mutable schema.
-    const schema =
-      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
-      (await space.db.schemaRegistry.register([type]))[0];
+const findViewByTypename = async (views: DataType.View[], typename: string) => {
+  return views.find((view) => view.query.typename === typename);
+};
 
-    // Create objects.
-    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
-    const objects = await generate.createObjects(n);
+export const createGenerator = <T extends Obj.Any>(
+  client: Client,
+  dispatch: PromiseIntentDispatcher,
+  schema: TypedObject<T>,
+): ObjectGenerator<T> => {
+  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
+    const typename = schema.typename;
 
     // Find or create table and view.
-    const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-    const table = tables.find((table) => table.view?.target?.query?.typename === type.typename);
-    if (!table) {
-      const name = type.typename.split('/').pop() ?? type.typename;
-      const view = createView({ name, typename: type.typename, jsonSchema: schema.jsonSchema });
-      space.db.add(Obj.make(TableType, { name, view: Ref.make(view) }));
+    const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
+    const view = await findViewByTypename(views, typename);
+    const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    if (!view && !staticSchema) {
+      await dispatch(createIntent(SpaceAction.AddSchema, { space, schema }));
+    } else if (!view && staticSchema) {
+      await dispatch(createIntent(SpaceAction.UseStaticSchema, { space, typename }));
     }
 
-    return objects;
+    // Create objects.
+    const generate = createAsyncGenerator(generator, schema, { db: space.db });
+    return generate.createObjects(n);
   };
 };
 

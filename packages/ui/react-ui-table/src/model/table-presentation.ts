@@ -254,7 +254,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getMainGridCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
 
     for (let row = range.start.row; row <= range.end.row && row < this.model.getRowCount(); row++) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
@@ -272,7 +272,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getDraftRowCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
     const draftRows = this.model.draftRows.value;
 
     for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
@@ -302,9 +302,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
   private getHeaderCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
-    const fields = this.model.view?.fields ?? [];
+    const fields = this.model.projection?.fields ?? [];
     for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-      const { field, props } = this.getFieldProjection(fields[col].id);
+      const { field, props } = this.model.projection.getFieldProjection(fields[col].id);
       const sorting = this.model.sorting?.sorting;
       const direction = sorting?.fieldId === field.id ? sorting.direction : undefined;
 
@@ -386,7 +386,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       [toPlaneCellIndex({ col: 0, row: 0 })]: {
         accessoryHtml: this.model.features.schemaEditable
           ? tableButtons.addColumn.render({
-              disabled: (this.model.view?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
+              disabled: (this.model.projection?.fields?.length ?? 0) >= VIEW_FIELD_LIMIT,
             })
           : undefined,
         className: '!bg-toolbarSurface',
@@ -427,7 +427,7 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
   switch (selectionMode) {
     case 'single':
       // TODO(ZaymonFC): @thure, do we need a grid version of 'currentRelated'?
-      return ['!bg-currentRelated hover:bg-hoverSurface', '!cursor-pointer'];
+      return ['!bg-currentRelated dx-grid__cell--no-focus-unfurl hover:bg-hoverSurface !cursor-pointer'];
     case 'multiple':
       return ['!bg-gridCellSelected'];
   }

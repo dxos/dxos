@@ -12,24 +12,24 @@ import { findAnnotation } from '@dxos/effect';
 import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { MapCapabilities } from './capabilities';
-import { MapContainer, MapControl } from '../components';
+import { MapContainer } from '../components';
 import { MapViewEditor } from '../components/MapViewEditor';
 import { MAP_PLUGIN } from '../meta';
-import { MapType, LocationAnnotationId } from '../types';
+import { LocationAnnotationId, MapView } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MAP_PLUGIN}/map`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
+      filter: (data): data is { subject: DataType.View } =>
+        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(MapView, data.subject.presentation),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
-        const [lng = 0, lat = 0] = data.subject?.coordinates ?? [];
-        const [center, setCenter] = useState<LatLngLiteral>({ lat, lng });
+        const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
         const [zoom, setZoom] = useState(14);
 
         const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
@@ -41,7 +41,7 @@ export default () =>
           <MapContainer
             role={role}
             type={state.type}
-            map={data.subject}
+            view={data.subject}
             center={center}
             zoom={zoom}
             onChange={handleChange}
@@ -49,20 +49,22 @@ export default () =>
         );
       },
     }),
-    createSurface({
-      id: 'plugin-map',
-      role: 'canvas-node',
-      filter: (data) => Obj.instanceOf(MapType, data),
-      component: ({ data }) => {
-        const [lng = 0, lat = 0] = data?.coordinates ?? [];
-        return <MapControl center={{ lat, lng }} zoom={14} />;
-      },
-    }),
+    // createSurface({
+    //   id: 'plugin-map',
+    //   role: 'card--extrinsic',
+    //   filter: (data) => Obj.instanceOf(MapType, data),
+    //   component: ({ data }) => {
+    //     const [lng = 0, lat = 0] = data?.coordinates ?? [];
+    //     return <MapControl center={{ lat, lng }} zoom={14} />;
+    //   },
+    // }),
     createSurface({
       id: `${MAP_PLUGIN}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MapType } => Obj.instanceOf(MapType, data.subject),
-      component: ({ data }) => <MapViewEditor map={data.subject} />,
+      position: 'hoist',
+      filter: (data): data is { subject: DataType.View } =>
+        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(MapView, data.subject.presentation.target),
+      component: ({ data }) => <MapViewEditor view={data.subject} />,
     }),
     createSurface({
       id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,

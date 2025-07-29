@@ -8,6 +8,7 @@ import { SpaceSchema, Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -65,7 +66,15 @@ export namespace Assistant {
   // Actions
   //
 
-  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${meta.id}/action}/create-chat`, {
+  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${meta.id}/on-space-created`, {
+    input: Schema.Struct({
+      space: SpaceSchema,
+      rootCollection: DataType.Collection,
+    }),
+    output: Schema.Void,
+  }) {}
+
+  export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${meta.id}/action/create-chat`, {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
@@ -75,7 +84,7 @@ export namespace Assistant {
     }),
   }) {}
 
-  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta.id}/action}/create-sequence`, {
+  export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta.id}/action/create-sequence`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
     }),

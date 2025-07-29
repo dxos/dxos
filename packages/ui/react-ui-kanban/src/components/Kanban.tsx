@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { getTypename } from '@dxos/echo-schema';
 import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
 import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
 import {
@@ -30,8 +29,8 @@ export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
 
 export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
-  const { singleSelect, clear } = useSelectionActions([model.id, getTypename(model.schema)!]);
-  const selected = useSelected(model.id, 'single');
+  const { multiSelect, clear } = useSelectionActions([model.id]);
+  const selected = useSelected(model.id, 'multi');
   const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
@@ -84,7 +83,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       <StackItem.Root
                         item={card}
                         focusIndicatorVariant='group'
-                        onClick={() => singleSelect(card.id)}
+                        onClick={() => multiSelect([card.id])}
                         prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                       >
@@ -93,7 +92,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                             <StackItem.DragHandle asChild>
                               <Card.DragHandle toolbarItem />
                             </StackItem.DragHandle>
-                            <AttentionGlyph attended={selected === card.id} />
+                            <AttentionGlyph attended={selected.includes(card.id)} />
                             {onRemoveCard && (
                               <>
                                 <Card.ToolbarSeparator variant='gap' />
@@ -107,7 +106,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                               </>
                             )}
                           </Card.Toolbar>
-                          <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                          <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
                         </Card.StaticRoot>
                         <StackItem.DragPreview>
                           {({ item }) => (
@@ -116,7 +115,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 <Card.Toolbar>
                                   <Card.DragHandle toolbarItem />
                                 </Card.Toolbar>
-                                <Surface role='card--kanban' limit={1} data={{ subject: item }} />
+                                <Surface role='card--intrinsic' limit={1} data={{ subject: item }} />
                               </CardDragPreview.Content>
                             </CardDragPreview.Root>
                           )}
@@ -179,7 +178,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
                           <Card.StaticRoot key={card.id}>
-                            <Surface role='card--kanban' limit={1} data={{ subject: card }} />
+                            <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
                           </Card.StaticRoot>
                         ))}
                       </CardStackDragPreview.Content>

@@ -181,6 +181,9 @@
       "@dxos/plugin-script": [
         "packages/plugins/plugin-script/src/index.ts"
       ],
+      "@dxos/plugin-script/templates": [
+        "packages/plugins/plugin-script/src/templates/index.ts"
+      ],
       "@dxos/plugin-script/types": [
         "packages/plugins/plugin-script/src/types.ts"
       ],
@@ -390,9 +393,6 @@
       ],
       "@dxos/react-ui-table": [
         "packages/ui/react-ui-table/src/index.ts"
-      ],
-      "@dxos/react-ui-table/types": [
-        "packages/ui/react-ui-table/src/types/index.ts"
       ],
       "@dxos/react-ui-tabs": [
         "packages/ui/react-ui-tabs/src/index.ts"

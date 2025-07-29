@@ -2,15 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Effect } from 'effect';
+
+import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
+import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant } from '../types';
 
-export default () => [
-  contributes(
-    Capabilities.IntentResolver,
+export default (context: PluginContext) => [
+  contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: Assistant.OnSpaceCreated,
+      resolve: ({ space, rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: collection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Assistant.Chat.typename }),
+          );
+          rootCollection.objects.push(Ref.make(collection));
+
+          const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
+          space.db.add(chat);
+        }),
+    }),
     createResolver({
       intent: Assistant.CreateChat,
       resolve: ({ space, name }) => ({
@@ -22,9 +38,6 @@ export default () => [
         },
       }),
     }),
-  ),
-  contributes(
-    Capabilities.IntentResolver,
     createResolver({
       intent: Assistant.CreateSequence,
       resolve: ({ name }) => ({
@@ -41,5 +54,5 @@ export default () => [
         },
       }),
     }),
-  ),
+  ]),
 ];

@@ -43,6 +43,6 @@ export default defineFunction({
     // Flush and wait for data to propagate.
     await space.db.flush();
     await new Promise((resolve) => setTimeout(resolve, 10_000));
-    return result;
+    return { createdObjects: objects.length };
   },
 });

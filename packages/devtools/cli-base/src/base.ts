@@ -16,6 +16,7 @@ import pkgUp from 'pkg-up';
 import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import {
   DX_CONFIG,
   DX_DATA,
@@ -223,7 +224,17 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     } else {
       // Set config if not overridden by env.
       // TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
-      log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
+      log.config({
+        filter:
+          !process.env.LOG_FILTER && !process.env.LOG_CONFIG
+            ? this.flags.verbose
+              ? LogLevel.VERBOSE
+              : LogLevel.ERROR
+            : undefined,
+      });
+      if (this.flags.verbose) {
+        log.verbose('verbose mode');
+      }
     }
 
     if (this.flags.target) {
@@ -592,9 +603,27 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   ): Promise<T | void> {
     const client = await this.getClient();
 
-    if (options.halo && !client.halo.identity.get()) {
-      this.warn('Identity not initialized.');
-      process.exit(1);
+    if (options.halo) {
+      if (!client.halo.identity.get()) {
+        this.warn('Identity not initialized.');
+        process.exit(1);
+      }
+
+      // Wait for device to be loaded.
+      await new Promise((resolve) => {
+        if (client.halo.devices.get().length > 0) {
+          resolve(undefined);
+        } else {
+          const subscription = client.halo.devices.subscribe((devices) => {
+            if (devices.length > 0) {
+              subscription.unsubscribe();
+              resolve(undefined);
+            }
+          });
+        }
+      });
+      // TODO(mykola): Move to client initialization.
+      client.edge.setIdentity(createEdgeIdentity(client));
     }
 
     await this.onClientInit(client);
