@@ -79,7 +79,7 @@ export interface SpaceAPI {
 
   get db(): EchoDatabase;
 
-  // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
+  // TODO(dmaretskyi): Align with echo api: queues.get(id).append(items);
   get queues(): QueuesAPI;
 }
 
@@ -89,6 +89,7 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
 };
 
 export type FunctionDefinition<T = {}, O = any> = {
+  name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
@@ -105,6 +106,7 @@ export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): Function
   }
 
   return {
+    name: params.name,
     description: params.description,
     inputSchema: params.inputSchema,
     outputSchema: params.outputSchema ?? Schema.Any,

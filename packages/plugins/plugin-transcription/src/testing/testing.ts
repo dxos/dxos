@@ -69,7 +69,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcription {
+  createBlock(): DataType.MessageBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
@@ -81,7 +81,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     }
 
     return {
-      type: 'transcription',
+      _tag: 'transcript',
       started: this.next().toISOString(),
       text,
     };
@@ -99,7 +99,13 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
   });
 
-  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.AiService } }));
+  executor = new FunctionExecutor(
+    new ServiceContainer().setServices({
+      // ai: {
+      //   client: this.AiService,
+      // },
+    }),
+  );
 
   space: Space | undefined;
   currentMessage: number = 0;

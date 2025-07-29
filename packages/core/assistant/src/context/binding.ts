@@ -10,6 +10,7 @@ import { Blueprint } from '../blueprint';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
+// TODO(burdon): Make ContentBlock.
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Type.Ref(Blueprint)),

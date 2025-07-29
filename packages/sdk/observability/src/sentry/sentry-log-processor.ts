@@ -20,7 +20,12 @@ export class SentryLogProcessor {
     // Don't forward logs from remote sessions.
     if (!shouldLog(entry, config.captureFilters) || meta?.S?.remoteSessionId) {
       if (entry.level > LogLevel.DEBUG) {
-        this._addBreadcrumb(undefined, entry.message, convertLevel(entry.level), undefined);
+        this._addBreadcrumb(
+          undefined,
+          entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
+          convertLevel(entry.level),
+          undefined,
+        );
       }
       return;
     }
@@ -66,7 +71,8 @@ export class SentryLogProcessor {
         return;
       }
 
-      scope.setFingerprint([entry.message]);
+      const message = entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : '');
+      scope.setFingerprint([message]);
       const eventId = captureMessage(extendedMessage);
       this._addBreadcrumb(eventId, extendedMessage, severity, entry.context);
     });
@@ -117,18 +123,20 @@ export class SentryLogProcessor {
   }
 }
 
-const formatMessageForSentry = (entry: LogEntry) => {
+const formatMessageForSentry = (entry: LogEntry): string => {
+  const message = entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : '');
+
   let scopePrefix: string | undefined;
   if (entry.meta?.S) {
     const scope = entry.meta?.S;
     scopePrefix = scope.name || getDebugName(scope);
   }
   if (scopePrefix == null) {
-    return entry.message;
+    return message;
   }
 
   const workerPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
-  return `${workerPrefix}${scopePrefix} ${entry.message}`;
+  return `${workerPrefix}${scopePrefix} ${message}`;
 };
 
 const convertLevel = (level: LogLevel): SeverityLevel => {

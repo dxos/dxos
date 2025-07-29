@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { type Table } from '@oclif/core/lib/cli-ux';
-
 import { ux } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
@@ -16,6 +14,7 @@ import { SPACE_WAIT_TIMEOUT } from '../defaults';
 import { SpaceTimeoutError } from '../errors';
 
 export const selectSpace = async (spaces: Space[]) => {
+  // TODO(burdon): https://esbuild.github.io/content-types/#direct-eval
   // eslint-disable-next-line no-eval
   const inquirer = (await eval('import("inquirer")')).default;
   const { key } = await inquirer.prompt([

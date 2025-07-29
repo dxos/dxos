@@ -5,13 +5,14 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, Message, OllamaAiServiceClient, ToolRegistry, ToolTypes } from '@dxos/ai';
+import { defineTool, type Message, OllamaAiServiceClient, ToolId, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 import { type GptInput, gptNode } from './node';
 import { ValueBag } from '../../types';
@@ -63,9 +64,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         const conversation = queues.create();
         yield* Effect.promise(() =>
           conversation.append([
-            Obj.make(Message, {
-              role: 'user',
-              content: [{ type: 'text', text: 'I have 10 apples in my bag' }],
+            Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
             }),
           ]),
         );
@@ -99,7 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         return;
       }
 
-      const textToImageTool = defineTool('testing', {
+      const _textToImageTool = defineTool('testing', {
         name: 'text-to-image',
         type: ToolTypes.TextToImage,
         options: {
@@ -109,7 +111,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
 
       const input: GptInput = {
         prompt: 'A beautiful sunset over a calm ocean',
-        tools: ['testing/text-to-image'],
+        tools: [ToolId.make('testing/text-to-image')],
       };
       const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
         Effect.flatMap(ValueBag.unwrap),
@@ -121,7 +123,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
             logging: {
               enabled: ENABLE_LOGGING,
             },
-            toolResolver: ToolResolverService.make(new ToolRegistry([textToImageTool as any])),
           }).createLayer(),
         ),
         Effect.scoped,

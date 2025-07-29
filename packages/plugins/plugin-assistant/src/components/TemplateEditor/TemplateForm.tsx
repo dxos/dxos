@@ -5,16 +5,16 @@
 import { type Schema } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
+import { Template } from '@dxos/assistant';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { TemplateEditor } from './TemplateEditor';
 import { meta } from '../../meta';
-import { type TemplateInput, TemplateInputType, type TemplateType } from '../../types';
 
 export type TemplateFormProps = {
-  template: TemplateType;
+  template: Template.Template;
   schema?: Schema.Schema<any, any, any>;
   commandEditable?: boolean;
 };
@@ -25,7 +25,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
 
   return (
     <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-      {commandEditable && (
+      {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
           <Input.Root>
@@ -39,7 +39,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
             />
           </Input.Root>
         </div>
-      )}
+      )} */}
 
       <TemplateEditor template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
 
@@ -53,7 +53,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
                 <Select.Root
                   value={String(input.type)}
                   onValueChange={(type) => {
-                    input.type = getInputType(type) ?? TemplateInputType.VALUE;
+                    input.type = getInputType(type) ?? Template.InputType.VALUE;
                   }}
                 >
                   <Select.TriggerButton placeholder='Type' classNames='is-full' />
@@ -74,10 +74,10 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
               <div>
                 {input.type !== undefined &&
                   [
-                    TemplateInputType.VALUE,
-                    TemplateInputType.CONTEXT,
-                    TemplateInputType.RESOLVER,
-                    TemplateInputType.SCHEMA,
+                    Template.InputType.VALUE,
+                    Template.InputType.CONTEXT,
+                    Template.InputType.RESOLVER,
+                    Template.InputType.SCHEMA,
                   ].includes(input.type) && (
                     <div>
                       <Input.Root>
@@ -103,15 +103,15 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
 
 const inputTypes = [
   {
-    value: TemplateInputType.VALUE,
+    value: Template.InputType.VALUE,
     label: 'Value',
   },
   {
-    value: TemplateInputType.PASS_THROUGH,
+    value: Template.InputType.PASS_THROUGH,
     label: 'Pass through',
   },
   {
-    value: TemplateInputType.RETRIEVER,
+    value: Template.InputType.RETRIEVER,
     label: 'Retriever',
   },
   // {
@@ -123,15 +123,15 @@ const inputTypes = [
   //   label: 'Query',
   // },
   {
-    value: TemplateInputType.RESOLVER,
+    value: Template.InputType.RESOLVER,
     label: 'Resolver',
   },
   {
-    value: TemplateInputType.CONTEXT,
+    value: Template.InputType.CONTEXT,
     label: 'Context',
   },
   {
-    value: TemplateInputType.SCHEMA,
+    value: Template.InputType.SCHEMA,
     label: 'Schema',
   },
 ];
@@ -140,7 +140,7 @@ export const nameRegex = /\{\{([\w-]+)\}\}/;
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
-const usePromptInputs = (template: TemplateType) => {
+const usePromptInputs = (template: Template.Template) => {
   useEffect(() => {
     const text = template.source ?? '';
     if (!template.inputs) {
@@ -148,10 +148,10 @@ const usePromptInputs = (template: TemplateType) => {
     }
 
     const regex = new RegExp(nameRegex, 'g');
-    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
+    const variables = new Set<string>([...(text.target?.content.matchAll(regex) ?? [])].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, TemplateInput>(
+    const unclaimed = new Map<string, Template.Input>(
       template.inputs?.filter(isNonNullable).map((input) => [input.name, input]),
     );
     const missing: string[] = [];

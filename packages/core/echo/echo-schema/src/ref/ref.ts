@@ -137,8 +137,10 @@ export interface Ref<T> {
    * `{ "/": "dxn:..." }`
    * and
    * `{ "/": "dxn:...", "target": { ... } }`
+   *
+   * Clones the reference object.
    */
-  noInline(): this;
+  noInline(): Ref<T>;
 
   /**
    * Serializes the reference to a JSON object.
@@ -358,10 +360,13 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * Do not inline the target object in the reference.
    * Makes .target unavailable unless the reference is connected to a database context.
+   * Clones the reference object.
    */
-  noInline(): this {
+  noInline(): RefImpl<T> {
     this.#target = undefined;
-    return this;
+    const ref = new RefImpl<T>(this.#dxn, this.#target);
+    ref.#resolver = this.#resolver;
+    return ref;
   }
 
   encode(): EncodedReference {

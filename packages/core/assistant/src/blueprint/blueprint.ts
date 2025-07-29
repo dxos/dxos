@@ -8,6 +8,8 @@ import { ToolId } from '@dxos/ai';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 
+import { Template } from './template';
+
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
@@ -15,8 +17,7 @@ import { LabelAnnotation } from '@dxos/echo-schema';
 export const Blueprint = Schema.Struct({
   /**
    * Global registry ID.
-   * NOTE: Once a blueprint has been cloned from the registry, its stored definition may converge,
-   * but the `key` property refers to the original registry entry.
+   * NOTE: The `key` property refers to the original registry entry.
    */
   // TODO(burdon): Create Format type.
   key: Schema.String.annotations({
@@ -41,7 +42,7 @@ export const Blueprint = Schema.Struct({
    * Instructions that guide the AI assistant's behavior and responses.
    * These are system prompts or guidelines that the AI should follow.
    */
-  instructions: Schema.String.annotations({
+  instructions: Type.Ref(Template).annotations({
     description: "Instructions that guide the AI assistant's behavior and responses",
   }),
 
@@ -55,6 +56,7 @@ export const Blueprint = Schema.Struct({
   /**
    * Array of artifacts that the AI assistant can create or modify.
    */
+  // TODO(burdon): Change to refs?
   artifacts: Schema.Array(Schema.String).annotations({
     description: 'Ids of artifact definitions that should be pulled into the blueprint',
   }),
@@ -65,7 +67,7 @@ export const Blueprint = Schema.Struct({
     version: '0.1.0',
   }),
 
-  // TODO(burdon): Move to main API.
+  // TODO(burdon): Move to Type.Obj def?
   LabelAnnotation.set(['name']),
 );
 
