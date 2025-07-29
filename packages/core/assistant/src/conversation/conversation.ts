@@ -77,10 +77,17 @@ export class Conversation {
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
 
+      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+
+      const systemPrompt =
+        (options.systemPrompt ?? '') +
+        '\n\n' +
+        contextObjects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`).join('\n');
+
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
-        systemPrompt: options.systemPrompt,
+        systemPrompt,
         toolkit: options.toolkit,
         blueprints,
       });

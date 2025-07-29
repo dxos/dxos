@@ -265,10 +265,12 @@ const getDecorators = ({
   config,
   plugins = [],
   blueprints = [],
+  context = false,
 }: {
   config: Config;
   plugins?: Plugin[];
   blueprints?: Blueprint[];
+  context?: boolean;
 }) => [
   withPluginManager({
     fireEvents: [Events.SetupArtifactDefinition],
@@ -290,17 +292,18 @@ const getDecorators = ({
               queue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
+          const binder = new ContextBinder(await chat.queue.load());
 
-          // TODO(burdon): Add to conversation context.
           const doc = space.db.add(
             Obj.make(DocumentType, {
               name: 'Tasks',
               content: Ref.make(Obj.make(DataType.Text, { content: '' })),
             }),
           );
+          if (context) {
+            await binder.bind({ objects: [Ref.make(doc)] });
+          }
 
-          const binder = new ContextBinder(await chat.queue.load());
-          await binder.bind({ objects: [Ref.make(doc)] });
           for (const blueprint of blueprints) {
             // Clone blueprints and bind to conversation.
             // TODO(dmaretskyi): This should be done by Obj.clone.
@@ -356,6 +359,7 @@ export const WithBlueprints = {
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [TASK_LIST_BLUEPRINT],
+    context: true,
   }),
   args: {
     components: [ChatContainer, [DocumentContainer, BlueprintContainer]],
