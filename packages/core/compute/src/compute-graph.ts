@@ -16,7 +16,6 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { ExportedCellChange, type HyperFormula } from '#hyperformula';
-
 import { ComputeNode } from './compute-node';
 import {
   defaultFunctions,

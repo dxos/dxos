@@ -14,7 +14,6 @@ import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
 import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
-
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
 
 export const EDGE_FUNCTION_NAME = 'DX';
