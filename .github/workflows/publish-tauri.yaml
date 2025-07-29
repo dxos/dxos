@@ -201,7 +201,9 @@ jobs:
           working-directory: ./packages/apps/composer-app/src-tauri/
 
   publish:
-    needs: build
+    needs:
+      - build
+      - build_ios
 
     runs-on: depot-ubuntu-24.04
 
