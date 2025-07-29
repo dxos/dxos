@@ -117,7 +117,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected --remote
+        run: moon run :test --affected --remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
