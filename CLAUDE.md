@@ -3,7 +3,13 @@
 - lint task takes `--fix` argument to fix issues.
 - use `moon :build --quiet --no-bail` to build all packages.
 - when reaching a natural stopping point, run the linter for impacted packages.
+- project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name)
 - create a new branch before starting work.
 - use `gh pr create` to create a pull request.
 - use "Conventional Commits" for PR titles.
+- use `moon :build --quiet --no-bail` to build all packages
 - ask for confirmation to ensure all work is complete and if so check that all packages build and pass linting and fix any problems that come up.
+- create a new branch before starting work
+- use `gh pr create` to create a pull request
+- use "Conventional Commits" for PR titles
+- the PR body should contain a reference to the GH or Linear issue: e.g., "Fixes DX-123"

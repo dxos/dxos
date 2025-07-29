@@ -71,6 +71,7 @@
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-theme-editor": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
+    "@dxos/plugin-tictactoe": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
