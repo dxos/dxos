@@ -160,6 +160,14 @@ async function verifyWorkflows() {
         if (result.errors && result.errors.length > 0) {
           result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
         }
+        
+        // Display logs for failed workflows
+        if (result.failedRuns && result.failedRuns.length > 0) {
+          for (const failedRun of result.failedRuns) {
+            await displayWorkflowLogs(failedRun);
+          }
+        }
+        
         process.exit(1);
       }
     }
@@ -178,6 +186,14 @@ async function verifyWorkflows() {
       if (result.errors && result.errors.length > 0) {
         result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
       }
+      
+      // Display logs for failed workflows
+      if (result.failedRuns && result.failedRuns.length > 0) {
+        for (const failedRun of result.failedRuns) {
+          await displayWorkflowLogs(failedRun);
+        }
+      }
+      
       process.exit(1);
     }
   }
@@ -189,12 +205,13 @@ async function verifyWorkflows() {
 async function checkWorkflowStatus() {
   const runs = await listWorkflowRunsForRepo(false); // Don't display table in verify mode
   if (!runs || runs.length === 0) {
-    return { status: 'success', errors: [] };
+    return { status: 'success', errors: [], failedRuns: [] };
   }
 
   let hasPending = false;
   let hasFailures = false;
   const errors = [];
+  const failedRuns = [];
 
   for (const run of runs) {
     if (run.status === 'queued' || run.status === 'in_progress') {
@@ -202,15 +219,80 @@ async function checkWorkflowStatus() {
     } else if (run.status === 'completed' && run.conclusion === 'failure') {
       hasFailures = true;
       errors.push(`${run.name} (${run.head_branch}): ${run.conclusion}`);
+      failedRuns.push(run);
     }
   }
 
   if (hasPending) {
-    return { status: 'pending', errors };
+    return { status: 'pending', errors, failedRuns: [] };
   } else if (hasFailures) {
-    return { status: 'failure', errors };
+    return { status: 'failure', errors, failedRuns };
   } else {
-    return { status: 'success', errors: [] };
+    return { status: 'success', errors: [], failedRuns: [] };
+  }
+}
+
+/**
+ * Fetch and display logs for a failed workflow run.
+ */
+async function displayWorkflowLogs(run) {
+  try {
+    const { octokit, owner, repo } = getOctokit();
+    
+    console.log(chalk.yellow(`\n📋 Fetching logs for workflow: ${run.name} (${run.head_branch})...`));
+    
+    // Get jobs for the workflow run
+    const { data: { jobs } } = await octokit.actions.listJobsForWorkflowRun({
+      owner,
+      repo,
+      run_id: run.id,
+    });
+    
+    for (const job of jobs) {
+      if (job.conclusion === 'failure') {
+        console.log(chalk.red(`\n❌ Failed Job: ${job.name}`));
+        console.log(chalk.gray(`   Started: ${job.started_at}`));
+        console.log(chalk.gray(`   Completed: ${job.completed_at}`));
+        console.log(chalk.gray(`   URL: ${job.html_url}`));
+        
+        try {
+          // Get job logs
+          const logsResponse = await octokit.actions.downloadJobLogsForWorkflowRun({
+            owner,
+            repo,
+            job_id: job.id,
+          });
+          
+          if (logsResponse.url) {
+            const response = await fetch(logsResponse.url);
+            const logs = await response.text();
+            
+            console.log(chalk.gray('\n--- Job Logs ---'));
+            // Display last 50 lines of logs to avoid overwhelming output
+            const logLines = logs.split('\n');
+            const displayLines = logLines.slice(-50);
+            
+            displayLines.forEach(line => {
+              if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
+                console.log(chalk.red(line));
+              } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
+                console.log(chalk.yellow(line));
+              } else {
+                console.log(line);
+              }
+            });
+            
+            if (logLines.length > 50) {
+              console.log(chalk.gray(`\n... (showing last 50 lines of ${logLines.length} total lines)`));
+            }
+          }
+        } catch (logErr) {
+          console.log(chalk.red(`   Failed to fetch logs: ${logErr.message}`));
+        }
+      }
+    }
+  } catch (err) {
+    console.error(chalk.red(`Failed to fetch workflow logs: ${err.message}`));
   }
 }
 
