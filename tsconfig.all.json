@@ -553,6 +553,9 @@
       "path": "tools/dx-compile/tsconfig.json"
     },
     {
+      "path": "tools/eslint-plugin-rules/tsconfig.json"
+    },
+    {
       "path": "tools/lit-storybook/tsconfig.json"
     },
     {

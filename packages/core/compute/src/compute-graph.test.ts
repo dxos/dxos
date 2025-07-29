@@ -11,6 +11,7 @@ import { Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 
 import { DetailedCellError } from '#hyperformula';
+
 import { TestBuilder } from './testing';
 
 describe('ComputeGraph', () => {

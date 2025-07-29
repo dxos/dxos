@@ -15,8 +15,11 @@ export const withTheme: Decorator = (Story: StoryFn, context: StoryContext) => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
   }, [theme]);
 
-  return createElement(ThemeProvider, {
-    children: createElement(Story),
-    tx: defaultTx,
-  });
+  return createElement(
+    ThemeProvider,
+    {
+      tx: defaultTx,
+    },
+    createElement(Story),
+  );
 };

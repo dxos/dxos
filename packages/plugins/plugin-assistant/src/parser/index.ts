@@ -4,4 +4,4 @@
 
 export * from './filter-generator';
 export * from './query-parser';
-export * from './types';
+export type * from './types';
