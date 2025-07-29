@@ -142,7 +142,7 @@ async function verifyWorkflows() {
     // Watch mode: wait for workflows to complete
     while (true) {
       const result = await checkWorkflowStatus();
-      
+
       if (result.status === 'pending') {
         if (argv.verbose) {
           console.log(chalk.yellow('Workflows still pending, waiting...'));
@@ -150,7 +150,7 @@ async function verifyWorkflows() {
         await new Promise((resolve) => setTimeout(resolve, argv.interval));
         continue;
       }
-      
+
       // Workflows completed, check final status
       if (result.status === 'success') {
         console.log(chalk.green('✓ All workflows completed successfully'));
@@ -158,23 +158,23 @@ async function verifyWorkflows() {
       } else if (result.status === 'failure') {
         console.log(chalk.red('✗ Workflows completed with errors:'));
         if (result.errors && result.errors.length > 0) {
-          result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
+          result.errors.forEach((error) => console.log(chalk.red(`  - ${error}`)));
         }
-        
+
         // Display logs for failed workflows
         if (result.failedRuns && result.failedRuns.length > 0) {
           for (const failedRun of result.failedRuns) {
             await displayWorkflowLogs(failedRun);
           }
         }
-        
+
         process.exit(1);
       }
     }
   } else {
     // Single check mode
     const result = await checkWorkflowStatus();
-    
+
     if (result.status === 'pending') {
       console.log(chalk.yellow('⏳ Workflows are still pending'));
       process.exit(2);
@@ -184,16 +184,16 @@ async function verifyWorkflows() {
     } else if (result.status === 'failure') {
       console.log(chalk.red('✗ Workflows completed with errors:'));
       if (result.errors && result.errors.length > 0) {
-        result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
+        result.errors.forEach((error) => console.log(chalk.red(`  - ${error}`)));
       }
-      
+
       // Display logs for failed workflows
       if (result.failedRuns && result.failedRuns.length > 0) {
         for (const failedRun of result.failedRuns) {
           await displayWorkflowLogs(failedRun);
         }
       }
-      
+
       process.exit(1);
     }
   }
@@ -240,30 +240,31 @@ function parseTaskLogs(logs) {
   const logLines = logs.split('\n');
   const tasks = new Map();
   const failedTasks = [];
-  
+
   // Regex to match task log lines: timestamp | task_name | content
   const taskLogRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+([^|]+)\s*\|(.*)$/;
-  
+
   for (const line of logLines) {
     const match = line.match(taskLogRegex);
-    
+
     if (match) {
       const taskName = match[1].trim();
-      const logContent = match[2].trim();
-      
+      const logContent = match[2];
+
       // Initialize task if not seen before
       if (!tasks.has(taskName)) {
         tasks.set(taskName, {
           name: taskName,
           logs: [],
           status: 'running',
-          failed: false
+          failed: false,
         });
       }
-      
+
       const task = tasks.get(taskName);
-      task.logs.push(line);
-      
+      // Store only the log content without timestamp and task name prefix
+      task.logs.push(logContent);
+
       // Check for failure marker
       if (logContent.includes(`Task ${taskName} failed to run.`)) {
         task.failed = true;
@@ -272,7 +273,7 @@ function parseTaskLogs(logs) {
     } else {
       // Check for generic failure patterns in non-task lines
       if (line.includes('failed to run.')) {
-        const failureMatch = line.match(/Task ([^\s]+) failed to run\./); 
+        const failureMatch = line.match(/Task ([^\s]+) failed to run\./);
         if (failureMatch) {
           const taskName = failureMatch[1];
           if (tasks.has(taskName)) {
@@ -285,14 +286,14 @@ function parseTaskLogs(logs) {
       }
     }
   }
-  
+
   // Collect only failed tasks
   for (const task of tasks.values()) {
     if (task.failed) {
       failedTasks.push(task);
     }
   }
-  
+
   return failedTasks;
 }
 
@@ -302,23 +303,25 @@ function parseTaskLogs(logs) {
 async function displayWorkflowLogs(run) {
   try {
     const { octokit, owner, repo } = getOctokit();
-    
+
     console.log(chalk.yellow(`\n📋 Fetching logs for workflow: ${run.name} (${run.head_branch})...`));
-    
+
     // Get jobs for the workflow run
-    const { data: { jobs } } = await octokit.actions.listJobsForWorkflowRun({
+    const {
+      data: { jobs },
+    } = await octokit.actions.listJobsForWorkflowRun({
       owner,
       repo,
       run_id: run.id,
     });
-    
+
     for (const job of jobs) {
       if (job.conclusion === 'failure') {
         console.log(chalk.red(`\n❌ Failed Job: ${job.name}`));
         console.log(chalk.gray(`   Started: ${job.started_at}`));
         console.log(chalk.gray(`   Completed: ${job.completed_at}`));
         console.log(chalk.gray(`   URL: ${job.html_url}`));
-        
+
         try {
           // Get job logs
           const logsResponse = await octokit.actions.downloadJobLogsForWorkflowRun({
@@ -326,23 +329,23 @@ async function displayWorkflowLogs(run) {
             repo,
             job_id: job.id,
           });
-          
+
           if (logsResponse.url) {
             const response = await fetch(logsResponse.url);
             const logs = await response.text();
-            
+
             const failedTasks = parseTaskLogs(logs);
-            
+
             if (failedTasks.length > 0) {
               console.log(chalk.gray('\n--- Failed Tasks ---'));
-              
+
               for (const task of failedTasks) {
                 console.log(chalk.red(`\n❌ Task: ${task.name}`));
                 console.log(chalk.gray(`   Status: ${task.status}`));
                 console.log(chalk.gray(`   Log lines: ${task.logs.length}`));
-                
+
                 // Display task logs with color coding
-                task.logs.forEach(line => {
+                task.logs.forEach((line) => {
                   if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
                     console.log(chalk.red(line));
                   } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
@@ -352,21 +355,21 @@ async function displayWorkflowLogs(run) {
                   }
                 });
               }
-              
+
               // Summary
               console.log(chalk.yellow(`\n📊 Summary: ${failedTasks.length} failed task(s)`));
-              failedTasks.forEach(task => {
+              failedTasks.forEach((task) => {
                 console.log(chalk.red(`  - ${task.name}: ${task.status}`));
               });
             } else {
               console.log(chalk.gray('\n--- Job Logs ---'));
               console.log(chalk.yellow('No failed tasks found, showing raw logs...'));
-              
+
               // Fallback to original log display if no tasks detected
               const logLines = logs.split('\n');
               const displayLines = logLines.slice(-500);
-              
-              displayLines.forEach(line => {
+
+              displayLines.forEach((line) => {
                 if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
                   console.log(chalk.red(line));
                 } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
