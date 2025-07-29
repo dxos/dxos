@@ -1,3 +1,4 @@
+name: Publish
 on:
   workflow_dispatch:
     inputs:
@@ -15,11 +16,13 @@ on:
     types:
       - published
 
-name: Publish
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish:
-    runs-on: depot-ubuntu-24.04-8
+    runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
