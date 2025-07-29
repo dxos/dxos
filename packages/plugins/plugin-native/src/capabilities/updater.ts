@@ -24,6 +24,7 @@ export default (context: PluginContext) => {
 
   // https://tauri.app/plugin/updater/#checking-for-updates
   const action = Effect.gen(function* () {
+    log.info('Checking for updates...');
     const update = yield* Effect.tryPromise(() => check());
     if (update) {
       log.info('Update available', update);
