@@ -224,12 +224,10 @@ export const createViewWithReferences = async ({
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
 
-      const referencePath = pipe(
+      const referencePath = yield* pipe(
         Option.fromNullable(referenceSchema),
-        Option.flatMap(LabelAnnotation.get),
+        Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
-        // TODO(wittjosiah): Remove. Currently needed because `LabelAnnotation` is being overridden.
-        Option.getOrElse(() => 'name'),
       );
 
       if (referenceSchema && referencePath) {
