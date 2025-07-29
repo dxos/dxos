@@ -1,24 +1,21 @@
 {
   "extends": "../../../tsconfig.base.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
   "include": [
-    "src"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/debug"
+      "path": "../../common/context"
     },
     {
       "path": "../../common/effect"
-    },
-    {
-      "path": "../../common/errors"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -33,7 +30,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../ai"
@@ -45,25 +51,19 @@
       "path": "../blueprint"
     },
     {
+      "path": "../conductor"
+    },
+    {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
-    },
-    {
       "path": "../functions"
     },
     {
       "path": "../mesh/edge-client"
-    },
-    {
-      "path": "../protocols"
     }
   ]
 }

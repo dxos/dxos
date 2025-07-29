@@ -9,6 +9,10 @@ import { type SpaceId } from '@dxos/keys';
 import { createTemplate } from './template';
 import SYSTEM_PROMPT from './templates/system-prompt.tpl?raw';
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Replace with Ref.
 export type AssociatedArtifact = {
   spaceId: SpaceId;
   typename: string;
@@ -23,6 +27,7 @@ export type SystemPromptOptions = {
 
   /**
    * Associated artifact to include in the prompt.
+   * @deprecated
    */
   artifact?: AssociatedArtifact;
 

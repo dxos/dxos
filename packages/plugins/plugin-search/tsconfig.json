@@ -42,10 +42,10 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/blueprint"
     },
     {
       "path": "../../core/echo/echo"

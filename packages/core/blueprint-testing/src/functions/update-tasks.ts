@@ -15,12 +15,22 @@ export default defineFunction({
   name: 'dxos.org/function/markdown/update-tasks',
   description: 'Creates and updates tasks in markdown documents.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({ description: 'The ID of the document to update.' }),
-    operations: Schema.optional(Schema.Array(Schema.Any.annotations({ description: 'Task operations to apply.' }))),
+    id: ArtifactId.annotations({
+      description: 'The ID of the document to update.',
+    }),
+    operations: Schema.optional(
+      Schema.Array(
+        Schema.Any.annotations({
+          description: 'Task operations to apply.',
+        }),
+      ),
+    ),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,
-    numberedContent: Schema.String.annotations({ description: 'Content with line numbers for agent reference.' }),
+    numberedContent: Schema.String.annotations({
+      description: 'Content with line numbers for agent reference.',
+    }),
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));

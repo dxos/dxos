@@ -3,13 +3,13 @@
 //
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/assistant';
+import { Blueprint, Template } from '@dxos/blueprint';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { readDocument, writeDocument } from '../functions';
 
-export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
+export const DESIGN_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
@@ -31,7 +31,7 @@ export const DESIGN_SPEC_BLUEPRINT = Obj.make(Blueprint, {
   artifacts: [],
 });
 
-export const TASK_LIST_BLUEPRINT = Obj.make(Blueprint, {
+export const TASK_BLUEPRINT = Obj.make(Blueprint, {
   key: 'dxos.org/blueprint/task-list',
   name: 'Task List',
   description: 'Manages a list of tasks.',

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Template } from '@dxos/assistant';
+import { type Template } from '@dxos/blueprint';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';

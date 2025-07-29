@@ -19,6 +19,7 @@ import {
   type GenerationStream,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
+import { type Blueprint } from '@dxos/blueprint';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
@@ -27,7 +28,6 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType, type ContentBlock } from '@dxos/schema';
 
-import type { Blueprint } from '../blueprint';
 import { AiAssistantError } from '../errors';
 
 export type AiSessionOptions = {};

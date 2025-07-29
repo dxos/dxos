@@ -7,12 +7,8 @@ import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import {
-  Blueprint,
-  Conversation,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-} from '@dxos/assistant';
+import { Conversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprint';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -21,7 +17,7 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from './blueprints';
+import { DESIGN_BLUEPRINT, TASK_BLUEPRINT } from './blueprints';
 import { readDocument, writeDocument } from '../functions';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
@@ -41,7 +37,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           session.block.on((block) => printer.printContentBlock(block));
         });
 
-        const blueprint = db.add(DESIGN_SPEC_BLUEPRINT);
+        const blueprint = db.add(DESIGN_BLUEPRINT);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const artifact = db.add(
@@ -109,7 +105,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           });
         });
 
-        const blueprint = db.add(TASK_LIST_BLUEPRINT);
+        const blueprint = db.add(TASK_BLUEPRINT);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const artifact = db.add(

@@ -6,8 +6,8 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 
 import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { type Blueprint } from '@dxos/assistant';
+import { type ArtifactDefinition } from '@dxos/blueprint';
+import { type Blueprint } from '@dxos/blueprint';
 import { type Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';

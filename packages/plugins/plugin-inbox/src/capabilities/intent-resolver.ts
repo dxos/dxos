@@ -15,7 +15,7 @@ import {
   createIntent,
   chain,
 } from '@dxos/app-framework';
-// import { ArtifactId } from '@dxos/artifact';
+// import { ArtifactId } from '@dxos/blueprint';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';

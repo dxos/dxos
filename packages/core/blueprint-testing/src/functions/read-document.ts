@@ -14,7 +14,9 @@ export default defineFunction({
   description: 'Read the design spec document.',
   inputSchema: Schema.Struct({
     // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
-    id: ArtifactId.annotations({ description: 'The ID of the document to read.' }),
+    id: ArtifactId.annotations({
+      description: 'The ID of the document to read.',
+    }),
   }),
   outputSchema: Schema.Struct({
     content: Schema.String,

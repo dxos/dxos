@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Template } from '@dxos/assistant';
+import { Template } from '@dxos/blueprint';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';

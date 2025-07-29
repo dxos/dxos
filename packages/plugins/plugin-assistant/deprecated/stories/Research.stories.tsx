@@ -13,7 +13,7 @@ import { AgentStatus, EdgeAiServiceClient, createTool, type ExecutableTool, Mess
 import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/blueprint-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
 import { raise } from '@dxos/debug';
 import { Type, Filter, Obj, Relation } from '@dxos/echo';

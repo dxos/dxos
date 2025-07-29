@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Template } from '@dxos/assistant';
+import { Template } from '@dxos/blueprint';
 import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';

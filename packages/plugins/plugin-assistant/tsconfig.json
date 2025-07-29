@@ -55,13 +55,13 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
-    },
-    {
-      "path": "../../core/artifact-testing"
-    },
-    {
       "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/blueprint"
+    },
+    {
+      "path": "../../core/blueprint-testing"
     },
     {
       "path": "../../core/compute"

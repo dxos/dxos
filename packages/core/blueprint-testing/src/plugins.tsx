@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/blueprint';
 import { Type, type Obj } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 

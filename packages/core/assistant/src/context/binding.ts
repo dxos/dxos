@@ -4,9 +4,9 @@
 
 import { Schema } from 'effect';
 
+import { Blueprint } from '@dxos/blueprint';
 import { Type } from '@dxos/echo';
 
-import { Blueprint } from '../blueprint';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */

@@ -5,12 +5,12 @@
 import { computed, type ReadonlySignal } from '@preact/signals-core';
 import { Array, pipe } from 'effect';
 
+import { type Blueprint } from '@dxos/blueprint';
 import { Obj, type Type, type Ref, type Relation } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
 import { ContextBinding } from './binding';
-import { type Blueprint } from '../blueprint';
 
 /**
  * Manages bindings of blueprints and objects to a conversation.

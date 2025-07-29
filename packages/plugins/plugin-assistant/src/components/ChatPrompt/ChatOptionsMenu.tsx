@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type Blueprint, type BlueprintRegistry } from '@dxos/assistant';
+import { type Blueprint, type BlueprintRegistry } from '@dxos/blueprint';
 import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';

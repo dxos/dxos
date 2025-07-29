@@ -124,13 +124,13 @@
       "path": "packages/core/ai/tsconfig.json"
     },
     {
-      "path": "packages/core/artifact/tsconfig.json"
-    },
-    {
-      "path": "packages/core/artifact-testing/tsconfig.json"
-    },
-    {
       "path": "packages/core/assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/core/blueprint/tsconfig.json"
+    },
+    {
+      "path": "packages/core/blueprint-testing/tsconfig.json"
     },
     {
       "path": "packages/core/compute/tsconfig.json"

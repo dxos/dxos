@@ -19,6 +19,7 @@ export const makeToolResolverFromFunctions = (
       if (!fn) {
         return yield* Effect.fail(new AiToolNotFoundError(id));
       }
+
       return projectFunctionToTool(fn);
     }),
   });
@@ -32,7 +33,6 @@ export const makeToolExecutionServiceFromFunctions = (
       const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
         return Effect.fn('toolFunctionHandler')(function* (input: any) {
           const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
-
           const fnDef = functions.find((f) => f.name === functionName);
           if (!fnDef) {
             return yield* Effect.fail(new AiToolNotFoundError(tool.name));

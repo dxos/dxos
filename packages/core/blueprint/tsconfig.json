@@ -12,12 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/context"
-    },
-    {
-      "path": "../../common/effect"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -30,40 +24,16 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../plugins/plugin-markdown"
-    },
-    {
-      "path": "../../sdk/app-framework"
-    },
-    {
       "path": "../../sdk/schema"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
       "path": "../ai"
     },
     {
-      "path": "../artifact"
-    },
-    {
-      "path": "../assistant"
-    },
-    {
-      "path": "../conductor"
-    },
-    {
       "path": "../echo/echo"
     },
     {
-      "path": "../echo/echo-db"
-    },
-    {
-      "path": "../functions"
-    },
-    {
-      "path": "../mesh/edge-client"
+      "path": "../echo/echo-schema"
     }
   ]
 }

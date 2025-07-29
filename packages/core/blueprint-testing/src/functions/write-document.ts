@@ -13,10 +13,14 @@ export default defineFunction({
   name: 'dxos.org/function/markdown/write-document',
   description: 'Updates the entire contents of the document.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({ description: 'The ID of the document to write.' }),
-    content: Schema.String.annotations({ description: 'New content to write to the document.' }),
+    id: ArtifactId.annotations({
+      description: 'The ID of the document to write.',
+    }),
+    content: Schema.String.annotations({
+      description: 'New content to write to the document.',
+    }),
   }),
-  outputSchema: Schema.String,
+  outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
     if (!doc || !Obj.instanceOf(DocumentType, doc)) {
@@ -25,9 +29,5 @@ export default defineFunction({
 
     const text = yield* DatabaseService.loadRef(doc.content);
     text.content = content;
-
-    // eslint-disable-next-line no-console
-    console.log('writeDocument', content);
-    return 'Document updated.';
   }),
 });

@@ -9,14 +9,15 @@ import React, { useCallback, useEffect, useMemo, useState, type FC } from 'react
 
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ContextBinder } from '@dxos/assistant';
+import { Blueprint, BlueprintRegistry } from '@dxos/blueprint';
 import {
-  DESIGN_SPEC_BLUEPRINT,
-  TASK_LIST_BLUEPRINT,
+  DESIGN_BLUEPRINT,
+  TASK_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
   writeDocument,
-} from '@dxos/artifact-testing';
-import { Blueprint, BlueprintRegistry, ContextBinder } from '@dxos/assistant';
+} from '@dxos/blueprint-testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -113,7 +114,7 @@ const ChatContainer = () => {
   }, [presets]);
 
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT]), []);
+  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -358,7 +359,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_LIST_BLUEPRINT],
+    blueprints: [TASK_BLUEPRINT],
     context: true,
   }),
   args: {

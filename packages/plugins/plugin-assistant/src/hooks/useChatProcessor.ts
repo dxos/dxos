@@ -7,8 +7,13 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { Conversation, type BlueprintRegistry, createSystemPrompt, type AssociatedArtifact } from '@dxos/assistant';
+import { Conversation } from '@dxos/assistant';
+import {
+  type ArtifactDefinition,
+  type AssociatedArtifact,
+  type BlueprintRegistry,
+  createSystemPrompt,
+} from '@dxos/blueprint';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';

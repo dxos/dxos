@@ -2266,148 +2266,17 @@ importers:
         specifier: 3.17.0
         version: 3.17.0
 
-  packages/core/artifact:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      effect:
-        specifier: 3.17.0
-        version: 3.17.0
-      handlebars:
-        specifier: 4.7.8
-        version: 4.7.8
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-    devDependencies:
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-
-  packages/core/artifact-testing:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
-      '@dxos/assistant':
-        specifier: workspace:*
-        version: link:../assistant
-      '@dxos/conductor':
-        specifier: workspace:*
-        version: link:../conductor
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo/echo-db
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../mesh/edge-client
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../functions
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-markdown
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-    devDependencies:
-      '@effect/ai':
-        specifier: 0.23.0
-        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
-      '@effect/ai-anthropic':
-        specifier: 0.13.0
-        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
-      '@effect/ai-openai':
-        specifier: 0.26.1
-        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
-      '@effect/cluster':
-        specifier: 0.44.0
-        version: 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
-      '@effect/experimental':
-        specifier: 0.53.0
-        version: 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
-      '@effect/platform':
-        specifier: 0.89.0
-        version: 0.89.0(effect@3.17.0)
-      '@effect/platform-node':
-        specifier: 0.92.0
-        version: 0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
-      '@effect/rpc':
-        specifier: 0.66.0
-        version: 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
-      '@effect/sql':
-        specifier: 0.43.0
-        version: 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
-      '@effect/workflow':
-        specifier: 0.6.0
-        version: 0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
-      effect:
-        specifier: 3.17.0
-        version: 3.17.0
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-
   packages/core/assistant:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../blueprint
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -2500,6 +2369,143 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0(@types/node@22.10.2)
 
+  packages/core/blueprint:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.17.0
+        version: 3.17.0
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+    devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+
+  packages/core/blueprint-testing:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../blueprint
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../conductor
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+    devDependencies:
+      '@effect/ai':
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-anthropic':
+        specifier: 0.13.0
+        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-openai':
+        specifier: 0.26.1
+        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/cluster':
+        specifier: 0.44.0
+        version: 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/experimental':
+        specifier: 0.53.0
+        version: 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
+      '@effect/platform':
+        specifier: 0.89.0
+        version: 0.89.0(effect@3.17.0)
+      '@effect/platform-node':
+        specifier: 0.92.0
+        version: 0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/rpc':
+        specifier: 0.66.0
+        version: 0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/sql':
+        specifier: 0.43.0
+        version: 0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/workflow':
+        specifier: 0.6.0
+        version: 0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      effect:
+        specifier: 3.17.0
+        version: 3.17.0
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+
   packages/core/compute:
     dependencies:
       '@dxos/async':
@@ -2575,15 +2581,15 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../blueprint
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5126,12 +5132,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -5274,15 +5280,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5479,9 +5485,9 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@18.2.0)
     devDependencies:
-      '@dxos/artifact-testing':
+      '@dxos/blueprint-testing':
         specifier: workspace:*
-        version: link:../../core/artifact-testing
+        version: link:../../core/blueprint-testing
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5682,15 +5688,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5800,15 +5806,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -6275,12 +6281,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -6887,15 +6893,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -7059,15 +7065,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7171,15 +7177,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7292,15 +7298,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7431,15 +7437,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8401,15 +8407,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8609,12 +8615,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9092,12 +9098,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9483,12 +9489,12 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10056,15 +10062,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -10476,12 +10482,12 @@ importers:
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../app-graph
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -12254,15 +12260,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/artifact':
-        specifier: workspace:*
-        version: link:../../core/artifact
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprint':
+        specifier: workspace:*
+        version: link:../../core/blueprint
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -12342,9 +12348,9 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0
     devDependencies:
-      '@dxos/artifact-testing':
+      '@dxos/blueprint-testing':
         specifier: workspace:*
-        version: link:../../core/artifact-testing
+        version: link:../../core/blueprint-testing
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
