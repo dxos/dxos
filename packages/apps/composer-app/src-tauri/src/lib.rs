@@ -1,6 +1,6 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let builder = tauri::Builder::default();
 
     // Only include updater plugin for non-mobile targets
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
