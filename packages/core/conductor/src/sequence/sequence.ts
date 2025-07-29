@@ -41,7 +41,7 @@ export namespace SequenceBuilder {
   class Builder {
     private readonly _steps: SequenceStep[] = [];
 
-    step(instructions: string, options?: { tools?: string[] }): Builder {
+    step(instructions: string, options?: { tools?: ToolId[] }): Builder {
       this._steps.push({
         id: Key.ObjectId.random(),
         instructions,
@@ -68,7 +68,7 @@ export namespace SequenceParser {
       const builder = SequenceBuilder.create();
       for (const step of steps) {
         builder.step(step.instructions, {
-          tools: (step.tools ?? []) as string[],
+          tools: [...(step.tools ?? [])],
         });
       }
 

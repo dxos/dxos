@@ -4,7 +4,7 @@
 
 import { type Context, ContextDisposedError } from '@dxos/context';
 
-import { createPromiseFromCallback } from './callback';
+import { promiseFromCallback } from './callback';
 import { TimeoutError } from './errors';
 
 /**
@@ -25,6 +25,27 @@ export const sleep = (ms: number) => {
     };
 
     sleeper();
+  });
+};
+
+// TODO(burdon): Reconcile with sleep.
+export const sleepWithContext = (ctx: Context, ms: number) => {
+  const error = new ContextDisposedError();
+  return new Promise<void>((resolve, reject) => {
+    if (ctx.disposed) {
+      reject(error);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      clearDispose();
+      resolve();
+    }, ms);
+
+    const clearDispose = ctx.onDispose(() => {
+      clearTimeout(timeout);
+      reject(error);
+    });
   });
 };
 
@@ -52,7 +73,7 @@ export const asyncTimeout = async <T>(
     unrefTimeout(timeoutId);
   });
 
-  const conditionTimeout = typeof promise === 'function' ? createPromiseFromCallback<T>(promise) : promise;
+  const conditionTimeout = typeof promise === 'function' ? promiseFromCallback<T>(promise) : promise;
   return await Promise.race([conditionTimeout, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
@@ -66,24 +87,4 @@ export const unrefTimeout = (timeoutId: NodeJS.Timeout) => {
   if (typeof timeoutId === 'object' && 'unref' in timeoutId) {
     timeoutId.unref();
   }
-};
-
-export const sleepWithContext = (ctx: Context, ms: number) => {
-  const error = new ContextDisposedError();
-  return new Promise<void>((resolve, reject) => {
-    if (ctx.disposed) {
-      reject(error);
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      clearDispose();
-      resolve();
-    }, ms);
-
-    const clearDispose = ctx.onDispose(() => {
-      clearTimeout(timeout);
-      reject(error);
-    });
-  });
 };

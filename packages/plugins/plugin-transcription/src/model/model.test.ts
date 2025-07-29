@@ -18,7 +18,7 @@ const blockToMarkdown: ChunkRenderer<DataType.Message> = (
 ): string[] => {
   return [
     `###### ${message.sender.name}`,
-    ...message.blocks.filter((block) => block.type === 'transcription').map((block) => block.text),
+    ...message.blocks.filter((block) => block._tag === 'transcript').map((block) => block.text),
     '',
   ];
 };
@@ -37,7 +37,7 @@ describe('SerializationModel', () => {
       sender: { name: 'Alice' },
       blocks: [
         {
-          type: 'transcription',
+          _tag: 'transcript',
           started: createDate(),
           text: 'Hello world!',
         },
@@ -51,7 +51,7 @@ describe('SerializationModel', () => {
     }
 
     // Update message.
-    message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+    message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
     model.updateChunk(message);
     {
       const text = model.doc.toString();
@@ -74,7 +74,7 @@ describe('SerializationModel', () => {
         sender: { name: 'Alice' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -92,7 +92,7 @@ describe('SerializationModel', () => {
         sender: { name: 'Bob' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -119,7 +119,7 @@ describe('SerializationModel', () => {
         sender: { name: 'Alice' },
         blocks: [
           {
-            type: 'transcription',
+            _tag: 'transcript',
             started: createDate(),
             text: 'Hello world!',
           },
@@ -131,7 +131,7 @@ describe('SerializationModel', () => {
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\n\n');
 
       // Update message (add block).
-      message.blocks.push({ type: 'transcription', started: createDate(), text: 'Hello again!' });
+      message.blocks.push({ _tag: 'transcript', started: createDate(), text: 'Hello again!' });
       model.updateChunk(message);
       model.sync(adapter);
       expect(view.state.doc.toString()).to.eq('###### Alice\nHello world!\nHello again!\n\n');
@@ -150,7 +150,7 @@ describe('SerializationModel', () => {
       const message = Obj.make(DataType.Message, {
         created: createDate(),
         sender: { name: 'Bob' },
-        blocks: [{ type: 'transcription', started: createDate(), text: 'Hello again!' }],
+        blocks: [{ _tag: 'transcript', started: createDate(), text: 'Hello again!' }],
       });
       model.appendChunk(message);
       model.sync(adapter);

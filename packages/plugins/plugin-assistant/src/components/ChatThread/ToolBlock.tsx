@@ -4,15 +4,16 @@
 
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AgentStatus, type Message, type Tool } from '@dxos/ai';
+import { type AgentStatus, type Tool } from '@dxos/ai';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
 import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
+import { type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
 
-export const isToolMessage = (message: Message) => {
-  return message.content.some((block) => block.type === 'tool_use' || block.type === 'tool_result');
+export const isToolMessage = (message: DataType.Message) => {
+  return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 
 const getToolName = (tool: Tool) => {
@@ -28,40 +29,49 @@ const getToolCaption = (tool: Tool | undefined, status: AgentStatus | undefined)
 };
 
 export type ToolBlockProps = ThemedClassName<{
-  message: Message;
+  message: DataType.Message;
   tools?: Tool[];
 }>;
 
 export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) => {
-  const { content = [] } = message;
+  const { blocks = [] } = message;
 
   let request: { tool: Tool | undefined; block: any } | undefined;
-  const blocks = content.filter((block) => block.type === 'tool_use' || block.type === 'tool_result');
-  const items = blocks
+  const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
+  const items = toolBlocks
     .map((block) => {
-      switch (block.type) {
-        case 'tool_use': {
+      switch (block._tag) {
+        case 'toolCall': {
           // TODO(burdon): Skip these updates?
-          if (block.pending && request?.block.id === block.id) {
+          if (block.pending && request?.block.toolCallId === block.toolCallId) {
             return null;
           }
 
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
-          return { title: getToolCaption(request.tool, block.currentStatus), block };
+          return {
+            title: getToolCaption(request.tool, undefined), // block.status), // TODO(burdon): Get status?
+            block,
+          };
         }
 
-        case 'tool_result': {
+        case 'toolResult': {
           if (!request) {
             log.warn('unexpected message', { block });
             return { title: 'Error', block };
           }
 
-          return { title: `${getToolCaption(request.tool, undefined)} (Success)`, block };
+          return {
+            title: `${getToolCaption(request.tool, undefined)} (Success)`,
+            block,
+          };
         }
 
         default: {
           request = undefined;
-          return { title: 'Error', block };
+          return {
+            title: 'Error',
+            block,
+          };
         }
       }
     })

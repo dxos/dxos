@@ -50,7 +50,7 @@ while (true) {
     system: createSystemPrompt(schemaTypes),
     tools: [
       cypherTool,
-      // TODO(burdon): createToot (with executable).
+      // TODO(burdon): createTool (with executable).
       // defineTool('testing', {
       //   name: 'text-to-image',
       //   type: ToolTypes.TextToImage,

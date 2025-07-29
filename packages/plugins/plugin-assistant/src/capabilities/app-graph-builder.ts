@@ -13,6 +13,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
+import { Template } from '@dxos/assistant';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -32,7 +33,7 @@ import {
 } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant, TemplateType } from '../types';
+import { Assistant } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -155,7 +156,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/root`,
       connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
+        let query: QueryResult<Template.Template> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
@@ -164,7 +165,7 @@ export default (context: PluginContext) =>
             ),
             Option.map((space) => {
               if (!query) {
-                query = space.db.query(Query.type(TemplateType));
+                query = space.db.query(Query.type(Template.Template));
               }
 
               const templates = get(rxFromQuery(query));
@@ -192,7 +193,7 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${meta.id}/templates`,
       connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
+        let query: QueryResult<Template.Template> | undefined;
         return Rx.make((get) =>
           pipe(
             get(node),
@@ -203,7 +204,7 @@ export default (context: PluginContext) =>
             ),
             Option.map((space) => {
               if (!query) {
-                query = space.db.query(Query.type(TemplateType));
+                query = space.db.query(Query.type(Template.Template));
               }
               return get(rxFromQuery(query))
                 .toSorted((a, b) => {

@@ -40,8 +40,8 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
   const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
-  const textBlock = message.blocks.find((block) => block.type === 'text');
-  const references = message.blocks.filter((block) => block.type === 'reference').map((block) => block.reference);
+  const textBlock = message.blocks.find((block) => block._tag === 'text');
+  const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
 
   useOnEditAnalytics(message, textBlock, !!editing);
 

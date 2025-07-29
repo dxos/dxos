@@ -2,37 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, type ExecutableTool } from '@dxos/ai';
-import { type ArtifactDefinition } from '@dxos/artifact';
+import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { Effect } from 'effect';
+
+import {
+  type ToolExecutionService,
+  type ToolResolverService,
+  type AiInputPreprocessingError,
+  type AiToolNotFoundError,
+} from '@dxos/ai';
 import { Event } from '@dxos/async';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
-import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
+import { DatabaseService } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
 
 import { ContextBinder, type ContextBinding } from '../context';
-import { AISession, type SessionRunOptions } from '../session';
+import type { AiAssistantError } from '../errors';
+import { AiSession } from '../session';
 
-export interface ConversationRunOptions {
+export interface ConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
   prompt: string;
 
-  tools?: ExecutableTool[];
-  artifacts?: ArtifactDefinition[];
-  extensions?: ToolContextExtensions;
-  generationOptions?: SessionRunOptions['generationOptions'];
-
-  /** @depreacated Should be managed by the conversation. */
-  requiredArtifactIds?: string[];
-
-  // TODO(dmaretskyi): Move into conversation.
-  artifactDiffResolver?: SessionRunOptions['artifactDiffResolver'];
+  toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
 export type ConversationOptions = {
-  serviceContainer: ServiceContainer;
-  queue: Queue<Message | ContextBinding>;
+  queue: Queue<DataType.Message | ContextBinding>;
 };
 
 /**
@@ -41,14 +38,13 @@ export type ConversationOptions = {
  * Backed by a Queue.
  */
 export class Conversation {
-  private readonly _serviceContainer: ServiceContainer;
-  private readonly _queue: Queue<Message | ContextBinding>;
+  private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
    */
-  public readonly onBegin = new Event<AISession>();
+  public readonly onBegin = new Event<AiSession>();
 
   /**
    * Blueprints bound to the conversation.
@@ -56,48 +52,45 @@ export class Conversation {
   public readonly context: ContextBinder;
 
   constructor(options: ConversationOptions) {
-    this._serviceContainer = options.serviceContainer;
     this._queue = options.queue;
     this.context = new ContextBinder(this._queue);
   }
 
-  async run(options: ConversationRunOptions): Promise<Message[]> {
-    const session = new AISession({ operationModel: 'configured' });
-    this.onBegin.emit(session);
-
-    const history = await this.getHistory();
-    const context = await this.context.query();
-    const blueprints = (await Ref.Array.loadAll([...context.blueprints])).filter(isNonNullable);
-    if (blueprints.length > 1) {
-      log.warn('multiple blueprints are not yet supported');
-    }
-
-    const messages = await session.run({
-      history,
-      prompt: options.prompt,
-      systemPrompt: (options.systemPrompt ?? '') + (blueprints.at(0)?.instructions ?? ''),
-
-      // TODO(dmaretskyi): Artifacts come from the blueprint?
-      artifacts: options.artifacts ?? [],
-      tools: blueprints.at(0)?.tools ?? [],
-      executableTools: options.tools,
-      requiredArtifactIds: options.requiredArtifactIds,
-      client: this._serviceContainer.getService(AiService).client,
-      toolResolver: this._serviceContainer.getService(ToolResolverService).toolResolver,
-      extensions: {
-        serviceContainer: this._serviceContainer,
-        ...options.extensions,
-      },
-      generationOptions: options.generationOptions,
-    });
-
-    await this._queue.append(messages);
-
-    return messages;
-  }
-
-  async getHistory(): Promise<Message[]> {
+  async getHistory(): Promise<DataType.Message[]> {
     const queueItems = await this._queue.queryObjects();
-    return queueItems.filter(Obj.instanceOf(Message));
+    return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
+
+  run = <Tools extends AiTool.Any>(
+    options: ConversationRunOptions<Tools>,
+  ): Effect.Effect<
+    DataType.Message[],
+    AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
+    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+  > =>
+    Effect.gen(this, function* () {
+      const session = new AiSession();
+      this.onBegin.emit(session);
+
+      const history = yield* Effect.promise(() => this.getHistory());
+      const context = yield* Effect.promise(() => this.context.query());
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
+
+      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+
+      const systemPrompt =
+        (options.systemPrompt ?? '') +
+        '\n\n' +
+        contextObjects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`).join('\n');
+
+      const messages = yield* session.run({
+        prompt: options.prompt,
+        history,
+        systemPrompt,
+        toolkit: options.toolkit,
+        blueprints,
+      });
+      yield* Effect.promise(() => this._queue.append(messages));
+      return messages;
+    }).pipe(Effect.withSpan('Conversation.run'));
 }

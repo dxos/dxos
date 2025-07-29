@@ -4,6 +4,7 @@
 
 /**
  * Returns a non-reactive snapshot of the given live object.
+ * @deprecated Use `getSnapshot` from `@dxos/live-object` instead.
  */
 // TODO(wittjosiah): Types.
 export const getSnapshot = (object: any): any => {
