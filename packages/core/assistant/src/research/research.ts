@@ -8,8 +8,7 @@
 import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AgentStatus, AiService, ConsolePrinter } from '@dxos/ai';
-import { create } from '@dxos/echo-schema';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import { defineFunction, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';

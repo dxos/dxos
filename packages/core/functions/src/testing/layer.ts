@@ -5,12 +5,11 @@
 import { Context, Effect, Layer } from 'effect';
 import type { Schema } from 'effect';
 
-import type { Resource } from '@dxos/context';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
+import { accuireReleaseResource } from '@dxos/effect';
 
 import { DatabaseService, QueueService } from '../services';
-import { accuireReleaseResource } from '@dxos/effect';
 
 const testBuilder = accuireReleaseResource(() => new EchoTestBuilder());
 

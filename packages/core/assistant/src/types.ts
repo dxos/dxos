@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ObjectId } from '@dxos/echo-schema';
-import { DXN, LOCAL_SPACE_TAG, SpaceId } from '@dxos/keys';
 import { Schema } from 'effect';
+
+import { type ObjectId } from '@dxos/echo-schema';
+import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 

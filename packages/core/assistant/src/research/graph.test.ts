@@ -3,6 +3,7 @@
 //
 
 import { AnthropicClient } from '@effect/ai-anthropic';
+import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, pipe } from 'effect';
 
@@ -13,9 +14,8 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { FetchHttpClient } from '@effect/platform';
-import { AiSession } from '../session';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
+import { AiSession } from '../session';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 

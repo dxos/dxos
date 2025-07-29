@@ -4,13 +4,7 @@
 
 import { type Context } from 'effect';
 
-import {
-  AiService,
-  type AiServiceClient,
-  type AiServiceEdgeClientOptions,
-  EdgeAiServiceClient,
-  ToolRegistry,
-} from '@dxos/ai';
+import { AiService, type AiServiceClient, type AiServiceEdgeClientOptions, EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';

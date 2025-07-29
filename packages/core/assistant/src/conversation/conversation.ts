@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, type AiLanguageModel, type AiTool, AiToolkit } from '@effect/ai';
-import { Array, Effect, pipe, type Context, String } from 'effect';
+import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { Effect } from 'effect';
 
 import {
-  ToolExecutionService,
-  ToolResolverService,
+  type ToolExecutionService,
+  type ToolResolverService,
   type AiInputPreprocessingError,
   type AiToolNotFoundError,
 } from '@dxos/ai';
@@ -15,7 +15,6 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
-import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { ContextBinder, type ContextBinding } from '../context';
