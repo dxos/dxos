@@ -268,9 +268,9 @@ async function displayWorkflowLogs(run) {
             const logs = await response.text();
             
             console.log(chalk.gray('\n--- Job Logs ---'));
-            // Display last 50 lines of logs to avoid overwhelming output
+            // Display last 500 lines of logs to avoid overwhelming output
             const logLines = logs.split('\n');
-            const displayLines = logLines.slice(-50);
+            const displayLines = logLines.slice(-500);
             
             displayLines.forEach(line => {
               if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
