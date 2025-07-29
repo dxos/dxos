@@ -3,10 +3,11 @@
 //
 
 import { Effect, Schema } from 'effect';
+
+import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { DocumentType } from '@dxos/plugin-markdown/types';
-import { ArtifactId } from "@dxos/assistant";
 
 export default defineFunction({
   name: 'dxos.org/function/markdown/write-document',

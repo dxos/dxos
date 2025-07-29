@@ -222,7 +222,7 @@ const CALCULATOR_SEQUENCE = SequenceParser.create().parse({
   ],
 });
 
-const calculatorTool = createTool('test', {
+const _calculatorTool = createTool('test', {
   name: 'calculator',
   description: 'Can calculate the result of an expression.',
   schema: Schema.Struct({
@@ -246,7 +246,7 @@ const calculatorTool = createTool('test', {
   },
 });
 
-const printerTool = createTool('test', {
+const _printerTool = createTool('test', {
   name: 'printer',
   description: 'Can print a message.',
   schema: Schema.Struct({
