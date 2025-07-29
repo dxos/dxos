@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { findProperty } from '@dxos/effect';
 import { Input, type ThemedClassName, type TextInputProps as NativeTextInputProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getFieldValue, Projection, setFieldValue } from '@dxos/schema';
+import { getFieldValue, setFieldValue, type Projection } from '@dxos/schema';
 
 export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
   projection: Projection;

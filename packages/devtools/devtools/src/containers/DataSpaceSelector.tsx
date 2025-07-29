@@ -42,7 +42,7 @@ export const DataSpaceSelector = () => {
   }, []);
 
   const getLabel = (space: Space) => {
-    return space?.isOpen ? space?.properties.name ?? 'New space' : '(closed)';
+    return space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)';
   };
 
   return (

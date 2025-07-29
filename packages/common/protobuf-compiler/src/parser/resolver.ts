@@ -25,7 +25,7 @@ export function createProtoResolver(original: ProtoResolver, baseDir?: string): 
 
     try {
       // Test if referenced package.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const config = require(join(target, 'package.json'));
       if (typeof config.protobuf !== 'string') {
         throw new Error(`Package "${target}" does not expose "protobuf" file.`);

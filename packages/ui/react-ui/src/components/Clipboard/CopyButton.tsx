@@ -57,7 +57,7 @@ export const CopyButtonIconOnly = ({
   const { t } = useTranslation('os');
   const { textValue, setTextValue } = useClipboard();
   const isCopied = textValue === value;
-  const label = isCopied ? t('copy success label') : props.label ?? t('copy label');
+  const label = isCopied ? t('copy success label') : (props.label ?? t('copy label'));
   const { onOpen } = useTooltipContext('CopyButton', __scopeTooltip);
   return (
     <IconButton

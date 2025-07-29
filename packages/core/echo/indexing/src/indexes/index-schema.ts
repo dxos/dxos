@@ -124,4 +124,4 @@ export class IndexSchema extends Resource implements Index {
 }
 
 const getTypeFromObject = (object: Partial<ObjectStructure>): string | null =>
-  object.system?.type ? decodeReference(object.system.type).objectId ?? null : null;
+  object.system?.type ? (decodeReference(object.system.type).objectId ?? null) : null;

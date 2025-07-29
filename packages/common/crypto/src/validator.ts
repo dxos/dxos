@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
-
 import { verify } from '#hypercore-crypto';
+
+import { PublicKey } from '@dxos/keys';
 
 /**
  * Generator for signature validation function.

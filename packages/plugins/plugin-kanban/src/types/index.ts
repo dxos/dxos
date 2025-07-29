@@ -4,4 +4,4 @@
 
 export * from './kanban';
 export * from './schema';
-export * from './types';
+export type * from './types';
