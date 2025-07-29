@@ -194,13 +194,27 @@ jobs:
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
 
-      - name: Upload assets
+      - name: Upload assets to CN
         uses: ./.github/actions/cn-release
         with:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
+
+      # https://tauri.app/distribute/app-store/#ios
+      - name: Upload assets to App Store Connect
+        run: |
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/Composer.ipa" \
+            --apiKey $APPLE_API_KEY \
+            --apiIssuer $APPLE_API_ISSUER
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
 
   publish_tauri:
     needs:
