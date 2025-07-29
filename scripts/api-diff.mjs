@@ -171,6 +171,7 @@ function extractPublicAPI(entryPoints) {
       declaration: true,
       skipLibCheck: true,
       skipDefaultLibCheck: true,
+      moduleResolution: ts.ModuleResolutionKind.NodeJs,
     });
 
     const sourceFile = program.getSourceFile(entryPoint.path);
@@ -178,7 +179,7 @@ function extractPublicAPI(entryPoints) {
 
     const checker = program.getTypeChecker();
 
-    // Visit all exported symbols
+    // Process direct exports from the module symbol
     const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
     if (moduleSymbol && moduleSymbol.exports) {
       moduleSymbol.exports.forEach((symbol, name) => {
@@ -204,9 +205,105 @@ function extractPublicAPI(entryPoints) {
         });
       });
     }
+
+    // Process export * from statements
+    processExportStarStatements(sourceFile, checker, exports, entryPoint);
   }
 
   return exports;
+}
+
+/**
+ * Process export * from statements to capture re-exported symbols
+ */
+function processExportStarStatements(sourceFile, checker, exports, entryPoint) {
+  function visit(node) {
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && !node.exportClause) {
+      // This is an "export * from 'module'" statement
+      const moduleSpecifier = node.moduleSpecifier;
+      if (ts.isStringLiteral(moduleSpecifier)) {
+        const moduleSymbol = checker.getSymbolAtLocation(moduleSpecifier);
+        if (moduleSymbol && moduleSymbol.exports) {
+          moduleSymbol.exports.forEach((symbol, name) => {
+            if (name === 'default') return; // Skip default exports
+            if (name.startsWith('_')) return; // Skip internal exports
+            if (exports.has(name)) return; // Don't override existing exports
+
+            const declaration = symbol.valueDeclaration || symbol.declarations?.[0];
+            if (!declaration) return;
+
+            try {
+              const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+              const typeString = checker.typeToString(type, declaration, ts.TypeFormatFlags.InTypeAlias);
+
+              // For re-exported symbols, we need to get the source file of the original declaration
+              const originalSourceFile = declaration.getSourceFile();
+              
+              exports.set(name, {
+                name,
+                entryPoint: entryPoint.name,
+                declaration,
+                type: typeString,
+                kind: ts.SyntaxKind[declaration.kind],
+                sourceText: getDeclarationText(declaration, originalSourceFile),
+                isReExport: true,
+                reExportFrom: moduleSpecifier.text,
+              });
+            } catch (error) {
+              DEBUG && console.error(`Error processing re-export ${name}:`, error.message);
+            }
+          });
+        }
+      }
+    }
+    
+    // Also handle named re-exports: export { foo, bar } from 'module'
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && node.exportClause && ts.isNamedExports(node.exportClause)) {
+      const moduleSpecifier = node.moduleSpecifier;
+      if (ts.isStringLiteral(moduleSpecifier)) {
+        const moduleSymbol = checker.getSymbolAtLocation(moduleSpecifier);
+        if (moduleSymbol && moduleSymbol.exports) {
+          node.exportClause.elements.forEach(exportSpecifier => {
+            const exportedName = exportSpecifier.name.text;
+            const originalName = exportSpecifier.propertyName?.text || exportedName;
+            
+            const symbol = moduleSymbol.exports?.get(originalName);
+            if (!symbol) return;
+            
+            if (exportedName.startsWith('_')) return; // Skip internal exports
+            if (exports.has(exportedName)) return; // Don't override existing exports
+
+            const declaration = symbol.valueDeclaration || symbol.declarations?.[0];
+            if (!declaration) return;
+
+            try {
+              const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+              const typeString = checker.typeToString(type, declaration, ts.TypeFormatFlags.InTypeAlias);
+              const originalSourceFile = declaration.getSourceFile();
+              
+              exports.set(exportedName, {
+                name: exportedName,
+                entryPoint: entryPoint.name,
+                declaration,
+                type: typeString,
+                kind: ts.SyntaxKind[declaration.kind],
+                sourceText: getDeclarationText(declaration, originalSourceFile),
+                isReExport: true,
+                reExportFrom: moduleSpecifier.text,
+                originalName: originalName !== exportedName ? originalName : undefined,
+              });
+            } catch (error) {
+              DEBUG && console.error(`Error processing named re-export ${exportedName}:`, error.message);
+            }
+          });
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
 }
 
 /**
