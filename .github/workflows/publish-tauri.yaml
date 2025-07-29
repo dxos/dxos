@@ -14,10 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CN_APPLICATION: "dxos/composer"
+  CN_APPLICATION: dxos/composer
 
 jobs:
-  draft:
+  draft_tauri:
     runs-on: depot-ubuntu-24.04
 
     steps:
@@ -31,8 +31,8 @@ jobs:
           command: draft
           working-directory: ./packages/apps/composer-app/src-tauri/
 
-  build:
-    needs: draft
+  build_tauri:
+    needs: draft_tauri
 
     strategy:
       fail-fast: false
@@ -44,8 +44,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    timeout-minutes: 1
-    # timeout-minutes: 45
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4
@@ -138,8 +137,8 @@ jobs:
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
 
-  build_ios:
-    needs: draft
+  build_tauri_ios:
+    needs: draft_tauri
 
     runs-on: depot-macos-latest
 
@@ -203,10 +202,10 @@ jobs:
           command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
 
-  publish:
+  publish_tauri:
     needs:
-      - build
-      - build_ios
+      - build_tauri
+      - build_tauri_ios
 
     runs-on: depot-ubuntu-24.04
 
