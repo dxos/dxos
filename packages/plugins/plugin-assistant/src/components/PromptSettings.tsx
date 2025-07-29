@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Template } from '@dxos/assistant';
+import { type Template } from '@dxos/blueprints';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../meta';

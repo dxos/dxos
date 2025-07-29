@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
-import { Template } from '@dxos/assistant';
+import { type Template } from '@dxos/blueprints';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -51,17 +51,17 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
 
               <Input.Root>
                 <Select.Root
-                  value={String(input.type)}
-                  onValueChange={(type) => {
-                    input.type = getInputType(type) ?? Template.InputType.VALUE;
+                  value={input.kind}
+                  onValueChange={(kind) => {
+                    input.kind = kind as Template.InputKind;
                   }}
                 >
                   <Select.TriggerButton placeholder='Type' classNames='is-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
-                        {inputTypes.map(({ value, label }) => (
-                          <Select.Option key={value} value={String(value)}>
+                        {inputs.map(({ kind, label }) => (
+                          <Select.Option key={kind} value={kind}>
                             {label}
                           </Select.Option>
                         ))}
@@ -72,26 +72,20 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
               </Input.Root>
 
               <div>
-                {input.type !== undefined &&
-                  [
-                    Template.InputType.VALUE,
-                    Template.InputType.CONTEXT,
-                    Template.InputType.RESOLVER,
-                    Template.InputType.SCHEMA,
-                  ].includes(input.type) && (
-                    <div>
-                      <Input.Root>
-                        <Input.TextInput
-                          placeholder={t('command placeholder')}
-                          classNames='is-full bg-transparent'
-                          value={input.value ?? ''}
-                          onChange={(event) => {
-                            input.value = event.target.value;
-                          }}
-                        />
-                      </Input.Root>
-                    </div>
-                  )}
+                {input.kind !== undefined && ['value', 'context', 'resolver', 'schema'].includes(input.kind) && (
+                  <div>
+                    <Input.Root>
+                      <Input.TextInput
+                        placeholder={t('command placeholder')}
+                        classNames='is-full bg-transparent'
+                        value={input.default ?? ''}
+                        onChange={(event) => {
+                          input.default = event.target.value;
+                        }}
+                      />
+                    </Input.Root>
+                  </div>
+                )}
               </div>
             </Fragment>
           ))}
@@ -101,44 +95,43 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
   );
 };
 
-const inputTypes = [
+// TODO(burdon): Translations.
+const inputs: { kind: Template.InputKind; label: string }[] = [
   {
-    value: Template.InputType.VALUE,
+    kind: 'value',
     label: 'Value',
   },
   {
-    value: Template.InputType.PASS_THROUGH,
+    kind: 'pass-through',
     label: 'Pass through',
   },
   {
-    value: Template.InputType.RETRIEVER,
+    kind: 'retriever',
     label: 'Retriever',
   },
-  // {
-  //   value: TemplateInputType.FUNCTION,
-  //   label: 'Function',
-  // },
-  // {
-  //   value: TemplateInputType.QUERY,
-  //   label: 'Query',
-  // },
   {
-    value: Template.InputType.RESOLVER,
+    kind: 'function',
+    label: 'Function',
+  },
+  {
+    kind: 'query',
+    label: 'Query',
+  },
+  {
+    kind: 'resolver',
     label: 'Resolver',
   },
   {
-    value: Template.InputType.CONTEXT,
+    kind: 'context',
     label: 'Context',
   },
   {
-    value: Template.InputType.SCHEMA,
+    kind: 'schema',
     label: 'Schema',
   },
 ];
 
-export const nameRegex = /\{\{([\w-]+)\}\}/;
-
-const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
+export const NAME_REGEXP = /\{\{([\w-]+)\}\}/;
 
 const usePromptInputs = (template: Template.Template) => {
   useEffect(() => {
@@ -147,7 +140,7 @@ const usePromptInputs = (template: Template.Template) => {
       template.inputs = []; // TODO(burdon): Required?
     }
 
-    const regex = new RegExp(nameRegex, 'g');
+    const regex = new RegExp(NAME_REGEXP, 'g');
     const variables = new Set<string>([...(text.target?.content.matchAll(regex) ?? [])].map((m) => m[1]));
 
     // Create map of unclaimed inputs.

@@ -81,8 +81,9 @@ export class ClientServicesHost {
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
 
-  private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
+
+  private _config?: Config;
   private _signalManager?: SignalManager;
   private _networkManager?: SwarmNetworkManager;
   private _storage?: Storage;

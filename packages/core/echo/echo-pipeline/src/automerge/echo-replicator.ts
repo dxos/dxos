@@ -3,8 +3,9 @@
 //
 
 import { type PublicKey, type SpaceId } from '@dxos/keys';
-import type { AutomergeProtocolMessage } from '@dxos/protocols';
+import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
+// TODO(burdon): Rename AutomergeReplicator?
 export interface EchoReplicator {
   /**
    * Called on when replicator is added to EchoHost.
