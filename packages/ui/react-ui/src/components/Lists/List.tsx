@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretRight } from '@phosphor-icons/react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
 
@@ -30,6 +29,7 @@ import { ListDropIndicator } from './ListDropIndicator';
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
+import { Icon } from '../Icon';
 
 type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
 
@@ -106,7 +106,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     const { tx } = useThemeContext();
     const density = useDensityContext();
     const { open } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const Icon = open ? CaretDown : CaretRight;
+    const iconName = open ? 'ph--caret-down--bold' : 'ph--caret-right--bold';
     return (
       <ListPrimitiveItemOpenTrigger
         {...props}
@@ -114,12 +114,7 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
         ref={forwardedRef}
       >
         {children || (
-          <Icon
-            {...{
-              weight: 'bold',
-              className: tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {}),
-            }}
-          />
+          <Icon icon={iconName} classNames={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})} />
         )}
       </ListPrimitiveItemOpenTrigger>
     );

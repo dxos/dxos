@@ -68,6 +68,9 @@ importers:
       '@dxos/dx-compile':
         specifier: workspace:*
         version: link:tools/dx-compile
+      '@dxos/dx-tools':
+        specifier: workspace:*
+        version: link:tools/dx-tools
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:packages/common/esbuild-plugins
@@ -730,9 +733,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@sentry/vite-plugin':
         specifier: ^2.14.0
         version: 2.14.0(encoding@0.1.13)
@@ -926,9 +926,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -1041,9 +1038,6 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: ^0.44.0
         version: 0.44.0(@opentelemetry/api@1.9.0)(encoding@0.1.13)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@sentry/react':
         specifier: ^7.100.1
         version: 7.101.0(react@18.2.0)
@@ -2213,6 +2207,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -2237,6 +2234,21 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-anthropic':
+        specifier: ^0.13.0
+        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-openai':
+        specifier: 0.26.1
+        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/platform':
+        specifier: ^0.89.0
+        version: 0.89.0(effect@3.17.0)
+      '@effect/platform-node':
+        specifier: ^0.92.0
+        version: 0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
@@ -2417,6 +2429,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2444,6 +2459,18 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-anthropic':
+        specifier: ^0.13.0
+        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+      '@effect/platform':
+        specifier: ^0.89.0
+        version: 0.89.0(effect@3.17.0)
+      '@effect/platform-node':
+        specifier: ^0.92.0
+        version: 0.92.0(@effect/cluster@0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
@@ -2456,7 +2483,16 @@ importers:
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
     devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
       effect:
         specifier: 3.17.0
         version: 3.17.0
@@ -3157,6 +3193,9 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../echo/echo-pipeline
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
@@ -3169,6 +3208,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4514,9 +4556,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -5397,6 +5436,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.23.0
+        version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -5406,12 +5448,18 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
+      '@preact/signals-react':
+        specifier: ^3.2.0
+        version: 3.2.1(react@18.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@xiechao/codemirror-lang-handlebars':
         specifier: 1.0.4
         version: 1.0.4
+      effect:
+        specifier: 3.17.0
+        version: 3.17.0
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
@@ -5427,6 +5475,9 @@ importers:
       unified:
         specifier: ^11.0.0
         version: 11.0.5
+      use-deep-compare-effect:
+        specifier: ^1.8.1
+        version: 1.8.1(react@18.2.0)
     devDependencies:
       '@dxos/artifact-testing':
         specifier: workspace:*
@@ -5470,9 +5521,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.17.0
-        version: 3.17.0
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -5822,9 +5870,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -5922,9 +5967,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6206,9 +6248,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6681,9 +6720,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -6818,9 +6854,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -7789,9 +7822,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8116,9 +8146,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -8673,9 +8700,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9225,9 +9249,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9334,9 +9355,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -9547,6 +9565,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.38.0
         version: 0.38.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(react@18.2.0)(scheduler@0.23.2)
@@ -10476,6 +10497,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10528,9 +10552,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -10610,9 +10631,6 @@ importers:
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -11054,9 +11072,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -11503,6 +11518,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -11580,9 +11598,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
 
   packages/ui/brand:
     dependencies:
@@ -11836,6 +11851,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -11963,9 +11981,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -12641,6 +12656,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
+      framer-motion:
+        specifier: ^12.23.9
+        version: 12.23.11(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
@@ -13747,9 +13765,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14446,9 +14461,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.7(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@types/react':
         specifier: ~18.2.0
         version: 18.2.79
@@ -14566,6 +14578,8 @@ importers:
       '@types/yargs':
         specifier: ~16.0.1
         version: 16.0.4
+
+  tools/dx-tools: {}
 
   tools/eslint-plugin-rules: {}
 
@@ -25511,8 +25525,8 @@ packages:
   fractional-indexing-jittered@0.9.1:
     resolution: {integrity: sha512-qyzDZ7JXWf/yZT2rQDpQwFBbIaZS2o+zb0s740vqreXQ6bFQPd8tAy4D1gGN0CUeIcnNHjuvb0EaLnqHhGV/PA==}
 
-  framer-motion@12.11.0:
-    resolution: {integrity: sha512-BaBPmkhaC2l0n619Kt1nQaxSdUdyyz5V1Z7EKJ1CcraOTZitgVx0RTbL8lmg2XesaFi6o8MPBIhkWDIvzDpGaQ==}
+  framer-motion@12.23.11:
+    resolution: {integrity: sha512-VzNi+exyI3bn7Pzvz1Fjap1VO9gQu8mxrsSsNamMidsZ8AA8W2kQsR+YQOciEUbMtkKAWIbPHPttfn5e9jqqJQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
       react: ~18.2.0
@@ -28149,11 +28163,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  motion-dom@12.11.0:
-    resolution: {integrity: sha512-CItkGYJenn5ZsbzTX0D9mE0UWdjdd9r535FrxEXhzR8Kwa9I2dLr1uhEJgQPWbgaIJ6i0sNFnf2T9NvVDWQVBw==}
+  motion-dom@12.23.9:
+    resolution: {integrity: sha512-6Sv++iWS8XMFCgU1qwKj9l4xuC47Hp4+2jvPfyTXkqDg2tTzSgX6nWKD4kNFXk0k7llO59LZTPuJigza4A2K1A==}
 
-  motion-utils@12.9.4:
-    resolution: {integrity: sha512-BW3I65zeM76CMsfh3kHid9ansEJk9Qvl+K5cu4DVHKGsI52n76OJ4z2CUJUV+Mn3uEP9k1JJA3tClG0ggSrRcg==}
+  motion-utils@12.23.6:
+    resolution: {integrity: sha512-eAWoPgr4eFEOFfg2WjIsMoqJTW6Z8MTUCgn/GZ3VRpClWBdnbjryiA3ZSNLyxCTmCQx4RmYX6jX1iWHbenUPNQ==}
 
   motion@12.11.0:
     resolution: {integrity: sha512-1DIh+uBh2Ledv8VlJfveLuE+6tTAkLqRxhBHQSH6Ct8PxcZpUWY7z9E34L3LvnGbXp8u97hGSjeDsmvmVrjOeQ==}
@@ -32005,6 +32019,12 @@ packages:
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
+
+  use-deep-compare-effect@1.8.1:
+    resolution: {integrity: sha512-kbeNVZ9Zkc0RFGpfMN3MNfaKNvcLNyxOAAd9O4CBZ+kCBXXscn9s/4I+8ytUER4RDpEYs5+O6Rs4PqiZ+rHr5Q==}
+    engines: {node: '>=10', npm: '>=6'}
+    peerDependencies:
+      react: ~18.2.0
 
   use-isomorphic-layout-effect@1.1.2:
     resolution: {integrity: sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==}
@@ -45904,10 +45924,10 @@ snapshots:
 
   fractional-indexing-jittered@0.9.1: {}
 
-  framer-motion@12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  framer-motion@12.23.11(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      motion-dom: 12.11.0
-      motion-utils: 12.9.4
+      motion-dom: 12.23.9
+      motion-utils: 12.23.6
       tslib: 2.8.1
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.0
@@ -49451,15 +49471,15 @@ snapshots:
       requirejs: 2.3.7
       requirejs-config-file: 4.0.0
 
-  motion-dom@12.11.0:
+  motion-dom@12.23.9:
     dependencies:
-      motion-utils: 12.9.4
+      motion-utils: 12.23.6
 
-  motion-utils@12.9.4: {}
+  motion-utils@12.23.6: {}
 
   motion@12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      framer-motion: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      framer-motion: 12.23.11(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       tslib: 2.8.1
     optionalDependencies:
       '@emotion/is-prop-valid': 1.2.0
@@ -54030,6 +54050,12 @@ snapshots:
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+
+  use-deep-compare-effect@1.8.1(react@18.2.0):
+    dependencies:
+      '@babel/runtime': 7.27.1
+      dequal: 2.0.3
+      react: 18.2.0
 
   use-isomorphic-layout-effect@1.1.2(@types/react@18.2.79)(react@18.2.0):
     dependencies:

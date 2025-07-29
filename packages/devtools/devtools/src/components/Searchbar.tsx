@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { Button, Input, type TextInputProps } from '@dxos/react-ui';
+import { IconButton, Input, type TextInputProps } from '@dxos/react-ui';
 
 export type SearchbarProps = Pick<TextInputProps, 'placeholder'> & {
   value?: string;
@@ -40,9 +39,7 @@ export const Searchbar: FC<SearchbarProps> = ({ placeholder, value, onChange }) 
           onKeyDown={({ key }) => key === 'Escape' && handleReset()}
         />
         {/* TODO(burdon): Embedded icon. */}
-        <Button onClick={handleReset} variant='ghost'>
-          <X />
-        </Button>
+        <IconButton icon='ph--x--regular' iconOnly label='Clear search' onClick={handleReset} variant='ghost' />
       </Input.Root>
     </div>
   );

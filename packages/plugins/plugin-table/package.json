@@ -62,6 +62,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
     "@effect/platform": "0.89.0",
     "@types/react": "~18.2.0",

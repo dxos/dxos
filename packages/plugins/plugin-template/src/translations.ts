@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { TemplateType } from './types';
+import { Template } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [TemplateType.typename]: {
+      [Template.Data.typename]: {
         'typename label': 'Template',
         'typename label_zero': 'Templates',
         'typename label_one': 'Template',

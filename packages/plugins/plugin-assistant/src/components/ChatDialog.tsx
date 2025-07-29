@@ -10,7 +10,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
 import { Chat, type ChatRootProps } from './Chat';
-import { useChatProcessor, useServiceContainer } from '../hooks';
+import { useChatProcessor, useChatServices } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
@@ -23,8 +23,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'dialog', chat, serviceContainer, settings });
+  const services = useChatServices({ space });
+  const processor = useChatProcessor({ chat, services, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -36,7 +36,6 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
         setOpen(true);
         setExpanded(true);
         break;
-
       case 'thread-close':
         setOpen(false);
         break;

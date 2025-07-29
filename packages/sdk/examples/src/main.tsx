@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -16,10 +15,10 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { Icon, Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
 
@@ -97,7 +96,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Airplane size={28} className={offline ? 'active' : ''} />
+                    <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>
@@ -112,7 +111,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Stack size={28} className={batching ? 'active' : ''} />
+                    <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>

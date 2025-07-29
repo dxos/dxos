@@ -3,13 +3,13 @@
 //
 
 import {
-  autocompletion,
-  completionKeymap,
   type Completion,
   type CompletionResult,
   type CompletionContext,
-  startCompletion,
   acceptCompletion,
+  autocompletion,
+  completionKeymap,
+  startCompletion,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxTree } from '@codemirror/language';

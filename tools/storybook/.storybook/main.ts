@@ -29,6 +29,7 @@ export const modules = [
   'devtools/*/src/**',
   'experimental/*/src/**',
   'plugins/*/src/**',
+  'plugins/plugin-assistant/src/**',
   'sdk/*/src/**',
   'ui/*/src/**',
 ];
@@ -87,6 +88,11 @@ export const createConfig = ({
 
     return mergeConfig(config, {
       publicDir: staticDir,
+      resolve: {
+        alias: {
+          'tiktoken/lite': '.storybook/stub.mjs',
+        },
+      },
       build: {
         assetsInlineLimit: 0,
         rollupOptions: {

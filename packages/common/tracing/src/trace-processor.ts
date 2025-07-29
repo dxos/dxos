@@ -345,7 +345,7 @@ export class TraceProcessor {
 
         const entryToPush: LogEntry = {
           level: entry.level,
-          message: entry.message,
+          message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context,
           timestamp: new Date(),
           meta: {
