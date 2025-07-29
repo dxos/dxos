@@ -1,15 +1,18 @@
 # https://moonrepo.dev/docs/config/workspace
 $schema: ./cache/schemas/workspace.json
+
 projects:
   - docs
   - packages/**/moon.yml
   - tools/*/moon.yml
+
 unstable_remote:
   host: 'grpcs://cache.depot.dev'
   auth:
     token: 'DEPOT_TOKEN'
     headers:
       'X-Depot-Org': 't8fblrl00n'
+
 vcs:
   manager: git
   defaultBranch: main

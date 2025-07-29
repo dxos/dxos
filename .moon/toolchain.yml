@@ -1,10 +1,12 @@
 # https://moonrepo.dev/docs/config/toolchain#node
 node:
+  addEnginesConstraint: false
+  dedupeOnLockfileChange: false
   packageManager: pnpm
   # TODO(wittjosiah): Doesn't seem to always produce stable package.json.
   #   Conflicting with toolbox?
   syncPackageManagerField: false
-  addEnginesConstraint: false
+
 # https://moonrepo.dev/docs/config/toolchain#typescript
 typescript:
   rootOptionsConfigFileName: 'tsconfig.base.json'
