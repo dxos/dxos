@@ -105,6 +105,9 @@ jobs:
             exit 1
           fi
 
+      - name: emit failure
+        run: exit 1
+
       - uses: tecolicom/actions-use-homebrew-tools@v1
         if: matrix.os == 'depot-macos-latest'
         with:
@@ -136,6 +139,15 @@ jobs:
           api-key: ${{ secrets.CN_API_KEY }}
           application: ${{ env.CN_APPLICATION }}
           command: upload
+          working-directory: ./packages/apps/composer-app/src-tauri/
+
+      - name: Purge draft release
+        uses: ./.github/actions/cn-release
+        if: failure()
+        with:
+          api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: purge
           working-directory: ./packages/apps/composer-app/src-tauri/
 
   publish:
