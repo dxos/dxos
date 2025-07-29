@@ -404,6 +404,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/effect-cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/e2e/blade-runner/package.json",
           "jsonpath": "$.version"
         },

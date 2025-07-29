@@ -232,6 +232,9 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/devtools/effect-cli/tsconfig.json"
+    },
+    {
       "path": "packages/e2e/proto-guard/tsconfig.json"
     },
     {
