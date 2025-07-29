@@ -6,8 +6,8 @@ import React, { useState, useEffect, Fragment, type FC } from 'react';
 
 import { parseToolName, type Tool } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { type Blueprint } from '@dxos/assistant';
+import { type ArtifactDefinition } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { type Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -22,11 +22,11 @@ import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
-  blueprints?: readonly Ref.Ref<Blueprint>[];
+  blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
   artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
-  activeBlueprints?: readonly Ref.Ref<Blueprint>[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
   striped?: boolean;
 }>;
 

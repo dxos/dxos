@@ -21,10 +21,10 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/conductor"

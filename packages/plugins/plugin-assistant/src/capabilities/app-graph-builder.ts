@@ -13,7 +13,7 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
-import { Template } from '@dxos/assistant';
+import { Template } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

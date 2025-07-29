@@ -12,7 +12,7 @@ import { EdgeAiServiceClient, type AiServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/assistant-testing';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
 import { SequenceMachine, SequenceParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/conductor';

@@ -41,9 +41,9 @@
     "@codemirror/view": "^6.34.1",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
@@ -111,7 +111,7 @@
     "use-deep-compare-effect": "^1.8.1"
   },
   "devDependencies": {
-    "@dxos/artifact-testing": "workspace:*",
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
