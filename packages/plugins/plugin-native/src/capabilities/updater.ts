@@ -64,6 +64,10 @@ export default (context: PluginContext) => {
     }
   });
 
+  // Check on startup.
+  await Effect.runPromise(action);
+
+  // Schedule to run every hour.
   const fiber = pipe(
     // prettier-ignore
     action,
