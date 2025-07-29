@@ -18,6 +18,7 @@ export const translations = [
         'node actions menu invoker label': 'More options',
         'tree item actions label': 'More actions',
         'empty branch message': ' ',
+        'button back': 'Back to Space',
       },
     },
   },

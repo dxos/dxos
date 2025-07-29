@@ -5,31 +5,16 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
 
 import { useLoadDescendents } from '../../hooks';
 import { NAVTREE_PLUGIN } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem';
-
-const headingBackButtonLabel = 'inset-0 min-is-0 truncate flex items-center pis-2';
-
-const TitleButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
-  return (
-    <Button
-      variant='ghost'
-      classNames='pli-1 flex-1 group text-start justify-start bs-[--rail-action] font-normal'
-      onClick={onClick}
-    >
-      <Icon icon='ph--caret-left--bold' size={3} />
-      <span className={mx(headingBackButtonLabel)}>{title}</span>
-    </Button>
-  );
-};
 
 export type L1PanelProps = {
   open?: boolean;
@@ -46,7 +31,6 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   // TODO(wittjosiah): Support multiple alternate trees.
   const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
   const useAlternateItems = useCallback(
     (node?: Node, { disposition }: { disposition?: string } = {}) => {
@@ -55,6 +39,10 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     },
     [navTreeContext, alternateTree],
   );
+
+  const handleOpen = useCallback(() => {
+    setAlternateTree?.(alternatePath, true);
+  }, [alternatePath, setAlternateTree]);
 
   const handleBack = useCallback(() => {
     if (isAlternate) {
@@ -83,26 +71,37 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-subduedSeparator app-drag pli-1 density-coarse'>
-            {backCapable ? (
-              <TitleButton title={title} onClick={handleBack} />
-            ) : (
-              <span className='flex-1 truncate min-is-0 pis-6'>{title}</span>
-            )}
-            {alternateTree && !isAlternate && (
-              <IconButton
-                variant='ghost'
-                classNames={['shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1']}
-                iconOnly
-                size={5}
-                icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
-                label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                data-testid='treeView.alternateTreeButton'
-                onClick={handleOpen}
-              />
-            )}
-            <NavTreeItemColumns path={path} item={item} open density='coarse' />
-          </h2>
+          <Toolbar.Root classNames='!p-0 border-be border-subduedSeparator app-drag density-coarse'>
+            <h2 className='flex-1 truncate min-is-0 pis-4'>{title}</h2>
+            <div className='pis-2 pie-2'>
+              {(backCapable && (
+                <IconButton
+                  variant='ghost'
+                  icon='ph--arrow-u-down-left--regular'
+                  iconOnly
+                  size={5}
+                  label={t('button back')}
+                  classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+                  onClick={handleBack}
+                />
+              )) ||
+                (alternateTree && !isAlternate && (
+                  <IconButton
+                    data-testid='treeView.alternateTreeButton'
+                    variant='ghost'
+                    icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
+                    iconOnly
+                    size={5}
+                    label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
+                    classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+                    onClick={handleOpen}
+                  />
+                ))}
+            </div>
+            {/* TODO(burdon): What is this? */}
+            {/* <NavTreeItemColumns path={path} item={item} open density='coarse' /> */}
+          </Toolbar.Root>
+
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
               <Tree
