@@ -14,14 +14,6 @@ import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 
-const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
-  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
-  expect(debugObjects).toBeDefined();
-  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
-  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
-  return debugObjects;
-};
-
 describe('FieldEditor', () => {
   afterEach(() => {
     cleanup();
@@ -33,7 +25,7 @@ describe('FieldEditor', () => {
     expect(screen.getByText('Type format')).toBeInTheDocument();
     expect(screen.getByText('String')).toBeInTheDocument();
 
-    // Verify the initial field shows as String type
+    // Verify the initial field shows as String type.
     expect(screen.getByText('String')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('combobox'));
@@ -55,3 +47,11 @@ describe('FieldEditor', () => {
     expect(name.description).toBe('Full name.');
   });
 });
+
+const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
+  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
+  expect(debugObjects).toBeDefined();
+  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
+  return debugObjects;
+};

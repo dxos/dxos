@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
 import { Option } from 'effect';
 import React, { useCallback, useState } from 'react';
 
@@ -17,7 +16,7 @@ import {
 import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
@@ -148,7 +147,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
 
         <div role='none' className='flex mlb-2 pli-2 justify-center'>
           <Button data-testid='stack.createSection' classNames='gap-2' onClick={handleAddSection}>
-            <Plus />
+            <Icon icon='ph--plus' />
             <span className='sr-only'>{t('add section label')}</span>
           </Button>
         </div>

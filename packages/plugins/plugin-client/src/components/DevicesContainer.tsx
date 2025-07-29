@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Check, X } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
@@ -12,7 +11,7 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, IconButton, List, useId, useTranslation, Icon } from '@dxos/react-ui';
 import {
   ControlFrame,
   ControlFrameItem,
@@ -22,7 +21,6 @@ import {
   ControlSection,
 } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
@@ -290,5 +288,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? <Check className={mx('m-1.5', getSize(6))} /> : <X className={mx('m-1.5', getSize(6))} />;
+  return statusValue > 0 ? (
+    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+  ) : (
+    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+  );
 };

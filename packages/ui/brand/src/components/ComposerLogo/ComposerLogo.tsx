@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
+import { type IconWeight } from '@phosphor-icons/react';
 import { arc, interpolateString, select } from 'd3';
 import React, {
   type CSSProperties,
@@ -28,9 +28,23 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-const Composer = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
-  <IconBase ref={ref} {...props} weights={weights} />
-));
+const Composer = forwardRef<SVGSVGElement, any>((props, ref) => {
+  const weight = props.weight || 'regular';
+  const size = props.size || 256;
+  return (
+    <svg
+      ref={ref}
+      {...props}
+      width={size}
+      height={size}
+      viewBox='0 0 256 256'
+      fill='currentColor'
+      xmlns='http://www.w3.org/2000/svg'
+    >
+      {weights.get(weight)}
+    </svg>
+  );
+});
 
 export interface AnimationController {
   spin: () => void;

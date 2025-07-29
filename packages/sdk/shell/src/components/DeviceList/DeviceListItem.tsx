@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DotsThree, ShareFat, Power, FirstAidKit } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -17,8 +16,8 @@ import {
   useTranslation,
   DropdownMenu,
   Button,
+  Icon,
 } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 import { type AgentFormProps, type DeviceListItemProps } from './DeviceListProps';
@@ -120,7 +119,7 @@ export const DeviceListItem = forwardRef<
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
                   <span className='sr-only'>{t('more options label')}</span>
-                  <DotsThree className={getSize(5)} />
+                  <Icon icon='ph--dots-three--regular' size={5} />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
@@ -134,19 +133,19 @@ export const DeviceListItem = forwardRef<
                       data-testid='device-list-item-current.join-existing'
                       onClick={onClickJoinExisting}
                     >
-                      <ShareFat className={getSize(5)} />
+                      <Icon icon='ph--share-fat--regular' size={5} />
                       {t('choose join new identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <FirstAidKit className={getSize(5)} />
+                      <Icon icon='ph--first-aid-kit--regular' size={5} />
                       {t('choose recover identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickReset && (
                     <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Power className={getSize(5)} />
+                      <Icon icon='ph--power--regular' size={5} />
                       {t('reset device label')}
                     </DropdownMenu.Item>
                   )}

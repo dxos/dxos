@@ -4,10 +4,9 @@
 
 import '@dxos-theme';
 
-import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Input, Select, Toggle, Toolbar } from '../components';
+import { Icon, Input, Select, Toggle, Toolbar } from '../components';
 import { withTheme, withSurfaceVariantsLayout } from '../testing';
 
 const DefaultStory = () => {
@@ -37,27 +36,27 @@ const DefaultStory = () => {
         {/* TODO(burdon): Icon sizes should adapt to density. */}
         <Toolbar.ToggleGroup type='multiple'>
           <Toolbar.ToggleGroupItem value='a'>
-            <TextB />
+            <Icon icon='ph--text-b--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='b'>
-            <TextItalic />
+            <Icon icon='ph--text-italic--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='c'>
-            <TextUnderline />
+            <Icon icon='ph--text-underline--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
         {/* TODO(burdon): Highlight isn't shown. */}
         <Toolbar.ToggleGroup type='single' defaultValue='a'>
           <Toolbar.ToggleGroupItem value='a'>
-            <FileTs />
+            <Icon icon='ph--file-ts--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='b'>
-            <FileJs />
+            <Icon icon='ph--file-js--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
         <Toolbar.Button asChild>
           <Toggle>
-            <Bug />
+            <Icon icon='ph--bug--regular' />
           </Toggle>
         </Toolbar.Button>
         {/* TODO(burdon): Should not be 'is-full' by default. */}
@@ -71,7 +70,7 @@ const DefaultStory = () => {
         </Input.Root>
         <Toolbar.Button>Test</Toolbar.Button>
         <Toolbar.Button>
-          <ArrowClockwise />
+          <Icon icon='ph--arrow-clockwise--regular' />
         </Toolbar.Button>
       </Toolbar.Root>
       <Input.Root>

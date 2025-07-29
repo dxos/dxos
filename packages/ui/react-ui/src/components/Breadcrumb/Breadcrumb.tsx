@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Dot } from '@phosphor-icons/react';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import { Icon } from '../Icon';
 import { Link, type LinkProps } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
@@ -100,7 +100,7 @@ const BreadcrumbSeparator = ({ children, classNames, ...props }: BreadcrumbSepar
       {...props}
       className={tx('breadcrumb.separator', 'breadcrumb__separator', {}, classNames)}
     >
-      {children ?? <Dot weight='bold' />}
+      {children ?? <Icon icon='ph--dot--bold' />}
     </Primitive.span>
   );
 };
