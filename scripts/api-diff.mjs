@@ -28,7 +28,7 @@ const ts = require('typescript');
 $.verbose = false;
 
 const VERBOSE = false,
-  DEBUG = true;
+  DEBUG = false;
 
 process.on('unhandledRejection', (err) => {
   console.error(chalk.red('Error: '), err);
@@ -238,7 +238,7 @@ function processExportStarStatements(sourceFile, checker, exports, entryPoint) {
 
               // For re-exported symbols, we need to get the source file of the original declaration
               const originalSourceFile = declaration.getSourceFile();
-              
+
               exports.set(name, {
                 name,
                 entryPoint: entryPoint.name,
@@ -256,20 +256,25 @@ function processExportStarStatements(sourceFile, checker, exports, entryPoint) {
         }
       }
     }
-    
+
     // Also handle named re-exports: export { foo, bar } from 'module'
-    if (ts.isExportDeclaration(node) && node.moduleSpecifier && node.exportClause && ts.isNamedExports(node.exportClause)) {
+    if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      node.exportClause &&
+      ts.isNamedExports(node.exportClause)
+    ) {
       const moduleSpecifier = node.moduleSpecifier;
       if (ts.isStringLiteral(moduleSpecifier)) {
         const moduleSymbol = checker.getSymbolAtLocation(moduleSpecifier);
         if (moduleSymbol && moduleSymbol.exports) {
-          node.exportClause.elements.forEach(exportSpecifier => {
+          node.exportClause.elements.forEach((exportSpecifier) => {
             const exportedName = exportSpecifier.name.text;
             const originalName = exportSpecifier.propertyName?.text || exportedName;
-            
+
             const symbol = moduleSymbol.exports?.get(originalName);
             if (!symbol) return;
-            
+
             if (exportedName.startsWith('_')) return; // Skip internal exports
             if (exports.has(exportedName)) return; // Don't override existing exports
 
@@ -280,7 +285,7 @@ function processExportStarStatements(sourceFile, checker, exports, entryPoint) {
               const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
               const typeString = checker.typeToString(type, declaration, ts.TypeFormatFlags.InTypeAlias);
               const originalSourceFile = declaration.getSourceFile();
-              
+
               exports.set(exportedName, {
                 name: exportedName,
                 entryPoint: entryPoint.name,
