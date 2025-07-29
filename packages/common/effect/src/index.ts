@@ -8,3 +8,4 @@ export * from './url';
 export * from './context';
 export * from './errors';
 export * from './testing';
+export * from './resource';

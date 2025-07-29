@@ -10,17 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 
 import { DatabaseService, QueueService } from '../services';
-
-// TODO(dmaretskyi): Extract to effect-utils.
-const accuireReleaseResource = <T extends Resource>(getResource: () => T) =>
-  Effect.acquireRelease(
-    Effect.gen(function* () {
-      const resource = getResource();
-      yield* Effect.promise(() => resource.open());
-      return resource;
-    }),
-    (resource) => Effect.promise(() => resource.close()),
-  );
+import { accuireReleaseResource } from '@dxos/effect';
 
 const testBuilder = accuireReleaseResource(() => new EchoTestBuilder());
 
