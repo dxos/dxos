@@ -7,7 +7,6 @@ on:
       - production
       - staging
       - tauri
-      - jdw/tauri
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +16,6 @@ env:
   CN_APPLICATION: "dxos/composer"
 
 jobs:
-  # TODO(wittjosiah): Purge draft releases if the build fails.
   draft:
     runs-on: depot-ubuntu-24.04
 
