@@ -26,6 +26,7 @@ export default async (context: PluginContext) => {
   const action = Effect.gen(function* () {
     log.info('Checking for updates...');
     const update = yield* Effect.tryPromise(() => check());
+    log.info('Checked for updates', { version: update?.version, currentVersion: update?.currentVersion });
     if (update) {
       log.info('Update available', update);
       let downloaded = 0;
