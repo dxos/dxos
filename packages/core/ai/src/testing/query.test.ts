@@ -14,11 +14,11 @@ import { createTestData, seedTestData } from './test-data';
 import { Contact, Organization, Project, Task } from './test-schema';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
+import { DEFAULT_EDGE_MODEL } from '../defs';
+import { EdgeAiServiceClient } from '../service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage } from '../tools';
 import { createLogger } from '../util';
-import { DEFAULT_EDGE_MODEL } from '../defs';
-import { EdgeAiServiceClient } from '../service';
 
 const aiClient = new EdgeAiServiceClient({
   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
