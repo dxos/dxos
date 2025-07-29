@@ -404,33 +404,30 @@ function outputChanges(packageName, oldVersion, newVersion, changes) {
     `**Summary:** ${changes.added.length} added, ${changes.changed.length} changed, ${changes.removed.length} removed\n`,
   );
 
-  // Added exports
-  if (changes.added.length > 0) {
-    console.log('## ✅ Added\n');
-    for (const export_ of changes.added) {
-      console.log(`### ${export_.name}\n`);
-      console.log('```typescript');
-      console.log(export_.sourceText);
-      console.log('```\n');
-    }
-  }
+  // Create a flat list of all changes with their type
+  const allChanges = [
+    ...changes.added.map(item => ({ type: 'added', name: item.name, item })),
+    ...changes.changed.map(item => ({ type: 'changed', name: item.name, item })),
+    ...changes.removed.map(item => ({ type: 'removed', name: item.name, item }))
+  ];
 
-  // Changed exports
-  if (changes.changed.length > 0) {
-    console.log('## 🔄 Changed\n');
-    for (const change of changes.changed) {
-      console.log(`### ${change.name}\n`);
-      console.log('```typescript');
-      console.log(change.new.sourceText);
-      console.log('```\n');
-    }
-  }
+  // Sort all changes by name
+  allChanges.sort((a, b) => a.name.localeCompare(b.name));
 
-  // Removed exports
-  if (changes.removed.length > 0) {
-    console.log('## ❌ Removed\n');
-    for (const export_ of changes.removed) {
-      console.log(`- \`${export_.name}\`\n`);
+  // Output each change individually
+  for (const change of allChanges) {
+    if (change.type === 'added') {
+      console.log(`## ✅ Added ${change.name}\n`);
+      console.log('```typescript');
+      console.log(change.item.sourceText);
+      console.log('```\n');
+    } else if (change.type === 'changed') {
+      console.log(`## 🔄 Changed ${change.name}\n`);
+      console.log('```typescript');
+      console.log(change.item.new.sourceText);
+      console.log('```\n');
+    } else if (change.type === 'removed') {
+      console.log(`## ❌ Removed ${change.name}\n`);
     }
   }
 }
