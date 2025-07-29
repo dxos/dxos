@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CrownCross } from '@phosphor-icons/react';
 import React from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/echo';
-import { Input, Select, useThemeContext } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
 
 import { type ChessType } from '../types';
 
@@ -55,7 +53,11 @@ const PlayerSelect = ({
   return (
     <Input.Root>
       <Input.Label>
-        <CrownCross className={mx(getSize(6))} weight={iconFillMode} aria-label={`Chess icon for side ${side}`} />
+        <Icon
+          aria-label={`Chess icon for side ${side}`}
+          icon={`ph--crown-cross--${iconFillMode || 'regular'}`}
+          size={6}
+        />
       </Input.Label>
       <Select.Root value={value} onValueChange={onValueChange}>
         <Select.TriggerButton placeholder={'Select player'} />

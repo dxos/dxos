@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowURightDown, Circle } from '@phosphor-icons/react';
 import { type Color } from 'chess.js';
 import React, { type FC } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, Icon } from '@dxos/react-ui';
 import { type ChessModel } from '@dxos/react-ui-gameboard';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
 
 export type ChessPanelProps = ThemedClassName<{
   model: ChessModel;
@@ -36,9 +35,10 @@ export const ChessPanel: FC<ChessPanelProps> = ({ classNames, model, orientation
 
     return (
       <div className='flex items-center'>
-        <Circle
-          className={mx(getSize(4), turn && (game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
-          weight={turn ? 'fill' : 'thin'}
+        <Icon
+          icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
+          size={4}
+          classNames={mx(turn && (game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
         />
       </div>
     );
@@ -50,7 +50,7 @@ export const ChessPanel: FC<ChessPanelProps> = ({ classNames, model, orientation
         <Player color={orientation === 'w' ? 'b' : 'w'} />
         {onFlip && (
           <button onClick={onFlip}>
-            <ArrowURightDown weight='thin' className={getSize(6)} />
+            <Icon icon='ph--arrow-u-right-down--thin' size={6} />
           </button>
         )}
       </div>

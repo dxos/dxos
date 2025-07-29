@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Gauge, Graph as GraphIcon, Gear, Toolbox, Warning } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
-import { Button, ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { ToggleGroup, ToggleGroupItem, Toolbar, Icon, IconButton } from '@dxos/react-ui';
 
 import { Json, Tree } from './Tree';
 import { Container } from '../Container';
@@ -49,23 +47,32 @@ export const DebugApp: FC<{ graph: Graph }> = ({ graph }) => {
         <Toolbar.Root classNames='p-1'>
           <ToggleGroup type='single' value={view}>
             <ToggleGroupItem value={'graph'} onClick={() => setView('graph')} title={'Plugin graph'}>
-              <GraphIcon className={getSize(5)} />
+              <Icon icon='ph--graph--regular' size={5} />
             </ToggleGroupItem>
             <ToggleGroupItem value={'diagnostics'} onClick={() => setView('diagnostics')} title={'Diagnostics'}>
-              <Gauge className={getSize(5)} />
+              <Icon icon='ph--gauge--regular' size={5} />
             </ToggleGroupItem>
             <ToggleGroupItem value={'config'} onClick={() => setView('config')} title={'Config'}>
-              <Gear className={getSize(5)} />
+              <Icon icon='ph--gear--regular' size={5} />
             </ToggleGroupItem>
           </ToggleGroup>
 
           <Toolbar.Separator variant='gap' />
-          <Button onClick={(event) => handleResetClient(event.shiftKey)} title='Reset client'>
-            <Warning className={mx(getSize(5), 'text-red-700')} />
-          </Button>
-          <Button onClick={handleOpenDevtools} title='Open Devtools'>
-            <Toolbox weight='duotone' className={mx(getSize(5), 'text-700')} />
-          </Button>
+          <IconButton
+            icon='ph--warning--regular'
+            iconOnly
+            size={5}
+            classNames='text-red-700'
+            onClick={(event) => handleResetClient(event.shiftKey)}
+            label='Reset client'
+          />
+          <IconButton
+            icon='ph--toolbox--duotone'
+            iconOnly
+            size={5}
+            onClick={handleOpenDevtools}
+            label='Open Devtools'
+          />
         </Toolbar.Root>
       }
     >

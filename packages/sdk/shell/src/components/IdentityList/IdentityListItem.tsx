@@ -8,7 +8,6 @@ import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ListItem, Avatar, useId, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
 
 type IdentityListItemProps = {
@@ -27,7 +26,7 @@ export const IdentityListItem = forwardRef<
   return (
     <ListItem.Root
       {...props}
-      classNames={mx('flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer', classNames)}
+      classNames={['flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer', classNames]}
       onClick={() => onClick?.()}
       data-testid='identity-list-item'
       labelId={labelId}
