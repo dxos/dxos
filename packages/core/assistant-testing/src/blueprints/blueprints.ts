@@ -28,7 +28,6 @@ export const DESIGN_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   ),
   // TODO(dmaretskyi): Helper for function -> toolId conversion.
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
-  artifacts: [],
 });
 
 export const TASK_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
@@ -47,7 +46,6 @@ export const TASK_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
     }),
   ),
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
-  artifacts: [],
 });
 
 export const PLANNING_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
@@ -102,5 +100,4 @@ export const PLANNING_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
     }),
   ),
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
-  artifacts: [],
 });

@@ -13,13 +13,14 @@ import { Template } from '../template';
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
+ * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
  */
 export const Blueprint = Schema.Struct({
   /**
    * Global registry ID.
    * NOTE: The `key` property refers to the original registry entry.
    */
-  // TODO(burdon): Create Format type.
+  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
   key: Schema.String.annotations({
     description: 'Unique registration key for the blueprint',
   }),
@@ -51,14 +52,6 @@ export const Blueprint = Schema.Struct({
    */
   tools: Schema.Array(ToolId).annotations({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
-  }),
-
-  /**
-   * Array of artifacts that the AI assistant can create or modify.
-   */
-  // TODO(burdon): Change to refs?
-  artifacts: Schema.Array(Schema.String).annotations({
-    description: 'Ids of artifact definitions that should be pulled into the blueprint',
   }),
 }).pipe(
   Type.Obj({
