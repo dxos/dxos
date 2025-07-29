@@ -8,9 +8,9 @@ import React, { type FC } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
+import { translations } from '../translations';
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
-import { translations } from '../translations';
 
 const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??

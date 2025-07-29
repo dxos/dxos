@@ -10,6 +10,7 @@ RUN apt-get update \
     libenchant-2-2 \
     libpng++-dev \
     libxtst-dev \
+    sudo \
     xz-utils
 
 # Install Node.js from official binary tarball
@@ -35,10 +36,11 @@ RUN npm install -g pnpm@10.13.1 \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/*
 
-# TODO(wittjosiah): Allow runner to use sudo.
-# Create a user with a fixed UID:GID.
+# Create a user with a fixed UID:GID and add to sudo group.
 RUN groupadd -g 1001 runner && \
-    useradd -m -u 1001 -g 1001 -s /bin/bash runner
+    useradd -m -u 1001 -g 1001 -s /bin/bash runner && \
+    usermod -aG sudo runner && \
+    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Give the user ownership of expected directories:
 # /__w: Workspace (repo checkout)

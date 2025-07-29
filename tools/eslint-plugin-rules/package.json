@@ -1,0 +1,16 @@
+{
+  "name": "@dxos/eslint-plugin-rules",
+  "version": "0.8.3",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

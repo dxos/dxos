@@ -5,7 +5,7 @@
 import { defineModule, definePlugin, Events, contributes, allOf } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities, Keyboard, ReactContext } from './capabilities';
+import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';
 import { AttentionEvents } from './events';
 import { meta } from './meta';
 
@@ -34,6 +34,11 @@ export const AttentionPlugin = () =>
       id: `${meta.id}/module/keyboard`,
       activatesOn: allOf(Events.AppGraphReady, AttentionEvents.AttentionReady),
       activate: Keyboard,
+    }),
+    defineModule({
+      id: `${meta.id}/module/intent-resolver`,
+      activatesOn: Events.SetupIntentResolver,
+      activate: IntentResolver,
     }),
   ]);
 

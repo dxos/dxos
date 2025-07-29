@@ -24,51 +24,52 @@ const ChessContainer = ({ game, role }: ChessContainerProps) => {
     return null;
   }
 
-  if (role === 'popover') {
-    return (
-      <Chess.Root game={game}>
-        <div role='none' className='popover-square size-container'>
-          <Chess.Board classNames={containFragment} />
-        </div>
-      </Chess.Root>
-    );
+  switch (role) {
+    case 'card--popover': {
+      return (
+        <Chess.Root game={game}>
+          <div role='none' className='popover-square size-container'>
+            <Chess.Board classNames={containFragment} />
+          </div>
+        </Chess.Root>
+      );
+    }
+    case 'card--extrinsic': {
+      return (
+        <Chess.Root game={game}>
+          <div role='none' className='grid is-full bs-full size-container place-content-center'>
+            <Chess.Board classNames={containFragment} />
+          </div>
+        </Chess.Root>
+      );
+    }
+    case 'card--intrinsic': {
+      return (
+        <Chess.Root game={game}>
+          <Chess.Board />
+        </Chess.Root>
+      );
+    }
+    default: {
+      return (
+        <StackItem.Content>
+          <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
+            <div />
+
+            <div className='flex m-4 overflow-hidden'>
+              <Chess.Root game={game}>
+                <Chess.Content>
+                  <Chess.Board />
+                </Chess.Content>
+              </Chess.Root>
+            </div>
+
+            <PlayerSelector space={space} game={game} />
+          </div>
+        </StackItem.Content>
+      );
+    }
   }
-
-  if (role === 'card--extrinsic') {
-    return (
-      <Chess.Root game={game}>
-        <div role='none' className='grid is-full bs-full size-container place-content-center'>
-          <Chess.Board classNames={containFragment} />
-        </div>
-      </Chess.Root>
-    );
-  }
-
-  if (role === 'card--intrinsic') {
-    return (
-      <Chess.Root game={game}>
-        <Chess.Board />
-      </Chess.Root>
-    );
-  }
-
-  return (
-    <StackItem.Content>
-      <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
-        <div />
-
-        <div className='flex m-4 overflow-hidden'>
-          <Chess.Root game={game}>
-            <Chess.Content>
-              <Chess.Board />
-            </Chess.Content>
-          </Chess.Root>
-        </div>
-
-        <PlayerSelector space={space} game={game} />
-      </div>
-    </StackItem.Content>
-  );
 };
 
 export default ChessContainer;
