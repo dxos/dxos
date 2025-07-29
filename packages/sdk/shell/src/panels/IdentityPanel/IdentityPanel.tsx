@@ -64,7 +64,7 @@ const IdentityHeading = ({
 
   const setDisplayName = (nextDisplayName: string) => {
     setDisplayNameDirectly(nextDisplayName);
-    updateDisplayName(nextDisplayName);
+    void updateDisplayName(nextDisplayName);
   };
 
   const setEmoji = (nextEmoji: string) => {

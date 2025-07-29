@@ -4,9 +4,9 @@
 
 import { Effect, Layer, Schema, Scope } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import {
-  AiService,
   CredentialsService,
   DatabaseService,
   FunctionCallService,

@@ -4,7 +4,6 @@
 
 import { test } from 'vitest';
 
-import { DEFAULT_EDGE_MODEL, EdgeAiServiceClient } from '@dxos/ai';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
@@ -15,6 +14,8 @@ import { createTestData, seedTestData } from './test-data';
 import { Contact, Organization, Project, Task } from './test-schema';
 import { runLLM } from '../conversation';
 import { EchoDataSource } from '../cypher';
+import { DEFAULT_EDGE_MODEL } from '../defs';
+import { EdgeAiServiceClient } from '../service';
 import { AI_SERVICE_ENDPOINT } from '../testing';
 import { createUserMessage } from '../tools';
 import { createLogger } from '../util';

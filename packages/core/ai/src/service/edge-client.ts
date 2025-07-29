@@ -2,13 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(dmaretskyi): Kill this.
+// @ts-nocheck
+
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type { AiServiceClient, GenerationStream } from './service';
-import { createGenerationStream } from './stream';
 import { type GenerateRequest, type GenerateResponse, type LLMModel } from '../types';
 
+/**
+ * @deprecated
+ */
 export type AiServiceEdgeClientOptions = {
   endpoint: string;
   defaultGenerationOptions?: {
@@ -16,6 +21,9 @@ export type AiServiceEdgeClientOptions = {
   };
 };
 
+/**
+ * @deprecated
+ */
 export class EdgeAiServiceClient implements AiServiceClient {
   private readonly _endpoint: string;
   private readonly _defaultGenerationOptions: AiServiceEdgeClientOptions['defaultGenerationOptions'];
