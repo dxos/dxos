@@ -62,7 +62,7 @@ const data = (() => {
 export const Popover = {
   args: {
     subject: Obj.make(DocumentType, data.document),
-    role: 'popover',
+    role: 'card--popover',
   },
 };
 
