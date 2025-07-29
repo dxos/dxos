@@ -186,6 +186,11 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          # Omit DEPOT_TOKEN if branch is 'production', otherwise include it.
+          DEPOT_TOKEN: ${{ github.ref == 'refs/heads/production' && '' || secrets.DEPOT_TOKEN }}
+          DX_HOST: true
+          NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Upload assets
         uses: ./.github/actions/cn-release
