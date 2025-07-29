@@ -233,6 +233,70 @@ async function checkWorkflowStatus() {
 }
 
 /**
+ * Parse task logs from GitHub Actions logs.
+ * Extracts task-specific logs and identifies failed tasks.
+ */
+function parseTaskLogs(logs) {
+  const logLines = logs.split('\n');
+  const tasks = new Map();
+  const failedTasks = [];
+  
+  // Regex to match task log lines: timestamp | task_name | content
+  const taskLogRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+([^|]+)\s*\|(.*)$/;
+  
+  for (const line of logLines) {
+    const match = line.match(taskLogRegex);
+    
+    if (match) {
+      const taskName = match[1].trim();
+      const logContent = match[2].trim();
+      
+      // Initialize task if not seen before
+      if (!tasks.has(taskName)) {
+        tasks.set(taskName, {
+          name: taskName,
+          logs: [],
+          status: 'running',
+          failed: false
+        });
+      }
+      
+      const task = tasks.get(taskName);
+      task.logs.push(line);
+      
+      // Check for failure marker
+      if (logContent.includes(`Task ${taskName} failed to run.`)) {
+        task.failed = true;
+        task.status = 'failed';
+      }
+    } else {
+      // Check for generic failure patterns in non-task lines
+      if (line.includes('failed to run.')) {
+        const failureMatch = line.match(/Task ([^\s]+) failed to run\./); 
+        if (failureMatch) {
+          const taskName = failureMatch[1];
+          if (tasks.has(taskName)) {
+            const task = tasks.get(taskName);
+            task.failed = true;
+            task.status = 'failed';
+            task.logs.push(line);
+          }
+        }
+      }
+    }
+  }
+  
+  // Collect only failed tasks
+  for (const task of tasks.values()) {
+    if (task.failed) {
+      failedTasks.push(task);
+    }
+  }
+  
+  return failedTasks;
+}
+
+/**
  * Fetch and display logs for a failed workflow run.
  */
 async function displayWorkflowLogs(run) {
@@ -267,23 +331,50 @@ async function displayWorkflowLogs(run) {
             const response = await fetch(logsResponse.url);
             const logs = await response.text();
             
-            console.log(chalk.gray('\n--- Job Logs ---'));
-            // Display last 500 lines of logs to avoid overwhelming output
-            const logLines = logs.split('\n');
-            const displayLines = logLines.slice(-500);
+            const failedTasks = parseTaskLogs(logs);
             
-            displayLines.forEach(line => {
-              if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
-                console.log(chalk.red(line));
-              } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
-                console.log(chalk.yellow(line));
-              } else {
-                console.log(line);
+            if (failedTasks.length > 0) {
+              console.log(chalk.gray('\n--- Failed Tasks ---'));
+              
+              for (const task of failedTasks) {
+                console.log(chalk.red(`\n❌ Task: ${task.name}`));
+                console.log(chalk.gray(`   Status: ${task.status}`));
+                console.log(chalk.gray(`   Log lines: ${task.logs.length}`));
+                
+                // Display task logs with color coding
+                task.logs.forEach(line => {
+                  if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
+                    console.log(chalk.red(line));
+                  } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
+                    console.log(chalk.yellow(line));
+                  } else {
+                    console.log(line);
+                  }
+                });
               }
-            });
-            
-            if (logLines.length > 50) {
-              console.log(chalk.gray(`\n... (showing last 50 lines of ${logLines.length} total lines)`));
+              
+              // Summary
+              console.log(chalk.yellow(`\n📊 Summary: ${failedTasks.length} failed task(s)`));
+              failedTasks.forEach(task => {
+                console.log(chalk.red(`  - ${task.name}: ${task.status}`));
+              });
+            } else {
+              console.log(chalk.gray('\n--- Job Logs ---'));
+              console.log(chalk.yellow('No failed tasks found, showing raw logs...'));
+              
+              // Fallback to original log display if no tasks detected
+              const logLines = logs.split('\n');
+              const displayLines = logLines.slice(-500);
+              
+              displayLines.forEach(line => {
+                if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
+                  console.log(chalk.red(line));
+                } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
+                  console.log(chalk.yellow(line));
+                } else {
+                  console.log(line);
+                }
+              });
             }
           }
         } catch (logErr) {
