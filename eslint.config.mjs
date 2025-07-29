@@ -69,6 +69,7 @@ export default tseslint.config(
       'packages/common/node-std',
       'packages/sdk/config/src/testing',
       'tools/dx-tools',
+      'tools/storybook/.storybook/stub.mjs',
     ],
     // WARNING: Do not add extra keys to this config object
     // See: https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
