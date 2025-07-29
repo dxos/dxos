@@ -4,14 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { type Blueprint, type BlueprintRegistry } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
 export type ChatOptionsMenuProps = {
-  blueprintRegistry?: BlueprintRegistry;
-  blueprints?: Blueprint[];
+  blueprintRegistry?: Blueprint.Registry;
+  blueprints?: Blueprint.Blueprint[];
   onChange?: (key: string, active: boolean) => void;
 };
 

@@ -1,3 +1,3 @@
 # @dxos/blueprints
 
-Blueprints and related utilities.
+Low-level definitions for Blueprints, Templates, and related utilities.

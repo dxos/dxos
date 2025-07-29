@@ -25,7 +25,9 @@ export class ContextBinder {
   readonly bindings: ReadonlySignal<Bindings> = computed(() => this._reduce(this._queue.objects));
 
   // TODO(burdon): load refs?
-  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint>[]> = computed(() => [...this.bindings.value.blueprints]);
+  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]> = computed(() => [
+    ...this.bindings.value.blueprints,
+  ]);
   readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
 
   /**
@@ -91,11 +93,11 @@ export class ContextBinder {
 }
 
 export type BindingProps = Partial<{
-  blueprints: Ref.Ref<Blueprint>[];
+  blueprints: Ref.Ref<Blueprint.Blueprint>[];
   objects: Ref.Ref<Type.Expando>[];
 }>;
 
 export class Bindings {
-  blueprints = new ComplexSet<Ref.Ref<Blueprint>>((ref) => ref.dxn.toString());
+  blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
   objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
 }

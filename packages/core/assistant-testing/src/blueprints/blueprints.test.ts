@@ -74,7 +74,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
+          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
@@ -171,7 +171,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
+          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(

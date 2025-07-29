@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createSystemPrompt } from '@dxos/blueprints';
+import { createSystemPrompt } from '@dxos/assistant';
 import { ObjectId } from '@dxos/echo-schema';
 import { type ServiceContainer } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -207,7 +207,7 @@ export const createArtifactCircuit = () => {
   model.builder.call((builder) => {
     const prompt = model.createNode(
       createTemplate({
-        text: createSystemPrompt(),
+        text: createSystemPrompt({}),
         ...position({ x: -10, y: -5, width: 8, height: 18 }),
       }),
     );
@@ -262,7 +262,7 @@ export const createGptCircuit = (options: {
     if (options.instructions) {
       const prompt = model.createNode(
         createTemplate({
-          text: createSystemPrompt(),
+          text: createSystemPrompt({}),
           ...position({ x: -18, y: -12, width: 8, height: 10 }),
         }),
       );

@@ -8,7 +8,7 @@ import { ToolId } from '@dxos/ai';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 
-import { Template } from './template';
+import { Template } from '../template';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.

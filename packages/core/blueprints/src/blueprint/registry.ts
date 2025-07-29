@@ -4,7 +4,10 @@
 
 import { type Blueprint } from './blueprint';
 
-export class BlueprintRegistry {
+/**
+ * Blueprint registry.
+ */
+export class Registry {
   constructor(private readonly _blueprints: Blueprint[]) {
     this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
   }

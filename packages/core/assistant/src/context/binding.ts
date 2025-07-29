@@ -13,8 +13,8 @@ import { Type } from '@dxos/echo';
 // TODO(burdon): Make ContentBlock.
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
-    added: Schema.Array(Type.Ref(Blueprint)),
-    removed: Schema.Array(Type.Ref(Blueprint)),
+    added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
+    removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
   }),
 
   // TODO(burdon): Type.Expando => Type.Obj (or Obj.Any?)

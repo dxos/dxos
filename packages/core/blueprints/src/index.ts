@@ -3,5 +3,5 @@
 //
 
 export * from './artifacts';
-export * from './blueprint';
-export * from './prompts';
+export * as Blueprint from './blueprint';
+export * as Template from './template';

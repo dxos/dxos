@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { readDocument, writeDocument } from '../functions';
 
-export const DESIGN_BLUEPRINT = Obj.make(Blueprint, {
+export const DESIGN_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
@@ -31,7 +31,7 @@ export const DESIGN_BLUEPRINT = Obj.make(Blueprint, {
   artifacts: [],
 });
 
-export const TASK_BLUEPRINT = Obj.make(Blueprint, {
+export const TASK_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/task-list',
   name: 'Task List',
   description: 'Manages a list of tasks.',
@@ -50,7 +50,7 @@ export const TASK_BLUEPRINT = Obj.make(Blueprint, {
   artifacts: [],
 });
 
-export const PLANNING_BLUEPRINT = Obj.make(Blueprint, {
+export const PLANNING_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',

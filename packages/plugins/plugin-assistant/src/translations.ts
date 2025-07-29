@@ -13,7 +13,7 @@ export const translations = [
   {
     'en-US': {
       // TODO(burdon): From assistant.
-      [Blueprint.typename]: {
+      [Blueprint.Blueprint.typename]: {
         'typename label': 'Blueprint',
         'typename label_zero': 'Blueprints',
         'typename label_one': 'Blueprint',

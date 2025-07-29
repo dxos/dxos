@@ -17,7 +17,7 @@ import {
   remoteServiceEndpoints,
   writeDocument,
 } from '@dxos/assistant-testing';
-import { Blueprint, BlueprintRegistry } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -114,7 +114,7 @@ const ChatContainer = () => {
   }, [presets]);
 
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new BlueprintRegistry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
+  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -211,7 +211,7 @@ const DocumentContainer = () => {
 // TODO(burdon): Show all active blueprints from context?
 const BlueprintContainer = () => {
   const space = useSpace();
-  const [blueprint] = useQuery(space, Filter.type(Blueprint));
+  const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
   if (!blueprint?.instructions.target) {
     return null;
   }
@@ -270,7 +270,7 @@ const getDecorators = ({
 }: {
   config: Config;
   plugins?: Plugin[];
-  blueprints?: Blueprint[];
+  blueprints?: Blueprint.Blueprint[];
   context?: boolean;
 }) => [
   withPluginManager({
@@ -278,7 +278,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Assistant.Chat, DocumentType, Blueprint],
+        types: [Assistant.Chat, DocumentType, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -309,7 +309,7 @@ const getDecorators = ({
             // Clone blueprints and bind to conversation.
             // TODO(dmaretskyi): This should be done by Obj.clone.
             const { id: _id, ...data } = blueprint;
-            const obj = space.db.add(Obj.make(Blueprint, data));
+            const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
         },

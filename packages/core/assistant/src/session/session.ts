@@ -37,7 +37,7 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
   history: DataType.Message[];
   systemPrompt?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
-  blueprints?: Blueprint[];
+  blueprints?: Blueprint.Blueprint[];
 };
 
 /**

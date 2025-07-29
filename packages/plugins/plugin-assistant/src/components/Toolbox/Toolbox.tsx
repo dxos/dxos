@@ -22,11 +22,11 @@ import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
-  blueprints?: readonly Ref.Ref<Blueprint>[];
+  blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
   artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
-  activeBlueprints?: readonly Ref.Ref<Blueprint>[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
   striped?: boolean;
 }>;
 

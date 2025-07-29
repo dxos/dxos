@@ -5,6 +5,17 @@
 import { type Schema } from 'effect';
 
 import { type ExecutableTool } from '@dxos/ai';
+import { type SpaceId } from '@dxos/keys';
+
+/**
+ * @deprecated
+ */
+// TODO(burdon): Replace with Ref.
+export type AssociatedArtifact = {
+  spaceId: SpaceId;
+  typename: string;
+  id: string;
+};
 
 /**
  * Static artifact definition.
