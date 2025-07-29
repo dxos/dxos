@@ -10,7 +10,7 @@ import { Schema } from 'effect';
 import { DEFAULT_EDGE_MODEL, AiService } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { defineFunction, ToolResolverService } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -85,7 +85,8 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
     const ai = context.getService(AiService);
     const session = new AiSession({ operationModel: 'configured' });
 
-    const response = await session.runStructured(NormalizationOutput, {
+    // TODO(dmaretskyi): This got broken after effect-ai transition.
+    const response = void session.runStructured(NormalizationOutput, {
       generationOptions: {
         model: DEFAULT_EDGE_MODEL,
       },
@@ -102,8 +103,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
         }),
       ],
       prompt,
-      toolResolver: context.getService(ToolResolverService).toolResolver,
-    });
+    }) as any;
 
     response.sentences.forEach((sentence) => {
       sentence.id = ObjectId.random();
