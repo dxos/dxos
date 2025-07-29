@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, type Message, OllamaAiServiceClient, ToolId, ToolRegistry, ToolTypes } from '@dxos/ai';
+import { defineTool, type Message, OllamaAiServiceClient, ToolId, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -101,7 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         return;
       }
 
-      const textToImageTool = defineTool('testing', {
+      const _textToImageTool = defineTool('testing', {
         name: 'text-to-image',
         type: ToolTypes.TextToImage,
         options: {
