@@ -229,12 +229,12 @@
         },
         {
           "type": "json",
-          "path": "packages/core/blueprint/package.json",
+          "path": "packages/core/assistant-testing/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/core/blueprint-testing/package.json",
+          "path": "packages/core/blueprints/package.json",
           "jsonpath": "$.version"
         },
         {

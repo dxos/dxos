@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } f
 import { EdgeAiServiceClient, AiService } from '@dxos/ai';
 import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, localServiceEndpoints } from '@dxos/blueprint-testing';
+import { capabilities, localServiceEndpoints } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';

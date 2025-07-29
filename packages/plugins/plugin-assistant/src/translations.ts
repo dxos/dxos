@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/blueprint';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 

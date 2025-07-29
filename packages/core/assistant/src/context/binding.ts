@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Blueprint } from '@dxos/blueprint';
+import { Blueprint } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 
 /**

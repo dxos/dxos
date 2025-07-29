@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/blueprint-testing",
+  "name": "@dxos/assistant-testing",
   "version": "0.8.3",
-  "description": "Blueprint testing utilities.",
+  "description": "Assistant testing utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/blueprint": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",

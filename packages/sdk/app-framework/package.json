@@ -43,7 +43,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprint": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

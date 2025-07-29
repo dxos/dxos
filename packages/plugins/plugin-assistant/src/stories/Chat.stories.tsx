@@ -10,14 +10,14 @@ import React, { useCallback, useEffect, useMemo, useState, type FC } from 'react
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
-import { Blueprint, BlueprintRegistry } from '@dxos/blueprint';
 import {
   DESIGN_BLUEPRINT,
   TASK_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
   writeDocument,
-} from '@dxos/blueprint-testing';
+} from '@dxos/assistant-testing';
+import { Blueprint, BlueprintRegistry } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

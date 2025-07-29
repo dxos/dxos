@@ -31,7 +31,7 @@
       "roots": ["@dxos/composer-app"],
       "include": [
         "packages/common/storybook-utils",
-        "packages/core/blueprint-testing",
+        "packages/core/assistant-testing",
         "packages/core/assistant",
         "packages/core/compute",
         "packages/core/conductor",

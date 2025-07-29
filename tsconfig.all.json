@@ -127,10 +127,10 @@
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
-      "path": "packages/core/blueprint/tsconfig.json"
+      "path": "packages/core/assistant-testing/tsconfig.json"
     },
     {
-      "path": "packages/core/blueprint-testing/tsconfig.json"
+      "path": "packages/core/blueprints/tsconfig.json"
     },
     {
       "path": "packages/core/compute/tsconfig.json"

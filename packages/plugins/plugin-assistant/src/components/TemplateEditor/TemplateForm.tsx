@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
-import { Template } from '@dxos/blueprint';
+import { Template } from '@dxos/blueprints';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';

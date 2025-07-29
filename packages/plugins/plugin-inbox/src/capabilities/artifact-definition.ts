@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/blueprint';
+import { defineArtifact } from '@dxos/blueprints';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';

@@ -8,7 +8,7 @@ import { Effect, type Layer } from 'effect';
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
-import { type ArtifactDefinition, type BlueprintRegistry } from '@dxos/blueprint';
+import { type ArtifactDefinition, type BlueprintRegistry } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';

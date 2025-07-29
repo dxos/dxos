@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { type ContextBinder } from '@dxos/assistant';
-import { Blueprint, type BlueprintRegistry } from '@dxos/blueprint';
+import { Blueprint, type BlueprintRegistry } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';

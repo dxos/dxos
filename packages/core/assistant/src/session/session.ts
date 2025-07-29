@@ -19,7 +19,7 @@ import {
   type GenerationStream,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
-import { type Blueprint } from '@dxos/blueprint';
+import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';

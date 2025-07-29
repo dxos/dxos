@@ -18,7 +18,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { remoteServiceEndpoints } from '@dxos/blueprint-testing';
+import { remoteServiceEndpoints } from '@dxos/assistant-testing';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';

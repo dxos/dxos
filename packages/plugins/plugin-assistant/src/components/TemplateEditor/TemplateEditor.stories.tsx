@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { createSystemPrompt, Template } from '@dxos/blueprint';
+import { createSystemPrompt, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';

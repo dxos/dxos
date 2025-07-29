@@ -8,7 +8,7 @@ import { type FC, type PropsWithChildren } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
-import { type ArtifactDefinition } from '@dxos/blueprint';
+import { type ArtifactDefinition } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';

@@ -13,7 +13,7 @@ import {
   type AssociatedArtifact,
   type BlueprintRegistry,
   createSystemPrompt,
-} from '@dxos/blueprint';
+} from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';

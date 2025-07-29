@@ -2274,9 +2274,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../blueprint
+        version: link:../blueprints
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -2369,47 +2369,7 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0(@types/node@22.10.2)
 
-  packages/core/blueprint:
-    dependencies:
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../ai
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      effect:
-        specifier: 3.17.0
-        version: 3.17.0
-      handlebars:
-        specifier: 4.7.8
-        version: 4.7.8
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-    devDependencies:
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-
-  packages/core/blueprint-testing:
+  packages/core/assistant-testing:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -2420,9 +2380,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../blueprint
+        version: link:../blueprints
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../conductor
@@ -2506,6 +2466,46 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0(react@18.2.0)
 
+  packages/core/blueprints:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.17.0
+        version: 3.17.0
+      handlebars:
+        specifier: 4.7.8
+        version: 4.7.8
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+    devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+
   packages/core/compute:
     dependencies:
       '@dxos/async':
@@ -2587,9 +2587,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../blueprint
+        version: link:../blueprints
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -5135,9 +5135,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -5286,9 +5286,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5485,9 +5485,9 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@18.2.0)
     devDependencies:
-      '@dxos/blueprint-testing':
+      '@dxos/assistant-testing':
         specifier: workspace:*
-        version: link:../../core/blueprint-testing
+        version: link:../../core/assistant-testing
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5694,9 +5694,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -5812,9 +5812,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
@@ -6284,9 +6284,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -6899,9 +6899,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -7071,9 +7071,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7183,9 +7183,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7304,9 +7304,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -7443,9 +7443,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8413,9 +8413,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -8618,9 +8618,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9101,9 +9101,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9492,9 +9492,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10068,9 +10068,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -10485,9 +10485,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
@@ -12266,9 +12266,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/blueprint':
+      '@dxos/blueprints':
         specifier: workspace:*
-        version: link:../../core/blueprint
+        version: link:../../core/blueprints
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -12348,9 +12348,9 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0
     devDependencies:
-      '@dxos/blueprint-testing':
+      '@dxos/assistant-testing':
         specifier: workspace:*
-        version: link:../../core/blueprint-testing
+        version: link:../../core/assistant-testing
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute

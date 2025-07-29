@@ -48,10 +48,10 @@
       "path": "../../core/assistant"
     },
     {
-      "path": "../../core/blueprint"
+      "path": "../../core/assistant-testing"
     },
     {
-      "path": "../../core/blueprint-testing"
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/compute"

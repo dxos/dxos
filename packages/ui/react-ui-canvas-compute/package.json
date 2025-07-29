@@ -29,7 +29,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/blueprint": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/blueprint-testing": "workspace:*",
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",

@@ -1,3 +1,3 @@
-# @dxos/blueprint
+# @dxos/blueprints
 
 Blueprints and related utilities.

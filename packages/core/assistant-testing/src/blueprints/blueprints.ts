@@ -3,7 +3,7 @@
 //
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/blueprint';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
