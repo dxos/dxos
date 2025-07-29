@@ -14,12 +14,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      # TODO(wittjosiah): Requires sudo access.
-      # debug_enabled:
-      #   type: boolean
-      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-      #   required: false
-      #   default: false
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
       e2e:
         type: boolean
@@ -47,6 +46,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -96,11 +101,11 @@ jobs:
       VITEST_COVERAGE: 'true'
       MOON_CONCURRENCY: 6
     steps:
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
-      #   with:
-      #     detached: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -166,11 +171,11 @@ jobs:
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
     steps:
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      #   with:
-      #     detached: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
 
       - name: Checkout
         uses: actions/checkout@v4
