@@ -74,6 +74,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   projection?: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
+  initialSelection?: string[];
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
   onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
@@ -118,6 +119,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     projection,
     features = {},
     sorting = [],
+    initialSelection = [],
     pinnedRows = { top: [], bottom: [] },
     rowActions = [],
     onCellUpdate,
@@ -145,6 +147,13 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const [sort] = sorting;
       this._sorting.setSort(sort.fieldId, sort.direction);
     }
+
+    this._selection = new SelectionModel(
+      this._sorting.sortedRows,
+      this._features.selection.mode ?? 'multiple',
+      initialSelection,
+      () => this._onRowOrderChange?.(),
+    );
 
     this._pinnedRows = pinnedRows;
     this._rowActions = rowActions;
@@ -232,9 +241,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
     this.initializeColumnMeta();
     this.initializeEffects();
-    this._selection = new SelectionModel(this._sorting.sortedRows, this._features.selection.mode ?? 'multiple', () =>
-      this._onRowOrderChange?.(),
-    );
     await this._selection.open(this._ctx);
   }
 
