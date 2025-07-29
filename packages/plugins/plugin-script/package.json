@@ -18,6 +18,11 @@
       "types": "./dist/types/src/types.d.ts",
       "browser": "./dist/lib/browser/types.mjs",
       "node": "./dist/lib/node-esm/types.mjs"
+    },
+    "./templates": {
+      "types": "./dist/types/src/templates/index.d.ts",
+      "browser": "./dist/lib/browser/templates/index.mjs",
+      "node": "./dist/lib/node-esm/templates/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -25,6 +30,9 @@
     "*": {
       "types": [
         "dist/types/src/types.d.ts"
+      ],
+      "templates": [
+        "dist/types/src/templates/index.d.ts"
       ]
     }
   },
@@ -93,7 +101,7 @@
     "codemirror": "^6.0.1",
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",
-    "prettier": "^3.2.4",
+    "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.5.0",
     "typescript": "^5.8.3"
   },

@@ -4,11 +4,12 @@
 
 import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
-import { useSelectionActions } from '@dxos/react-ui-attention';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -38,6 +39,9 @@ export const useTableModel = <T extends TableRow = TableRow>({
   onRowAction,
   ...props
 }: UseTableModelParams<T>): TableModel<T> | undefined => {
+  const selected = useSelected(view && fullyQualifiedId(view), 'multi');
+  const initialSelection = useMemo(() => selected, [view]);
+
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
     if (!view || !schema) {
@@ -52,6 +56,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         projection,
         features,
         rowActions,
+        initialSelection,
         onRowAction,
         ...props,
       });
@@ -63,7 +68,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       clearTimeout(t);
       void model?.close();
     };
-  }, [view, schema, projection, features, rowActions]); // TODO(burdon): Trigger if callbacks change?
+  }, [view, schema, projection, features, rowActions, initialSelection]); // TODO(burdon): Trigger if callbacks change?
 
   // Update data.
   useEffect(() => {

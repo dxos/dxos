@@ -3,7 +3,7 @@
 // Generated from airports.json
 //
 
-import { FeatureCollection } from 'geojson';
+import { type FeatureCollection } from 'geojson';
 
 export default {
   "type": "FeatureCollection",

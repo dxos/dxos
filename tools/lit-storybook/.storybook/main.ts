@@ -21,9 +21,7 @@ const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.lit-stories.ts';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
-export const modules = [
-  'ui/*/src/**',
-];
+export const modules = ['ui/*/src/**'];
 
 export const stories = modules.map((dir) => join(packages, dir, storyFiles));
 export const content = modules.map((dir) => join(packages, dir, contentFiles));

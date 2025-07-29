@@ -313,13 +313,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     }),
     createSurface({
       id: POPOVER_RENAME_SPACE,
-      role: 'popover',
+      role: 'card--popover',
       filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
       component: ({ data }) => <PopoverRenameSpace space={data.props} />,
     }),
     createSurface({
       id: POPOVER_RENAME_OBJECT,
-      role: 'popover',
+      role: 'card--popover',
       filter: (data): data is { props: Obj.Any } =>
         data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,

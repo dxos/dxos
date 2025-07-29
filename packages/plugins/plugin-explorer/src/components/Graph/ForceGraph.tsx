@@ -39,7 +39,7 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
       forceGraph.current = new NativeForceGraph(rootRef.current)
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#node-styling
         .nodeRelSize(6)
-        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : node.data.label ?? node.id))
+        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : (node.data.label ?? node.id)))
         .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling

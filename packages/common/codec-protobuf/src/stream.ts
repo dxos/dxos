@@ -148,7 +148,6 @@ export class Stream<T> {
       return () => {
         streamPromise.then(
           (stream) => stream.close(),
-          // eslint-disable-next-line n/handle-callback-err
           (err) => {
             /* already handled */
           },

@@ -450,15 +450,17 @@ export const createObjectNode = ({
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 
+  const label = Obj.getLabel(object) ||
+    // TODO(wittjosiah): Remove metadata labels.
+    metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
+
   return {
     id: fullyQualifiedId(object),
     type,
     cacheable: ['label', 'icon', 'role'],
     data: object,
     properties: {
-      // TODO(burdon): Use annotation to get the name field.
-      label: metadata.label?.(object) ||
-        (object as any).name || ['object name placeholder', { ns: type, default: 'New object' }],
+      label,
       icon: metadata.icon ?? 'ph--placeholder--regular',
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
@@ -657,7 +659,7 @@ export const cloneObject = async (
   newSpace: Space,
 ): Promise<Type.Expando> => {
   const schema = Obj.getSchema(object);
-  const typename = schema ? Type.getTypename(schema) ?? EXPANDO_TYPENAME : EXPANDO_TYPENAME;
+  const typename = schema ? (Type.getTypename(schema) ?? EXPANDO_TYPENAME) : EXPANDO_TYPENAME;
   const metadata = resolve(typename);
   const serializer = metadata.serializer;
   invariant(serializer, `No serializer for type: ${typename}`);

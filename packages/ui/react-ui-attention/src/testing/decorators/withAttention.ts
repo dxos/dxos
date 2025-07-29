@@ -8,5 +8,5 @@ import { createElement } from 'react';
 import { RootAttentionProvider } from '../../components';
 
 export const withAttention: Decorator = (Story) => {
-  return createElement(RootAttentionProvider, { children: createElement(Story) });
+  return createElement(RootAttentionProvider, {}, createElement(Story));
 };

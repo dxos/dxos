@@ -97,6 +97,10 @@ export class Indexer extends Resource {
     return this._lifecycleState === LifecycleState.OPEN;
   }
 
+  get config() {
+    return this._indexConfig;
+  }
+
   @synchronized
   // TODO(mykola): Make it iterative (e.g. `initConfig(<index1>); initConfig(<index2>); ...`).
   async setConfig(config: IndexConfig): Promise<void> {

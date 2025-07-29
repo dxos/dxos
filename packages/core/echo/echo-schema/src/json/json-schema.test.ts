@@ -65,7 +65,6 @@ describe('effect-to-json', () => {
   });
 
   // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
-  // eslint-disable-next-line mocha/no-skipped-tests
   // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({

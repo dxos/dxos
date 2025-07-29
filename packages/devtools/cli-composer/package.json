@@ -82,7 +82,7 @@
     "@types/react-dom": "~18.2.0",
     "fast-check": "^3.19.0",
     "oclif": "^4.15.12",
-    "prettier": "^3.2.4",
+    "prettier": "^3.6.2",
     "shx": "^0.3.3"
   },
   "engines": {
