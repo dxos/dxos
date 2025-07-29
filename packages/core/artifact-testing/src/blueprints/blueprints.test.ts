@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { beforeAll, describe, expect, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
@@ -14,8 +14,6 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Obj, Ref } from '@dxos/echo';
-import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
@@ -23,41 +21,36 @@ import { DocumentType } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from './blueprints';
 import { readDocument, writeDocument } from '../functions';
+import { DESIGN_SPEC_BLUEPRINT, TASK_LIST_BLUEPRINT } from './blueprints';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 120_000 }, () => {
-  let builder: EchoTestBuilder;
-  let db: EchoDatabase;
-  let queues: QueueFactory;
+  it.effect(
+    'spec blueprint',
+    Effect.fn(
+      function* () {
+        const { queues } = yield* QueueService;
+        const { db } = yield* DatabaseService;
+        const printer = new ConsolePrinter();
+        const conversation = new Conversation({
+          queue: queues.create(),
+        });
+        conversation.onBegin.on((session) => {
+          session.message.on((message) => printer.printMessage(message));
+          session.userMessage.on((message) => printer.printMessage(message));
+          session.block.on((block) => printer.printContentBlock(block));
+        });
 
-  beforeAll(async () => {
-    builder = await new EchoTestBuilder().open();
-    ({ db, queues } = await builder.createDatabase({ types: [DocumentType, Blueprint] }));
-  });
+        const blueprint = db.add(DESIGN_SPEC_BLUEPRINT);
+        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-  it('spec blueprint', async () => {
-    const printer = new ConsolePrinter();
-    const conversation = new Conversation({
-      queue: queues.create(),
-    });
-    conversation.onBegin.on((session) => {
-      session.message.on((message) => printer.printMessage(message));
-      session.userMessage.on((message) => printer.printMessage(message));
-      session.block.on((block) => printer.printContentBlock(block));
-    });
+        const artifact = db.add(
+          Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
+        );
+        let prevContent = artifact.content;
 
-    const blueprint = db.add(DESIGN_SPEC_BLUEPRINT);
-    await conversation.context.bind({ blueprints: [Ref.make(blueprint)] });
-
-    const artifact = db.add(
-      Obj.make(DocumentType, { content: Ref.make(Obj.make(DataType.Text, { content: 'Hello, world!' })) }),
-    );
-    let prevContent = artifact.content;
-
-    // TODO(dmaretskyi): Fix with effect
-    void conversation.run({
-      prompt: trim`
+        yield* conversation.run({
+          prompt: trim`
         Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
         1. Users should be able to create and edit their profiles
@@ -70,20 +63,31 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
 
         The store spec in ${Obj.getDXN(artifact)}
       `,
-    });
-    log.info('spec 1', { doc: artifact });
-    expect(artifact.content).not.toBe(prevContent);
-    prevContent = artifact.content;
+        });
+        log.info('spec 1', { doc: artifact });
+        expect(artifact.content).not.toBe(prevContent);
+        prevContent = artifact.content;
 
-    // TODO(dmaretskyi): Fix with effect.
-    void conversation.run({
-      prompt: trim`
+        yield* conversation.run({
+          prompt: trim`
         I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
       `,
-    });
-    log.info('spec 2', { doc: artifact });
-    expect(artifact.content).not.toBe(prevContent);
-  });
+        });
+        log.info('spec 2', { doc: artifact });
+        expect(artifact.content).not.toBe(prevContent);
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint] }),
+          makeToolResolverFromFunctions([readDocument, writeDocument]),
+          makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+        ),
+      ),
+    ),
+  );
 
   it.effect.only(
     'building a shelf',

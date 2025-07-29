@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { ArtifactId, defineArtifact } from '@dxos/artifact';
+import { defineArtifact } from '@dxos/artifact';
 import { createArtifactElement } from '@dxos/assistant';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
@@ -16,6 +16,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
+import { ArtifactId } from "@dxos/assistant";
+
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
