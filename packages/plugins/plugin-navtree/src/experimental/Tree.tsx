@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretRight, Circle, File, Folder, type Icon, type IconProps, Plus, UserCircle } from '@phosphor-icons/react';
 import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue, type Size } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Rounded border if first/last.
 const styles = {
@@ -15,21 +14,21 @@ const styles = {
 };
 
 export const IconButton = ({
-  Icon,
+  iconName,
   classNames,
   size = 4,
   onClick,
-  ...props
+  weight = 'regular',
 }: {
-  Icon: Icon;
+  iconName: string;
   classNames?: ClassNameValue;
   size?: Size;
-} & Pick<IconProps, 'weight'> &
-  Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
+  weight?: 'regular' | 'duotone' | 'fill';
+} & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon className={mx('cursor-pointer', getSize(size))} {...props} />
+      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
 };
@@ -37,7 +36,7 @@ export const IconButton = ({
 export type TreeNodeData = {
   id: string;
   title: string;
-  Icon?: Icon;
+  iconName?: string;
   color?: string;
   children?: TreeNodeData[];
 };
@@ -123,7 +122,7 @@ const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
   // TODO(burdon): No animation if opening/closing folder.
   return (
     <IconButton
-      Icon={isActive ? UserCircle : Circle}
+      iconName={isActive ? 'ph--user-circle--regular' : 'ph--circle--regular'}
       size={4}
       weight={selected?.[id] ? 'fill' : 'duotone'}
       classNames={mx(
@@ -143,7 +142,7 @@ const OpenIcon = ({
   return (
     (children?.length && open && (
       <IconButton
-        Icon={CaretRight}
+        iconName='ph--caret-right--regular'
         size={3}
         classNames={mx('transition duration-200', open?.[id] ? 'rotate-90' : 'transform-none')}
         onClick={(ev) => {
@@ -157,12 +156,12 @@ const OpenIcon = ({
 
 // TODO(burdon): Drag handle,
 const ItemIcon = ({
-  node: { children, Icon = children?.length ? Folder : File, color },
+  node: { children, iconName = children?.length ? 'ph--folder--regular' : 'ph--file--regular', color },
 }: Pick<TreeNodeProps, 'node'>) => {
   return (
-    (Icon && (
+    (iconName && (
       <IconButton
-        Icon={Icon}
+        iconName={iconName}
         classNames={color ?? 'text-neutral-700 dark:text-neutral-300'}
         weight={color ? 'duotone' : 'regular'}
       />
@@ -173,7 +172,7 @@ const ItemIcon = ({
 const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => {
   return (
     <IconButton
-      Icon={Plus}
+      iconName='ph--plus--regular'
       classNames='invisible group-hover:visible'
       onClick={(ev) => {
         ev.stopPropagation();

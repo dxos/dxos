@@ -3,10 +3,13 @@ fileGroups:
   assets:
     - assets/**/*
     - public/**/*
+
   scripts:
     - scripts/**/*
+
   sources:
     - src/**/*
+
   production:
     - src/**/*
     - '!src/test/**/*'
@@ -15,10 +18,12 @@ fileGroups:
     - '!src/**/*.spec.ts'
     - '!src/stories/**/*'
     - '!src/**/*.stories.tsx'
+
   tests:
     - src/test/**/*
     - src/**/*.test.tsx?
     - src/playwright/**/*
     - src/**/*.spec.ts
+
 implicitInputs:
   - package.json

@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
 
 import type { PublicKey } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 import { live } from '@dxos/live-object';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Button, Input } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Button, Input, Icon } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
 
@@ -53,7 +51,7 @@ const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
             </Input.Root>
             <div className='grow'>{task.title}</div>
             <Button variant='ghost' onClick={() => space?.db.remove(task)}>
-              <X className={getSize(4)} />
+              <Icon icon='ph--x--regular' size={4} />
             </Button>
           </li>
         ))}

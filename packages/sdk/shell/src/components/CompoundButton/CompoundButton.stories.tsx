@@ -4,9 +4,9 @@
 
 import '@dxos-theme';
 
-import { ArrowRight, ClockCounterClockwise } from '@phosphor-icons/react';
 import React, { type PropsWithChildren } from 'react';
 
+import { Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
@@ -30,8 +30,8 @@ export const Default = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <ClockCounterClockwise className='w-5 h-5' />,
-    after: <ArrowRight className='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
   },
 };
@@ -41,8 +41,8 @@ export const Primary = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
-    before: <ClockCounterClockwise className='w-5 h-5' />,
-    after: <ArrowRight className='w-5 h-5' />,
+    before: <Icon icon='ph--clock-counter-clockwise' classNames='w-5 h-5' />,
+    after: <Icon icon='ph--arrow-right' classNames='w-5 h-5' />,
     disabled: false,
     variant: 'primary',
   },

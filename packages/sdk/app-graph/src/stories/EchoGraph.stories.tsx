@@ -5,7 +5,6 @@
 import '@dxos-theme';
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
-import { Pause, Play, Plus, Timer } from '@phosphor-icons/react';
 import { type Meta } from '@storybook/react-vite';
 import { Option, pipe } from 'effect';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -25,7 +24,7 @@ import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Input, Select } from '@dxos/react-ui';
+import { Input, Select, Icon, IconButton } from '@dxos/react-ui';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -205,7 +204,11 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <Button onClick={() => setGenerating((generating) => !generating)}>{generating ? <Pause /> : <Play />}</Button>
+        <IconButton
+          icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={generating ? 'Pause' : 'Play'}
+          onClick={() => setGenerating((generating) => !generating)}
+        />
         <div className='relative' title='mutation period'>
           <Input.Root>
             <Input.TextInput
@@ -217,11 +220,9 @@ const Controls = ({ children }: PropsWithChildren) => {
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Input.Root>
-          <Timer className={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
+          <Icon icon='ph--timer--regular' classNames={mx('absolute inline-end-1 block-start-1 mt-[6px]', getSize(3))} />
         </div>
-        <Button onClick={() => action && runAction(client, action)}>
-          <Plus />
-        </Button>
+        <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
           <Select.TriggerButton placeholder='Select value' />
           <Select.Portal>
