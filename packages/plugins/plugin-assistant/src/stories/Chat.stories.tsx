@@ -70,13 +70,13 @@ const DefaultStory = ({ components }: { components: (FC | FC[])[] }) => {
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='overflow-hidden bg-baseSurface border border-separator'>
+              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
                 <Component />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='overflow-hidden bg-baseSurface border border-separator'>
+          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
             <Component />
           </div>
         ),
@@ -193,7 +193,7 @@ const DocumentContainer = () => {
       <Editor
         id={document.id}
         text={document.content.target}
-        classNames='p-2'
+        classNames='h-full p-2 overflow-hidden'
         extensions={[
           // TODO(burdon): Create util.
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
