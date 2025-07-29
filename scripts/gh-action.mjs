@@ -14,6 +14,7 @@ import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import { log } from 'console';
+import { execSync } from 'child_process';
 
 // TODO(burdon): Reconcile with tools/x.
 
@@ -421,10 +422,27 @@ async function getUsername() {
  * https://github.com/settings/apps
  */
 function getGithubToken() {
+  // First priority: environment variable
   if (process.env.GITHUB_TOKEN) {
     return process.env.GITHUB_TOKEN;
   }
 
+  // Second priority: GitHub CLI auth status
+  try {
+    execSync('gh auth status', { stdio: 'pipe' });
+    // If gh auth status succeeds, get the token
+    const token = execSync('gh auth token', { encoding: 'utf8' }).trim();
+    if (token) {
+      return token;
+    }
+  } catch (err) {
+    // GitHub CLI is not authenticated, continue to 1Password fallback
+    if (argv.verbose) {
+      console.log(chalk.gray('GitHub CLI not authenticated, trying 1Password...'));
+    }
+  }
+
+  // Third priority: 1Password fallback
   try {
     const token = item.get(OP_GITHUB_ITEM);
     const field = token?.fields.find((f) => f.label === OP_GITHUB_FIELD);
