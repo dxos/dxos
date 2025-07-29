@@ -44,7 +44,7 @@ export const LocalEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiService
 export const RemoteEdgeAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiUrl: Config.succeed('https://edge-main.dxos.workers.dev/provider/anthropic'),
+      apiUrl: Config.succeed('https://ai-service.dxos.workers.dev/provider/anthropic'),
     }),
   ),
   Layer.provide(FetchHttpClient.layer),
