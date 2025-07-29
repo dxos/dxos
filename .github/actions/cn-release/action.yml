@@ -29,6 +29,6 @@ runs:
 
     - uses: crabnebula-dev/cloud-release@v0
       with:
-        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
+        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}
         api-key: ${{ inputs.api-key }}
         working-directory: ${{ inputs.working-directory }}
