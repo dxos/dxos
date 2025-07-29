@@ -22,13 +22,15 @@ runs:
   using: 'composite'
   steps:
     - id: release-channel
-      if: github.ref_name != 'production'
+      # TODO(wittjosiah): Switch to production.
+      if: github.ref_name != 'labs'
       # Replace all slashes with dashes.
       run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
       shell: bash
 
     - uses: crabnebula-dev/cloud-release@v0
       with:
-        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
+        # TODO(wittjosiah): Switch to production.
+        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'labs' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
         api-key: ${{ inputs.api-key }}
         working-directory: ${{ inputs.working-directory }}
