@@ -32,12 +32,7 @@ export const jsonReplacer = (key: string, value: any): any => {
     }
   }
 
-  // TODO(burdon): Option.
-  // code if (Array.isArray(value)) {
-  // code   return value.length;
-  // code } else {
   return value;
-  // code }
 };
 
 /**
