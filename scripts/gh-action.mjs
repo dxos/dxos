@@ -80,6 +80,11 @@ const argv = yargs(process.argv.slice(2))
     type: 'boolean',
     default: false,
     description: 'Verbose mode',
+  })
+  .option('verify', {
+    type: 'boolean',
+    default: false,
+    description: 'Verify mode: exit 0 if all OK, 1 if errors, 2 if pending workflows',
   }).argv;
 
 const command = argv._[0];
@@ -87,7 +92,9 @@ const command = argv._[0];
 switch (command) {
   case 'action':
   default: {
-    if (argv.watch) {
+    if (argv.verify) {
+      await verifyWorkflows();
+    } else if (argv.watch) {
       while (true) {
         const done = await checkResults();
         if (done) {
@@ -128,6 +135,86 @@ async function checkResults() {
 }
 
 /**
+ * Verify workflows and exit with appropriate code.
+ */
+async function verifyWorkflows() {
+  if (argv.watch) {
+    // Watch mode: wait for workflows to complete
+    while (true) {
+      const result = await checkWorkflowStatus();
+      
+      if (result.status === 'pending') {
+        if (argv.verbose) {
+          console.log(chalk.yellow('Workflows still pending, waiting...'));
+        }
+        await new Promise((resolve) => setTimeout(resolve, argv.interval));
+        continue;
+      }
+      
+      // Workflows completed, check final status
+      if (result.status === 'success') {
+        console.log(chalk.green('✓ All workflows completed successfully'));
+        process.exit(0);
+      } else if (result.status === 'failure') {
+        console.log(chalk.red('✗ Workflows completed with errors:'));
+        if (result.errors && result.errors.length > 0) {
+          result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
+        }
+        process.exit(1);
+      }
+    }
+  } else {
+    // Single check mode
+    const result = await checkWorkflowStatus();
+    
+    if (result.status === 'pending') {
+      console.log(chalk.yellow('⏳ Workflows are still pending'));
+      process.exit(2);
+    } else if (result.status === 'success') {
+      console.log(chalk.green('✓ All workflows completed successfully'));
+      process.exit(0);
+    } else if (result.status === 'failure') {
+      console.log(chalk.red('✗ Workflows completed with errors:'));
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach(error => console.log(chalk.red(`  - ${error}`)));
+      }
+      process.exit(1);
+    }
+  }
+}
+
+/**
+ * Check workflow status and return summary.
+ */
+async function checkWorkflowStatus() {
+  const runs = await listWorkflowRunsForRepo(false); // Don't display table in verify mode
+  if (!runs || runs.length === 0) {
+    return { status: 'success', errors: [] };
+  }
+
+  let hasPending = false;
+  let hasFailures = false;
+  const errors = [];
+
+  for (const run of runs) {
+    if (run.status === 'queued' || run.status === 'in_progress') {
+      hasPending = true;
+    } else if (run.status === 'completed' && run.conclusion === 'failure') {
+      hasFailures = true;
+      errors.push(`${run.name} (${run.head_branch}): ${run.conclusion}`);
+    }
+  }
+
+  if (hasPending) {
+    return { status: 'pending', errors };
+  } else if (hasFailures) {
+    return { status: 'failure', errors };
+  } else {
+    return { status: 'success', errors: [] };
+  }
+}
+
+/**
  * Get PRs.
  */
 async function getPullRequests() {
@@ -151,7 +238,7 @@ async function getPullRequests() {
 /**
  * List GH actions.
  */
-async function listWorkflowRunsForRepo(watch = false) {
+async function listWorkflowRunsForRepo(watch = false, displayTable = true) {
   try {
     const { octokit, owner, repo } = getOctokit();
     const actor = argv.me ? await getUsername() : argv.username;
@@ -173,48 +260,50 @@ async function listWorkflowRunsForRepo(watch = false) {
       return;
     }
 
-    // Output as cli-table3
-    const table = new Table({
-      head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
-      style: { head: ['gray'], compact: true },
-    });
-
     const rows = workflow_runs
       .filter((run) => (!actor || run.actor?.login === actor) && (!argv.filter || run.name.match(argv.filter)))
       .sort(({ created_at: a }, { created_at: b }) => new Date(b) - new Date(a));
 
-    rows.forEach((run) => {
-      const now = new Date(new Date().toISOString());
-      const created = new Date(run.created_at);
-      const updated = new Date(run.updated_at);
+    if (displayTable) {
+      // Output as cli-table3
+      const table = new Table({
+        head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
+        style: { head: ['gray'], compact: true },
+      });
 
-      const diff = (run.status === 'completed' ? updated : now) - created;
-      const mm = Math.floor((diff / 1000 / 60) % 60);
-      const ss = Math.floor((diff / 1000) % 60);
-      const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+      rows.forEach((run) => {
+        const now = new Date(new Date().toISOString());
+        const created = new Date(run.created_at);
+        const updated = new Date(run.updated_at);
 
-      table.push([
-        chalk.blueBright(link(run.html_url, run.id)),
-        run.name,
-        run.actor?.login,
-        chalk.magenta(run.head_branch),
-        run.created_at,
-        { hAlign: 'right', content: humanReadable },
-        run.status === 'completed'
-          ? run.conclusion === 'failure'
-            ? chalk.red(run.conclusion)
-            : run.conclusion === 'success'
-              ? chalk.green(run.conclusion)
-              : chalk.yellow(run.conclusion)
-          : chalk.yellow(run.status),
-      ]);
-    });
+        const diff = (run.status === 'completed' ? updated : now) - created;
+        const mm = Math.floor((diff / 1000 / 60) % 60);
+        const ss = Math.floor((diff / 1000) % 60);
+        const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 
-    if (watch && !argv.verbose) {
-      console.clear();
+        table.push([
+          chalk.blueBright(link(run.html_url, run.id)),
+          run.name,
+          run.actor?.login,
+          chalk.magenta(run.head_branch),
+          run.created_at,
+          { hAlign: 'right', content: humanReadable },
+          run.status === 'completed'
+            ? run.conclusion === 'failure'
+              ? chalk.red(run.conclusion)
+              : run.conclusion === 'success'
+                ? chalk.green(run.conclusion)
+                : chalk.yellow(run.conclusion)
+            : chalk.yellow(run.status),
+        ]);
+      });
+
+      if (watch && !argv.verbose) {
+        console.clear();
+      }
+
+      console.log(table.toString());
     }
-
-    console.log(table.toString());
     return rows;
   } catch (err) {
     console.error('Failed to fetch workflow runs:', err);
