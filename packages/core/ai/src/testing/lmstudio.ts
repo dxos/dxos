@@ -7,6 +7,7 @@ import { OllamaAiServiceClient, type OllamaClientParams } from '../service';
 
 /**
  * Create a test client with small local model and no temperature for predictable results.
+ * @deprecated
  */
 export const createTestLMStudioClient = (options?: Pick<OllamaClientParams, 'tools'>) => {
   return new OllamaAiServiceClient({

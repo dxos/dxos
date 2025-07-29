@@ -3,17 +3,16 @@
 //
 
 import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 
-import { TemplateAction, TemplateType } from '../types';
+import { Template } from '../types';
 
 export default () =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: TemplateAction.Create,
+      intent: Template.Create,
       resolve: ({ name }) => ({
-        data: { object: Obj.make(TemplateType, { name }) },
+        data: { object: Template.make({ name }) },
       }),
     }),
   );

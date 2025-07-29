@@ -112,6 +112,7 @@ export class LoggingServiceImpl implements LoggingService {
 
         const record: LogEntry = {
           ...entry,
+          message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context: jsonify(getContextFromEntry(entry)),
           timestamp: new Date(),
           meta: {

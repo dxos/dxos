@@ -89,4 +89,9 @@ describe('log', () => {
       context: 123,
     });
   });
+
+  test('error', function () {
+    const myError = new Error('Test error', { cause: new Error('Cause') });
+    log.catch(myError);
+  });
 });

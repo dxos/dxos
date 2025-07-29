@@ -23,7 +23,10 @@ import { live } from '@dxos/live-object';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+class TestSchema extends TypedObject({
+  typename: 'example.com/type/Test',
+  version: '0.1.0',
+})({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
 }) {}
@@ -42,7 +45,10 @@ describe('EchoSchema', () => {
   test('set EchoSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(live(TestSchema, {}));
-    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    class GeneratedSchema extends TypedObject({
+      typename: 'example.com/type/Test',
+      version: '0.1.0',
+    })({
       field: Schema.String,
     }) {}
 

@@ -5,10 +5,9 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
-import { ArtifactId } from '@dxos/artifact';
-import { createGraphWriterTool, createLocalSearchTool, createExaTool } from '@dxos/assistant';
+import { EdgeAiServiceClient, ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
+import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
@@ -82,16 +81,16 @@ describe.skip('Sequence', () => {
         'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
       )
       .step('If the email is spam, label it as spam and do not respond.', {
-        tools: [labelTool.id],
+        tools: [ToolId.make(labelTool.id)],
       })
       .step(
         'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
         {
-          tools: [replyTool.id],
+          tools: [ToolId.make(replyTool.id)],
         },
       )
       .step('If the email is a question, respond with a short answer and ask for more information.', {
-        tools: [replyTool.id],
+        tools: [ToolId.make(replyTool.id)],
       })
       .build();
 
@@ -124,25 +123,30 @@ describe.skip('Sequence', () => {
 
     await db.flush({ indexes: true });
 
-    const [exa, localSearch, graphWriter] = [
-      createExaTool({ apiKey: EXA_API_KEY }),
-      createLocalSearchTool(db),
-      createGraphWriterTool({ db, schema: DataTypes }),
-    ];
+    // const [exa, localSearch, graphWriter] = [
+    // createExaTool({ apiKey: EXA_API_KEY }),
+    // createLocalSearchTool(db),
+    // createGraphWriterTool({ db, schema: DataTypes }),
+    // ];
 
     const sequence = SequenceBuilder.create()
       .step('Research founders of the organization. Do deep research.', {
-        tools: [exa.id],
+        // tools: [exa.id],
       })
       .step('Based on your research select matching entires that are already in the graph', {
-        tools: [localSearch.id],
+        // tools: [localSearch.id],
       })
       .step('Add researched data to the graph', {
-        tools: [localSearch.id, graphWriter.id],
+        // tools: [localSearch.id, graphWriter.id],
       })
       .build();
 
-    const tools = new ToolRegistry([exa, localSearch, graphWriter]);
+    const tools = new ToolRegistry([
+      //
+      // exa,
+      // localSearch,
+      // graphWriter,
+    ]);
     const machine = new SequenceMachine(tools, sequence);
     setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiClient, input: org1 });

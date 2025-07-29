@@ -143,7 +143,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
   });
 };
 
-const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolver) => {
+export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolver) => {
   const go = (value: unknown) => {
     if (Ref.isRef(value)) {
       setRefResolver(value, refResolver);

@@ -14,7 +14,6 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
-  fullWidth,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -91,8 +90,12 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
         initialValue: createLinks(items),
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
+          // TODO(burdon): Limit to tags.
           createMarkdownExtensions({ themeMode }),
-          createThemeExtensions({ themeMode, slots: fullWidth }),
+          createThemeExtensions({
+            themeMode,
+            slots: { editor: { className: 'is-full' }, content: { className: '!text-sm' } },
+          }),
           tagPicker({
             debug: true,
             onUpdate: handleUpdate,

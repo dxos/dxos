@@ -7,7 +7,7 @@ type Transform = (...args: any) => Promise<any>;
 /**
  * Async reducer iteratively applies functions to the given array of elements.
  */
-export const asyncChain =
+export const chain =
   <T>(chain: Transform[]) =>
   async (elements: Promise<T[]>) => {
     let result = await elements;
