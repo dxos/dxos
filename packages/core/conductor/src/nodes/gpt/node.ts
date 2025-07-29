@@ -4,7 +4,13 @@
 
 import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, type GenerationStreamEvent, ToolId } from '@dxos/ai';
+import {
+  DEFAULT_EDGE_MODEL,
+  type GenerationStreamEvent,
+  ToolExecutionService,
+  ToolId,
+  ToolResolverService,
+} from '@dxos/ai';
 import { AiService } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
@@ -162,7 +168,12 @@ export const gptNode = defineComputeNode({
       const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
       // TODO(dmaretskyi): Is there a better way to satisfy deps?
-      const model = AiService.model(DEFAULT_EDGE_MODEL).pipe(Layer.provide(Layer.succeed(AiService, yield* AiService)));
+      const runDeps = Layer.mergeAll(
+        AiService.model(DEFAULT_EDGE_MODEL).pipe(Layer.provide(Layer.succeed(AiService, yield* AiService))),
+        // TODO(dmaretskyi): Move them out.
+        ToolResolverService.layerEmpty,
+        ToolExecutionService.layerEmpty,
+      );
 
       // TODO(dmaretskyi): Should this use conversation instead?
       // TODO(dmaretskyi): Tools.
@@ -173,7 +184,7 @@ export const gptNode = defineComputeNode({
             prompt: fullPrompt,
             history: [...historyMessages],
           })
-          .pipe(Effect.provide(model));
+          .pipe(Effect.provide(runDeps));
         log.info('messages', { messages });
 
         if (conversation) {

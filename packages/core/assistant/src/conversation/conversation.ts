@@ -77,33 +77,12 @@ export class Conversation {
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
 
-      const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
-      const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-        yield* ToolExecutionService.handlersFor(blueprintToolkit),
-      );
-      const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
-      const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
-        Effect.provide(blueprintToolkitHandler) as any,
-      ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-
-      // Build system prompt from blueprint templates.
-      const systemPrompt = yield* pipe(
-        blueprints,
-        Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
-        Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
-        Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
-        Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
-      );
-
-      log.info('run', {
-        systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
-      });
-
       const messages = yield* session.run({
         prompt: options.prompt,
         history,
-        toolkit: toolkitWithBlueprintHandlers,
-        systemPrompt,
+        systemPrompt: options.systemPrompt,
+        toolkit: options.toolkit,
+        blueprints,
       });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;

@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Effect, Schema } from 'effect';
 
 import { EchoObject } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
 
 /**
  * AI agents self-reporting their current status.

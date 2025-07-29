@@ -42,11 +42,7 @@ export const researchFn = defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch } }) {
-      // const queues = context.getService(QueueService);
-
-      // TODO(dmaretskyi): Extract to a function.
-      const tracing = yield* TracingService;
-      tracing.write(create(AgentStatus, { message: 'Researching...' }));
+      yield* TracingService.emitStatus({ message: 'Researching...' });
 
       const graphWriteToolkit = makeGraphWriterToolkit({ schema: DataTypes });
       const toolkit = yield* AiToolkit.merge(ExaToolkit, LocalSearchToolkit, graphWriteToolkit).pipe(

@@ -6,7 +6,7 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AiService } from '@dxos/ai';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -75,6 +75,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
       },
       Effect.provide(
         AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          Layer.provideMerge(ToolResolverService.layerEmpty),
+          Layer.provideMerge(ToolExecutionService.layerEmpty),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),
@@ -90,13 +92,15 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
           history: [],
-          toolkit: yield* TestToolkit,
+          toolkit: TestToolkit,
         });
         log.info('response', { response });
       },
       Effect.provide(
         Layer.mergeAll(
           toolkitLayer,
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),

@@ -2,27 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, type AiError, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
-import { Chunk, Context, Effect, Option, type Schema, Stream } from 'effect';
+import { AiLanguageModel, AiToolkit, type AiError, type AiResponse, type AiTool } from '@effect/ai';
+import { Chunk, Context, Effect, Option, pipe, Stream, type Schema } from 'effect';
 
 import {
+  AiParser,
+  AiPreprocessor,
   getToolCalls,
   runTool,
+  ToolExecutionService,
+  ToolResolverService,
   type AgentStatus,
   type AiInputPreprocessingError,
+  type AiToolNotFoundError,
   type GenerationStream,
 } from '@dxos/ai';
-import { AiParser, AiPreprocessor } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType, type ContentBlock } from '@dxos/schema';
 
+import type { Blueprint } from '../blueprint';
 import { AiAssistantError } from '../errors';
+import { DatabaseService } from '@dxos/functions';
+import { Array } from 'effect';
+import { String } from 'effect';
 
 export type AiSessionOptions = {};
 
@@ -30,9 +37,8 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
   prompt: string;
   history: DataType.Message[];
   systemPrompt?: string;
-  toolkit?: AiToolkit.ToHandler<Tools>;
-
-  // TODO(dmaretskyi): Blueprints.
+  toolkit?: AiToolkit.AiToolkit<Tools>;
+  blueprints?: Blueprint[];
 };
 
 /**
@@ -106,8 +112,8 @@ export class AiSession {
     options: SessionRunOptions<Tools>,
   ): Effect.Effect<
     DataType.Message[],
-    AiAssistantError | AiInputPreprocessingError | AiError.AiError,
-    AiLanguageModel.AiLanguageModel | AiTool.Context<Tools>
+    AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
+    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
       this._history = [...options.history];
@@ -126,24 +132,36 @@ export class AiSession {
 
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
-        // Open request stream.
-        // this._stream = await options.client.execStream({
-        //   ...(options.generationOptions ?? {}),
-        //   // TODO(burdon): Rename messages or separate history/message.
-        //   history: [...this._history, ...this._pending],
-        //   tools,
-        //   systemPrompt:
-        //     options.systemPrompt ??
-        //     createBaseInstructions({
-        //       availableArtifacts: [...requiredArtifactIds],
-        //       operationModel: this._options.operationModel,
-        //     }),
-        // });
+        const blueprints = options.blueprints ?? [];
+
+        // Build system prompt from blueprint templates.
+        // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
+        const systemPrompt = yield* pipe(
+          blueprints,
+          Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
+          Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
+          Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
+          Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
+        );
+
+        // Build a combined toolkit from the blueprint tools and the provided toolkit.
+        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
+        const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> =
+          yield* blueprintToolkit.toContext(yield* ToolExecutionService.handlersFor(blueprintToolkit));
+        const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
+        const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
+          Effect.provide(blueprintToolkitHandler) as any,
+        ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+
+        log.info('run', {
+          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
+          tools: Object.keys(blueprintToolkit.tools),
+        });
 
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
-          toolkit: options.toolkit,
-          system: options.systemPrompt,
+          system: systemPrompt,
+          toolkit: toolkitWithBlueprintHandlers,
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseGptStream({
@@ -177,19 +195,7 @@ export class AiSession {
           break;
         }
 
-        const toolkit = options.toolkit;
-        if (!toolkit) {
-          return yield* Effect.dieMessage('Toolkit is required to run the session.');
-        }
-        invariant(
-          !Effect.isEffect(toolkit),
-          'Toolkit must be resolved to a handler before being passed to the session.',
-        );
-
-        const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-          runTool(toolkit, toolCall),
-        );
-
+        const toolResults = yield* runTools(toolCalls, toolkitWithBlueprintHandlers as any);
         this._pending.push(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
@@ -318,3 +324,14 @@ export namespace ArtifactDiffResolver {
     >;
   };
 }
+
+const runTools: <Tools extends AiTool.Any>(
+  toolCalls: ContentBlock.ToolCall[],
+  toolkit: AiToolkit.AiToolkit<Tools>,
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
+  function* (toolCalls, toolkit) {
+    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
+
+    return yield* Effect.forEach(toolCalls, (toolCall) => runTool(toolkitWithHandlers, toolCall));
+  },
+);

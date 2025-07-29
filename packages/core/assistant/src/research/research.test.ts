@@ -29,7 +29,6 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 
 const AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
   Layer.provide(AnthropicLayer),
-  // TODO(dmaretskyi): Migrate to FetchHttpClient.
   Layer.provide(FetchHttpClient.layer),
 );
 
