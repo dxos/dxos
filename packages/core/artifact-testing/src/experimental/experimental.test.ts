@@ -24,7 +24,7 @@ import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { FunctionExecutor, type ServiceContainer, ToolResolverService, TracingService } from '@dxos/functions';
+import { FunctionExecutor, type ServiceContainer, TracingService } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
@@ -73,8 +73,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
       tracing: {
         service: TracingService.console,
       },
-      // TODO(burdon): Provide Toolkit.
-      toolResolver: ToolResolverService.make(new ToolRegistry([printerTool, calculatorTool])),
     });
   });
 

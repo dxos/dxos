@@ -25,7 +25,6 @@ import {
   QueueService,
   ServiceContainer,
   type ServiceCredential,
-  ToolResolverService,
   type TracingService,
 } from '../services';
 
@@ -100,8 +99,6 @@ export type TestServiceOptions = {
   tracing?: {
     service?: Context.Tag.Service<TracingService>;
   };
-
-  toolResolver?: Context.Tag.Service<ToolResolverService>;
 };
 
 export const createTestServices = ({
@@ -112,7 +109,6 @@ export const createTestServices = ({
   queues,
   space,
   tracing,
-  toolResolver,
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && (!!db || !!queues)), 'space can be provided only if db and queues are not');
 
@@ -123,7 +119,6 @@ export const createTestServices = ({
     eventLogger: logging?.logger ?? logging?.enabled ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
-    toolResolver: toolResolver ?? ToolResolverService.make(new ToolRegistry([])),
   });
 };
 

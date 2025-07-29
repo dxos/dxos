@@ -9,7 +9,7 @@ import { defineTool, type Message, OllamaAiServiceClient, ToolId, ToolRegistry, 
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -123,7 +123,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
             logging: {
               enabled: ENABLE_LOGGING,
             },
-            toolResolver: ToolResolverService.make(new ToolRegistry([textToImageTool as any])),
           }).createLayer(),
         ),
         Effect.scoped,

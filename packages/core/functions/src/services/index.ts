@@ -9,4 +9,3 @@ export * from './credentials';
 export * from './tracing';
 export * from './event-logger';
 export * from './function-call-service';
-export * from './tool-resolver';

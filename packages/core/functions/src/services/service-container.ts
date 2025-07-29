@@ -12,7 +12,6 @@ import { DatabaseService } from './database';
 import { EventLogger } from './event-logger';
 import { FunctionCallService } from './function-call-service';
 import { QueueService } from './queues';
-import { ToolResolverService } from './tool-resolver';
 import { TracingService } from './tracing';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.
@@ -28,7 +27,6 @@ const SERVICES = {
   functionCallService: FunctionCallService,
   queues: QueueService,
   tracing: TracingService,
-  toolResolver: ToolResolverService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
 
 /**
@@ -109,11 +107,7 @@ export class ServiceContainer {
       FunctionCallService,
       this._services.functionCallService ?? FunctionCallService.mock(),
     );
-    const toolResolver = Layer.succeed(
-      ToolResolverService,
-      this._services.toolResolver ?? ToolResolverService.notAvailable,
-    );
 
-    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService, toolResolver);
+    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);
   }
 }

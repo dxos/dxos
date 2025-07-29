@@ -17,7 +17,6 @@ import {
   DatabaseService,
   EventLogger,
   FunctionCallService,
-  ToolResolverService as FunctionsToolResolverService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
@@ -34,7 +33,6 @@ export type ChatServices =
   | ToolResolverService
   | TracingService
   | EventLogger
-  | ToolResolverService
   | ToolExecutionService;
 
 export type UseChatServicesProps = {
@@ -61,8 +59,6 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       Layer.succeed(EventLogger, EventLogger.noop),
       toolResolver,
       toolExecutionService,
-      // TODO(dmaretskyi): Remove.
-      Layer.succeed(FunctionsToolResolverService, FunctionsToolResolverService.make(toolRegistry)),
     );
   }, [space, toolRegistry, toolResolver]);
 };
