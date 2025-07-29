@@ -14,7 +14,7 @@ import { NATIVE_PLUGIN } from '../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-export default async (context: PluginContext) => {
+export default (context: PluginContext) => {
   const platform = type();
   if (!SUPPORTS_OTA.includes(platform)) {
     return contributes(Capabilities.Null, null);
@@ -66,10 +66,6 @@ export default async (context: PluginContext) => {
     }
   });
 
-  // Check on startup.
-  await Effect.runPromise(action);
-
-  // Schedule to run every hour.
   const fiber = pipe(
     // prettier-ignore
     action,
