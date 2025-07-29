@@ -191,8 +191,6 @@
       "@moonrepo/cli",
       "@parcel/watcher",
       "@sentry/cli",
-      "@socketsupply/socket-darwin-arm64",
-      "@socketsupply/socket-linux-x64",
       "@swc/core",
       "canvas",
       "cbor-extract",
