@@ -46,12 +46,6 @@
       "path": "packages/common/esbuild-plugins/tsconfig.json"
     },
     {
-      "path": "packages/common/eslint-plugin/tsconfig.json"
-    },
-    {
-      "path": "packages/common/eslint-plugin-rules/tsconfig.json"
-    },
-    {
       "path": "packages/common/feed-store/tsconfig.json"
     },
     {
