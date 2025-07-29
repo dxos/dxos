@@ -99,11 +99,15 @@ const MarkdownContainer = ({
       const results = await space?.db.query(Query.select(filter)).run();
       // TODO(wittjosiah): Use `Obj.Any` type.
       const getLabel = (object: any) => {
+        const label = Obj.getLabel(object);
+        if (label) {
+          return label;
+        }
+
+        // TODO(wittjosiah): Remove metadata labels.
         const type = Obj.getTypename(object)!;
         const metadata = resolve(type);
-        return (
-          metadata.label?.(object) || object.name || ['object name placeholder', { ns: type, default: 'New object' }]
-        );
+        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
       };
       const items =
         results?.objects

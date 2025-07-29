@@ -109,9 +109,6 @@ export const Person = PersonSchema.pipe(
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
-).pipe(
-  Schema.annotations({ title: 'Person', description: 'A person.' }),
-  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
-);
+).pipe(Schema.annotations({ title: 'Person', description: 'A person.' }), LabelAnnotation.set(['fullName']));
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}

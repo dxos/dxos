@@ -11,7 +11,7 @@ export interface AnnotationHelper<T> {
 
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
-    get: (schema) => SchemaAST.getAnnotation(schema as any, id),
+    get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
     set:
       (value) =>
       <S extends Schema.Schema.Any>(schema: S) =>
