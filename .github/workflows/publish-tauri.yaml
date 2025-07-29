@@ -24,15 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set release channel
-        id: release-channel
-        uses: ./.github/actions/channel
-
       - name: Create draft non-production release
-        uses: crabnebula-dev/cloud-release@v0
+        uses: ./.github/actions/cn-release
         with:
-          command: release draft ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: draft
           working-directory: ./packages/apps/composer-app/src-tauri/
 
   build:
@@ -52,10 +49,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set release channel
-        id: release-channel
-        uses: ./.github/actions/channel
 
       - uses: 'moonrepo/setup-toolchain@v0'
 
@@ -138,10 +131,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload assets
-        uses: crabnebula-dev/cloud-release@v0
+        uses: ./.github/actions/cn-release
         with:
-          command: release upload ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: upload
           working-directory: ./packages/apps/composer-app/src-tauri/
 
   publish:
@@ -152,14 +146,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set release channel
-        id: release-channel
-        uses: ./.github/actions/channel
-
       - name: Publish release
-        uses: crabnebula-dev/cloud-release@v0
+        uses: ./.github/actions/cn-release
         with:
-          command: |
-            release publish ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
+          application: ${{ env.CN_APPLICATION }}
+          command: publish
           working-directory: ./packages/apps/composer-app/src-tauri/

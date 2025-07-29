@@ -1,0 +1,34 @@
+name: Crab Nebula Release
+description: Run a Crab Nebula release command
+
+inputs:
+  api-key:
+    description: 'Cloud Release API key'
+    required: true
+  command:
+    description: 'Cloud Release command'
+    required: true
+  application:
+    description: 'Cloud Release application name'
+    required: true
+  framework:
+    description: 'Cloud Release framework'
+    default: 'tauri'
+  working-directory:
+    description: 'Working directory'
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - id: release-channel
+      if: github.ref_name != 'production'
+      # Replace all slashes with dashes.
+      run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - uses: crabnebula-dev/cloud-release@v0
+      with:
+        command: release ${{ inputs.command }} ${{ inputs.application }} --framework ${{ inputs.framework }}${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
+        api-key: ${{ inputs.api-key }}
+        working-directory: ${{ inputs.working-directory }}
