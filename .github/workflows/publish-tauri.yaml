@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CN_APPLICATION: "dxos/composer"
+  CN_APPLICATION: dxos/composer
 
 jobs:
   draft:
@@ -21,6 +21,80 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install semver
+        run: npm install -g semver
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Install CrabNebula CLI
+        run: |
+          # Download the latest cn CLI for Linux
+          curl -L -o cn https://cdn.crabnebula.app/download/crabnebula/cn-cli/latest/cn_linux
+          chmod +x cn
+          sudo mv cn /usr/local/bin/
+          
+          # Verify installation
+          cn --version
+
+      - name: Bump version in Tauri config
+        run: |
+          RELEASE_DATA=$(cn release list dxos/composer --channel tauri --format json)
+          LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.[0].version')
+          CONFIG_VERSION=$(jq -r '.version' packages/apps/composer-app/src-tauri/tauri.conf.json)
+
+          # Strip prerelease parts for comparison using sed instead of semver -r
+          LATEST_CORE_VERSION=$(echo "$LATEST_VERSION" | sed 's/-.*$//')
+          CONFIG_CORE_VERSION=$(echo "$CONFIG_VERSION" | sed 's/-.*$//')
+
+          # Check if latest version is a prerelease
+          if [[ "$LATEST_VERSION" == *"-"* ]]; then
+            echo "Latest version is a prerelease: $LATEST_VERSION"
+
+            # Check if config version is one version behind the latest core version
+            CONFIG_PLUS_ONE=$(echo "$CONFIG_CORE_VERSION" | xargs semver -i patch)
+            if [ "$CONFIG_PLUS_ONE" = "$LATEST_CORE_VERSION" ]; then
+              echo "Config version ($CONFIG_CORE_VERSION) is one version behind latest core version ($LATEST_CORE_VERSION), bumping latest version"
+              NEW_VERSION=$(echo $LATEST_VERSION | xargs semver -i prerelease)
+
+              # Update the version in tauri.conf.json
+              TAURI_CONFIG_PATH="packages/apps/composer-app/src-tauri/tauri.conf.json"
+              jq \
+                --arg version "$NEW_VERSION" \
+                '.version = $version' \
+                "$TAURI_CONFIG_PATH" > temp.json && \
+              mv temp.json "$TAURI_CONFIG_PATH"
+
+              echo "Updated tauri.conf.json with version: $NEW_VERSION"
+            else
+              echo "Config version ($CONFIG_CORE_VERSION) is not one version behind latest core version ($LATEST_CORE_VERSION), skipping bump"
+            fi
+          elif [ "$CONFIG_CORE_VERSION" = "$LATEST_CORE_VERSION" ]; then
+            echo "Config version matches latest release, bumping to prerelease"
+            NEW_VERSION=$(echo $LATEST_VERSION | xargs semver -i prerelease)
+
+            # Update the version in tauri.conf.json
+            TAURI_CONFIG_PATH="packages/apps/composer-app/src-tauri/tauri.conf.json"
+            jq \
+              --arg version "$NEW_VERSION" \
+              '.version = $version' \
+              "$TAURI_CONFIG_PATH" > temp.json && \
+            mv temp.json "$TAURI_CONFIG_PATH"
+
+            echo "Updated tauri.conf.json with version: $NEW_VERSION"
+          else
+            echo "Config version ($CONFIG_CORE_VERSION) differs from latest release ($LATEST_CORE_VERSION), skipping bump"
+          fi
+        env:
+          CN_API_KEY: ${{ secrets.CN_API_KEY }}
 
       - name: Create draft non-production release
         uses: ./.github/actions/cn-release
@@ -48,7 +122,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: 'moonrepo/setup-toolchain@v0'
+      - uses: moonrepo/setup-toolchain@v0
 
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
