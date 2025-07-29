@@ -64,5 +64,8 @@
   ],
   "circleci.notifications.mine": true,
   "search.useParentIgnoreFiles": true,
-  "search.useGlobalIgnoreFiles": false
+  "search.useGlobalIgnoreFiles": false,
+  "rust-analyzer.linkedProjects": [
+    "packages/apps/composer-app/src-tauri/Cargo.toml"
+  ]
 }
