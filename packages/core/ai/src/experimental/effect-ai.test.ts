@@ -41,7 +41,7 @@ const toolkitLayer = TestToolkit.toLayer({
       const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
       log.info('calculate', { sanitizedInput });
 
-      // eslint-disable-next-line no-new-func
+      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
       return Function(`"use strict"; return (${sanitizedInput})`)();
     })();
 
