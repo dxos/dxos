@@ -200,11 +200,45 @@ async function verifyWorkflows() {
 }
 
 /**
+ * Get the current Git branch name.
+ */
+function getCurrentBranch() {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+    return branch;
+  } catch (err) {
+    if (argv.verbose) {
+      console.log(chalk.gray('Could not determine current branch, checking all branches'));
+    }
+    return null;
+  }
+}
+
+/**
  * Check workflow status and return summary.
  */
 async function checkWorkflowStatus() {
-  const runs = await listWorkflowRunsForRepo(false); // Don't display table in verify mode
+  const runs = await listWorkflowRunsForRepo(false, false); // Don't display table in verify mode
   if (!runs || runs.length === 0) {
+    return { status: 'success', errors: [], failedRuns: [] };
+  }
+
+  // Get current branch to filter workflows
+  const currentBranch = getCurrentBranch();
+  
+  // Filter runs by current branch if available
+  const filteredRuns = currentBranch 
+    ? runs.filter(run => run.head_branch === currentBranch)
+    : runs;
+  
+  if (argv.verbose && currentBranch) {
+    console.log(chalk.gray(`Checking workflows for branch: ${currentBranch}`));
+  }
+  
+  if (filteredRuns.length === 0) {
+    if (currentBranch && argv.verbose) {
+      console.log(chalk.gray(`No workflows found for branch: ${currentBranch}`));
+    }
     return { status: 'success', errors: [], failedRuns: [] };
   }
 
@@ -213,7 +247,7 @@ async function checkWorkflowStatus() {
   const errors = [];
   const failedRuns = [];
 
-  for (const run of runs) {
+  for (const run of filteredRuns) {
     if (run.status === 'queued' || run.status === 'in_progress') {
       hasPending = true;
     } else if (run.status === 'completed' && run.conclusion === 'failure') {
