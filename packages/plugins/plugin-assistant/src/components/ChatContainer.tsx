@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
-import { type AssociatedArtifact } from '@dxos/artifact';
+import { type AssociatedArtifact } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
