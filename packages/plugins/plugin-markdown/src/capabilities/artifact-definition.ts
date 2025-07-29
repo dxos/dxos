@@ -7,7 +7,7 @@ import { pipe, Schema } from 'effect';
 import { createTool, ToolResult } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
+import { createArtifactElement, ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { invariant, assertArgument } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -15,7 +15,6 @@ import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { DocumentType, MarkdownAction } from '../types';
-import { ArtifactId } from "@dxos/assistant";
 
 // TODO(burdon): Factor out.
 declare global {

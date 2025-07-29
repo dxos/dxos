@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { type Schema } from 'effect';
 
 import { type ExecutableTool } from '@dxos/ai';
-import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 
 /**
  * Static artifact definition.

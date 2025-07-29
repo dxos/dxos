@@ -86,7 +86,7 @@ export const sentenceNormalization = defineFunction<NormalizationInput, Normaliz
     const session = new AiSession({ operationModel: 'configured' });
 
     // TODO(dmaretskyi): This got broken after effect-ai transition.
-    const response = void session.runStructured(NormalizationOutput, {
+    const response = session.runStructured(NormalizationOutput, {
       generationOptions: {
         model: DEFAULT_EDGE_MODEL,
       },
