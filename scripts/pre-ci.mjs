@@ -174,7 +174,8 @@ async function main() {
   // Step 6: Run build and test
   console.log(chalk.blue('Step 6: Running build and tests...'));
   try {
-    await $`moon run :build :test --no-bail`;
+    await $`moon run :build --no-bail`;
+    await $`moon run :test --no-bail -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
     console.error(chalk.red('Build or tests failed:'), error);
