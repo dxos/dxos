@@ -4,4 +4,4 @@
 
 export * from './framer';
 export * from './muxer';
-export * from './rpc-port';
+export type * from './rpc-port';

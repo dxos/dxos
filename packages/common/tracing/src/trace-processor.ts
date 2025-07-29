@@ -199,7 +199,7 @@ export class TraceProcessor {
         } else {
           res[key] = sanitizeValue(
             value,
-            options.depth === undefined ? 1 : options.depth ?? MAX_INFO_OBJECT_DEPTH,
+            options.depth === undefined ? 1 : (options.depth ?? MAX_INFO_OBJECT_DEPTH),
             this,
           );
         }

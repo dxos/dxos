@@ -95,7 +95,7 @@ const MarkdownContainer = ({
   );
   const onLinkQuery = useCallback(
     async (query?: string): Promise<CommandMenuGroup[]> => {
-      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';
+      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
       // TODO(wittjosiah): Use `Obj.Any` type.
       const getLabel = (object: any) => {
@@ -190,7 +190,7 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
   const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &

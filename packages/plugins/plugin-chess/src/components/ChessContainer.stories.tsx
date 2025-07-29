@@ -24,7 +24,7 @@ import ChessContainer from './ChessContainer';
 import { ChessType } from '../types';
 
 type StoryProps = {
-  role: 'popover' | 'card--intrinsic' | 'card--extrinsic';
+  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 };
 
 const render: Meta<StoryProps>['render'] = ({ role }) => {
@@ -93,7 +93,7 @@ export default meta;
 
 export const Popover = {
   args: {
-    role: 'popover',
+    role: 'card--popover',
   },
 };
 

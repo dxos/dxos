@@ -54,7 +54,7 @@ export const table = <T extends Record<string, any>>(
       Object.entries<TableColumn>(header as any)
         .filter(f)
         .map(([key, { color, primary, truncate, get }]) => {
-          let value = get ? get(row) : row[key] ?? '';
+          let value = get ? get(row) : (row[key] ?? '');
           if (truncate) {
             value = value.slice(0, 8);
           }

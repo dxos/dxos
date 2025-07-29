@@ -3,5 +3,5 @@
 //
 
 export * from './launchctl-runner';
-export * from './runner';
+export type * from './runner';
 export * from './systemctl-runner';
