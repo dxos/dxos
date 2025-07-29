@@ -91,7 +91,9 @@ export class ChatProcessor {
   public readonly messages: Signal<DataType.Message[]> = computed(() => {
     const messages = [...this._pending.value];
     if (this._streaming.value) {
-      messages.push(this._streaming.value);
+      // TODO(dmaretskyi): Replace with Obj.clone.
+      // NOTE: We have to clone the message here so that react will re-render.
+      messages.push(Obj.make(DataType.Message, this._streaming.value));
     }
 
     return messages;
@@ -104,6 +106,7 @@ export class ChatProcessor {
   private _session: AiSession | undefined = undefined;
 
   constructor(
+    // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
     private readonly _services: Layer.Layer<ChatServices>,
     private readonly _conversation: Conversation,
     private readonly _options: ChatProcessorOptions = defaultOptions,
@@ -175,11 +178,27 @@ export class ChatProcessor {
               sender: { role: 'assistant' },
               blocks: [block],
             });
+          } else if (this._streaming.value.blocks.at(-1)?.pending === true) {
+            this._streaming.value.blocks[this._streaming.value.blocks.length - 1] = block;
           } else {
-            const { blocks: _, ...rest } = this._streaming.value;
-            this._streaming.value = { ...rest, blocks: [block] };
+            this._streaming.value.blocks.push(block);
           }
         });
+      });
+
+      session.block.on((block) => {
+        if (!this._streaming.value) {
+          // TODO(burdon): Hack to create temp message; better for session to send initial partial object?
+          this._streaming.value = Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'assistant' },
+            blocks: [block],
+          });
+        } else if (this._streaming.value.blocks.at(-1)?.pending === true) {
+          this._streaming.value.blocks[this._streaming.value.blocks.length - 1] = block;
+        } else {
+          this._streaming.value.blocks.push(block);
+        }
       });
 
       // TODO(dmaretskyi): Handle tool status reports.
