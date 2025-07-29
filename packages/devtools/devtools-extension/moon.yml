@@ -2,3 +2,4 @@ type: application
 language: typescript
 tags:
   - typecheck
+  - vite

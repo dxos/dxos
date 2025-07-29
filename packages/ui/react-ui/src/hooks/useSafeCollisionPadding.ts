@@ -21,7 +21,7 @@ const safePadding = (
 ) => {
   return (
     (propIsNumber(safePadding[side]) ? safePadding[side] : 0) +
-    (propIsNumber(propsPadding) ? propsPadding : propsIsRecord(propsPadding) ? propsPadding[side] ?? 0 : 0)
+    (propIsNumber(propsPadding) ? propsPadding : propsIsRecord(propsPadding) ? (propsPadding[side] ?? 0) : 0)
   );
 };
 

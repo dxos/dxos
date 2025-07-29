@@ -26,7 +26,9 @@ export const safeParseJson: {
   if (data && data.length > 0) {
     try {
       return JSON.parse(data);
-    } catch (err) {}
+    } catch (err) {
+      // no-op.
+    }
   }
   return defaultValue;
 };

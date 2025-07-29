@@ -36,7 +36,7 @@ export const TraceView: FC<{
     const spans =
       resourceId === undefined || !groupByResource
         ? [...state.spans.values()].filter((s) => s.parentId === undefined)
-        : selectedResource?.spans ?? [];
+        : (selectedResource?.spans ?? []);
 
     return buildMultiFlameGraph(
       state,

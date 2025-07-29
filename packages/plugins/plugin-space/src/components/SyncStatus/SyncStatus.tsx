@@ -29,7 +29,7 @@ export const SyncStatus = () => {
   return <SyncStatusIndicator state={state} saved={saved} />;
 };
 
-export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: Boolean }) => {
+export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: boolean }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const summary = getSyncSummary(state);
   const offline = Object.values(state).length === 0;

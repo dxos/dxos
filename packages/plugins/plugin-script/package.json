@@ -101,7 +101,7 @@
     "codemirror": "^6.0.1",
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",
-    "prettier": "^3.2.4",
+    "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.5.0",
     "typescript": "^5.8.3"
   },
