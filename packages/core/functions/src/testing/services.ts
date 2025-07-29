@@ -110,7 +110,7 @@ export const createTestServices = ({
     ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? DatabaseService.make(space?.db || db!) : undefined,
-    eventLogger: logging?.logger ?? logging?.enabled ? consoleLogger : noopLogger,
+    eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
   });

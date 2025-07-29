@@ -3,4 +3,4 @@
 //
 
 export { schema, schemaJson, type TYPES } from './gen/index.js';
-export * from './types.js';
+export type * from './types.js';

@@ -132,7 +132,7 @@ export const gptNode = defineComputeNode({
             try: () => queues.get<DataType.Message>(conversation.dxn).queryObjects(),
             catch: (e) => e as Error,
           })
-        : history ?? [];
+        : (history ?? []);
 
       log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 

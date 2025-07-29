@@ -50,7 +50,7 @@ const maybeForce = <Config>(
   cb: (config: Config) => Force<any, any>,
   defaultValue = undefined,
 ) => {
-  const value = typeof options === 'boolean' ? (options ? {} : undefined) : options ?? defaultValue;
+  const value = typeof options === 'boolean' ? (options ? {} : undefined) : (options ?? defaultValue);
   if (value) {
     return cb(value);
   }

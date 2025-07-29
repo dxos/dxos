@@ -234,7 +234,7 @@ const withEchoRefinements = (
  * @param definitions
  */
 export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
-  const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
+  const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }

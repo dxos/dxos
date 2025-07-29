@@ -12,7 +12,7 @@ import { asyncTimeout } from './timeout';
  * @deprecated Use `Trigger` instead.
  */
 export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T) => void] => {
-  // eslint-disable-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+  // eslint-disable-line prefer-arrow-functions/prefer-arrow-functions
   let callback: (arg: T) => void;
 
   const promise = new Promise<T>((resolve, reject) => {

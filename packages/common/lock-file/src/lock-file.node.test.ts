@@ -84,11 +84,11 @@ describe('LockFile', () => {
 
 // NOTE: Self-contained so when function.toString is called the code runs.
 const lockInProcess = (filename: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { open } = require('node:fs/promises');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { constants } = require('node:fs');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { flock } = require('fs-ext');
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
