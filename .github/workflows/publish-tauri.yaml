@@ -105,9 +105,6 @@ jobs:
             exit 1
           fi
 
-      - name: emit failure
-        run: exit 1
-
       - uses: tecolicom/actions-use-homebrew-tools@v1
         if: matrix.os == 'depot-macos-latest'
         with:
