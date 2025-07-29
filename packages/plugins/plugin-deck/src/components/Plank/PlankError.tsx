@@ -16,11 +16,8 @@ export const PlankContentError = ({ error }: { error?: Error }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
-      <p
-        role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
-      >
+    <div role='none' className='overflow-y-auto p-8 attention-surface grid place-items-center'>
+      <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
         {error ? errorString : t('error fallback message')}
       </p>
     </div>
