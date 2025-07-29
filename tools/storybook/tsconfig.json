@@ -7,9 +7,9 @@
     "out"
   ],
   "include": [
+    ".storybook/*.mjs",
     ".storybook/*.ts",
     ".storybook/*.tsx",
-    ".storybook/*.mjs",
     "config/**/*.mts"
   ],
   "references": [

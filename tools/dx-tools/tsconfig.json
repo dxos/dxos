@@ -5,9 +5,9 @@
     "outDir": "dist"
   },
   "include": [
+    "src/**/*.mjs",
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.mjs"
+    "src/**/*.tsx"
   ],
   "references": []
 }
