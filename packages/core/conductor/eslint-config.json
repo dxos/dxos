@@ -1,8 +1,0 @@
-{
-  "extends": [
-    "../../../../.eslintrc.packlets.js"
-  ],
-  "parserOptions": {
-    "project": "./packages/core/conductor/tsconfig.json"
-  }
-}

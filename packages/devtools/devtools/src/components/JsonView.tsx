@@ -9,7 +9,7 @@ import { schema } from '@dxos/protocols/proto';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { arrayToBuffer } from '@dxos/util';
 
-export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
+export const JsonView: FC<{ data?: object; truncate?: boolean }> = ({ data, truncate = true }) => {
   return (
     <SyntaxHighlighter classNames='p-1' language='json'>
       {JSON.stringify(data, replacer(truncate), 2)}
