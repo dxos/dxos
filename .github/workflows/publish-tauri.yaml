@@ -30,17 +30,8 @@ jobs:
 
       - name: Create draft non-production release
         uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name != 'production'
         with:
-          command: release draft ${{ env.CN_APPLICATION }} --framework tauri --channel ${{ steps.release-channel.outputs.channel }}
-          api-key: ${{ secrets.CN_API_KEY }}
-          working-directory: ./packages/apps/composer-app/src-tauri/
-
-      - name: Create draft production release
-        uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name == 'production'
-        with:
-          command: release draft ${{ env.CN_APPLICATION }} --framework tauri
+          command: release draft ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
@@ -146,19 +137,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: Upload Assets
+      - name: Upload assets
         uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name != 'production'
         with:
-          command: release upload ${{ env.CN_APPLICATION }} --framework tauri --channel ${{ steps.release-channel.outputs.channel }}
-          api-key: ${{ secrets.CN_API_KEY }}
-          working-directory: ./packages/apps/composer-app/src-tauri/
-
-      - name: Upload Assets
-        uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name == 'production'
-        with:
-          command: release upload ${{ env.CN_APPLICATION }} --framework tauri
+          command: release upload ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
           working-directory: ./packages/apps/composer-app/src-tauri/
 
@@ -174,18 +156,10 @@ jobs:
         id: release-channel
         uses: ./.github/actions/channel
 
-      - name: Publish non-production release
+      - name: Publish release
         uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name != 'production'
         with:
-          command: release publish ${{ env.CN_APPLICATION }} --framework tauri --channel ${{ steps.release-channel.outputs.channel }}
-          api-key: ${{ secrets.CN_API_KEY }}
-          working-directory: ./packages/apps/composer-app/src-tauri/
-
-      - name: Publish production release
-        uses: crabnebula-dev/cloud-release@v0
-        if: github.ref_name == 'production'
-        with:
-          command: release publish ${{ env.CN_APPLICATION }} --framework tauri
+          command: |
+            release publish ${{ env.CN_APPLICATION }} --framework tauri${{ github.ref_name != 'production' && format(' --channel {0}', steps.release-channel.outputs.channel) || '' }}
           api-key: ${{ secrets.CN_API_KEY }}
           working-directory: ./packages/apps/composer-app/src-tauri/
