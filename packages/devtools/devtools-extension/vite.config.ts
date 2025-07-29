@@ -24,6 +24,7 @@ export default defineConfig({
     keepNames: true,
   },
   build: {
+    outDir: 'out/devtools-extension',
     sourcemap: true,
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
