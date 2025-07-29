@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/assistant';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
@@ -13,7 +13,7 @@ export const translations = [
   {
     'en-US': {
       // TODO(burdon): From assistant.
-      [Blueprint.typename]: {
+      [Blueprint.Blueprint.typename]: {
         'typename label': 'Blueprint',
         'typename label_zero': 'Blueprints',
         'typename label_one': 'Blueprint',

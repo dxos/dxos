@@ -7,7 +7,8 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { createSystemPrompt, Template } from '@dxos/assistant';
+import { createSystemPrompt } from '@dxos/assistant';
+import { Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -72,6 +73,6 @@ export const Default: Story = {
 
 export const System: Story = {
   args: {
-    source: createSystemPrompt(),
+    source: createSystemPrompt({}),
   },
 };

@@ -4,17 +4,17 @@
 
 import { Schema } from 'effect';
 
+import { Blueprint } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 
-import { Blueprint } from '../blueprint';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
 // TODO(burdon): Make ContentBlock.
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
-    added: Schema.Array(Type.Ref(Blueprint)),
-    removed: Schema.Array(Type.Ref(Blueprint)),
+    added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
+    removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
   }),
 
   // TODO(burdon): Type.Expando => Type.Obj (or Obj.Any?)

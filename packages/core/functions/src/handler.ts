@@ -40,19 +40,19 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
  */
 export interface FunctionContext {
   /**
+   * Space from which the function was invoked.
+   */
+  space: SpaceAPI | undefined;
+
+  ai: AiServiceClient;
+
+  /**
    * Resolves a service available to the function.
    * @throws if the service is not available.
    */
   getService: <T extends Context.Tag<any, any>>(tag: T) => Context.Tag.Service<T>;
 
   getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
-
-  /**
-   * Space from which the function was invoked.
-   */
-  space: SpaceAPI | undefined;
-
-  ai: AiServiceClient;
 }
 
 export interface FunctionContextAi {
@@ -76,7 +76,6 @@ export interface QueuesAPI {
  */
 export interface SpaceAPI {
   get id(): SpaceId;
-
   get db(): EchoDatabase;
 
   // TODO(dmaretskyi): Align with echo api: queues.get(id).append(items);
@@ -97,19 +96,25 @@ export type FunctionDefinition<T = {}, O = any> = {
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
-export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
-  if (!Schema.isSchema(params.inputSchema)) {
+export const defineFunction = <T, O>({
+  name,
+  description,
+  inputSchema,
+  outputSchema = Schema.Any,
+  handler,
+}: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
+  if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
-  if (typeof params.handler !== 'function') {
+  if (typeof handler !== 'function') {
     throw new Error('Handler must be a function');
   }
 
   return {
-    name: params.name,
-    description: params.description,
-    inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? Schema.Any,
-    handler: params.handler,
+    name,
+    description,
+    inputSchema,
+    outputSchema,
+    handler,
   };
 };
