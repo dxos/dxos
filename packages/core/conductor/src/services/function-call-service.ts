@@ -6,13 +6,13 @@ import { Context } from 'effect';
 
 import type { SpaceId } from '@dxos/keys';
 
-export class FunctionCallService extends Context.Tag('FunctionCallService')<
-  FunctionCallService,
+export class RemoteFunctionExecutionService extends Context.Tag('RemoteFunctionExecutionService')<
+  RemoteFunctionExecutionService,
   {
     callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;
   }
 >() {
-  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<FunctionCallService> {
+  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<RemoteFunctionExecutionService> {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         const url = getInvocationUrl(deployedFunctionId, baseUrl, { spaceId });

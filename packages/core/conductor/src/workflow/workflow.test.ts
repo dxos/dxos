@@ -16,7 +16,7 @@ import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createEventLogger, type FunctionCallService } from '../services';
+import { createEventLogger, type RemoteFunctionExecutionService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -245,7 +245,7 @@ describe('workflow', () => {
 });
 
 const createTestExecutionContext = (mocks?: {
-  functions?: Context.Tag.Service<FunctionCallService>;
+  functions?: Context.Tag.Service<RemoteFunctionExecutionService>;
 }): TestEffectLayers => {
   return new ServiceContainer()
     .setServices({

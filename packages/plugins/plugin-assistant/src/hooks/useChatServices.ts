@@ -16,7 +16,7 @@ import {
   CredentialsService,
   DatabaseService,
   ComputeEventLogger,
-  FunctionCallService,
+  RemoteFunctionExecutionService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
@@ -29,7 +29,7 @@ export type ChatServices =
   | CredentialsService
   | DatabaseService
   | QueueService
-  | FunctionCallService
+  | RemoteFunctionExecutionService
   | ToolResolverService
   | ToolExecutionService
   | TracingService
@@ -54,7 +54,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       CredentialsService.configuredLayer([]),
       space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
       space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
-      FunctionCallService.mockLayer,
+      RemoteFunctionExecutionService.mockLayer,
       ComputeEventLogger.layerFromTracing,
       toolResolver,
       toolExecutionService,

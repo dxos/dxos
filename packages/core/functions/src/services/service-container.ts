@@ -10,7 +10,7 @@ import { entries } from '@dxos/util';
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { ComputeEventLogger } from './event-logger';
-import { FunctionCallService } from './function-call-service';
+import { RemoteFunctionExecutionService } from './function-call-service';
 import { QueueService } from './queues';
 import { TracingService } from './tracing';
 
@@ -24,7 +24,7 @@ const SERVICES = {
   credentials: CredentialsService,
   database: DatabaseService,
   eventLogger: ComputeEventLogger,
-  functionCallService: FunctionCallService,
+  functionCallService: RemoteFunctionExecutionService,
   queues: QueueService,
   tracing: TracingService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
@@ -104,8 +104,8 @@ export class ServiceContainer {
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
     const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
     const functionCallService = Layer.succeed(
-      FunctionCallService,
-      this._services.functionCallService ?? FunctionCallService.mock(),
+      RemoteFunctionExecutionService,
+      this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
     );
 
     return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);

@@ -10,7 +10,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type ComputeGraph,
   createEventLogger,
-  FunctionCallService,
+  RemoteFunctionExecutionService,
   ValueBag,
   type WorkflowLoader,
 } from '@dxos/conductor';
@@ -232,7 +232,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
       eventLogger: createEventLogger(LogLevel.INFO),
       database: DatabaseService.make(space.db),
       queues: QueueService.make(space.queues, undefined),
-      functionCallService: FunctionCallService.mock(),
+      functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();
 };

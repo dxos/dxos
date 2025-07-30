@@ -9,13 +9,13 @@ import type { SpaceId } from '@dxos/keys';
 /**
  * Allows calling into other functions.
  */
-export class FunctionCallService extends Context.Tag('FunctionCallService')<
-  FunctionCallService,
+export class RemoteFunctionExecutionService extends Context.Tag('RemoteFunctionExecutionService')<
+  RemoteFunctionExecutionService,
   {
     callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;
   }
 >() {
-  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<FunctionCallService> {
+  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<RemoteFunctionExecutionService> {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         const url = getInvocationUrl(deployedFunctionId, baseUrl, { spaceId });
@@ -32,7 +32,7 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
     };
   }
 
-  static mock = (): Context.Tag.Service<FunctionCallService> => {
+  static mock = (): Context.Tag.Service<RemoteFunctionExecutionService> => {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         return input;
@@ -40,7 +40,7 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
     };
   };
 
-  static mockLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
+  static mockLayer = Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.mock());
 }
 
 // TODO(dmaretskyi): Reconcile with `getInvocationUrl` in `@dxos/functions/edge`.

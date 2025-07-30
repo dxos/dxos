@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import {
   CredentialsService,
   DatabaseService,
-  FunctionCallService,
+  RemoteFunctionExecutionService,
   QueueService,
   TracingService,
 } from '@dxos/functions';
@@ -344,7 +344,7 @@ export class GraphExecutor {
         Layer.succeed(AiService, yield* AiService),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
-        Layer.succeed(FunctionCallService, yield* FunctionCallService),
+        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(QueueService, yield* QueueService),
       );
