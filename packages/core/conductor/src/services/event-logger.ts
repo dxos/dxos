@@ -7,7 +7,7 @@ import { Effect, Context } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
 
-export type ComputeEvent =
+export type ComputeEventPayload =
   | {
       type: 'begin-compute';
       nodeId: string;
@@ -36,14 +36,14 @@ export type ComputeEvent =
       event: any;
     };
 
-export class EventLogger extends Context.Tag('EventLogger')<
-  EventLogger,
-  { readonly log: (event: ComputeEvent) => void; readonly nodeId: string | undefined }
+export class ComputeEventLogger extends Context.Tag('ComputeEventLogger')<
+  ComputeEventLogger,
+  { readonly log: (event: ComputeEventPayload) => void; readonly nodeId: string | undefined }
 >() {}
 
 export const logCustomEvent = (data: any) =>
   Effect.gen(function* () {
-    const logger = yield* EventLogger;
+    const logger = yield* ComputeEventLogger;
     if (!logger.nodeId) {
       throw new Error('logCustomEvent must be called within a node compute function');
     }
@@ -62,7 +62,10 @@ export const createDefectLogger = <A, E, R>(): ((self: Effect.Effect<A, E, R>) =
     }),
   );
 
-export const createEventLogger = (level: LogLevel, message: string = 'event'): Context.Tag.Service<EventLogger> => {
+export const createEventLogger = (
+  level: LogLevel,
+  message: string = 'event',
+): Context.Tag.Service<ComputeEventLogger> => {
   const logFunction = (
     {
       [LogLevel.WARN]: log.warn,
@@ -74,7 +77,7 @@ export const createEventLogger = (level: LogLevel, message: string = 'event'): C
   )[level];
   invariant(logFunction);
   return {
-    log: (event: ComputeEvent) => {
+    log: (event: ComputeEventPayload) => {
       logFunction(message, event);
     },
     nodeId: undefined,

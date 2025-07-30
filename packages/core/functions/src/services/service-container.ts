@@ -9,7 +9,7 @@ import { entries } from '@dxos/util';
 
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
-import { EventLogger } from './event-logger';
+import { ComputeEventLogger } from './event-logger';
 import { FunctionCallService } from './function-call-service';
 import { QueueService } from './queues';
 import { TracingService } from './tracing';
@@ -23,7 +23,7 @@ const SERVICES = {
   ai: AiService,
   credentials: CredentialsService,
   database: DatabaseService,
-  eventLogger: EventLogger,
+  eventLogger: ComputeEventLogger,
   functionCallService: FunctionCallService,
   queues: QueueService,
   tracing: TracingService,
@@ -102,7 +102,7 @@ export class ServiceContainer {
     const queues =
       this._services.queues != null ? Layer.succeed(QueueService, this._services.queues) : QueueService.notAvailable;
     const tracing = Layer.succeed(TracingService, this._services.tracing ?? TracingService.noop);
-    const eventLogger = Layer.succeed(EventLogger, this._services.eventLogger ?? EventLogger.noop);
+    const eventLogger = Layer.succeed(ComputeEventLogger, this._services.eventLogger ?? ComputeEventLogger.noop);
     const functionCallService = Layer.succeed(
       FunctionCallService,
       this._services.functionCallService ?? FunctionCallService.mock(),

@@ -21,7 +21,7 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { EventLogger } from '../../services';
+import { ComputeEventLogger } from '../../services';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
 
@@ -141,7 +141,7 @@ export const gptNode = defineComputeNode({
       });
 
       const ctx = yield* contextFromScope();
-      const logger = yield* EventLogger;
+      const logger = yield* ComputeEventLogger;
 
       session.streamEvent.on(ctx, (event) => {
         logger.log({

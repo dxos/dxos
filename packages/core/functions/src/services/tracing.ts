@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
@@ -23,6 +23,8 @@ export class TracingService extends Context.Tag('TracingService')<
   }
 >() {
   static noop: Context.Tag.Service<TracingService> = { write: () => {} };
+
+  static layerNoop = Layer.succeed(TracingService, TracingService.noop);
 
   static console: Context.Tag.Service<TracingService> = {
     write: (event) => {

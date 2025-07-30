@@ -15,7 +15,7 @@ import {
   ConfiguredCredentialsService,
   CredentialsService,
   DatabaseService,
-  EventLogger,
+  ComputeEventLogger,
   FunctionCallService,
   QueueService,
   TracingService,
@@ -33,7 +33,7 @@ export type ChatServices =
   | ToolResolverService
   | ToolExecutionService
   | TracingService
-  | EventLogger;
+  | ComputeEventLogger;
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -55,11 +55,10 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
       space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
       FunctionCallService.mockLayer,
-      Layer.succeed(TracingService, TracingService.noop),
-      Layer.succeed(EventLogger, EventLogger.noop),
+      ComputeEventLogger.layerFromTracing,
       toolResolver,
       toolExecutionService,
-    );
+    ).pipe(Layer.provideMerge(TracingService.layerNoop));
   }, [space, toolRegistry, toolResolver]);
 };
 

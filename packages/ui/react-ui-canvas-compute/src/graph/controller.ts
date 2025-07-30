@@ -8,11 +8,11 @@ import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
-  type ComputeEvent,
+  type ComputeEventPayload,
   type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
-  type EventLogger,
+  type ComputeEventLogger,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -110,7 +110,7 @@ export class ComputeGraphController extends Resource {
   /** Computed result. */
   public readonly output = new Event<ComputeOutputEvent>();
 
-  public readonly events = new Event<ComputeEvent>();
+  public readonly events = new Event<ComputeEventPayload>();
 
   constructor(
     private readonly _serviceContainer: ServiceContainer,
@@ -322,7 +322,7 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createLogger(): Context.Tag.Service<EventLogger> {
+  private _createLogger(): Context.Tag.Service<ComputeEventLogger> {
     return {
       log: (event) => {
         this._handleEvent(event);
@@ -331,7 +331,7 @@ export class ComputeGraphController extends Resource {
     };
   }
 
-  private _handleEvent(event: ComputeEvent): void {
+  private _handleEvent(event: ComputeEventPayload): void {
     log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {

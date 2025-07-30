@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ComputeNode, ComputeMeta, ComputeEvent } from '@dxos/conductor';
+import type { ComputeNode, ComputeMeta, ComputeEventPayload } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
 
 import { useComputeContext } from './compute-context';
@@ -20,7 +20,7 @@ export type ComputeNodeState = {
     outputs: Record<string, RuntimeValue>;
     setOutput: (property: string, value: any) => void;
     evalNode: () => void;
-    subscribeToEventLog: (cb: (event: ComputeEvent) => void) => void;
+    subscribeToEventLog: (cb: (event: ComputeEventPayload) => void) => void;
   };
 };
 
@@ -54,7 +54,7 @@ export const useComputeNodeState = (shape: ComputeShape): ComputeNodeState => {
   }, [shape.node]);
 
   const subscribeToEventLog = useCallback(
-    (cb: (event: ComputeEvent) => void) => {
+    (cb: (event: ComputeEventPayload) => void) => {
       return controller.events.on((ev) => {
         if (ev.nodeId === shape.node) {
           cb(ev);
