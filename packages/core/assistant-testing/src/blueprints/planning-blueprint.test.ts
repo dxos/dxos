@@ -21,14 +21,6 @@ import blueprint from './planning-blueprint';
 import { readDocument, writeDocument } from '../functions';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
-  // it.effect.only(
-  //   'building a shelf',
-  //   Effect.fn(function* ({ expect }) {
-  //     console.log('!!!!!!!');
-  //     expect(true).toBe(true);
-  //   }),
-  // );
-
   it.effect.only(
     'building a shelf',
     Effect.fn(
@@ -57,11 +49,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
 
         const artifact = db.add(Document.make());
 
-        // TODO(burdon): Build testing pattern.
-        const prompts: string[] = [
+        // TODO(burdon): Create assistant testing pattern.
+        const prompts = [
           trim`
             I'm building a shelf.
-            Store the shopping list in ${Obj.getDXN(artifact)}
+            Maintain a shopping list here: ${Obj.getDXN(artifact)}
             I need a hammer, nails, and a saw.
           `,
           trim`
@@ -84,15 +76,17 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           prevContent = artifact.content;
         }
 
-        const { content } = yield* Effect.promise(() => artifact.content.load());
-        Object.entries({
-          screwdriver: true,
-          screws: true,
-          board: true,
-          saw: true,
+        const list = {
           hammer: false,
           nails: false,
-        }).forEach(([item, expected]) => {
+          saw: true,
+          board: true,
+          screwdriver: true,
+          screws: true,
+        };
+
+        const { content } = yield* Effect.promise(() => artifact.content.load());
+        Object.entries(list).forEach(([item, expected]) => {
           expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
         });
       },
