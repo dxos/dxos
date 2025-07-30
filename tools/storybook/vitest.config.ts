@@ -4,7 +4,6 @@
 
 import storybookTest from '@storybook/addon-vitest/vitest-plugin';
 import { defineConfig } from 'vitest/config';
-import { stories } from './.storybook/paths';
 
 export default defineConfig({
   test: {
@@ -23,16 +22,9 @@ export default defineConfig({
       },
       plugins: [
         // @ts-ignore
-        storybookTest(),
-        {
-          name: 'vite-plugin-storybook-test-dxos-imports',
-          config: () => ({
-            test: {
-              include: stories,
-              exclude: [],
-            },
-          })
-        }
+        storybookTest({
+          tags: { include: ['test'] },
+        }),
       ],
     }],
   },
