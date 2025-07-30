@@ -137,7 +137,7 @@ export class AiSession {
         // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
         const systemPrompt = yield* pipe(
           blueprints,
-          Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
+          Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
           Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
           Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
           Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),

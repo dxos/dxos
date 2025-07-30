@@ -3,8 +3,9 @@
 //
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readDocument, writeDocument } from '../functions';
@@ -13,9 +14,10 @@ export const DESIGN_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/design-spec',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
-  instructions: Ref.make(
-    Template.make({
-      source: trim`
+  instructions: {
+    source: Ref.make(
+      Obj.make(DataType.Text, {
+        content: trim`
         You manage a design spec based on the conversation.
         The design spec is a markdown document that is used to record the tasks.
         The design spec document follows a hierarchical structure, with nested markdown bulleted sections.
@@ -24,8 +26,9 @@ export const DESIGN_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
         When replying to the user, be terse with your comments about design doc handling.
         Do not announce when you read or write the design spec document.
       `,
-    }),
-  ),
+      }),
+    ),
+  },
   // TODO(dmaretskyi): Helper for function -> toolId conversion.
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
 });
@@ -34,17 +37,19 @@ export const TASK_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/task-list',
   name: 'Task List',
   description: 'Manages a list of tasks.',
-  instructions: Ref.make(
-    Template.make({
-      source: trim`
+  instructions: {
+    source: Ref.make(
+      Obj.make(DataType.Text, {
+        content: trim`
         You manage a list of tasks.
         The task list is stored in a markdown document.
         Use the appropriate tools to read and write the task list document.
         When replying to the user, be terse with your comments about task list handling.
         Do not announce when you read or write the task list document.
       `,
-    }),
-  ),
+      }),
+    ),
+  },
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
 });
 
@@ -52,9 +57,10 @@ export const PLANNING_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
-  instructions: Ref.make(
-    Template.make({
-      source: trim`
+  instructions: {
+    source: Ref.make(
+      Obj.make(DataType.Text, {
+        content: trim`
         You are a planning agent that manages complex tasks by creating and maintaining a markdown planning document.
 
         ## Core Responsibilities
@@ -97,7 +103,8 @@ export const PLANNING_BLUEPRINT = Obj.make(Blueprint.Blueprint, {
         - Focus on task execution rather than document management
         - Only mention document updates when they provide valuable context to the user
       `,
-    }),
-  ),
+      }),
+    ),
+  },
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
 });

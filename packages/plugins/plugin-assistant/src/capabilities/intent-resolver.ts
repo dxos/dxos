@@ -5,6 +5,7 @@
 import { Effect } from 'effect';
 
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
@@ -18,13 +19,20 @@ export default (context: PluginContext) => [
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-          const { object: collection } = yield* dispatch(
+          const { object: chatCollection } = yield* dispatch(
             createIntent(CollectionAction.CreateQueryCollection, { typename: Assistant.Chat.typename }),
           );
-          rootCollection.objects.push(Ref.make(collection));
+          const { object: blueprintCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Blueprint.Blueprint.typename }),
+          );
+          rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
 
           const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
           space.db.add(chat);
+
+          // TODO(wittjosiah): Create default blueprint.
+          // const { object: blueprint } = yield* dispatch(createIntent(Assistant.CreateBlueprint, { ... }));
+          // space.db.add(blueprint);
         }),
     }),
     createResolver({
@@ -36,6 +44,12 @@ export default (context: PluginContext) => [
             queue: Ref.fromDXN(space.queues.create().dxn),
           }),
         },
+      }),
+    }),
+    createResolver({
+      intent: Assistant.CreateBlueprint,
+      resolve: ({ name, description }) => ({
+        data: { object: Blueprint.make({ name, description }) },
       }),
     }),
     createResolver({
