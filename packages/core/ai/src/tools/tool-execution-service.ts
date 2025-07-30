@@ -1,4 +1,8 @@
-import { AiTool, AiToolkit } from '@effect/ai';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Record } from 'effect';
 
 import { AiToolNotFoundError } from '../errors';

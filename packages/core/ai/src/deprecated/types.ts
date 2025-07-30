@@ -1,4 +1,8 @@
-import { Schema } from 'effect'
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
 
 import { type ContentBlock, DataType } from '@dxos/schema';
 

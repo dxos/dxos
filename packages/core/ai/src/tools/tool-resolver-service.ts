@@ -1,8 +1,12 @@
-import { AiTool, AiToolkit } from '@effect/ai';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
+import { type ToolId } from '../deprecated/tools';
 import { AiToolNotFoundError } from '../errors';
-import { ToolId } from '../deprecated/tools';
 
 // TODO(burdon): Ai prefix?
 export class ToolResolverService extends Context.Tag('ToolResolverService')<
