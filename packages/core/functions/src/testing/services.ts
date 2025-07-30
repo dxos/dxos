@@ -33,23 +33,7 @@ export type TestServiceOptions = {
   /**
    * AI service configuration.
    */
-  ai?: OneOf<{
-    /**
-     * Custom AI service client.
-     */
-    client?: AiServiceClient;
-
-    /**
-     * Edge AI service at specified endpoint.
-     */
-    endpoint?: AiServiceEdgeClientOptions['endpoint'];
-
-    /**
-     * Predefined AI service configuration.
-     */
-    // TODO(burdon): 'dev' and 'edge' are redundant with providing an endpoint.
-    provider?: AiServiceProvider;
-  }>;
+  ai?: any;
 
   /**
    * Credentials service configuration.
@@ -110,52 +94,13 @@ export const createTestServices = ({
   assertArgument(!(!!space && (!!db || !!queues)), 'space can be provided only if db and queues are not');
 
   return new ServiceContainer().setServices({
-    ai: createAiService(ai),
+    // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? DatabaseService.make(space?.db || db!) : undefined,
     eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
   });
-};
-
-// TODO(burdon): Enable model configuration.
-const createAiService = (ai: TestServiceOptions['ai']): Context.Tag.Service<AiService> | undefined => {
-  if (ai?.client != null) {
-    return AiService.make(ai.client);
-  }
-
-  if (ai?.endpoint != null) {
-    return AiService.make(new EdgeAiServiceClient({ endpoint: ai.endpoint }));
-  }
-
-  switch (ai?.provider) {
-    case 'dev':
-      return AiService.make(
-        new EdgeAiServiceClient({
-          endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-          defaultGenerationOptions: {
-            model: '@anthropic/claude-3-5-sonnet-20241022',
-          },
-        }),
-      );
-
-    case 'edge':
-      return AiService.make(
-        new EdgeAiServiceClient({
-          endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-          defaultGenerationOptions: {
-            model: '@anthropic/claude-3-5-sonnet-20241022',
-          },
-        }),
-      );
-
-    case 'ollama':
-      return AiService.make(createTestAiServiceClient());
-
-    case 'lmstudio':
-      throw new Error('LMStudio is not supported');
-  }
 };
 
 const createCredentialsService = (
