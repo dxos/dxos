@@ -4024,7 +4024,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4082,7 +4082,7 @@ importers:
         version: 0.3.4
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
 
   packages/devtools/cli-base:
     dependencies:
@@ -4184,7 +4184,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4202,7 +4202,7 @@ importers:
         version: 1.3.6
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -4380,7 +4380,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4401,7 +4401,7 @@ importers:
         version: 18.2.0
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -28686,8 +28686,8 @@ packages:
   ogl@1.0.11:
     resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
-  ohash@1.1.4:
-    resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
+  ohash@1.1.6:
+    resolution: {integrity: sha512-TBu7PtV8YkAZn0tSxobKY2n2aAQva936lhRrj6957aDaCf9IEtqsKbgMzXE/F/sjqYOwmrukeORHNLe5glk7Cg==}
 
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
@@ -31756,6 +31756,10 @@ packages:
 
   undici@7.10.0:
     resolution: {integrity: sha512-u5otvFBOBZvmdjWLVW+5DAc9Nkq8f24g0O9oY7qw2JVIF1VocIFoyz9JFkuVOS2j41AufeO0xnlweJ2RLT8nGw==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.11.0:
+    resolution: {integrity: sha512-heTSIac3iLhsmZhUCjyS3JQEkZELateufzZuBaVM5RHXdSBMb1LPMQf5x+FH7qjsZYDP0ttAc3nnVpUB+wYbOg==}
     engines: {node: '>=20.18.1'}
 
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
@@ -48030,7 +48034,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  kubo-rpc-client@4.1.1(undici@7.10.0):
+  kubo-rpc-client@4.1.1(undici@7.11.0):
     dependencies:
       '@ipld/dag-cbor': 9.1.0
       '@ipld/dag-json': 10.1.7
@@ -48058,7 +48062,7 @@ snapshots:
       merge-options: 3.0.4
       multiformats: 13.3.0
       nanoid: 5.0.7
-      native-fetch: 4.0.2(undici@7.10.0)
+      native-fetch: 4.0.2(undici@7.11.0)
       parse-duration: 1.0.2
       react-native-fetch-api: 3.0.0
       stream-to-it: 1.0.1
@@ -49616,9 +49620,9 @@ snapshots:
 
   napi-postinstall@0.3.2: {}
 
-  native-fetch@4.0.2(undici@7.10.0):
+  native-fetch@4.0.2(undici@7.11.0):
     dependencies:
-      undici: 7.10.0
+      undici: 7.11.0
 
   natural-compare@1.4.0: {}
 
@@ -49976,7 +49980,7 @@ snapshots:
 
   ogl@1.0.11: {}
 
-  ohash@1.1.4: {}
+  ohash@1.1.6: {}
 
   ohash@2.0.11: {}
 
@@ -53766,10 +53770,12 @@ snapshots:
 
   undici@7.10.0: {}
 
+  undici@7.11.0: {}
+
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     dependencies:
       defu: 6.1.4
-      ohash: 1.1.4
+      ohash: 1.1.6
       pathe: 1.1.2
       ufo: 1.6.1
 
