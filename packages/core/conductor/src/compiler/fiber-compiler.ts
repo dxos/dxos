@@ -14,6 +14,7 @@ import {
   TracingService,
   ComputeEventLogger,
 } from '@dxos/functions';
+import { createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -26,7 +27,6 @@ import {
   type TopologyNode,
 } from './topology';
 import { ComputeNodeError, ValueValidationError } from '../errors';
-import { createDefectLogger } from '@dxos/functions';
 import {
   type ComputeEffect,
   type ComputeGraphModel,

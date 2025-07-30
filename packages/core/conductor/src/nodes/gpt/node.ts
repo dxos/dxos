@@ -17,11 +17,11 @@ import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { contextFromScope } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
+import { ComputeEventLogger } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ComputeEventLogger } from '@dxos/functions';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
 

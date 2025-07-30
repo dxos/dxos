@@ -11,12 +11,12 @@ import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { createEventLogger, type RemoteFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
 
 import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createEventLogger, type RemoteFunctionExecutionService } from '@dxos/functions';
 import {
   AnyInput,
   AnyOutput,

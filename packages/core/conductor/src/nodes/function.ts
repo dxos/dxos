@@ -6,8 +6,8 @@ import { Effect, Schema } from 'effect';
 
 import { Obj, type Ref } from '@dxos/echo';
 import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
-
 import { RemoteFunctionExecutionService } from '@dxos/functions';
+
 import { type ComputeRequirements } from '../types';
 
 export const resolveFunctionPath = async (fnRef?: Ref.Ref<FunctionType>): Promise<{ path: string }> => {

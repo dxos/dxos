@@ -4,11 +4,11 @@
 
 import { Effect, Schema } from 'effect';
 
+import { createDefectLogger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
 import { compileOrThrow, type GraphExecutor } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createDefectLogger } from '@dxos/functions';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
