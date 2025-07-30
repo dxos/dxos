@@ -4,26 +4,17 @@
 
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 
+import { todo } from '@dxos/debug';
 import { search } from './exa';
 
 const REMOTE_AI = true;
 
-const AiService = REMOTE_AI
-  ? new EdgeAiServiceClient({
-      endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-    })
-  : new OllamaAiServiceClient({
-      overrides: {
-        model: 'llama3.1:8b',
-      },
-    });
-
 describe.skip('Search', () => {
+  const AiService = todo();
   describe('Query-based', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({

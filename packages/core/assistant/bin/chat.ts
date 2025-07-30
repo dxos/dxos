@@ -8,11 +8,6 @@ import { Contact, Organization, Project, Task, createCypherTool, createTestData 
 import { ObjectId } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
 
-// TOOD(burdon): Get from config.
-// const aiClient = new EdgeAiServiceClient({
-//   endpoint: AI_SERVICE_ENDPOINT.LOCAL,
-// });
-
 const dataSource = createTestData();
 const cypherTool = createCypherTool(dataSource);
 

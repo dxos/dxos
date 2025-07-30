@@ -3,6 +3,5 @@
 //
 
 export * from './sequence';
-export * from './machine';
 export * from './logger';
 export * from './compiler';
