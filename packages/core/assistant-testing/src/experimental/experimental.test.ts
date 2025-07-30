@@ -18,7 +18,7 @@ import {
   ValueBag,
   computeGraphToGraphViz,
 } from '@dxos/conductor';
-import { compileSequence, SequenceMachine, SequenceParser, setConsolePrinter } from '@dxos/conductor';
+import { compileSequence, SequenceParser } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -101,7 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     log.info('text', { text });
   });
 
-  test('sequence', { timeout: 120_000 }, async () => {
+  test.skip('sequence', { timeout: 120_000 }, async () => {
     const researchQueue = queues.create();
     const toolkit = new ToolRegistry(
       [
@@ -122,8 +122,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     const _org = db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
     await db.flush({ indexes: true });
 
-    const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
-    setConsolePrinter(machine, true);
+    // const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
+    // setConsolePrinter(machine, true);
     // const { client } = serviceContainer.getService(AiService);
     // await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });

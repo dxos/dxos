@@ -12,7 +12,6 @@ import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { setConsolePrinter } from './logger';
 import { SequenceBuilder } from './sequence';
 import { TEST_EMAILS } from './test-data';
 
@@ -32,7 +31,7 @@ describe.skip('Sequence', () => {
 
     const tools = new ToolRegistry([]);
     const machine = todo() as any;
-    setConsolePrinter(machine, true);
+    // setConsolePrinter(machine, true);
     await machine.runToCompletion({ aiClient });
   });
 
@@ -89,7 +88,7 @@ describe.skip('Sequence', () => {
 
     const tools = new ToolRegistry([replyTool, labelTool]);
     const machine = todo() as any;
-    setConsolePrinter(machine);
+    // setConsolePrinter(machine);
     await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   });
 
@@ -145,3 +144,7 @@ describe.skip('Sequence', () => {
     await machine.runToCompletion({ aiClient, input: org1 });
   });
 });
+function setConsolePrinter(machine: any, arg1: boolean) {
+  throw new Error('Function not implemented.');
+}
+
