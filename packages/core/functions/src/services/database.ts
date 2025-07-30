@@ -28,6 +28,10 @@ export class DatabaseService extends Context.Tag('DatabaseService')<
     };
   };
 
+  static makeLayer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
+    return Layer.succeed(DatabaseService, DatabaseService.make(db));
+  };
+
   static resolve: (dxn: DXN) => Effect.Effect<Obj.Any | Relation.Any, Error, DatabaseService> = Effect.fn(
     function* (dxn) {
       const { db } = yield* DatabaseService;

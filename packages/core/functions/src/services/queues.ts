@@ -42,6 +42,9 @@ export class QueueService extends Context.Tag('QueueService')<
       contextQueue,
     };
   };
+
+  static makeLayer = (queues: QueueFactory, contextQueue?: Queue): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues, contextQueue));
 }
 
 /**

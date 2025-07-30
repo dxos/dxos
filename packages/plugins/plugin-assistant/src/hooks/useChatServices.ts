@@ -51,10 +51,10 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
   return useMemo(() => {
     return Layer.mergeAll(
       AiServiceTestingPreset('edge-remote').pipe(Layer.orDie), // TODO(burdon): Error management?
-      Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
-      space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
-      space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,
-      Layer.succeed(FunctionCallService, FunctionCallService.mock()),
+      CredentialsService.configuredLayer([]),
+      space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
+      space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
+      FunctionCallService.mockLayer,
       Layer.succeed(TracingService, TracingService.noop),
       Layer.succeed(EventLogger, EventLogger.noop),
       toolResolver,

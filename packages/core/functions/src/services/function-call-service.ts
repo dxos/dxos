@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import { Context, Layer } from 'effect';
 
 import type { SpaceId } from '@dxos/keys';
 
@@ -32,13 +32,15 @@ export class FunctionCallService extends Context.Tag('FunctionCallService')<
     };
   }
 
-  static mock = () => {
+  static mock = (): Context.Tag.Service<FunctionCallService> => {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         return input;
       },
     };
   };
+
+  static mockLayer = Layer.succeed(FunctionCallService, FunctionCallService.mock());
 }
 
 // TODO(dmaretskyi): Reconcile with `getInvocationUrl` in `@dxos/functions/edge`.
