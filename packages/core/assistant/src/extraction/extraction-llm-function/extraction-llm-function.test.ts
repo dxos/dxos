@@ -4,12 +4,12 @@
 
 import { beforeAll, describe, test } from 'vitest';
 
+import { todo } from '@dxos/debug';
 import { FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-import { todo } from '@dxos/debug';
 import { processTranscriptMessage } from '../extraction';
 import { extractionAnthropicFn } from './extraction-llm-function';
 
