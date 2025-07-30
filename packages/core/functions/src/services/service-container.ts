@@ -10,8 +10,8 @@ import { entries } from '@dxos/util';
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { ComputeEventLogger } from './event-logger';
-import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { QueueService } from './queues';
+import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { TracingService } from './tracing';
 
 // TODO(dmaretskyi): Refactor this module to only rely on tags and not the human-assigned names.

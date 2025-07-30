@@ -1,6 +1,12 @@
-import { Layer } from 'effect';
-import { AiService } from '@dxos/ai';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Layer } from 'effect';
+
+import { type AiService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
+
 import { ASSISTANT_PLUGIN } from './meta';
 
 export namespace AssistantCapabilities {

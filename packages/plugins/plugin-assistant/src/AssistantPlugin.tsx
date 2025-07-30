@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Layer } from 'effect';
+
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Template } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -10,13 +13,12 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Layer } from 'effect';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, ServiceType } from './types';
+
 export const AssistantPlugin = () =>
   definePlugin(meta, [
     defineModule({

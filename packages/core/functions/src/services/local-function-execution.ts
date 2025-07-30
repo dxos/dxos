@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Context, Effect, Layer, Schema } from 'effect';
+
+import { todo } from '@dxos/debug';
+
 import type { FunctionContext, FunctionDefinition } from '../handler';
 import type { Services } from './service-container';
-import { todo } from '@dxos/debug';
 import { FunctionError } from '../errors';
 
 export class LocalFunctionExecutionService extends Context.Tag('LocalFunctionExecutionService')<

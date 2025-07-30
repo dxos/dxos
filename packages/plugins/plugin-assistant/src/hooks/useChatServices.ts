@@ -19,6 +19,7 @@ import {
   RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
+
 import { AssistantCapabilities } from '../capability-definitions';
 
 export * from '@dxos/assistant';

@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Context, Schedule, Schema, Layer } from 'effect';
+import { Effect, Context, Schema, Layer } from 'effect';
 
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
-import { Obj, Type } from '@dxos/echo';
+
 import { TracingService } from './tracing';
 
 export const ComputeEventPayload = Schema.Union(
