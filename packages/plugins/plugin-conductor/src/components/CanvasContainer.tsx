@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { AiService } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
+import { todo } from '@dxos/debug';
 import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
@@ -28,7 +29,6 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { todo } from '@dxos/debug';
 
 const createServices = (config: Config, space?: Space): ServiceContainer => {
   return new ServiceContainer().setServices({

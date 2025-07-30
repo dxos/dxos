@@ -5,10 +5,10 @@
 import { describe, test } from 'vitest';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
+import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 
-import { todo } from '@dxos/debug';
 import { search } from './exa';
 
 describe.skip('Search', () => {

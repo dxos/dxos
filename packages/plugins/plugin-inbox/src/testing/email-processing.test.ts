@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 
 import { processEmail } from './email-processor';
-import { todo } from '@dxos/debug';
 
 describe.skip('Email Processing', () => {
   test('content extraction and labeling', { timeout: 180_000 }, async () => {

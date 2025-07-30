@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 
 import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { todo } from '@dxos/debug';
 import { setConsolePrinter } from './logger';
 import { SequenceBuilder } from './sequence';
 import { TEST_EMAILS } from './test-data';
