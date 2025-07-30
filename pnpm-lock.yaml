@@ -7664,12 +7664,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-help':
-        specifier: workspace:*
-        version: link:../plugin-help
-      '@dxos/plugin-navtree':
-        specifier: workspace:*
-        version: link:../plugin-navtree
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -7686,6 +7680,9 @@ importers:
         specifier: 3.17.0
         version: 3.17.0
     devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       vite:
         specifier: 5.4.7
         version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
