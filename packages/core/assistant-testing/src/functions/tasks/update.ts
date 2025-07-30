@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Document } from '@dxos/plugin-markdown/types';
 
-import { MarkdownTaskManager, type TaskOperation } from './task-manager';
+import { MarkdownTasks, type TaskOperation } from './task-list';
 
 export default defineFunction({
   name: 'dxos.org/function/markdown/update-tasks',
@@ -39,11 +39,11 @@ export default defineFunction({
     }
     const { content } = yield* DatabaseService.loadRef(doc.content);
 
-    // Create task manager and apply operations if provided
-    const taskManager = new MarkdownTaskManager(content);
+    // Create task manager and apply operations if provided.
+    const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);
-      // TODO: Update the document content when database operations are fixed
+      // TODO: Update the document content when database operations are fixed.
     }
 
     return {

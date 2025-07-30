@@ -8,7 +8,7 @@
  * A framework for managing hierarchical task lists where each line is a task.
  * Designed to work with language model agents that receive documents with line numbers.
  */
-export class MarkdownTaskManager {
+export class MarkdownTasks {
   private _lineEndings: string;
   private _content: string[];
 
