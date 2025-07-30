@@ -21,12 +21,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - id: release-channel
+    - uses: ./.github/actions/cn-channel
       # TODO(wittjosiah): Switch to production.
       if: github.ref_name != 'labs'
-      # Replace all slashes with dashes.
-      run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
-      shell: bash
+      id: release-channel
 
     - uses: crabnebula-dev/cloud-release@v0
       with:
