@@ -9,7 +9,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import type { AiServiceClient, GenerationStream } from './service';
-import { type GenerateRequest, type GenerateResponse, type LLMModel } from '../types';
+import { type GenerateRequest, type GenerateResponse, type LLMModel } from '../../types';
 
 /**
  * @deprecated

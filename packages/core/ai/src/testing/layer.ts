@@ -6,8 +6,8 @@ import { AnthropicClient } from '@effect/ai-anthropic';
 import { FetchHttpClient } from '@effect/platform';
 import { Config, Layer, type ConfigError } from 'effect';
 
-import { AiServiceRouter } from '../experimental';
-import { type AiService } from '../service';
+import * as AiServiceRouter from '../AiServiceRouter';
+import { type AiService } from '../deprecated/service';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
 

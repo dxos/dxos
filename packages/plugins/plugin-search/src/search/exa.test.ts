@@ -4,24 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY } from '@dxos/ai/testing';
+import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
 
 import { search } from './exa';
-
-const REMOTE_AI = true;
-
-const AiService = REMOTE_AI
-  ? new EdgeAiServiceClient({
-      endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-    })
-  : new OllamaAiServiceClient({
-      overrides: {
-        model: 'llama3.1:8b',
-      },
-    });
 
 describe.skip('Search', () => {
   describe('Query-based', () => {
@@ -29,7 +17,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact],
-        AiService,
+        AiService: null as any, // TODO: Implement AiService
         exaApiKey: EXA_API_KEY,
       });
 
@@ -40,7 +28,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact, Testing.Project, Testing.Organization],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -51,7 +39,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -62,7 +50,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'companies building CRDTs',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -75,7 +63,7 @@ describe.skip('Search', () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -86,7 +74,7 @@ describe.skip('Search', () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 

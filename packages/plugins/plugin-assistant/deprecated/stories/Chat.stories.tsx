@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient, Message } from '@dxos/ai';
+import { Message } from '@dxos/ai';
 import {
   Capabilities,
   Events,
@@ -40,6 +40,7 @@ import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import { translations } from '../../translations';
 import { DataType } from '@dxos/schema';
+import { todo } from '@dxos/debug';
 
 // TODO(burdon): Configure for local with ollama/LM studio.
 // const endpoints = localServiceEndpoints;
@@ -58,7 +59,7 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
   const tools = useCapabilities(Capabilities.Tools);
 
-  const aiClient = useMemo(() => new EdgeAiServiceClient({ endpoint: endpoints.ai }), []);
+  const aiClient = useMemo(() => todo('new Edge Ai Service Client({ endpoint: endpoints.ai })'), []);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.

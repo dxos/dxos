@@ -24,7 +24,7 @@ import {
   type DataSource,
   type Node,
   type Relationship,
-} from '../cypher';
+} from '../experimental/cypher';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(

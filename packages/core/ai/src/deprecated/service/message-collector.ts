@@ -4,7 +4,7 @@
 
 import { type DataType } from '@dxos/schema';
 
-import { type GenerationStreamEvent } from '../types';
+import { type GenerationStreamEvent } from '../../types';
 
 export class MessageCollector {
   private _messages: DataType.Message[] = [];
