@@ -611,7 +611,13 @@ export default (context: PluginContext) => {
                 query = space.db.query(Filter.type(DataType.View));
               }
 
-              let deletable = !isSchema;
+              let deletable =
+                !isSchema &&
+                // Don't allow the Records smart collection to be deleted.
+                !(
+                  Obj.instanceOf(DataType.QueryCollection, object) &&
+                  object.query.typename === DataType.StoredSchema.typename
+                );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(

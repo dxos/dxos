@@ -6,7 +6,7 @@ import { Effect } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
-import { Template } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
@@ -17,11 +17,11 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   AssistantSettings,
+  BlueprintContainer,
   ChatContainer,
   ChatDialog,
   PromptSettings,
   SequenceContainer,
-  TemplateContainer,
 } from '../components';
 import { meta, ASSISTANT_DIALOG } from '../meta';
 import { Assistant } from '../types';
@@ -118,16 +118,16 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${meta.id}/template`,
+      id: `${meta.id}/blueprint`,
       role: 'article',
-      filter: (data): data is { subject: Template.Template } => Obj.instanceOf(Template.Template, data.subject),
-      component: ({ data }) => <TemplateContainer template={data.subject} />,
+      filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
+      component: ({ data }) => <BlueprintContainer blueprint={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/prompt-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: Template.Template } => Obj.instanceOf(Template.Template, data.subject),
-      component: ({ data }) => <PromptSettings template={data.subject} />,
+      filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
+      component: ({ data }) => <PromptSettings template={data.subject.instructions} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,
