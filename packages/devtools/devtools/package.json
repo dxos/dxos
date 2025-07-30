@@ -23,7 +23,7 @@
     "proxy": "ts-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@automerge/automerge": "3.0.0",
+    "@automerge/automerge": "3.1.1",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
