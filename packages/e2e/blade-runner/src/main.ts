@@ -26,10 +26,12 @@ import {
   ReplicationTestPlan,
   AutomergeTestPlan,
   EdgeSync,
+  EdgeWs,
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
-  edge: () => new EdgeSync(),
+  edgeSync: () => new EdgeSync(),
+  edgeWs: () => new EdgeWs(),
   automerge: () => new AutomergeTestPlan(),
   // signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),

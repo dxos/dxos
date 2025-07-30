@@ -308,8 +308,8 @@ class MessageCounter {
   public getStats() {
     return {
       ...this._stats,
-      receivedRPS: this._stats.receivedRPS.filter((r) => r.value > 0),
-      sentRPS: this._stats.sentRPS.filter((s) => s.value > 0),
+      receivedRPS: this._stats.receivedRPS,
+      sentRPS: this._stats.sentRPS,
     };
   }
 
@@ -327,8 +327,10 @@ class MessageCounter {
         this._lastSent = this._stats.sent;
 
         if (receivedRPS > 0 || sentRPS > 0) {
+          this._stats.receivedRPS.push({ timestamp: Date.now(), value: receivedRPS });
+          this._stats.sentRPS.push({ timestamp: Date.now(), value: sentRPS });
           log.trace('dxos.message.stats', {
-            stats: JSON.stringify(this.getStats(), null, 2),
+            stats: JSON.stringify(this.getStats()),
           });
         }
       },
