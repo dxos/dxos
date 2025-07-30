@@ -11,7 +11,7 @@ import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './service';
 import { StreamTransform, type StreamBlock } from './transform';
-import { type GenerationStreamEvent } from '../types';
+import { type GenerationStreamEvent } from '../../types';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.

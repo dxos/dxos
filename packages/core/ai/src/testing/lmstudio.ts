@@ -3,7 +3,7 @@
 //
 
 import { DEFAULT_OLLAMA_MODEL } from '../defs';
-import { OllamaAiServiceClient, type OllamaClientParams } from '../service';
+import { OllamaAiServiceClient, type OllamaClientParams } from '../deprecated/service';
 
 /**
  * Create a test client with small local model and no temperature for predictable results.

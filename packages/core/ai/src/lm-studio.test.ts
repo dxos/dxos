@@ -12,9 +12,9 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { parseGptStream } from './AiParser';
-import { preprocessAiInput } from './AiPreprocessor';
-import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
+import { parseGptStream } from './experimental/AiParser';
+import { preprocessAiInput } from './experimental/AiPreprocessor';
+import { LMSTUDIO_ENDPOINT } from './experimental/AiServiceRouter';
 
 describe.skip('lmstudio', () => {
   it.effect(

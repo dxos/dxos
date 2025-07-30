@@ -15,9 +15,9 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { MessageCollector, emitMessageAsEvents } from './message-collector';
 import { type AiServiceClient, type GenerationStream } from './service';
-import { DEFAULT_OLLAMA_ENDPOINT } from '../defs';
+import { DEFAULT_OLLAMA_ENDPOINT } from '../../defs';
 import { createTool, type ExecutableTool, isToolUse, runTools, type Tool, ToolResult } from '../tools';
-import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
+import { ToolTypes, type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../../types';
 
 export type OllamaClientParams = {
   endpoint?: string;

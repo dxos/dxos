@@ -11,7 +11,7 @@ import { Effect, Layer } from 'effect';
 
 import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 import { AiModelNotAvailableError } from '../errors';
-import { AiService } from '../service';
+import { AiService } from '../deprecated/service';
 
 const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(

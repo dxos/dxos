@@ -8,8 +8,8 @@ import { Effect, Layer, Schema } from 'effect';
 
 import { log } from '@dxos/log';
 
-import { ToolResolverService, ToolExecutionService } from './tools';
-import { ToolId } from '../tools';
+import { ToolResolverService, ToolExecutionService } from './experimental/tools';
+import { ToolId } from './tools';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (id: ToolId) =>

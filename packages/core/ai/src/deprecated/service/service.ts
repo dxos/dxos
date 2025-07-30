@@ -5,8 +5,8 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
-import { type AiModelNotAvailableError } from '../errors';
-import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../types';
+import { type AiModelNotAvailableError } from '../../errors';
+import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse, type LLMModel } from '../../types';
 
 /**
  * AI Model Factory.
