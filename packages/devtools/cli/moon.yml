@@ -1,7 +1,6 @@
 type: application
 language: typescript
 tags:
-  - typecheck
   - ts-test
   - ts-compile
 tasks:
