@@ -66,12 +66,12 @@ export type State = {
 export type PluginConfig = State & {
   isDev?: boolean;
   isPwa?: boolean;
-  isSocket?: boolean;
+  isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
 };
 
-export const getCore = ({ isPwa, isSocket }: PluginConfig): string[] =>
+export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   [
     ATTENTION_PLUGIN,
     AUTOMATION_PLUGIN,
@@ -81,11 +81,11 @@ export const getCore = ({ isPwa, isSocket }: PluginConfig): string[] =>
     GRAPH_PLUGIN,
     HELP_PLUGIN,
     INTENT_PLUGIN,
-    isSocket && NATIVE_PLUGIN,
+    isTauri && NATIVE_PLUGIN,
     NAVTREE_PLUGIN,
     OBSERVABILITY_PLUGIN,
     PREVIEW_PLUGIN,
-    !isSocket && isPwa && PWA_PLUGIN,
+    !isTauri && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
     SETTINGS_PLUGIN,
     SPACE_PLUGIN,
@@ -123,7 +123,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isNotFalsy)
     .flat();
 
-export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
+export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
   [
     AssistantPlugin(),
     AttentionPlugin(),
@@ -159,13 +159,13 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     MarkdownPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isSocket && NativePlugin(),
+    isTauri && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
     OutlinerPlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    !isSocket && isPwa && PwaPlugin(),
+    !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
     isLabs && SearchPlugin(),

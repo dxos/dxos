@@ -75,13 +75,6 @@ export default defineConfig((env) => ({
           react: ['react', 'react-dom'],
         },
       },
-      external: [
-        // Provided at runtime by socket supply shell.
-        'socket:application',
-        'socket:process',
-        'socket:window',
-        'socket:os',
-      ],
     },
   },
   resolve: {
