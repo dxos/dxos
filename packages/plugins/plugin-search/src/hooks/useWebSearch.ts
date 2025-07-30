@@ -5,13 +5,13 @@
 import { useState } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 
-import { todo } from '@dxos/debug';
 import { search } from '../search';
 import { type SearchResult } from '../types';
 import { getStringProperty } from './sync';

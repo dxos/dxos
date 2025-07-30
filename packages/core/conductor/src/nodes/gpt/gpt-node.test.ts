@@ -14,8 +14,8 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ValueBag } from '../../types';
 import { type GptInput, gptNode } from './node';
+import { ValueBag } from '../../types';
 
 const ENABLE_LOGGING = true;
 
