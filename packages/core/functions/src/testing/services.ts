@@ -4,13 +4,10 @@
 
 import { type Context } from 'effect';
 
-import { AiService, type AiServiceClient, type AiServiceEdgeClientOptions, EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 
-import { consoleLogger, noopLogger } from './logger';
 import {
   ConfiguredCredentialsService,
   type CredentialsService,
@@ -21,6 +18,7 @@ import {
   type ServiceCredential,
   type TracingService,
 } from '../services';
+import { consoleLogger, noopLogger } from './logger';
 
 // TODO(burdon): Factor out.
 export type OneOf<T> = {
