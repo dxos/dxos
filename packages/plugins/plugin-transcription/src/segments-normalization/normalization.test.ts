@@ -70,7 +70,7 @@ describe.skip('SentenceNormalization', () => {
         //           model: '@anthropic/claude-3-5-sonnet-20241022',
         //         },
         //       })
-        //     : new OllamaAiServiceClient({
+        //     : new Ollama AiServiceClient({
         //         overrides: {
         //           model: 'llama3.1:8b',
         //         },

@@ -4,7 +4,6 @@
 
 import { Effect } from 'effect';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -15,9 +14,8 @@ import { TranscriptionAction } from '@dxos/plugin-transcription/types';
 import { Filter, fullyQualifiedId, getSpace, parseId, Query } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MeetingCapabilities } from './capabilities';
-import { getMeetingContent, summarizeTranscript } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
+import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -78,19 +76,20 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const endpoint = client.config.values.runtime?.services?.ai?.server;
-        invariant(endpoint, 'AI service not configured.');
-        // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
-        const ai = new EdgeAiServiceClient({ endpoint });
-        const resolve = (typename: string) =>
-          context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+        throw new Error('Not implemented');
 
-        const text = await meeting.summary.load();
-        text.content = 'Generating summary...';
-        const content = await getMeetingContent(meeting, resolve);
-        const summary = await summarizeTranscript(ai, content);
-        text.content = summary;
+        // const client = context.getCapability(ClientCapabilities.Client);
+        // const endpoint = client.config.values.runtime?.services?.ai?.server;
+        // invariant(endpoint, 'AI service not configured.');
+        // // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
+        // const resolve = (typename: string) =>
+        //   context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+
+        // const text = await meeting.summary.load();
+        // text.content = 'Generating summary...';
+        // const content = await getMeetingContent(meeting, resolve);
+        // const summary = await summarizeTranscript(ai, content);
+        // text.content = summary;
       },
     }),
   ]);

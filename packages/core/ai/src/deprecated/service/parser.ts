@@ -15,6 +15,7 @@ import { type GenerationStreamEvent } from '../../types';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.
+ * @depreacated
  */
 export class MixedStreamParser {
   /**

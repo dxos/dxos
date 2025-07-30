@@ -165,7 +165,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@automerge/automerge": "3.0.0",
+      "@automerge/automerge": "3.1.1",
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
       "nan": "2.19.0",
@@ -194,8 +194,6 @@
       "@moonrepo/cli",
       "@parcel/watcher",
       "@sentry/cli",
-      "@socketsupply/socket-darwin-arm64",
-      "@socketsupply/socket-linux-x64",
       "@swc/core",
       "canvas",
       "cbor-extract",

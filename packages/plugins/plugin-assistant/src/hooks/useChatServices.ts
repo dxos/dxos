@@ -31,9 +31,9 @@ export type ChatServices =
   | QueueService
   | FunctionCallService
   | ToolResolverService
+  | ToolExecutionService
   | TracingService
-  | EventLogger
-  | ToolExecutionService;
+  | EventLogger;
 
 export type UseChatServicesProps = {
   space?: Space;
