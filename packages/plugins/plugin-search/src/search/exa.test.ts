@@ -17,7 +17,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact],
-        AiService: todo(),
+        AiService: null as any, // TODO: Implement AiService
         exaApiKey: EXA_API_KEY,
       });
 
