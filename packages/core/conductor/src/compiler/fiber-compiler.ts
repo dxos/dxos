@@ -26,7 +26,7 @@ import {
   type TopologyNode,
 } from './topology';
 import { ComputeNodeError, ValueValidationError } from '../errors';
-import { createDefectLogger } from '../services';
+import { createDefectLogger } from '@dxos/functions';
 import {
   type ComputeEffect,
   type ComputeGraphModel,

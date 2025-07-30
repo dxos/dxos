@@ -12,7 +12,7 @@ import { DXN } from '@dxos/keys';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { logCustomEvent } from '../services';
+import { logCustomEvent } from '@dxos/functions';
 import { TestRuntime } from '../testing';
 import {
   type ComputeGraph,
