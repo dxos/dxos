@@ -17,6 +17,7 @@
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
+    "gh-action": "./scripts/gh-action.mjs",
     "postinstall": "[ \"$CI\" != \"true\" ] && tsx tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
