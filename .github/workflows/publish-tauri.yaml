@@ -46,6 +46,13 @@ jobs:
           cn --version
 
       - name: Bump version in Tauri config
+        # Latest Version is Prerelease?
+        # ├─ Yes → Config Version is one behind Latest Core?
+        # │        ├─ Yes → Bump Latest Version (prerelease)
+        # │        └─ No → Skip bump
+        # └─ No → Config Version matches Latest?
+        #        ├─ Yes → Bump to prerelease
+        #        └─ No → Skip bump
         run: |
           RELEASE_DATA=$(cn release list dxos/composer --channel tauri --format json)
           LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.[0].version')
