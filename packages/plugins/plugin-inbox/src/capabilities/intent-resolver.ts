@@ -5,7 +5,7 @@
 // import { Effect, pipe, Schema } from 'effect';
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import { pipe } from 'effect';
+import { Layer, pipe } from 'effect';
 
 import {
   contributes,

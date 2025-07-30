@@ -95,6 +95,9 @@ export type TestServiceOptions = {
   };
 };
 
+/**
+ * @deprecated
+ */
 export const createTestServices = ({
   ai,
   credentials,
