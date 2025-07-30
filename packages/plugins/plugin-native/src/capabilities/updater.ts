@@ -26,23 +26,23 @@ export default (context: PluginContext) => {
   const action = Effect.gen(function* () {
     log.info('checking for updates');
     const update = yield* Effect.tryPromise(() => check());
-    log.info('Checked for updates', { version: update?.version, currentVersion: update?.currentVersion });
+    log.info('checked for updates', { version: update?.version, currentVersion: update?.currentVersion });
     if (update) {
-      log.info('Update available', update);
+      log.info('update available', update);
       let downloaded = 0;
       let contentLength = 0;
 
       const handleDownload = Match.type<DownloadEvent>().pipe(
         Match.when({ event: 'Started' }, (event) => {
           contentLength = event.data.contentLength ?? 0;
-          log.info('Download started', { contentLength });
+          log.info('download started', { contentLength });
         }),
         Match.when({ event: 'Progress' }, (event) => {
           downloaded += event.data.chunkLength;
-          log.info('Download progress', { downloaded, contentLength });
+          log.info('download progress', { downloaded, contentLength });
         }),
         Match.when({ event: 'Finished' }, () => {
-          log.info('Download completed');
+          log.info('download completed');
         }),
         Match.exhaustive,
       );
