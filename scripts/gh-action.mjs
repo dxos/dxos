@@ -144,30 +144,32 @@ async function verifyWorkflows() {
       const result = await checkWorkflowStatus();
 
       if (result.status === 'pending') {
-        if (argv.watch) {
-          console.log(
-            chalk.yellow(
-              `Workflows still pending: ${result.pendingRuns
-                .map((run) => {
-                  const now = new Date(new Date().toISOString());
-                  const created = new Date(run.created_at);
-                  const diff = now - created;
-                  const mm = Math.floor((diff / 1000 / 60) % 60);
-                  const ss = Math.floor((diff / 1000) % 60);
-                  const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
-                  return `${run.name} ${humanReadable}`;
-                })
-                .join(', ')}`,
-            ),
-          );
-        }
+        console.log(
+          chalk.yellow(
+            `Workflows still pending: ${result.pendingRuns
+              .map((run) => {
+                const now = new Date(new Date().toISOString());
+                const created = new Date(run.created_at);
+                const diff = now - created;
+                const mm = Math.floor((diff / 1000 / 60) % 60);
+                const ss = Math.floor((diff / 1000) % 60);
+                const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+                return `${run.name} ${humanReadable}`;
+              })
+              .join(', ')}`,
+          ),
+        );
+        await new Promise((resolve) => setTimeout(resolve, argv.interval));
+        continue;
+      } else if (result.status === 'no-workflows') {
+        console.log(chalk.yellow('No workflows found for current branch'));
         await new Promise((resolve) => setTimeout(resolve, argv.interval));
         continue;
       }
 
       // Workflows completed, check final status
       if (result.status === 'success') {
-        console.log(chalk.green('✓ All workflows completed successfully'));
+        console.log(chalk.green(`✓ All workflows completed successfully: ${result.failedRuns.length}`));
         process.exit(0);
       } else if (result.status === 'failure') {
         console.log(chalk.red('✗ Workflows completed with errors:'));
@@ -193,7 +195,9 @@ async function verifyWorkflows() {
       console.log(chalk.yellow('⏳ Workflows are still pending'));
       process.exit(2);
     } else if (result.status === 'success') {
-      console.log(chalk.green('✓ All workflows completed successfully'));
+      console.log(
+        chalk.green(`✓ All workflows completed successfully: ${result.successRuns.map((run) => run.name).join(', ')}`),
+      );
       process.exit(0);
     } else if (result.status === 'failure') {
       console.log(chalk.red('✗ Workflows completed with errors:'));
@@ -208,6 +212,9 @@ async function verifyWorkflows() {
         }
       }
 
+      process.exit(1);
+    } else if (result.status === 'no-workflows') {
+      console.log(chalk.yellow('No workflows found for current branch'));
       process.exit(1);
     }
   }
@@ -229,6 +236,19 @@ function getCurrentBranch() {
 }
 
 /**
+ * Get the current Git commit hash.
+ */
+function getCurrentCommit() {
+  try {
+    const commit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    return commit;
+  } catch (err) {
+    console.log(chalk.gray('Could not determine current commit'));
+    process.exit(1);
+  }
+}
+
+/**
  * Check workflow status and return summary.
  */
 async function checkWorkflowStatus() {
@@ -239,9 +259,12 @@ async function checkWorkflowStatus() {
 
   // Get current branch to filter workflows
   const currentBranch = getCurrentBranch();
+  const currentCommit = getCurrentCommit();
 
   // Filter runs by current branch if available
-  const filteredRuns = currentBranch ? runs.filter((run) => run.head_branch === currentBranch) : runs;
+  const filteredRuns = currentBranch
+    ? runs.filter((run) => run.head_branch === currentBranch && run.head_commit.id === currentCommit)
+    : runs;
 
   if (argv.verbose && currentBranch) {
     console.log(chalk.gray(`Checking workflows for branch: ${currentBranch}`));
@@ -251,7 +274,7 @@ async function checkWorkflowStatus() {
     if (currentBranch && argv.verbose) {
       console.log(chalk.gray(`No workflows found for branch: ${currentBranch}`));
     }
-    return { status: 'success', errors: [], failedRuns: [] };
+    return { status: 'no-workflows', errors: [], failedRuns: [] };
   }
 
   let hasPending = false;
@@ -279,7 +302,7 @@ async function checkWorkflowStatus() {
   } else if (hasFailures) {
     return { status: 'failure', errors, failedRuns };
   } else {
-    return { status: 'success', errors: [], failedRuns: [] };
+    return { status: 'success', errors: [], failedRuns: [], successRuns: filteredRuns };
   }
 }
 
