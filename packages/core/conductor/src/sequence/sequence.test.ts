@@ -19,8 +19,6 @@ import { TEST_EMAILS } from './test-data';
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Sequence', () => {
-  const aiClient = todo();
-
   test('follows a simple sequence', { timeout: 60_000 }, async () => {
     const sequence = SequenceBuilder.create()
       .step('Generate an idea for a new product. Do not use any external tools for this.')
@@ -32,7 +30,7 @@ describe.skip('Sequence', () => {
     const tools = new ToolRegistry([]);
     const machine = todo() as any;
     // setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiClient });
+    // await machine.runToCompletion({ aiClient });
   });
 
   test('email bot', { timeout: 60_000 }, async () => {
