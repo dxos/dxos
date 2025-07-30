@@ -17,7 +17,7 @@ import { Document } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import blueprint from './design-blueprint';
+import blueprint from './design';
 import { readDocument, writeDocument } from '../functions';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { timeout: 120_000 }, () => {
