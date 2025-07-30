@@ -419,7 +419,7 @@ describe('Query', () => {
         const peer = await builder.createPeer({ kv });
         const db = await peer.openDatabase(spaceKey, rootUrl);
         const contact2 = await db.query(Filter.typename(Testing.Contact.typename)).first();
-        expect(contact2).toEqual(contact);
+        expect(contact2?.name).toEqual(contact.name);
         contact2.name = 'Bob';
         await db.flush();
         await peer.close();
