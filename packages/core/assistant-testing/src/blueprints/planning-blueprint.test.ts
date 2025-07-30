@@ -36,6 +36,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         const { queues } = yield* QueueService;
         const { db } = yield* DatabaseService;
 
+        const systemPrompt = 'You are a helpful assistant.';
+
         const conversation = new Conversation({
           queue: queues.create(),
         });
@@ -46,7 +48,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           session.userMessage.on((message) => printer.printMessage(message));
           session.block.on((block) => printer.printContentBlock(block));
           session.streamEvent.on((part) => {
-            // log.info('part', { part });
+            log('part', { part });
           });
         });
 
@@ -58,6 +60,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
 
         {
           yield* conversation.run({
+            systemPrompt,
             prompt: trim`
               I'm building a shelf.
               I need a hammer, nails, and a saw.
@@ -72,45 +75,47 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           prevContent = artifact.content;
         }
 
-        // {
-        //   yield* conversation.run({
-        //     prompt: trim`
-        //       I will need a board too.
-        //     `,
-        //   });
-        //   log.info('conv 2', {
-        //     messages: yield* Effect.promise(() => conversation.getHistory()),
-        //   });
-        //   log.info('spec 2', { doc: artifact.content.target?.content });
-        //   expect(artifact.content).not.toBe(prevContent);
-        //   prevContent = artifact.content;
-        // }
+        {
+          yield* conversation.run({
+            systemPrompt,
+            prompt: trim`
+              I will need a board too.
+            `,
+          });
+          log.info('conv 2', {
+            messages: yield* Effect.promise(() => conversation.getHistory()),
+          });
+          log.info('spec 2', { doc: artifact.content.target?.content });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
 
-        // {
-        //   yield* conversation.run({
-        //     prompt: trim`
-        //       Actually lets use screws and a screwdriver.
-        //     `,
-        //   });
-        //   log.info('conv 3', {
-        //     messages: yield* Effect.promise(() => conversation.getHistory()),
-        //   });
-        //   log.info('spec 3', { doc: artifact.content.target?.content });
-        //   expect(artifact.content).not.toBe(prevContent);
-        //   prevContent = artifact.content;
-        // }
+        {
+          yield* conversation.run({
+            systemPrompt,
+            prompt: trim`
+              Actually lets use screws and a screwdriver.
+            `,
+          });
+          log.info('conv 3', {
+            messages: yield* Effect.promise(() => conversation.getHistory()),
+          });
+          log.info('spec 3', { doc: artifact.content.target?.content });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
 
-        // const { content } = yield* Effect.promise(() => artifact.content.load());
-        // Object.entries({
-        //   screwdriver: true,
-        //   screws: true,
-        //   board: true,
-        //   saw: true,
-        //   hammer: false,
-        //   nails: false,
-        // }).forEach(([item, expected]) => {
-        //   expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
-        // });
+        const { content } = yield* Effect.promise(() => artifact.content.load());
+        Object.entries({
+          screwdriver: true,
+          screws: true,
+          board: true,
+          saw: true,
+          hammer: false,
+          nails: false,
+        }).forEach(([item, expected]) => {
+          expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
+        });
       },
       Effect.provide(
         Layer.mergeAll(

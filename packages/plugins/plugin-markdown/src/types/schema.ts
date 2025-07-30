@@ -24,5 +24,8 @@ export namespace Document {
   export type Document = Schema.Schema.Type<typeof Document>;
 
   export const make = ({ name, content }: Partial<{ name: string; content: string }> = {}) =>
-    Obj.make(Document, { name, content: Ref.make(DataType.text(content)) });
+    Obj.make(Document, {
+      name,
+      content: Ref.make(DataType.text(content)),
+    });
 }
