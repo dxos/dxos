@@ -12,12 +12,12 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import {
-  ConfiguredCredentialsService,
+  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  ComputeEventLogger,
-  RemoteFunctionExecutionService,
+  LocalFunctionExecutionService,
   QueueService,
+  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 
@@ -58,7 +58,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       ComputeEventLogger.layerFromTracing,
       toolResolver,
       toolExecutionService,
-    ).pipe(Layer.provideMerge(TracingService.layerNoop));
+    ).pipe(Layer.provideMerge(TracingService.layerNoop), Layer.provideMerge(LocalFunctionExecutionService.layer));
   }, [space, toolRegistry, toolResolver]);
 };
 
@@ -67,7 +67,7 @@ const useToolResolver = (): Layer.Layer<ToolResolverService> => {
   return useMemo(() => makeToolResolverFromFunctions(functions), [useDeepCompareMemoize(functions.map((f) => f.name))]);
 };
 
-const useToolExecutionService = (): Layer.Layer<ToolExecutionService> => {
+const useToolExecutionService = (): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   const functions = useCapabilities(Capabilities.Functions).flat();
   return useMemo(
     () => makeToolExecutionServiceFromFunctions(functions),

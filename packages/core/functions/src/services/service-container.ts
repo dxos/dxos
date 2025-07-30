@@ -10,7 +10,7 @@ import { entries } from '@dxos/util';
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
 import { DatabaseService } from './database';
 import { ComputeEventLogger } from './event-logger';
-import { RemoteFunctionExecutionService } from './function-call-service';
+import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import { QueueService } from './queues';
 import { TracingService } from './tracing';
 

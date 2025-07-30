@@ -9,3 +9,4 @@ export * from './credentials';
 export * from './tracing';
 export * from './event-logger';
 export * from './remote-function-execution-service';
+export * from './local-function-execution';
