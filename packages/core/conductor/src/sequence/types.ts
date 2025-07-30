@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import type { ContentBlock, DataType } from '@dxos/schema';
+
 import type { SequenceStep } from './sequence';
 
 export type SequenceEvent =

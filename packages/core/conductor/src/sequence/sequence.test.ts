@@ -147,4 +147,3 @@ describe.skip('Sequence', () => {
 function setConsolePrinter(machine: any, arg1: boolean) {
   throw new Error('Function not implemented.');
 }
-

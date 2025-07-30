@@ -5,12 +5,9 @@
 import { type ReadonlySignal, signal } from '@preact/signals-core';
 import chalk from 'chalk';
 
-import { ConsolePrinter } from '@dxos/ai';
-import { type CleanupFn, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { type SequenceEvent, type SequenceLogger } from './types';
-import { type Sequence } from './sequence';
 
 /* eslint-disable no-console */
 
