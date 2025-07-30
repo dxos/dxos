@@ -2,34 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineConfig, mergeConfig } from 'vitest/config';
+import storybookTest from '@storybook/addon-vitest/vitest-plugin';
+import { defineConfig } from 'vitest/config';
+import { stories } from './.storybook/paths';
 
-import { baseConfig } from '../../vitest.base.config';
-
-export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
-  defineConfig({
-    test: {
-      setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // moon run storybook:test-ci
-          test: {
-            name: 'ci',
-            environment: 'node',
-          },
+export default defineConfig({
+  test: {
+    projects: [{
+      test: {
+        name: 'storybook',
+        // Enable browser mode
+        browser: {
+          enabled: true,
+          // Make sure to install Playwright
+          provider: 'playwright',
+          headless: true,
+          instances: [{ browser: 'chromium' }],
         },
+        setupFiles: ['./.storybook/vitest.setup.ts'],
+      },
+      plugins: [
+        // @ts-ignore
+        storybookTest(),
         {
-          // moon run storybook:test-browser
-          test: {
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
+          name: 'vite-plugin-storybook-test-dxos-imports',
+          config: () => ({
+            test: {
+              include: stories,
+              exclude: [],
             },
-          },
-        },
+          })
+        }
       ],
-    },
-  }),
-);
+    }],
+  },
+});
