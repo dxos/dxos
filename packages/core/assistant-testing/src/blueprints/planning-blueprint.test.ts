@@ -56,51 +56,30 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const artifact = db.add(Document.make());
+
+        // TODO(burdon): Build testing pattern.
+        const prompts: string[] = [
+          trim`
+            I'm building a shelf.
+            Store the shopping list in ${Obj.getDXN(artifact)}
+            I need a hammer, nails, and a saw.
+          `,
+          trim`
+            I will need a board too.
+          `,
+          trim`
+            Actually lets use screws and a screwdriver.
+          `,
+        ];
+
         let prevContent = artifact.content;
-
-        {
+        for (const prompt of prompts) {
           yield* conversation.run({
             systemPrompt,
-            prompt: trim`
-              I'm building a shelf.
-              I need a hammer, nails, and a saw.
-              Store the shopping list in ${Obj.getDXN(artifact)}
-            `,
+            prompt,
           });
-          log.info('conv 1', {
-            messages: yield* Effect.promise(() => conversation.getHistory()),
-          });
-          log.info('spec 1', { doc: artifact.content.target?.content });
-          expect(artifact.content).not.toBe(prevContent);
-          prevContent = artifact.content;
-        }
-
-        {
-          yield* conversation.run({
-            systemPrompt,
-            prompt: trim`
-              I will need a board too.
-            `,
-          });
-          log.info('conv 2', {
-            messages: yield* Effect.promise(() => conversation.getHistory()),
-          });
-          log.info('spec 2', { doc: artifact.content.target?.content });
-          expect(artifact.content).not.toBe(prevContent);
-          prevContent = artifact.content;
-        }
-
-        {
-          yield* conversation.run({
-            systemPrompt,
-            prompt: trim`
-              Actually lets use screws and a screwdriver.
-            `,
-          });
-          log.info('conv 3', {
-            messages: yield* Effect.promise(() => conversation.getHistory()),
-          });
-          log.info('spec 3', { doc: artifact.content.target?.content });
+          log.info('conv', { messages: yield* Effect.promise(() => conversation.getHistory()) });
+          log.info('spec', { doc: artifact.content.target?.content });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
         }
