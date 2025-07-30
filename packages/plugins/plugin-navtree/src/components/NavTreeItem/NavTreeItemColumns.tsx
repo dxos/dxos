@@ -12,16 +12,15 @@ import { useLoadDescendents } from '../../hooks';
 import { NAVTREE_PLUGIN } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import type { NavTreeItemColumnsProps } from '../types';
+import { type NavTreeItemColumnsProps } from '../types';
 
 export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
   const { getActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-
   const { actions: _actions, groupedActions } = getActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, b) =>
+  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
