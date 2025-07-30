@@ -275,14 +275,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             annotation.includes('unused-static') &&
             whitelistedTypenames.has(Type.getTypename(schema)) &&
             !space.properties.staticRecords?.includes(Type.getTypename(schema));
+          const usedStatic =
+            annotation.includes('used-static') &&
+            whitelistedTypenames.has(Type.getTypename(schema)) &&
+            space.properties.staticRecords?.includes(Type.getTypename(schema));
           const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || unusedStatic || objectForm;
+          return annotation.includes('static') || limitedStatic || unusedStatic || usedStatic || objectForm;
         });
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
             ...(annotation.includes('limited-static') ||
             annotation.includes('unused-static') ||
+            annotation.includes('used-static') ||
             annotation.includes('static') ||
             annotation.includes('object-form')
               ? fixed.map((schema) => Type.getTypename(schema))

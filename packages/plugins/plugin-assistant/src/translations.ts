@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
@@ -21,15 +21,6 @@ export const translations = [
         'object name placeholder': 'New blueprint',
         'rename object label': 'Rename blueprint',
         'delete object label': 'Delete blueprint',
-      },
-      [Template.Template.typename]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
-        'rename object label': 'Rename template',
-        'delete object label': 'Delete template',
       },
       // TODO(burdon): From conductor.
       [Sequence.typename]: {

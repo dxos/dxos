@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Template } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -32,15 +32,21 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Sequence),
-          metadata: {
-            icon: 'ph--circuitry--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
           id: Type.getTypename(Assistant.Chat),
           metadata: {
             icon: 'ph--atom--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(Blueprint.Blueprint),
+          metadata: {
+            icon: 'ph--blueprint--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(Sequence),
+          metadata: {
+            icon: 'ph--circuitry--regular',
           },
         }),
       ],
@@ -59,6 +65,14 @@ export const AssistantPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
+            objectSchema: Blueprint.Blueprint,
+            formSchema: Assistant.BlueprintForm,
+            getIntent: (props) => createIntent(Assistant.CreateBlueprint, props),
+          }),
+        ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
             objectSchema: Sequence,
             getIntent: () => createIntent(Assistant.CreateSequence),
           }),
@@ -68,7 +82,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Template.Template, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
