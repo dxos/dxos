@@ -4,7 +4,7 @@
 
 import { type Context } from 'effect';
 
-import { type AiServiceEdgeClientOptions, EdgeAiServiceClient, type AiServiceClient, ToolRegistry } from '@dxos/ai';
+import { AiService, type AiServiceClient, type AiServiceEdgeClientOptions, EdgeAiServiceClient } from '@dxos/ai';
 import { AI_SERVICE_ENDPOINT, createTestAiServiceClient } from '@dxos/ai/testing';
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
@@ -12,7 +12,6 @@ import { assertArgument } from '@dxos/invariant';
 
 import { consoleLogger, noopLogger } from './logger';
 import {
-  AiService,
   ConfiguredCredentialsService,
   type CredentialsService,
   DatabaseService,
@@ -20,7 +19,6 @@ import {
   QueueService,
   ServiceContainer,
   type ServiceCredential,
-  ToolResolverService,
   type TracingService,
 } from '../services';
 
@@ -95,8 +93,6 @@ export type TestServiceOptions = {
   tracing?: {
     service?: Context.Tag.Service<TracingService>;
   };
-
-  toolResolver?: Context.Tag.Service<ToolResolverService>;
 };
 
 export const createTestServices = ({
@@ -107,7 +103,6 @@ export const createTestServices = ({
   queues,
   space,
   tracing,
-  toolResolver,
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && (!!db || !!queues)), 'space can be provided only if db and queues are not');
 
@@ -115,10 +110,9 @@ export const createTestServices = ({
     ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? DatabaseService.make(space?.db || db!) : undefined,
-    eventLogger: logging?.logger ?? logging?.enabled ? consoleLogger : noopLogger,
+    eventLogger: (logging?.logger ?? logging?.enabled) ? consoleLogger : noopLogger,
     queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
     tracing: tracing?.service,
-    toolResolver: toolResolver ?? ToolResolverService.make(new ToolRegistry([])),
   });
 };
 

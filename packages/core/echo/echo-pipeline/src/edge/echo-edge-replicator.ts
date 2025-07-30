@@ -132,9 +132,11 @@ export class EchoEdgeReplicator implements EchoReplicator {
       context: this._context,
       sharedPolicyEnabled: this._sharePolicyEnabled,
       onRemoteConnected: async () => {
+        log.trace('dxos.echo.edge.replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
       },
       onRemoteDisconnected: async () => {
+        log.trace('dxos.echo.edge.replicator.onRemoteDisconnected', { spaceId });
         this._context?.onConnectionClosed(connection);
       },
       onRestartRequested: async () => {
@@ -162,6 +164,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
             if (ctx?.disposed) {
               return;
             }
+            log.trace('dxos.echo.edge.replicator.restart', { spaceId, reconnects, restartDelay });
             await this._openConnection(spaceId, reconnects + 1);
           },
           restartDelay,
@@ -252,10 +255,23 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     await this._requestLimiter.open();
 
-    // TODO: handle reconnects
     this._ctx.onDispose(
       this._edgeConnection.onMessage((msg: RouterMessage) => {
         this._onMessage(msg);
+      }),
+    );
+
+    let firstReconnect = true;
+    this._ctx.onDispose(
+      // NOTE: This will fire immediately if the connection is already open.
+      this._edgeConnection.onReconnected(async () => {
+        if (firstReconnect) {
+          log.verbose('first reconnect skipped');
+          firstReconnect = false;
+          return;
+        }
+
+        this._onRestartRequested();
       }),
     );
 
@@ -353,16 +369,20 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     const encoded = cbor.encode(message);
 
-    await this._edgeConnection.send(
-      buf.create(RouterMessageSchema, {
-        serviceId: this._targetServiceId,
-        source: {
-          identityKey: this._edgeConnection.identityKey,
-          peerKey: this._edgeConnection.peerKey,
-        },
-        payload: { value: bufferToArray(encoded) },
-      }),
-    );
+    try {
+      await this._edgeConnection.send(
+        buf.create(RouterMessageSchema, {
+          serviceId: this._targetServiceId,
+          source: {
+            identityKey: this._edgeConnection.identityKey,
+            peerKey: this._edgeConnection.peerKey,
+          },
+          payload: { value: bufferToArray(encoded) },
+        }),
+      );
+    } catch (err) {
+      log.error('failed to send message', { err });
+    }
   }
 }
 

@@ -24,7 +24,9 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
 
       <div className='p-1'>
         <h4>Metrics</h4>
-        {resource.metrics?.map((metric, idx) => <MetricComponent key={idx} metric={metric} />)}
+        {resource.metrics?.map((metric, idx) => (
+          <MetricComponent key={idx} metric={metric} />
+        ))}
       </div>
     </div>
   );

@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 import type { FlameChartNodes } from 'flame-chart-js';
 import React, { type FC, useMemo, useState } from 'react';
 
-import { Input } from '@dxos/react-ui';
+import { IconButton, Input } from '@dxos/react-ui';
 
 // Deliberately not using the common components export to aid in code-splitting.
 
@@ -37,7 +36,7 @@ export const TraceView: FC<{
     const spans =
       resourceId === undefined || !groupByResource
         ? [...state.spans.values()].filter((s) => s.parentId === undefined)
-        : selectedResource?.spans ?? [];
+        : (selectedResource?.spans ?? []);
 
     return buildMultiFlameGraph(
       state,
@@ -69,11 +68,17 @@ export const TraceView: FC<{
         </div>
         {showThreads && graphs.length > 1 && (
           <>
-            <ArrowLeft className='cursor-pointer ml-4' onClick={handleBack} />
+            <IconButton
+              icon='ph--arrow-left--regular'
+              classNames='ml-4'
+              iconOnly
+              label='Previous'
+              onClick={handleBack}
+            />
             <div className='flex-1 text-center'>
               Thread {selectedFlameIndex + 1} / {graphs.length}
             </div>
-            <ArrowRight className='cursor-pointer' onClick={handleForward} />
+            <IconButton icon='ph--arrow-right--regular' iconOnly label='Next' onClick={handleForward} />
           </>
         )}
       </div>

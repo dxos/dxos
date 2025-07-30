@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
 import { type FC } from 'react';
 
 import { type Obj } from '@dxos/echo';
@@ -29,7 +28,7 @@ type StackSectionAction = {
   testId: string;
   type: string | [string, { ns: string }];
   label: string | [string, { ns: string }];
-  icon: FC<IconProps>;
+  icon: FC<{ className?: string; size?: number }>;
 };
 
 export type StackSectionMetadata = {

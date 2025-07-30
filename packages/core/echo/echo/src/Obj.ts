@@ -30,9 +30,9 @@ export type Obj<Props> = ObjBase & Props;
  */
 export interface Any extends ObjBase {}
 
-type MakeProps<T> = {
-  id?: EchoSchema.ObjectId;
-} & Type.Properties<T>;
+type Props<T> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
+
+export type MakeProps<S extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<S>>>;
 
 /**
  * Creates new object.
@@ -40,7 +40,7 @@ type MakeProps<T> = {
 // TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Obj.Any>(
   schema: S,
-  props: NoInfer<MakeProps<Schema.Schema.Type<S>>>,
+  props: MakeProps<S>,
   meta?: EchoSchema.ObjectMeta,
 ): LiveObject.Live<Schema.Schema.Type<S>> => {
   assertArgument(

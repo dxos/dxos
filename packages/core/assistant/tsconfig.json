@@ -20,6 +20,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -44,7 +47,7 @@
       "path": "../ai"
     },
     {
-      "path": "../artifact"
+      "path": "../blueprints"
     },
     {
       "path": "../echo/echo"

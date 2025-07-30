@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { IdentificationCard, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { debounce } from '@dxos/async';
@@ -13,9 +12,9 @@ import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Clipboard, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Clipboard, Icon, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
-import { errorText, getSize } from '@dxos/react-ui-theme';
+import { errorText } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import {
@@ -64,7 +63,7 @@ const IdentityHeading = ({
 
   const setDisplayName = (nextDisplayName: string) => {
     setDisplayNameDirectly(nextDisplayName);
-    updateDisplayName(nextDisplayName);
+    void updateDisplayName(nextDisplayName);
   };
 
   const setEmoji = (nextEmoji: string) => {
@@ -128,7 +127,7 @@ const IdentityHeading = ({
             <Tooltip.Trigger asChild content={t('manage credentials label')} side='bottom'>
               <Toolbar.Button classNames='bs-[--rail-action]' onClick={onManageCredentials}>
                 <span className='sr-only'>{t('manage credentials label')}</span>
-                <IdentificationCard className={getSize(5)} />
+                <Icon icon='ph--identification-card--regular' size={5} />
               </Toolbar.Button>
             </Tooltip.Trigger>
           )}
@@ -138,7 +137,7 @@ const IdentityHeading = ({
               onClick={() => onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)}
             >
               <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-              {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
+              <Icon icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'} size={5} />
             </Toolbar.Button>
           </Tooltip.Trigger>
         </Toolbar.Root>

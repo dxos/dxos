@@ -58,10 +58,10 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
       role='none'
       className={mx(
         'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'popover' && 'popover-card-height',
+        role === 'card--popover' && 'popover-card-height',
         role === 'section' && 'attention-surface',
         role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
         ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
       )}
     >
@@ -126,30 +126,26 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     /**
      * Provides an external controller that can be called to repaint the table.
      */
-    useImperativeHandle<TableController, TableController>(
-      forwardedRef,
-      () => {
-        if (!presentation || !dxGrid) {
-          return {};
-        }
+    useImperativeHandle<TableController, TableController>(forwardedRef, () => {
+      if (!presentation || !dxGrid) {
+        return {};
+      }
 
-        return {
-          update: (cell) => {
-            if (cell) {
-              dxGrid.updateIfWithinBounds(cell, true);
-            } else {
-              dxGrid.updateCells(true);
-              dxGrid.requestUpdate();
-            }
-          },
-        };
-      },
-      [presentation, dxGrid],
-    );
+      return {
+        update: (cell) => {
+          if (cell) {
+            dxGrid.updateIfWithinBounds(cell, true);
+          } else {
+            dxGrid.updateCells(true);
+            dxGrid.requestUpdate();
+          }
+        },
+      };
+    }, [presentation, dxGrid]);
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
         if (rowIndex != null) {
           if (onRowClick) {
             const row = model?.getRowAt(rowIndex);

@@ -60,6 +60,7 @@
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
     "@fluentui/react-tabster": "^9.24.2",
+    "@phosphor-icons/react": "^2.1.5",
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-context": "1.1.1",
@@ -82,7 +83,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -92,13 +92,13 @@
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5"
+    "@dxos/react-ui-theme": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

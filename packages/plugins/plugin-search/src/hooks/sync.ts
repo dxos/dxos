@@ -63,7 +63,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
           match,
           // TODO(burdon): Truncate.
           // TODO(burdon): Issue with sketch documents.
-          snippet: value !== label ? value : fields.content ?? fields.description ?? undefined,
+          snippet: value !== label ? value : (fields.content ?? fields.description ?? undefined),
           object,
         });
 

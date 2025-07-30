@@ -3,10 +3,11 @@
 //
 
 import { DEFAULT_OLLAMA_MODEL } from '../defs';
-import { OllamaAiServiceClient, type OllamaClientParams } from '../service';
+import { OllamaAiServiceClient, type OllamaClientParams } from '../deprecated';
 
 /**
  * Create a test client with small local model and no temperature for predictable results.
+ * @deprecated
  */
 export const createTestLMStudioClient = (options?: Pick<OllamaClientParams, 'tools'>) => {
   return new OllamaAiServiceClient({

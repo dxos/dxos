@@ -21,7 +21,7 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 };
 
 export const truncate = (text?: string, length = 0, right = false) => {
-  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
+  const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : (text ?? '');
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
 };
 
@@ -32,7 +32,7 @@ export type FormatParts = {
   line?: number;
   timestamp?: string;
   level: LogLevel;
-  message: string;
+  message?: string;
   context?: any;
   error?: Error;
   scope?: any;

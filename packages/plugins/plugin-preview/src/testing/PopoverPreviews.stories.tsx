@@ -30,7 +30,7 @@ export const Contact = {
     icon: 'ph--user--regular',
     subject: 'contact',
     withImage: true,
-    role: 'popover',
+    role: 'card--popover',
   },
 };
 
@@ -40,7 +40,7 @@ export const Organization = {
     icon: 'ph--building-office--regular',
     subject: 'organization',
     withImage: true,
-    role: 'popover',
+    role: 'card--popover',
   },
 };
 
@@ -50,6 +50,6 @@ export const Project = {
     icon: 'ph--building--regular',
     subject: 'project',
     withImage: true,
-    role: 'popover',
+    role: 'card--popover',
   },
 };

@@ -4,7 +4,6 @@
 
 import '@dxos-theme';
 
-import { Laptop, Planet, Plus, PlusCircle, SignIn, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -15,7 +14,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, Clipboard, List } from '@dxos/react-ui';
+import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
 import { getSize, activeSurface } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -76,12 +75,12 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
             onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
             data-testid='invitations.create-space'
           >
-            <PlusCircle className={getSize(6)} />
+            <Icon icon='ph--plus-circle--regular' classNames={getSize(6)} />
           </Button>
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
           <Button onClick={() => setPanel('join')} data-testid='invitations.open-join-space'>
-            <SignIn weight='fill' className={getSize(6)} />
+            <Icon icon='ph--sign-in--fill' classNames={getSize(6)} />
           </Button>
           {/* </Tooltip> */}
         </ButtonGroup>
@@ -142,7 +141,7 @@ const Invitations = () => {
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
       >
-        <Plus className={getSize(6)} />
+        <Icon icon='ph--plus--regular' classNames={getSize(6)} />
       </Button>
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
@@ -151,7 +150,7 @@ const Invitations = () => {
         disabled={panel === 'identity'}
         data-testid='invitations.open-join-identity'
       >
-        <QrCode weight='fill' className={getSize(6)} />
+        <Icon icon='ph--qr-code--fill' classNames={getSize(6)} />
       </Button>
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
@@ -160,12 +159,12 @@ const Invitations = () => {
         disabled={!identity || panel === 'devices'}
         data-testid='invitations.open-devices'
       >
-        <Laptop weight='fill' className={getSize(6)} />
+        <Icon icon='ph--laptop--fill' classNames={getSize(6)} />
       </Button>
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
       <Button onClick={() => setPanel(undefined)} disabled={!panel} data-testid='invitations.list-spaces'>
-        <Planet weight='fill' className={getSize(6)} />
+        <Icon icon='ph--planet--fill' classNames={getSize(6)} />
       </Button>
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
@@ -178,9 +177,9 @@ const Invitations = () => {
         data-testid='invitations.toggle-network'
       >
         {networkStatus === ConnectionState.ONLINE ? (
-          <WifiHigh weight='fill' className={getSize(6)} />
+          <Icon icon='ph--wifi-high--fill' classNames={getSize(6)} />
         ) : (
-          <WifiSlash weight='fill' className={getSize(6)} />
+          <Icon icon='ph--wifi-slash--fill' classNames={getSize(6)} />
         )}
       </Button>
       {/* </ToolTip> */}

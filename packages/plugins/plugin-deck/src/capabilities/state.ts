@@ -29,7 +29,7 @@ const migrateSidebarState = () => {
   });
 };
 
-const DeckStateFactory = () => {
+export const DeckStateFactory = () => {
   migrateSidebarState();
 
   const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {

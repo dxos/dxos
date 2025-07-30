@@ -7,16 +7,14 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
-  extractionAnthropicFn,
   type ExtractionFunction,
+  extractionAnthropicFn,
   extractionNerFn,
-  processTranscriptMessage,
   getNer,
+  processTranscriptMessage,
 } from '@dxos/assistant';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
@@ -117,11 +115,15 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
-      const AiService = new EdgeAiServiceClient({
-        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-      });
       executor = new FunctionExecutor(
-        new ServiceContainer().setServices({ ai: { client: AiService }, database: { db: space!.db } }),
+        new ServiceContainer().setServices({
+          // ai: {
+          //   client: new Edge AiServiceClient({
+          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+          //   }),
+          // },
+          // database: { db: space!.db },
+        }),
       );
     }
 

@@ -9,6 +9,7 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type ThemedClassName, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { TagPicker, type TagPickerItemData, type TagPickerOptions } from '@dxos/react-ui-tag-picker';
+import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -20,7 +21,7 @@ export type ChatReferencesProps = ThemedClassName<{
 }>;
 
 export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatReferencesProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t: _t } = useTranslation(meta.id);
 
   const [items] = useAsyncState<TagPickerItemData[]>(async () => {
     const objects = await Ref.Array.loadAll(context.objects.value ?? []);
@@ -41,9 +42,9 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
 
   return (
     <TagPicker
-      classNames={classNames}
+      classNames={mx('h-[1.75rem] text-sm', classNames)}
       mode='multi-select'
-      placeholder={t('context objects placeholder')}
+      // placeholder={t('context objects placeholder')}
       items={items}
       onSearch={handleSearch}
       onUpdate={onUpdate}

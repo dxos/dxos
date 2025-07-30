@@ -5,8 +5,6 @@
 import { effect } from '@preact/signals-core';
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -53,31 +51,31 @@ const messages: MessageWithRangeId[] = [
   Obj.make(DataType.Message, {
     created: new Date(Date.now() + 1000 * index).toISOString(),
     sender,
-    blocks: [{ type: 'transcription', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
-    rangeId: [],
-  } as any),
+    blocks: [{ _tag: 'transcript', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+  }),
 );
 
-const REMOTE_AI = true;
+// eslint-disable-next-line no-unused-vars
+const _REMOTE_AI = true;
 
 describe.skip('SentenceNormalization', () => {
   const getExecutor = () => {
     return new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: {
-          client: REMOTE_AI
-            ? new EdgeAiServiceClient({
-                endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-                defaultGenerationOptions: {
-                  model: '@anthropic/claude-3-5-sonnet-20241022',
-                },
-              })
-            : new OllamaAiServiceClient({
-                overrides: {
-                  model: 'llama3.1:8b',
-                },
-              }),
-        },
+        // ai: {
+        //   client: REMOTE_AI
+        //     ? new Edge AiServiceClient({
+        //         endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+        //         defaultGenerationOptions: {
+        //           model: '@anthropic/claude-3-5-sonnet-20241022',
+        //         },
+        //       })
+        //     : new OllamaAiServiceClient({
+        //         overrides: {
+        //           model: 'llama3.1:8b',
+        //         },
+        //       }),
+        // },
       }),
     );
   };

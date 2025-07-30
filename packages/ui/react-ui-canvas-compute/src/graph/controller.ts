@@ -17,11 +17,11 @@ import {
   type GptOutput,
   type GraphDiagnostic,
   GraphExecutor,
-  isNotExecuted,
   ValueBag,
+  isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 

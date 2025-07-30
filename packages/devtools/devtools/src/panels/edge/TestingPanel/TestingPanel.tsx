@@ -69,7 +69,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
         <Toolbar.Root>
           <DataSpaceSelector />
           <Toolbar.Button onClick={handleSpaceCreate}>
-            <Icon icon='ph--plus' />
+            <Icon icon='ph--plus--regular' />
             Create Space
           </Toolbar.Button>
         </Toolbar.Root>

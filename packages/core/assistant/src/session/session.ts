@@ -2,35 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Option, pipe, Schema } from 'effect';
+import { AiLanguageModel, AiToolkit, type AiError, type AiResponse, type AiTool } from '@effect/ai';
+import { Chunk, Context, Effect, Option, pipe, Stream, type Schema } from 'effect';
+import { Array, String } from 'effect';
 
 import {
-  AgentStatusReport,
-  isToolUse,
-  runTools,
+  AiParser,
+  AiPreprocessor,
+  getToolCalls,
+  runTool,
+  ToolExecutionService,
+  ToolResolverService,
   type AgentStatus,
-  structuredOutputParser,
-  type AiServiceClient,
+  type AiInputPreprocessingError,
+  type AiToolNotFoundError,
   type GenerationStream,
-  type GenerateRequest,
-  Message,
-  type MessageContentBlock,
-  MixedStreamParser,
-  ToolResult,
-  createTool,
-  type ExecutableTool,
-  type ToolId,
-  type ToolResolver,
 } from '@dxos/ai';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { Event, synchronized } from '@dxos/async';
+import { Event } from '@dxos/async';
+import { type Blueprint } from '@dxos/blueprints';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
-import { create, type ObjectId } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { type ObjectId } from '@dxos/echo-schema';
+import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { DataType, type ContentBlock } from '@dxos/schema';
 
-import { VersionPin } from './version-pin';
+import { AiAssistantError } from '../errors';
+
+export type AiSessionOptions = {};
+
+export type SessionRunOptions<Tools extends AiTool.Any> = {
+  prompt: string;
+  history: DataType.Message[];
+  systemPrompt?: string;
+  toolkit?: AiToolkit.AiToolkit<Tools>;
+  blueprints?: Blueprint.Blueprint[];
+};
 
 /**
  * Contains message history, tools, current context.
@@ -38,114 +46,47 @@ import { VersionPin } from './version-pin';
  * It makes requests to the model, its a state machine.
  * It keeps track of the current goal.
  * It manages the context window.
- * Tracks the success criteria of reaching the goal, exposing metrics (stretch)
+ * Tracks the success criteria of reaching the goal, exposing metrics (stretch).
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
-
-/**
- * Resolves artifact ids to their versions.
- * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
- * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
- * a diff is inserted into the conversation.
- */
-export type ArtifactDiffResolver = (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
-  Map<
-    ObjectId,
-    {
-      version: ObjectVersion;
-      diff?: string;
-    }
-  >
->;
-
-export type SessionRunOptions = {
-  artifacts: ArtifactDefinition[];
-
-  /**
-   * Non-artifact specific tools.
-   */
-  tools: ToolId[];
-
-  history: Message[];
-
-  prompt: string;
-
-  generationOptions?: Pick<GenerateRequest, 'model'>;
-
-  extensions?: ToolContextExtensions;
-
-  systemPrompt?: string;
-
-  /**
-   * Pre-require artifacts.
-   */
-  requiredArtifactIds?: string[];
-
-  client: AiServiceClient;
-  toolResolver: ToolResolver;
-
-  /**
-   * Executable tools that do not go through the tool resolver.
-   */
-  executableTools?: ExecutableTool[];
-
-  /**
-   * @see ArtifactDiffResolver
-   */
-  artifactDiffResolver?: ArtifactDiffResolver;
-};
-
-type OperationModel = 'planning' | 'importing' | 'configured';
-
-export type AiSessionOptions = {
-  /**
-   * Determines the agent's handling of the artifacts definitions:
-   *
-   * - `planning`: The model will create a plan with required artifacts for each step.
-   * - `importing`: The model can query registry and only pull in the artifacts that are required to complete the task.
-   * - `configured`: The available artifacts are pre-selected and the model cannot select additional artifacts.
-   */
-  operationModel: OperationModel;
-};
-
-export class AISession {
-  /** SSE stream parser. */
-  private readonly _parser = new MixedStreamParser();
+export class AiSession {
+  // TODO(burdon): Move to conversation.
+  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   /** Pending messages (incl. the current user request). */
-  private _pending: Message[] = [];
+  private _pending: DataType.Message[] = [];
 
   /** Current streaming response. */
   private _stream: GenerationStream | undefined;
 
   /** Prior history from queue. */
-  private _history: Message[] = [];
+  private _history: DataType.Message[] = [];
 
   /**
    * New message.
    */
-  public readonly message = this._parser.message;
+  public readonly message = new Event<DataType.Message>();
 
   /**
    * Complete block added to Message.
    */
-  public readonly block = this._parser.block;
+  public readonly block = new Event<ContentBlock.Any>();
 
   /**
    * Update partial block (while streaming).
    */
-  public readonly update = this._parser.update;
+  public readonly update = new Event<ContentBlock.Any>();
 
   /**
    * Unparsed events from the underlying generation stream.
    */
-  public readonly streamEvent = this._parser.streamEvent;
+  public readonly streamEvent = new Event<AiResponse.Part>();
 
   /**
    * User prompt or tool result.
    */
-  public readonly userMessage = new Event<Message>();
+  public readonly userMessage = new Event<DataType.Message>();
 
   /**
    * Agent self-reporting its status.
@@ -158,407 +99,180 @@ export class AISession {
    */
   public readonly done = new Event<void>();
 
-  /**
-   * Emits when the tool reports its status.
-   * Triggered by the tool execution function.
-   */
-  public readonly toolStatusReport = new Event<{ message: Message; status: AgentStatus }>();
-
-  constructor(private readonly _options: AiSessionOptions) {
-    // Message complete.
-    this._parser.message.on((message) => {
-      this._pending.push(message);
-    });
-    this._parser.block.on((block) => {
-      if (block.type === 'text' && block.disposition === 'status') {
-        this.statusReport.emit(create(AgentStatusReport, { message: block.text }));
-      }
-    });
-  }
+  constructor(private readonly _options: AiSessionOptions = {}) {}
 
   /**
    * Runs the AI model loop interacting with tools and artifacts.
    * @param options - The session options.
    * @returns The messages generated by the session, including the user's prompt.
    */
-  @synchronized
-  async run(options: SessionRunOptions): Promise<Message[]> {
-    const systemTools: ExecutableTool[] = [];
-    switch (this._options.operationModel) {
-      case 'planning':
-        systemTools.push(this._createQueryArtifactsTool(options.artifacts), this._createPlanningTool(options));
-        break;
-      case 'importing':
-        systemTools.push(
-          this._createQueryArtifactsTool(options.artifacts),
-          this._createRequireTool(options.artifacts, (artifactDefinitionIds) => {
-            for (const artifactDefinitionId of artifactDefinitionIds) {
-              requiredArtifactIds.add(artifactDefinitionId);
-            }
-          }),
-        );
-        break;
-      case 'configured':
-        // no system tools
-        break;
-      default:
-        throw new TypeError(`Invalid operation model: ${this._options.operationModel}`);
-    }
+  // TODO(dmaretskyi): Toolkit context doesn't get added to the effect type.
+  run = <Tools extends AiTool.Any>(
+    options: SessionRunOptions<Tools>,
+  ): Effect.Effect<
+    DataType.Message[],
+    AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
+    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+  > =>
+    Effect.gen(this, function* () {
+      this._history = [...options.history];
 
-    this._history = [...options.history];
-    this._pending = [await this._formatUserPrompt(options.artifactDiffResolver, options.prompt, options.history)];
-    this.userMessage.emit(this._pending.at(-1)!);
-    this._stream = undefined;
+      const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
+      this._pending = [promptMessages];
+      this.userMessage.emit(promptMessages);
 
-    let error: Error | undefined;
-
-    const requiredArtifactIds = new Set<string>(options.requiredArtifactIds ?? []);
-    try {
-      let more = false;
+      // Potential tool use loop.
       do {
-        const tools: ExecutableTool[] = pipe(
-          [
-            ...systemTools,
-            ...(await Promise.all(options.tools.map((toolId) => options.toolResolver.resolve(toolId)))),
-            ...(options.executableTools ?? []),
-            ...options.artifacts
-              .filter((artifact) => requiredArtifactIds.has(artifact.id))
-              .flatMap((artifact) => artifact.tools),
-          ],
-          Array.dedupeWith((a, b) => a.id === b.id),
-        );
-
         log('request', {
           pending: this._pending.length,
           history: this._history.length,
-          tools: tools.map((tool) => tool.name),
+          tools: (Object.values(options.toolkit?.tools ?? {}) as AiTool.Any[]).map((tool: AiTool.Any) => tool.name),
         });
 
-        // Open request stream.
-        this._stream = await options.client.execStream({
-          ...(options.generationOptions ?? {}),
-          // TODO(burdon): Rename messages or separate history/message.
-          history: [...this._history, ...this._pending],
-          tools,
-          systemPrompt:
-            options.systemPrompt ??
-            createBaseInstructions({
-              availableArtifacts: [...requiredArtifactIds],
-              operationModel: this._options.operationModel,
-            }),
+        const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
+
+        const blueprints = options.blueprints ?? [];
+
+        // Build system prompt from blueprint templates.
+        // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
+        const systemPrompt = yield* pipe(
+          blueprints,
+          Effect.forEach((blueprint) => DatabaseService.loadRef(blueprint.instructions)),
+          Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
+          Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
+          Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
+        );
+
+        // Build a combined toolkit from the blueprint tools and the provided toolkit.
+        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
+        const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> =
+          yield* blueprintToolkit.toContext(yield* ToolExecutionService.handlersFor(blueprintToolkit));
+        const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
+        const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
+          Effect.provide(blueprintToolkitHandler) as any,
+        ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+
+        log.info('run', {
+          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
+          tools: Object.keys(blueprintToolkit.tools),
         });
 
-        // Wait until complete.
-        await this._parser.parse(this._stream);
-        await this._stream.complete();
+        const blocks = yield* AiLanguageModel.streamText({
+          prompt,
+          system: systemPrompt,
+          toolkit: toolkitWithBlueprintHandlers,
+          disableToolCallResolution: true,
+        }).pipe(
+          AiParser.parseGptStream({
+            onBlock: (block) =>
+              Effect.gen(this, function* () {
+                if (block.pending) {
+                  this.update.emit(block);
+                } else {
+                  this.block.emit(block);
+                }
+              }),
+            onPart: (part) =>
+              Effect.gen(this, function* () {
+                this.streamEvent.emit(part);
+              }),
+          }),
+          Stream.runCollect,
+          Effect.map(Chunk.toArray),
+        );
 
-        // Add messages.
-        log('response', { pending: this._pending });
+        const response = Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks,
+        });
+        this._pending.push(response);
+        this.message.emit(response);
 
-        // Resolve tool use locally.
-        more = false;
-        const message = this._pending.at(-1);
-        invariant(message);
-        if (isToolUse(message)) {
-          log('tool request...');
-          const response = await runTools({
-            message: this._pending.at(-1)!,
-            tools,
-            extensions: options.extensions ?? {},
-            reportStatus: (status) => this._onToolStatusReport(message, status),
-          });
-
-          log('tool response', { response });
-          switch (response.type) {
-            case 'continue': {
-              this._pending = [...this._pending, response.message];
-              this.userMessage.emit(response.message);
-              more = true;
-              break;
-            }
-          }
+        const toolCalls = getToolCalls(response);
+        if (toolCalls.length === 0) {
+          break;
         }
-      } while (more);
-    } catch (err) {
-      log.catch(err);
-      if (err instanceof Error && err.message.includes('Overloaded')) {
-        error = new AIServiecOverloadedError('AI service overloaded', { cause: err } as any); // TODO(dmaretskyi): Schema errors cant have cause
-      } else {
-        error = new Error('AI service error', { cause: err });
-      }
-    } finally {
-      this._stream = undefined;
-      this.done.emit();
-    }
 
-    if (error) {
-      throw error;
-    }
+        const toolResults = yield* runTools(toolCalls, toolkitWithBlueprintHandlers as any);
+        this._pending.push(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: toolResults,
+          }),
+        );
+      } while (true);
 
-    return this._pending;
-  }
+      return this._pending;
+    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     schema: S,
-    options: SessionRunOptions,
+    options: SessionRunOptions<AiTool.Any>,
   ): Promise<Schema.Schema.Type<S>> {
-    const parser = structuredOutputParser(schema);
-    const result = await this.run({
-      ...options,
-      executableTools: [...(options.executableTools ?? []), parser.tool],
-    });
-    return parser.getResult(result);
+    return todo();
+    // const parser = structuredOutputParser(schema);
+    // const result = await this.run({
+    //   ...options,
+    //   executableTools: [...(options.executableTools ?? []), parser.tool],
+    // });
+    // return parser.getResult(result);
   }
 
-  private async _formatUserPrompt(
-    artifactDiffResolver: ArtifactDiffResolver | undefined,
-    prompt: string,
-    history: Message[],
-  ) {
-    const prelude: MessageContentBlock[] = [];
+  private _formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
+    Effect.gen(function* () {
+      const prelude: ContentBlock.Any[] = [];
 
-    if (artifactDiffResolver) {
-      const versions = gatherObjectVersions(history);
+      // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
+      const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
+      if (Option.isSome(artifactDiffResolver)) {
+        const versions = gatherObjectVersions(history);
 
-      const artifactDiff = await artifactDiffResolver(
-        [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
-      );
-
-      log.info('vision', {
-        artifactDiff,
-        versions,
-      });
-
-      for (const [id, { version }] of [...artifactDiff.entries()]) {
-        if (ObjectVersion.equals(version, versions.get(id)!)) {
-          artifactDiff.delete(id);
-          continue;
-        }
-
-        prelude.push(VersionPin.createBlock(VersionPin.make({ objectId: id, version })));
-      }
-      if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
-      }
-    }
-
-    return Obj.make(Message, {
-      role: 'user',
-      content: [...prelude, { type: 'text', text: prompt }],
-    });
-  }
-
-  private _createQueryArtifactsTool(artifacts: ArtifactDefinition[]): ExecutableTool {
-    return createTool('system', {
-      name: 'query_artifact_definitions',
-      description: 'Query the available artifact definitions',
-      schema: Schema.Struct({}),
-      execute: async () => {
-        return ToolResult.Success({
-          artifactDefinitions: artifacts.map((artifact) => ({
-            id: artifact.id,
-            name: artifact.name,
-            description: artifact.description,
-          })),
+        const artifactDiff = yield* Effect.tryPromise({
+          try: () =>
+            artifactDiffResolver.value.resolve(
+              [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
+            ),
+          catch: AiAssistantError.wrap('Artifact diff resolution error'),
         });
-      },
-    });
-  }
 
-  private _createRequireTool(
-    artifacts: ArtifactDefinition[],
-    onRequire: (artifactDefinitionIds: readonly string[]) => void,
-  ): ExecutableTool {
-    return createTool('system', {
-      name: 'require_artifact_definitions',
-      description:
-        'Require the use of specific artifact definitions. This will allow the model to interact with artifact definitions and use their tools.',
-      schema: Schema.Struct({
-        artifactDefinitionIds: Schema.Array(Schema.String).annotations({
-          description: 'The ids of the artifact definitions to require',
-          examples: [['artifact:dxos.org/example/Test']],
-        }),
-      }),
-      execute: async ({ artifactDefinitionIds }) => {
-        const missingArtifactDefinitionIds = artifactDefinitionIds.filter(
-          (artifactId) => !artifacts.some((artifact) => artifact.id === artifactId),
-        );
-        if (missingArtifactDefinitionIds.length > 0) {
-          return ToolResult.Error(
-            `One or more artifact definition ids are invalid: ${missingArtifactDefinitionIds.join(', ')}`,
-          );
+        log.info('vision', {
+          artifactDiff,
+          versions,
+        });
+
+        for (const [id, { version }] of [...artifactDiff.entries()]) {
+          if (ObjectVersion.equals(version, versions.get(id)!)) {
+            artifactDiff.delete(id);
+            continue;
+          }
+
+          prelude.push({ _tag: 'anchor', objectId: id, version });
         }
-
-        onRequire(artifactDefinitionIds);
-
-        return ToolResult.Success({});
-      },
-    });
-  }
-
-  private _createPlanningTool(options: SessionRunOptions): ExecutableTool {
-    return createTool('system', {
-      name: 'create_plan',
-      description:
-        'Create a plan. Make sure that each step is independent and can be executed solely on the data returned by the previous step. The steps only share the data that is specified in the plan.',
-      schema: Schema.Struct({
-        goal: Schema.String.annotations({ description: 'The goal that the plan will achieve.' }),
-        steps: Schema.Array(
-          Schema.Struct({
-            action: Schema.String.annotations({
-              description: 'Complete, detailed action to perform.',
-            }),
-            input: Schema.String.annotations({
-              description: 'The required input data for this step. First step must not require any data.',
-            }),
-            output: Schema.String.annotations({
-              description: 'The output data from this step. This is passed to the next step as input.',
-            }),
-            requiredArtifactIds: Schema.Array(Schema.String).annotations({
-              description: 'The ids of the artifacts required to perform this step.',
-              examples: [['artifact:dxos.org/example/Test']],
-            }),
-          }),
-        ).annotations({ description: 'Steps' }),
-      }),
-      execute: async ({ goal, steps }) => {
-        const missingArtifactIds = steps
-          .flatMap((step) => step.requiredArtifactIds)
-          .filter((artifactId) => !options.artifacts.some((artifact) => artifact.id === artifactId));
-        if (missingArtifactIds.length > 0) {
-          return ToolResult.Error(`One or more artifact ids are invalid: ${missingArtifactIds.join(', ')}`);
+        if (artifactDiff.size > 0) {
+          prelude.push(createArtifactUpdateBlock(artifactDiff));
         }
+      }
 
-        const stepResults: any[] = [];
-        for (const step of steps) {
-          log('executing step', { action: step.action });
-          const session = new AISession({ operationModel: 'importing' });
-          session.message.on((ev) => this.message.emit(ev));
-          session.block.on((ev) => this.block.emit(ev));
-          session.update.on((ev) => this.update.emit(ev));
-          session.streamEvent.on((ev) => this.streamEvent.emit(ev));
-          session.userMessage.on((ev) => this.userMessage.emit(ev));
-
-          const messages = await session.run({
-            artifacts: options.artifacts,
-            tools: options.tools,
-            history: options.history,
-            extensions: options.extensions,
-            requiredArtifactIds: step.requiredArtifactIds.slice(),
-            prompt: `
-              You are an agent that executes the subtask in a plan.
-              
-              While you know the plan's goal only focus on your subtask
-              Use the data from the previous step to complete your task.
-              Return all of the data from "output" in your last message.
-              
-              Current step (that you need to complete):
-              ${JSON.stringify(
-                {
-                  goal,
-                  input: step.input,
-                  output: step.output,
-                  yourTask: step.action,
-                },
-                null,
-                2,
-              )}
-              
-              Previous step results:
-              ${JSON.stringify(stepResults.at(-1))}.
-            `,
-
-            generationOptions: options.generationOptions,
-            client: options.client,
-            toolResolver: options.toolResolver,
-            artifactDiffResolver: options.artifactDiffResolver,
-          });
-          const result = messages.at(-1);
-          stepResults.push(result);
-        }
-
-        return ToolResult.Success({ stepResults });
-      },
+      return Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user' },
+        blocks: [...prelude, { _tag: 'text', text: prompt }],
+      });
     });
-  }
-
-  private _onToolStatusReport(message: Message, status: AgentStatus): void {
-    this.toolStatusReport.emit({ message, status });
-  }
 
   abort(): void {
     this._stream?.abort();
   }
 }
 
-// TODO(burdon): Use handlebars template with effect-schema input.
-const createBaseInstructions = ({
-  availableArtifacts,
-  operationModel,
-}: {
-  availableArtifacts: string[];
-  operationModel: OperationModel;
-}) => `
-  You are a friendly, advanced AI assistant capable of creating and managing artifacts from available data and tools. 
-  Your task is to process user commands and questions and decide how best to respond.
-  In some cases, you will need to create or reference data objects called artifacts.
-
-  Follow these guidelines carefully:
-
-  Decision-making:
-
-  - Analyze the structure and type of the content in the user's message.
-  
-  
-  ${
-    operationModel === 'planning'
-      ? `
-      - Can you complete the task using the available artifacts?
-      - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
-      - Identify which artifacts are relevant to the user's request.
-        - Break down the user's request into a step-by-step plan that you will use to execute the user's request, the plan items should include artifacts which will be used to perform the actions.
-      `
-      : ''
-  }
-  ${
-    operationModel === 'importing'
-      ? `
-      - Can you complete the task using the available artifacts?
-      - If you can't complete the task using the available artifacts, query the list of available artifacts using the appropriate tool.
-      - Identify which artifacts are relevant to the user's request.
-    - Are the required artifacts already available?
-    - If not, select which artifact(s) will be the most relevant and require them using the require_artifacts tool.
-    - The require'd artifact tools will be available for use after require.
-  `
-      : ''
-  }
-  ${
-    operationModel === 'configured'
-      ? `
-    - Select the most relevant artifact(s) to complete the task.
-    - Call the appropriate tool to use the artifact(s).
-  `
-      : ''
-  }
-
-  ${availableArtifacts.length > 0 ? `Artifacts already in context: ${availableArtifacts.join('\n')}` : ''}
-`;
-
-export class AIServiecOverloadedError extends Schema.TaggedError<AIServiecOverloadedError>()(
-  'AIServiecOverloadedError',
-  {},
-) {}
-
-const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion> => {
+const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
-    for (const block of message.content) {
-      if (block.type === 'json' && block.disposition === VersionPin.DISPOSITION) {
-        const pin = VersionPin.pipe(Schema.decodeOption)(JSON.parse(block.json)).pipe(Option.getOrUndefined);
-        if (!pin) {
-          continue;
-        }
-        artifactIds.set(pin.objectId, pin.version);
+    for (const block of message.blocks) {
+      if (block._tag === 'anchor') {
+        artifactIds.set(block.objectId, block.version as ObjectVersion);
       }
     }
   }
@@ -568,9 +282,10 @@ const gatherObjectVersions = (messages: Message[]): Map<ObjectId, ObjectVersion>
 
 const createArtifactUpdateBlock = (
   artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
-): MessageContentBlock => {
+): ContentBlock.Any => {
   return {
-    type: 'text',
+    _tag: 'text',
+    // TODO(dmaretskyi): Does this need to be a special content-block?
     disposition: 'artifact-update',
     text: `
       The following artifacts have been updated since the last message:
@@ -580,3 +295,42 @@ const createArtifactUpdateBlock = (
     `,
   };
 };
+
+/**
+ * Resolves artifact ids to their versions.
+ * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
+ * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
+ * a diff is inserted into the conversation.
+ *
+ * Can be optionally provided to the session run call.
+ */
+// TODO(dmaretskyi): Convert to Context.Reference
+export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
+  ArtifactDiffResolver,
+  ArtifactDiffResolver.Service
+>() {}
+
+export namespace ArtifactDiffResolver {
+  export type Service = {
+    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
+      Map<
+        ObjectId,
+        {
+          version: ObjectVersion;
+          diff?: string;
+        }
+      >
+    >;
+  };
+}
+
+const runTools: <Tools extends AiTool.Any>(
+  toolCalls: ContentBlock.ToolCall[],
+  toolkit: AiToolkit.AiToolkit<Tools>,
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
+  function* (toolCalls, toolkit) {
+    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
+
+    return yield* Effect.forEach(toolCalls, (toolCall) => runTool(toolkitWithHandlers, toolCall));
+  },
+);

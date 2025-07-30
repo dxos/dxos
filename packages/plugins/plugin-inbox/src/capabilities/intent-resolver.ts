@@ -5,8 +5,17 @@
 // import { Effect, pipe, Schema } from 'effect';
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
-// import { ArtifactId } from '@dxos/artifact';
+import { pipe } from 'effect';
+
+import {
+  contributes,
+  Capabilities,
+  createResolver,
+  type PluginContext,
+  createIntent,
+  chain,
+} from '@dxos/app-framework';
+// import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
@@ -16,6 +25,9 @@ import { createQueueDXN } from '@dxos/echo-schema';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { TableAction } from '@dxos/plugin-table/types';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from './capabilities';
@@ -63,9 +75,8 @@ export default (context: PluginContext) =>
       intent: InboxAction.ExtractContact,
       resolve: async ({ space, message }) => {
         log.info('Extract contact', { message });
-        const email = message.sender.email;
         const name = message.sender.name;
-
+        const email = message.sender.email;
         if (!email) {
           log.warn('Email is required for contact extraction', { sender: message.sender });
           return;
@@ -131,27 +142,27 @@ export default (context: PluginContext) =>
         space.db.add(newContact);
         log.info('Contact extracted and added to space', { contact: newContact });
 
-        // TODO(wittjosiah): Create a table for contacts.
-        // const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-        // const contactTable = tables.find((table) => {
-        //   return table.view?.target?.query?.typename === DataType.Person.typename;
-        // });
+        const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
+        const contactTable = views.find(
+          (view) =>
+            view.query.typename === DataType.Person.typename && Obj.instanceOf(TableView, view.presentation.target),
+        );
 
-        // if (!contactTable) {
-        //   log.info('No table found for contacts, creating one.');
-        //   return {
-        //     intents: [
-        //       pipe(
-        //         createIntent(TableAction.Create, {
-        //           space,
-        //           name: 'Contacts',
-        //           typename: DataType.Person.typename,
-        //         }),
-        //         chain(SpaceAction.AddObject, { target: space }),
-        //       ),
-        //     ],
-        //   };
-        // }
+        if (!contactTable) {
+          log.info('No table found for contacts, creating one.');
+          return {
+            intents: [
+              pipe(
+                createIntent(TableAction.Create, {
+                  space,
+                  name: 'Contacts',
+                  typename: DataType.Person.typename,
+                }),
+                chain(SpaceAction.AddObject, { target: space }),
+              ),
+            ],
+          };
+        }
       },
     }),
     // TODO(dmaretskyi): There should be a generic execute{function/sequence/workflow} intent that runs the executable locally or remotelly.

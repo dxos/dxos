@@ -30,7 +30,7 @@ export const renderMarkdown =
   (message: DataType.Message, index: number, debug = false): string[] => {
     if (message.sender.role === 'assistant') {
       // Start/stop block.
-      return [message.blocks.find((block) => block.type === 'transcription')?.text ?? '', ''];
+      return [message.blocks.find((block) => block._tag === 'transcript')?.text ?? '', ''];
     }
 
     // TODO(burdon): Use link/reference markup for users (with popover).
@@ -42,7 +42,7 @@ export const renderMarkdown =
       message.sender.name ??
       message.sender.email ??
       message.sender.identityDid;
-    const blocks = message.blocks.filter((block) => block.type === 'transcription');
+    const blocks = message.blocks.filter((block) => block._tag === 'transcript');
     return [
       `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
       blocks.map((block) => block.text.trim()).join(' '),

@@ -199,7 +199,7 @@ export class TraceProcessor {
         } else {
           res[key] = sanitizeValue(
             value,
-            options.depth === undefined ? 1 : options.depth ?? MAX_INFO_OBJECT_DEPTH,
+            options.depth === undefined ? 1 : (options.depth ?? MAX_INFO_OBJECT_DEPTH),
             this,
           );
         }
@@ -345,7 +345,7 @@ export class TraceProcessor {
 
         const entryToPush: LogEntry = {
           level: entry.level,
-          message: entry.message,
+          message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context,
           timestamp: new Date(),
           meta: {

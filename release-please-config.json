@@ -94,16 +94,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin-rules/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/feed-store/package.json",
           "jsonpath": "$.version"
         },
@@ -234,17 +224,17 @@
         },
         {
           "type": "json",
-          "path": "packages/core/artifact/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/artifact-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/assistant-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/blueprints/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -950,6 +940,16 @@
         {
           "type": "json",
           "path": "tools/dx-compile/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/dx-tools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

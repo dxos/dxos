@@ -5,19 +5,19 @@
 import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 
 import { TemplateContainer } from '../components';
-import { TEMPLATE_PLUGIN } from '../meta';
-import { isObject } from '../types';
+import { meta } from '../meta';
+import { Template } from '../types';
 
 export default () =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
-      id: TEMPLATE_PLUGIN,
+      id: meta.id,
       role: 'article',
-      filter: (data): data is { subject: Obj.Any } => isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any } => Obj.instanceOf(Template.Data, data.subject),
       component: ({ data, role }) => <TemplateContainer role={role} object={data.subject} />,
     }),
   );
