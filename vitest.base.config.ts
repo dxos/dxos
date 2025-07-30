@@ -23,12 +23,13 @@ type BrowserOptions = {
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  env?: string;
 };
 
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
-  switch (environment) {
+  switch (options.env ?? environment) {
     case 'chromium': {
       return createBrowserConfig({ browserName: environment, ...options });
     }
