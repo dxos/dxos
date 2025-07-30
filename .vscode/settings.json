@@ -52,7 +52,6 @@
   "debug.javascript.terminalOptions": {
     "skipFiles": ["**/**/tracing/src/api.ts"]
   },
-  "circleci.persistedProjectSelection": [],
   "vitest.disableWorkspaceWarning": true,
   "vitest.rootConfig": "vitest.all.config.ts",
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
@@ -62,10 +61,11 @@
     "effect/Effect",
     "effect/Console"
   ],
-  "circleci.notifications.mine": true,
   "search.useParentIgnoreFiles": true,
   "search.useGlobalIgnoreFiles": false,
-
+  "rust-analyzer.linkedProjects": [
+    "packages/apps/composer-app/src-tauri/Cargo.toml"
+  ],
   // Doesn't work in a big monorepo.
   "typescript.updateImportsOnPaste.enabled": false
 }
