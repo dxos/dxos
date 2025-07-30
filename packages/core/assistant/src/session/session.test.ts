@@ -109,12 +109,12 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     ),
   );
 
+  // TODO(dmaretskyi): Revive test.
   /*
   it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
-    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
-    // const aiClient = new OllamaAiServiceClient({
+    
     //   overrides: { model: 'llama3.1:8b' },
-    // });
+    
     const session = new AiSession({ operationModel: 'configured' });
 
     const objects = new Set<string>();

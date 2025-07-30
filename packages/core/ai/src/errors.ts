@@ -13,3 +13,5 @@ export class AiModelNotAvailableError extends BaseError.extend('AI_MODEL_NOT_AVA
     super(`AI Model not available: ${model}`);
   }
 }
+
+export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}

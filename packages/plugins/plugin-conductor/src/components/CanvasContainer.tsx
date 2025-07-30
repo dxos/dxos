@@ -4,9 +4,10 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { EdgeAiServiceClient, AiService } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
+import { todo } from '@dxos/debug';
 import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
@@ -36,7 +37,7 @@ const createServices = (config: Config, space?: Space): ServiceContainer => {
     ai:
       config.values.runtime?.services?.ai?.server == null
         ? undefined
-        : AiService.make(new EdgeAiServiceClient({ endpoint: config.values.runtime?.services?.ai?.server })),
+        : AiService.make(todo(`new Edge AiServiceClient({ endpoint: config.values.runtime?.services?.ai?.server })`)),
   });
 };
 

@@ -5,30 +5,19 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
+import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
-import { setConsolePrinter } from './logger';
-import { SequenceMachine } from './machine';
 import { SequenceBuilder } from './sequence';
-import { TEST_EMAILS } from './test-data';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
 // TODO(burdon): Don't run on CI.
 describe.skip('Sequence', () => {
-  const aiClient = new EdgeAiServiceClient({
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-    defaultGenerationOptions: {
-      // model: '@anthropic/claude-sonnet-4-20250514',
-      model: '@anthropic/claude-3-5-sonnet-20241022',
-    },
-  });
-
   test('follows a simple sequence', { timeout: 60_000 }, async () => {
     const sequence = SequenceBuilder.create()
       .step('Generate an idea for a new product. Do not use any external tools for this.')
@@ -38,9 +27,9 @@ describe.skip('Sequence', () => {
       .build();
 
     const tools = new ToolRegistry([]);
-    const machine = new SequenceMachine(tools, sequence);
-    setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiClient });
+    const machine = todo() as any;
+    // setConsolePrinter(machine, true);
+    // await machine.runToCompletion({ aiClient });
   });
 
   test('email bot', { timeout: 60_000 }, async () => {
@@ -95,9 +84,9 @@ describe.skip('Sequence', () => {
       .build();
 
     const tools = new ToolRegistry([replyTool, labelTool]);
-    const machine = new SequenceMachine(tools, sequence);
-    setConsolePrinter(machine);
-    await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
+    const machine = todo() as any;
+    // setConsolePrinter(machine);
+    // await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   });
 
   test.only('research', { timeout: 120_000 }, async () => {
@@ -147,8 +136,8 @@ describe.skip('Sequence', () => {
       // localSearch,
       // graphWriter,
     ]);
-    const machine = new SequenceMachine(tools, sequence);
-    setConsolePrinter(machine, true);
-    await machine.runToCompletion({ aiClient, input: org1 });
+    const machine = todo() as any;
+    // setConsolePrinter(machine, true);
+    // await machine.runToCompletion({ aiClient, input: org1 });
   });
 });

@@ -7,10 +7,8 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient, AiService } from '@dxos/ai';
-import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, localServiceEndpoints } from '@dxos/assistant-testing';
+import { capabilities } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -34,16 +32,16 @@ import { ComputeContext, useComputeGraphController, useGraphMonitor } from './ho
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
+  createArtifactCircuit,
+  createAudioCircuit,
+  createBasicCircuit,
+  createComputeGraphController,
   createControlCircuit,
+  createGptCircuit,
   createGPTRealtimeCircuit,
   createLogicCircuit,
-  createComputeGraphController,
-  createBasicCircuit,
-  createGptCircuit,
-  createAudioCircuit,
-  createTransformCircuit,
   createTemplateCircuit,
-  createArtifactCircuit,
+  createTransformCircuit,
 } from './testing';
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
@@ -249,16 +247,6 @@ export const Control: Story = {
   },
 };
 
-// export const Ollama: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createComputeGraphController(createTest3(), createEdgeServices()),
-//   },
-// };
-
 export const Template: Story = {
   args: {
     showGrid: false,
@@ -268,7 +256,7 @@ export const Template: Story = {
     ...createComputeGraphController(
       createTemplateCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -285,7 +273,7 @@ export const GPT: Story = {
     ...createComputeGraphController(
       createGptCircuit({ history: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -301,7 +289,7 @@ export const Plugins: Story = {
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -317,7 +305,7 @@ export const Artifact: Story = {
     ...createComputeGraphController(
       createArtifactCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -334,7 +322,7 @@ export const ImageGen: Story = {
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -350,7 +338,7 @@ export const Audio: Story = {
     ...createComputeGraphController(
       createAudioCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -365,7 +353,7 @@ export const Voice: Story = {
     ...createComputeGraphController(
       createGPTRealtimeCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },

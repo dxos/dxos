@@ -6006,6 +6006,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

@@ -9,7 +9,7 @@ import { getSnapshot } from '@dxos/live-object';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
-import { AiInputPreprocessingError } from '../errors';
+import { AiInputPreprocessingError } from './errors';
 
 /**
  * Preprocesses messages for AI input.
