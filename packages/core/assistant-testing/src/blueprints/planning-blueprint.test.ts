@@ -36,8 +36,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
 
         const printer = new ConsolePrinter({ mode: 'json' });
         conversation.onBegin.on((session) => {
-          session.message.on((message) => printer.printMessage(message));
           session.userMessage.on((message) => printer.printMessage(message));
+          session.message.on((message) => printer.printMessage(message));
           session.block.on((block) => printer.printContentBlock(block));
           session.streamEvent.on((part) => {
             log('part', { part });
@@ -60,7 +60,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             I will need a board too.
           `,
           trim`
-            Actually lets use screws and a screwdriver.
+            Actually I'm going to use screws and a screwdriver.
           `,
         ];
 
