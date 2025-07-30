@@ -169,7 +169,7 @@ async function verifyWorkflows() {
 
       // Workflows completed, check final status
       if (result.status === 'success') {
-        console.log(chalk.green(`✓ All workflows completed successfully: ${result.failedRuns.length}`));
+        console.log(chalk.green(`✓ All workflows completed successfully: ${result.successRuns.length}`));
         process.exit(0);
       } else if (result.status === 'failure') {
         console.log(chalk.red('✗ Workflows completed with errors:'));
@@ -254,7 +254,7 @@ function getCurrentCommit() {
 async function checkWorkflowStatus() {
   const runs = await listWorkflowRunsForRepo(false, false); // Don't display table in verify mode
   if (!runs || runs.length === 0) {
-    return { status: 'success', errors: [], failedRuns: [] };
+    return { status: 'no-workflows' };
   }
 
   // Get current branch to filter workflows
