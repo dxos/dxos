@@ -14,7 +14,7 @@ import { DataType, type ContentBlock } from '@dxos/schema';
 import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
-import { getToolCalls, runTool } from './experimental/tools';
+import { getToolCalls, runTool } from './tools';
 import { AiServiceTestingPreset } from './testing';
 
 // Tool definitions.
