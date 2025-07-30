@@ -7,8 +7,6 @@ import { Effect, type Layer } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { AiService } from '@dxos/ai';
-import { createTestAiServiceClient } from '@dxos/ai/testing';
 import {
   type ComputeGraph,
   createEventLogger,
@@ -232,7 +230,6 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
-      ai: AiService.make(createTestAiServiceClient()),
       database: DatabaseService.make(space.db),
       queues: QueueService.make(space.queues, undefined),
       functionCallService: FunctionCallService.mock(),
