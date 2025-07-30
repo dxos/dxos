@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
-import { AiInputPreprocessingError } from '../errors';
+import { AiInputPreprocessingError } from './errors';
 
 describe('preprocessor', () => {
   it.effect(

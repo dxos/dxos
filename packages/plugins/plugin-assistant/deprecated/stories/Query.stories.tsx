@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
-import { EdgeAiServiceClient, type AiServiceEdgeClientOptions } from '@dxos/ai';
+import { type AiServiceEdgeClientOptions } from '@dxos/ai';
 import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -168,7 +168,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   // AI
   //
 
-  const aiClient = useMemo(() => new SpyAiService(new EdgeAiServiceClient(aiConfig)), []);
+  const aiClient = useMemo(() => todo('new SpyAiService(new Edge AiServiceClient(aiConfig))'), []);
   const tools = useMemo(
     () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],
