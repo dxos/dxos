@@ -40,5 +40,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Request camera access for WebRTC</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Request microphone access for WebRTC</string>
 </dict>
 </plist>

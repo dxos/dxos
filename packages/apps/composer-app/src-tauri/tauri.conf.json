@@ -6,7 +6,7 @@
   "build": {
     "frontendDist": "../out/composer",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "moon run composer-app:serve",
+    "beforeDevCommand": "vite dev",
     "beforeBuildCommand": "moon run composer-app:bundle"
   },
   "app": {
