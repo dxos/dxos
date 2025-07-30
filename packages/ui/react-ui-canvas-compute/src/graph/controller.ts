@@ -18,8 +18,8 @@ import {
   ValueBag,
   isNotExecuted,
 } from '@dxos/conductor';
-import { type ComputeEventPayload, type ComputeEventLogger } from '@dxos/functions';
 import { Resource } from '@dxos/context';
+import { type ComputeEventPayload, type ComputeEventLogger } from '@dxos/functions';
 import { type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';

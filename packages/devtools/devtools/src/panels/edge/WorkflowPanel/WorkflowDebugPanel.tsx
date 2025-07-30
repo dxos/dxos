@@ -8,8 +8,8 @@ import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
-import { createEventLogger, RemoteFunctionExecutionService } from '@dxos/functions';
 import { EdgeHttpClient } from '@dxos/edge-client';
+import { createEventLogger, RemoteFunctionExecutionService } from '@dxos/functions';
 import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
