@@ -17,6 +17,7 @@
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
+    "gh-action": "./scripts/gh-action.mjs",
     "postinstall": "[ \"$CI\" != \"true\" ] && tsx tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
@@ -164,7 +165,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@automerge/automerge": "3.0.0",
+      "@automerge/automerge": "3.1.1",
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
       "nan": "2.19.0",

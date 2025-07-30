@@ -7,14 +7,8 @@ import { Effect, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import {
-  type AiSession,
-  ArtifactDiffResolver,
-  type BlueprintRegistry,
-  type ContextBinder,
-  type Conversation,
-} from '@dxos/assistant';
+import { type AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
+import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -39,7 +33,7 @@ type RequestOptions = {
 export type ChatProcessorOptions = {
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
-  blueprintRegistry?: BlueprintRegistry;
+  blueprintRegistry?: Blueprint.Registry;
 
   // TODO(dmaretskyi): Remove.
   artifacts?: readonly ArtifactDefinition[];

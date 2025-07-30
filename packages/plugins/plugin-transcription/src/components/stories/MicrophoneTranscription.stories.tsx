@@ -118,7 +118,7 @@ const DefaultStory = ({
       executor = new FunctionExecutor(
         new ServiceContainer().setServices({
           // ai: {
-          //   client: new EdgeAiServiceClient({
+          //   client: new Edge AiServiceClient({
           //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
           //   }),
           // },

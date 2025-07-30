@@ -25,8 +25,8 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",

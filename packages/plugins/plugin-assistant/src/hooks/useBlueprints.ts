@@ -5,7 +5,8 @@
 import { effect } from '@preact/signals-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { Blueprint, type BlueprintRegistry, type ContextBinder } from '@dxos/assistant';
+import { type ContextBinder } from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -19,9 +20,9 @@ export type UpdateCallback = (key: string, active: boolean) => void;
 export const useBlueprints = (
   space: Space,
   context: ContextBinder,
-  blueprintRegistry?: BlueprintRegistry,
-): [Blueprint[], UpdateCallback] => {
-  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  blueprintRegistry?: Blueprint.Registry,
+): [Blueprint.Blueprint[], UpdateCallback] => {
+  const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);
   useEffect(() => {
     let t: NodeJS.Timeout;
     effect(() => {
@@ -44,7 +45,7 @@ export const useBlueprints = (
         if (blueprint) {
           // TODO(dmaretskyi): This should be done by Obj.clone.
           const { id: _id, ...data } = blueprint;
-          const obj = space.db.add(Obj.make(Blueprint, data));
+          const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
           void context.bind({ blueprints: [Ref.make(obj)] });
         }
       }

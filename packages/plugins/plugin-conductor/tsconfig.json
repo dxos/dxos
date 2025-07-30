@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/log"
     },
     {

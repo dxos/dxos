@@ -9,13 +9,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, SchemaAST } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AgentStatus, EdgeAiServiceClient, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
+import { AgentStatus, createTool, type ExecutableTool, Message, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY, SpyAiService } from '@dxos/ai/testing';
 import { Capabilities, contributes, createSurface, Events, Surface, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/assistant-testing';
 import { findRelatedSchema, researchFn, type RelatedSchema } from '@dxos/assistant';
-import { raise } from '@dxos/debug';
+import { raise, todo } from '@dxos/debug';
 import { Type, Filter, Obj, Relation } from '@dxos/echo';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo-schema';
 import { ConfiguredCredentialsService, FunctionExecutor, ServiceContainer, TracingService } from '@dxos/functions';
@@ -62,13 +62,13 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const aiClient = useMemo(
     () =>
       new SpyAiService(
-        new EdgeAiServiceClient({
+        todo(`new Edge Ai ServiceClient({
           endpoint: endpoints.ai,
           defaultGenerationOptions: {
             // model: '@anthropic/claude-sonnet-4-20250514',
             model: '@anthropic/claude-3-5-sonnet-20241022',
           },
-        }),
+        })`),
       ),
     [],
   );

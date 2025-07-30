@@ -5,67 +5,44 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { Button, type ButtonProps, Icon, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
 
-import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
-import { l0ItemType } from '../../util';
+import { meta } from '../../meta';
 import { useNavTreeContext } from '../NavTreeContext';
 import { NavTreeItemColumns } from '../NavTreeItem';
 
-const headingBackButtonLabel = 'inset-0 min-is-0 truncate flex items-center pis-2';
-
-const TitleButton = ({ title, onClick }: { title: string } & Pick<ButtonProps, 'onClick'>) => {
-  return (
-    <Button
-      variant='ghost'
-      classNames='pli-1 flex-1 group text-start justify-start bs-[--rail-action] font-normal'
-      onClick={onClick}
-    >
-      <Icon icon='ph--caret-left--bold' size={3} />
-      <span className={mx(headingBackButtonLabel)}>{title}</span>
-    </Button>
-  );
-};
-
 export type L1PanelProps = {
   open?: boolean;
-  item: Node<any>;
   path: string[];
+  item: Node<any>;
   currentItemId: string;
   onBack?: () => void;
 };
 
-const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
-  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+/**
+ * Space or settings panel.
+ */
+export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
+  const { t } = useTranslation(meta.id);
+  const { isAlternateTree, ...navTreeContext } = useNavTreeContext();
+  // NOTE(burdon): I'm very uneasy about this pattern of declaring hooks as context props.
+  const { useItems } = navTreeContext;
+  const title = toLocalizedString(item.properties.label, t);
 
   // TODO(wittjosiah): Support multiple alternate trees.
-  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const alternateTree = useItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
-  const handleOpen = useCallback(() => setAlternateTree?.(alternatePath, true), [alternatePath, setAlternateTree]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
   const useAlternateItems = useCallback(
     (node?: Node, { disposition }: { disposition?: string } = {}) => {
       // TODO(wittjosiah): Sorting is expensive, limit to necessary items for now.
-      return navTreeContext.useItems(node, { disposition, sort: node?.id === alternateTree.id });
+      return useItems(node, { disposition, sort: node?.id === alternateTree.id });
     },
-    [navTreeContext, alternateTree],
+    [alternateTree, useItems],
   );
-
-  const handleBack = useCallback(() => {
-    if (isAlternate) {
-      setAlternateTree?.(alternatePath, false);
-    } else {
-      onBack?.();
-    }
-  }, [isAlternate, onBack, alternatePath, setAlternateTree]);
-
-  const title = toLocalizedString(item.properties.label, t);
-  const backCapable = item.id.startsWith('!') || isAlternate;
 
   return (
     <Tabs.Tabpanel
@@ -83,26 +60,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <h2 className='flex items-center border-be border-subduedSeparator app-drag pli-1 density-coarse'>
-            {backCapable ? (
-              <TitleButton title={title} onClick={handleBack} />
-            ) : (
-              <span className='flex-1 truncate min-is-0 pis-6'>{title}</span>
-            )}
-            {alternateTree && !isAlternate && (
-              <IconButton
-                variant='ghost'
-                classNames={['shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1']}
-                iconOnly
-                size={5}
-                icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
-                label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                data-testid='treeView.alternateTreeButton'
-                onClick={handleOpen}
-              />
-            )}
-            <NavTreeItemColumns path={path} item={item} open density='coarse' />
-          </h2>
+          <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
               <Tree
@@ -134,41 +92,63 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
   );
 };
 
-const L1PanelCollection = ({ item, path, ...props }: L1PanelProps) => {
-  const { useItems } = useNavTreeContext();
-  useLoadDescendents(item);
-  const collectionItems = useItems(item);
-  const groupPath = useMemo(() => [...path, item.id], [item.id, path]);
-  return (
-    <>
-      {collectionItems
-        .filter((item) => l0ItemType(item) === 'tab')
-        .map((item) => (
-          <L1Panel key={item.id} item={item} path={groupPath} {...props} />
-        ))}
-    </>
-  );
-};
+/**
+ * Header row.
+ */
+const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
+  const { t } = useTranslation(meta.id);
+  const { isAlternateTree, setAlternateTree, ...navTreeContext } = useNavTreeContext();
+  const title = toLocalizedString(item.properties.label, t);
 
-export type L1PanelsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {
-  topLevelItems: Node<any>[];
-  path: string[];
-};
+  // TODO(wittjosiah): Support multiple alternate trees.
+  const alternateTree = navTreeContext.useItems(item, { disposition: 'alternate-tree' })[0];
+  const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
+  const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
+  const backCapable = item.id.startsWith('!') || isAlternate;
 
-export const L1Panels = ({ topLevelItems, onBack, ...props }: L1PanelsProps) => {
+  const handleOpen = useCallback(() => {
+    setAlternateTree?.(alternatePath, true);
+  }, [alternatePath, setAlternateTree]);
+
+  const handleBack = useCallback(() => {
+    if (isAlternate) {
+      setAlternateTree?.(alternatePath, false);
+    } else {
+      onBack?.();
+    }
+  }, [isAlternate, alternatePath, setAlternateTree, onBack]);
+
+  // TODO(burdon): Reuse same grid as tree?
   return (
-    <>
-      {topLevelItems.map((item) => {
-        const type = l0ItemType(item);
-        switch (type) {
-          case 'collection':
-            return <L1PanelCollection key={item.id} item={item} {...props} />;
-          case 'tab':
-            return <L1Panel key={item.id} item={item} {...props} onBack={onBack} />;
-          default:
-            return null;
-        }
-      })}
-    </>
+    <div className='flex is-full items-center border-be border-subduedSeparator app-drag density-coarse'>
+      <div className='is-6' />
+      <h2 className='flex-1 truncate min-is-0'>{title}</h2>
+      <div>
+        {(backCapable && (
+          <IconButton
+            variant='ghost'
+            icon='ph--arrow-u-down-left--regular'
+            iconOnly
+            size={5}
+            label={t('button back')}
+            classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+            onClick={handleBack}
+          />
+        )) ||
+          (alternateTree && !isAlternate && (
+            <IconButton
+              data-testid='treeView.alternateTreeButton'
+              variant='ghost'
+              icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
+              iconOnly
+              size={5}
+              label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
+              classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+              onClick={handleOpen}
+            />
+          )) || <div />}
+      </div>
+      <NavTreeItemColumns open path={path} item={item} density='coarse' />
+    </div>
   );
 };

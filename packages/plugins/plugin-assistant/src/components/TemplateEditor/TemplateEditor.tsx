@@ -7,7 +7,7 @@ import { styleTags, tags } from '@lezer/highlight';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import React from 'react';
 
-import { type Template } from '@dxos/assistant';
+import { type Template } from '@dxos/blueprints';
 import { invariant } from '@dxos/invariant';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';

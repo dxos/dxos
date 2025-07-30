@@ -7,8 +7,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { Conversation, type BlueprintRegistry, createSystemPrompt, type AssociatedArtifact } from '@dxos/assistant';
+import { Conversation, createSystemPrompt } from '@dxos/assistant';
+import { type ArtifactDefinition, type AssociatedArtifact, type Blueprint } from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -26,7 +26,7 @@ type UseChatProcessorProps = {
 
   // TODO(burdon): Move into layer?
   services?: Layer.Layer<ChatServices>;
-  blueprintRegistry?: BlueprintRegistry;
+  blueprintRegistry?: Blueprint.Registry;
   // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
 

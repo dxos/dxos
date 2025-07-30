@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@dxos/ai": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
