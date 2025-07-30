@@ -8,11 +8,9 @@ import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
-  type ComputeEventPayload,
   type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
-  type ComputeEventLogger,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -20,6 +18,7 @@ import {
   ValueBag,
   isNotExecuted,
 } from '@dxos/conductor';
+import { type ComputeEventPayload, type ComputeEventLogger } from '@dxos/functions';
 import { Resource } from '@dxos/context';
 import { type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';

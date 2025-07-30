@@ -5,7 +5,8 @@
 import { Schema } from 'effect';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ComputeNode, ComputeMeta, ComputeEventPayload } from '@dxos/conductor';
+import type { ComputeNode, ComputeMeta } from '@dxos/conductor';
+import type { ComputeEventPayload } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { useComputeContext } from './compute-context';
