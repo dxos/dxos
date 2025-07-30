@@ -10,7 +10,9 @@ import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
-import { MODULES } from '@dxos/node-std/_/config';
+
+// NOTE(thure): the `storybook:test-ci` task fails (“ ✘ [ERROR] … resolved to an ESM file”) if this imports from `@dxos/node-std/_/config` regardless of how that entrypoint is configured.
+import { MODULES } from './packages/common/node-std/dist/lib/node-esm/_/config.mjs';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();

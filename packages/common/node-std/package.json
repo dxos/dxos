@@ -9,10 +9,7 @@
   "sideEffects": true,
   "type": "module",
   "exports": {
-    "./_/config": {
-      "import": "./dist/lib/browser/_/config.mjs",
-      "require": "./dist/lib/node-esm/_/config.mjs"
-    },
+    "./_/config": "./dist/lib/browser/_/config.mjs",
     "./assert": "./dist/lib/browser/assert.mjs",
     "./buffer": "./dist/lib/browser/buffer.mjs",
     "./crypto": "./dist/lib/browser/crypto.mjs",
