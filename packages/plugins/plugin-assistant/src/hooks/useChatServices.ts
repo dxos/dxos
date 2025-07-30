@@ -32,8 +32,7 @@ export type ChatServices =
   | RemoteFunctionExecutionService
   | ToolResolverService
   | ToolExecutionService
-  | TracingService
-  | ComputeEventLogger;
+  | TracingService;
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -43,7 +42,6 @@ export type UseChatServicesProps = {
  * Construct service layer.
  */
 export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
-  const toolRegistry = useToolRegistry();
   // TODO(dmaretskyi): We can provide the plugin registry as a layer and then build the entire layer stack from there. We need to think how plugin reactivity affect our layer structure.
   const toolResolver = useToolResolver();
   const toolExecutionService = useToolExecutionService();
@@ -59,7 +57,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ch
       toolResolver,
       toolExecutionService,
     ).pipe(Layer.provideMerge(TracingService.layerNoop), Layer.provideMerge(LocalFunctionExecutionService.layer));
-  }, [space, toolRegistry, toolResolver]);
+  }, [space, toolResolver]);
 };
 
 const useToolResolver = (): Layer.Layer<ToolResolverService> => {
@@ -73,18 +71,4 @@ const useToolExecutionService = (): Layer.Layer<ToolExecutionService, never, Loc
     () => makeToolExecutionServiceFromFunctions(functions),
     [useDeepCompareMemoize(functions.map((f) => f.name))],
   );
-};
-
-// TODO(burdon): Factor out.
-const useToolRegistry = (): ToolRegistry => {
-  const tools = useCapabilities(Capabilities.Tools).flat();
-  return useMemo(() => {
-    const toolRegistry = new ToolRegistry([]);
-    for (const tool of tools) {
-      if (!toolRegistry.has(tool)) {
-        toolRegistry.register(tool);
-      }
-    }
-    return toolRegistry;
-  }, [useDeepCompareMemoize(tools)]);
 };
