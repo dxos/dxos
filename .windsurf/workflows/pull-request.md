@@ -9,3 +9,4 @@ When I ask you to create a PR make sure to do following steps:
 3. Check if there's a PR open (using the gh tool).
 4. If there's no PR use `git diff main --no-ext-diff -- ':!pnpm-lock.yaml'` to get the diff and then create a new PR with summary
 5. Don't forget to git push.
+6. Afterwards you will be waiting for CI to pass. Use `pnpm -w gh-action --verify` to check the current state. If the workflow is still running sleep for a minute and try again. If the workflow failed -- fix errors and start the process again. If it suceeded -- break.
