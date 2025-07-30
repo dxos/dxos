@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { IconButton, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
@@ -71,36 +71,45 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
     >
       {item.id === currentItemId && (
         <>
-          <Toolbar.Root classNames='!p-0 border-be border-subduedSeparator app-drag density-coarse'>
-            <h2 className='flex-1 truncate min-is-0 pis-4'>{title}</h2>
-            <div className='pis-2 pie-2'>
-              {(backCapable && (
+          <div
+            className='__grid __grid-cols flex is-full items-center border-be border-subduedSeparator app-drag density-coarse'
+            style={
+              {
+                // TODO(burdon): Use tree layout CSS vars?
+                // gridTemplateColumns: '[tree-row-start] 1fr min-content [tree-row-end]',
+                // gridTemplateColumns: '24px 1fr min-content 16px',
+                // gridTemplateRows: '1fr',
+              }
+            }
+          >
+            <div className='is-6' />
+            <h2 className='flex-1 truncate min-is-0'>{title}</h2>
+            {(backCapable && (
+              <IconButton
+                variant='ghost'
+                icon='ph--arrow-u-down-left--regular'
+                iconOnly
+                size={5}
+                label={t('button back')}
+                classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+                onClick={handleBack}
+              />
+            )) ||
+              (alternateTree && !isAlternate && (
                 <IconButton
+                  data-testid='treeView.alternateTreeButton'
                   variant='ghost'
-                  icon='ph--arrow-u-down-left--regular'
+                  icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
                   iconOnly
                   size={5}
-                  label={t('button back')}
+                  label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
                   classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
-                  onClick={handleBack}
+                  onClick={handleOpen}
                 />
-              )) ||
-                (alternateTree && !isAlternate && (
-                  <IconButton
-                    data-testid='treeView.alternateTreeButton'
-                    variant='ghost'
-                    icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
-                    iconOnly
-                    size={5}
-                    label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-                    classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
-                    onClick={handleOpen}
-                  />
-                ))}
-            </div>
-            {/* TODO(burdon): What is this? */}
-            {/* <NavTreeItemColumns path={path} item={item} open density='coarse' /> */}
-          </Toolbar.Root>
+              )) || <div />}
+            {/* TODO(burdon): This seems to be more than a single column? We should only render the Action? */}
+            {/* <NavTreeItemColumns open path={path} item={item} density='coarse' /> */}
+          </div>
 
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
