@@ -10,11 +10,13 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { Layer } from 'effect';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, ServiceType } from './types';
-
 export const AssistantPlugin = () =>
   definePlugin(meta, [
     defineModule({
@@ -94,5 +96,13 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
       activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ai-service`,
+      activatesOn: Events.Startup,
+      activate: () => [
+        // TODO(dmaretskyi): Read config from settings.
+        contributes(AssistantCapabilities.AiServiceLayer, AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
+      ],
     }),
   ]);
