@@ -13,7 +13,6 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType, DataTypes } from '@dxos/schema';
 
 import { SequenceBuilder } from './sequence';
-import { TEST_EMAILS } from './test-data';
 
 // TODO(burdon): Conslidate with existing artifact definition and create JSON DSL.
 
