@@ -9,7 +9,7 @@ import type { SpaceId } from '@dxos/keys';
 /**
  * Allows calling into other functions.
  */
-export class RemoteFunctionExecutionService extends Context.Tag('RemoteFunctionExecutionService')<
+export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions/RemoteFunctionExecutionService')<
   RemoteFunctionExecutionService,
   {
     callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;

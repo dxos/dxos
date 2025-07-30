@@ -10,7 +10,7 @@ import type { FunctionContext, FunctionDefinition } from '../handler';
 import type { Services } from './service-container';
 import { FunctionError } from '../errors';
 
-export class LocalFunctionExecutionService extends Context.Tag('LocalFunctionExecutionService')<
+export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.

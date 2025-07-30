@@ -8,7 +8,7 @@ import type { Filter, Live, Obj, Query, Ref, Relation } from '@dxos/echo';
 import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
 
-export class DatabaseService extends Context.Tag('DatabaseService')<
+export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,
   {
     readonly db: EchoDatabase;

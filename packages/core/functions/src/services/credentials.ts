@@ -17,7 +17,7 @@ export type ServiceCredential = {
   apiKey?: string;
 };
 
-export class CredentialsService extends Context.Tag('CredentialsService')<
+export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<
   CredentialsService,
   {
     /**

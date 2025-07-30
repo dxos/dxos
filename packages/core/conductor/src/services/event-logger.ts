@@ -36,7 +36,7 @@ export type ComputeEventPayload =
       event: any;
     };
 
-export class ComputeEventLogger extends Context.Tag('ComputeEventLogger')<
+export class ComputeEventLogger extends Context.Tag('@dxos/conductor/ComputeEventLogger')<
   ComputeEventLogger,
   { readonly log: (event: ComputeEventPayload) => void; readonly nodeId: string | undefined }
 >() {}

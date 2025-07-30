@@ -48,7 +48,7 @@ export const ComputeEvent = Schema.Struct({
 /**
  * Logs event for the compute workflows.
  */
-export class ComputeEventLogger extends Context.Tag('ComputeEventLogger')<
+export class ComputeEventLogger extends Context.Tag('@dxos/functions/ComputeEventLogger')<
   ComputeEventLogger,
   { readonly log: (event: ComputeEventPayload) => void; readonly nodeId: string | undefined }
 >() {

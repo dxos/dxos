@@ -12,7 +12,7 @@ export namespace ServiceRegistry {
   }
 }
 
-export class ServiceRegistry extends Context.Tag('ServiceRegistry')<ServiceRegistry, ServiceRegistry.Service>() {
+export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistry')<ServiceRegistry, ServiceRegistry.Service>() {
   /**
    * Resolves the service from the registry.
    * @param tag Service tag to resolve.

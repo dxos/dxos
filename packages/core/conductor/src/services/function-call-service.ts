@@ -6,7 +6,7 @@ import { Context } from 'effect';
 
 import type { SpaceId } from '@dxos/keys';
 
-export class RemoteFunctionExecutionService extends Context.Tag('RemoteFunctionExecutionService')<
+export class RemoteFunctionExecutionService extends Context.Tag('@dxos/conductor/RemoteFunctionExecutionService')<
   RemoteFunctionExecutionService,
   {
     callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;
