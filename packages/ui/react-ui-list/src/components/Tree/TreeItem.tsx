@@ -40,8 +40,15 @@ export const TreeDataSchema = Schema.Struct({
 });
 
 export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
-
 export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
+
+export type ColumnRenderer<T extends HasId = any> = FC<{
+  item: T;
+  path: string[];
+  open: boolean;
+  menuOpen: boolean;
+  setMenuOpen: (open: boolean) => void;
+}>;
 
 export type TreeItemProps<T extends HasId = any> = {
   item: T;
@@ -49,13 +56,7 @@ export type TreeItemProps<T extends HasId = any> = {
   levelOffset?: number;
   last: boolean;
   draggable?: boolean;
-  renderColumns?: FC<{
-    item: T;
-    path: string[];
-    open: boolean;
-    menuOpen: boolean;
-    setMenuOpen: (open: boolean) => void;
-  }>;
+  renderColumns?: ColumnRenderer<T>;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
