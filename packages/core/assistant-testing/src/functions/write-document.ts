@@ -7,7 +7,7 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Document } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
   name: 'dxos.org/function/markdown/write-document',
@@ -23,7 +23,7 @@ export default defineFunction({
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(DocumentType, doc)) {
+    if (!doc || !Obj.instanceOf(Document.Document, doc)) {
       throw new Error('Document not found.');
     }
 

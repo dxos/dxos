@@ -23,7 +23,7 @@ import {
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { DocumentType, MarkdownAction } from './types';
+import { Document, MarkdownAction } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = () =>
@@ -51,20 +51,20 @@ export const MarkdownPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: DocumentType.typename,
+          id: Document.Document.typename,
           metadata: {
-            label: (object: DocumentType) => object.name || object.fallbackName,
+            label: (object: Document.Document) => object.name || object.fallbackName,
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (doc: DocumentType) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
+            loadReferences: async (doc: Document.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
             serializer,
             // TODO(wittjosiah): Consider how to do generic comments without these.
             comments: 'anchored',
             selectionMode: 'multi-range',
-            getAnchorLabel: (doc: DocumentType, anchor: string): string | undefined => {
+            getAnchorLabel: (doc: Document.Document, anchor: string): string | undefined => {
               if (doc.content) {
                 const [start, end] = anchor.split(':');
                 return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
@@ -80,7 +80,7 @@ export const MarkdownPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: DocumentType,
+            objectSchema: Document.Document,
             getIntent: (_, { space }) => createIntent(MarkdownAction.Create, { spaceId: space.id }),
           }),
         ),

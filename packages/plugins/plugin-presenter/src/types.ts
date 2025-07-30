@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { type Context, createContext } from 'react';
 
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Document } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import { PRESENTER_PLUGIN } from './meta';
@@ -17,7 +17,7 @@ export namespace PresenterAction {
     `${PRESENTER_ACTION}/toggle-presentation`,
     {
       input: Schema.Struct({
-        object: Schema.Union(DocumentType, DataType.Collection),
+        object: Schema.Union(Document.Document, DataType.Collection),
         state: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Void,

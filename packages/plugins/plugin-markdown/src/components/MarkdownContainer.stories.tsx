@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, contributes, IntentPlugin, SettingsPlugin, Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Query, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -27,7 +27,7 @@ import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
-import { DocumentType } from '../types';
+import { Document } from '../types';
 
 faker.seed(1);
 
@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [doc] = useQuery(space, Query.type(DocumentType));
+  const [doc] = useQuery(space, Query.type(Document.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
 
   return <Surface role='article' data={data} />;
@@ -51,17 +51,13 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [DocumentType, DataType.Text, Testing.Contact],
+          types: [Document.Document, DataType.Text, Testing.Contact],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            const doc = Obj.make(DocumentType, {
-              name: 'Test',
-              content: Ref.make(Obj.make(DataType.Text, { content: '# Test\n\n' })),
-            });
-            space.db.add(doc);
+            space.db.add(Document.make({ name: 'Test', content: '# Test\n\n' }));
             const createObjects = createObjectFactory(space.db, generator);
             await createObjects([{ type: Testing.Contact, count: 10 }]);
             await space.db.flush({ indexes: true });

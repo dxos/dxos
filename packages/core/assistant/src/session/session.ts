@@ -32,7 +32,7 @@ import { AiAssistantError } from '../errors';
 
 export type AiSessionOptions = {};
 
-export type SessionRunOptions<Tools extends AiTool.Any> = {
+export type AiSessionRunOptions<Tools extends AiTool.Any> = {
   prompt: string;
   history: DataType.Message[];
   systemPrompt?: string;
@@ -108,7 +108,7 @@ export class AiSession {
    */
   // TODO(dmaretskyi): Toolkit context doesn't get added to the effect type.
   run = <Tools extends AiTool.Any>(
-    options: SessionRunOptions<Tools>,
+    options: AiSessionRunOptions<Tools>,
   ): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
@@ -209,7 +209,7 @@ export class AiSession {
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     schema: S,
-    options: SessionRunOptions<AiTool.Any>,
+    options: AiSessionRunOptions<AiTool.Any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);

@@ -34,14 +34,14 @@ import { command, type EditorSelection, type Range, useTextEditor } from '@dxos/
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
+import { render, withLayout } from '@dxos/storybook-utils';
 
 import MarkdownContainer from './MarkdownContainer';
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { translations } from '../translations';
-import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
+import { Document, type MarkdownSettingsProps } from '../types';
 
 faker.seed(1);
 
@@ -61,7 +61,7 @@ const TestItem = Schema.Struct({
   }),
 );
 
-const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
+const TestChat: FC<{ doc: Document.Document; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
@@ -120,7 +120,7 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
-  const [doc, setDoc] = useState<DocumentType>();
+  const [doc, setDoc] = useState<Document.Document>();
   const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
@@ -129,24 +129,23 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
       return undefined;
     }
 
-    const doc = space.db.add(
-      createDocument({
-        name: 'Test',
-
-        // Create links.
-        content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
-          const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
-          const dxn = Ref.make(obj).dxn.toString();
-          return `[${label}][${dxn}]`;
+    setDoc(
+      space.db.add(
+        Document.make({
+          name: 'Test',
+          content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
+            // Create links.
+            const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
+            const dxn = Ref.make(obj).dxn.toString();
+            return `[${label}][${dxn}]`;
+          }),
         }),
-      }),
+      ),
     );
-
-    setDoc(doc);
   }, [space]);
 
   if (!space || !doc) {
-    return <></>;
+    return null;
   }
 
   return (
@@ -159,14 +158,14 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
-  render: DefaultStory,
+  render: render(DefaultStory),
   decorators: [
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [DocumentType, TestItem],
+          types: [Document.Document, TestItem],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

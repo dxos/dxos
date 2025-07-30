@@ -11,12 +11,12 @@ import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { translations } from '../translations';
-import { MarkdownAction, DocumentType } from '../types';
+import { MarkdownAction, Document } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: DocumentType.typename,
+      inputType: Document.Document.typename,
       outputType: 'text/markdown',
       // Reconcile with metadata serializers.
       serialize: async (node) => {
@@ -24,7 +24,9 @@ export default (context: PluginContext) =>
         const content = await doc.content.load();
         return {
           name:
-            doc.name || doc.fallbackName || translations[0]['en-US'][DocumentType.typename]['object name placeholder'],
+            doc.name ||
+            doc.fallbackName ||
+            translations[0]['en-US'][Document.Document.typename]['object name placeholder'],
           data: content.content,
           type: 'text/markdown',
         };

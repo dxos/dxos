@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  TASK_BLUEPRINT,
+  PLANNING_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
   writeDocument,
@@ -26,7 +26,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Document } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
@@ -42,7 +42,6 @@ import {
   outliner,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
@@ -114,7 +113,7 @@ const ChatContainer = () => {
   }, [presets]);
 
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
+  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, PLANNING_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -181,7 +180,7 @@ const ChatContainer = () => {
 const DocumentContainer = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const [document] = useQuery(space, Filter.type(DocumentType));
+  const [document] = useQuery(space, Filter.type(Document.Document));
   if (!document?.content.target) {
     return null;
   }
@@ -278,7 +277,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Assistant.Chat, DocumentType, Blueprint.Blueprint],
+        types: [Assistant.Chat, Document.Document, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -294,13 +293,7 @@ const getDecorators = ({
             }),
           );
           const binder = new ContextBinder(await chat.queue.load());
-
-          const doc = space.db.add(
-            Obj.make(DocumentType, {
-              name: 'Tasks',
-              content: Ref.make(Obj.make(DataType.Text, { content: '' })),
-            }),
-          );
+          const doc = space.db.add(Document.make({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }
@@ -359,7 +352,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_BLUEPRINT],
+    blueprints: [PLANNING_BLUEPRINT],
     context: true,
   }),
   args: {

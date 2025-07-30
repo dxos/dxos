@@ -46,15 +46,15 @@ import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type Document, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: DocumentType;
+  document?: Document.Document;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<DocumentType>;
+  query?: QueryResult<Document.Document>;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -79,7 +79,7 @@ export const useExtensions = ({
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
-  // const query = space?.db.query(Filter.type(DocumentType));
+  // const query = space?.db.query(Filter.type(Document.Document));
   // query?.subscribe();
   const baseExtensions = useMemo(
     () =>

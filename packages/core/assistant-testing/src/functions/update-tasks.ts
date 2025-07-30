@@ -7,7 +7,7 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Document } from '@dxos/plugin-markdown/types';
 
 import { MarkdownTaskManager, type TaskOperation } from './task-manager';
 
@@ -34,7 +34,7 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(DocumentType, doc)) {
+    if (!doc || !Obj.instanceOf(Document.Document, doc)) {
       throw new Error('Document not found.');
     }
     const { content } = yield* DatabaseService.loadRef(doc.content);

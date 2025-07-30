@@ -14,15 +14,15 @@ import { DataType } from '@dxos/schema';
 import { MarkdownCapabilities } from './capabilities';
 import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
 import { MARKDOWN_PLUGIN } from '../meta';
-import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
+import { Document, type MarkdownSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: DocumentType; variant: undefined } =>
-        Obj.instanceOf(DocumentType, data.subject) && !data.variant,
+      filter: (data): data is { subject: Document.Document; variant: undefined } =>
+        Obj.instanceOf(Document.Document, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -74,7 +74,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/editor`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
+      filter: (data): data is { subject: { id: string; text: string } } =>
+        Obj.instanceOf(Document.Document, data.subject),
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -106,8 +107,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: DocumentType | DataType.Text } =>
-        Obj.instanceOf(DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
+      filter: (data): data is { subject: Document.Document | DataType.Text } =>
+        Obj.instanceOf(Document.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
     }),
   ]);

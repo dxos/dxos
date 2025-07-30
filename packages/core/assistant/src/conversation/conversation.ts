@@ -75,7 +75,6 @@ export class Conversation {
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
-
       const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
 
       const systemPrompt =

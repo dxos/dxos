@@ -8,24 +8,24 @@ import { Type } from '@dxos/echo';
 import { type Extension } from '@dxos/react-ui-editor';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import { DocumentType } from './schema';
-import { MARKDOWN_PLUGIN } from '../meta';
+import { Document } from './schema';
+import { meta } from '../meta';
 
-const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
+// TODO(burdon): Single Markdown namespace.
 
 export namespace MarkdownAction {
-  export class Create extends Schema.TaggedClass<Create>()(MARKDOWN_ACTION, {
+  export class Create extends Schema.TaggedClass<Create>()(`${meta}/action/create`, {
     input: Schema.Struct({
       spaceId: Type.SpaceId,
       name: Schema.optional(Schema.String),
       content: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: DocumentType,
+      object: Document.Document,
     }),
   }) {}
 
-  export class SetViewMode extends Schema.TaggedClass<SetViewMode>()(`${MARKDOWN_ACTION}/set-view-mode`, {
+  export class SetViewMode extends Schema.TaggedClass<SetViewMode>()(`${meta}/action/set-view-mode`, {
     input: Schema.Struct({
       id: Schema.String,
       viewMode: EditorViewMode,
@@ -36,10 +36,7 @@ export namespace MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-// TODO(burdon): Async.
-export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
-
-export type OnChange = (text: string) => void;
+export type MarkdownExtensionProvider = (props: { document?: Document.Document }) => Extension | undefined;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.

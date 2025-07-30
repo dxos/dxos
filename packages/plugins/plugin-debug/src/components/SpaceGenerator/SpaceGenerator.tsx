@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, type Obj } from '@dxos/echo';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Document } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
@@ -29,7 +29,7 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
+  const staticTypes = [Document.Document, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
   const recordTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
