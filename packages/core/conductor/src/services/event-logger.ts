@@ -6,6 +6,7 @@ import { Effect, Context } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 import { log, LogLevel } from '@dxos/log';
+import { ComputeEventLogger } from '@dxos/functions';
 
 export type ComputeEventPayload =
   | {
@@ -35,11 +36,6 @@ export type ComputeEventPayload =
       nodeId: string;
       event: any;
     };
-
-export class ComputeEventLogger extends Context.Tag('@dxos/conductor/ComputeEventLogger')<
-  ComputeEventLogger,
-  { readonly log: (event: ComputeEventPayload) => void; readonly nodeId: string | undefined }
->() {}
 
 export const logCustomEvent = (data: any) =>
   Effect.gen(function* () {

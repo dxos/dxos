@@ -21,7 +21,7 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ComputeEventLogger } from '../../services';
+import { ComputeEventLogger } from '@dxos/functions';
 import { defineComputeNode, ValueBag } from '../../types';
 import { StreamSchema } from '../../util';
 

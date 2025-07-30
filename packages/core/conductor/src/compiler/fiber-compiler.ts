@@ -12,6 +12,7 @@ import {
   RemoteFunctionExecutionService,
   QueueService,
   TracingService,
+  ComputeEventLogger,
 } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -25,7 +26,7 @@ import {
   type TopologyNode,
 } from './topology';
 import { ComputeNodeError, ValueValidationError } from '../errors';
-import { createDefectLogger, ComputeEventLogger } from '../services';
+import { createDefectLogger } from '../services';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
