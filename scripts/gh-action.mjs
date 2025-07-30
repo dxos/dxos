@@ -144,8 +144,22 @@ async function verifyWorkflows() {
       const result = await checkWorkflowStatus();
 
       if (result.status === 'pending') {
-        if (argv.verbose) {
-          console.log(chalk.yellow('Workflows still pending, waiting...'));
+        if (argv.watch) {
+          console.log(
+            chalk.yellow(
+              `Workflows still pending: ${result.pendingRuns
+                .map((run) => {
+                  const now = new Date(new Date().toISOString());
+                  const created = new Date(run.created_at);
+                  const diff = now - created;
+                  const mm = Math.floor((diff / 1000 / 60) % 60);
+                  const ss = Math.floor((diff / 1000) % 60);
+                  const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+                  return `${run.name} ${humanReadable}`;
+                })
+                .join(', ')}`,
+            ),
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, argv.interval));
         continue;
@@ -225,16 +239,14 @@ async function checkWorkflowStatus() {
 
   // Get current branch to filter workflows
   const currentBranch = getCurrentBranch();
-  
+
   // Filter runs by current branch if available
-  const filteredRuns = currentBranch 
-    ? runs.filter(run => run.head_branch === currentBranch)
-    : runs;
-  
+  const filteredRuns = currentBranch ? runs.filter((run) => run.head_branch === currentBranch) : runs;
+
   if (argv.verbose && currentBranch) {
     console.log(chalk.gray(`Checking workflows for branch: ${currentBranch}`));
   }
-  
+
   if (filteredRuns.length === 0) {
     if (currentBranch && argv.verbose) {
       console.log(chalk.gray(`No workflows found for branch: ${currentBranch}`));
@@ -258,7 +270,12 @@ async function checkWorkflowStatus() {
   }
 
   if (hasPending) {
-    return { status: 'pending', errors, failedRuns: [] };
+    return {
+      status: 'pending',
+      errors,
+      failedRuns: [],
+      pendingRuns: filteredRuns.filter((run) => run.status === 'queued' || run.status === 'in_progress'),
+    };
   } else if (hasFailures) {
     return { status: 'failure', errors, failedRuns };
   } else {
