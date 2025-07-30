@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -28,14 +28,14 @@ const TEMPLATE = trim`
 
 const DefaultStory = () => {
   const client = useClient();
-  const [template] = useState(() => {
+  const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Template.make({ source: TEMPLATE }));
+    return space.db.add(Blueprint.make({ name: 'Test', instructions: { source: TEMPLATE } }));
   });
 
   return (
     <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
-      <TemplateForm template={template} />
+      <TemplateForm id={blueprint.id} template={blueprint.instructions} />
     </div>
   );
 };

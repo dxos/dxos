@@ -8,7 +8,7 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -35,12 +35,12 @@ const TEMPLATE = trim`
 
 const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
-  const [template] = useState(() => {
+  const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Template.make({ source }));
+    return space.db.add(Blueprint.make({ name: 'Test', instructions: { source } }));
   });
 
-  return <TemplateEditor template={template} />;
+  return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
