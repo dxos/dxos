@@ -96,7 +96,7 @@ const main = async () => {
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
-    isSocket: !!(globalThis as any).__args,
+    isTauri: !!(globalThis as any).__TAURI__,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
