@@ -92,6 +92,7 @@ jobs:
         run: moon run devtools-extension:bundle
         env:
           NODE_ENV: production
+          NODE_OPTIONS: '--max_old_space_size=12288'
 
       - name: Gather Artifacts for Devtools extension
         run: |
