@@ -10,7 +10,7 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: composer-app
+      PRODUCT_NAME: Composer
       PRODUCT_BUNDLE_IDENTIFIER: org.dxos.composer
 targetTemplates:
   app:
