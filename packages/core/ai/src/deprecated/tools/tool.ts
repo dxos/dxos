@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { JsonSchemaType } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
-import { type AgentStatus } from '../status-report';
+import { AgentStatus } from '../../status-report';
 
 declare global {
   /**

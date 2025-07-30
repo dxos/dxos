@@ -13,8 +13,8 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseGptStream } from './experimental/AiParser';
-import { preprocessAiInput } from './experimental/AiPreprocessor';
-import { LMSTUDIO_ENDPOINT } from './experimental/AiServiceRouter';
+import { preprocessAiInput } from './AiPreprocessor';
+import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
 describe.skip('lmstudio', () => {
   it.effect(

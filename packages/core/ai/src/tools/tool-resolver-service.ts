@@ -1,3 +1,9 @@
+import { AiTool, AiToolkit } from '@effect/ai';
+import { Context, Effect, Layer } from 'effect';
+
+import { AiToolNotFoundError } from '../errors';
+import { ToolId } from '../deprecated/tools';
+
 // TODO(burdon): Ai prefix?
 export class ToolResolverService extends Context.Tag('ToolResolverService')<
   ToolResolverService,

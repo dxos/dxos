@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OPENAI_MODELS } from './defs';
-import { Tool } from './tools';
+import { Tool } from './deprecated/tools';
 
 // TODO(dmaretskyi): Rename `ModelName`.
 export const LLMModel = Schema.Literal(
@@ -18,3 +18,6 @@ export const LLMModel = Schema.Literal(
 );
 
 export type LLMModel = Schema.Schema.Type<typeof LLMModel>;
+
+// Re-export deprecated types for backward compatibility
+export type { GenerateRequest, GenerateResponse, GenerationStreamEvent } from './deprecated/types';

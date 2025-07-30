@@ -10,7 +10,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
 import { type GenerationStream } from './service';
-import { StreamTransform, type StreamBlock } from './transform';
+import { StreamTransform, type StreamBlock } from '../../parser';
 import { type GenerationStreamEvent } from '../../types';
 
 /**

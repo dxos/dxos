@@ -10,8 +10,8 @@ import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
-import { AiModelNotAvailableError } from '../errors';
-import { AiService } from '../deprecated/service';
+import { AiModelNotAvailableError } from './errors';
+import { AiService } from './deprecated/service';
 
 const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(

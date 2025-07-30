@@ -5,7 +5,7 @@
 export * as AiParser from './AiParser';
 export * as AiPreprocessor from './AiPreprocessor';
 export * as AiServiceRouter from './AiServiceRouter';
-export * from './cypher';
+export * from './experimental';
 export * from './defs';
 export * from './deprecated/service';
 export * from './errors';
