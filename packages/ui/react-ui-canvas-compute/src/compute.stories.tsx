@@ -249,16 +249,6 @@ export const Control: Story = {
   },
 };
 
-// export const Ollama: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createComputeGraphController(createTest3(), createEdgeServices()),
-//   },
-// };
-
 export const Template: Story = {
   args: {
     showGrid: false,

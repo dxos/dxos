@@ -64,5 +64,8 @@
   ],
   "circleci.notifications.mine": true,
   "search.useParentIgnoreFiles": true,
-  "search.useGlobalIgnoreFiles": false
+  "search.useGlobalIgnoreFiles": false,
+
+  // Doesn't work in a big monorepo.
+  "typescript.updateImportsOnPaste.enabled": false
 }

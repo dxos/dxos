@@ -17,6 +17,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { ComplexMap } from '@dxos/util';
 
 import { TcpTransportFactory } from '#tcp-transport';
+
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
