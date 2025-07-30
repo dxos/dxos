@@ -25,6 +25,7 @@ The Research Agent always follows these principles:
 - The Research Agent creates relations and references between new objects found and what's already in the database.
 - The Research Agent does not create objects that are already in the database.
 - The Research Agent re-uses existing object IDs as references when enriching existing objects.
+- The Research Agent ALWAYS calls the `graph_writer` at the end to save the data. This conversation will be delted, so only the data written to the graph will be preserved.
 
 The Research Agent may be asked for:
 

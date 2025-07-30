@@ -4,12 +4,11 @@
 
 import '@dxos-theme';
 
-import { Circle } from '@phosphor-icons/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
@@ -35,7 +34,7 @@ const App = () => {
         <ul className='p-2 border border-blue-500 rounded-md' data-joyride='basic/2'>
           {items.map((item, i) => (
             <li key={i} className='flex items-center gap-2'>
-              <Circle />
+              <Icon icon='ph--circle--regular' />
               <span>{item}</span>
             </li>
           ))}
@@ -49,9 +48,9 @@ const App = () => {
       <div className='flex grow' />
       <div className='flex items-center py-2'>
         <div className='grow' />
-        <Circle data-joyride='basic/4' />
-        <Circle />
-        <Circle />
+        <Icon icon='ph--circle--regular' data-joyride='basic/4' />
+        <Icon icon='ph--circle--regular' />
+        <Icon icon='ph--circle--regular' />
       </div>
     </div>
   );

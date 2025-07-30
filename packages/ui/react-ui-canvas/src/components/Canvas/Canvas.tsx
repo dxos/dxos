@@ -64,17 +64,13 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     }, [scale, offset]);
 
     // Controller.
-    useImperativeHandle(
-      forwardedRef,
-      () => {
-        return {
-          setProjection: async (projection: ProjectionState) => {
-            setProjection(projection);
-          },
-        };
-      },
-      [ref],
-    );
+    useImperativeHandle(forwardedRef, () => {
+      return {
+        setProjection: async (projection: ProjectionState) => {
+          setProjection(projection);
+        },
+      };
+    }, [ref]);
 
     return (
       <CanvasContext.Provider

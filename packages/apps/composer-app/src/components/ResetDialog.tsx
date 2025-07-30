@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { CaretDown, CaretRight, Clipboard } from '@phosphor-icons/react';
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -17,7 +16,6 @@ import {
   IconButton,
   Message,
   Popover,
-  Tooltip,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -95,8 +93,6 @@ export const ResetDialog = ({
     }
   }, [needRefresh, updateServiceWorker]);
 
-  const Caret = showStack ? CaretDown : CaretRight;
-
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -109,14 +105,14 @@ export const ResetDialog = ({
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <button
-                className='flex items-center'
+              <IconButton
+                icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                variant='ghost'
+                classNames='flex items-center'
+                label={t('show stack label')}
                 onClick={() => setShowStack((showStack) => !showStack)}
                 data-testid='resetDialog.showStackTrace'
-              >
-                <Caret />
-                <span className='mis-2'>{t('show stack label')}</span>
-              </button>
+              />
               {showStack && (
                 <Message.Root
                   key={error.message}
@@ -125,11 +121,13 @@ export const ResetDialog = ({
                   data-testid='resetDialog.stackTrace'
                 >
                   <pre className='text-xs whitespace-pre-line'>{error.stack}</pre>
-                  <Tooltip.Trigger asChild content={t('copy error label')}>
-                    <Button onClick={handleCopyError} classNames='absolute top-2 right-2'>
-                      <Clipboard weight='duotone' size='1em' />
-                    </Button>
-                  </Tooltip.Trigger>
+                  <IconButton
+                    classNames='absolute top-2 right-2'
+                    icon='ph--clipboard--duotone'
+                    iconOnly
+                    label={t('copy error label')}
+                    onClick={handleCopyError}
+                  />
                 </Message.Root>
               )}
             </>

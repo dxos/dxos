@@ -2,15 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Surface, contributes, createSurface } from '@dxos/app-framework';
-import { getSchema } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import {
+  Capabilities,
+  LayoutAction,
+  Surface,
+  contributes,
+  createIntent,
+  createSurface,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
+import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { AttentionAction } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
+import { TableView } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -27,38 +40,66 @@ export default () =>
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
-        // TODO(wittjosiah): Handle org click.
-        // const { dispatchPromise: dispatch } = useIntentDispatcher();
-        // const handleOrgClick = useCallback(
-        //   async (org: DataType.Organization) => {
-        //     const space = getSpace(org);
-        //     const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
-        //     const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-        //       return table.view?.target?.query?.typename === DataType.Organization.typename;
-        //     });
-        //     await dispatch(
-        //       createIntent(LayoutAction.UpdatePopover, {
-        //         part: 'popover',
-        //         options: {
-        //           state: false,
-        //           anchorId: '',
-        //         },
-        //       }),
-        //     );
-        //     if (currentSpaceOrgTable) {
-        //       return dispatch(
-        //         createIntent(LayoutAction.Open, {
-        //           part: 'main',
-        //           subject: [fullyQualifiedId(currentSpaceOrgTable)],
-        //           options: { workspace: space?.id },
-        //         }),
-        //       );
-        //     }
-        //   },
-        //   [dispatch],
-        // );
+        const { dispatch } = useIntentDispatcher();
+        const space = getSpace(data.subject);
+        const defaultSpace = useSpace();
+
+        const currentSpaceOrgs = useQuery(space, Filter.type(DataType.Organization));
+        const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
+        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
+        const currentSpaceOrgTable = currentSpaceViews.find(
+          (view) =>
+            view.query.typename === DataType.Organization.typename &&
+            Obj.instanceOf(TableView, view.presentation.target),
+        );
+        const defaultSpaceOrgTable = defaultSpaceViews.find(
+          (view) =>
+            view.query.typename === DataType.Organization.typename &&
+            Obj.instanceOf(TableView, view.presentation.target),
+        );
+
+        // TODO(wittjosiah): Generalized way of handling related objects navigation.
+        const handleOrgClick = useCallback(
+          (org: DataType.Organization) =>
+            Effect.gen(function* () {
+              const view = currentSpaceOrgs.includes(org) ? currentSpaceOrgTable : defaultSpaceOrgTable;
+              yield* dispatch(
+                createIntent(LayoutAction.UpdatePopover, {
+                  part: 'popover',
+                  options: {
+                    state: false,
+                    anchorId: '',
+                  },
+                }),
+              );
+              if (view) {
+                const id = fullyQualifiedId(view);
+                yield* dispatch(
+                  createIntent(LayoutAction.Open, {
+                    part: 'main',
+                    subject: [id],
+                    options: { workspace: space?.id },
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(DeckAction.ChangeCompanion, {
+                    primary: id,
+                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(AttentionAction.Select, {
+                    contextId: id,
+                    selection: { mode: 'multi', ids: [org.id] },
+                  }),
+                );
+              }
+            }).pipe(Effect.runPromise),
+          [dispatch, currentSpaceOrgs, currentSpaceOrgTable, defaultSpaceOrgTable],
+        );
+
         return (
-          <ContactCard role={role} subject={data.subject}>
+          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );

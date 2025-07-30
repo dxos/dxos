@@ -18,7 +18,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { remoteServiceEndpoints } from '@dxos/assistant-testing';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -39,6 +39,7 @@ import { Chat } from './Chat';
 import { ChatProcessor } from '../../hooks';
 import { createProcessorOptions } from '../../testing';
 import { translations } from '../../translations';
+import { DataType } from '@dxos/schema';
 
 // TODO(burdon): Configure for local with ollama/LM studio.
 // const endpoints = localServiceEndpoints;
@@ -92,14 +93,15 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   useEffect(() => {
     if (queue?.objects.length === 0 && !queue.isLoading && prompts.length > 0) {
       void queue.append([
-        Obj.make(Message, {
-          role: 'assistant',
-          content: prompts.map(
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks: prompts.map(
             (prompt) =>
               ({
-                type: 'json',
+                _tag: 'json',
                 disposition: 'suggest',
-                json: JSON.stringify({ text: prompt }),
+                data: JSON.stringify({ text: prompt }),
               }) as const,
           ),
         }),

@@ -25,7 +25,7 @@ export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPla
 
 export function parseCellIndex(index: DxGridCellIndex): DxGridPosition;
 export function parseCellIndex(index: DxGridPlaneCellIndex): DxGridPlanePosition;
-// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
 export function parseCellIndex(index: DxGridPlaneCellIndex | DxGridCellIndex): DxGridPlanePosition | DxGridPosition {
   const coords = index.split(separator);
   if (coords.length === 3) {

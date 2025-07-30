@@ -16,12 +16,12 @@ export const createMessages = (count = 10) => {
   return faker.helpers.multiple(
     () =>
       Obj.make(DataType.Message, {
+        created: faker.date.recent().toISOString(),
         sender: {
           identityDid: IdentityDid.random(),
           name: faker.person.fullName(),
         },
-        created: faker.date.recent().toISOString(),
-        blocks: [{ type: 'text', text: faker.lorem.paragraph() }],
+        blocks: [{ _tag: 'text', text: faker.lorem.paragraph() }],
         properties: {
           subject: faker.commerce.productName(),
         },

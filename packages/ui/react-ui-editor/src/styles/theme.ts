@@ -79,18 +79,17 @@ export const defaultTheme: ThemeStyles = {
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-separator)',
+    borderRight: '1px solid var(--dx-subduedSeparator)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
-    alignContent: 'center',
   },
   /**
-   * Height is set to match the corresponding line.
+   * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    alignItems: 'center',
     fontSize: '12px',
+    lineHeight: '24px',
   },
 
   /**

@@ -3,7 +3,7 @@
 //
 
 import { Obj, type Ref, type Relation } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
+import { type AnyEchoObject, type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -74,6 +74,10 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    */
   async append(items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModelShape(item));
+
+    for (const item of items) {
+      setRefResolverOnData(item, this._refResolver);
+    }
 
     // Optimistic update.
     this._objects = [...this._objects, ...items];

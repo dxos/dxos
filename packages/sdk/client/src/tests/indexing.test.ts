@@ -339,7 +339,7 @@ describe('Index queries', () => {
   };
 });
 
-const objectContains = (container: any, content: any): Boolean => {
+const objectContains = (container: any, content: any): boolean => {
   log('objectContains', {
     container,
     content,

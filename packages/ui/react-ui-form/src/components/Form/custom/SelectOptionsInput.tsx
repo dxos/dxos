@@ -123,7 +123,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={mx('p-1 plb-2', 'flex flex-col', 'cursor-pointer', 'hover:bg-hoverOverlay')}
+                      classNames={['p-1 plb-2', 'flex flex-col', 'cursor-pointer', 'hover:bg-hoverOverlay']}
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>

@@ -92,7 +92,7 @@ const L1Panel = ({ open, item, path, currentItemId, onBack }: L1PanelProps) => {
             {alternateTree && !isAlternate && (
               <IconButton
                 variant='ghost'
-                classNames={mx('shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1')}
+                classNames={['shrink-0', hoverableControlItem, hoverableOpenControlItem, 'pli-2 pointer-fine:pli-1']}
                 iconOnly
                 size={5}
                 icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}

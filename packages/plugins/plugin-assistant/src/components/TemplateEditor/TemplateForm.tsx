@@ -5,16 +5,16 @@
 import { type Schema } from 'effect';
 import React, { Fragment, useEffect } from 'react';
 
+import { type Template } from '@dxos/blueprints';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { TemplateEditor } from './TemplateEditor';
 import { meta } from '../../meta';
-import { type TemplateInput, TemplateInputType, type TemplateType } from '../../types';
 
 export type TemplateFormProps = {
-  template: TemplateType;
+  template: Template.Template;
   schema?: Schema.Schema<any, any, any>;
   commandEditable?: boolean;
 };
@@ -25,13 +25,13 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
 
   return (
     <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-      {commandEditable && (
+      {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
           <Input.Root>
             <Input.TextInput
               placeholder={t('command placeholder')}
-              classNames={mx('is-full bg-transparent m-2')}
+              classNames='is-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
                 template.command = event.target.value.replace(/\w/g, '');
@@ -39,7 +39,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
             />
           </Input.Root>
         </div>
-      )}
+      )} */}
 
       <TemplateEditor template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
 
@@ -51,17 +51,17 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
 
               <Input.Root>
                 <Select.Root
-                  value={String(input.type)}
-                  onValueChange={(type) => {
-                    input.type = getInputType(type) ?? TemplateInputType.VALUE;
+                  value={input.kind}
+                  onValueChange={(kind) => {
+                    input.kind = kind as Template.InputKind;
                   }}
                 >
                   <Select.TriggerButton placeholder='Type' classNames='is-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
-                        {inputTypes.map(({ value, label }) => (
-                          <Select.Option key={value} value={String(value)}>
+                        {inputs.map(({ kind, label }) => (
+                          <Select.Option key={kind} value={kind}>
                             {label}
                           </Select.Option>
                         ))}
@@ -72,26 +72,20 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
               </Input.Root>
 
               <div>
-                {input.type !== undefined &&
-                  [
-                    TemplateInputType.VALUE,
-                    TemplateInputType.CONTEXT,
-                    TemplateInputType.RESOLVER,
-                    TemplateInputType.SCHEMA,
-                  ].includes(input.type) && (
-                    <div>
-                      <Input.Root>
-                        <Input.TextInput
-                          placeholder={t('command placeholder')}
-                          classNames={mx('is-full bg-transparent')}
-                          value={input.value ?? ''}
-                          onChange={(event) => {
-                            input.value = event.target.value;
-                          }}
-                        />
-                      </Input.Root>
-                    </div>
-                  )}
+                {input.kind !== undefined && ['value', 'context', 'resolver', 'schema'].includes(input.kind) && (
+                  <div>
+                    <Input.Root>
+                      <Input.TextInput
+                        placeholder={t('command placeholder')}
+                        classNames='is-full bg-transparent'
+                        value={input.default ?? ''}
+                        onChange={(event) => {
+                          input.default = event.target.value;
+                        }}
+                      />
+                    </Input.Root>
+                  </div>
+                )}
               </div>
             </Fragment>
           ))}
@@ -101,57 +95,56 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
   );
 };
 
-const inputTypes = [
+// TODO(burdon): Translations.
+const inputs: { kind: Template.InputKind; label: string }[] = [
   {
-    value: TemplateInputType.VALUE,
+    kind: 'value',
     label: 'Value',
   },
   {
-    value: TemplateInputType.PASS_THROUGH,
+    kind: 'pass-through',
     label: 'Pass through',
   },
   {
-    value: TemplateInputType.RETRIEVER,
+    kind: 'retriever',
     label: 'Retriever',
   },
-  // {
-  //   value: TemplateInputType.FUNCTION,
-  //   label: 'Function',
-  // },
-  // {
-  //   value: TemplateInputType.QUERY,
-  //   label: 'Query',
-  // },
   {
-    value: TemplateInputType.RESOLVER,
+    kind: 'function',
+    label: 'Function',
+  },
+  {
+    kind: 'query',
+    label: 'Query',
+  },
+  {
+    kind: 'resolver',
     label: 'Resolver',
   },
   {
-    value: TemplateInputType.CONTEXT,
+    kind: 'context',
     label: 'Context',
   },
   {
-    value: TemplateInputType.SCHEMA,
+    kind: 'schema',
     label: 'Schema',
   },
 ];
 
-export const nameRegex = /\{\{([\w-]+)\}\}/;
+export const NAME_REGEXP = /\{\{([\w-]+)\}\}/;
 
-const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
-
-const usePromptInputs = (template: TemplateType) => {
+const usePromptInputs = (template: Template.Template) => {
   useEffect(() => {
     const text = template.source ?? '';
     if (!template.inputs) {
       template.inputs = []; // TODO(burdon): Required?
     }
 
-    const regex = new RegExp(nameRegex, 'g');
-    const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
+    const regex = new RegExp(NAME_REGEXP, 'g');
+    const variables = new Set<string>([...(text.target?.content.matchAll(regex) ?? [])].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, TemplateInput>(
+    const unclaimed = new Map<string, Template.Input>(
       template.inputs?.filter(isNonNullable).map((input) => [input.name, input]),
     );
     const missing: string[] = [];

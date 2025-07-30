@@ -4,10 +4,10 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
+import { EdgeAiServiceClient, AiService } from '@dxos/ai';
 import { type Config } from '@dxos/client';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { AiService, DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
+import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
 import {
@@ -56,6 +56,7 @@ const useGraphController = (canvas: CanvasBoardType) => {
     if (!controller) {
       return;
     }
+
     void controller.open();
     return () => {
       void controller.close();

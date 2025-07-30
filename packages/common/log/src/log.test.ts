@@ -28,10 +28,10 @@ log.config({
   filter: LogLevel.DEBUG,
 });
 
-/* eslint-disable @stayradiated/prefer-arrow-functions/prefer-arrow-functions */
+/* eslint-disable prefer-arrow-functions/prefer-arrow-functions */
 
-describe('log', function () {
-  test('throws an error', function () {
+describe('log', () => {
+  test('throws an error', () => {
     try {
       throw new LogError('Test failed', { value: 1 });
     } catch (err: any) {
@@ -39,7 +39,7 @@ describe('log', function () {
     }
   });
 
-  test('throws an error showing stacktrace', function () {
+  test('throws an error showing stacktrace', () => {
     try {
       throw new LogError('Test failed', { value: 2 });
     } catch (err: any) {
@@ -47,7 +47,7 @@ describe('log', function () {
     }
   });
 
-  test('catches an error', function () {
+  test('catches an error', () => {
     try {
       throw new LogError('ERROR ON LINE 21', { value: 3 });
     } catch (err: any) {
@@ -55,7 +55,7 @@ describe('log', function () {
     }
   });
 
-  test('config', function () {
+  test('config', () => {
     log.config({
       filter: LogLevel.INFO,
     });
@@ -65,7 +65,7 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  test('config file', function () {
+  test('config file', () => {
     log.config({
       file: path.join('packages/common/log/test-config.yml'),
     });
@@ -75,7 +75,7 @@ describe('log', function () {
     log.warn('Warn level log message');
   });
 
-  test('levels', function () {
+  test('levels', () => {
     log('Default level log message');
     log.debug('Debug level log message');
     log.info('Info level log message');
@@ -83,10 +83,15 @@ describe('log', function () {
     log.error('Error level log message');
   });
 
-  test('context', function () {
+  test('context', () => {
     log.info('Message with context', {
       title: 'test',
       context: 123,
     });
+  });
+
+  test('error', function () {
+    const myError = new Error('Test error', { cause: new Error('Cause') });
+    log.catch(myError);
   });
 });

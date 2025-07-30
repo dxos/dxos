@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@dxos/ai": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -34,6 +34,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -43,12 +44,19 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "0.23.0",
+    "@effect/ai-anthropic": "^0.13.0",
+    "@effect/platform": "^0.89.0",
+    "@effect/platform-node": "^0.92.0",
     "@preact/signals-core": "^1.9.0",
     "@xenova/transformers": "^2.17.2",
     "chalk": "^4.1.0",
-    "exa-js": "^1.5.12"
+    "exa-js": "^1.5.12",
+    "handlebars": "4.7.8",
+    "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
+    "@types/lodash.defaultsdeep": "^4.6.6",
     "effect": "3.17.0",
     "inquirer": "^12.0.0"
   },

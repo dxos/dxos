@@ -7,4 +7,4 @@ export * from './identity-did';
 export * from './object-id';
 export * from './public-key';
 export * from './space-id';
-export * from './types';
+export type * from './types';

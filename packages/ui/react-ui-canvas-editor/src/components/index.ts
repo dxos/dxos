@@ -10,5 +10,5 @@ export * from './Toolbar';
 export * from './UI';
 
 export * from './anchors';
-export * from './defs';
+export type * from './defs';
 export * from './styles';

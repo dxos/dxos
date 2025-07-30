@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus, Table, List, ListMagnifyingGlass } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { Input, Select, Toolbar } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
 
 export type DataView = 'table' | 'list' | 'debug';
 
@@ -30,7 +28,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   return (
     <Toolbar.Root classNames='p-1'>
       <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
-        <Plus />
+        <Icon icon='ph--plus--regular' />
       </Toolbar.Button>
       <Input.Root>
         <Input.TextInput
@@ -69,13 +67,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <Toolbar.ToggleGroupItem value='table'>
-            <Table className={getSize(5)} />
+            <Icon icon='ph--table--regular' size={5} />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='list'>
-            <List className={getSize(5)} />
+            <Icon icon='ph--list--regular' size={5} />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='debug'>
-            <ListMagnifyingGlass className={getSize(5)} />
+            <Icon icon='ph--list-magnifying-glass--regular' size={5} />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
       )}

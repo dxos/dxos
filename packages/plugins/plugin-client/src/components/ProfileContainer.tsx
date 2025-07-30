@@ -58,7 +58,7 @@ export const ProfileContainer = () => {
       setDisplayNameDirectly(profile.displayName);
       setEmojiDirectly(profile.emoji);
       setHueDirectly(profile.hue);
-      updateProfile(profile);
+      void updateProfile(profile);
     },
     [identity],
   );

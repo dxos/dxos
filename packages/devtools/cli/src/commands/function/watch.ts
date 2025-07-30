@@ -70,7 +70,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
         if (event === 'rename') {
           trigger.wake();
         } else {
-          updateSource();
+          void updateSource();
         }
       });
 
