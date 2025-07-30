@@ -7,7 +7,6 @@ on:
       - production
       - staging
       - tauri
-      - jdw/ios
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
