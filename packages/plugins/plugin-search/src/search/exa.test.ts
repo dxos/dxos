@@ -11,16 +11,13 @@ import { Testing } from '@dxos/schema/testing';
 import { todo } from '@dxos/debug';
 import { search } from './exa';
 
-const REMOTE_AI = true;
-
 describe.skip('Search', () => {
-  const AiService = todo();
   describe('Query-based', () => {
     test.skip('contacts', { timeout: 60_000 }, async () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -31,7 +28,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact, Testing.Project, Testing.Organization],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -42,7 +39,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -53,7 +50,7 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'companies building CRDTs',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -66,7 +63,7 @@ describe.skip('Search', () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -77,7 +74,7 @@ describe.skip('Search', () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
