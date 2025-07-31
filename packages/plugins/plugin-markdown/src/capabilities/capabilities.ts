@@ -16,5 +16,6 @@ export namespace MarkdownCapabilities {
     setViewMode: (id: string, viewMode: EditorViewMode) => void;
   }>(`${meta.id}/capability/state`);
 
+  // TODO(burdon): Move to ./types (external API)?
   export const Extensions = defineCapability<MarkdownExtensionProvider[]>(`${meta.id}/capability/extensions`);
 }
