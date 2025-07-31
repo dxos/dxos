@@ -18,3 +18,6 @@ export const meta: PluginMeta = {
   icon: 'ph--text-aa--regular',
   screenshots: ['https://dxos.network/plugin-details-markdown-dark.png'],
 };
+
+// TODO(burdon): Workaround for suspected vitest bug?
+export const not_meta = meta;
