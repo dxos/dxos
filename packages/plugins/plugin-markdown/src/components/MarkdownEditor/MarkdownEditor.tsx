@@ -50,10 +50,10 @@ import { type MarkdownPluginState } from '../../types';
 export type MarkdownEditorProps = {
   id: string;
   role?: string;
+  toolbar?: boolean;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   slashCommandGroups?: CommandMenuGroup[];
-  toolbar?: boolean;
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
   viewMode?: EditorViewMode;

@@ -8,7 +8,10 @@ import { Type } from '@dxos/echo';
 import { EditorViewMode } from '@dxos/react-ui-editor/types';
 
 import { Document } from './markdown';
-import { meta } from '../meta';
+
+// TODO(burdon): This creates the vitest error. Rename meta.ts?
+// import { meta } from '../meta';
+const meta = { id: 'dxos.org/plugin/markdown' };
 
 export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
   input: Schema.Struct({

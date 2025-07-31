@@ -20,7 +20,7 @@ import { isEditorModel } from '../util';
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${meta.id}/document`,
+      id: `${meta.id}/surface/document`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
@@ -47,7 +47,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${meta.id}/text`,
+      id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: DataType.Text } =>
         typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
@@ -73,7 +73,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${meta.id}/editor`,
+      id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
       component: ({ data, role }) => {
@@ -98,14 +98,14 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${meta.id}/plugin-settings`,
+      id: `${meta.id}/surface/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${meta.id}/preview`,
+      id: `${meta.id}/surface/preview`,
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
       filter: (data): data is { subject: Markdown.Document | DataType.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),

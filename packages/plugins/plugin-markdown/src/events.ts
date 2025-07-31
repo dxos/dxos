@@ -7,5 +7,5 @@ import { Events } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export namespace MarkdownEvents {
-  export const SetupExtensions = Events.createStateEvent(`${meta.id}/setup-extensions`);
+  export const SetupExtensions = Events.createStateEvent(`${meta.id}/event/setup-extensions`);
 }
