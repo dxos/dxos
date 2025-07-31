@@ -6,8 +6,8 @@ import { Effect, Schema } from 'effect';
 
 import { Obj, type Ref } from '@dxos/echo';
 import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
+import { RemoteFunctionExecutionService } from '@dxos/functions';
 
-import { FunctionCallService } from '../services';
 import { type ComputeRequirements } from '../types';
 
 export const resolveFunctionPath = async (fnRef?: Ref.Ref<FunctionType>): Promise<{ path: string }> => {
@@ -30,7 +30,7 @@ export const executeFunction = (
   outputSchema: Schema.Schema.AnyNoContext,
 ): Effect.Effect<any, any, ComputeRequirements> => {
   return Effect.gen(function* () {
-    const functionCallService = yield* FunctionCallService;
+    const functionCallService = yield* RemoteFunctionExecutionService;
 
     const result = yield* Effect.tryPromise({
       try: () => functionCallService.callFunction(path, input),

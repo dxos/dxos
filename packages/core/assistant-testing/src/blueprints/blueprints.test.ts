@@ -10,7 +10,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Conversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DocumentType } from '@dxos/plugin-markdown/types';
@@ -77,9 +77,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-            Layer.provideMerge(AiServiceTestingPreset('direct')),
-          ),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+        ).pipe(
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(LocalFunctionExecutionService.layer),
         ),
       ),
     ),
@@ -174,9 +175,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Blueprint', { timeout: 12
           TestDatabaseLayer({ types: [DocumentType, DataType.Text, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-            Layer.provideMerge(AiServiceTestingPreset('direct')),
-          ),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+        ).pipe(
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(LocalFunctionExecutionService.layer),
         ),
       ),
     ),

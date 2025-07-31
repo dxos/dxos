@@ -11,7 +11,7 @@ import { type GenerateRequest, type GenerationStreamEvent, type GenerateResponse
 /**
  * AI Model Factory.
  */
-export class AiService extends Context.Tag('AiService')<
+export class AiService extends Context.Tag('@dxos/ai/AiService')<
   AiService,
   {
     readonly model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
