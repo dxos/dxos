@@ -8,12 +8,18 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import main, { type EsbuildExecutorOptions } from './main';
+import { updatePackageExports } from './update-package-exports';
 
 void (async () => {
   try {
     const argv: any = yargs(hideBin(process.argv))
       .scriptName('dx-compile')
       .usage('$0 [options]')
+      .option('updatePackageExports', {
+        type: 'boolean',
+        default: false,
+        describe: 'Update package.json exports instead of building.',
+      })
       .option('bundle', { type: 'boolean', default: true, describe: 'Bundle the build output' })
       .option('bundlePackage', { type: 'array', default: [], describe: 'Packages to include in the bundle' })
       .option('ignorePackage', { type: 'array', default: [], describe: 'Packages to ignore when bundling' })
@@ -29,6 +35,7 @@ void (async () => {
       .option('alias', { type: 'string', default: '{}', describe: 'Alias imports (JSON string)' })
       .option('preactSignalTracking', { type: 'boolean', default: false, describe: 'Enable preact signal tracking' })
       .help().argv;
+
 
     // Parse alias JSON string if provided.
     let alias: Record<string, string> = {};
@@ -55,6 +62,13 @@ void (async () => {
       preactSignalTracking: argv.preactSignalTracking as boolean,
       verbose: argv.verbose as boolean,
     };
+
+
+    if (argv.updatePackageExports) {
+      await updatePackageExports(options);
+      process.exit(0);
+    }
+
     const result = await main(options);
     process.exit(result.success ? 0 : 1);
   } catch (err) {
