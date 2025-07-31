@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { EsbuildExecutorOptions } from './main';
 import { join } from 'node:path';
 
