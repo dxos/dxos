@@ -22,10 +22,6 @@ export const DocumentType = Schema.Struct({
 
 export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
 
-// TODO(burdon): Replace when defaults are supported.
-export const createDocument = ({ name, content }: { name: string; content: string }) =>
-  Obj.make(DocumentType, { name, content: Ref.make(Obj.make(DataType.Text, { content })) });
-
 /**
  * Checks if an object conforms to the interface needed to render an editor.
  */

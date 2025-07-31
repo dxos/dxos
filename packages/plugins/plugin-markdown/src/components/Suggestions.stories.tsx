@@ -41,7 +41,7 @@ import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { translations } from '../translations';
-import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
+import { Markdown, DocumentType, type MarkdownSettingsProps } from '../types';
 
 faker.seed(1);
 
@@ -130,10 +130,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     }
 
     const doc = space.db.add(
-      createDocument({
+      Markdown.make({
         name: 'Test',
-
-        // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
           const dxn = Ref.make(obj).dxn.toString();
