@@ -149,11 +149,12 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx(classNames)}>
       {readonly && (
-        <div role='none' className={mx('is-full', outerSpacing && 'plb-cardSpacingBlock pli-cardSpacingInline')}>
-          <Callout.Root valence='info'>
-            <Callout.Title>{t('system schema description')}</Callout.Title>
-          </Callout.Root>
-        </div>
+        <Callout.Root
+          valence='info'
+          classNames={['is-full mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}
+        >
+          <Callout.Title>{t('system schema description')}</Callout.Title>
+        </Callout.Root>
       )}
 
       {/* TODO(burdon): Is the form read-only or just the schema? */}
