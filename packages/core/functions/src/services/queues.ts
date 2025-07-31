@@ -9,7 +9,7 @@ import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 /**
  * Gives access to all queues.
  */
-export class QueueService extends Context.Tag('QueueService')<
+export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   QueueService,
   {
     /**
@@ -42,12 +42,15 @@ export class QueueService extends Context.Tag('QueueService')<
       contextQueue,
     };
   };
+
+  static makeLayer = (queues: QueueFactory, contextQueue?: Queue): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues, contextQueue));
 }
 
 /**
  * Gives access to a specific queue passed as a context.
  */
-export class ContextQueueService extends Context.Tag('ContextQueueService')<
+export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
   ContextQueueService,
   {
     readonly contextQueue: Queue;

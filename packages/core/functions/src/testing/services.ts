@@ -12,7 +12,7 @@ import {
   ConfiguredCredentialsService,
   type CredentialsService,
   DatabaseService,
-  type EventLogger,
+  type ComputeEventLogger,
   QueueService,
   ServiceContainer,
   type ServiceCredential,
@@ -64,7 +64,7 @@ export type TestServiceOptions = {
    */
   logging?: {
     enabled?: boolean;
-    logger?: Context.Tag.Service<EventLogger>;
+    logger?: Context.Tag.Service<ComputeEventLogger>;
   };
 
   /**

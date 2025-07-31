@@ -2,41 +2,45 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import { Context, Layer } from 'effect';
 
 import type { SpaceId } from '@dxos/keys';
 
-export class FunctionCallService extends Context.Tag('FunctionCallService')<
-  FunctionCallService,
+/**
+ * Allows calling into other functions.
+ */
+export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions/RemoteFunctionExecutionService')<
+  RemoteFunctionExecutionService,
   {
     callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;
   }
 >() {
-  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<FunctionCallService> {
+  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<RemoteFunctionExecutionService> {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         const url = getInvocationUrl(deployedFunctionId, baseUrl, { spaceId });
-
         const result = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
         });
         if (result.status >= 300 || result.status < 200) {
-          throw new Error(`Failed to invoke function: ${await result.text()}`);
+          throw new Error('Failed to invoke function', { cause: new Error(`HTTP error: ${await result.text()}`) });
         }
         return await result.json();
       },
     };
   }
 
-  static mock = () => {
+  static mock = (): Context.Tag.Service<RemoteFunctionExecutionService> => {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         return input;
       },
     };
   };
+
+  static mockLayer = Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.mock());
 }
 
 // TODO(dmaretskyi): Reconcile with `getInvocationUrl` in `@dxos/functions/edge`.
