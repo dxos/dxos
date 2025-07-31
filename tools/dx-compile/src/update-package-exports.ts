@@ -11,6 +11,10 @@ export const updatePackageExports = async (options: EsbuildExecutorOptions) => {
       console.warn('Non confirming package exports/imports');
       return;
     }
+    if (!specifier.source.startsWith('./')) {
+      console.error('bad source specifier:', specifier.source);
+      process.exit(1);
+    }
 
     for (const key of Object.keys(specifier)) {
       if (key !== 'source') {
