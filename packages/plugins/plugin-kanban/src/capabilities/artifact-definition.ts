@@ -49,7 +49,7 @@ export default () => {
         caption: 'Creating kanban board...',
         schema: Schema.Struct({
           typename: Schema.String.annotations({
-            description: 'The fully qualified typename of the schema to use for the kanban cards.',
+            description: 'The fully qualified typename of the record to use for the kanban cards.',
           }),
           pivotColumn: Schema.optional(Schema.String).annotations({
             description: 'Optional field name to use as the column pivot.',
