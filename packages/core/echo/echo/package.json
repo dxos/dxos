@@ -10,40 +10,40 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./Type": {
+      "source": "./src/Type.ts",
       "types": "./dist/types/src/Type.d.ts",
       "browser": "./dist/lib/browser/Type.mjs",
-      "node": "./dist/lib/node-esm/Type.mjs",
-      "source": "./src/Type.ts"
+      "node": "./dist/lib/node-esm/Type.mjs"
     },
     "./Obj": {
+      "source": "./src/Obj.ts",
       "types": "./dist/types/src/Obj.d.ts",
       "browser": "./dist/lib/browser/Obj.mjs",
-      "node": "./dist/lib/node-esm/Obj.mjs",
-      "source": "./src/Obj.ts"
+      "node": "./dist/lib/node-esm/Obj.mjs"
     },
     "./Relation": {
+      "source": "./src/Relation.ts",
       "types": "./dist/types/src/Relation.d.ts",
       "browser": "./dist/lib/browser/Relation.mjs",
-      "node": "./dist/lib/node-esm/Relation.mjs",
-      "source": "./src/Relation.ts"
+      "node": "./dist/lib/node-esm/Relation.mjs"
     },
     "./Ref": {
+      "source": "./src/Ref.ts",
       "types": "./dist/types/src/Ref.d.ts",
       "browser": "./dist/lib/browser/Ref.mjs",
-      "node": "./dist/lib/node-esm/Ref.mjs",
-      "source": "./src/Ref.ts"
+      "node": "./dist/lib/node-esm/Ref.mjs"
     },
     "./testing": {
+      "source": "./src/testing/types.ts",
       "types": "./dist/types/src/testing/types.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs",
-      "source": "./src/testing/types.ts"
+      "browser": "./dist/lib/browser/testing/types.mjs",
+      "node": "./dist/lib/node-esm/testing/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
