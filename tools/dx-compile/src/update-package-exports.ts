@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 export const updatePackageExports = async (options: EsbuildExecutorOptions) => {
   const packageJson = JSON.parse(await readFile('package.json', 'utf-8'));
+  const before = JSON.stringify(packageJson);
 
   const updateSpecifier = (specifier: any) => {
     if (typeof specifier !== 'object' || typeof specifier.source !== 'string') {
@@ -42,5 +43,9 @@ export const updatePackageExports = async (options: EsbuildExecutorOptions) => {
     updateSpecifier(value);
   }
 
-  await writeFile('package.json', JSON.stringify(packageJson, null, 2));
+  const after = JSON.stringify(packageJson);
+  const changed = before !== after;
+
+  await writeFile('package.json', JSON.stringify(packageJson, null, 2) + '\n');
+  return changed;
 };

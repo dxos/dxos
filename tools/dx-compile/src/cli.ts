@@ -18,7 +18,7 @@ void (async () => {
       .option('updatePackageExports', {
         type: 'boolean',
         default: false,
-        describe: 'Update package.json exports instead of building.',
+        describe: 'Update package.json exports.',
       })
       .option('bundle', { type: 'boolean', default: true, describe: 'Bundle the build output' })
       .option('bundlePackage', { type: 'array', default: [], describe: 'Packages to include in the bundle' })
@@ -35,7 +35,6 @@ void (async () => {
       .option('alias', { type: 'string', default: '{}', describe: 'Alias imports (JSON string)' })
       .option('preactSignalTracking', { type: 'boolean', default: false, describe: 'Enable preact signal tracking' })
       .help().argv;
-
 
     // Parse alias JSON string if provided.
     let alias: Record<string, string> = {};
@@ -63,10 +62,14 @@ void (async () => {
       verbose: argv.verbose as boolean,
     };
 
-
     if (argv.updatePackageExports) {
-      await updatePackageExports(options);
-      process.exit(0);
+      const changed = await updatePackageExports(options);
+      if (changed && process.env.CI) {
+        console.error(
+          'Package json exports have changed. This is disallowed in CI. Please run `dx-compile --updatePackageExports` and commit the changes.',
+        );
+        process.exit(1);
+      }
     }
 
     const result = await main(options);
