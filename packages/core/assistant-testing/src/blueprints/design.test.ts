@@ -60,7 +60,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
             The store spec in ${Obj.getDXN(artifact)}
           `,
         });
-        log.info('spec 1', { doc: artifact });
+        log.info('spec', { doc: artifact });
         expect(artifact.content).not.toBe(prevContent);
         prevContent = artifact.content;
 
@@ -69,7 +69,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
             I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
           `,
         });
-        log.info('spec 2', { doc: artifact });
+        log.info('spec', { doc: artifact });
         expect(artifact.content).not.toBe(prevContent);
       },
       Effect.provide(

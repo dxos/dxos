@@ -19,6 +19,7 @@ import { trim } from '@dxos/util';
 
 import blueprint from './planning';
 import { readDocument, writeDocument } from '../functions';
+import { runSteps, type TestStep } from './testing';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
   it.effect.only(
@@ -27,8 +28,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
       function* ({ expect }) {
         const { queues } = yield* QueueService;
         const { db } = yield* DatabaseService;
-
-        const systemPrompt = 'You are a helpful assistant.';
 
         const conversation = new Conversation({
           queue: queues.create(),
@@ -49,32 +48,42 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
 
         const artifact = db.add(Document.make());
 
-        // TODO(burdon): Create assistant testing pattern.
-        const prompts = [
-          trim`
-            I'm building a shelf.
-            Maintain a shopping list here: ${Obj.getDXN(artifact)}
-            I need a hammer, nails, and a saw.
-          `,
-          trim`
-            I will need a board too.
-          `,
-          trim`
-            Actually I'm going to use screws and a screwdriver.
-          `,
+        let prevContent = artifact.content;
+        const testStep = async () => {
+          const content = await artifact.content.load();
+          log.info('spec', { doc: artifact.content.target?.content });
+          expect(content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        };
+
+        const systemPrompt = 'You are a helpful assistant.';
+        const steps: TestStep[] = [
+          {
+            systemPrompt,
+            prompt: trim`
+              I'm building a shelf.
+              Maintain a shopping list here: ${Obj.getDXN(artifact)}
+              I need a hammer, nails, and a saw.
+            `,
+            test: testStep,
+          },
+          {
+            systemPrompt,
+            prompt: trim`
+              I will need a board too.
+            `,
+            test: testStep,
+          },
+          {
+            systemPrompt,
+            prompt: trim`
+              Actually I'm going to use screws and a screwdriver.
+            `,
+            test: testStep,
+          },
         ];
 
-        let prevContent = artifact.content;
-        for (const prompt of prompts) {
-          yield* conversation.run({
-            systemPrompt,
-            prompt,
-          });
-          log.info('conv', { messages: yield* Effect.promise(() => conversation.getHistory()) });
-          log.info('spec', { doc: artifact.content.target?.content });
-          expect(artifact.content).not.toBe(prevContent);
-          prevContent = artifact.content;
-        }
+        yield* runSteps({ conversation, steps });
 
         const list = {
           hammer: false,
