@@ -7,12 +7,11 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Obj } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
@@ -50,11 +49,11 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [DocumentType, DataType.Text],
+    types: [Markdown.DocumentType, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        Obj.make(DocumentType, {
-          content: Ref.make(Obj.make(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+        Markdown.make({
+          content: '## Type here...\n\ntry the airplane mode switch.',
         }),
       );
     },

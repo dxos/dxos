@@ -34,12 +34,12 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(Markdown.Doc, doc)) {
+    if (!doc || !Obj.instanceOf(Markdown.DocumentType, doc)) {
       throw new Error('Document not found.');
     }
-    const { content } = yield* DatabaseService.loadRef(doc.content);
 
     // Create task manager and apply operations if provided.
+    const { content } = yield* DatabaseService.loadRef(doc.content);
     const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);

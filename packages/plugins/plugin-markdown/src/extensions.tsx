@@ -46,15 +46,15 @@ import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type Markdown, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: DocumentType;
+  document?: Markdown.DocumentType;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<DocumentType>;
+  query?: QueryResult<Markdown.DocumentType>;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;

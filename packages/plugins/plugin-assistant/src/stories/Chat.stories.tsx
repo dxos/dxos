@@ -26,7 +26,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
@@ -42,7 +42,6 @@ import {
   outliner,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
@@ -181,7 +180,7 @@ const ChatContainer = () => {
 const DocumentContainer = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const [document] = useQuery(space, Filter.type(DocumentType));
+  const [document] = useQuery(space, Filter.type(Markdown.DocumentType));
   if (!document?.content.target) {
     return null;
   }
@@ -278,7 +277,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Assistant.Chat, DocumentType, Blueprint.Blueprint],
+        types: [Markdown.DocumentType, Assistant.Chat, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -287,20 +286,14 @@ const getDecorators = ({
           //  ERROR: invariant violation: Database was not initialized with root object.
           await space.waitUntilReady();
 
-          // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(
+            // TODO(burdon): Assistant.makeChat()
             Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
           const binder = new ContextBinder(await chat.queue.load());
-
-          const doc = space.db.add(
-            Obj.make(DocumentType, {
-              name: 'Tasks',
-              content: Ref.make(Obj.make(DataType.Text, { content: '' })),
-            }),
-          );
+          const doc = space.db.add(Markdown.make({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }

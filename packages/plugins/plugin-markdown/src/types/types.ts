@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { type Extension } from '@dxos/react-ui-editor';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import { DocumentType } from './schema';
+import { Markdown } from './markdown';
 import { MARKDOWN_PLUGIN } from '../meta';
 
 const MARKDOWN_ACTION = `${MARKDOWN_PLUGIN}/action`;
@@ -21,7 +21,7 @@ export namespace MarkdownAction {
       content: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: DocumentType,
+      object: Markdown.DocumentType,
     }),
   }) {}
 
@@ -37,7 +37,7 @@ export namespace MarkdownAction {
 export type MarkdownProperties = Record<string, any>;
 
 // TODO(burdon): Async.
-export type MarkdownExtensionProvider = (props: { document?: DocumentType }) => Extension | undefined;
+export type MarkdownExtensionProvider = (props: { document?: Markdown.DocumentType }) => Extension | undefined;
 
 export type OnChange = (text: string) => void;
 

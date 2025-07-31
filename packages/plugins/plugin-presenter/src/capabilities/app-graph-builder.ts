@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -32,8 +32,8 @@ export default (context: PluginContext) =>
                 rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value),
               );
               const isPresentable = settings?.presentCollections
-                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(DocumentType, node.data)
-                : Obj.instanceOf(DocumentType, node.data);
+                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.DocumentType, node.data)
+                : Obj.instanceOf(Markdown.DocumentType, node.data);
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {

@@ -3,13 +3,13 @@
 //
 import React, { type FC } from 'react';
 
-import { type DocumentType } from '@dxos/plugin-markdown/types';
+import { type Markdown } from '@dxos/plugin-markdown/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { RevealPlayer } from './RevealPlayer';
 import { useExitPresenter } from '../useExitPresenter';
 
-const DocumentPresenterContainer: FC<{ document: DocumentType }> = ({ document }) => {
+const DocumentPresenterContainer: FC<{ document: Markdown.DocumentType }> = ({ document }) => {
   const handleExit = useExitPresenter(document);
 
   return (

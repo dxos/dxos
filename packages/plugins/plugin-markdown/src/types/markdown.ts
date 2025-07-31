@@ -8,7 +8,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
-export const DocumentType = Schema.Struct({
+export const DocumentType$ = Schema.Struct({
   name: Schema.optional(Schema.String),
   fallbackName: Schema.optional(Schema.String),
   content: Type.Ref(DataType.Text),
@@ -20,7 +20,7 @@ export const DocumentType = Schema.Struct({
   LabelAnnotation.set(['name', 'fallbackName']),
 );
 
-export type DocumentType = Schema.Schema.Type<typeof DocumentType>;
+export type DocumentType$ = Schema.Schema.Type<typeof DocumentType$>;
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
@@ -35,8 +35,11 @@ export const isEditorModel = (data: any): data is { id: string; text: string } =
   typeof data.text === 'string';
 
 export namespace Markdown {
-  export const Doc = DocumentType;
-  export type Doc = DocumentType;
+  export const DocumentType = DocumentType$;
+  export type DocumentType = DocumentType$;
+
+  // TODO(burdon): Use unifomly.
   export const make = ({ name, content = '' }: Partial<{ name: string; content: string }> = {}) =>
+    // TODO(burdon): Use .text().
     Obj.make(DocumentType, { name, content: Ref.make(Obj.make(DataType.Text, { content })) });
 }

@@ -8,7 +8,7 @@ import { computed, effect } from '@preact/signals-core';
 
 import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { type DocumentType } from '@dxos/plugin-markdown/types';
+import { type Markdown } from '@dxos/plugin-markdown/types';
 import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo } from '@dxos/schema';
@@ -16,7 +16,7 @@ import { AnchoredTo } from '@dxos/schema';
 import { ThreadAction, ThreadType, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
-const getName = (doc: DocumentType, anchor: string): string | undefined => {
+const getName = (doc: Markdown.DocumentType, anchor: string): string | undefined => {
   if (doc.content) {
     const [start, end] = anchor.split(':');
     return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
@@ -26,7 +26,11 @@ const getName = (doc: DocumentType, anchor: string): string | undefined => {
 /**
  * Construct plugins.
  */
-export const threads = (state: ThreadState, doc?: DocumentType, dispatch?: PromiseIntentDispatcher): Extension => {
+export const threads = (
+  state: ThreadState,
+  doc?: Markdown.DocumentType,
+  dispatch?: PromiseIntentDispatcher,
+): Extension => {
   const space = doc && getSpace(doc);
   if (!doc || !space || !dispatch) {
     // Include no-op comments extension here to ensure that the facets are always present when they are expected.
