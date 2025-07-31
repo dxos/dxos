@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './schema';
+export * as Document from './document';
 export * from './types';

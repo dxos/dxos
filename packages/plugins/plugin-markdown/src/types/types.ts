@@ -8,10 +8,10 @@ import { Type } from '@dxos/echo';
 import { type Extension } from '@dxos/react-ui-editor';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import { Document } from './schema';
+import { Document } from './document';
 import { meta } from '../meta';
 
-// TODO(burdon): Single Markdown namespace.
+// TODO(burdon): Single Markdown namespace?
 
 export namespace MarkdownAction {
   export class Create extends Schema.TaggedClass<Create>()(`${meta}/action/create`, {
@@ -21,7 +21,7 @@ export namespace MarkdownAction {
       content: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Document.Document,
+      object: Document,
     }),
   }) {}
 
@@ -36,7 +36,7 @@ export namespace MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-export type MarkdownExtensionProvider = (props: { document?: Document.Document }) => Extension | undefined;
+export type MarkdownExtensionProvider = (props: { document?: Document }) => Extension | undefined;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.

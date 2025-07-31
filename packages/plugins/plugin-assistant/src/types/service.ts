@@ -9,6 +9,8 @@ import { Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 import { FunctionType } from '@dxos/functions';
 
+export const LLM_PROVIDERS = ['edge', 'ollama', 'lmstudio'] as const;
+
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),
   key: Schema.String,

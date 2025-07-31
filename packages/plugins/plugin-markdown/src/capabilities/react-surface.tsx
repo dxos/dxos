@@ -16,6 +16,7 @@ import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../compone
 import { MARKDOWN_PLUGIN } from '../meta';
 import { Document, type MarkdownSettingsProps } from '../types';
 
+// TODO(burdon): Normalize cases to assume Document.Document?
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
@@ -74,8 +75,7 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/editor`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: { id: string; text: string } } =>
-        Obj.instanceOf(Document.Document, data.subject),
+      filter: (data): data is { subject: { id: string; text: string } } => Document.isEditorModel(data.subject),
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);

@@ -24,7 +24,7 @@ export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
   Schema.annotations({ title: 'Space' }),
 );
 
-// TODO(dmaretskyi): Move to @dxos/echo-schema.
+// TODO(dmaretskyi): Move to @dxos/echo-schema and/or @dxos/echo.
 export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
   Schema.filter((x) => isLiveObject(x)),
   Schema.annotations({ title: 'Live' }),

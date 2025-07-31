@@ -137,6 +137,7 @@ export const useExtensions = ({
   return useMemo<Extension[]>(
     () =>
       [
+        // TODO(burdon): Abstract away the two cases for EditorModel and document.
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
         document &&
           createDataExtensions({
