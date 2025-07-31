@@ -211,7 +211,7 @@ const DocumentContainer = () => {
 const BlueprintContainer = () => {
   const space = useSpace();
   const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
-  if (!blueprint?.instructions.target) {
+  if (!blueprint?.instructions) {
     return null;
   }
 
@@ -220,7 +220,7 @@ const BlueprintContainer = () => {
       <Toolbar.Root classNames='border-b border-subduedSeparator'>
         <h2>{Obj.getLabel(blueprint)}</h2>
       </Toolbar.Root>
-      <TemplateEditor template={blueprint.instructions.target} />
+      <TemplateEditor id={blueprint.id} template={blueprint.instructions} />
     </div>
   );
 };

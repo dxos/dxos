@@ -13,7 +13,6 @@ import {
   type PromiseIntentDispatcher,
   type PluginContext,
 } from '@dxos/app-framework';
-import { Template } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -21,16 +20,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
 import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import {
-  type Space,
-  Filter,
-  Query,
-  type QueryResult,
-  fullyQualifiedId,
-  getSpace,
-  isSpace,
-} from '@dxos/react-client/echo';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { type Space, Filter, Query, type QueryResult, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
@@ -151,81 +142,6 @@ export default (context: PluginContext) =>
             Option.getOrElse(() => []),
           ),
         ),
-    }),
-
-    createExtension({
-      id: `${meta.id}/root`,
-      connector: (node) => {
-        let query: QueryResult<Template.Template> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(Template.Template));
-              }
-
-              const templates = get(rxFromQuery(query));
-              return templates.length > 0
-                ? [
-                    {
-                      id: `${meta.id}/templates`,
-                      type: `${meta.id}/templates`,
-                      data: null,
-                      properties: {
-                        label: ['templates label', { ns: meta.id }],
-                        icon: 'ph--file-code--regular',
-                        space,
-                      },
-                    },
-                  ]
-                : [];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
-    createExtension({
-      id: `${meta.id}/templates`,
-      connector: (node) => {
-        let query: QueryResult<Template.Template> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.id === `${meta.id}/templates` && isSpace(node.properties.space)
-                ? Option.some(node.properties.space)
-                : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(Template.Template));
-              }
-              return get(rxFromQuery(query))
-                .toSorted((a, b) => {
-                  const nameA = a.name ?? '';
-                  const nameB = b.name ?? '';
-                  return nameA.localeCompare(nameB);
-                })
-                .map((template) => ({
-                  id: fullyQualifiedId(template),
-                  type: `${meta.id}/template`,
-                  data: template,
-                  properties: {
-                    label: template.name ?? ['object placeholder', { ns: meta.id }],
-                    icon: 'ph--file-code--regular',
-                  },
-                }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
     }),
   ]);
 

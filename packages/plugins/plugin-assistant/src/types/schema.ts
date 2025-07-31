@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+import { Blueprint } from '@dxos/blueprints';
 import { SpaceSchema, Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -81,6 +82,18 @@ export namespace Assistant {
     }),
     output: Schema.Struct({
       object: Assistant.Chat,
+    }),
+  }) {}
+
+  export const BlueprintForm = Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+  });
+
+  export class CreateBlueprint extends Schema.TaggedClass<CreateBlueprint>()(`${meta.id}/action/create-blueprint`, {
+    input: BlueprintForm,
+    output: Schema.Struct({
+      object: Blueprint.Blueprint,
     }),
   }) {}
 

@@ -25,16 +25,18 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-help": "workspace:*",
-    "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
+    "@tauri-apps/plugin-os": "^2.3.0",
+    "@tauri-apps/plugin-process": "^2.3.0",
+    "@tauri-apps/plugin-updater": "^2.9.0",
     "effect": "3.17.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "effect": "^3.13.3"
   },
   "publishConfig": {

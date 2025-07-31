@@ -27,10 +27,7 @@
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../plugin-help"
-    },
-    {
-      "path": "../plugin-navtree"
+      "path": "../../ui/react-ui"
     }
   ]
 }

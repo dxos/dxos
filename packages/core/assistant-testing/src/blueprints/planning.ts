@@ -3,8 +3,9 @@
 //
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readDocument, writeDocument } from '../functions';
@@ -13,9 +14,9 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
-  instructions: Ref.make(
-    Template.make({
-      source: trim`
+  instructions: {
+    source: Ref.make(
+      DataType.text(trim`
         You are a planning agent that manages complex tasks by creating and maintaining a markdown planning document.
 
         ## Core Responsibilities
@@ -57,9 +58,9 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
         - Be concise when discussing document updates
         - Focus on task execution rather than document management
         - Only mention document updates when they provide valuable context to the user
-      `,
-    }),
-  ),
+      `),
+    ),
+  },
   tools: [ToolId.make(readDocument.name), ToolId.make(writeDocument.name)],
 });
 
