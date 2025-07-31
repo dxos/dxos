@@ -55,6 +55,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",

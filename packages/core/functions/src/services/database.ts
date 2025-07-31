@@ -8,7 +8,7 @@ import type { Filter, Live, Obj, Query, Ref, Relation } from '@dxos/echo';
 import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
 
-export class DatabaseService extends Context.Tag('DatabaseService')<
+export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,
   {
     readonly db: EchoDatabase;
@@ -26,6 +26,10 @@ export class DatabaseService extends Context.Tag('DatabaseService')<
         return db;
       },
     };
+  };
+
+  static makeLayer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
+    return Layer.succeed(DatabaseService, DatabaseService.make(db));
   };
 
   static resolve: (dxn: DXN) => Effect.Effect<Obj.Any | Relation.Any, Error, DatabaseService> = Effect.fn(

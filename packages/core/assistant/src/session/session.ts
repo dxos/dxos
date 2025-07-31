@@ -305,7 +305,7 @@ const createArtifactUpdateBlock = (
  * Can be optionally provided to the session run call.
  */
 // TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('ArtifactDiffResolver')<
+export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
   ArtifactDiffResolver,
   ArtifactDiffResolver.Service
 >() {}

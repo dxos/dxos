@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Layer } from 'effect';
+
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -11,6 +14,7 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, ServiceType } from './types';
@@ -108,5 +112,13 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Should occur before the chat is loaded when surfaces activation is more granular.
       activatesBefore: [Events.SetupArtifactDefinition],
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ai-service`,
+      activatesOn: Events.Startup,
+      activate: () => [
+        // TODO(dmaretskyi): Read config from settings.
+        contributes(AssistantCapabilities.AiServiceLayer, AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
+      ],
     }),
   ]);

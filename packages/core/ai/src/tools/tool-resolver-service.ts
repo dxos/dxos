@@ -9,7 +9,7 @@ import { type ToolId } from '../deprecated/tools';
 import { AiToolNotFoundError } from '../errors';
 
 // TODO(burdon): Ai prefix?
-export class ToolResolverService extends Context.Tag('ToolResolverService')<
+export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverService')<
   ToolResolverService,
   {
     readonly resolve: (id: ToolId) => Effect.Effect<AiTool.Any, AiToolNotFoundError>;

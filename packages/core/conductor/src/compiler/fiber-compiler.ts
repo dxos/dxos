@@ -9,10 +9,12 @@ import { raise } from '@dxos/debug';
 import {
   CredentialsService,
   DatabaseService,
-  FunctionCallService,
+  RemoteFunctionExecutionService,
   QueueService,
   TracingService,
+  ComputeEventLogger,
 } from '@dxos/functions';
+import { createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -25,7 +27,6 @@ import {
   type TopologyNode,
 } from './topology';
 import { ComputeNodeError, ValueValidationError } from '../errors';
-import { createDefectLogger, EventLogger } from '../services';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
@@ -126,7 +127,7 @@ export const compile = async ({
           invariant(ValueBag.isValueBag(input));
 
           const instance = executor.clone();
-          const logger = yield* EventLogger;
+          const logger = yield* ComputeEventLogger;
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
           logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: Object.keys(input.values) });
@@ -317,7 +318,7 @@ export class GraphExecutor {
         ),
       );
 
-      const logger = yield* EventLogger;
+      const logger = yield* ComputeEventLogger;
       logger.log({
         type: 'compute-input',
         nodeId,
@@ -340,11 +341,11 @@ export class GraphExecutor {
       // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
       const layer = Layer.mergeAll(
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
-        Layer.succeed(EventLogger, yield* EventLogger),
+        Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
         Layer.succeed(AiService, yield* AiService),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
-        Layer.succeed(FunctionCallService, yield* FunctionCallService),
+        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
         Layer.succeed(TracingService, yield* TracingService),
         Layer.succeed(QueueService, yield* QueueService),
       );
@@ -370,7 +371,7 @@ export class GraphExecutor {
       const value = yield* ValueBag.get(output, prop);
       invariant(!Effect.isEffect(value));
 
-      const logger = yield* EventLogger;
+      const logger = yield* ComputeEventLogger;
       logger.log({
         type: 'compute-output',
         nodeId,
@@ -406,7 +407,7 @@ export class GraphExecutor {
           throw new Error(`No compute function for node type: ${node.graphNode.type}`);
         }
 
-        const logger = yield* EventLogger;
+        const logger = yield* ComputeEventLogger;
         logger.log({
           type: 'begin-compute',
           nodeId: node.id,
@@ -423,7 +424,7 @@ export class GraphExecutor {
               : new ComputeNodeError('Compute node failed', { cause, context: { nodeId } }),
           ),
           Effect.withSpan('call-node'),
-          Effect.provideService(EventLogger, {
+          Effect.provideService(ComputeEventLogger, {
             log: logger.log,
             nodeId: node.id,
           }),

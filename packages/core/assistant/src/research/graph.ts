@@ -134,7 +134,7 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
 /**
  * Attached as an annotation to the writer tool.
  */
-class GraphWriterSchema extends Context.Tag('GraphWriterSchema')<
+class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')<
   GraphWriterSchema,
   { schema: Schema.Schema.AnyNoContext[] }
 >() {}
