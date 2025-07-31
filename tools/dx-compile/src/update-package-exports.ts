@@ -16,20 +16,20 @@ export const updatePackageExports = async (options: EsbuildExecutorOptions) => {
         delete specifier[key];
       }
     }
-    specifier.types = join('./dist/types', specifier.source.replace(/\.ts$/, '.d.ts').replace(/\.tsx$/, '.d.ts'));
+    specifier.types = './' + join('dist/types', specifier.source.replace(/\.ts$/, '.d.ts').replace(/\.tsx$/, '.d.ts'));
 
     for (const platform of options.platforms) {
-      const distSlug = specifier.source.replace(/^src\//, '').replace(/\.tsx?$/, '') + '.mjs';
+      const distSlug = specifier.source.replace(/^\.\/src\//, '').replace(/\.tsx?$/, '') + '.mjs';
 
       switch (platform) {
         case 'node':
-          specifier.node = join('./dist/lib/node-esm', distSlug);
+          specifier.node = './' + join('dist/lib/node-esm', distSlug);
           break;
         case 'browser':
-          specifier.browser = join('./dist/lib/browser', distSlug);
+          specifier.browser = './' + join('dist/lib/browser', distSlug);
           break;
         case 'neutral':
-          specifier.default = join('./dist/lib/neutral', distSlug);
+          specifier.default = './' + join('dist/lib/neutral', distSlug);
           break;
       }
     }
