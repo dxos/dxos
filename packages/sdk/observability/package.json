@@ -12,17 +12,20 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     },
     "./segment": {
       "types": "./dist/types/src/segment/index.d.ts",
       "browser": "./dist/lib/browser/segment/index.mjs",
-      "node": "./dist/lib/node-esm/segment/index.mjs"
+      "node": "./dist/lib/node-esm/segment/index.mjs",
+      "source": "./src/segment/index.ts"
     },
     "./sentry": {
       "types": "./dist/types/src/sentry/index.d.ts",
       "browser": "./dist/lib/browser/sentry/index.mjs",
-      "node": "./dist/lib/node-esm/sentry/index.mjs"
+      "node": "./dist/lib/node-esm/sentry/index.mjs",
+      "source": "./src/sentry/index.ts"
     }
   },
   "browser": {

@@ -11,7 +11,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",

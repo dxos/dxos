@@ -12,17 +12,20 @@
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     },
     "./muxer": {
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
       "browser": "./dist/lib/browser/edge-ws-muxer.mjs",
-      "node": "./dist/lib/node-esm/edge-ws-muxer.mjs"
+      "node": "./dist/lib/node-esm/edge-ws-muxer.mjs",
+      "source": "./src/edge-ws-muxer.ts"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
