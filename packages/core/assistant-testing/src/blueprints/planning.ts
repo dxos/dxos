@@ -16,7 +16,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   description: 'Plans and tracks complex tasks with artifact management.',
   instructions: {
     source: Ref.make(
-      DataType.text(trim`
+      DataType.makeText(trim`
         You are a planning agent that manages complex tasks by creating and maintaining a markdown planning document.
 
         ## Core Responsibilities

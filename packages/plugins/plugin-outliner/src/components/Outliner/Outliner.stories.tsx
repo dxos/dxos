@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
@@ -45,6 +44,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: Obj.make(DataType.Text, { content: '- [x] Initial content' }),
+    text: DataType.makeText('- [x] Initial content'),
   },
 };

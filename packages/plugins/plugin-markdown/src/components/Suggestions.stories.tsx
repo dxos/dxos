@@ -130,7 +130,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     }
 
     const doc = space.db.add(
-      Markdown.make({
+      Markdown.makeDocument({
         name: 'Test',
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));

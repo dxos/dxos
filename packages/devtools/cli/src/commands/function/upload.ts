@@ -166,7 +166,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         this.log(`Updated source of ${script.id}`);
       }
     } else {
-      const sourceObj = space.db.add(Obj.make(DataType.Text, { content: scriptFileContent }));
+      const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
       const obj = space.db.add(
         Obj.make(ScriptType, { name: this.flags.name ?? scriptFileName, source: Ref.make(sourceObj) }),
       );

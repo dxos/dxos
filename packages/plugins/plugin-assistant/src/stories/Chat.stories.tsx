@@ -293,7 +293,7 @@ const getDecorators = ({
             }),
           );
           const binder = new ContextBinder(await chat.queue.load());
-          const doc = space.db.add(Markdown.make({ name: 'Tasks' }));
+          const doc = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }

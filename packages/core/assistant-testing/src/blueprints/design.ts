@@ -16,7 +16,7 @@ const blueprint = Obj.make(Blueprint.Blueprint, {
   description: 'Preserve the conversation in the design spec.',
   instructions: {
     source: Ref.make(
-      DataType.text(trim`
+      DataType.makeText(trim`
         You manage a design spec based on the conversation.
         The design spec is a markdown document that is used to record the tasks.
         The design spec document follows a hierarchical structure, with nested markdown bulleted sections.

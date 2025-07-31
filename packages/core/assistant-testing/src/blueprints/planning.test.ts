@@ -46,7 +46,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         db.add(blueprint);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-        const artifact = db.add(Markdown.make());
+        const artifact = db.add(Markdown.makeDocument());
 
         let prevContent = artifact.content;
         const matchList =

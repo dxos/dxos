@@ -13,8 +13,7 @@ import {
   type PluginContext,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 
 import { MarkdownCapabilities } from './capabilities';
 import { Markdown, MarkdownAction } from '../types';
@@ -24,12 +23,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        const doc = Obj.make(Markdown.Document, {
-          name,
-          content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
-        });
-
-        return { data: { object: doc } };
+        return { data: { object: Markdown.makeDocument({ name, content }) } };
       },
     }),
     createResolver({

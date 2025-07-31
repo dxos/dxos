@@ -20,13 +20,9 @@ export default async (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   const defaultSpace = client.spaces.default;
 
-  const readme = Obj.make(Markdown.Document, {
+  const readme = Markdown.makeDocument({
     name: INITIAL_DOC_TITLE,
-    content: Ref.make(
-      Obj.make(DataType.Text, {
-        content: INITIAL_CONTENT.join('\n\n'),
-      }),
-    ),
+    content: INITIAL_CONTENT.join('\n\n'),
   });
 
   const defaultSpaceCollection = defaultSpace.properties[DataType.Collection.typename].target;

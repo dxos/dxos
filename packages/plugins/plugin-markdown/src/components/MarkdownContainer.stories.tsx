@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, contributes, IntentPlugin, SettingsPlugin, Surface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Query, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -57,10 +57,7 @@ const meta: Meta<typeof DefaultStory> = {
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            const doc = Obj.make(Markdown.Document, {
-              name: 'Test',
-              content: Ref.make(Obj.make(DataType.Text, { content: '# Test\n\n' })),
-            });
+            const doc = Markdown.makeDocument({ name: 'Test', content: '# Test\n\n' });
             space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
             await createObjects([{ type: Testing.Contact, count: 10 }]);
