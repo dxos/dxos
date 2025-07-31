@@ -2,33 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineConfig, mergeConfig } from 'vitest/config';
-
+import storybookTest from '@storybook/addon-vitest/vitest-plugin';
+import { mergeConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import { baseConfig } from '../../vitest.base.config';
 
 export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
+  baseConfig({ cwd: __dirname, env: 'chromium' }),
+  // @ts-ignore
   defineConfig({
     test: {
-      setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // pnpm -w nx test stories --project=unit
-          test: {
-            name: 'unit',
-            environment: 'node',
+      projects: [{
+        test: {
+          name: 'storybook',
+          // Enable browser mode
+          browser: {
+            enabled: true,
+            // Make sure to install Playwright
+            provider: 'playwright',
+            headless: true,
+            instances: [{ browser: 'chromium' }],
           },
+          setupFiles: ['./.storybook/vitest.setup.ts'],
         },
-        {
-          test: {
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
-            },
-          },
-        },
-      ],
+        plugins: [
+          // @ts-ignore
+          storybookTest({
+            tags: { include: ['test'] },
+          }),
+        ],
+      }],
     },
-  }),
-);
+  }));

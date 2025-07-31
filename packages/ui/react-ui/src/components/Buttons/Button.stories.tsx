@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
+import { expect, userEvent, within, fn } from 'storybook/test';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { withSurfaceVariantsLayout, withTheme } from '../../testing';
@@ -38,13 +39,20 @@ const meta: Meta<typeof Button> = {
   render: DefaultStory,
   decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
+  tags: ['test'],
+  play: async ({ args, canvasElement }: any) => {
+    const canvas = within(canvasElement);
+    const buttons = canvas.getAllByRole('button');
+    await userEvent.click(buttons[0]);
+    await expect(args.onClick).toHaveBeenCalled();
+  },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const defaults: Story['args'] = { children: 'Test' };
+const defaults: Story['args'] = { children: 'Test', onClick: fn() };
 
 export const Default: Story = {
   args: { ...defaults, variant: 'default' },

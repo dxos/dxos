@@ -4,7 +4,6 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import react from '@vitejs/plugin-react-swc';
-import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -14,31 +13,11 @@ import wasm from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
+import { content, iconsDir, staticDir, stories } from './paths';
+
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
-const baseDir = resolve(__dirname, '../');
-const rootDir = resolve(baseDir, '../../');
-const staticDir = resolve(baseDir, './static');
-const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
-
-export const packages = resolve(rootDir, 'packages');
-export const storyFiles = '*.{mdx,stories.tsx}';
-export const contentFiles = '*.{ts,tsx,js,jsx,css}';
-export const modules = [
-  'apps/*/src/**',
-  'devtools/*/src/**',
-  'experimental/*/src/**',
-  'plugins/*/src/**',
-  'plugins/plugin-assistant/src/**',
-  'sdk/*/src/**',
-  'ui/*/src/**',
-];
-
-export const stories = modules.map((dir) => join(packages, dir, storyFiles));
-export const content = modules.map((dir) => join(packages, dir, contentFiles));
-
 if (isTrue(process.env.DX_DEBUG)) {
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify({ stories, content }, null, 2));
 }
 
@@ -82,7 +61,6 @@ export const createConfig = ({
    */
   viteFinal: async (config: InlineConfig, options: { configType?: string }) => {
     if (isTrue(process.env.DX_DEBUG)) {
-      // eslint-disable-next-line no-console
       console.log(JSON.stringify({ config, options }, null, 2));
     }
 
@@ -168,7 +146,6 @@ export const createConfig = ({
 const config = createConfig();
 
 if (isTrue(process.env.DX_DEBUG)) {
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify({ config }, null, 2));
 }
 

@@ -332,6 +332,9 @@ importers:
       pkg-up:
         specifier: ^3.1.0
         version: 3.1.0
+      playwright:
+        specifier: 1.54.1
+        version: 1.54.1
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
