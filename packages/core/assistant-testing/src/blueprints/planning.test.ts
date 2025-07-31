@@ -49,10 +49,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         const artifact = db.add(Document.make());
 
         let prevContent = artifact.content;
-        const testStep = async () => {
-          const content = await artifact.content.load();
+        const matchList = (list: Record<string, boolean>) => async () => {
+          const { content } = await artifact.content.load();
           log.info('spec', { doc: artifact.content.target?.content });
           expect(content).not.toBe(prevContent);
+          Object.entries(list).forEach(([item, expected]) => {
+            expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
+          });
+
           prevContent = artifact.content;
         };
 
@@ -65,39 +69,41 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               Maintain a shopping list here: ${Obj.getDXN(artifact)}
               I need a hammer, nails, and a saw.
             `,
-            test: testStep,
+            test: matchList({
+              hammer: true,
+              nails: true,
+              saw: true,
+            }),
           },
           {
             systemPrompt,
             prompt: trim`
               I will need a board too.
             `,
-            test: testStep,
+            test: matchList({
+              hammer: true,
+              nails: true,
+              saw: true,
+              board: true,
+            }),
           },
           {
             systemPrompt,
             prompt: trim`
               Actually I'm going to use screws and a screwdriver.
             `,
-            test: testStep,
+            test: matchList({
+              hammer: false,
+              nails: false,
+              saw: true,
+              board: true,
+              screwdriver: true,
+              screws: true,
+            }),
           },
         ];
 
         yield* runSteps({ conversation, steps });
-
-        const list = {
-          hammer: false,
-          nails: false,
-          saw: true,
-          board: true,
-          screwdriver: true,
-          screws: true,
-        };
-
-        const { content } = yield* Effect.promise(() => artifact.content.load());
-        Object.entries(list).forEach(([item, expected]) => {
-          expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
-        });
       },
       Effect.provide(
         Layer.mergeAll(
