@@ -13,7 +13,7 @@ import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { MARKDOWN_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getAbstract, getFallbackName } from '../../util';
 
@@ -37,7 +37,7 @@ const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string
 
 export const MarkdownPreview = ({ subject, role }: PreviewProps<Markdown.Document | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(MARKDOWN_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const snippet = getSnippet(subject, t('fallback abstract'));
 
   // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.

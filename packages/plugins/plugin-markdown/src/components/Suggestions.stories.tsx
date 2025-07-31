@@ -36,12 +36,12 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import MarkdownContainer from './MarkdownContainer';
+import { MarkdownContainer } from './MarkdownContainer';
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
-import { MARKDOWN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { translations } from '../translations';
-import { Markdown, type MarkdownSettingsProps } from '../types';
+import { Markdown } from '../types';
 
 faker.seed(1);
 
@@ -121,7 +121,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
   const [doc, setDoc] = useState<Markdown.Document>();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {
@@ -155,7 +155,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+// TODO(burdon): Make consistent.
+const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: DefaultStory,
   decorators: [
@@ -185,7 +186,7 @@ const meta: Meta<typeof DefaultStory> = {
   },
 };
 
-export default meta;
+export default storybook;
 
 type Story = Meta<typeof DefaultStory>;
 

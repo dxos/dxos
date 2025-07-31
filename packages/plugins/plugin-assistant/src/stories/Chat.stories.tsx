@@ -48,7 +48,7 @@ import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat, TemplateEditor, type ChatPromptProps } from '../components';
 import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
-import { meta as AssistantMeta } from '../meta';
+import { meta } from '../meta';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -90,7 +90,7 @@ const DefaultStory = ({ components }: { components: (FC | FC[])[] }) => {
 //
 
 const ChatContainer = () => {
-  const { t } = useTranslation(AssistantMeta.id);
+  const { t } = useTranslation(meta.id);
   const space = useSpace();
 
   const [chat, setChat] = useState<Assistant.Chat>();
@@ -229,7 +229,7 @@ const BlueprintContainer = () => {
 // Configuration
 //
 
-const meta = {
+const storybook = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
   decorators: [],
@@ -239,9 +239,9 @@ const meta = {
   },
 } satisfies Meta<typeof DefaultStory>;
 
-export default meta;
+export default storybook;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof storybook>;
 
 //
 // Decorators

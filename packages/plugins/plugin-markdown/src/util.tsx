@@ -6,7 +6,22 @@ import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
 
-import { Markdown, type MarkdownProperties } from './types';
+import { Markdown } from './types';
+
+/**
+ * Checks if an object conforms to the interface needed to render an editor.
+ * @deprecated Use Schema.instanceOf(Markdown.Document, data)
+ */
+// TODO(burdon): Normalize types (from FilesPlugin).
+export const isEditorModel = (data: any): data is { id: string; text: string } =>
+  data &&
+  typeof data === 'object' &&
+  'id' in data &&
+  typeof data.id === 'string' &&
+  'text' in data &&
+  typeof data.text === 'string';
+
+export type MarkdownProperties = Record<string, any>;
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
   (Obj.isObject(data) as boolean)

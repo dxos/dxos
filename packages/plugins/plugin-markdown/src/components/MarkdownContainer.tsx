@@ -25,7 +25,7 @@ import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
-import { Markdown, type MarkdownSettingsProps } from '../types';
+import { Markdown } from '../types';
 import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
@@ -34,11 +34,11 @@ export type MarkdownContainerProps = Pick<
 > & {
   id: string;
   object: Markdown.Document | DataType.Text | any;
-  settings: MarkdownSettingsProps;
+  settings: Markdown.Settings;
   selectionManager?: SelectionManager;
 };
 
-const MarkdownContainer = ({
+export const MarkdownContainer = ({
   id,
   role,
   object,

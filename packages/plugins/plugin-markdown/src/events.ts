@@ -4,8 +4,8 @@
 
 import { Events } from '@dxos/app-framework';
 
-import { MARKDOWN_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace MarkdownEvents {
-  export const SetupExtensions = Events.createStateEvent(`${MARKDOWN_PLUGIN}/setup-extensions`);
+  export const SetupExtensions = Events.createStateEvent(`${meta.id}/setup-extensions`);
 }

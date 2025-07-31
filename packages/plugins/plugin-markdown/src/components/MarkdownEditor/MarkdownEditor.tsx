@@ -44,7 +44,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { isNotFalsy, isNonNullable } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
-import { MARKDOWN_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type MarkdownPluginState } from '../../types';
 
 export type MarkdownEditorProps = {
@@ -147,7 +147,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(MARKDOWN_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const toolbarState = useEditorToolbarState({ viewMode });
     const formattingObserver = useFormattingState(toolbarState);
