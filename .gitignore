@@ -8,6 +8,7 @@ debug-storybook.log
 
 # Vitest
 vitest-results.json
+.vitest-results.json
 
 # Runtime data
 *.pid
