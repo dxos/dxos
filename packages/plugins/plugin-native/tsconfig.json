@@ -28,12 +28,6 @@
     },
     {
       "path": "../../ui/react-ui"
-    },
-    {
-      "path": "../plugin-help"
-    },
-    {
-      "path": "../plugin-navtree"
     }
   ]
 }
