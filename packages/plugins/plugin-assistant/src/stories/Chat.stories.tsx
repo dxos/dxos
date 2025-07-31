@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  TASK_BLUEPRINT,
+  PLANNING_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
   writeDocument,
@@ -114,7 +114,7 @@ const ChatContainer = () => {
   }, [presets]);
 
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
+  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, PLANNING_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -359,7 +359,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_BLUEPRINT],
+    blueprints: [PLANNING_BLUEPRINT],
     context: true,
   }),
   args: {
