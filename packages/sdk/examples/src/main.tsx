@@ -49,7 +49,7 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [Markdown.DocumentType, DataType.Text],
+    types: [Markdown.Document, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
         Markdown.make({

@@ -24,7 +24,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        const doc = Obj.make(Markdown.DocumentType, {
+        const doc = Obj.make(Markdown.Document, {
           name,
           content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
         });
@@ -44,8 +44,8 @@ export default (context: PluginContext) =>
       filter: (
         data,
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
-        target: Markdown.DocumentType;
-      } => Obj.instanceOf(Markdown.DocumentType, data.target),
+        target: Markdown.Document;
+      } => Obj.instanceOf(Markdown.Document, data.target),
       resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);

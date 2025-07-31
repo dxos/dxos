@@ -50,11 +50,11 @@ import { type Markdown, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: Markdown.DocumentType;
+  document?: Markdown.Document;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<Markdown.DocumentType>;
+  query?: QueryResult<Markdown.Document>;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;

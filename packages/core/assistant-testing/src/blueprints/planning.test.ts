@@ -103,7 +103,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text, Markdown.DocumentType, Blueprint.Blueprint] }),
+          TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),

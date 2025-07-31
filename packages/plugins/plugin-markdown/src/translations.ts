@@ -10,7 +10,7 @@ import { Markdown } from './types';
 export const translations = [
   {
     'en-US': {
-      [Markdown.DocumentType.typename]: {
+      [Markdown.Document.typename]: {
         'typename label': 'Document',
         'typename label_zero': 'Documents',
         'typename label_one': 'Document',

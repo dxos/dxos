@@ -10,9 +10,9 @@ import { Markdown } from '../types';
 
 export default () =>
   contributes(Capabilities.AnchorSort, {
-    key: Type.getTypename(Markdown.DocumentType)!,
+    key: Type.getTypename(Markdown.Document)!,
     sort: (anchorA, anchorB) => {
-      const doc = getTarget(anchorA) as Markdown.DocumentType;
+      const doc = getTarget(anchorA) as Markdown.Document;
       const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;
       if (doc !== getTarget(anchorB) || !accessor) {
         return 0;

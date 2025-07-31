@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [doc] = useQuery(space, Query.type(Markdown.DocumentType));
+  const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
 
   return <Surface role='article' data={data} />;
@@ -51,13 +51,13 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Markdown.DocumentType, DataType.Text, Testing.Contact],
+          types: [Markdown.Document, DataType.Text, Testing.Contact],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            const doc = Obj.make(Markdown.DocumentType, {
+            const doc = Obj.make(Markdown.Document, {
               name: 'Test',
               content: Ref.make(Obj.make(DataType.Text, { content: '# Test\n\n' })),
             });

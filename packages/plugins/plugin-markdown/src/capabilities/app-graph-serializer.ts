@@ -16,7 +16,7 @@ import { Markdown, MarkdownAction } from '../types';
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: Markdown.DocumentType.typename,
+      inputType: Markdown.Document.typename,
       outputType: 'text/markdown',
       // Reconcile with metadata serializers.
       serialize: async (node) => {
@@ -26,7 +26,7 @@ export default (context: PluginContext) =>
           name:
             doc.name ||
             doc.fallbackName ||
-            translations[0]['en-US'][Markdown.DocumentType.typename]['object name placeholder'],
+            translations[0]['en-US'][Markdown.Document.typename]['object name placeholder'],
           data: content.content,
           type: 'text/markdown',
         };

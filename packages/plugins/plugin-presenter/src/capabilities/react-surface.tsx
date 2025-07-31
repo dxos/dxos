@@ -25,8 +25,8 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: Markdown.DocumentType; variant: 'presenter' } =>
-        Obj.instanceOf(Markdown.DocumentType, data.subject) && data.variant === 'presenter',
+      filter: (data): data is { subject: Markdown.Document; variant: 'presenter' } =>
+        Obj.instanceOf(Markdown.Document, data.subject) && data.variant === 'presenter',
       component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
     }),
     createSurface({
@@ -40,7 +40,7 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: Markdown.DocumentType } => Obj.instanceOf(Markdown.DocumentType, data.subject),
+      filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

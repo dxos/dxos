@@ -53,11 +53,11 @@ export const createGenerator = <T extends Obj.Any>(
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    Markdown.DocumentType.typename,
+    Markdown.Document.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Obj.make(Markdown.DocumentType, {
+          Obj.make(Markdown.Document, {
             name: faker.commerce.productName(),
             content: Ref.make(Obj.make(DataType.Text, { content: faker.lorem.sentences(5) })),
           }),

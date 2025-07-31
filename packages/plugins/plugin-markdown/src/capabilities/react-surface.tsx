@@ -21,8 +21,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/document`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: Markdown.DocumentType; variant: undefined } =>
-        Obj.instanceOf(Markdown.DocumentType, data.subject) && !data.variant,
+      filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
+        Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
@@ -106,8 +106,8 @@ export default () =>
     createSurface({
       id: `${MARKDOWN_PLUGIN}/preview`,
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
-      filter: (data): data is { subject: Markdown.DocumentType | DataType.Text } =>
-        Obj.instanceOf(Markdown.DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
+      filter: (data): data is { subject: Markdown.Document | DataType.Text } =>
+        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
     }),
   ]);

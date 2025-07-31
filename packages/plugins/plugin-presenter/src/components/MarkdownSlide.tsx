@@ -8,7 +8,7 @@ import { type Markdown } from '@dxos/plugin-markdown/types';
 
 import { Container, Slide } from './Markdown';
 
-const MarkdownSlide: FC<{ document: Markdown.DocumentType }> = ({ document }) => {
+const MarkdownSlide: FC<{ document: Markdown.Document }> = ({ document }) => {
   const content = document.content.target?.content;
   if (!content) {
     return null;

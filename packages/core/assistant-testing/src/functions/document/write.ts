@@ -23,7 +23,7 @@ export default defineFunction({
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(Markdown.DocumentType, doc)) {
+    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
       throw new Error('Document not found.');
     }
 

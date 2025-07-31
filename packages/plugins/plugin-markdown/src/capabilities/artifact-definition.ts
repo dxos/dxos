@@ -33,7 +33,7 @@ export default () => {
       - Use these tools to interact with documents, including listing available documents and retrieving their content.
       - Documents are stored in Markdown format.
     `,
-    schema: Markdown.DocumentType,
+    schema: Markdown.Document,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -76,9 +76,9 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.type(Markdown.DocumentType)).run();
+          const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
           const documentInfo = documents.map((doc) => {
-            invariant(Obj.instanceOf(Markdown.DocumentType, doc));
+            invariant(Obj.instanceOf(Markdown.Document, doc));
             return {
               id: fullyQualifiedId(doc),
               name: doc.name || doc.fallbackName || 'Unnamed Document',
@@ -99,7 +99,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
-          assertArgument(Obj.instanceOf(Markdown.DocumentType, document), 'Invalid type');
+          assertArgument(Obj.instanceOf(Markdown.Document, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

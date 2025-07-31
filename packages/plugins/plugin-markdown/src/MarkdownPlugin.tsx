@@ -51,20 +51,20 @@ export const MarkdownPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: Markdown.DocumentType.typename,
+          id: Markdown.Document.typename,
           metadata: {
-            label: (object: Markdown.DocumentType) => object.name || object.fallbackName,
+            label: (object: Markdown.Document) => object.name || object.fallbackName,
             icon: 'ph--text-aa--regular',
             graphProps: {
               managesAutofocus: true,
             },
             // TODO(wittjosiah): Move out of metadata.
-            loadReferences: async (doc: Markdown.DocumentType) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
+            loadReferences: async (doc: Markdown.Document) => await Ref.Array.loadAll<Obj.Any>([doc.content]),
             serializer,
             // TODO(wittjosiah): Consider how to do generic comments without these.
             comments: 'anchored',
             selectionMode: 'multi-range',
-            getAnchorLabel: (doc: Markdown.DocumentType, anchor: string): string | undefined => {
+            getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
               if (doc.content) {
                 const [start, end] = anchor.split(':');
                 return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
@@ -80,7 +80,7 @@ export const MarkdownPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: Markdown.DocumentType,
+            objectSchema: Markdown.Document,
             getIntent: (_, { space }) => createIntent(MarkdownAction.Create, { spaceId: space.id }),
           }),
         ),

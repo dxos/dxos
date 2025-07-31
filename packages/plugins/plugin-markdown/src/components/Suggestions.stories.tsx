@@ -61,7 +61,7 @@ const TestItem = Schema.Struct({
   }),
 );
 
-const TestChat: FC<{ doc: Markdown.DocumentType; content: string }> = ({ doc, content }) => {
+const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
@@ -120,7 +120,7 @@ const TestChat: FC<{ doc: Markdown.DocumentType; content: string }> = ({ doc, co
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
-  const [doc, setDoc] = useState<Markdown.DocumentType>();
+  const [doc, setDoc] = useState<Markdown.Document>();
   const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
@@ -164,7 +164,7 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Markdown.DocumentType, TestItem],
+          types: [Markdown.Document, TestItem],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

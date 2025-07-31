@@ -47,7 +47,7 @@ const meta: Meta<typeof MarkdownPreview> = {
 export default meta;
 
 const data = (() => {
-  const document = Obj.make(Markdown.DocumentType, {
+  const document = Obj.make(Markdown.Document, {
     name: faker.lorem.words(3),
     content: Ref.make(
       Obj.make(DataType.Text, {
@@ -61,21 +61,21 @@ const data = (() => {
 
 export const Popover = {
   args: {
-    subject: Obj.make(Markdown.DocumentType, data.document),
+    subject: Obj.make(Markdown.Document, data.document),
     role: 'card--popover',
   },
 };
 
 export const Extrinsic = {
   args: {
-    subject: Obj.make(Markdown.DocumentType, data.document),
+    subject: Obj.make(Markdown.Document, data.document),
     role: 'card--extrinsic',
   },
 };
 
 export const Intrinsic = {
   args: {
-    subject: Obj.make(Markdown.DocumentType, data.document),
+    subject: Obj.make(Markdown.Document, data.document),
     role: 'card--intrinsic',
   },
 };

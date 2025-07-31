@@ -33,7 +33,7 @@ export type MarkdownContainerProps = Pick<
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: Markdown.DocumentType | DataType.Text | any;
+  object: Markdown.Document | DataType.Text | any;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
 };
@@ -50,7 +50,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = Obj.instanceOf(Markdown.DocumentType, object) ? object : undefined;
+  const doc = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
   const previewOptions = useMemo(
@@ -199,7 +199,7 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
   Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'> & {
-    document: Markdown.DocumentType;
+    document: Markdown.Document;
   };
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {

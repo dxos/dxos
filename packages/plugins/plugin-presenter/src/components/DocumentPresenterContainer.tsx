@@ -9,7 +9,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { RevealPlayer } from './RevealPlayer';
 import { useExitPresenter } from '../useExitPresenter';
 
-const DocumentPresenterContainer: FC<{ document: Markdown.DocumentType }> = ({ document }) => {
+const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {
   const handleExit = useExitPresenter(document);
 
   return (

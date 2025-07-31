@@ -32,8 +32,8 @@ export default (context: PluginContext) =>
                 rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value),
               );
               const isPresentable = settings?.presentCollections
-                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.DocumentType, node.data)
-                : Obj.instanceOf(Markdown.DocumentType, node.data);
+                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
+                : Obj.instanceOf(Markdown.Document, node.data);
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {

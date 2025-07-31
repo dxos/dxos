@@ -180,7 +180,7 @@ const ChatContainer = () => {
 const DocumentContainer = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const [document] = useQuery(space, Filter.type(Markdown.DocumentType));
+  const [document] = useQuery(space, Filter.type(Markdown.Document));
   if (!document?.content.target) {
     return null;
   }
@@ -277,7 +277,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Markdown.DocumentType, Assistant.Chat, Blueprint.Blueprint],
+        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();

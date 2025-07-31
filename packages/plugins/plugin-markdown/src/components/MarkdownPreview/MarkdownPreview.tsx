@@ -18,8 +18,8 @@ import { Markdown } from '../../types';
 import { getAbstract, getFallbackName } from '../../util';
 
 // TODO(burdon): Factor out.
-const getTitle = (subject: Markdown.DocumentType | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(Markdown.DocumentType, subject)) {
+const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
     return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getFallbackName(subject.content);
@@ -27,15 +27,15 @@ const getTitle = (subject: Markdown.DocumentType | DataType.Text, fallback: stri
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: Markdown.DocumentType | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(Markdown.DocumentType, subject)) {
+const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
     return getAbstract(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getAbstract(subject.content);
   }
 };
 
-export const MarkdownPreview = ({ subject, role }: PreviewProps<Markdown.DocumentType | DataType.Text>) => {
+export const MarkdownPreview = ({ subject, role }: PreviewProps<Markdown.Document | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const snippet = getSnippet(subject, t('fallback abstract'));
