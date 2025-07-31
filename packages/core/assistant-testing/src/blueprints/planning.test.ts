@@ -75,7 +75,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               I need a hammer, nails, and a saw.
             `,
             test: matchList({
-              includes: [/hammer/, /nails/, /saw/],
+              includes: [/- \[.+hammer/, /- \[.+nails/, /- \[.+saw/],
             }),
           },
           {
@@ -84,7 +84,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               I will need a board too.
             `,
             test: matchList({
-              includes: [/board/],
+              includes: [/- \[.+board/],
             }),
           },
           {
@@ -93,8 +93,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               Actually I'm going to use screws and a screwdriver.
             `,
             test: matchList({
-              includes: [/screwdriver/, /screws/],
-              excludes: [/hammer/, /nails/],
+              includes: [/- \[.+screwdriver/, /- \[.+screws/],
+              excludes: [/- \[.+hammer/, /- \[.+nails/],
             }),
           },
         ];
