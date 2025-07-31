@@ -60,7 +60,7 @@ export interface Template extends Schema.Schema.Type<typeof Template> {}
  */
 export const make = ({ source = '', ...props }: Partial<Omit<Template, 'source'> & { source: string }>) => {
   return Obj.make(Template, {
-    source: Ref.make(Obj.make(DataType.Text, { content: source })),
+    source: Ref.make(DataType.text(source)),
     ...props,
   });
 };

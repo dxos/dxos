@@ -24,9 +24,7 @@ export * from './message';
 export * from './relations';
 export * from './task';
 
-// TODO(burdon): Replace instanceof checks.
-// TODO(burdon): Remove Type suffix from other type defs (after API changes).
-// TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org/).
+// TODO(wittjosiah): Introduce a generic canvas type which stores data using OCIF (https://www.canvasprotocol.org).
 
 /**
  * Common data types.
@@ -89,6 +87,7 @@ export namespace DataType {
   export const Organization = Organization$.Organization;
   export type Organization = Organization$.Organization;
   // TODO(burdon): Remove.
+  /** @deprecated */
   export const OrganizationStatusOptions = Organization$.OrganizationStatusOptions;
 
   export const PostalAddress = PostalAddress$.PostalAddress;
