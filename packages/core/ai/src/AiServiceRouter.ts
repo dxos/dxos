@@ -18,7 +18,7 @@ import { type LLMModel as ModelName } from './types';
 //  https://developers.cloudflare.com/workers-ai/models/llama-3.2-3b-instruct   => cloudflare.com/llama-3.2-3b-instruct
 //  https://ollama.com/library/llama3.2                                         => ollama.com/llama3.2
 
-export class AiModelResolver extends Context.Tag('AiModelResolver')<
+export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
   AiModelResolver,
   {
     readonly model: (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;

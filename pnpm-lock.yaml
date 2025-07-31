@@ -3193,6 +3193,9 @@ importers:
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
