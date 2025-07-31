@@ -12,7 +12,7 @@ export default async (context: PluginContext) => {
   const { Obj, Ref } = await import('@dxos/echo');
   const { fullyQualifiedId } = await import('@dxos/react-client/echo');
   const { ClientCapabilities } = await import('@dxos/plugin-client');
-  const { Document } = await import('@dxos/plugin-markdown/types');
+  const { Markdown } = await import('@dxos/plugin-markdown/types');
   const { DataType } = await import('@dxos/schema');
 
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -20,7 +20,7 @@ export default async (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
   const defaultSpace = client.spaces.default;
 
-  const readme = Document.make({
+  const readme = Markdown.make({
     name: INITIAL_DOC_TITLE,
     content: INITIAL_CONTENT.join('\n\n'),
   });

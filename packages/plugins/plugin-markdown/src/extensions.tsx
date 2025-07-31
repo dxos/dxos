@@ -21,13 +21,17 @@ import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
   type AutocompleteResult,
+  Cursor,
   type EditorStateStore,
+  EditorView,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
+  type RenderCallback,
   createDataExtensions,
   autocomplete,
   decorateMarkdown,
+  documentId,
   folding,
   formattingKeymap,
   linkTooltip,
@@ -35,10 +39,6 @@ import {
   preview,
   selectionState,
   typewriter,
-  type RenderCallback,
-  EditorView,
-  documentId,
-  Cursor,
   type PreviewOptions,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
@@ -46,15 +46,15 @@ import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
-import { type Document, type MarkdownSettingsProps } from './types';
+import { type Markdown, type MarkdownSettingsProps } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: Document.Document;
+  document?: Markdown.Doc;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<Document.Document>;
+  query?: QueryResult<Markdown.Doc>;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -79,7 +79,7 @@ export const useExtensions = ({
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
-  // const query = space?.db.query(Filter.type(Document.Document));
+  // const query = space?.db.query(Filter.type(Markdown.Doc));
   // query?.subscribe();
   const baseExtensions = useMemo(
     () =>

@@ -13,7 +13,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -46,7 +46,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         db.add(blueprint);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-        const artifact = db.add(Document.make());
+        const artifact = db.add(Markdown.make());
 
         let prevContent = artifact.content;
         const matchList = (list: Record<string, boolean>) => async () => {
@@ -107,7 +107,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [Document.Document, DataType.Text, Blueprint.Blueprint] }),
+          TestDatabaseLayer({ types: [Markdown.Doc, DataType.Text, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, writeDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(

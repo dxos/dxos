@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import {
@@ -25,8 +25,8 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: Document.Document; variant: 'presenter' } =>
-        Obj.instanceOf(Document.Document, data.subject) && data.variant === 'presenter',
+      filter: (data): data is { subject: Markdown.Doc; variant: 'presenter' } =>
+        Obj.instanceOf(Markdown.Doc, data.subject) && data.variant === 'presenter',
       component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
     }),
     createSurface({
@@ -40,7 +40,7 @@ export default () =>
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: Document.Document } => Obj.instanceOf(Document.Document, data.subject),
+      filter: (data): data is { subject: Markdown.Doc } => Obj.instanceOf(Markdown.Doc, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

@@ -7,7 +7,7 @@ import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo-schema';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
@@ -53,11 +53,11 @@ export const createGenerator = <T extends Obj.Any>(
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    Document.Document.typename,
+    Markdown.Doc.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Obj.make(Document.Document, {
+          Obj.make(Markdown.Doc, {
             name: faker.commerce.productName(),
             content: Ref.make(Obj.make(DataType.Text, { content: faker.lorem.sentences(5) })),
           }),

@@ -4,11 +4,11 @@
 
 import React, { type FC } from 'react';
 
-import { type Document } from '@dxos/plugin-markdown/types';
+import { type Markdown } from '@dxos/plugin-markdown/types';
 
 import { Container, Slide } from './Markdown';
 
-const MarkdownSlide: FC<{ document: Document.Document }> = ({ document }) => {
+const MarkdownSlide: FC<{ document: Markdown.Doc }> = ({ document }) => {
   const content = document.content.target?.content;
   if (!content) {
     return null;

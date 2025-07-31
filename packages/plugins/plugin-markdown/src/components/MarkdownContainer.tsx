@@ -25,7 +25,7 @@ import { DataType } from '@dxos/schema';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
-import { Document, type MarkdownSettingsProps } from '../types';
+import { Markdown, type MarkdownSettingsProps } from '../types';
 import { getFallbackName } from '../util';
 
 export type MarkdownContainerProps = Pick<
@@ -33,7 +33,7 @@ export type MarkdownContainerProps = Pick<
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: Document.Document | DataType.Text | any;
+  object: Markdown.Doc | DataType.Text | any;
   settings: MarkdownSettingsProps;
   selectionManager?: SelectionManager;
 };
@@ -50,7 +50,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = Obj.instanceOf(Document.Document, object) ? object : undefined;
+  const doc = Obj.instanceOf(Markdown.Doc, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
   const previewOptions = useMemo(
@@ -199,7 +199,7 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
   Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'> & {
-    document: Document.Document;
+    document: Markdown.Doc;
   };
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {

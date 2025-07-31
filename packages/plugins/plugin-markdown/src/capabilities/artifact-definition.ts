@@ -14,7 +14,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { Document, MarkdownAction } from '../types';
+import { Markdown, MarkdownAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -33,7 +33,7 @@ export default () => {
       - Use these tools to interact with documents, including listing available documents and retrieving their content.
       - Documents are stored in Markdown format.
     `,
-    schema: Document.Document,
+    schema: Markdown.Doc,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -76,9 +76,9 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.type(Document.Document)).run();
+          const { objects: documents } = await space.db.query(Filter.type(Markdown.Doc)).run();
           const documentInfo = documents.map((doc) => {
-            invariant(Obj.instanceOf(Document.Document, doc));
+            invariant(Obj.instanceOf(Markdown.Doc, doc));
             return {
               id: fullyQualifiedId(doc),
               name: doc.name || doc.fallbackName || 'Unnamed Document',
@@ -99,7 +99,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
-          assertArgument(Obj.instanceOf(Document.Document, document), 'Invalid type');
+          assertArgument(Obj.instanceOf(Markdown.Doc, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

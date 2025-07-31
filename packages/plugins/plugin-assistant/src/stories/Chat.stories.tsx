@@ -26,7 +26,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
@@ -180,7 +180,7 @@ const ChatContainer = () => {
 const DocumentContainer = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const [document] = useQuery(space, Filter.type(Document.Document));
+  const [document] = useQuery(space, Filter.type(Markdown.Doc));
   if (!document?.content.target) {
     return null;
   }
@@ -277,7 +277,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Assistant.Chat, Document.Document, Blueprint.Blueprint],
+        types: [Assistant.Chat, Markdown.Doc, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -293,7 +293,7 @@ const getDecorators = ({
             }),
           );
           const binder = new ContextBinder(await chat.queue.load());
-          const doc = space.db.add(Document.make({ name: 'Tasks' }));
+          const doc = space.db.add(Markdown.make({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }

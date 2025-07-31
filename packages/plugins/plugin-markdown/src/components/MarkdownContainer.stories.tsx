@@ -27,7 +27,7 @@ import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
-import { Document } from '../types';
+import { Markdown } from '../types';
 
 faker.seed(1);
 
@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const space = useSpace();
-  const [doc] = useQuery(space, Query.type(Document.Document));
+  const [doc] = useQuery(space, Query.type(Markdown.Doc));
   const data = useMemo(() => ({ subject: doc }), [doc]);
 
   return <Surface role='article' data={data} />;
@@ -51,13 +51,13 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Document.Document, DataType.Text, Testing.Contact],
+          types: [Markdown.Doc, DataType.Text, Testing.Contact],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            space.db.add(Document.make({ name: 'Test', content: '# Test\n\n' }));
+            space.db.add(Markdown.make({ name: 'Test', content: '# Test\n\n' }));
             const createObjects = createObjectFactory(space.db, generator);
             await createObjects([{ type: Testing.Contact, count: 10 }]);
             await space.db.flush({ indexes: true });

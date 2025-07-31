@@ -10,7 +10,7 @@ import React from 'react';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
@@ -47,7 +47,7 @@ const meta: Meta<typeof MarkdownPreview> = {
 export default meta;
 
 const data = (() => {
-  const document = Obj.make(Document.Document, {
+  const document = Obj.make(Markdown.Doc, {
     name: faker.lorem.words(3),
     content: Ref.make(
       Obj.make(DataType.Text, {
@@ -61,21 +61,21 @@ const data = (() => {
 
 export const Popover = {
   args: {
-    subject: Obj.make(Document.Document, data.document),
+    subject: Obj.make(Markdown.Doc, data.document),
     role: 'card--popover',
   },
 };
 
 export const Extrinsic = {
   args: {
-    subject: Obj.make(Document.Document, data.document),
+    subject: Obj.make(Markdown.Doc, data.document),
     role: 'card--extrinsic',
   },
 };
 
 export const Intrinsic = {
   args: {
-    subject: Obj.make(Document.Document, data.document),
+    subject: Obj.make(Markdown.Doc, data.document),
     role: 'card--intrinsic',
   },
 };

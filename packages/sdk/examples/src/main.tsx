@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { Document } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space, type TypedObject } from '@dxos/react-client/echo';
@@ -49,10 +49,10 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [Document.Document, DataType.Text],
+    types: [Markdown.Doc, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        Document.make({
+        Markdown.make({
           content: '## Type here...\n\ntry the airplane mode switch.',
         }),
       );

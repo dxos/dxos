@@ -16,14 +16,14 @@ import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 
 import { MarkdownCapabilities } from './capabilities';
-import { Document, MarkdownAction } from '../types';
+import { Markdown, MarkdownAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        return { data: { object: Document.make({ name, content }) } };
+        return { data: { object: Markdown.make({ name, content }) } };
       },
     }),
     createResolver({
@@ -38,8 +38,8 @@ export default (context: PluginContext) =>
       filter: (
         data,
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
-        target: Document.Document;
-      } => Obj.instanceOf(Document.Document, data.target),
+        target: Markdown.Doc;
+      } => Obj.instanceOf(Markdown.Doc, data.target),
       resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);

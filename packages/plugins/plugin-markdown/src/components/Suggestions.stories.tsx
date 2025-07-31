@@ -41,7 +41,7 @@ import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
 import { MARKDOWN_PLUGIN } from '../meta';
 import { translations } from '../translations';
-import { Document, type MarkdownSettingsProps } from '../types';
+import { Markdown, type MarkdownSettingsProps } from '../types';
 
 faker.seed(1);
 
@@ -61,7 +61,7 @@ const TestItem = Schema.Struct({
   }),
 );
 
-const TestChat: FC<{ doc: Document.Document; content: string }> = ({ doc, content }) => {
+const TestChat: FC<{ doc: Markdown.Doc; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
@@ -120,7 +120,7 @@ const TestChat: FC<{ doc: Document.Document; content: string }> = ({ doc, conten
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
-  const [doc, setDoc] = useState<Document.Document>();
+  const [doc, setDoc] = useState<Markdown.Doc>();
   const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
@@ -131,7 +131,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 
     setDoc(
       space.db.add(
-        Document.make({
+        Markdown.make({
           name: 'Test',
           content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
             // Create links.
@@ -165,7 +165,7 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Document.Document, TestItem],
+          types: [Markdown.Doc, TestItem],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
           },

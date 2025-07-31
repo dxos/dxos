@@ -8,7 +8,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
-export const Document = Schema.Struct({
+export const Doc = Schema.Struct({
   name: Schema.optional(Schema.String),
   fallbackName: Schema.optional(Schema.String),
   content: Type.Ref(DataType.Text),
@@ -20,10 +20,10 @@ export const Document = Schema.Struct({
   LabelAnnotation.set(['name', 'fallbackName']),
 );
 
-export type Document = Schema.Schema.Type<typeof Document>;
+export type Doc = Schema.Schema.Type<typeof Doc>;
 
 export const make = ({ name, content }: Partial<{ name: string; content: string }> = {}) =>
-  Obj.make(Document, {
+  Obj.make(Doc, {
     name,
     content: Ref.make(DataType.text(content)),
   });
