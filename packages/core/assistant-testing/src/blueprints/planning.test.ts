@@ -49,15 +49,21 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         const artifact = db.add(Markdown.make());
 
         let prevContent = artifact.content;
-        const matchList = (list: Record<string, boolean>) => async () => {
-          const { content } = await artifact.content.load();
-          log.info('spec', { doc: artifact.content.target?.content });
-          expect(content).not.toBe(prevContent);
-          Object.entries(list).forEach(([item, expected]) => {
-            expect(content.toLowerCase().includes(item), `item=${item} included=${expected}`).toBe(expected);
-          });
-          prevContent = artifact.content;
-        };
+        const matchList =
+          ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>
+          async () => {
+            const { content } = await artifact.content.load();
+            log.info('spec', { doc: artifact.content.target?.content });
+            expect(content).not.toBe(prevContent);
+            const text = content.toLowerCase();
+            for (const include of includes) {
+              expect(text.match(include), `does not include: ${include}`).toBeTruthy();
+            }
+            for (const exclude of excludes) {
+              expect(text.match(exclude), `includes: ${exclude}`).toBeFalsy();
+            }
+            prevContent = artifact.content;
+          };
 
         const systemPrompt = 'You are a helpful assistant.';
         const steps: TestStep[] = [
@@ -69,9 +75,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               I need a hammer, nails, and a saw.
             `,
             test: matchList({
-              hammer: true,
-              nails: true,
-              saw: true,
+              includes: [/hammer/, /nails/, /saw/],
             }),
           },
           {
@@ -80,10 +84,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               I will need a board too.
             `,
             test: matchList({
-              hammer: true,
-              nails: true,
-              saw: true,
-              board: true,
+              includes: [/board/],
             }),
           },
           {
@@ -92,12 +93,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
               Actually I'm going to use screws and a screwdriver.
             `,
             test: matchList({
-              hammer: false,
-              nails: false,
-              saw: true,
-              board: true,
-              screwdriver: true,
-              screws: true,
+              includes: [/screwdriver/, /screws/],
+              excludes: [/hammer/, /nails/],
             }),
           },
         ];
