@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 import { readDocument, writeDocument } from '../functions';
 
 const blueprint = Obj.make(Blueprint.Blueprint, {
-  key: 'dxos.org/blueprint/design-spec',
+  key: 'dxos.org/blueprint/design',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',
   instructions: {

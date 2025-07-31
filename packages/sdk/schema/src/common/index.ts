@@ -126,7 +126,7 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
-  export const text = (content = '') => Obj.make(DataType.Text, { content });
+  export const text = (content = '') => Obj.make(Text, { content });
 
   //
   // View

@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { type Extension } from '@dxos/react-ui-editor';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import { Doc } from './document';
+import { Markdown } from './doc';
 import { meta } from '../meta';
 
 // TODO(burdon): Single Markdown namespace?
@@ -21,7 +21,7 @@ export namespace MarkdownAction {
       content: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Doc,
+      object: Markdown.Doc,
     }),
   }) {}
 
@@ -36,7 +36,7 @@ export namespace MarkdownAction {
 
 export type MarkdownProperties = Record<string, any>;
 
-export type MarkdownExtensionProvider = (props: { document?: Doc }) => Extension | undefined;
+export type MarkdownExtensionProvider = (props: { document?: Markdown.Doc }) => Extension | undefined;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
