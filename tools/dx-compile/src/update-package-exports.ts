@@ -41,4 +41,6 @@ export const updatePackageExports = async (options: EsbuildExecutorOptions) => {
   for (const [key, value] of Object.entries(packageJson.exports ?? {})) {
     updateSpecifier(value);
   }
+
+  await writeFile('package.json', JSON.stringify(packageJson, null, 2));
 };
