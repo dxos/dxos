@@ -9,6 +9,7 @@ import { Duration, Effect, Fiber, Match, pipe, Schedule } from 'effect';
 
 import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
 import { log } from '@dxos/log';
+import { Command } from '@tauri-apps/plugin-shell';
 
 import { NATIVE_PLUGIN } from '../meta';
 
@@ -72,6 +73,16 @@ export default (context: PluginContext) => {
     Effect.repeat(Schedule.fixed(Duration.hours(1))),
     Effect.runFork,
   );
+
+  queueMicrotask(async () => {
+    const command = Command.sidecar('sidecar/ollama', ['serve'], { env: { OLLAMA_HOST: '127.0.0.1:21434' } });
+    command.stdout.on('data', (data) => console.log('[ollama]', data.toString()));
+    command.stderr.on('data', (data) => console.error('[ollama]', data.toString()));
+    command.on('close', (code) => console.log('Ollama closed with code', code));
+    command.on('error', (error) => console.error('Ollama error', error));
+    const child = await command.spawn();
+    console.log('Running ollama with pid', child.pid);
+  });
 
   return contributes(Capabilities.Null, null, () => {
     Effect.runSync(Fiber.interrupt(fiber));
