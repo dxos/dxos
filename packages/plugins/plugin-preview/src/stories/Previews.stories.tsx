@@ -31,6 +31,13 @@ export const Extrinsic = {
   },
 } satisfies Story;
 
+export const ExtrinsicNoImage = {
+  args: {
+    role: 'card--extrinsic',
+    cards: createCards(false),
+  },
+} satisfies Story;
+
 export const Intrinsic = {
   args: {
     role: 'card--intrinsic',

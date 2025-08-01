@@ -14,21 +14,20 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { useClient } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { withLayout } from '@dxos/storybook-utils';
+import { render, withLayout } from '@dxos/storybook-utils';
 
 import ChessContainer from './ChessContainer';
 import { ChessType } from '../types';
 
-type StoryProps = {
+// TODO(burdon): Factor out variance.
+type DefaultStoryProps = {
   role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 };
 
-const render: Meta<StoryProps>['render'] = ({ role }) => {
-  const _client = useClient();
+const DefaultStory = ({ role }: DefaultStoryProps) => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const games = useQuery(space, Filter.type(ChessType));
@@ -42,24 +41,27 @@ const render: Meta<StoryProps>['render'] = ({ role }) => {
   }, [games]);
 
   if (!game) {
-    return <span>…</span>;
+    return null;
   }
 
   return (
+    // TODO(burdon): Reuse icons from meta.
     <CardContainer icon='ph--castle-turret--regular' role={role}>
       <ChessContainer game={game} role={role} />
     </CardContainer>
   );
 };
 
-const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-chess/ChessContainer',
-  render,
+const meta: Meta<DefaultStoryProps> = {
+  title: 'plugins/plugin-chess/Card', // TODO(burdon): Name consistently (for all plugins that provide cards).
+  render: render(DefaultStory),
   decorators: [
     withLayout(),
+    // TODO(burdon): This shouldn't require plugin manager? Reconcile with all other preview stories.
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
+        // TODO(burdon): Client is not required.
         ClientPlugin({
           types: [ChessType],
           onClientInitialized: async (_, client) => {
