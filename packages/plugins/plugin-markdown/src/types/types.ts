@@ -5,12 +5,12 @@
 import { type Extension } from '@dxos/react-ui-editor';
 import { type EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import type * as Markdown from './Markdown';
+import { type Document } from './Markdown';
 
 // TODO(burdon): Remove these from ./types since not part of plugin-markdown API?
 
 // TODO(burdon): Async?
-export type MarkdownExtensionProvider = (props: { document?: Markdown.Document }) => Extension | undefined;
+export type MarkdownExtensionProvider = (props: { document?: Document }) => Extension | undefined;
 
 export type MarkdownPluginState = {
   // Codemirror extensions provided by other plugins.
