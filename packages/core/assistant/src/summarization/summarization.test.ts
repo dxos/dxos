@@ -78,9 +78,8 @@ const summarizationFn = defineFunction({
         ],
       }),
     );
-    return Obj.make(DataType.Text, {
-      content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
-    });
+
+    return DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
   },
 });
 
@@ -135,9 +134,7 @@ const refinementFn = defineFunction({
       }),
     );
     return {
-      summary: Obj.make(DataType.Text, {
-        content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
-      }),
+      summary: DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
     };
   },
 });
@@ -166,9 +163,7 @@ describe.skip('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    const summary = Obj.make(DataType.Text, {
-      content: '',
-    });
+    const summary = DataType.makeText();
 
     const summaries = [];
 
@@ -179,11 +174,9 @@ describe.skip('Summarization', () => {
         transcript: blocks,
       });
       summary.content = result.content;
-      summaries.push(Obj.make(DataType.Text, { content: result.content }));
+      summaries.push(DataType.makeText(result.content));
 
       console.log(blocks.at(-1));
-      console.log();
-      console.log('--------------------------------');
       console.log();
       console.log(summary.content);
       console.log();
@@ -194,11 +187,9 @@ describe.skip('Summarization', () => {
           summaries: history,
         });
         summary.content = result.summary.content;
-        summaries.push(Obj.make(DataType.Text, { content: result.summary.content }));
+        summaries.push(DataType.makeText(result.summary.content));
 
         console.log('REFINED');
-        console.log();
-        console.log('--------------------------------');
         console.log();
         console.log(summary.content);
         console.log();

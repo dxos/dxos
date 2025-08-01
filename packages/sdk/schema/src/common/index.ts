@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import * as EchoSchema$ from '@dxos/echo-schema';
 
 import * as AccessToken$ from './access-token';
@@ -126,6 +127,7 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
+  export const makeText = (content = '') => Obj.make(Text, { content });
 
   //
   // View

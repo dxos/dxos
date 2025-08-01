@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { DocumentType } from './types';
+import { Markdown } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [DocumentType.typename]: {
+      [Markdown.Document.typename]: {
         'typename label': 'Document',
         'typename label_zero': 'Documents',
         'typename label_one': 'Document',

@@ -7,11 +7,11 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/write-document',
-  description: 'Updates the entire contents of the document.',
+  name: 'dxos.org/function/markdown/update',
+  description: 'Updates the entire contents of the markdown document.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
       description: 'The ID of the document to write.',
@@ -23,7 +23,7 @@ export default defineFunction({
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { id, content } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(DocumentType, doc)) {
+    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
       throw new Error('Document not found.');
     }
 
