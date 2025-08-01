@@ -13,13 +13,14 @@ export default mergeConfig(
       setupFiles: ['./.storybook/vitest.setup.ts'],
       projects: [
         {
-          // pnpm -w nx test stories --project=unit
+          // moon run storybook:test-ci
           test: {
-            name: 'unit',
+            name: 'ci',
             environment: 'node',
           },
         },
         {
+          // moon run storybook:test-browser
           test: {
             // https://vitest.dev/guide/browser
             name: 'browser',
