@@ -15,6 +15,7 @@ import {
   GeneratorAnnotation,
   FormatAnnotation,
   PropertyMetaAnnotationId,
+  LabelAnnotation,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
@@ -58,7 +59,10 @@ const TestSchema = Schema.Struct({
   parent: Schema.optional(Schema.suspend((): Type.Ref<TestSchema> => Type.Ref(TestSchema))).annotations({
     title: 'Parent',
   }),
-}).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+}).pipe(
+  Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  LabelAnnotation.set(['name']),
+);
 interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
 const StoryViewEditor = ({
