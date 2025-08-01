@@ -20,7 +20,7 @@ import { translations } from '../../translations';
 faker.seed(1234);
 
 const meta: Meta<typeof MarkdownPreview> = {
-  title: 'Cards/plugin-markdown',
+  title: 'plugins/plugin-markdown/MarkdownPreview',
   component: MarkdownPreview,
   render: ({ role, subject, ...args }) => {
     return (

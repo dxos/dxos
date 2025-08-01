@@ -53,7 +53,7 @@ const render: Meta<StoryProps>['render'] = ({ role }) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'Cards/plugin-chess',
+  title: 'plugins/plugin-chess/ChessContainer',
   render,
   decorators: [
     withLayout(),

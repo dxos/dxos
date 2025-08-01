@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -28,10 +28,9 @@ faker.seed(1234);
 type StoryProps = { role: string };
 
 const meta: Meta<StoryProps> = {
-  title: 'Cards/plugin-table',
+  title: 'plugins/plugin-table/TablePreview',
   render: ({ role }) => {
     const { schema, view } = useTestTableModel();
-
     if (!schema || !view) {
       return <div />;
     }
@@ -59,7 +58,6 @@ const meta: Meta<StoryProps> = {
         ];
 
         const selectOptionIds = selectOptions.map((o) => o.id);
-
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
@@ -103,20 +101,22 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
+type Story = StoryObj<typeof meta>;
+
 export const Popover = {
   args: {
     role: 'card--popover',
   },
-};
+} satisfies Story;
 
 export const Extrinsic = {
   args: {
     role: 'card--extrinsic',
   },
-};
+} satisfies Story;
 
 export const Intrinsic = {
   args: {
     role: 'card--intrinsic',
   },
-};
+} satisfies Story;
