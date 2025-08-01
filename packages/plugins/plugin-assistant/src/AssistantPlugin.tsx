@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Layer } from 'effect';
+import { Effect, Layer } from 'effect';
 
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -12,7 +11,10 @@ import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { AnthropicClient } from '@effect/ai-anthropic';
 
+import { AiServiceRouter } from '@dxos/ai';
+import { FetchHttpClient } from '@effect/platform';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
@@ -114,11 +116,46 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/ai-service`,
+      id: `${meta.id}/module/s`,
       activatesOn: Events.Startup,
-      activate: () => [
-        // TODO(dmaretskyi): Read config from settings.
-        contributes(AssistantCapabilities.AiServiceLayer, AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
-      ],
+      activate: () => {
+        return [
+          contributes(
+            AssistantCapabilities.AiModelResolver,
+            AiServiceRouter.AnthropicResolver.pipe(
+              Layer.provide(
+                AnthropicClient.layer({
+                  // TODO(dmaretskyi): Read endpoint from config/settings.
+                  apiUrl: 'https://ai-service.dxos.workers.dev/provider/anthropic',
+                }),
+              ),
+              Layer.provide(FetchHttpClient.layer),
+            ),
+          ),
+        ];
+      },
+    }),
+    defineModule({
+      id: `${meta.id}/module/ai-service`,
+      // Must activate after the `AssistantCapabilities.AiModelResolver` were contributed.
+      activatesOn: Events.DispatcherReady,
+      activate: (context) => {
+        const aiModelResolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
+        console.log('aiModelResolvers', aiModelResolvers);
+
+        // TODO(dmaretskyi): Extract function to read them.
+        const combinedLayer = aiModelResolvers.reduce(
+          (acc, resolver) => resolver.pipe(Layer.provide(acc)),
+          AiServiceRouter.AiModelResolver.fromModelMap(Effect.succeed({})), // Empty resolver as fallback.
+        );
+
+        return [
+          // TODO(dmaretskyi): Read config from settings.
+          contributes(
+            AssistantCapabilities.AiServiceLayer,
+            AiServiceRouter.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
+          ),
+        ];
+      },
     }),
   ]);

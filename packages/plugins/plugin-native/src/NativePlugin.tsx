@@ -4,7 +4,7 @@
 
 import { definePlugin, Events, defineModule, contributes, Capabilities } from '@dxos/app-framework';
 
-import { Updater } from './capabilities';
+import { Updater, Ollama } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -19,5 +19,11 @@ export const NativePlugin = () =>
       id: `${meta.id}/module/updater`,
       activatesOn: Events.DispatcherReady,
       activate: Updater,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ollama`,
+      // TODO(dmaretskyi): Should we do a custom activation event?
+      activatesOn: Events.Startup,
+      activate: Ollama,
     }),
   ]);

@@ -23,9 +23,12 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "^0.89.0",
     "@tauri-apps/plugin-os": "^2.3.0",
     "@tauri-apps/plugin-process": "^2.3.0",
     "@tauri-apps/plugin-shell": "^2.3.0",

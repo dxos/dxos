@@ -4,7 +4,7 @@
 
 import { type Layer } from 'effect';
 
-import { type AiService } from '@dxos/ai';
+import { type AiService, AiServiceRouter } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
 
 import { ASSISTANT_PLUGIN } from './meta';
@@ -12,4 +12,11 @@ import { ASSISTANT_PLUGIN } from './meta';
 export namespace AssistantCapabilities {
   export type AiServiceLayer = Layer.Layer<AiService>;
   export const AiServiceLayer = defineCapability<AiServiceLayer>(`${ASSISTANT_PLUGIN}/capability/ai-service-factory`);
+
+  /**
+   * Plugins can contribute them to provide model resolvers.
+   */
+  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
+    `${ASSISTANT_PLUGIN}/capability/ai-model-resolver`,
+  );
 }

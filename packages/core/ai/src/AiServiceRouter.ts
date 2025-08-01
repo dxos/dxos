@@ -106,6 +106,22 @@ export const LMStudioResolver = AiModelResolver.fromModelMap(
   ),
 );
 
+export const OllamaResolver = ({ host = 'http://localhost:11434' }: { host?: string } = {}) =>
+  AiModelResolver.fromModelMap(
+    Effect.gen(function* () {
+      return {
+        'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest' as any),
+        'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b' as any),
+      };
+    }).pipe(
+      Effect.provide(
+        OpenAiClient.layer({
+          apiUrl: host + '/v1',
+        }),
+      ),
+    ),
+  );
+
 export const OpenAiResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
     return {
@@ -118,6 +134,9 @@ export const OpenAiResolver = AiModelResolver.fromModelMap(
   }),
 );
 
+/**
+ * @deprecated This is a preset and we should not use it directly.
+ */
 export const AiServiceRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver),
   Layer.provide(LMStudioResolver),

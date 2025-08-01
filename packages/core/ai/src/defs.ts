@@ -38,6 +38,7 @@ export const DEFAULT_OLLAMA_MODELS = [
   'llama3.2:1b',
   'llama3:70b',
   'deepseek-r1:latest',
+  'qwen2.5:14b',
 ] as const;
 
 export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
