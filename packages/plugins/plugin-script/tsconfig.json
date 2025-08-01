@@ -3,7 +3,6 @@
     "../../../tsconfig.base.json"
   ],
   "compilerOptions": {
-    "target": "ES2020",
     "types": [
       "node"
     ]

@@ -4,7 +4,6 @@
     "allowSyntheticDefaultImports": true,
     "emitDeclarationOnly": false,
     "outDir": "dist",
-    "target": "ESNext",
     "types": [
       "node"
     ]
