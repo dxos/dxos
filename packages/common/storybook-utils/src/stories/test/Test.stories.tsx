@@ -17,7 +17,7 @@ import { TEST_ID, Test, type TestProps } from './Test';
  * Storybook sanity test.
  */
 const meta: Meta<TestProps> = {
-  title: 'devtools/storybook-utils/Test',
+  title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
