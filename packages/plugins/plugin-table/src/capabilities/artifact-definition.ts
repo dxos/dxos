@@ -55,7 +55,7 @@ export default () => {
         caption: 'Creating table...',
         schema: Schema.Struct({
           typename: Schema.String.annotations({
-            description: 'The fully qualified typename of the schema to use for the table.',
+            description: 'The fully qualified name of the record type to use for the table.',
           }),
           name: Schema.optional(Schema.String).annotations({
             description: 'Optional name for the table.',
@@ -124,7 +124,7 @@ export default () => {
       createTool(meta.id, {
         name: 'inspect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
-        description: 'Get the current schema of the table.',
+        description: 'Get the current record type of the table.',
         caption: 'Loading table...',
         schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {
