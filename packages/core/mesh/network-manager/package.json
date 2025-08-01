@@ -24,24 +24,28 @@
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
-      "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
+      "require": "./dist/lib/node-esm/transport/tcp/index.mjs",
+      "source": "./src/transport/tcp/index.ts"
     }
   },
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts"
     },
     "./transport/tcp": {
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
-      "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
+      "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
+      "source": "./src/transport/tcp/index.ts"
     }
   },
   "browser": {

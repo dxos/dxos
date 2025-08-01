@@ -10,11 +10,13 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs",
+      "source": "./src/index.ts"
     },
     "./types": {
       "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs"
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "source": "./src/types/index.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
