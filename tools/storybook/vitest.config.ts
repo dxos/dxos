@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
+// TODO(burdon): Factor out common components.
 import { baseConfig } from '../../vitest.storybook.config';
 
 export default mergeConfig(
@@ -35,7 +36,7 @@ export default mergeConfig(
         },
         {
           test: {
-            // moon run storybook:test
+            // moon run storybook:test-ci -- --project=browser
             // https://vitest.dev/guide/browser
             name: 'browser',
             browser: {

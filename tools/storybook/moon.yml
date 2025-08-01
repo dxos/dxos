@@ -35,16 +35,6 @@ tasks:
       - --quiet
       - --config-dir=config/e2e
     preset: server
-  test:
-    command: vitest --project=browser
-    deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - ^:compile
-    inputs:
-      - /vitest.storybook.config.ts
-      - vitest.config.ts
-      - $NODE_VERSION
   test-ci:
     command: vitest --project=ci
     deps:
