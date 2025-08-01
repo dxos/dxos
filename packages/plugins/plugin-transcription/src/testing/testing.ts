@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';

@@ -6,7 +6,7 @@ import { type Schema } from 'effect';
 
 import { type AiServiceClient } from '@dxos/ai';
 import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
