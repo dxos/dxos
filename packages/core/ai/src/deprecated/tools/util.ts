@@ -35,7 +35,7 @@ export type RunToolsResult =
       result: unknown;
     };
 
-export const runTools = async ({
+export const runTools_ = async ({
   message,
   tools,
   extensions,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel } from '@effect/ai';
+import { AiLanguageModel, type AiToolkit } from '@effect/ai';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
@@ -10,12 +10,15 @@ import { Chunk, Console, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { DataType, type ContentBlock } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
 import { parseGptStream } from './experimental/AiParser';
+import { TestHelpers } from '@dxos/effect';
+import { calculatorLayer, CalculatorToolkit, tapHttpErrors } from './testing';
+import { getToolCalls, runTool, runTools } from './tools';
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('llm'))('ollama', () => {
+describe('ollama', () => {
   it.effect(
     'streaming',
     Effect.fn(
@@ -51,8 +54,69 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('llm'))('ollama', () => {
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
+    ),
+  );
+
+  it.effect.only(
+    'tools',
+    Effect.fn(
+      function* ({ expect }) {
+        const history: DataType.Message[] = [];
+        history.push(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
+          }),
+        );
+
+        const toolkit = CalculatorToolkit;
+
+        do {
+          const prompt = yield* preprocessAiInput(history);
+          const blocks = yield* AiLanguageModel.streamText({
+            prompt,
+            toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
+            system: 'You are a helpful assistant.',
+            disableToolCallResolution: true,
+          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          const message = Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'assistant' },
+            blocks,
+          });
+          log.info('message', { message });
+          history.push(message);
+
+          const toolCalls = getToolCalls(message);
+          if (toolCalls.length === 0) {
+            break;
+          }
+
+          const toolResults: ContentBlock.ToolResult[] = yield* runTools(toolCalls, toolkit);
+          history.push(
+            Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: toolResults,
+            }),
+          );
+        } while (true);
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          calculatorLayer,
+          Layer.provide(
+            OpenAiLanguageModel.model('qwen2.5:14b' as any),
+            OpenAiClient.layer({
+              apiUrl: 'http://localhost:11434/v1/',
+              transformClient: tapHttpErrors,
+            }).pipe(Layer.provide(FetchHttpClient.layer)),
+          ),
+        ),
+      ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });
-
-// 

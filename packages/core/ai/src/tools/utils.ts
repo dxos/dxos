@@ -42,3 +42,14 @@ export const runTool: <Tools extends AiTool.Any>(
     );
   },
 );
+
+export const runTools: <Tools extends AiTool.Any>(
+  toolCalls: ContentBlock.ToolCall[],
+  toolkit: AiToolkit.AiToolkit<Tools>,
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
+  function* (toolCalls, toolkit) {
+    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
+
+    return yield* Effect.forEach(toolCalls, (toolCall) => runTool(toolkitWithHandlers, toolCall));
+  },
+);
