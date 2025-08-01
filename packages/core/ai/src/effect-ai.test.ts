@@ -16,40 +16,7 @@ import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
 import { getToolCalls, runTool } from './tools';
-
-// Tool definitions.
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('Calculator', {
-    description: 'Basic calculator tool',
-    parameters: {
-      input: Schema.String.annotations({
-        description: 'The calculation to perform.',
-      }),
-    },
-    success: Schema.Struct({
-      result: Schema.Number,
-    }),
-    failure: Schema.Never,
-  }),
-) {}
-
-// Tool handlers.
-const toolkitLayer = TestToolkit.toLayer({
-  Calculator: Effect.fn(function* ({ input }) {
-    const result = (() => {
-      // Restrict to basic arithmetic operations for safety.
-      const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
-      log.info('calculate', { sanitizedInput });
-
-      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
-      return Function(`"use strict"; return (${sanitizedInput})`)();
-    })();
-
-    // TODO(burdon): How to return an error.
-    yield* Console.log(`Executing calculation: ${input} = ${result}`);
-    return { result };
-  }),
-});
+import { CalculatorToolkit, calculatorLayer } from './testing';
 
 describe('effect AI client', () => {
   it.effect(
@@ -65,13 +32,13 @@ describe('effect AI client', () => {
           }),
         );
 
-        const toolkit = TestToolkit;
+        const toolkit = CalculatorToolkit;
 
         do {
           const prompt = yield* preprocessAiInput(history);
           const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit: yield* TestToolkit.pipe(Effect.provide(toolkitLayer)),
+            toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
@@ -105,7 +72,6 @@ describe('effect AI client', () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          toolkitLayer,
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),

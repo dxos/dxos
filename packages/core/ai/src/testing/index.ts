@@ -10,3 +10,4 @@ export * from './test-schema';
 export * from './test-stream';
 export * from './tap';
 export * from './layer';
+export * from './toolkit';

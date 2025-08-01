@@ -5,6 +5,9 @@
 import { Effect } from 'effect';
 import type { TestContext } from 'vitest';
 
+// TODO(dmaretskyi): Add all different test tags here.
+export type TestTag = 'flaky' | 'llm';
+
 export namespace TestHelpers {
   /**
    * Skip the test if the condition is false.
@@ -50,6 +53,24 @@ export namespace TestHelpers {
     <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
       Effect.gen(function* () {
         if (condition) {
+          ctx.skip();
+        } else {
+          return yield* effect;
+        }
+      });
+
+  /**
+   * Skips this test if the tag is not in the list of tags to run.
+   * Tags are specified in the `DX_TEST_TAGS` environment variable.
+   *
+   * @param tag
+   * @returns
+   */
+  export const taggedTest =
+    (tag: TestTag) =>
+    <A, E, R>(effect: Effect.Effect<A, E, R>, ctx: TestContext): Effect.Effect<A, E, R> =>
+      Effect.gen(function* () {
+        if (!process.env.DX_TEST_TAGS?.includes(tag)) {
           ctx.skip();
         } else {
           return yield* effect;
