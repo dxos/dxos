@@ -105,12 +105,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover = {
-  args: {
-    role: 'card--popover',
-  },
-} satisfies Story;
-
 export const Extrinsic = {
   args: {
     role: 'card--extrinsic',
@@ -120,5 +114,11 @@ export const Extrinsic = {
 export const Intrinsic = {
   args: {
     role: 'card--intrinsic',
+  },
+} satisfies Story;
+
+export const Popover = {
+  args: {
+    role: 'card--popover',
   },
 } satisfies Story;
