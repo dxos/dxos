@@ -12,7 +12,7 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MarkdownCapabilities } from './capabilities';
-import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
+import { MarkdownContainer, MarkdownSettings, MarkdownCard } from '../components';
 import { meta } from '../meta';
 import { Markdown } from '../types';
 import { isEditorModel } from '../util';
@@ -109,6 +109,6 @@ export default () =>
       role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
       filter: (data): data is { subject: Markdown.Document | DataType.Text } =>
         Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
-      component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
+      component: ({ data, role }) => <MarkdownCard {...data} role={role} />,
     }),
   ]);

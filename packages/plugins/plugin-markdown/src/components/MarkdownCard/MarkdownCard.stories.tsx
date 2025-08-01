@@ -14,18 +14,18 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
-import { MarkdownPreview } from './MarkdownPreview';
+import { MarkdownCard } from './MarkdownCard';
 import { translations } from '../../translations';
 
 faker.seed(1234);
 
-const meta: Meta<typeof MarkdownPreview> = {
-  title: 'plugins/plugin-markdown/MarkdownPreview',
-  component: MarkdownPreview,
+const meta: Meta<typeof MarkdownCard> = {
+  title: 'plugins/plugin-markdown/Card',
+  component: MarkdownCard,
   render: ({ role, subject, ...args }) => {
     return (
       <CardContainer icon='ph--text-aa--regular' role={role}>
-        <MarkdownPreview role={role} subject={subject} {...args} />
+        <MarkdownCard role={role} subject={subject} {...args} />
       </CardContainer>
     );
   },
@@ -40,6 +40,7 @@ const meta: Meta<typeof MarkdownPreview> = {
     layout: 'centered',
     translations,
   },
+  tags: ['cards'],
 };
 
 export default meta;

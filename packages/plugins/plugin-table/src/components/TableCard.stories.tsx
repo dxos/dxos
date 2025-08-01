@@ -20,7 +20,7 @@ import { TableView } from '@dxos/react-ui-table/types';
 import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TablePreview } from './index';
+import { TableCard } from './TableCard';
 import { translations } from '../translations';
 
 faker.seed(1234);
@@ -28,7 +28,7 @@ faker.seed(1234);
 type StoryProps = { role: string };
 
 const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/TablePreview',
+  title: 'plugins/plugin-table/Card',
   render: ({ role }) => {
     const { schema, view } = useTestTableModel();
     if (!schema || !view) {
@@ -37,11 +37,12 @@ const meta: Meta<StoryProps> = {
 
     return (
       <CardContainer icon='ph--text-aa--regular' role={role}>
-        <TablePreview role={role} view={view} />
+        <TableCard role={role} view={view} />
       </CardContainer>
     );
   },
   decorators: [
+    // TODO(burdon): Should not require space.
     withClientProvider({
       types: [DataType.View, TableView],
       createIdentity: true,
@@ -97,6 +98,7 @@ const meta: Meta<StoryProps> = {
     layout: 'centered',
     translations: [...translations, ...tableTranslations],
   },
+  tags: ['cards'],
 };
 
 export default meta;
