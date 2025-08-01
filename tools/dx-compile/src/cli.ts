@@ -8,12 +8,18 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import main, { type EsbuildExecutorOptions } from './main';
+import { updatePackageExports } from './update-package-exports';
 
 void (async () => {
   try {
     const argv: any = yargs(hideBin(process.argv))
       .scriptName('dx-compile')
       .usage('$0 [options]')
+      .option('updatePackageExports', {
+        type: 'boolean',
+        default: false,
+        describe: 'Update package.json exports.',
+      })
       .option('bundle', { type: 'boolean', default: true, describe: 'Bundle the build output' })
       .option('bundlePackage', { type: 'array', default: [], describe: 'Packages to include in the bundle' })
       .option('ignorePackage', { type: 'array', default: [], describe: 'Packages to ignore when bundling' })
@@ -55,6 +61,17 @@ void (async () => {
       preactSignalTracking: argv.preactSignalTracking as boolean,
       verbose: argv.verbose as boolean,
     };
+
+    if (argv.updatePackageExports) {
+      const changed = await updatePackageExports(options);
+      if (changed && process.env.CI) {
+        console.error(
+          'Package json exports have changed. This is disallowed in CI. Please run `dx-compile --updatePackageExports` and commit the changes.',
+        );
+        process.exit(1);
+      }
+    }
+
     const result = await main(options);
     process.exit(result.success ? 0 : 1);
   } catch (err) {

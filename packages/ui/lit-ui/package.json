@@ -12,12 +12,14 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
-      "node": "./dist/src/index.js"
+      "node": "./dist/src/index.js",
+      "source": "./dist/src/index.ts"
     },
     "./react": {
       "types": "./dist/src/react.d.ts",
       "browser": "./dist/src/react.js",
-      "node": "./dist/src/react.js"
+      "node": "./dist/src/react.js",
+      "source": "./dist/src/react.ts"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
     "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss",

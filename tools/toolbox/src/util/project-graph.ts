@@ -20,6 +20,7 @@ export type PackageJson = {
   type?: string;
   private: boolean;
   exports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
+  imports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
   main?: string;
   browser?: Record<string, string>;
   types?: string;
