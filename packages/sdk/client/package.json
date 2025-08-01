@@ -13,47 +13,56 @@
     "./devtools": {
       "types": "./dist/types/src/devtools/index.d.ts",
       "browser": "./dist/lib/browser/devtools/index.mjs",
-      "node": "./dist/lib/node-esm/devtools/index.mjs"
+      "node": "./dist/lib/node-esm/devtools/index.mjs",
+      "source": "./src/devtools/index.ts"
     },
     "./echo": {
       "types": "./dist/types/src/echo/index.d.ts",
       "browser": "./dist/lib/browser/echo/index.mjs",
-      "node": "./dist/lib/node-esm/echo/index.mjs"
+      "node": "./dist/lib/node-esm/echo/index.mjs",
+      "source": "./src/echo/index.ts"
     },
     "./halo": {
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
-      "node": "./dist/lib/node-esm/halo/index.mjs"
+      "node": "./dist/lib/node-esm/halo/index.mjs",
+      "source": "./src/halo/index.ts"
     },
     "./edge": {
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
-      "node": "./dist/lib/node-esm/edge/index.mjs"
+      "node": "./dist/lib/node-esm/edge/index.mjs",
+      "source": "./src/edge/index.ts"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     },
     "./invitations": {
       "types": "./dist/types/src/invitations/index.d.ts",
       "browser": "./dist/lib/browser/invitations/index.mjs",
-      "node": "./dist/lib/node-esm/invitations/index.mjs"
+      "node": "./dist/lib/node-esm/invitations/index.mjs",
+      "source": "./src/invitations/index.ts"
     },
     "./mesh": {
       "types": "./dist/types/src/mesh/index.d.ts",
       "browser": "./dist/lib/browser/mesh/index.mjs",
-      "node": "./dist/lib/node-esm/mesh/index.mjs"
+      "node": "./dist/lib/node-esm/mesh/index.mjs",
+      "source": "./src/mesh/index.ts"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts"
     },
     "./worker": {
       "types": "./dist/types/src/worker/index.d.ts",
       "browser": "./dist/lib/browser/worker/index.mjs",
-      "node": "./dist/lib/node-esm/worker/index.mjs"
+      "node": "./dist/lib/node-esm/worker/index.mjs",
+      "source": "./src/worker/index.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
