@@ -8,15 +8,15 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 import { baseConfig } from '../../vitest.storybook.config';
 
-console.log(join(__dirname, './.storybook'));
-
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
   defineConfig({
     plugins: [
+      // https://storybook.js.org/docs/writing-tests/in-ci
       // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
       storybookTest({
-        configDir: join(__dirname, './.storybook'),
+        configDir: join(__dirname, '.storybook'),
+        storybookScript: 'moon run storybook:serve',
         tags: {
           include: ['test'],
           exclude: ['experimental'],
@@ -35,6 +35,7 @@ export default mergeConfig(
         },
         {
           test: {
+            // moon run storybook:test
             // https://vitest.dev/guide/browser
             name: 'browser',
             browser: {

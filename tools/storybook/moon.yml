@@ -35,13 +35,23 @@ tasks:
       - --quiet
       - --config-dir=config/e2e
     preset: server
-  test-ci:
+  test:
     command: vitest --project=browser
     deps:
       - esbuild-plugins:compile
       - node-std:compile
       - ^:compile
     inputs:
-      - /vitest.base.config.ts
+      - /vitest.storybook.config.ts
       - vitest.config.ts
-      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+      - $NODE_VERSION
+  test-ci:
+    command: vitest --project=ci
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - ^:bundle
+    inputs:
+      - /vitest.storybook.config.ts
+      - vitest.config.ts
+      - $NODE_VERSION
