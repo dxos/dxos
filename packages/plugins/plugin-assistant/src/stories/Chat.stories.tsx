@@ -45,7 +45,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
-import { Chat, TemplateEditor, type ChatPromptProps } from '../components';
+import { Chat, type ChatEvent, TemplateEditor, type ChatPromptProps } from '../components';
 import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
 import { meta } from '../meta';
@@ -145,12 +145,16 @@ const ChatContainer = () => {
 
   const handleBranchChat = useCallback(() => {}, [space]);
 
+  const handleEvent = useCallback((event: ChatEvent) => {
+    log.info('event', { event });
+  }, []);
+
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
+    <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
       <Toolbar.Root classNames='border-b border-subduedSeparator'>
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton

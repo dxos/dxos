@@ -55,8 +55,7 @@ export const createConfig = ({
   framework: {
     name: '@storybook/react-vite',
     options: {
-      // TODO(wittjosiah): Re-enable strict mode in stories.
-      // strictMode: true,
+      strictMode: true,
     },
   },
   stories: baseStories ?? stories,
