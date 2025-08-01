@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Type } from '@dxos/echo';
 import { EditorViewMode } from '@dxos/react-ui-editor/types';
 
-import { Document } from './markdown';
+import * as Markdown from './Markdown';
 import { not_meta } from '../meta';
 
 export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/create`, {
@@ -17,7 +17,7 @@ export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/
     content: Schema.optional(Schema.String),
   }),
   output: Schema.Struct({
-    object: Document,
+    object: Markdown.Document,
   }),
 }) {}
 
