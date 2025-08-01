@@ -62,7 +62,7 @@ export interface JournalType extends Schema.Schema.Type<typeof JournalType> {}
 export const createOutline = (name?: string, content?: string): OutlineType => {
   return Obj.make(OutlineType, {
     name,
-    content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
+    content: Ref.make(DataType.makeText(content)),
   });
 };
 
@@ -76,7 +76,7 @@ export const createJournal = (name?: string): JournalType => {
 export const createJournalEntry = (date = new Date()): JournalEntryType => {
   return Obj.make(JournalEntryType, {
     date: getDateString(date),
-    content: Ref.make(Obj.make(DataType.Text, { content: '' })),
+    content: Ref.make(DataType.makeText()),
   });
 };
 

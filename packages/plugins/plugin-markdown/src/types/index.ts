@@ -2,5 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './schema';
+export * as MarkdownAction from './MarkdownAction';
+export * as Markdown from './Markdown';
 export * from './types';

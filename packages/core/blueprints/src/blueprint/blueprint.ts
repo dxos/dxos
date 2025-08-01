@@ -89,7 +89,7 @@ export const make = ({
     name,
     description,
     instructions: {
-      source: Ref.make(Obj.make(DataType.Text, { content: instructions.source })),
+      source: Ref.make(DataType.makeText(instructions.source)),
       inputs: instructions.inputs,
     },
     tools,

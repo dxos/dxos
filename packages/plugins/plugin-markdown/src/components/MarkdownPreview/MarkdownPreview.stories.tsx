@@ -4,16 +4,14 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref } from '@dxos/echo';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { DataType } from '@dxos/schema';
 import { withTheme, withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPreview } from './MarkdownPreview';
@@ -27,7 +25,7 @@ const meta: Meta<typeof MarkdownPreview> = {
   render: ({ role, subject, ...args }) => {
     return (
       <CardContainer icon='ph--text-aa--regular' role={role}>
-        <MarkdownPreview subject={subject} role={role} />
+        <MarkdownPreview role={role} subject={subject} {...args} />
       </CardContainer>
     );
   },
@@ -46,36 +44,34 @@ const meta: Meta<typeof MarkdownPreview> = {
 
 export default meta;
 
-const data = (() => {
-  const document = Obj.make(DocumentType, {
-    name: faker.lorem.words(3),
-    content: Ref.make(
-      Obj.make(DataType.Text, {
-        content: faker.lorem.paragraphs(3),
-      }),
-    ),
-  });
+type Story = StoryObj<typeof meta>;
 
-  return { document };
-})();
-
-export const Popover = {
+export const Popover: Story = {
   args: {
-    subject: Obj.make(DocumentType, data.document),
     role: 'card--popover',
+    subject: Markdown.makeDocument({
+      name: faker.lorem.words(3),
+      content: faker.lorem.paragraphs(3),
+    }),
   },
 };
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
-    subject: Obj.make(DocumentType, data.document),
     role: 'card--extrinsic',
+    subject: Markdown.makeDocument({
+      name: faker.lorem.words(3),
+      content: faker.lorem.paragraphs(3),
+    }),
   },
 };
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
-    subject: Obj.make(DocumentType, data.document),
     role: 'card--intrinsic',
+    subject: Markdown.makeDocument({
+      name: faker.lorem.words(3),
+      content: faker.lorem.paragraphs(3),
+    }),
   },
 };

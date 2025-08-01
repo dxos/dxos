@@ -10,7 +10,7 @@ import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-frame
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
-import { MARKDOWN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 /**
  * Handle scrolling and selection of the current thread in a markdown editor.
@@ -52,5 +52,5 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
     [documentId, editorView],
   );
 
-  useIntentResolver(MARKDOWN_PLUGIN, scrollIntoViewResolver);
+  useIntentResolver(meta.id, scrollIntoViewResolver);
 };

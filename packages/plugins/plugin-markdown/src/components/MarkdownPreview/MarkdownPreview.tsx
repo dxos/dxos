@@ -13,13 +13,13 @@ import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { MARKDOWN_PLUGIN } from '../../meta';
-import { DocumentType } from '../../types';
+import { meta } from '../../meta';
+import { Markdown } from '../../types';
 import { getAbstract, getFallbackName } from '../../util';
 
 // TODO(burdon): Factor out.
-const getTitle = (subject: DocumentType | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(DocumentType, subject)) {
+const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
     return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getFallbackName(subject.content);
@@ -27,17 +27,17 @@ const getTitle = (subject: DocumentType | DataType.Text, fallback: string) => {
 };
 
 // TODO(burdon): Factor out.
-const getSnippet = (subject: DocumentType | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(DocumentType, subject)) {
+const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
     return getAbstract(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(DataType.Text, subject)) {
     return getAbstract(subject.content);
   }
 };
 
-export const MarkdownPreview = ({ subject, role }: PreviewProps<DocumentType | DataType.Text>) => {
+export const MarkdownPreview = ({ subject, role }: PreviewProps<Markdown.Document | DataType.Text>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(MARKDOWN_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const snippet = getSnippet(subject, t('fallback abstract'));
 
   // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.

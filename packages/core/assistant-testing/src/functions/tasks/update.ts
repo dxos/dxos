@@ -7,9 +7,9 @@ import { Effect, Schema } from 'effect';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
-import { MarkdownTaskManager, type TaskOperation } from './task-manager';
+import { MarkdownTasks, type TaskOperation } from './task-list';
 
 export default defineFunction({
   name: 'dxos.org/function/markdown/update-tasks',
@@ -34,16 +34,16 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
     const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(DocumentType, doc)) {
+    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
       throw new Error('Document not found.');
     }
-    const { content } = yield* DatabaseService.loadRef(doc.content);
 
-    // Create task manager and apply operations if provided
-    const taskManager = new MarkdownTaskManager(content);
+    // Create task manager and apply operations if provided.
+    const { content } = yield* DatabaseService.loadRef(doc.content);
+    const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);
-      // TODO: Update the document content when database operations are fixed
+      // TODO: Update the document content when database operations are fixed.
     }
 
     return {

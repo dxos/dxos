@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { type FC, useCallback, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -38,7 +37,7 @@ faker.seed(101);
 
 const DefaultStory: FC<{ content?: string }> = ({ content = '' }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(Obj.make(DataType.Text, { content }));
+  const [text] = useState(DataType.makeText(content));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {
