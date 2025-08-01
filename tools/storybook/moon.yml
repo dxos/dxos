@@ -35,15 +35,13 @@ tasks:
       - --quiet
       - --config-dir=config/e2e
     preset: server
-  # TODO(burdon): Currently not working.
-  # ✘ [ERROR] "@dxos/node-std/_/config" resolved to an ESM file.
   test-ci:
     command: vitest --project=ci
     deps:
       - esbuild-plugins:compile
       - node-std:compile
-      - ^:compile
+      - ^:bundle
     inputs:
-      - /vitest.base.config.ts
+      - /vitest.storybook.config.ts
       - vitest.config.ts
-      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+      - $NODE_VERSION
