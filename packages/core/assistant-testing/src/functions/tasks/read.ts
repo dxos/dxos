@@ -10,10 +10,9 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/read',
-  description: 'Read markdown document.',
+  name: 'dxos.org/function/markdown/read-tasks',
+  description: 'Read markdown tasks.',
   inputSchema: Schema.Struct({
-    // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
     id: ArtifactId.annotations({
       description: 'The ID of the document to read.',
     }),
@@ -27,7 +26,11 @@ export default defineFunction({
       throw new Error('Document not found.');
     }
 
+    // Return content with line numbers prefixed.
     const { content } = yield* DatabaseService.loadRef(doc.content);
-    return { content };
+    const lines = content.split('\n');
+    const len = String(lines.length).length;
+    const numbered = lines.map((line, i) => `${String(i + 1).padStart(len, ' ')}. ${line}`).join('\n');
+    return { content: numbered };
   }),
 });

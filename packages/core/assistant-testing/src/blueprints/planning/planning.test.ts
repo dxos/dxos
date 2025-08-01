@@ -18,12 +18,12 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import blueprint from './planning';
-import { readDocument, writeDocument } from '../functions';
-import { runSteps, type TestStep } from './testing';
+import { readTasks, updateTasks } from '../../functions';
+import { runSteps, type TestStep } from '../testing';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
   it.effect.only(
-    'building a shelf',
+    'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
         const { queues } = yield* QueueService;
@@ -104,8 +104,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readDocument, writeDocument]),
-          makeToolExecutionServiceFromFunctions([readDocument, writeDocument]),
+          makeToolResolverFromFunctions([readTasks, updateTasks]),
+          makeToolExecutionServiceFromFunctions([readTasks, updateTasks]),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),

@@ -15,7 +15,7 @@ import {
   PLANNING_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
-  writeDocument,
+  updateDocument,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -316,7 +316,7 @@ const getDecorators = ({
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Functions, [readDocument, writeDocument])],
+    capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],
   }),
   withTheme,
   withLayout({

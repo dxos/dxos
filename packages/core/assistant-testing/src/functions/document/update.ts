@@ -10,8 +10,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/write-document',
-  description: 'Updates the entire contents of the document.',
+  name: 'dxos.org/function/markdown/update',
+  description: 'Updates the entire contents of the markdown document.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
       description: 'The ID of the document to write.',

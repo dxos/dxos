@@ -3,4 +3,4 @@
 //
 
 export { default as readDocument } from './read';
-export { default as writeDocument } from './write';
+export { default as updateDocument } from './update';
