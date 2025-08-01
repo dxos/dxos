@@ -7,12 +7,21 @@ tasks:
       cache: false
   tauri-dev:
     command: tauri dev
+    # TODO(wittjosiah): Remove once beforeDevCommand is using moon again.
     deps:
       - ^:compile
     preset: server
   # https://tauri.app/develop/#developing-your-mobile-application
   tauri-ios:
     command: tauri ios dev
+    # TODO(wittjosiah): Remove once beforeDevCommand is using moon again.
     deps:
       - ^:compile
     preset: server
+  tauri-ios-build:
+    command: tauri ios build
+    args:
+      - --export-method=app-store-connect
+    # TODO(wittjosiah): Determine which the outputs are which should be cached.
+    options:
+      cache: false

@@ -97,7 +97,7 @@ storybook-static
 
 # Protobuf Compiler
 packages/core/protocols/proto
-**/gen
+**/proto/gen
 
 # CLI
 packages/devtools/cli/src/util/telemetryrc.json
