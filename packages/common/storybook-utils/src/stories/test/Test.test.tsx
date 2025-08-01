@@ -18,7 +18,6 @@ const { Default } = composeStories(stories);
  * Vitest sanity test (should be visible in the storybook).
  * https://storybook.js.org/docs/writing-tests/integrations/vitest-addon
  */
-// TODO(burdon): Not working.
 describe('Test', () => {
   it('should render', async () => {
     await Default.run();
