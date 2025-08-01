@@ -7676,6 +7676,12 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-help':
+        specifier: workspace:*
+        version: link:../plugin-help
+      '@dxos/plugin-navtree':
+        specifier: workspace:*
+        version: link:../plugin-navtree
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

@@ -4,7 +4,7 @@
 
 import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
-import { beforeAll, describe, test } from 'vitest';
+import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -74,6 +74,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
         service: TracingService.console,
       },
     });
+  });
+
+  afterAll(async () => {
+    await builder.close();
   });
 
   test('compute graph', { timeout: 120_000 }, async () => {

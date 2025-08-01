@@ -26,7 +26,7 @@ import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
-import { MARKDOWN_PLUGIN, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { meta as MarkdownMeta, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
@@ -101,7 +101,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
     KANBAN_PLUGIN,
-    MARKDOWN_PLUGIN,
+    MarkdownMeta.id,
     SHEET_PLUGIN,
     SKETCH_PLUGIN,
     TABLE_PLUGIN,

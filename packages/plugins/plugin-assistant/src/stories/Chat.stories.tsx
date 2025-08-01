@@ -12,10 +12,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  TASK_BLUEPRINT,
+  PLANNING_BLUEPRINT,
   readDocument,
   remoteServiceEndpoints,
-  writeDocument,
+  updateDocument,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -26,7 +26,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
@@ -42,14 +42,13 @@ import {
   outliner,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../AssistantPlugin';
 import { Chat, TemplateEditor, type ChatPromptProps } from '../components';
 import { type AiServicePreset, AiServicePresets } from '../hooks';
 import { useChatProcessor, useChatServices } from '../hooks';
-import { meta as AssistantMeta } from '../meta';
+import { meta } from '../meta';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -91,7 +90,7 @@ const DefaultStory = ({ components }: { components: (FC | FC[])[] }) => {
 //
 
 const ChatContainer = () => {
-  const { t } = useTranslation(AssistantMeta.id);
+  const { t } = useTranslation(meta.id);
   const space = useSpace();
 
   const [chat, setChat] = useState<Assistant.Chat>();
@@ -114,7 +113,7 @@ const ChatContainer = () => {
   }, [presets]);
 
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, TASK_BLUEPRINT]), []);
+  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, PLANNING_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -181,7 +180,7 @@ const ChatContainer = () => {
 const DocumentContainer = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
-  const [document] = useQuery(space, Filter.type(DocumentType));
+  const [document] = useQuery(space, Filter.type(Markdown.Document));
   if (!document?.content.target) {
     return null;
   }
@@ -230,7 +229,7 @@ const BlueprintContainer = () => {
 // Configuration
 //
 
-const meta = {
+const storybook = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
   decorators: [],
@@ -240,9 +239,9 @@ const meta = {
   },
 } satisfies Meta<typeof DefaultStory>;
 
-export default meta;
+export default storybook;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof storybook>;
 
 //
 // Decorators
@@ -278,7 +277,7 @@ const getDecorators = ({
     plugins: [
       ClientPlugin({
         config,
-        types: [Assistant.Chat, DocumentType, Blueprint.Blueprint],
+        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint],
         onClientInitialized: async (_, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
@@ -287,20 +286,14 @@ const getDecorators = ({
           //  ERROR: invariant violation: Database was not initialized with root object.
           await space.waitUntilReady();
 
-          // TODO(burdon): Remove need for this boilerplate. Namespace for types?
           const chat = space.db.add(
+            // TODO(burdon): Assistant.makeChat()
             Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
           const binder = new ContextBinder(await chat.queue.load());
-
-          const doc = space.db.add(
-            Obj.make(DocumentType, {
-              name: 'Tasks',
-              content: Ref.make(Obj.make(DataType.Text, { content: '' })),
-            }),
-          );
+          const doc = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }
@@ -323,7 +316,7 @@ const getDecorators = ({
 
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Functions, [readDocument, writeDocument])],
+    capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],
   }),
   withTheme,
   withLayout({
@@ -359,7 +352,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     config: remoteConfig,
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [TASK_BLUEPRINT],
+    blueprints: [PLANNING_BLUEPRINT],
     context: true,
   }),
   args: {

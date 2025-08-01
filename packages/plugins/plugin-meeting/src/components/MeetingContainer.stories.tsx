@@ -57,8 +57,8 @@ const meta: Meta<MeetingContainerProps> = {
                 created: new Date().toISOString(),
                 participants: [],
                 transcript: Ref.make(Obj.make(TranscriptType, { queue: Ref.fromDXN(space.queues.create().dxn) })),
-                notes: Ref.make(Obj.make(DataType.Text, { content: 'Notes' })),
-                summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
+                notes: Ref.make(DataType.makeText('Notes')),
+                summary: Ref.make(DataType.makeText()),
                 thread: Ref.make(Obj.make(ThreadType, { messages: [] })),
               }),
             );

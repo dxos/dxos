@@ -8,11 +8,11 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/react-ui-editor';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { MARKDOWN_PLUGIN } from '../../meta';
-import { type MarkdownSettingsProps } from '../../types';
+import { meta } from '../../meta';
+import { type Markdown } from '../../types';
 
-export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps }) => {
-  const { t } = useTranslation(MARKDOWN_PLUGIN);
+export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) => {
+  const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (

@@ -5,7 +5,7 @@
 import { defineCapability } from '@dxos/app-framework';
 import { type EditorViewMode, type EditorStateStore } from '@dxos/react-ui-editor';
 
-import { MARKDOWN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type MarkdownExtensionProvider, type MarkdownPluginState } from '../types';
 
 export namespace MarkdownCapabilities {
@@ -14,7 +14,8 @@ export namespace MarkdownCapabilities {
     editorState: EditorStateStore;
     getViewMode: (id: string) => EditorViewMode;
     setViewMode: (id: string, viewMode: EditorViewMode) => void;
-  }>(`${MARKDOWN_PLUGIN}/capability/state`);
+  }>(`${meta.id}/capability/state`);
 
-  export const Extensions = defineCapability<MarkdownExtensionProvider[]>(`${MARKDOWN_PLUGIN}/capability/extensions`);
+  // TODO(burdon): Move to ./types (external API)?
+  export const Extensions = defineCapability<MarkdownExtensionProvider[]>(`${meta.id}/capability/extensions`);
 }
