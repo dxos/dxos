@@ -138,7 +138,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
         }
       }
     });
-  }, [event, onEvent]);
+  }, [event, onEvent, processor]);
 
   if (!space) {
     return null;
