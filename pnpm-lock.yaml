@@ -5352,6 +5352,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../plugin-board
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

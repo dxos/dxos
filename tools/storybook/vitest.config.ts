@@ -3,12 +3,22 @@
 //
 
 import { defineConfig, mergeConfig } from 'vitest/config';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 import { baseConfig } from '../../vitest.base.config';
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
   defineConfig({
+    plugins: [
+      // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
+      storybookTest({
+        tags: {
+          include: ['stable'],
+          exclude: ['experimental'],
+        },
+      }),
+    ],
     test: {
       setupFiles: ['./.storybook/vitest.setup.ts'],
       projects: [

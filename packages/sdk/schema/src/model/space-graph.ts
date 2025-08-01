@@ -32,6 +32,8 @@ class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphE
 
 const defaultFilter: Filter<any> = Filter.everything();
 
+const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
+
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
   onCreateNode?: (node: SpaceGraphNode, object: Obj.Any) => void;
@@ -238,7 +240,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
               type: 'object',
               data: {
                 object,
-                label: (schema && Obj.getLabel(object)) ?? object.id,
+                label: (schema && Obj.getLabel(object)) ?? Obj.getTypename(object) + '/' + truncate(object.id),
               },
             };
 

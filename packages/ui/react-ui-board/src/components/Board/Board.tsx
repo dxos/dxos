@@ -24,7 +24,8 @@ import { IconButton, Toolbar, type ThemedClassName, useTranslation } from '@dxos
 import { mx } from '@dxos/react-ui-theme';
 
 import { BoardCell, type BoardCellProps } from './BoardCell';
-import { type BoardGeometry as BoardGrid, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
+import { defaultGrid, defaultLayout } from './defs';
+import { type BoardGeometry, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
 import { type BoardLayout, type Size, type Position } from './types';
 import { translationKey } from '../../translations';
 
@@ -36,9 +37,6 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag edges to resize.
-
-const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
-const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -54,7 +52,7 @@ interface BoardController {
 type BoardContextValue = {
   readonly: boolean;
   layout: BoardLayout;
-  grid: BoardGrid;
+  grid: BoardGeometry;
   bounds: Size;
   center: Position;
   zoom: boolean;

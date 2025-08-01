@@ -7,6 +7,8 @@ import { Obj, type Type, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
+export const testTypes = [DataType.Organization, DataType.Person, DataType.Employer, DataType.HasConnection];
+
 const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },

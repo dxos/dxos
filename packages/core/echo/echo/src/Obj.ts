@@ -30,9 +30,9 @@ export type Obj<Props> = ObjBase & Props;
  */
 export interface Any extends ObjBase {}
 
-type Props<T> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
+type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
-export type MakeProps<S extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<S>>>;
+export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>>;
 
 /**
  * Creates new object.

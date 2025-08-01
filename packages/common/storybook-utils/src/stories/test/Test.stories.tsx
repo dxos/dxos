@@ -21,6 +21,7 @@ const meta: Meta<TestProps> = {
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
+  tags: ['stable'],
 };
 
 export default meta;
