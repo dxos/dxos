@@ -20,6 +20,13 @@ const DEFAULT_TIMEOUT = 10_000;
 export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
 
+export type MessengerConfig = {
+  socketEndpoint: string;
+  timeout?: number;
+  protocol?: Protocol;
+  disableAuth?: boolean;
+};
+
 export interface EdgeConnection extends Required<Lifecycle> {
   statusChanged: Event<EdgeStatus>;
   get info(): any;
@@ -28,17 +35,10 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
+  send(message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
-  send(message: Message): Promise<void>;
 }
-
-export type MessengerConfig = {
-  socketEndpoint: string;
-  timeout?: number;
-  protocol?: Protocol;
-  disableAuth?: boolean;
-};
 
 /**
  * Messenger client for EDGE:
@@ -103,6 +103,30 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
   }
 
+  /**
+   * Send message.
+   * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
+   */
+  public async send(message: Message): Promise<void> {
+    if (this._ready.state !== TriggerState.RESOLVED) {
+      log('waiting for websocket');
+      await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
+    }
+
+    if (!this._currentConnection) {
+      throw new EdgeConnectionClosedError();
+    }
+
+    if (
+      message.source &&
+      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
+    ) {
+      throw new EdgeIdentityChangedError();
+    }
+
+    this._currentConnection.send(message);
+  }
+
   public onMessage(listener: MessageListener): () => void {
     this._messageListeners.add(listener);
     return () => this._messageListeners.delete(listener);
@@ -123,6 +147,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
         }
       });
     }
+
     return () => this._reconnectListeners.delete(listener);
   }
 
@@ -200,7 +225,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
     // Race with restartRequired so that restart is not blocked by _connect execution.
     // Wait on ready to attempt a reconnect if it times out.
     await Promise.race([this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT }), restartRequired]);
-
     return connection;
   }
 
@@ -235,30 +259,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
         log.error('ws incoming message processing failed', { err, payload: protocol.getPayloadType(message) });
       }
     }
-  }
-
-  /**
-   * Send message.
-   * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
-   */
-  public async send(message: Message): Promise<void> {
-    if (this._ready.state !== TriggerState.RESOLVED) {
-      log('waiting for websocket to become ready');
-      await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
-    }
-
-    if (!this._currentConnection) {
-      throw new EdgeConnectionClosedError();
-    }
-
-    if (
-      message.source &&
-      (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
-    ) {
-      throw new EdgeIdentityChangedError();
-    }
-
-    this._currentConnection.send(message);
   }
 
   private async _createAuthHeader(path: string): Promise<string | undefined> {
