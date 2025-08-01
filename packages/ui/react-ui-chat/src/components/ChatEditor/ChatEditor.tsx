@@ -23,6 +23,7 @@ import { references as referencesExtension, type ReferencesOptions } from './ref
 
 export interface ChatEditorController {
   focus(): void;
+  getText(): string;
   setText(text: string): void;
 }
 
@@ -66,6 +67,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         focus: () => {
           view?.focus();
         },
+        getText: () => view?.state.doc.toString() ?? '',
         setText: (text: string) => {
           view?.dispatch({
             changes: {

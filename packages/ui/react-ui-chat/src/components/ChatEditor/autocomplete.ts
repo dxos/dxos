@@ -14,6 +14,8 @@ import {
 } from '@codemirror/view';
 
 export type AutocompleteOptions = {
+  fireIfEmpty?: boolean;
+
   /**
    * Callback triggered when Enter is pressed.
    * @param text The current text in the editor
@@ -39,7 +41,7 @@ export type AutocompleteOptions = {
  * Pressing Tab will complete the suggestion.
  */
 // TODO(burdon): Move to react-ui-editor.
-export const autocomplete = ({ onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
+export const autocomplete = ({ fireIfEmpty, onSubmit, onSuggest, onCancel }: AutocompleteOptions): Extension => {
   const suggest = ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet;
@@ -144,7 +146,7 @@ export const autocomplete = ({ onSubmit, onSuggest, onCancel }: AutocompleteOpti
           preventDefault: true,
           run: (view) => {
             const text = view.state.doc.toString().trim();
-            if (text.length > 0 && onSubmit) {
+            if (onSubmit && (fireIfEmpty || text.length > 0)) {
               const reset = onSubmit(text);
 
               // Clear the document after calling onEnter.
