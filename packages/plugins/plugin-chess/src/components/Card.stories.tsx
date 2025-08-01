@@ -53,7 +53,7 @@ const DefaultStory = ({ role }: DefaultStoryProps) => {
 };
 
 const meta: Meta<DefaultStoryProps> = {
-  title: 'plugins/plugin-chess/Card', // TODO(burdon): Name consistently (for all plugins that provide cards).
+  title: 'plugins/plugin-chess/Card', // TODO(burdon): Name filename and test consistently (for all plugins that provide cards).
   render: render(DefaultStory),
   decorators: [
     withLayout(),
