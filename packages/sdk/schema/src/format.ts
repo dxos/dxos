@@ -83,8 +83,8 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: Schema.NonEmptyString.annotations({
-      title: 'Schema',
-      description: 'Schema typename',
+      title: 'Record type',
+      description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
       JsonProp.annotations({
