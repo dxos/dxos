@@ -22,7 +22,7 @@ const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
 
 const ViewMetaSchema = Schema.Struct({
   typename: Format.URL.annotations({
-    title: 'Typename',
+    title: 'Record type',
   }),
 }).pipe(Schema.mutable);
 
