@@ -12,7 +12,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { extractFullEntities } from './named-entity-recognition';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { findQuotes, insertReferences } from '../quotes';
 
@@ -25,6 +24,7 @@ export const extractionNerFn = defineFunction({
     log.info('input', { message, options });
     const startTime = performance.now();
     const { db } = context.getService(DatabaseService);
+    const { extractFullEntities } = await import('./named-entity-recognition');
 
     const entitiesPromise = Promise.all(
       message.blocks.map(async (block) => {

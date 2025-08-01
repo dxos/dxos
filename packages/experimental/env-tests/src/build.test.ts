@@ -28,6 +28,7 @@ describe('build tests', () => {
         //       ...or local file paths: ../../ui/react-ui-table/dist/lib/browser/types/index.mjs
         /sodium-native/,
         /protobufjs/,
+        /@xenova\+transformers/,
       ],
     });
   });

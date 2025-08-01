@@ -19,7 +19,7 @@ import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
-type UseChatProcessorProps = {
+export type UseChatProcessorProps = {
   preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;

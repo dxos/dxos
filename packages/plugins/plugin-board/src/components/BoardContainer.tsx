@@ -18,7 +18,7 @@ import { isNonNullable } from '@dxos/util';
 import { type Board as BoardType } from '../types';
 
 export type BoardContainerProps = {
-  role: string;
+  role?: string;
   board: BoardType.Board;
 };
 
@@ -84,8 +84,8 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
 
   return (
     <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
-      <StackItem.Content toolbar>
-        <Board.Controls />
+      <StackItem.Content toolbar classNames='overflow-hidden'>
+        <Board.Toolbar />
         <Board.Container>
           <Board.Viewport classNames='border-none'>
             <Board.Backdrop />

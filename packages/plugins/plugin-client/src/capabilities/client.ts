@@ -27,6 +27,7 @@ export default async ({ context, onClientInitialized, onSpacesReady, ...options 
     });
   });
 
+  // TODO(burdon): The callback isn't called?
   const subscription = client.spaces.isReady.subscribe(async (ready) => {
     if (ready) {
       await context.activatePromise(ClientEvents.SpacesReady);
