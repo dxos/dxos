@@ -79,6 +79,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       include: ['buffer/'],
       esbuildOptions: {
         plugins: [
+          // TODO(burdon): esbuild version mismatch.
           FixGracefulFsPlugin(),
           // TODO(wittjosiah): Compute nodeStd from package.json
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
@@ -102,7 +103,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 9999999 : 5000,
+      testTimeout: isDebug ? 3600_000 : 5000,
       inspect: isDebug,
       isolate: false,
       poolOptions: {

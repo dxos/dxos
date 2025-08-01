@@ -17,10 +17,10 @@ export default mergeConfig(
       // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
       storybookTest({
         configDir: join(__dirname, './.storybook'),
-        // tags: {
-        // include: ['stable'],
-        // exclude: ['experimental'],
-        // },
+        tags: {
+          include: ['test'],
+          exclude: ['experimental'],
+        },
       }),
     ],
     test: {
@@ -34,7 +34,6 @@ export default mergeConfig(
           },
         },
         {
-          // moon run storybook:test-browser
           test: {
             // https://vitest.dev/guide/browser
             name: 'browser',

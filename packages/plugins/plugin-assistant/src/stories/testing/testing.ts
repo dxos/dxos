@@ -55,36 +55,40 @@ export const getDecorators = ({
       ClientPlugin({
         config,
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
-        onClientInitialized: async (_, client) => {
+        onClientInitialized: async (context, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
 
           const space = client.spaces.default;
-
           // ISSUE(burdon): Should not require this.
           //  ERROR: invariant violation: Database was not initialized with root object.
           await space.waitUntilReady();
 
-          const chat = space.db.add(
-            // TODO(burdon): Assistant.makeChat()
-            Obj.make(Assistant.Chat, {
-              queue: Ref.fromDXN(space.queues.create().dxn),
-            }),
-          );
+          // TODO(burdon): Assistant.makeChat()
+          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           const binder = new ContextBinder(await chat.queue.load());
+
+          // TODO(burdon): Remove (should be created by blueprint).
           const doc = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
           if (context) {
             await binder.bind({ objects: [Ref.make(doc)] });
           }
 
+          // Clone blueprints and bind to conversation.
+          // TODO(dmaretskyi): This should be done by Obj.clone.
           for (const blueprint of blueprints) {
-            // Clone blueprints and bind to conversation.
-            // TODO(dmaretskyi): This should be done by Obj.clone.
             const { id: _id, ...data } = blueprint;
             const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
+
+          await props.onSpacesReady?.(context, client);
         },
+        // TODO(burdon): This isn't called?
+        // onSpacesReady: async (_, client) => {
+        //   const space = client.spaces.default;
+        //   space.db.add(Board.makeBoard());
+        // },
         ...props,
       }),
       IntentPlugin(),

@@ -9,8 +9,7 @@ import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
 import { Obj } from '@dxos/echo';
-import { BoardPlugin } from '@dxos/plugin-board';
-import { Board } from '@dxos/plugin-board/types';
+import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ChessType } from '@dxos/plugin-chess/types';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -24,6 +23,7 @@ import { render } from '@dxos/storybook-utils';
 import { translations } from '../translations';
 import {
   BlueprintContainer,
+  BoardContainer,
   ChatContainer,
   type ComponentProps,
   DocumentContainer,
@@ -129,7 +129,7 @@ export const WithSearch = {
   },
 } satisfies Story;
 
-// TODO(burdon): Artifact surface.
+// TODO(burdon): Artifact surface (showing currently bound artifacts).
 export const WithChess = {
   decorators: getDecorators({
     context: true,
@@ -145,7 +145,7 @@ export const WithChess = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer],
   },
 } satisfies Story;
 
@@ -154,14 +154,14 @@ export const WithBoard = {
     plugins: [BoardPlugin()],
     context: true,
     config: remoteConfig,
-    types: [ChessType],
+    types: [Board.Board],
     onSpacesReady: async (_, client) => {
       const space = client.spaces.default;
       space.db.add(Board.makeBoard());
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, BoardContainer],
   },
 } satisfies Story;
 

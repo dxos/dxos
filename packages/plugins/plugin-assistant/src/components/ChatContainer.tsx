@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
 import { type AssociatedArtifact } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chat, type ChatPromptProps } from './Chat';
-import { type AiServicePreset, AiServicePresets, useChatProcessor, useChatServices } from '../hooks';
+import { Chat } from './Chat';
+import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
@@ -26,23 +26,8 @@ export const ChatContainer = ({ chat, artifact }: ChatContainerProps) => {
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
 
-  // TODO(burdon): Factor out.
-  const [online, setOnline] = useState(true);
-  const presets = useMemo(
-    () => AiServicePresets.filter((preset) => online === (preset.provider === 'dxos-remote')),
-    [online],
-  );
-  const [preset, setPreset] = useState<AiServicePreset>();
-  const handleChangePreset = useCallback<NonNullable<ChatPromptProps['onChangePreset']>>(
-    (id) => {
-      const preset = presets.find((preset) => preset.id === id);
-      if (preset) {
-        setPreset(preset);
-      }
-    },
-    [presets],
-  );
-
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
   const processor = useChatProcessor({ preset, chat, services, settings });
   if (!processor) {
     return null;
@@ -55,11 +40,11 @@ export const ChatContainer = ({ chat, artifact }: ChatContainerProps) => {
         <Chat.Thread />
         <div className='pbe-4 pis-2 pie-2'>
           <Chat.Prompt
+            {...chatProps}
             classNames='border border-subduedSeparator rounded-md'
-            presets={presets.map(({ id, model, label }) => ({ id, label: label ?? model }))}
             preset={preset?.id}
+            online={online}
             onChangeOnline={setOnline}
-            onChangePreset={handleChangePreset}
           />
         </div>
       </Chat.Root>

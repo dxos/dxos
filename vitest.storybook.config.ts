@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'node:path';
-import pkgUp from 'pkg-up';
-import { BuildOptions, type Plugin } from 'esbuild';
-import { defineConfig, UserConfig, type ViteUserConfig } from 'vitest/config';
+import { defineConfig, type ViteUserConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
-// import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
+import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
+
+// TODO(burdon): Factor out common config with base.
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -52,12 +51,12 @@ const createNodeConfig = (cwd: string) =>
     },
     test: {
       environment: 'node',
-      include: [
-        '**/src/**/*.test.{ts,tsx}',
-        '**/test/**/*.test.{ts,tsx}',
-        '!**/src/**/*.browser.test.{ts,tsx}',
-        '!**/test/**/*.browser.test.{ts,tsx}',
-      ],
+      // include: [
+      //   '**/src/**/*.test.{ts,tsx}',
+      //   '**/test/**/*.test.{ts,tsx}',
+      //   '!**/src/**/*.browser.test.{ts,tsx}',
+      //   '!**/test/**/*.browser.test.{ts,tsx}',
+      // ],
       setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
     },
     // Shows build trace
@@ -73,8 +72,9 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       include: ['buffer/'],
       esbuildOptions: {
         plugins: [
-          // FixGracefulFsPlugin(),
-          // ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
+          // TODO(burdon): Vite version issues.
+          FixGracefulFsPlugin(),
+          ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
     },
