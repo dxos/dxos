@@ -15,9 +15,8 @@ const meta: Meta<DefaultstoryProps> = {
   title: 'plugins/plugin-preview/Card',
   render: Defaultstory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex flex-col justify-center' })],
-  parameters: {
-    translations,
-  },
+  parameters: { translations },
+  tags: ['cards'],
 };
 
 export default meta;

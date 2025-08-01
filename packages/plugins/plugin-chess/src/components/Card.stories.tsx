@@ -21,13 +21,16 @@ import { render, withLayout } from '@dxos/storybook-utils';
 
 import ChessContainer from './ChessContainer';
 import { ChessType } from '../types';
+import { meta } from '../meta';
 
 // TODO(burdon): Factor out variance.
 type DefaultStoryProps = {
   role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 };
 
+// TODO(burdon): This is the standard name for our stories (we can change it).
 const DefaultStory = ({ role }: DefaultStoryProps) => {
+  // TODO(burdon): This doesn't need to use Space (see MarkdownPreview).
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const games = useQuery(space, Filter.type(ChessType));
@@ -45,14 +48,13 @@ const DefaultStory = ({ role }: DefaultStoryProps) => {
   }
 
   return (
-    // TODO(burdon): Reuse icons from meta.
-    <CardContainer icon='ph--castle-turret--regular' role={role}>
+    <CardContainer icon={meta.icon} role={role}>
       <ChessContainer game={game} role={role} />
     </CardContainer>
   );
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const storybook: Meta<DefaultStoryProps> = {
   title: 'plugins/plugin-chess/Card', // TODO(burdon): Name filename and test consistently (for all plugins that provide cards).
   render: render(DefaultStory),
   decorators: [
@@ -89,9 +91,10 @@ const meta: Meta<DefaultStoryProps> = {
   parameters: {
     layout: 'centered',
   },
+  tags: ['cards'],
 };
 
-export default meta;
+export default storybook;
 
 export const Popover = {
   args: {
