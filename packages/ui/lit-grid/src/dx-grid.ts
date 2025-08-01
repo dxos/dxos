@@ -1614,6 +1614,7 @@ export {
   parseCellIndex,
   toPlaneCellIndex,
   cellQuery,
+  accessoryHandlesPointerdownAttrs,
 } from './util';
 
 export const commentedClassName = 'dx-grid__cell--commented';
