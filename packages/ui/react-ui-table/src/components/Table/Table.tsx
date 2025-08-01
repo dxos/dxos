@@ -282,7 +282,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         switch (event.key) {
           case 'Backspace':
           case 'Delete': {
-            model.setCellData(cell, undefined);
+            try {
+              model.setCellData(cell, undefined);
+              event.preventDefault();
+            } catch {
+              // Delete results in a validation error; don’t prevent default so dx-grid can emit an edit request.
+            }
             break;
           }
         }
@@ -391,7 +396,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
-          onKeyDown={handleKeyDown}
+          onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
           ref={setDxGrid}
         />

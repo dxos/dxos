@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
@@ -11,6 +11,7 @@ import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
+import Minimatch from 'minimatch';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -65,7 +66,7 @@ const createNodeConfig = (cwd: string) =>
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
+    plugins: [PluginImportSource(), process.env.VITE_INSPECT ? Inspect() : undefined],
   });
 
 const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
@@ -181,3 +182,72 @@ function nodeStdPlugin(): Plugin {
     },
   };
 }
+
+import { ResolverFactory } from 'oxc-resolver';
+
+const resolver = new ResolverFactory({
+  conditionNames: ['source'],
+});
+
+interface PluginImportSourceOptions {
+  include?: string[];
+  exclude?: string[];
+  verbose?: boolean;
+}
+
+const PluginImportSource = ({
+  include = ['**'],
+  exclude = ['**/node_modules/**'],
+  verbose = !!process.env.IMPORT_SOURCE_DEBUG,
+}: PluginImportSourceOptions = {}): Plugin => {
+  const globOptions = { dot: true };
+
+  return {
+    name: 'plugin-import-source',
+    resolveId: {
+      order: 'pre',
+      async handler(source, importer, options) {
+        // Check if source looks like an npm package name
+        if (!source.match(/^[a-zA-Z@][a-zA-Z0-9._-]*(\/[a-zA-Z0-9._-]+)*$/)) {
+          return null; // Skip to next importer
+        }
+
+        try {
+          if (!importer) {
+            return null;
+          }
+          const resolved = await resolver.async(importer, source);
+          verbose &&
+            console.log({
+              source,
+              importer,
+              resolved,
+            });
+          if (resolved.error || !resolved.path) {
+            return null;
+          }
+          const match =
+            include.some((pattern) => Minimatch(resolved.path, pattern, globOptions)) &&
+            !exclude.some((pattern) => Minimatch(resolved.path, pattern, globOptions));
+          verbose &&
+            console.log({
+              match,
+              path: resolved.path,
+              include: include.map((pattern) => [pattern, Minimatch(resolved.path, pattern, globOptions)]),
+              exclude: exclude.map((pattern) => [pattern, Minimatch(resolved.path, pattern, globOptions)]),
+            });
+          if (!match) {
+            return null;
+          }
+
+          verbose && console.log(`${source} -> ${resolved.path}`);
+          return resolved.path;
+        } catch (error) {
+          verbose && console.error(error);
+          // If resolution fails, return null to skip to next resolver
+          return null;
+        }
+      },
+    },
+  };
+};

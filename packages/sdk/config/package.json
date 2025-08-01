@@ -15,22 +15,26 @@
       "node": {
         "require": "./dist/lib/node/index.cjs",
         "default": "./dist/lib/node-esm/index.mjs"
-      }
+      },
+      "source": "./src/index.ts"
     },
     "./esbuild-plugin": {
       "types": "./dist/types/src/esbuild-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/esbuild-plugin.mjs",
-      "require": "./dist/plugin/node/esbuild-plugin.cjs"
+      "require": "./dist/plugin/node/esbuild-plugin.cjs",
+      "source": "./src/esbuild-plugin/index.ts"
     },
     "./rollup-plugin": {
       "types": "./dist/types/src/rollup-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/rollup-plugin.mjs",
-      "require": "./dist/plugin/node/rollup-plugin.cjs"
+      "require": "./dist/plugin/node/rollup-plugin.cjs",
+      "source": "./src/rollup-plugin/index.ts"
     },
     "./vite-plugin": {
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/plugin/node-esm/vite-plugin.mjs",
-      "require": "./dist/plugin/node/vite-plugin.cjs"
+      "require": "./dist/plugin/node/vite-plugin.cjs",
+      "source": "./src/vite-plugin/index.ts"
     }
   },
   "main": "dist/lib/node/index.cjs",
