@@ -9,7 +9,6 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
 
 import { defaultColSize, defaultRowSize } from './defs';
-// eslint-disable-next-line unused-imports/no-unused-imports
 import './dx-grid-axis-resize-handle';
 import {
   type DxGridAxisMetaProps,
@@ -480,6 +479,13 @@ export class DxGrid extends LitElement {
           case 'Enter':
             event.preventDefault();
             this.dispatchEditRequest();
+            break;
+          case 'Backspace':
+          case 'Delete':
+            if (!event.defaultPrevented) {
+              event.preventDefault();
+              this.dispatchEditRequest('');
+            }
             break;
           default:
             if (event.key.length === 1 && event.key.match(/\P{Cc}/u) && !(event.metaKey || event.ctrlKey)) {
