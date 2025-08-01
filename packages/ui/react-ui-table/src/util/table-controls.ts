@@ -3,6 +3,8 @@
 //
 
 // Core types.
+import { accessoryHandlesPointerdownAttrs } from '@dxos/lit-grid';
+
 export type TableControl = 'checkbox' | 'switch';
 
 export type ControlData =
@@ -41,7 +43,7 @@ const renderInput = (
   preventToggle = false,
   testId: string,
 ) => {
-  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}"/>`;
+  return `<input type="checkbox" class="${baseClass}" ${renderAttributes(attrs)} ${checked ? 'checked' : ''} ${preventToggle ? 'onclick="return false"' : ''} ${disabled ? 'disabled' : ''} data-testid="${testId}" data-dx-grid-action="accessory"/>`;
 };
 
 export const CheckboxStory = ({
@@ -64,6 +66,7 @@ export const SwitchStory = ({ colIndex, rowIndex, checked = false, disabled = fa
     [CONTROL_IDENTIFIERS.switch]: '',
     'data-row-index': rowIndex.toString(),
     'data-col-index': colIndex.toString(),
+    ...accessoryHandlesPointerdownAttrs,
   };
 
   return renderInput(BASE_CLASSES.switch, attrs, checked, disabled, true, 'table-switch');
