@@ -61,8 +61,8 @@ export default () =>
   contributes(Capabilities.Tools, [
     createTool(SYSTEM_NAMESPACE, {
       name: 'list',
-      description: 'List registered records in the space.',
-      caption: 'Listing registered records...',
+      description: 'List registered record types in the space.',
+      caption: 'Listing registered record types...',
       schema: Schema.Struct({}),
       execute: async (_input, { extensions }) => {
         invariant(extensions?.space, 'No space.');
@@ -79,11 +79,11 @@ export default () =>
     }),
     createTool(SYSTEM_NAMESPACE, {
       name: 'get',
-      description: 'Get a specific record by its typename.',
+      description: 'Get a specific record type by its name.',
       caption: 'Getting record...',
       schema: Schema.Struct({
         typename: Schema.String.annotations({
-          description: 'The fully qualified typename of the record.',
+          description: 'The fully qualified name of the record type.',
         }),
       }),
       execute: async ({ typename }, { extensions }) => {
@@ -100,12 +100,12 @@ export default () =>
     }),
     createTool(SYSTEM_NAMESPACE, {
       name: 'create',
-      description: 'Create a new record with the provided definition.',
-      caption: 'Creating record...',
+      description: 'Create a new record type with the provided definition.',
+      caption: 'Creating record type...',
       schema: Schema.Struct({
         typename: TypeNameSchema.annotations({
           description:
-            'The fully qualified schema typename. Must start with a domain, and then one or more path components (e.g., "example.com/type/TypeName").',
+            'The fully qualified name of the record type. Must start with a domain, and then one or more path components (e.g., "example.com/type/TypeName").',
         }),
         properties: Schema.Array(PropertyDefinitionSchema).pipe(
           Schema.annotations({ description: 'Array of property definitions for the record.' }),

@@ -17,7 +17,7 @@ export const CreateMapSchema = Schema.Struct({
   typename: Schema.optional(
     Schema.String.annotations({
       [TypenameAnnotationId]: ['dynamic'],
-      title: 'Record',
+      title: 'Record type',
     }),
   ),
   locationFieldId: Schema.String.annotations({

@@ -78,7 +78,7 @@ export default () => {
             }),
           ).annotations({ description: 'Optional center coordinates for the map.' }),
           typename: Schema.optional(Schema.String).annotations({
-            description: 'Optional fully qualified typename of the record to use for map points.',
+            description: 'Optional fully qualified name of the record type to use for map points.',
           }),
           locationFieldId: Schema.String.annotations({
             description: 'Field name to use as the location property.',

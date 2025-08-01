@@ -50,7 +50,7 @@ export const translations = [
         'space label': 'Space',
         'feeds label': 'Feeds',
         'objects label': 'Objects',
-        'schema label': 'Record',
+        'schema label': 'Schema',
         'automerge label': 'Automerge',
         'queues label': 'Queues',
         'members label': 'Members',
