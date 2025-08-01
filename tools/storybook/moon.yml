@@ -35,10 +35,8 @@ tasks:
       - --quiet
       - --config-dir=config/e2e
     preset: server
-  # TODO(burdon): Currently not working.
-  # ✘ [ERROR] "@dxos/node-std/_/config" resolved to an ESM file.
   test-ci:
-    command: vitest --project=ci
+    command: vitest --project=browser
     deps:
       - esbuild-plugins:compile
       - node-std:compile

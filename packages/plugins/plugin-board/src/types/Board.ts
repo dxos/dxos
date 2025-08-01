@@ -27,7 +27,7 @@ export const Board = Schema.Struct({
 
 export interface Board extends Schema.Schema.Type<typeof Board> {}
 
-export const makeBoard = (props: Partial<Obj.MakeProps<typeof Board>>) =>
+export const makeBoard = (props: Partial<Obj.MakeProps<typeof Board>> = {}) =>
   Obj.make(Board, {
     items: [],
     layout: defaultLayout,

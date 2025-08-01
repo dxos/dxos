@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { join } from 'node:path';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
-import { baseConfig } from '../../vitest.base.config';
+import { baseConfig } from '../../vitest.storybook.config';
+
+console.log(join(__dirname, './.storybook'));
 
 export default mergeConfig(
   baseConfig({ cwd: __dirname }),
@@ -13,10 +16,11 @@ export default mergeConfig(
     plugins: [
       // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
       storybookTest({
-        tags: {
-          include: ['stable'],
-          exclude: ['experimental'],
-        },
+        configDir: join(__dirname, './.storybook'),
+        // tags: {
+        // include: ['stable'],
+        // exclude: ['experimental'],
+        // },
       }),
     ],
     test: {
@@ -36,6 +40,7 @@ export default mergeConfig(
             name: 'browser',
             browser: {
               enabled: true,
+              instances: [{ browser: 'chromium' }],
             },
           },
         },
