@@ -64,7 +64,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
     };
   }, [themeMode, template.source?.target]);
 
-  return <div ref={parentRef} className={mx('h-full', classNames)} />;
+  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
 };
 
 /**
