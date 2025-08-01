@@ -12,22 +12,26 @@
     "./bundler": {
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
-      "node": "./dist/lib/node-esm/bundler/index.mjs"
+      "node": "./dist/lib/node-esm/bundler/index.mjs",
+      "source": "./src/bundler/index.ts"
     },
     "./edge": {
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
-      "node": "./dist/lib/node-esm/edge/index.mjs"
+      "node": "./dist/lib/node-esm/edge/index.mjs",
+      "source": "./src/edge/index.ts"
     },
     ".": {
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "node": "./dist/lib/node-esm/index.mjs",
+      "source": "./src/index.ts"
     },
     "./testing": {
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "node": "./dist/lib/node-esm/testing/index.mjs",
+      "source": "./src/testing/index.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
