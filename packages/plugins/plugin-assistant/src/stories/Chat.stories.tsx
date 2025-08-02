@@ -30,7 +30,7 @@ import {
   SurfaceContainer,
   TasksContainer,
 } from './components';
-import { addTestData, getDecorators, remoteConfig, testTypes } from './testing';
+import { addTestData, getDecorators, config, testTypes } from './testing';
 
 const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
   const space = useSpace();
@@ -86,7 +86,7 @@ type Story = StoryObj<typeof storybook>;
 
 export const Default = {
   decorators: getDecorators({
-    config: remoteConfig,
+    config: config.remote,
   }),
   args: {
     components: [ChatContainer],
@@ -96,7 +96,7 @@ export const Default = {
 export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
-    config: remoteConfig,
+    config: config.remote,
     onInit: async ({ space, binder }) => {
       const object = space.db.add(
         Markdown.makeDocument({
@@ -120,7 +120,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    config: remoteConfig,
+    config: config.remote,
     onInit: async ({ space, binder }) => {
       const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
       await binder.bind({ objects: [Ref.make(object)] });
@@ -134,7 +134,7 @@ export const WithBlueprints = {
 export const WithChess = {
   decorators: getDecorators({
     plugins: [ChessPlugin()],
-    config: remoteConfig,
+    config: config.remote,
     types: [Chess.Game],
     onInit: async ({ space, binder }) => {
       // TODO(burdon): Add player DID (for user and assistant).
@@ -154,7 +154,7 @@ export const WithChess = {
 export const WithMap = {
   decorators: getDecorators({
     plugins: [MapPlugin()],
-    config: remoteConfig,
+    config: config.remote,
     types: [Map.Map],
     onInit: async ({ space, binder }) => {
       const object = space.db.add(Map.makeMap());
@@ -169,7 +169,7 @@ export const WithMap = {
 export const WithBoard = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
-    config: remoteConfig,
+    config: config.remote,
     types: [Board.Board],
     onInit: async ({ space, binder }) => {
       const object = space.db.add(Board.makeBoard());
@@ -185,7 +185,7 @@ export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    config: remoteConfig,
+    config: config.remote,
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
@@ -194,7 +194,7 @@ export const WithResearch = {
 
 export const WithSearch = {
   decorators: getDecorators({
-    config: remoteConfig,
+    config: config.remote,
     types: testTypes,
     onInit: async ({ space }) => {
       await addTestData(space);

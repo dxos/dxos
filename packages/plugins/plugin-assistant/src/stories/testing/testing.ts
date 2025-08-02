@@ -29,19 +29,21 @@ import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
 import { type Space } from '@dxos/client/echo';
 
-export const remoteConfig = new Config({
-  runtime: {
-    services: {
-      ai: {
-        // TODO(burdon): Normalize props ('url'?)
-        server: remoteServiceEndpoints.ai,
-      },
-      edge: {
-        url: remoteServiceEndpoints.edge,
+export const config = {
+  remote: new Config({
+    runtime: {
+      services: {
+        ai: {
+          // TODO(burdon): Normalize props ('url'?)
+          server: remoteServiceEndpoints.ai,
+        },
+        edge: {
+          url: remoteServiceEndpoints.edge,
+        },
       },
     },
-  },
-});
+  }),
+};
 
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
