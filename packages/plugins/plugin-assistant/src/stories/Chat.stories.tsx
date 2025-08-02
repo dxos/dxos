@@ -52,13 +52,13 @@ const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<Com
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
+              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
                 <Component space={space} />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
+          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
             <Component space={space} />
           </div>
         ),
