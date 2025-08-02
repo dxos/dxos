@@ -22,6 +22,7 @@ import type { AiAssistantError } from '../errors';
 import { AiSession } from '../session';
 
 export interface ConversationRunOptions<Tools extends AiTool.Any> {
+  session?: AiSession;
   systemPrompt?: string;
   prompt: string;
 
@@ -43,6 +44,8 @@ export class Conversation {
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
+   *
+   * @deprecated Pass in a session instead.
    */
   public readonly onBegin = new Event<AiSession>();
 
@@ -61,15 +64,15 @@ export class Conversation {
     return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
 
-  run = <Tools extends AiTool.Any>(
-    options: ConversationRunOptions<Tools>,
-  ): Effect.Effect<
+  run = <Tools extends AiTool.Any>({
+    session = new AiSession(),
+    ...options
+  }: ConversationRunOptions<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      const session = new AiSession();
       this.onBegin.emit(session);
 
       const history = yield* Effect.promise(() => this.getHistory());

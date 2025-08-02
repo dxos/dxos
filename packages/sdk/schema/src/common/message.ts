@@ -205,7 +205,7 @@ export namespace ContentBlock {
    * Multiple choice selection.
    * Usually an answer to assistant's question.
    */
-  // TODO(burdon): Rename Option/Choice.
+  // TODO(burdon): Rename Choice.
   export const Select = Schema.TaggedStruct('select', {
     options: Schema.Array(Schema.String),
 

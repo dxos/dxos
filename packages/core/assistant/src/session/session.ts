@@ -3,7 +3,7 @@
 //
 
 import { AiLanguageModel, AiToolkit, type AiError, type AiResponse, type AiTool } from '@effect/ai';
-import { Chunk, Context, Effect, Option, pipe, Stream, type Schema } from 'effect';
+import { Chunk, Context, Effect, Option, pipe, Queue, Stream, type Schema } from 'effect';
 import { Array, String } from 'effect';
 
 import {
@@ -63,6 +63,9 @@ export class AiSession {
   /** Prior history from queue. */
   private _history: DataType.Message[] = [];
 
+  public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
+  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
+
   /**
    * New message.
    */
@@ -120,6 +123,7 @@ export class AiSession {
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
       this.userMessage.emit(promptMessages);
+      yield* this.messageQueue.offer(promptMessages);
 
       // Potential tool use loop.
       do {
@@ -166,6 +170,7 @@ export class AiSession {
           AiParser.parseGptStream({
             onBlock: (block) =>
               Effect.gen(this, function* () {
+                yield* this.blockQueue.offer(Option.some(block));
                 if (block.pending) {
                   this.update.emit(block);
                 } else {
@@ -181,6 +186,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        yield* this.blockQueue.offer(Option.none());
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -188,6 +194,7 @@ export class AiSession {
         });
         this._pending.push(response);
         this.message.emit(response);
+        yield* this.messageQueue.offer(response);
 
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
@@ -195,13 +202,13 @@ export class AiSession {
         }
 
         const toolResults = yield* runTools(toolCalls, toolkitWithBlueprintHandlers as any);
-        this._pending.push(
-          Obj.make(DataType.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'user' },
-            blocks: toolResults,
-          }),
-        );
+        const toolResultMessage = Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: toolResults,
+        });
+        this._pending.push(toolResultMessage);
+        yield* this.messageQueue.offer(toolResultMessage);
       } while (true);
 
       return this._pending;

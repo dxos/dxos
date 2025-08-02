@@ -1,19 +1,16 @@
 //
 // Copyright 2025 DXOS.org
 //
-
+import { Array } from 'effect';
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { createContext } from '@radix-ui/react-context';
-import { dedupeWith } from 'effect/Array';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
+import { type Expando, getSpace, type Space, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -37,6 +34,9 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
+import { Result, useRxValue } from '@effect-rx/rx-react';
+import { DXN, Obj, Ref } from '@dxos/echo';
+import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
@@ -85,14 +85,16 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
 
   // Messages.
   const queue = useQueue<DataType.Message>(chat?.queue.dxn);
-  const messages = useMemo(
-    () =>
-      dedupeWith(
-        [...(queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? []), ...(processor?.messages.value ?? [])],
-        (a, b) => a.id === b.id,
-      ),
-    [queue?.objects, processor?.messages.value],
-  );
+  const pending = useRxValue(processor.__messages);
+
+  const messages = useMemo(() => {
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
+    return Result.match(pending, {
+      onInitial: () => queueMessages,
+      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
+      onFailure: () => queueMessages,
+    });
+  }, [queue?.objects, pending]);
 
   // TODO(burdon): Replace with tool.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
