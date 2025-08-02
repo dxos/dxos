@@ -3,20 +3,21 @@
 //
 
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
-import { Effect, type Layer } from 'effect';
+import { Effect, Option, pipe, Stream, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
+import { AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
 import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import type { ChatServices } from './useChatServices';
+import { Registry, Result, Rx } from '@effect-rx/rx-react';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -34,6 +35,7 @@ export type ChatProcessorOptions = {
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
   blueprintRegistry?: Blueprint.Registry;
+  registry?: Registry.Registry;
 
   // TODO(dmaretskyi): Remove.
   artifacts?: readonly ArtifactDefinition[];
@@ -99,6 +101,66 @@ export class ChatProcessor {
   /** Current session. */
   private _session: AiSession | undefined = undefined;
 
+  private readonly __registry = this._options.registry ?? Registry.make();
+
+  private readonly __session = Rx.make<Option.Option<AiSession>>(Option.none());
+
+  readonly __streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
+    return pipe(
+      get(this.__session),
+      Option.map((session) => Stream.fromQueue(session.blockQueue)),
+      Option.getOrElse(() => Stream.make()),
+      Stream.scan<Option.Option<DataType.Message>, Option.Option<ContentBlock.Any>>(Option.none(), (acc, blockOption) =>
+        Option.flatMap(blockOption, (block) =>
+          acc.pipe(
+            Option.match({
+              onNone: () => [block],
+              onSome: (message) => [...message.blocks.filter((b) => !b.pending), block],
+            }),
+            Option.some,
+            Option.map((blocks) =>
+              Obj.make(DataType.Message, {
+                created: new Date().toISOString(),
+                sender: { role: 'assistant' },
+                blocks,
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  });
+
+  readonly __pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+    // TODO(wittjosiah): For some reason using Option.map here loses reactivity.
+    const session = get(this.__session);
+    return Option.isSome(session)
+      ? pipe(
+          session.value.messageQueue,
+          Stream.fromQueue,
+          Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => {
+            console.log('scan', { acc, message });
+            return [...acc, message];
+          }),
+        )
+      : Stream.make();
+  });
+
+  readonly __messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+    const streaming = get(this.__streaming);
+    return Result.map(get(this.__pending), (pending) =>
+      Result.match(streaming, {
+        onInitial: () => pending,
+        onSuccess: (streaming) =>
+          Option.match(streaming.value, {
+            onNone: () => pending,
+            onSome: (message) => [...pending, message],
+          }),
+        onFailure: () => pending,
+      }),
+    );
+  });
+
   constructor(
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
     private readonly _services: Layer.Layer<ChatServices>,
@@ -137,98 +199,52 @@ export class ChatProcessor {
   async request(message: string, options: RequestOptions = {}): Promise<DataType.Message[]> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
-    this._conversation.onBegin.on(ctx, (session) => {
-      log.info('onBegin', { session, isDisposed: ctx.disposed });
+    const session = new AiSession();
+    this._session = session;
+    this.__registry.set(this.__session, Option.some(session));
 
-      this._session = session;
-      ctx.onDispose(() => {
-        log.info('onDispose', { session, isDisposed: ctx.disposed });
-        if (this._session === session) {
-          this._session = undefined;
-        }
-      });
-
-      // User message.
-      session.userMessage.on((message) => {
-        log.info('userMessage', { message });
-        this._pending.value = [...this._pending.value, message];
-      });
-
-      // Message complete.
-      session.message.on((message) => {
-        batch(() => {
-          this._pending.value = [...this._pending.value, message];
-          this._streaming.value = undefined;
-        });
-      });
-
-      // Streaming update (happens before message complete).
-      session.update.on((block) => {
-        batch(() => {
-          if (!this._streaming.value) {
-            // TODO(burdon): Hack to create temp message; better for session to send initial partial object?
-            this._streaming.value = Obj.make(DataType.Message, {
-              created: new Date().toISOString(),
-              sender: { role: 'assistant' },
-              blocks: [block],
-            });
-          } else if (this._streaming.value.blocks.at(-1)?.pending === true) {
-            this._streaming.value.blocks[this._streaming.value.blocks.length - 1] = block;
-          } else {
-            this._streaming.value.blocks.push(block);
-          }
-        });
-      });
-
-      session.block.on((block) => {
-        if (!this._streaming.value) {
-          // TODO(burdon): Hack to create temp message; better for session to send initial partial object?
-          this._streaming.value = Obj.make(DataType.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks: [block],
-          });
-        } else if (this._streaming.value.blocks.at(-1)?.pending === true) {
-          this._streaming.value.blocks[this._streaming.value.blocks.length - 1] = block;
-        } else {
-          this._streaming.value.blocks.push(block);
-        }
-      });
-
-      // TODO(dmaretskyi): Handle tool status reports.
-      // session.toolStatusReport.on(({ message, status }) => {
-      //   const msg = this._pending.peek().find((m) => m.id === message.id);
-      //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-      //   if (!toolUse) {
-      //     return;
-      //   }
-
-      //   const block = msg?.content.find(
-      //     (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-      //   );
-      //   if (block) {
-      //     this._pending.value = this._pending.value.map((m) => {
-      //       if (m.id === message.id) {
-      //         return {
-      //           ...m,
-      //           content: m.content.map((block) =>
-      //             block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
-      //           ),
-      //         };
-      //       }
-
-      //       return m;
-      //     });
-      //   } else {
-      //     log.warn('no block for status report');
-      //   }
-      // });
+    ctx.onDispose(() => {
+      log.info('onDispose', { session, isDisposed: ctx.disposed });
+      if (this._session === session) {
+        this._session = undefined;
+        this.__registry.set(this.__session, Option.none());
+      }
     });
+
+    // TODO(dmaretskyi): Handle tool status reports.
+    // session.toolStatusReport.on(({ message, status }) => {
+    //   const msg = this._pending.peek().find((m) => m.id === message.id);
+    //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
+    //   if (!toolUse) {
+    //     return;
+    //   }
+
+    //   const block = msg?.content.find(
+    //     (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
+    //   );
+    //   if (block) {
+    //     this._pending.value = this._pending.value.map((m) => {
+    //       if (m.id === message.id) {
+    //         return {
+    //           ...m,
+    //           content: m.content.map((block) =>
+    //             block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
+    //           ),
+    //         };
+    //       }
+
+    //       return m;
+    //     });
+    //   } else {
+    //     log.warn('no block for status report');
+    //   }
+    // });
 
     try {
       const messages = await runAndForwardErrors(
         this._conversation
           .run({
+            session,
             prompt: message,
             // TODO(burdon): Construct from blueprints?
             systemPrompt: this._options.systemPrompt,
