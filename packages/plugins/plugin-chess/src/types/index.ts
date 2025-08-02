@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './schema';
-export * from './types';
+export * as Chess from './Chess';
+export * as ChessAction from './ChessAction';

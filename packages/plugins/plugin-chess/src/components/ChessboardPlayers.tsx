@@ -5,35 +5,47 @@
 import React from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
+import { useGameboardContext } from '@dxos/react-ui-gameboard';
+import { type Chess } from '../types';
+import { type ExtendedChessModel } from './Chessboard';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { type ChessType } from '../types';
+export type ChessboardPlayersProps = ThemedClassName<{}>;
 
-export const PlayerSelector = ({ space, game }: { space: Space; game: ChessType }) => {
-  const members = useMembers(space.key);
+export const ChessboardPlayers = ({ classNames }: ChessboardPlayersProps) => {
+  const { model } = useGameboardContext<ExtendedChessModel>(ChessboardPlayers.displayName);
+  const members = useMembers(getSpace(model.object)?.key);
+  const players: Chess.Game['players'] = model.object.players;
+  if (!players) {
+    return null;
+  }
 
   return (
-    <div role='none' className='grid grid-cols-2 gap-8'>
+    <div role='none' className={mx('grid grid-cols-2 gap-8', classNames)}>
       <div role='none' className='flex flex-row-reverse items-center gap-2'>
         <PlayerSelect
           side='white'
-          value={game.playerWhite}
-          onValueChange={(player) => (game.playerWhite = player)}
+          value={players.white}
+          onValueChange={(player) => (players.white = player)}
           members={members}
         />
       </div>
       <div role='none' className='flex flex-row items-center gap-2'>
         <PlayerSelect
           side='black'
-          value={game.playerBlack}
-          onValueChange={(player) => (game.playerBlack = player)}
+          value={players.black}
+          onValueChange={(player) => (players.black = player)}
           members={members}
         />
       </div>
     </div>
   );
 };
+
+ChessboardPlayers.displayName = 'Chessboard.Players';
 
 const PlayerSelect = ({
   side,

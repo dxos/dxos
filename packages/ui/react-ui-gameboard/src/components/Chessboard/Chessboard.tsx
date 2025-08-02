@@ -9,17 +9,16 @@ import { type ThemedClassName, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { boardStyles, type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
+import { boardStyles, type ChessModel, type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
   type DOMRectBounds,
+  Gameboard,
   type Location,
   type PieceRecord,
   type Player,
-  Piece,
-  Square,
   getRelativeBounds,
   locationToString,
-  useBoardContext,
+  useGameboardContext,
 } from '../Gameboard';
 
 export type ChessboardProps = ThemedClassName<
@@ -39,7 +38,7 @@ export const Chessboard = memo(
   ({ orientation, showLabels, debug, rows = 8, cols = 8, classNames }: ChessboardProps) => {
     useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
     const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
-    const { model, promoting, onPromotion } = useBoardContext();
+    const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
 
     const locations = useMemo<Location[]>(() => {
       return Array.from({ length: rows }, (_, i) => (orientation === 'black' ? i : rows - 1 - i)).flatMap((row) =>
@@ -102,7 +101,7 @@ export const Chessboard = memo(
         </div>
         <div>
           {locations.map((location) => (
-            <Square
+            <Gameboard.Square
               key={locationToString(location)}
               location={location}
               label={showLabels ? locationToPos(location) : undefined}
@@ -113,7 +112,7 @@ export const Chessboard = memo(
         </div>
         <div className={mx(promoting && 'opacity-50')}>
           {positions.map(({ bounds, piece }) => (
-            <Piece
+            <Gameboard.Piece
               key={piece.id}
               piece={piece}
               bounds={bounds}
@@ -176,12 +175,11 @@ const PromotionSelector = ({
     onSelect({ ...piece, type: selected.type });
   };
 
-  // TODO(burdon): Circle.
   return (
     <div>
       {positions.map(({ piece, bounds }) => (
         <div key={piece.id} style={bounds} onClick={() => handleSelect(piece)}>
-          <Piece
+          <Gameboard.Piece
             piece={piece}
             bounds={bounds}
             Component={ChessPieces[piece.type as ChessPiece]}
