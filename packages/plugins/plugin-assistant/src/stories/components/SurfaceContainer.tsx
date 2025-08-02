@@ -32,7 +32,7 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
     const ref = binder.objects.value?.[0];
     const object = await ref?.load();
     // TODO(burdon): Auto log meta for ECHO objects?
-    log.info('loaded', { typename: Obj.getTypename(object), id: object?.id });
+    log('loaded', { typename: Obj.getTypename(object), id: object?.id });
     return object;
   }, [chats]);
 

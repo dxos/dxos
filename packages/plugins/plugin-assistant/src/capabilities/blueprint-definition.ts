@@ -5,9 +5,9 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
+import { ToolId } from '@dxos/ai';
 
 import { context } from '../functions';
-import { ToolId } from '@dxos/ai';
 
 export default () => {
   return [
@@ -19,8 +19,8 @@ export default () => {
         instructions: {
           // TODO(burdon): This should be the system prompt for the assistant?
           source: trim`          
-          You are a helpful assistant.
-        `,
+            You are a helpful assistant.
+          `,
         },
         tools: [ToolId.make(context.name)],
       }),

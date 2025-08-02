@@ -4,19 +4,23 @@
 
 import { Effect, Schema } from 'effect';
 
-import { Key } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
   name: 'dxos.org/function/assistant-context',
   description: 'Retrieves objects from the curent chat context.',
-  inputSchema: Schema.Void,
+  inputSchema: Schema.Struct({
+    // TODO(burdon): DXN.
+    typename: Schema.optional(Schema.String),
+  }),
   outputSchema: Schema.Struct({
-    objects: Schema.Array(Key.ObjectId),
+    // TODO(burdon): Return objects (and teach assistant how to read schema).
+    objects: Schema.Array(Schema.Any),
   }),
   handler: Effect.fn(function* () {
-    console.log('!!!');
     // TODO(burdon): Get binder from tool context.
+    // TODO(burdon): Error handling for tools/functions.
+    console.log('###');
     return { objects: [] };
   }),
 });
