@@ -7,24 +7,27 @@ import '@dxos-theme';
 import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ChessType } from '../types';
+import { Chess } from '../types';
 import { meta } from '../meta';
-import { ChessPanel } from './ChessPanel';
+import { Chessboard } from './Chessboard';
 
 type DefaultStoryProps = {
   role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
-  game: ChessType;
+  game: Chess.Game;
 };
 
 const storybook: Meta<DefaultStoryProps> = {
   title: 'plugins/plugin-chess/Card',
   render: ({ role, game }) => (
     <CardContainer icon={meta.icon} role={role}>
-      <ChessPanel game={game} role={role} />
+      <Chessboard.Root game={game}>
+        <Chessboard.Content role={role}>
+          <Chessboard.Board />
+        </Chessboard.Content>
+      </Chessboard.Root>
     </CardContainer>
   ),
   decorators: [withTheme],
@@ -36,12 +39,8 @@ const storybook: Meta<DefaultStoryProps> = {
 
 export default storybook;
 
-const game = Obj.make(ChessType, {
-  name: 'Example Chess Game',
-  playerWhite: 'Player 1',
-  playerBlack: 'Player 2',
-  moves: [],
-  fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+const game = Chess.makeGame({
+  pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. bxc3 *',
 });
 
 type Story = StoryObj<DefaultStoryProps>;

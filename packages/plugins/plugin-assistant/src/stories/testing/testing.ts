@@ -12,12 +12,14 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { AttentionPlugin } from '@dxos/plugin-attention';
+import { GraphPlugin } from '@dxos/plugin-graph';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
+import { type Space } from '@dxos/client/echo';
 
 export const remoteConfig = new Config({
   runtime: {
@@ -33,71 +35,54 @@ export const remoteConfig = new Config({
   },
 });
 
+type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
+  plugins?: Plugin[];
+  blueprints?: Blueprint.Blueprint[];
+  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: ContextBinder }) => Promise<void>;
+};
+
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({
-  plugins = [],
-  blueprints = [],
-  context = false,
-  config,
-  types = [],
-  ...props
-}: {
-  config: Config;
-  plugins?: Plugin[];
-  blueprints?: Blueprint.Blueprint[];
-  context?: boolean;
-} & Omit<ClientPluginOptions, 'onClientInitialized'>) => [
+export const getDecorators = ({ types = [], plugins = [], blueprints = [], onInit, ...props }: DecoratorsProps) => [
   withPluginManager({
     fireEvents: [Events.SetupArtifactDefinition],
     plugins: [
+      // System plugins.
+      AttentionPlugin(),
+      GraphPlugin(),
+      IntentPlugin(),
+      SettingsPlugin(),
+      SpacePlugin(),
       ClientPlugin({
-        config,
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async (context, client) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
 
           const space = client.spaces.default;
-          // ISSUE(burdon): Should not require this.
+          // TODO(burdon): Should not require this.
           //  ERROR: invariant violation: Database was not initialized with root object.
+          // TODO(burdon): onSpacesReady is never called.
           await space.waitUntilReady();
-
-          // TODO(burdon): Assistant.makeChat()
-          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          const binder = new ContextBinder(await chat.queue.load());
-
-          // TODO(burdon): Remove (should be created by blueprint).
-          const doc = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
-          if (context) {
-            await binder.bind({ objects: [Ref.make(doc)] });
-          }
 
           // Clone blueprints and bind to conversation.
           // TODO(dmaretskyi): This should be done by Obj.clone.
+          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
+          const binder = new ContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const { id: _id, ...data } = blueprint;
             const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
 
-          await props.onSpacesReady?.(context, client);
+          await onInit?.({ space, chat, binder });
         },
-        // TODO(burdon): This isn't called?
-        // onSpacesReady: async (_, client) => {
-        //   const space = client.spaces.default;
-        //   space.db.add(Board.makeBoard());
-        // },
         ...props,
       }),
-      IntentPlugin(),
-      SettingsPlugin(),
-      SpacePlugin(),
 
-      TranscriptionPlugin(),
+      // User plugins.
       AssistantPlugin(),
-
       ...plugins,
     ],
     capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],

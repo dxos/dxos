@@ -15,15 +15,15 @@ import { Chessboard, type ChessboardProps } from './Chessboard';
 import { ChessModel } from './chess';
 import { Gameboard, type GameboardRootProps, type Player, type Move } from '../Gameboard';
 
-type RenderProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
-  fen: string;
+type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
+  pgn?: string;
 };
 
-const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps) => {
-  const model = useMemo(() => new ChessModel(fen), [fen]);
+const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStoryProps) => {
+  const model = useMemo(() => new ChessModel(pgn), [pgn]);
   const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
 
-  const handleDrop = useCallback<NonNullable<GameboardRootProps['onDrop']>>(
+  const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
     (move: Move) => {
       log.info('handleDrop', { move });
       return model.makeMove(move);
@@ -44,7 +44,7 @@ const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps)
         </Button>
       </Toolbar.Root>
       <Gameboard.Root model={model} onDrop={handleDrop}>
-        <Gameboard.Content>
+        <Gameboard.Content grow contain>
           <Chessboard orientation={orientation} {...props} />
         </Gameboard.Content>
       </Gameboard.Root>
@@ -52,7 +52,7 @@ const DefaultStory = ({ fen, orientation: _orientation, ...props }: RenderProps)
   );
 };
 
-const Grid = (props: RenderProps) => {
+const GridStory = () => {
   const models = useMemo(() => Array.from({ length: 9 }).map(() => new ChessModel()), []);
   useEffect(() => {
     const i = setInterval(() => {
@@ -88,23 +88,19 @@ export default meta;
 
 type Story = StoryObj<typeof DefaultStory>;
 
-export const Default: Story = {};
+export const Default = {} satisfies Story;
 
-export const Promotion: Story = {
-  args: {
-    fen: '4k3/7P/8/8/8/8/1p6/4K3 w - - 0 1',
-  },
-};
+export const Promotion = {} satisfies Story;
 
-export const Debug: Story = {
+export const Debug = {
   args: {
-    debug: true,
-    showLabels: true,
+    pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. bxc3 *',
     orientation: 'black',
-    fen: 'q3k1nr/1pp1nQpp/3p4/1P2p3/4P3/B1PP1b2/B5PP/5K2 b k - 0 17',
+    showLabels: true,
+    debug: true,
   },
-};
+} satisfies Story;
 
-export const Nine: Story = {
-  render: Grid,
-};
+export const Grid = {
+  render: GridStory,
+} satisfies Story;

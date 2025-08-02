@@ -10,9 +10,9 @@ import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useBoardContext } from './context';
 import { isPiece, type Location } from './types';
 import { type DOMRectBounds } from './util';
+import { useGameboardContext } from './Gameboard';
 
 type HoveredState = 'idle' | 'validMove' | 'invalidMove';
 
@@ -25,7 +25,7 @@ export type SquareProps = ThemedClassName<{
 export const Square = memo(({ location, bounds, label, classNames }: SquareProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<HoveredState>('idle');
-  const { model } = useBoardContext();
+  const { model } = useGameboardContext(Square.displayName!);
 
   useEffect(() => {
     const el = ref.current;

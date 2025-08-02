@@ -115,7 +115,7 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    log.info('creating processor', {
+    log('creating processor', {
       preset,
       artifacts: artifacts.length,
       systemPrompt: systemPrompt.length,
