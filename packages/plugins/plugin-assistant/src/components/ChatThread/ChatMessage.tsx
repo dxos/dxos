@@ -18,11 +18,12 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 import { type ChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
 import { ToolboxContainer } from '../Toolbox';
+
+import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;

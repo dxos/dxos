@@ -17,8 +17,9 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbox, type ToolboxProps } from './Toolbox';
 import { translations } from '../../translations';
+
+import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);

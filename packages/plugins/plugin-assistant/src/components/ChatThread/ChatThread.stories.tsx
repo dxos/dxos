@@ -13,8 +13,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType, type ContentBlock } from '@dxos/schema';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChatThread } from './ChatThread';
 import { translations } from '../../translations';
+
+import { ChatThread } from './ChatThread';
 
 faker.seed(1);
 

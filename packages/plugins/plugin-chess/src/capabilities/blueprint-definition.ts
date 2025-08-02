@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ToolId } from '@dxos/ai';
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
 import { load } from '../functions';
-import { ToolId } from '@dxos/ai';
 
 // TODO(burdon): Get object from bindings.
 

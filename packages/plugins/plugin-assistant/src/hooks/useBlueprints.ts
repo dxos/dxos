@@ -5,13 +5,13 @@
 import { effect } from '@preact/signals-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
 
 export type UpdateCallback = (key: string, active: boolean) => void;
 

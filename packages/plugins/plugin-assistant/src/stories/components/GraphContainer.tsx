@@ -11,9 +11,10 @@ import { Toolbar } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { type ComponentProps } from './types';
 import { createFilter, type Expression, QueryParser } from '../../parser';
 import { useFlush, useMatcherExtension } from '../hooks';
+
+import { type ComponentProps } from './types';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
   const [ast, setAst] = useState<Expression | undefined>();

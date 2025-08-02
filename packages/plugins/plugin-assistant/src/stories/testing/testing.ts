@@ -15,19 +15,19 @@ import {
   updateTasks,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
-import { type Space } from '@dxos/client/echo';
 
 // TODO(burdon): Factor out.
 export const config = {

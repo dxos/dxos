@@ -13,10 +13,10 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
+import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 import { Chess, ChessAction } from '../types';
-import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 declare global {

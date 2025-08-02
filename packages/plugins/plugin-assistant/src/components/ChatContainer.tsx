@@ -9,10 +9,11 @@ import { type AssociatedArtifact } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chat } from './Chat';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+
+import { Chat } from './Chat';
 
 export type ChatContainerProps = {
   role: string;

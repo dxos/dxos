@@ -13,8 +13,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { TemplateForm } from './TemplateForm';
 import { translations } from '../../translations';
+
+import { TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.

@@ -5379,6 +5379,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -5506,9 +5509,6 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../plugin-map
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table

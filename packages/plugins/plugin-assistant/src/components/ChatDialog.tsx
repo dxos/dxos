@@ -9,10 +9,11 @@ import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat, type ChatRootProps } from './Chat';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+
+import { Chat, type ChatRootProps } from './Chat';
 
 export type ChatDialogProps = {
   chat?: Assistant.Chat;

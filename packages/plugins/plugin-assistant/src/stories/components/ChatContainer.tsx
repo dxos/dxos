@@ -11,12 +11,13 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
-import { type ComponentProps } from './types';
 import { Chat } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
 import { meta } from '../../meta';
 import { Assistant } from '../../types';
+
+import { type ComponentProps } from './types';
 
 export const ChatContainer = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);

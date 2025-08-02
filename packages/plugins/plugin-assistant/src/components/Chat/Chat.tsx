@@ -22,7 +22,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ChatEvent } from './events';
 import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
@@ -37,6 +36,8 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
+
+import { type ChatEvent } from './events';
 
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
