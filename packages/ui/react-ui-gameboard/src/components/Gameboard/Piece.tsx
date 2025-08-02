@@ -18,15 +18,16 @@ import { type DOMRectBounds } from './util';
 import { useGameboardContext } from './Gameboard';
 
 export type PieceProps = ThemedClassName<{
+  Component: FC<SVGProps<SVGSVGElement>>;
   piece: PieceRecord;
   bounds: DOMRectBounds;
   label?: string;
   orientation?: Player;
-  Component: FC<SVGProps<SVGSVGElement>>;
+  onClick?: () => void;
 }>;
 
-export const Piece = memo(({ classNames, piece, orientation, bounds, label, Component }: PieceProps) => {
-  useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
+export const Piece = memo(({ classNames, Component, piece, orientation, bounds, label, onClick }: PieceProps) => {
+  useTrackProps({ classNames, Component, piece, orientation, bounds, label }, Piece.displayName, false);
   const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
@@ -105,10 +106,10 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
         className={mx(
           'absolute',
           classNames,
-          // orientation === 'black' && '_rotate-180',
           dragging && 'opacity-20', // Must not unmount component while dragging.
           isDragging && 'pointer-events-none', // Don't block the square's drop target.
         )}
+        onClick={onClick}
       >
         <Component className='grow' />
         {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}

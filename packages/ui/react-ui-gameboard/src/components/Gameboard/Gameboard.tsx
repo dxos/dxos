@@ -74,10 +74,12 @@ const GameboardRoot = <M extends GameboardModel>({ children, model, onDrop }: Ga
         }
 
         const move: Move = { from: piece.location, to: targetLocation, piece: piece.type };
-        if (model.canPromote?.(move)) {
-          setPromoting({ ...piece, location: targetLocation });
-        } else {
-          onDrop?.(move);
+        if (model.isValidMove(move)) {
+          if (model.canPromote?.(move)) {
+            setPromoting({ ...piece, location: targetLocation });
+          } else {
+            onDrop?.(move);
+          }
         }
 
         setDragging(false);
