@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { Gameboard, Chessboard, ChessModel } from '@dxos/react-ui-gameboard';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChessPanel } from './ChessPanel';
+import { ChessInfo } from './ChessInfo';
 
 const DefaultStory = () => {
   const model = useMemo(() => new ChessModel(), []);
@@ -22,7 +22,7 @@ const DefaultStory = () => {
           <Chessboard />
         </Gameboard.Content>
       </Gameboard.Root>
-      <ChessPanel model={model} classNames='w-[200px]' />
+      <ChessInfo model={model} classNames='w-[200px]' />
     </div>
   );
 };

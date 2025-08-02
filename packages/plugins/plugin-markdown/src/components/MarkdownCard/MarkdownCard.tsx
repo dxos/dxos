@@ -35,7 +35,9 @@ const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string
   }
 };
 
-export const MarkdownPreview = ({ subject, role }: PreviewProps<Markdown.Document | DataType.Text>) => {
+export type MarkdownCardProps = PreviewProps<Markdown.Document | DataType.Text>;
+
+export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(meta.id);
   const snippet = getSnippet(subject, t('fallback abstract'));

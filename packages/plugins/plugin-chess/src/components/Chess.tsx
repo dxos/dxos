@@ -6,7 +6,6 @@ import { Chess as ChessJS } from 'chess.js';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { getSpace } from '@dxos/react-client/echo';
 import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxos/react-ui-gameboard';
 
 import { Chess } from '../types';
@@ -27,11 +26,6 @@ const ChessRoot = ({ game, children }: PropsWithChildren<{ game: Chess.Game }>) 
       model.initialize(chess.fen());
     }
   }, [game.pgn]);
-
-  const space = getSpace(game);
-  if (!space) {
-    return null;
-  }
 
   const handleDrop = useCallback<NonNullable<GameboardRootProps['onDrop']>>(
     (move) => {

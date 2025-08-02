@@ -7,45 +7,23 @@ import React from 'react';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chess } from './Chess';
 import { PlayerSelector } from './PlayerSelector';
 import { type Chess } from '../types';
-
-const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
+import { ChessPanel } from './ChessPanel';
 
 const ChessContainer = ({ game, role }: { game: Chess.Game; role?: string }) => {
   const space = getSpace(game);
-
   if (!space) {
     return null;
   }
 
   switch (role) {
-    case 'card--popover': {
-      return (
-        <Chess.Root game={game}>
-          <div role='none' className='popover-square size-container'>
-            <Chess.Board classNames={containFragment} />
-          </div>
-        </Chess.Root>
-      );
-    }
+    case 'card--popover':
+    case 'card--intrinsic':
     case 'card--extrinsic': {
-      return (
-        <Chess.Root game={game}>
-          <div role='none' className='grid is-full bs-full size-container place-content-center'>
-            <Chess.Board classNames={containFragment} />
-          </div>
-        </Chess.Root>
-      );
+      return <ChessPanel game={game} role={role} />;
     }
-    case 'card--intrinsic': {
-      return (
-        <Chess.Root game={game}>
-          <Chess.Board />
-        </Chess.Root>
-      );
-    }
+
     default: {
       return (
         <StackItem.Content>
@@ -53,11 +31,7 @@ const ChessContainer = ({ game, role }: { game: Chess.Game; role?: string }) => 
             <div />
 
             <div className='flex m-4 overflow-hidden'>
-              <Chess.Root game={game}>
-                <Chess.Content>
-                  <Chess.Board />
-                </Chess.Content>
-              </Chess.Root>
+              <ChessPanel game={game} />
             </div>
 
             <PlayerSelector space={space} game={game} />
