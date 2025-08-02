@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -44,23 +44,25 @@ const game = Obj.make(ChessType, {
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
 });
 
-export const Extrinsic = {
-  args: {
-    role: 'card--extrinsic',
-    game: game,
-  },
-};
-
-export const Intrinsic = {
-  args: {
-    role: 'card--intrinsic',
-    game: game,
-  },
-};
+type Story = StoryObj<DefaultStoryProps>;
 
 export const Popover = {
   args: {
     role: 'card--popover',
     game: game,
   },
-};
+} satisfies Story;
+
+export const Extrinsic = {
+  args: {
+    role: 'card--extrinsic',
+    game: game,
+  },
+} satisfies Story;
+
+export const Intrinsic = {
+  args: {
+    role: 'card--intrinsic',
+    game: game,
+  },
+} satisfies Story;

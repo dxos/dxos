@@ -5863,6 +5863,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)

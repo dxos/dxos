@@ -7,19 +7,8 @@ import React from 'react';
 import { Chess } from './Chess';
 import { type ChessType } from '../types';
 
-// TODO(burdon): Factor out variance into useful container?
 export const ChessPanel = ({ game, role }: { game: ChessType; role?: string }) => {
   switch (role) {
-    case 'card--extrinsic': {
-      return (
-        <Chess.Root game={game}>
-          <Chess.Content classNames='grid is-full bs-full size-container place-content-center' contain>
-            <Chess.Board />
-          </Chess.Content>
-        </Chess.Root>
-      );
-    }
-
     case 'card--popover': {
       return (
         <Chess.Root game={game}>
@@ -30,11 +19,21 @@ export const ChessPanel = ({ game, role }: { game: ChessType; role?: string }) =
       );
     }
 
-    case 'card--intrinsic':
-    default: {
+    case 'card--intrinsic': {
       return (
         <Chess.Root game={game}>
           <Chess.Content>
+            <Chess.Board />
+          </Chess.Content>
+        </Chess.Root>
+      );
+    }
+
+    case 'card--extrinsic':
+    default: {
+      return (
+        <Chess.Root game={game}>
+          <Chess.Content grow contain>
             <Chess.Board />
           </Chess.Content>
         </Chess.Root>

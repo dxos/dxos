@@ -76,15 +76,17 @@ const GameboardRoot = ({ children, model, onDrop }: GameboardRootProps) => {
 
 GameboardRoot.displayName = 'Gameboard.Root';
 
-const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
-
-type GameboardContentProps = ThemedClassName<PropsWithChildren<{ contain?: boolean }>>;
+type GameboardContentProps = ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
 
 const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
-  ({ children, classNames, contain }, forwardedRef) => {
+  ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
-      <div ref={forwardedRef} role='none' className={mx(classNames)}>
-        {contain ? <div className={containFragment}>{children}</div> : children}
+      <div
+        ref={forwardedRef}
+        role='none'
+        className={mx(grow && 'grid is-full bs-full size-container place-content-center', classNames)}
+      >
+        {contain ? <div className='is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]'>{children}</div> : children}
       </div>
     );
   },
