@@ -21,7 +21,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
 
 import ChessContainer from './ChessContainer';
-import { ChessType } from '../types';
+import { Chess } from '../types';
 
 type StoryProps = {
   role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
@@ -31,8 +31,8 @@ const render: Meta<StoryProps>['render'] = ({ role }) => {
   const _client = useClient();
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const games = useQuery(space, Filter.type(ChessType));
-  const [game, setGame] = useState<ChessType>();
+  const games = useQuery(space, Filter.type(Chess.Game));
+  const [game, setGame] = useState<Chess.Game>();
 
   useEffect(() => {
     if (games.length && !game) {
@@ -61,12 +61,12 @@ const meta: Meta<StoryProps> = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [ChessType],
+          types: [Chess.Game],
           onClientInitialized: async (_, client) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const game = Obj.make(ChessType, {
+            const game = Obj.make(Chess.Game, {
               name: 'Example Chess Game',
               playerWhite: 'Player 1',
               playerBlack: 'Player 2',

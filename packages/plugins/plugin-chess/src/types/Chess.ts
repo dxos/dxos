@@ -5,18 +5,19 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo-schema';
 
-export const MoveSchema = Schema.mutable(
-  Schema.partial(
-    Schema.Struct({
-      source: Schema.String,
-      target: Schema.String,
-      piece: Schema.String,
-    }),
-  ),
-);
+// export const Move = Schema.mutable(
+//   Schema.partial(
+//     Schema.Struct({
+//       source: Schema.String,
+//       target: Schema.String,
+//       piece: Schema.String,
+//     }),
+//   ),
+// );
 
-export const ChessType = Schema.Struct({
+export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
   playerWhite: Schema.String,
   playerBlack: Schema.String,
@@ -30,5 +31,7 @@ export const ChessType = Schema.Struct({
     typename: 'dxos.org/type/Chess',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['name']),
 );
-export interface ChessType extends Schema.Schema.Type<typeof ChessType> {}
+
+export interface Game extends Schema.Schema.Type<typeof Game> {}

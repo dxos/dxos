@@ -9,11 +9,11 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chess } from './Chess';
 import { PlayerSelector } from './PlayerSelector';
-import { type ChessType } from '../types';
+import { type Chess } from '../types';
 
 const containFragment = 'is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]';
 
-const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
+const ChessContainer = ({ game, role }: { game: Chess.Game; role?: string }) => {
   const space = getSpace(game);
 
   if (!space) {

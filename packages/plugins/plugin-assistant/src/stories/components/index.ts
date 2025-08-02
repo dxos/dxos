@@ -9,3 +9,4 @@ export * from './BoardContainer';
 export * from './DocumentContainer';
 export * from './ChatContainer';
 export * from './GraphContainer';
+export * from './SurfaceContainer';

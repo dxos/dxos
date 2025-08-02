@@ -9,9 +9,9 @@ import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { ChessModel, Gameboard, Chessboard, type GameboardRootProps } from '@dxos/react-ui-gameboard';
 
-import { type ChessType } from '../types';
+import { Chess } from '../types';
 
-const ChessRoot = ({ game, children }: PropsWithChildren<{ game: ChessType }>) => {
+const ChessRoot = ({ game, children }: PropsWithChildren<{ game: Chess.Game }>) => {
   const model = useMemo(() => new ChessModel(), []);
   useEffect(() => {
     if (!model || game.pgn !== model?.game.pgn()) {

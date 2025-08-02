@@ -15,7 +15,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { ChessAction, ChessType } from '../types';
+import { Chess, ChessAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -34,7 +34,7 @@ export default () => {
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
       - Always inspect the chess game at the start of every prompt realting to a chess game, as it might have changed since the interaction.
    `,
-    schema: ChessType,
+    schema: Chess.Game,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -67,7 +67,7 @@ export default () => {
         schema: Schema.Struct({}),
         execute: async (_, { extensions }) => {
           invariant(extensions?.space, 'No space');
-          const { objects: games } = await extensions.space.db.query(Filter.type(ChessType)).run();
+          const { objects: games } = await extensions.space.db.query(Filter.type(Chess.Game)).run();
           invariant(games.length > 0, 'No chess games found');
 
           return ToolResult.Success(games);
@@ -83,7 +83,7 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(Obj.instanceOf(ChessType, game));
+          invariant(Obj.instanceOf(Chess.Game, game));
 
           return ToolResult.Success(game.fen);
         },
@@ -104,7 +104,7 @@ export default () => {
           const game = await extensions.space.db
             .query(Filter.ids(ArtifactId.toDXN(id, extensions.space.id).toString()))
             .first();
-          invariant(Obj.instanceOf(ChessType, game));
+          invariant(Obj.instanceOf(Chess.Game, game));
 
           const board = new Chess(game.fen);
           try {

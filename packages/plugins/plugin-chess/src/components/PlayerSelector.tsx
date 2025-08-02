@@ -8,9 +8,9 @@ import { generateName } from '@dxos/display-name';
 import { useMembers, type Space, type SpaceMember } from '@dxos/react-client/echo';
 import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
 
-import { type ChessType } from '../types';
+import { type Chess } from '../types';
 
-export const PlayerSelector = ({ space, game }: { space: Space; game: ChessType }) => {
+export const PlayerSelector = ({ space, game }: { space: Space; game: Chess.Game }) => {
   const members = useMembers(space.key);
 
   return (

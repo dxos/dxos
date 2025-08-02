@@ -11,7 +11,7 @@ import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
 import { Obj } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
-import { ChessType } from '@dxos/plugin-chess/types';
+import { Chess } from '@dxos/plugin-chess/types';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -28,6 +28,7 @@ import {
   type ComponentProps,
   DocumentContainer,
   GraphContainer,
+  SurfaceContainer,
 } from './components';
 import { addTestData, getDecorators, remoteConfig, testTypes } from './testing';
 
@@ -134,18 +135,18 @@ export const WithChess = {
   decorators: getDecorators({
     context: true,
     config: remoteConfig,
-    types: [ChessType],
+    types: [Chess.Game],
     onSpacesReady: async (_, client) => {
       const space = client.spaces.default;
       space.db.add(
-        Obj.make(ChessType, {
+        Obj.make(Chess.Game, {
           fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
         }),
       );
     },
   }),
   args: {
-    components: [ChatContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 

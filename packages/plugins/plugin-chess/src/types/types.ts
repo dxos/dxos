@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { ChessType } from './schema';
+import { Game } from './Chess';
 import { meta } from '../meta';
 
 export namespace ChessAction {
@@ -14,7 +14,7 @@ export namespace ChessAction {
       fen: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: ChessType,
+      object: Game,
     }),
   }) {}
 }
