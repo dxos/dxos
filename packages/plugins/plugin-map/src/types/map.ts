@@ -6,18 +6,35 @@ import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { createViewFromSpace, type CreateViewFromSpaceProps } from '@dxos/schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
+import { type MakeProps } from '@dxos/echo/Obj';
 
-export const MapView = Schema.Struct({
-  locationFieldId: Schema.String,
-}).pipe(Type.Obj({ typename: 'dxos.org/type/MapView', version: '0.1.0' }));
-export type MapView = Schema.Schema.Type<typeof MapView>;
+export const Map = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  // TODO(burdon): Should be part of view.
+  locationFieldId: Schema.optional(Schema.String),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Map',
+    version: '0.2.0',
+  }),
+  LabelAnnotation.set(['name']),
+);
+
+export type Map = Schema.Schema.Type<typeof Map>;
+
+export const makeMap = (props: MakeProps<typeof Map> = {}) => Obj.make(Map, props);
 
 type CreateMapProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
   locationFieldId: string;
 };
 
-export const createMap = async ({ locationFieldId, ...props }: CreateMapProps) => {
-  const map = Obj.make(MapView, { locationFieldId });
+/**
+ * @param param0 @deprecated
+ */
+// TODO(burdon): Reconcile type with view.
+export const createMapView = async ({ locationFieldId, ...props }: CreateMapProps) => {
+  const map = Obj.make(Map, { locationFieldId });
   const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: map });
   return { jsonSchema, view };
 };

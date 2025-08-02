@@ -9,9 +9,9 @@ import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { Chess } from '@dxos/plugin-chess/types';
+import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
@@ -24,7 +24,6 @@ import { trim } from '@dxos/util';
 import { translations } from '../translations';
 import {
   BlueprintContainer,
-  BoardContainer,
   ChatContainer,
   type ComponentProps,
   GraphContainer,
@@ -152,6 +151,21 @@ export const WithChess = {
   },
 } satisfies Story;
 
+export const WithMap = {
+  decorators: getDecorators({
+    plugins: [MapPlugin()],
+    config: remoteConfig,
+    types: [Map.Map],
+    onInit: async ({ space, binder }) => {
+      const object = space.db.add(Map.makeMap());
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, SurfaceContainer],
+  },
+} satisfies Story;
+
 export const WithBoard = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
@@ -163,7 +177,7 @@ export const WithBoard = {
     },
   }),
   args: {
-    components: [ChatContainer, BoardContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 

@@ -6,7 +6,7 @@ import { contributes, Capabilities, createResolver, type PluginContext } from '@
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { MapCapabilities } from './capabilities';
-import { createMap, MapAction } from '../types';
+import { Map, MapAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -14,7 +14,7 @@ export default (context: PluginContext) =>
       intent: MapAction.Create,
       resolve: async ({ space, name, typename, locationFieldId }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await createMap({ client, space, name, typename, locationFieldId });
+        const { view } = await Map.createMapView({ client, space, name, typename, locationFieldId });
         return { data: { object: view } };
       },
     }),

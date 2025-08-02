@@ -16,7 +16,7 @@ import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
-import { MapAction, MapView } from '../types';
+import { Map, MapAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -35,7 +35,7 @@ export default () => {
       - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
       - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
     `,
-    schema: MapView,
+    schema: Map.Map,
     tools: [
       createTool(meta.id, {
         name: 'list',
@@ -50,7 +50,7 @@ export default () => {
           const mapInfo = await Promise.all(
             objects.map(async (view) => {
               const map = await view.presentation.load();
-              if (!Obj.instanceOf(MapView, map)) {
+              if (!Obj.instanceOf(Map.Map, map)) {
                 return null;
               }
 

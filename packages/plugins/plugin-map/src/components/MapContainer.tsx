@@ -15,23 +15,22 @@ import { type DataType } from '@dxos/schema';
 
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
-import { type MapView } from '../types';
+import { type Map } from '../types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = { role?: string; type?: MapControlType; view?: DataType.View } & Pick<
-  MapCanvasProps,
-  'zoom' | 'center' | 'onChange'
->;
-
-// TODO(burdon): Error: Map container is already initialized.
+export type MapContainerProps = {
+  role?: string;
+  type?: MapControlType;
+  view?: DataType.View;
+} & Pick<MapCanvasProps, 'zoom' | 'center' | 'onChange'>;
 
 export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<MapMarker[]>([]);
   const client = useClient();
   const space = getSpace(view);
-  const map = view?.presentation.target as MapView | undefined;
+  const map = view?.presentation.target as Map.Map | undefined;
 
   const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
@@ -43,6 +42,10 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
 
     const newMarkers: MapMarker[] = (objects ?? [])
       .map((row) => {
+        if (!map.locationFieldId) {
+          return undefined;
+        }
+
         const geopoint = row[map.locationFieldId];
         if (!geopoint) {
           return undefined;
@@ -68,7 +71,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
   const selected = useSelected(view?.query.typename, 'multi');
 
   return (
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
       )}

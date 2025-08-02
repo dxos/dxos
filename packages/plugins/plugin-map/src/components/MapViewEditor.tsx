@@ -12,7 +12,7 @@ import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
 
-import { type MapView } from '../types';
+import { type Map } from '../types';
 
 export const MapSettingsSchema = Schema.Struct({
   coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
@@ -24,7 +24,7 @@ type MapViewEditorProps = { view: DataType.View };
 export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace();
-  const map = view.presentation.target as MapView | undefined;
+  const map = view.presentation.target as Map.Map | undefined;
   const currentSchema = useSchema(client, space, view.query.typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
