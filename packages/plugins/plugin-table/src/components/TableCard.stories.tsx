@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -20,7 +20,7 @@ import { TableView } from '@dxos/react-ui-table/types';
 import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TablePreview } from './index';
+import { TableCard } from './TableCard';
 import { translations } from '../translations';
 
 faker.seed(1234);
@@ -28,21 +28,21 @@ faker.seed(1234);
 type StoryProps = { role: string };
 
 const meta: Meta<StoryProps> = {
-  title: 'Cards/plugin-table',
+  title: 'plugins/plugin-table/Card',
   render: ({ role }) => {
     const { schema, view } = useTestTableModel();
-
     if (!schema || !view) {
       return <div />;
     }
 
     return (
       <CardContainer icon='ph--text-aa--regular' role={role}>
-        <TablePreview role={role} view={view} />
+        <TableCard role={role} view={view} />
       </CardContainer>
     );
   },
   decorators: [
+    // TODO(burdon): Should not require space.
     withClientProvider({
       types: [DataType.View, TableView],
       createIdentity: true,
@@ -59,7 +59,6 @@ const meta: Meta<StoryProps> = {
         ];
 
         const selectOptionIds = selectOptions.map((o) => o.id);
-
         const schema = getSchemaFromPropertyDefinitions(typename, [
           {
             name: 'single',
@@ -99,24 +98,27 @@ const meta: Meta<StoryProps> = {
     layout: 'centered',
     translations: [...translations, ...tableTranslations],
   },
+  tags: ['cards'],
 };
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Popover = {
   args: {
     role: 'card--popover',
   },
-};
-
-export const Extrinsic = {
-  args: {
-    role: 'card--extrinsic',
-  },
-};
+} satisfies Story;
 
 export const Intrinsic = {
   args: {
     role: 'card--intrinsic',
   },
-};
+} satisfies Story;
+
+export const Extrinsic = {
+  args: {
+    role: 'card--extrinsic',
+  },
+} satisfies Story;

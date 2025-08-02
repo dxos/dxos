@@ -10,36 +10,41 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import type { PreviewProps } from '../types';
+import { type PreviewProps } from '../types';
+import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 
 faker.seed(1234);
 
-export type StoryProps = {
-  Component: FC<PreviewProps<any>>;
+type CardProps<T extends object> = {
+  Component: FC<PreviewProps<T>>;
+  subject: T;
   icon?: string;
-  withImage?: boolean;
-  subject: 'project' | 'contact' | 'organization';
-  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
+  image?: boolean;
 };
 
-export const render: Meta<StoryProps>['render'] = ({
-  Component,
-  icon = 'ph--placeholder--regular',
-  role,
-  withImage,
-  subject,
-  ...args
-}) => {
+export type DefaultstoryProps = {
+  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
+  cards: CardProps<any>[];
+};
+
+export const Defaultstory: Meta<DefaultstoryProps>['render'] = ({ role, cards }) => {
   return (
-    <CardContainer icon={icon} role={role}>
-      <Component {...args} subject={withImage ? data[subject] : omitImage(data[subject])} role={role} />
-    </CardContainer>
+    <div className='grid grid-cols-3'>
+      {cards.map(({ Component, icon, image, subject }, i) => (
+        <div key={i} className='flex justify-center'>
+          <CardContainer icon={icon} role={role}>
+            <Component role={role} subject={image ? subject : omitImage(subject)} />
+          </CardContainer>
+        </div>
+      ))}
+    </div>
   );
 };
 
-export const omitImage = ({ image, ...rest }: any) => rest;
+export const omitImage = ({ image: _, ...rest }: any) => rest;
 
-export const data = (() => {
+// TODO(burdon): Test data should exercise the standard data generators.
+export const createCards = (image = true): CardProps<any>[] => {
   const organization = Obj.make(DataType.Organization, {
     name: faker.company.name(),
     image:
@@ -75,5 +80,24 @@ export const data = (() => {
     description: faker.lorem.paragraph(),
   });
 
-  return { organization, contact, project };
-})();
+  return [
+    {
+      Component: OrganizationCard,
+      subject: organization,
+      icon: 'ph--building-office--regular',
+      image,
+    },
+    {
+      Component: ContactCard,
+      subject: contact,
+      icon: 'ph--user--regular',
+      image,
+    },
+    {
+      Component: ProjectCard,
+      subject: project,
+      icon: 'ph--building--regular',
+      image,
+    },
+  ];
+};
