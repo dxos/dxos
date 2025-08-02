@@ -27,7 +27,7 @@
   "dependencies": {
     "@preact-signals/safe-react": "^0.9.0",
     "jsonpath": "^1.1.1",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.6.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
