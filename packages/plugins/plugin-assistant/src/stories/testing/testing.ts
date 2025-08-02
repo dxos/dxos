@@ -5,7 +5,15 @@
 import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
-import { readDocument, remoteServiceEndpoints, updateDocument } from '@dxos/assistant-testing';
+import {
+  DESIGN_BLUEPRINT,
+  PLANNING_BLUEPRINT,
+  readDocument,
+  readTasks,
+  remoteServiceEndpoints,
+  updateDocument,
+  updateTasks,
+} from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -85,7 +93,13 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
       AssistantPlugin(),
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],
+    capabilities: [
+      // TOOD(burdon): Factor out capability definitions.
+      contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+      contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+      contributes(Capabilities.Functions, [readDocument, updateDocument]),
+      contributes(Capabilities.Functions, [readTasks, updateTasks]),
+    ],
   }),
   withTheme,
   withLayout({
