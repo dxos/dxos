@@ -119,7 +119,7 @@ export class DXN {
   static tryParse(dxn: string): DXN | undefined {
     try {
       return DXN.parse(dxn);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }

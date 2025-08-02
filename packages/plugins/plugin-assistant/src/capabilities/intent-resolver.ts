@@ -48,8 +48,8 @@ export default (context: PluginContext) => [
     }),
     createResolver({
       intent: Assistant.CreateBlueprint,
-      resolve: ({ name, description }) => ({
-        data: { object: Blueprint.make({ name, description }) },
+      resolve: ({ key, name, description }) => ({
+        data: { object: Blueprint.make({ key, name, description }) },
       }),
     }),
     createResolver({

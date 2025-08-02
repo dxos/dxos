@@ -16,6 +16,7 @@ import { Filter, type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Chess, ChessAction } from '../types';
+import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -30,7 +31,7 @@ export default () => {
     id: `artifact:${meta.id}`,
     name: meta.name,
     description: 'Provides a simple chess engine.',
-    instructions: `
+    instructions: trim`
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
       - Always inspect the chess game at the start of every prompt realting to a chess game, as it might have changed since the interaction.
    `,

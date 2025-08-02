@@ -7,7 +7,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { ChessAction, Chess } from './types';
@@ -53,8 +53,8 @@ export const ChessPlugin = () =>
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact-definition`,
+      id: `${meta.id}/module/blueprint`,
       activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

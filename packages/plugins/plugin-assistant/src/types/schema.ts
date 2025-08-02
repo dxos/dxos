@@ -86,6 +86,7 @@ export namespace Assistant {
   }) {}
 
   export const BlueprintForm = Schema.Struct({
+    key: Schema.String,
     name: Schema.String,
     description: Schema.optional(Schema.String),
   });

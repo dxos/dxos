@@ -25,7 +25,9 @@ export const Game = Schema.Struct({
       ),
     }).pipe(Schema.mutable),
   ),
-  pgn: Schema.String,
+  pgn: Schema.String.annotations({
+    description: 'Portable Game Notation.',
+  }),
 }).pipe(
   Schema.partial,
   Type.Obj({
