@@ -3,35 +3,53 @@
 //
 
 import { Schema } from 'effect';
+import { Chess as ChessJS } from 'chess.js';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
-
-// export const Move = Schema.mutable(
-//   Schema.partial(
-//     Schema.Struct({
-//       source: Schema.String,
-//       target: Schema.String,
-//       piece: Schema.String,
-//     }),
-//   ),
-// );
+import { log } from '@dxos/log';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
-  playerWhite: Schema.String,
-  playerBlack: Schema.String,
-  moves: Schema.mutable(Schema.Array(Schema.String)),
-  // TODO(wittjosiah): Remove. Redundant with moves.
+  players: Schema.optional(
+    Schema.Struct({
+      white: Schema.optional(
+        Schema.String.annotations({
+          description: 'DID of white player',
+        }),
+      ),
+      black: Schema.optional(
+        Schema.String.annotations({
+          description: 'DID of black player',
+        }),
+      ),
+    }).pipe(Schema.mutable),
+  ),
   pgn: Schema.String,
-  fen: Schema.String,
 }).pipe(
   Schema.partial,
   Type.Obj({
     typename: 'dxos.org/type/Chess',
-    version: '0.1.0',
+    version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
+
+export const makeGame = ({ name, pgn }: { name?: string; pgn?: string } = {}) => {
+  const chess = new ChessJS();
+  if (pgn) {
+    try {
+      chess.loadPgn(pgn);
+    } catch {
+      log.warn(pgn);
+    }
+  }
+
+  return Obj.make(Game, {
+    name,
+    players: {},
+    pgn: chess.pgn(),
+  });
+};

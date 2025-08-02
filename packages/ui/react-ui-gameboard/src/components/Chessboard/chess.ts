@@ -3,21 +3,21 @@
 //
 
 import { type ReadonlySignal, signal } from '@preact/signals-core';
-import { Chess, validateFen } from 'chess.js';
+import { Chess as ChessJS } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 
 import { log } from '@dxos/log';
 
 import {
-  type Move,
-  type Location,
-  type PieceMap,
-  locationToString,
-  type PieceType,
   type GameboardModel,
+  type Location,
+  type Move,
+  type PieceMap,
+  type PieceType,
   type Player,
+  locationToString,
 } from '../Gameboard';
-import * as Alpha from '../gen/pieces/chess/alpha';
+import * as Alpha from '../../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
 
@@ -62,18 +62,31 @@ export const getSquareColor = ([row, col]: Location) => {
   return (col + row) % 2 === 0 ? boardStyles.black : boardStyles.white;
 };
 
+export const createChess = (pgn?: string) => {
+  const chess = new ChessJS();
+  if (pgn) {
+    try {
+      chess.loadPgn(pgn);
+    } catch {
+      log.warn(pgn);
+    }
+  }
+
+  return chess;
+};
+
 /**
  * Attempt move.
  */
-const makeMove = (game: Chess, move: Move): Chess | null => {
+const tryMove = (chess: ChessJS, move: Move): ChessJS | null => {
   const from = locationToPos(move.from);
   const to = locationToPos(move.to);
   try {
     log('makeMove', { move });
     const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
-    game.move({ from, to, promotion }, { strict: false });
-    return game;
-  } catch (err) {
+    chess.move({ from, to, promotion }, { strict: false });
+    return chess;
+  } catch {
     // Ignore.
     return null;
   }
@@ -83,37 +96,45 @@ const makeMove = (game: Chess, move: Move): Chess | null => {
  * Chess model.
  */
 export class ChessModel implements GameboardModel<ChessPiece> {
-  private _game!: Chess;
+  private readonly _chess = new ChessJS();
   private readonly _pieces = signal<PieceMap<ChessPiece>>({});
 
-  constructor(fen?: string) {
-    this.initialize(fen);
+  constructor(pgn?: string) {
+    this.initialize(pgn);
   }
 
   get turn(): Player {
-    return this._game.turn() === 'w' ? 'white' : 'black';
+    return this._chess.turn() === 'w' ? 'white' : 'black';
   }
 
   get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
     return this._pieces;
   }
 
-  get game(): Chess {
-    return this._game;
+  get game(): ChessJS {
+    return this._chess;
+  }
+
+  get pgn(): string {
+    return this._chess.pgn();
   }
 
   get fen(): string {
-    return this._game.fen();
+    return this._chess.fen();
   }
 
-  initialize(fen?: string): void {
+  initialize(pgn?: string): void {
     this._pieces.value = {};
-    this._game = new Chess(fen ? (validateFen(fen).ok ? fen : undefined) : undefined);
+    try {
+      this._chess.loadPgn(pgn ?? '');
+    } catch {
+      // Ignore.
+    }
     this._update();
   }
 
   isValidMove(move: Move): boolean {
-    return makeMove(new Chess(this._game.fen()), move) !== null;
+    return tryMove(new ChessJS(this._chess.fen()), move) !== null;
   }
 
   canPromote(move: Move): boolean {
@@ -123,24 +144,23 @@ export class ChessModel implements GameboardModel<ChessPiece> {
   }
 
   makeMove(move: Move): boolean {
-    const game = makeMove(this._game, move);
+    const game = tryMove(this._chess, move);
     if (!game) {
       return false;
     }
 
-    this._game = game;
     this._update();
     return true;
   }
 
   makeRandomMove(): boolean {
-    const moves = this._game.moves();
+    const moves = this._chess.moves();
     if (!moves.length) {
       return false;
     }
 
     const move = moves[Math.floor(Math.random() * moves.length)];
-    this._game.move(move);
+    this._chess.move(move);
     this._update();
     return true;
   }
@@ -150,7 +170,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
    */
   private _update(): void {
     const pieces: PieceMap<ChessPiece> = {};
-    this._game.board().flatMap((row) =>
+    this._chess.board().flatMap((row) =>
       row.forEach((record) => {
         if (!record) {
           return;

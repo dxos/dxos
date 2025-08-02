@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chess as Game } from 'chess.js';
-
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 
 import { Chess, ChessAction } from '../types';
 
@@ -14,11 +11,10 @@ export default () =>
     Capabilities.IntentResolver,
     createResolver({
       intent: ChessAction.Create,
-      resolve: ({ name, fen }) => {
-        const pgn = fen ? new Game(fen).pgn() : undefined;
+      resolve: ({ name, pgn }) => {
         return {
           data: {
-            object: Obj.make(Chess.Game, { name, fen, pgn }),
+            object: Chess.makeGame({ name, pgn }),
           },
         };
       },

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chess } from 'chess.js';
+import { Chess as ChessJS } from 'chess.js';
 import { pipe, Schema } from 'effect';
 
 import { createTool, ToolResult } from '@dxos/ai';
@@ -41,13 +41,13 @@ export default () => {
         description: 'Create a new chess game. Returns the artifact definition for the game.',
         caption: 'Creating chess game...',
         schema: Schema.Struct({
-          fen: Schema.String.annotations({ description: 'The state of the chess game in the FEN format.' }),
+          pgn: Schema.String.annotations({ description: 'The state of the chess game in the PGN format.' }),
         }),
-        execute: async ({ fen }, { extensions }) => {
+        execute: async ({ pgn }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
           const intent = pipe(
-            createIntent(ChessAction.Create, { fen }),
+            createIntent(ChessAction.Create, { pgn }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );
           const { data, error } = await extensions.dispatch(intent);
@@ -85,7 +85,7 @@ export default () => {
             .first();
           invariant(Obj.instanceOf(Chess.Game, game));
 
-          return ToolResult.Success(game.fen);
+          return ToolResult.Success(game.pgn);
         },
       }),
       createTool(meta.id, {
@@ -106,15 +106,15 @@ export default () => {
             .first();
           invariant(Obj.instanceOf(Chess.Game, game));
 
-          const board = new Chess(game.fen);
+          const chess = new ChessJS(game.pgn);
           try {
-            board.move(move);
+            chess.move(move);
           } catch (error: any) {
             return ToolResult.Error(error.message);
           }
-          game.pgn = board.pgn();
-          game.fen = board.fen();
-          return ToolResult.Success(game.fen);
+
+          game.pgn = chess.pgn();
+          return ToolResult.Success(game.pgn);
         },
       }),
     ],

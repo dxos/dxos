@@ -3,4 +3,4 @@
 //
 
 export * as Chess from './Chess';
-export * from './types';
+export * as ChessAction from './ChessAction';

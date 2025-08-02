@@ -22,6 +22,10 @@ export const translations = [
       [meta.id]: {
         'plugin name': 'Chess',
         'delete game label': 'Delete',
+        'game.checkmate': 'Checkmate',
+        'game.stalemate': 'Stalemate',
+        'game.draw': 'Draw',
+        'game.check': 'Check',
       },
     },
   },

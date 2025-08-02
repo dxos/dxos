@@ -7,11 +7,15 @@ import React from 'react';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { PlayerSelector } from './PlayerSelector';
 import { type Chess } from '../types';
-import { ChessPanel } from './ChessPanel';
+import { Chessboard } from './Chessboard';
 
-const ChessContainer = ({ game, role }: { game: Chess.Game; role?: string }) => {
+export type ChessContainerProps = {
+  game: Chess.Game;
+  role?: string;
+};
+
+export const ChessContainer = ({ game, role }: ChessContainerProps) => {
   const space = getSpace(game);
   if (!space) {
     return null;
@@ -21,21 +25,27 @@ const ChessContainer = ({ game, role }: { game: Chess.Game; role?: string }) => 
     case 'card--popover':
     case 'card--intrinsic':
     case 'card--extrinsic': {
-      return <ChessPanel game={game} role={role} />;
+      return (
+        <Chessboard.Root game={game}>
+          <Chessboard.Content role={role}>
+            <Chessboard.Board />
+          </Chessboard.Content>
+        </Chessboard.Root>
+      );
     }
 
     default: {
       return (
         <StackItem.Content>
-          <div role='none' className='grid grid-rows-[60px_1fr_60px] grow overflow-hidden'>
-            <div />
-
-            <div className='flex m-4 overflow-hidden'>
-              <ChessPanel game={game} />
+          <Chessboard.Root game={game}>
+            <div role='none' className='grid grid-rows-[5rem_1fr_5rem] grow overflow-hidden'>
+              <div />
+              <Chessboard.Content>
+                <Chessboard.Board />
+              </Chessboard.Content>
+              <Chessboard.Players />
             </div>
-
-            <PlayerSelector space={space} game={game} />
-          </div>
+          </Chessboard.Root>
         </StackItem.Content>
       );
     }
