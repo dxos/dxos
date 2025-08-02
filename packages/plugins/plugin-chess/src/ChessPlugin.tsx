@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { ChessAction, ChessType } from './types';
+import { ChessAction, Chess } from './types';
 
 export const ChessPlugin = () =>
   definePlugin(meta, [
@@ -24,7 +24,7 @@ export const ChessPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: ChessType.typename,
+          id: Chess.Game.typename,
           metadata: {
             icon: 'ph--shield-chevron--regular',
           },
@@ -37,7 +37,7 @@ export const ChessPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: ChessType,
+            objectSchema: Chess.Game,
             getIntent: () => createIntent(ChessAction.Create),
           }),
         ),

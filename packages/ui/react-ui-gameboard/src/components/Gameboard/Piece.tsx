@@ -3,7 +3,6 @@
 //
 
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-// import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import React, { useState, useRef, useEffect, type FC, type SVGProps, memo } from 'react';
@@ -14,9 +13,9 @@ import { log } from '@dxos/log';
 import { useDynamicRef, useTrackProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useBoardContext } from './context';
 import { isEqualLocation, isLocation, type Location, type PieceRecord, type Player } from './types';
 import { type DOMRectBounds } from './util';
+import { useGameboardContext } from './Gameboard';
 
 export type PieceProps = ThemedClassName<{
   piece: PieceRecord;
@@ -28,9 +27,7 @@ export type PieceProps = ThemedClassName<{
 
 export const Piece = memo(({ classNames, piece, orientation, bounds, label, Component }: PieceProps) => {
   useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
-  const { model } = useBoardContext();
-
-  const { dragging: isDragging, promoting } = useBoardContext();
+  const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
@@ -46,14 +43,10 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
     return draggable({
       element: el,
       getInitialData: () => ({ piece }),
-      onGenerateDragPreview: ({ nativeSetDragImage, location, source }) => {
+      onGenerateDragPreview: ({ nativeSetDragImage, source }) => {
         log('onGenerateDragPreview', { source: source.data });
         setCustomNativeDragPreview({
           getOffset: centerUnderPointer,
-          // getOffset: preserveOffsetOnSource({
-          //   element: source.element,
-          //   input: location.current.input,
-          // }),
           render: ({ container }) => {
             setPreview(container);
             const { width, height } = el.getBoundingClientRect();

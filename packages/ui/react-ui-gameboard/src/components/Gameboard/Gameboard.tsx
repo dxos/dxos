@@ -3,29 +3,47 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { createContext } from '@radix-ui/react-context';
 import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
-
-import { GameboardContext, type GameboardContextType } from './context';
-import { type GameboardModel, isLocation, isPiece, type Move, type PieceRecord } from './types';
 import { mx } from '@dxos/react-ui-theme';
 
-type GameboardRootProps = PropsWithChildren<{
-  model?: GameboardModel;
+import { type PieceRecord, type GameboardModel, type Move, isLocation, isPiece } from './types';
+import { Piece, type PieceProps } from './Piece';
+import { Square, type SquareProps } from './Square';
+
+export type GameboardContextValue<M extends GameboardModel> = {
+  model: M;
+  dragging?: boolean; // TODO(burdon): Change to PieceRecord.
+  promoting?: PieceRecord;
+  onPromotion: (move: Move) => void;
+};
+
+const [GameboardContextProvider, useRadixGameboardContext] = createContext<GameboardContextValue<any>>('Gameboard');
+
+const useGameboardContext = <M extends GameboardModel>(consumerName: string): GameboardContextValue<M> => {
+  return useRadixGameboardContext(consumerName);
+};
+
+//
+// Root
+//
+
+type GameboardRootProps<M extends GameboardModel> = PropsWithChildren<{
+  model?: M;
   onDrop?: (move: Move) => boolean;
 }>;
 
 /**
  * Generic board container.
  */
-const GameboardRoot = ({ children, model, onDrop }: GameboardRootProps) => {
+const GameboardRoot = <M extends GameboardModel>({ children, model, onDrop }: GameboardRootProps<M>) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
-  // Handle promotion.
-  const onPromotion = useCallback<GameboardContextType['onPromotion']>((move) => {
+  const handlePromotion = useCallback<GameboardContextValue<M>['onPromotion']>((move) => {
     log('onPromotion', { move });
     setPromoting(undefined);
     onDrop?.(move);
@@ -68,13 +86,17 @@ const GameboardRoot = ({ children, model, onDrop }: GameboardRootProps) => {
   }, [model]);
 
   return (
-    <GameboardContext.Provider value={{ model, dragging, promoting, onPromotion }}>
+    <GameboardContextProvider model={model} dragging={dragging} promoting={promoting} onPromotion={handlePromotion}>
       {children}
-    </GameboardContext.Provider>
+    </GameboardContextProvider>
   );
 };
 
 GameboardRoot.displayName = 'Gameboard.Root';
+
+//
+// Content
+//
 
 type GameboardContentProps = ThemedClassName<PropsWithChildren<{ grow?: boolean; contain?: boolean }>>;
 
@@ -82,9 +104,9 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   ({ children, classNames, grow, contain }, forwardedRef) => {
     return (
       <div
-        ref={forwardedRef}
         role='none'
         className={mx(grow && 'grid is-full bs-full size-container place-content-center', classNames)}
+        ref={forwardedRef}
       >
         {contain ? <div className='is-[min(100cqw,100cqh)] bs-[min(100cqw,100cqh)]'>{children}</div> : children}
       </div>
@@ -92,9 +114,24 @@ const GameboardContent = forwardRef<HTMLDivElement, GameboardContentProps>(
   },
 );
 
+GameboardContent.displayName = 'Gameboard.Content';
+
+//
+// Gameboard
+//
+
 export const Gameboard = {
   Root: GameboardRoot,
   Content: GameboardContent,
+  Piece,
+  Square,
 };
 
-export type { GameboardRootProps, GameboardContentProps };
+export { useGameboardContext };
+
+export type {
+  GameboardRootProps,
+  GameboardContentProps,
+  PieceProps as GameboardPieceProps,
+  SquareProps as GameboardSquareProps,
+};

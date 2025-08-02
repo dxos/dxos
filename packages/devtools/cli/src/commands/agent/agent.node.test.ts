@@ -75,7 +75,7 @@ describe('agent', () => {
     {
       log.info('Starting first test profile agent.');
       await runCommand(`agent start --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
-      log.info('Creating halo identity.');
+      log.info('creating halo identity.');
       await runCommand(`halo create ${haloName} --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
     }
 

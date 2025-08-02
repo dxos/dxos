@@ -21,7 +21,7 @@ import {
 
 import { type ComponentProps } from './types';
 
-export const DocumentContainer = ({ space }: ComponentProps) => {
+export const TasksContainer = ({ space }: ComponentProps) => {
   const { themeMode } = useThemeContext();
   const [document] = useQuery(space, Filter.type(Markdown.Document));
   if (!document?.content.target) {
