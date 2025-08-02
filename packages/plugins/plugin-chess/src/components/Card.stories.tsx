@@ -10,8 +10,9 @@ import React from 'react';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Chess } from '../types';
 import { meta } from '../meta';
+import { Chess } from '../types';
+
 import { Chessboard } from './Chessboard';
 
 type DefaultStoryProps = {

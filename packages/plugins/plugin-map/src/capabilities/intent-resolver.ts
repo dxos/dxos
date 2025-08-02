@@ -5,8 +5,9 @@
 import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { MapCapabilities } from './capabilities';
 import { Map, MapAction } from '../types';
+
+import { MapCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

@@ -105,6 +105,7 @@ export default tseslint.config(
       dxos.configs.recommended,
     ],
     rules: {
+      // TODO(burdon): Sort rules.
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-empty-function': 'off',
@@ -124,7 +125,7 @@ export default tseslint.config(
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/consistent-type-exports': 'off', // seems broken
+      '@typescript-eslint/consistent-type-exports': 'off', // TODO(dmaretskyi): Seems broken?
       '@typescript-eslint/no-this-alias': 'off',
 
       // TODO(dmaretskyi): New overrides. Need to review later.

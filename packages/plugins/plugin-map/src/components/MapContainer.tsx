@@ -13,9 +13,10 @@ import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
+import { type Map } from '../types';
+
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
-import { type Map } from '../types';
 
 export type MapControlType = 'globe' | 'map';
 

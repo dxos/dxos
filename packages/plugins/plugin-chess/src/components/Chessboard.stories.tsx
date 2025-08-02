@@ -7,13 +7,14 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { type Player } from '@dxos/react-ui-gameboard';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
+import { Chess } from '../types';
 
 import { Chessboard } from './Chessboard';
-import { Chess } from '../types';
-import { translations } from '../translations';
 
 const DefaultStory = ({ game }: { game: Chess.Game }) => {
   const [orientation, setOrientation] = useState<Player>('white');

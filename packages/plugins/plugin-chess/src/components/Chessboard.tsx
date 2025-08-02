@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   ChessModel,
   Chessboard as NativeChessboard,
@@ -11,12 +12,12 @@ import {
   Gameboard,
   type GameboardRootProps,
 } from '@dxos/react-ui-gameboard';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Chess } from '../types';
+
 import { ChessboardInfo, type ChessboardInfoProps } from './ChessboardInfo';
 import { ChessboardPlayers, type ChessboardPlayersProps } from './ChessboardPlayers';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 
 export class ExtendedChessModel extends ChessModel {
   constructor(readonly object: Chess.Game) {

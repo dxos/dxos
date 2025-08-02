@@ -8,6 +8,7 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType, TypenameAnnotationId } from '@dxos/schema';
 
 import { meta } from '../meta';
+
 import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({

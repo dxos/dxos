@@ -14,10 +14,11 @@ import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { DataType } from '@dxos/schema';
 
-import { MapCapabilities } from './capabilities';
 import { MapContainer, MapViewEditor } from '../components';
 import { meta } from '../meta';
 import { Map, LocationAnnotationId } from '../types';
+
+import { MapCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
