@@ -4,6 +4,7 @@
 
 import { type ReadonlySignal } from '@preact/signals-core';
 
+// TODO(burdon): Don't make this assumption.
 export type Player = 'black' | 'white';
 
 export type Location = [number, number];

@@ -55,7 +55,7 @@ const testRelationships: Record<
   } & Record<string, any>)[]
 > = {
   [DataType.Employer.typename]: [
-    // @eslint-disable-next-line
+    // prettier-ignore
     { source: 'rich_burdon', target: 'dxos' },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
     { source: 'rich_burdon', target: 'deshaw', active: false },
@@ -78,12 +78,12 @@ const testRelationships: Record<
 
   // TODO(burdon): Limit graph view to selected relationship types.
   [DataType.HasConnection.typename]: [
-    //
+    // prettier-ignore
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },
     { kind: 'partner', source: 'dxos', target: 'socket_supply' },
 
-    //
+    // prettier-ignore
     { kind: 'investor', source: 'blueyard', target: 'dxos' },
     { kind: 'investor', source: 'blueyard', target: 'protocol_labs' },
     { kind: 'investor', source: 'protocol_labs', target: 'dxos' },
