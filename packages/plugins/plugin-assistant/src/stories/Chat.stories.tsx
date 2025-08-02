@@ -8,20 +8,21 @@ import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
+import { Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { translations } from '../translations';
+
 import {
   BlueprintContainer,
   ChatContainer,
