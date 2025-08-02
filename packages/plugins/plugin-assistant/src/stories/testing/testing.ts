@@ -29,6 +29,7 @@ import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
 import { type Space } from '@dxos/client/echo';
 
+// TODO(burdon): Factor out.
 export const config = {
   remote: new Config({
     runtime: {

@@ -10,6 +10,7 @@ export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
 
 export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChange }: MapControlProps) => {
   const [controller, setController] = useState<MapController | null>(null);
+
   const handleZoomAction = useMapZoomHandler(controller);
 
   const handleAction: ControlProps['onAction'] = (action) => {
