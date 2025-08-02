@@ -59,16 +59,16 @@ export default tseslint.config(
       '**/bin',
       '**/scripts',
       '**/vendor',
-      'packages/common/esbuild-plugins/polyfills',
-      'packages/core/mesh/signal/testing/setup.js',
-      'tools/esbuild/cli.js',
-      'packages/sdk/shell/react-i18next.d.ts',
-      'packages/core/mesh/network-manager/module-stub.mjs',
-      'packages/ui/react-ui-geo/data',
       'packages/apps/composer-app/src/functions/_worker.ts',
+      'packages/common/esbuild-plugins/polyfills',
       'packages/common/node-std',
+      'packages/core/mesh/network-manager/module-stub.mjs',
+      'packages/core/mesh/signal/testing/setup.js',
       'packages/sdk/config/src/testing',
+      'packages/sdk/shell/react-i18next.d.ts',
+      'packages/ui/react-ui-geo/data',
       'tools/dx-tools',
+      'tools/esbuild/cli.js',
       'tools/storybook/.storybook/stub.mjs',
     ],
     // WARNING: Do not add extra keys to this config object
@@ -100,8 +100,8 @@ export default tseslint.config(
     extends: [
       dxos.configs.recommended,
       eslint.configs.recommended,
-      tseslint.configs.recommendedTypeChecked,
       reactPlugin.configs.flat.recommended,
+      tseslint.configs.recommendedTypeChecked,
       prettierRecommended,
     ],
     rules: {
@@ -229,8 +229,8 @@ export default tseslint.config(
   // Stories.
   //
   {
-    files: [[SOURCES_GLOB, '**/*.stories.{tsx,jsx}']],
     extends: [storybook.configs['flat/recommended']],
+    files: [[SOURCES_GLOB, '**/*.stories.{tsx,jsx}']],
     rules: {
       'storybook/context-in-play-function': 'off',
     },
