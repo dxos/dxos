@@ -12,7 +12,6 @@ import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { Chess } from '@dxos/plugin-chess/types';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
@@ -20,6 +19,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Ref } from '@dxos/echo';
+import { trim } from '@dxos/util';
 
 import { translations } from '../translations';
 import {
@@ -27,9 +27,9 @@ import {
   BoardContainer,
   ChatContainer,
   type ComponentProps,
-  DocumentContainer,
   GraphContainer,
   SurfaceContainer,
+  TasksContainer,
 } from './components';
 import { addTestData, getDecorators, remoteConfig, testTypes } from './testing';
 
@@ -98,15 +98,28 @@ export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: remoteConfig,
+    onInit: async ({ space, binder }) => {
+      const object = space.db.add(
+        Markdown.makeDocument({
+          name: 'Document',
+          content: trim`
+            # Hello, world!
+
+            This is a test.
+          `,
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
   }),
   args: {
-    components: [ChatContainer, DocumentContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
 export const WithBlueprints = {
   decorators: getDecorators({
-    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
     config: remoteConfig,
     onInit: async ({ space, binder }) => {
@@ -115,20 +128,7 @@ export const WithBlueprints = {
     },
   }),
   args: {
-    components: [ChatContainer, [DocumentContainer, BlueprintContainer]],
-  },
-} satisfies Story;
-
-export const WithSearch = {
-  decorators: getDecorators({
-    config: remoteConfig,
-    types: testTypes,
-    onInit: async ({ space }) => {
-      await addTestData(space);
-    },
-  }),
-  args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, [TasksContainer, BlueprintContainer]],
   },
 } satisfies Story;
 
@@ -138,10 +138,9 @@ export const WithChess = {
     config: remoteConfig,
     types: [Chess.Game],
     onInit: async ({ space, binder }) => {
-      // TODO(burdon): Add player IDs (for assistant).
+      // TODO(burdon): Add player DID (for user and assistant).
       const object = space.db.add(
         Chess.makeGame({
-          // name: 'Game',
           pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. bxc3 *',
         }),
       );
@@ -176,5 +175,18 @@ export const WithResearch = {
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
+  },
+} satisfies Story;
+
+export const WithSearch = {
+  decorators: getDecorators({
+    config: remoteConfig,
+    types: testTypes,
+    onInit: async ({ space }) => {
+      await addTestData(space);
+    },
+  }),
+  args: {
+    components: [ChatContainer, [GraphContainer]],
   },
 } satisfies Story;

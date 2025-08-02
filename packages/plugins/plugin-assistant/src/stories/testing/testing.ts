@@ -12,9 +12,10 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { AttentionPlugin } from '@dxos/plugin-attention';
+import { GraphPlugin } from '@dxos/plugin-graph';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
@@ -47,6 +48,12 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
   withPluginManager({
     fireEvents: [Events.SetupArtifactDefinition],
     plugins: [
+      // System plugins.
+      AttentionPlugin(),
+      GraphPlugin(),
+      IntentPlugin(),
+      SettingsPlugin(),
+      SpacePlugin(),
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async (context, client) => {
@@ -59,11 +66,10 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
           // TODO(burdon): onSpacesReady is never called.
           await space.waitUntilReady();
 
-          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          const binder = new ContextBinder(await chat.queue.load());
-
           // Clone blueprints and bind to conversation.
           // TODO(dmaretskyi): This should be done by Obj.clone.
+          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
+          const binder = new ContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const { id: _id, ...data } = blueprint;
             const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
@@ -74,13 +80,9 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
         },
         ...props,
       }),
-      IntentPlugin(),
-      SettingsPlugin(),
-      SpacePlugin(),
 
-      TranscriptionPlugin(),
+      // User plugins.
       AssistantPlugin(),
-
       ...plugins,
     ],
     capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],
