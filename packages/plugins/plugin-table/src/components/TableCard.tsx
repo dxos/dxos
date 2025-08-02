@@ -19,12 +19,12 @@ import {
 } from '@dxos/react-ui-table';
 import { type DataType } from '@dxos/schema';
 
-export type TableContainerProps = {
+export type TableCardProps = {
   role: string;
   view: DataType.View;
 };
 
-export const TablePreview = ({ role, view }: TableContainerProps) => {
+export const TableCard = ({ role, view }: TableCardProps) => {
   const tableRef = useRef<TableController>(null);
 
   const client = useClient();
@@ -75,4 +75,4 @@ export const TablePreview = ({ role, view }: TableContainerProps) => {
   );
 };
 
-export default TablePreview;
+export default TableCard;
