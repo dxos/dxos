@@ -25,7 +25,9 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
 
   const [items] = useAsyncState<TagPickerItemData[]>(async () => {
     const objects = await Ref.Array.loadAll(context.objects.value ?? []);
-    return objects.filter(isNonNullable).map((obj) => ({ id: obj.id, label: Obj.getLabel(obj) ?? obj.id }));
+    return objects
+      .filter(isNonNullable)
+      .map((obj) => ({ id: obj.id, label: Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id }));
   }, [context]);
 
   const handleSearch = useCallback<NonNullable<TagPickerOptions['onSearch']>>(

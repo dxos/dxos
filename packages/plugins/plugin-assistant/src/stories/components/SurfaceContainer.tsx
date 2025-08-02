@@ -13,6 +13,7 @@ import { Chess } from '@dxos/plugin-chess/types';
 import { useQuery } from '@dxos/react-client/echo';
 
 export const SurfaceContainer = ({ space }: ComponentProps) => {
+  // TODO(burdon): Query for chat artifacts from binder.
   const [object] = useQuery(space, Filter.type(Chess.Game));
   if (!object) {
     return null;

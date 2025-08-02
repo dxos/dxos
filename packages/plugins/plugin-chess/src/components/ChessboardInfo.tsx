@@ -11,13 +11,13 @@ import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { type ExtendedChessModel } from './Chessboard';
 import { meta } from '../meta';
 
-export type ChessInfoProps = ThemedClassName<{
+export type ChessboardInfoProps = ThemedClassName<{
   orientation?: Player;
   onOrientationChange?: (orientation: Player) => void;
 }>;
 
-export const ChessInfo = ({ classNames, orientation = 'white', onOrientationChange }: ChessInfoProps) => {
-  const { model } = useGameboardContext<ExtendedChessModel>(ChessInfo.displayName);
+export const ChessboardInfo = ({ classNames, orientation = 'white', onOrientationChange }: ChessboardInfoProps) => {
+  const { model } = useGameboardContext<ExtendedChessModel>(ChessboardInfo.displayName);
 
   return (
     <div
@@ -50,7 +50,7 @@ export const ChessInfo = ({ classNames, orientation = 'white', onOrientationChan
   );
 };
 
-ChessInfo.displayName = 'ChessInfo';
+ChessboardInfo.displayName = 'Chessboard.Info';
 
 const History = ({ classNames, model }: ThemedClassName<{ model: ExtendedChessModel }>) => {
   const { t } = useTranslation(meta.id);

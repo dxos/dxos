@@ -8,7 +8,6 @@ import { type StoryObj, type Meta } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
-import { Obj } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -19,6 +18,8 @@ import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { Ref } from '@dxos/echo';
 
 import { translations } from '../translations';
 import {
@@ -95,8 +96,8 @@ export const Default = {
 
 export const WithDocument = {
   decorators: getDecorators({
-    config: remoteConfig,
     plugins: [MarkdownPlugin()],
+    config: remoteConfig,
   }),
   args: {
     components: [ChatContainer, DocumentContainer],
@@ -107,8 +108,11 @@ export const WithBlueprints = {
   decorators: getDecorators({
     plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    context: true,
     config: remoteConfig,
+    onInit: async ({ space, binder }) => {
+      const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
   }),
   args: {
     components: [ChatContainer, [DocumentContainer, BlueprintContainer]],
@@ -117,11 +121,9 @@ export const WithBlueprints = {
 
 export const WithSearch = {
   decorators: getDecorators({
-    context: true,
     config: remoteConfig,
     types: testTypes,
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
+    onInit: async ({ space }) => {
       await addTestData(space);
     },
   }),
@@ -130,19 +132,20 @@ export const WithSearch = {
   },
 } satisfies Story;
 
-// TODO(burdon): Artifact surface (showing currently bound artifacts).
 export const WithChess = {
   decorators: getDecorators({
-    context: true,
+    plugins: [ChessPlugin()],
     config: remoteConfig,
     types: [Chess.Game],
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
-      space.db.add(
-        Obj.make(Chess.Game, {
-          fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    onInit: async ({ space, binder }) => {
+      // TODO(burdon): Add player IDs (for assistant).
+      const object = space.db.add(
+        Chess.makeGame({
+          // name: 'Game',
+          pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. bxc3 *',
         }),
       );
+      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
@@ -153,12 +156,11 @@ export const WithChess = {
 export const WithBoard = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
-    context: true,
     config: remoteConfig,
     types: [Board.Board],
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
-      space.db.add(Board.makeBoard());
+    onInit: async ({ space, binder }) => {
+      const object = space.db.add(Board.makeBoard());
+      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
@@ -170,7 +172,6 @@ export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    context: true,
     config: remoteConfig,
   }),
   args: {

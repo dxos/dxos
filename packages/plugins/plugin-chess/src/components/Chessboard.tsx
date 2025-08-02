@@ -6,14 +6,15 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from '
 
 import {
   ChessModel,
+  Chessboard as NativeChessboard,
+  type ChessboardProps as NativeChessboardProps,
   Gameboard,
   type GameboardRootProps,
-  Chessboard as NativeChessboard,
 } from '@dxos/react-ui-gameboard';
 
 import { type Chess } from '../types';
-import { ChessInfo } from './ChessInfo';
-import { ChessPlayers } from './ChessPlayers';
+import { ChessboardInfo, type ChessboardInfoProps } from './ChessboardInfo';
+import { ChessboardPlayers, type ChessboardPlayersProps } from './ChessboardPlayers';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -27,11 +28,11 @@ export class ExtendedChessModel extends ChessModel {
 // Root
 //
 
-type RootProps = PropsWithChildren<{
+type ChessboardRootProps = PropsWithChildren<{
   game: Chess.Game;
 }>;
 
-const Root = ({ game, children }: RootProps) => {
+const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
   useEffect(() => {
     model.initialize(game.pgn);
@@ -62,9 +63,9 @@ const Root = ({ game, children }: RootProps) => {
 
 type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 
-type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
+type ChessboardContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
-const Content = ({ classNames, children, role }: ContentProps) => {
+const ChessboardContent = ({ classNames, children, role }: ChessboardContentProps) => {
   return (
     <Gameboard.Content
       classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
@@ -81,11 +82,17 @@ const Content = ({ classNames, children, role }: ContentProps) => {
 //
 
 export const Chessboard = {
-  Root,
-  Content,
+  Root: ChessboardRoot,
+  Content: ChessboardContent,
   Board: NativeChessboard,
-  Info: ChessInfo,
-  Players: ChessPlayers,
+  Info: ChessboardInfo,
+  Players: ChessboardPlayers,
 };
 
-export type { RootProps as ChessRootProps };
+export type {
+  ChessboardRootProps,
+  ChessboardContentProps,
+  NativeChessboardProps as ChessboardBoardProps,
+  ChessboardInfoProps,
+  ChessboardPlayersProps,
+};

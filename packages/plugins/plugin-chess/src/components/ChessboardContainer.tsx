@@ -10,12 +10,12 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { type Chess } from '../types';
 import { Chessboard } from './Chessboard';
 
-export type ChessContainerProps = {
+export type ChessboardContainerProps = {
   game: Chess.Game;
   role?: string;
 };
 
-export const ChessContainer = ({ game, role }: ChessContainerProps) => {
+export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) => {
   const space = getSpace(game);
   if (!space) {
     return null;
@@ -36,9 +36,9 @@ export const ChessContainer = ({ game, role }: ChessContainerProps) => {
 
     default: {
       return (
-        <StackItem.Content>
+        <StackItem.Content classNames='bs-full is-full overflow-hidden'>
           <Chessboard.Root game={game}>
-            <div role='none' className='grid grid-rows-[5rem_1fr_5rem] grow overflow-hidden'>
+            <div role='none' className='grid grid-rows-[5rem_1fr_5rem]'>
               <div />
               <Chessboard.Content>
                 <Chessboard.Board />
@@ -52,4 +52,4 @@ export const ChessContainer = ({ game, role }: ChessContainerProps) => {
   }
 };
 
-export default ChessContainer;
+export default ChessboardContainer;

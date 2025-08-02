@@ -10,9 +10,13 @@ import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
 import { useGameboardContext } from '@dxos/react-ui-gameboard';
 import { type Chess } from '../types';
 import { type ExtendedChessModel } from './Chessboard';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-export const ChessPlayers = () => {
-  const { model } = useGameboardContext<ExtendedChessModel>(ChessPlayers.displayName);
+export type ChessboardPlayersProps = ThemedClassName<{}>;
+
+export const ChessboardPlayers = ({ classNames }: ChessboardPlayersProps) => {
+  const { model } = useGameboardContext<ExtendedChessModel>(ChessboardPlayers.displayName);
   const members = useMembers(getSpace(model.object)?.key);
   const players: Chess.Game['players'] = model.object.players;
   if (!players) {
@@ -20,7 +24,7 @@ export const ChessPlayers = () => {
   }
 
   return (
-    <div role='none' className='grid grid-cols-2 gap-8'>
+    <div role='none' className={mx('grid grid-cols-2 gap-8', classNames)}>
       <div role='none' className='flex flex-row-reverse items-center gap-2'>
         <PlayerSelect
           side='white'
@@ -41,7 +45,7 @@ export const ChessPlayers = () => {
   );
 };
 
-ChessPlayers.displayName = 'ChessPlayers';
+ChessboardPlayers.displayName = 'Chessboard.Players';
 
 const PlayerSelect = ({
   side,
