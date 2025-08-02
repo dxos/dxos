@@ -54,8 +54,9 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
           await client.spaces.waitUntilReady();
 
           const space = client.spaces.default;
-          // ISSUE(burdon): Should not require this.
+          // TODO(burdon): Should not require this.
           //  ERROR: invariant violation: Database was not initialized with root object.
+          // TODO(burdon): onSpacesReady is never called.
           await space.waitUntilReady();
 
           const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
