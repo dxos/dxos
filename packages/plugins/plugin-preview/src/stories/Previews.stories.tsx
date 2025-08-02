@@ -23,6 +23,20 @@ export default meta;
 
 type Story = StoryObj<DefaultstoryProps>;
 
+export const Popover = {
+  args: {
+    role: 'card--popover',
+    cards: createCards(),
+  },
+} satisfies Story;
+
+export const Intrinsic = {
+  args: {
+    role: 'card--intrinsic',
+    cards: createCards(),
+  },
+} satisfies Story;
+
 export const Extrinsic = {
   args: {
     role: 'card--extrinsic',
@@ -34,19 +48,5 @@ export const ExtrinsicNoImage = {
   args: {
     role: 'card--extrinsic',
     cards: createCards(false),
-  },
-} satisfies Story;
-
-export const Intrinsic = {
-  args: {
-    role: 'card--intrinsic',
-    cards: createCards(),
-  },
-} satisfies Story;
-
-export const Popover = {
-  args: {
-    role: 'card--popover',
-    cards: createCards(),
   },
 } satisfies Story;

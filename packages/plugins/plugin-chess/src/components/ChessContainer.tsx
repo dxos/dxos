@@ -19,8 +19,8 @@ const ChessContainer = ({ game, role }: { game: ChessType; role?: string }) => {
 
   switch (role) {
     case 'card--popover':
-    case 'card--extrinsic':
-    case 'card--intrinsic': {
+    case 'card--intrinsic':
+    case 'card--extrinsic': {
       return <ChessPanel game={game} role={role} />;
     }
 

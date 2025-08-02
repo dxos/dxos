@@ -111,14 +111,14 @@ export const Popover = {
   },
 } satisfies Story;
 
-export const Extrinsic = {
-  args: {
-    role: 'card--extrinsic',
-  },
-} satisfies Story;
-
 export const Intrinsic = {
   args: {
     role: 'card--intrinsic',
+  },
+} satisfies Story;
+
+export const Extrinsic = {
+  args: {
+    role: 'card--extrinsic',
   },
 } satisfies Story;

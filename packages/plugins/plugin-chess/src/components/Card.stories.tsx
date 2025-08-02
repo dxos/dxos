@@ -53,16 +53,16 @@ export const Popover = {
   },
 } satisfies Story;
 
-export const Extrinsic = {
+export const Intrinsic = {
   args: {
-    role: 'card--extrinsic',
+    role: 'card--intrinsic',
     game: game,
   },
 } satisfies Story;
 
-export const Intrinsic = {
+export const Extrinsic = {
   args: {
-    role: 'card--intrinsic',
+    role: 'card--extrinsic',
     game: game,
   },
 } satisfies Story;

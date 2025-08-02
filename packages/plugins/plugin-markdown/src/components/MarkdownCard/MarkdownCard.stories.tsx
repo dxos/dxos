@@ -57,9 +57,9 @@ export const Popover = {
   },
 } satisfies Story;
 
-export const Extrinsic = {
+export const Intrinsic = {
   args: {
-    role: 'card--extrinsic',
+    role: 'card--intrinsic',
     subject: Markdown.makeDocument({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),
@@ -67,9 +67,9 @@ export const Extrinsic = {
   },
 } satisfies Story;
 
-export const Intrinsic = {
+export const Extrinsic = {
   args: {
-    role: 'card--intrinsic',
+    role: 'card--extrinsic',
     subject: Markdown.makeDocument({
       name: faker.lorem.words(3),
       content: faker.lorem.paragraphs(3),
