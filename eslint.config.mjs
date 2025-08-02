@@ -206,26 +206,25 @@ export default tseslint.config(
           count: 1,
         },
       ],
-      'import-x/order': 'off', // Disabled because this rule was flaky.
-      // 'import-x/order': [
-      //   'error',
-      //   {
-      //     alphabetize: {
-      //       order: 'asc',
-      //     },
-      //     groups: [['builtin', 'external'], 'internal'],
-      //     'newlines-between': 'always',
-      //     pathGroups: [
-      //       {
-      //         pattern: '@{dxos,braneframe}/**',
-      //         group: 'internal',
-      //         position: 'before',
-      //       },
-      //     ],
-      //     pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
-      //   },
-      // ],
-      // TODO(dmaretskyi): To re-enable.
+      'import-x/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            {
+              pattern: '@dxos/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          'newlines-between': 'always',
+        },
+      ],
       'no-unsafe-optional-chaining': 'off',
       '@typescript-eslint/restrict-plus-operands': 'off',
     },
