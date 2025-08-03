@@ -74,8 +74,8 @@ export const useChatProcessor = ({
 
   // Tools and context.
   const config = useConfig();
-  const functions = useQuery(space, Filter.type(FunctionType));
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
+  const functions = useQuery(space, Filter.type(FunctionType));
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');
     const tools: ExecutableTool[] = [
