@@ -15,7 +15,7 @@ const ObjectVersionSchema = Schema.Unknown as Schema.Schema<ObjectVersion>;
 const VersionPinSchema = Schema.Struct({
   // TODO(dmaretskyi): Use Ref when those support encoding.
   objectId: ObjectId,
-  // TODO(dmaretskyi): Could be opaque
+  // TODO(dmaretskyi): Could be opaque.
   version: ObjectVersionSchema,
 });
 

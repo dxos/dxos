@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './context';
 export * from './conversation';
 export * from './functions';
 export * from './research';

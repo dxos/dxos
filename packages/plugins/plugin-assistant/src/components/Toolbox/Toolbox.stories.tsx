@@ -40,7 +40,7 @@ const meta: Meta<typeof Toolbox> = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

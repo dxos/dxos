@@ -17,7 +17,7 @@ import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Set
 import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType } from './types';
+import { Assistant, AssistantAction, ServiceType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -63,22 +63,22 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Assistant.Chat,
-            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
+            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Blueprint.Blueprint,
-            formSchema: Assistant.BlueprintForm,
-            getIntent: (props) => createIntent(Assistant.CreateBlueprint, props),
+            formSchema: AssistantAction.BlueprintForm,
+            getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Sequence,
-            getIntent: () => createIntent(Assistant.CreateSequence),
+            getIntent: () => createIntent(AssistantAction.CreateSequence),
           }),
         ),
       ],
@@ -93,7 +93,7 @@ export const AssistantPlugin = () =>
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
         contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
-          createIntent(Assistant.OnSpaceCreated, { rootCollection, space }),
+          createIntent(AssistantAction.OnSpaceCreated, { rootCollection, space }),
         ),
     }),
     defineModule({

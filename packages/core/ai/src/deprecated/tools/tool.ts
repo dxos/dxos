@@ -30,6 +30,9 @@ declare global {
   interface ToolContextExtensions {}
 }
 
+/**
+ * @deprecated
+ */
 export type ToolExecutionContext = {
   /**
    * Extensions are injected by the caller.
@@ -42,12 +45,18 @@ export type ToolExecutionContext = {
   reportStatus?: (status: AgentStatus) => void;
 };
 
+/**
+ * @deprecated
+ */
 export type ToolResult =
   // TODO(dmaretskyi): Rename `contentBlocks`
   | { kind: 'success'; result: unknown; extractContentBlocks?: ContentBlock.Any[] }
   | { kind: 'error'; message: string }
   | { kind: 'break'; result: unknown };
 
+/**
+ * @deprecated
+ */
 export const ToolResult = Object.freeze({
   /**
    * The tool execution was successful.
@@ -74,7 +83,9 @@ export const ToolResult = Object.freeze({
  * https://platform.openai.com/docs/guides/function-calling
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
-// TODO(burdon): Transform to @effect/ai AiTool.
+/**
+ * @deprecated
+ */
 export const Tool = Schema.Struct({
   // TODO(burdon): DXN?
   id: Schema.String,
@@ -138,8 +149,8 @@ export interface ToolResolver {
 
 /**
  * Registry of executable tools.
+ * @deprecated
  */
-// TODO(burdon): Tool resolution is duplicated in the session and ollama-client.
 export class ToolRegistry implements ToolResolver {
   private readonly _tools = new Map<string, ExecutableTool>();
 

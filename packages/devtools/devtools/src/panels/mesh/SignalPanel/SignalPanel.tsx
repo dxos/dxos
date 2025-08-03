@@ -5,14 +5,13 @@
 import React from 'react';
 
 import { PanelContainer } from '../../../components';
-import { styles } from '../../../styles';
 
 import { SignalMessageTable } from './SignalMessageTable';
 import { SignalStatusTable } from './SignalStatusTable';
 
 export const SignalPanel = () => {
   return (
-    <PanelContainer classNames={['grid grid-rows-[2fr_5fr]', styles.border]}>
+    <PanelContainer classNames='grid grid-rows-[2fr_5fr]'>
       <SignalStatusTable />
       <SignalMessageTable />
     </PanelContainer>

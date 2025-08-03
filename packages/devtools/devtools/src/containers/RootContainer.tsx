@@ -11,7 +11,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { useSections } from '../hooks';
-import { styles } from '../styles';
 
 export const RootContainer = () => {
   const { pathname } = useLocation();
@@ -19,7 +18,7 @@ export const RootContainer = () => {
   return (
     <div className='flex is-full bs-full overflow-hidden'>
       <Sidebar />
-      <div className={mx('flex flex-col grow overflow-hidden', styles.bgPanel)}>
+      <div className='flex flex-col grow overflow-hidden'>
         <ErrorBoundary key={pathname}>
           <Suspense>
             <Outlet />
@@ -34,27 +33,14 @@ const Sidebar = () => {
   const { pathname } = useLocation();
   const sections = useSections();
   return (
-    <div
-      className={mx(
-        'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r',
-        styles.border,
-        styles.bgPanel,
-      )}
-    >
-      <div className={mx('flex flex-col gap-4 divide-y', styles.border)}>
+    <div className='flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r border-separator'>
+      <div className='flex flex-col gap-4 divide-y divide-separator'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm pis-4 py-1'>{section.title}</div>
             <div>
               {section.items?.map(({ id, title, icon }) => (
-                <div
-                  key={id}
-                  className={mx(
-                    'flex items-center pis-4 gap-2',
-                    styles.sidebarItem,
-                    id === pathname && styles.selected,
-                  )}
-                >
+                <div key={id} className={mx('flex items-center pis-4 gap-2', id === pathname && 'bg-activeSurface')}>
                   <Icon icon={icon} size={4} />
                   <Link to={id} className='grow'>
                     <span>{title}</span>
