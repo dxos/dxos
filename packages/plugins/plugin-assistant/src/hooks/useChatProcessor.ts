@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { AiConversation, createSystemPrompt } from '@dxos/assistant';
-import { type ArtifactDefinition, type AssociatedArtifact, type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -23,19 +23,9 @@ export type UseChatProcessorProps = {
   space?: Space;
   chat?: Assistant.Chat;
   preset?: AiServicePreset;
-
-  // TODO(burdon): Move into layer?
   services?: Layer.Layer<AiChatServices>;
   blueprintRegistry?: Blueprint.Registry;
-  // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
-
-  /** @deprecated */
-  instructions?: string;
-  /** @deprecated */
-  artifact?: AssociatedArtifact;
-  /** @deprecated */
-  noPluginArtifacts?: boolean;
 };
 
 /**
@@ -48,18 +38,9 @@ export const useChatProcessor = ({
   services,
   blueprintRegistry,
   settings,
-  instructions,
-  artifact,
-  noPluginArtifacts,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
-
-  // TODO(burdon): Spec artifacts.
-  let artifacts: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
-  if (noPluginArtifacts) {
-    artifacts = Stable.array;
-  }
 
   // Services.
   const remoteServices = useQuery(space, Filter.type(ServiceType));
@@ -89,16 +70,8 @@ export const useChatProcessor = ({
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
-  // TODO(burdon): Create from template.
-  const systemPrompt = useMemo(
-    () =>
-      createSystemPrompt({
-        artifacts: artifacts.map((definition) => `${definition.name}\n${definition.instructions}`),
-        artifact,
-        instructions,
-      }),
-    [artifacts, artifact, instructions],
-  );
+  // TODO(burdon): Create from blueprint.
+  const systemPrompt = useMemo(() => createSystemPrompt(), []);
 
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
@@ -117,7 +90,6 @@ export const useChatProcessor = ({
 
     log('creating processor', {
       preset,
-      artifacts: artifacts.length,
       systemPrompt: systemPrompt.length,
       model: preset?.model,
       settings,
@@ -127,11 +99,10 @@ export const useChatProcessor = ({
       tools,
       extensions,
       blueprintRegistry,
-      artifacts,
       systemPrompt,
       model: preset?.model,
     });
-  }, [services, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, preset]);
+  }, [services, conversation, tools, blueprintRegistry, extensions, systemPrompt, preset]);
 
   return processor;
 };

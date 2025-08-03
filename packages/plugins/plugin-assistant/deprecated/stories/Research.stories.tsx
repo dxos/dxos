@@ -112,7 +112,6 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // TODO(burdon): Replace with useChatProcessor.
-  // const processor = useChatProcessor(space);
   const processor = useMemo<AiChatProcessor | undefined>(() => {
     if (!space) {
       return;

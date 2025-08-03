@@ -40,6 +40,6 @@ export type AssistantPromptOptions = {
   cot?: boolean;
 };
 
-export const createSystemPrompt = (options: AssistantPromptOptions) => {
+export const createSystemPrompt = (options: AssistantPromptOptions = {}) => {
   return Template.createPrompt(ASSISTANT, options);
 };

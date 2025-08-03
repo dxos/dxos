@@ -8,7 +8,7 @@ import { Effect, type Layer } from 'effect';
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { type AiConversation, type AiSession, ArtifactDiffResolver } from '@dxos/assistant';
-import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -32,14 +32,10 @@ export type AiRequestOptions = {
 };
 
 export type AiChatProcessorOptions = {
-  // TODO(burdon): Change to AiToolkit.
-  tools?: readonly ExecutableTool[];
   blueprintRegistry?: Blueprint.Registry;
-
-  // TODO(dmaretskyi): Remove.
-  artifacts?: readonly ArtifactDefinition[];
+  tools?: readonly ExecutableTool[];
   extensions?: ToolContextExtensions;
-  // TODO(burdon): Remove systemPrompt -- should come from blueprint.
+  // TODO(burdon): Remove systemPrompt -- should come from assistant blueprint?
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -93,7 +89,7 @@ export class AiChatProcessor {
     return messages;
   });
 
-  // TODO(burdon): Replace with Toolkit.
+  /** Tool implementations.*/
   private _tools?: ExecutableTool[];
 
   /** Current session. */
