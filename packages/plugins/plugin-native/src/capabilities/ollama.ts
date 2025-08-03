@@ -39,7 +39,12 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
   static layerLive = Layer.scoped(
     OllamaSidecar,
     Effect.gen(function* () {
-      const command = Command.sidecar('sidecar/ollama', ['serve'], { env: { OLLAMA_HOST } });
+      const command = Command.sidecar('sidecar/ollama', ['serve'], {
+        env: {
+          OLLAMA_HOST,
+          OLLAMA_ORIGINS: '*', // CORS
+        },
+      });
       command.stdout.on('data', (data) => console.log('[ollama]', data.toString()));
       command.stderr.on('data', (data) => console.error('[ollama]', data.toString()));
       command.on('close', (code) => console.log('Ollama closed with code', code));
