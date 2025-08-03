@@ -4,9 +4,9 @@
 
 import { type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type FC, forwardRef, type SetStateAction } from 'react';
+import React, { type Dispatch, type FC, type SetStateAction, forwardRef } from 'react';
 
-import { type ButtonProps, Button, DropdownMenu, useTranslation, Icon } from '@dxos/react-ui';
+import { Button, type ButtonProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 export type LargeButtonProps = ButtonProps & {

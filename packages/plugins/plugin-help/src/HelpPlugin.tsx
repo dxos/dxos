@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createResolver, defineModule, definePlugin, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { HelpCapabilities } from './capabilities/capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { type Step, HelpAction } from './types';
+import { HelpAction, type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';

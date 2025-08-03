@@ -8,8 +8,8 @@ import React from 'react';
 import { ReducerInput, ReducerOutput } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { FunctionBody, createFunctionAnchors, getHeight } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 //
 // Data

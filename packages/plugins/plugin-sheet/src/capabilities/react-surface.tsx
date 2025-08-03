@@ -8,10 +8,11 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { SheetCapabilities } from './capabilities';
 import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../components';
 import { SHEET_PLUGIN } from '../meta';
 import { SheetType } from '../types';
+
+import { SheetCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

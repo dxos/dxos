@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
-import { splitJsonPath, type JsonPath } from '@dxos/effect';
+import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
-import { getType, getTypename, type ObjectMeta, type EntityKindId } from '../object';
+import { type EntityKindId, type ObjectMeta, getType, getTypename } from '../object';
 import { ATTR_META } from '../object/model';
 
 /**

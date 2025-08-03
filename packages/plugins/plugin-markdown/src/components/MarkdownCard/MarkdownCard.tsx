@@ -5,7 +5,7 @@
 import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { type PreviewProps } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';

@@ -8,12 +8,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { live } from '@dxos/live-object';
-import { testData, TestSchema, testView, type TestType } from '@dxos/schema/testing';
+import { TestSchema, type TestType, testData, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DeprecatedForm, type DeprecatedFormProps } from './Form';
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
+
+import { DeprecatedForm, type DeprecatedFormProps } from './Form';
 
 const DefaultStory = (props: DeprecatedFormProps) => (
   <TestLayout json={{ props }}>

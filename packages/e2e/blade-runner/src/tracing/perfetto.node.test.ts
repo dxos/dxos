@@ -3,7 +3,8 @@
 //
 
 import path from 'node:path';
-import { onTestFinished, describe, expect, test } from 'vitest';
+
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { scheduleMicroTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';

@@ -5,12 +5,12 @@
 import { Schema } from 'effect';
 
 import {
-  formatToType,
   type EchoSchema,
   FormatEnum,
   type SelectOptionSchema,
   TypeEnum,
   TypedObject,
+  formatToType,
 } from '@dxos/echo-schema';
 import { createEchoSchema } from '@dxos/live-object/testing';
 

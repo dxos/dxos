@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { asyncTimeout, Event, MulticastObservable, Trigger, SubscriptionList } from '@dxos/async';
+import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { inspectObject } from '@dxos/debug';
@@ -21,9 +21,9 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type Credential,
+  type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
-  type DeviceProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 

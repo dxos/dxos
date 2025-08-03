@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RangeSetBuilder, StateField, StateEffect, Prec } from '@codemirror/state';
-import { EditorView, ViewPlugin, type ViewUpdate, Decoration, keymap, type DecorationSet } from '@codemirror/view';
+import { Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 
-import { placeholder, type PlaceholderOptions } from './placeholder';
 import { type Range } from '../../types';
+
+import { type PlaceholderOptions, placeholder } from './placeholder';
 
 export type CommandMenuOptions = {
   trigger: string | string[];

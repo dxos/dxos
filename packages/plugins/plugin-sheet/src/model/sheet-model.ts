@@ -4,10 +4,6 @@
 
 import { Event } from '@dxos/async';
 import {
-  addressFromA1Notation,
-  addressToA1Notation,
-  createSheetName,
-  isFormula,
   type CellAddress,
   type CellRange,
   type CellScalarValue,
@@ -16,10 +12,14 @@ import {
   type ComputeNodeEvent,
   DetailedCellError,
   ExportedCellChange,
-  type SimpleCellRange,
   type SimpleCellAddress,
+  type SimpleCellRange,
   type SimpleDate,
   type SimpleDateTime,
+  addressFromA1Notation,
+  addressToA1Notation,
+  createSheetName,
+  isFormula,
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -39,7 +39,7 @@ import {
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
 } from '../types';
-import { type SheetAction, type CellValue, type SheetType } from '../types';
+import { type CellValue, type SheetAction, type SheetType } from '../types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.

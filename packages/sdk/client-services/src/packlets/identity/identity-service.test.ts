@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { IdentityServiceImpl } from './identity-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+
+import { IdentityServiceImpl } from './identity-service';
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;

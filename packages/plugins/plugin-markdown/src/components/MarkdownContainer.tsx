@@ -16,17 +16,18 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
   type CommandMenuGroup,
   type CommandMenuItem,
-  insertAtCursor,
-  insertAtLineStart,
   type PreviewLinkRef,
   type PreviewOptions,
+  insertAtCursor,
+  insertAtLineStart,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
 import { Markdown } from '../types';
 import { getFallbackName } from '../util';
+
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,

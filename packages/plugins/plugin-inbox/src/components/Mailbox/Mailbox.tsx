@@ -4,7 +4,7 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, useCallback, useState, type WheelEvent } from 'react';
+import React, { type MouseEvent, type WheelEvent, useCallback, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
@@ -19,9 +19,10 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
-import { type Tag } from './model';
 import { type MailboxType } from '../../types';
 import { formatDate, hashString } from '../util';
+
+import { type Tag } from './model';
 
 const ROW_SIZES = {
   DEFAULT: 56,

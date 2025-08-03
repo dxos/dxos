@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 
 import {
-  Client,
   AppGraphBuilder,
+  Client,
   IntentResolver,
   Migrations,
   ReactContext,

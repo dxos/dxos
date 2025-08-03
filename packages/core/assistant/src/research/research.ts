@@ -9,15 +9,16 @@ import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
-import { defineFunction, TracingService } from '@dxos/functions';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';
+
+import { AiSession } from '../session';
 
 import { ExaToolkit, LiveExaHandler, MockExaHandler } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
-import { AiSession } from '../session';
 
 /**
  * Exec external service and return the results as a Subgraph.

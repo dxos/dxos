@@ -5,6 +5,6 @@
 // Workaround for https://github.com/vitest-dev/vitest/issues/7174.
 import type { Parjser } from 'parjs';
 
-import { parjsCombinators, parjs } from '#parjs';
+import { parjs, parjsCombinators } from '#parjs';
 
 export { type Parjser, parjsCombinators, parjs };

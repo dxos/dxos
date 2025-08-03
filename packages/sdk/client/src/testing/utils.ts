@@ -8,11 +8,12 @@ import type { Config } from '@dxos/config';
 import { type Context } from '@dxos/context';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
-import { TestBuilder } from './test-builder';
 import { Client } from '../client';
+
+import { TestBuilder } from './test-builder';
 
 type Options = {
   timeout?: number;

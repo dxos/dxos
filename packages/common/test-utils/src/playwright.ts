@@ -4,9 +4,10 @@
 
 /* eslint-disable no-console */
 
-import { type Browser, type BrowserContext, type PlaywrightTestConfig, type Page } from '@playwright/test';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+
+import { type Browser, type BrowserContext, type Page, type PlaywrightTestConfig } from '@playwright/test';
 import pkgUp from 'pkg-up';
 
 import { Lock } from './lock';

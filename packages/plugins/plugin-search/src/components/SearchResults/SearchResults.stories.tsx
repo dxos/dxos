@@ -10,8 +10,9 @@ import React, { useState } from 'react';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SearchResults, type SearchResultsProps } from './SearchResults';
 import { filterObjectsSync } from '../../hooks';
+
+import { SearchResults, type SearchResultsProps } from './SearchResults';
 
 faker.seed(1);
 

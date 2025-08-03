@@ -2,15 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type NetworkService, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { NetworkServiceImpl } from './network-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+
+import { NetworkServiceImpl } from './network-service';
 
 describe('NetworkService', () => {
   let serviceContext: ServiceContext;

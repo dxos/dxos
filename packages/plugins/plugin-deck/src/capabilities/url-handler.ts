@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 
-import { DeckCapabilities } from './capabilities';
 import { defaultDeck } from '../types';
+
+import { DeckCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default async (context: PluginContext) => {

@@ -6,8 +6,9 @@ import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
-import { Testing } from './types';
 import { DataType } from '../common';
+
+import { Testing } from './types';
 
 faker.seed(1);
 

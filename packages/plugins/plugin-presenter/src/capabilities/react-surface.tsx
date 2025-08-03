@@ -11,10 +11,10 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import {
+  CollectionPresenterContainer,
+  DocumentPresenterContainer,
   MarkdownSlide,
   PresenterSettings,
-  DocumentPresenterContainer,
-  CollectionPresenterContainer,
 } from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
 import { type PresenterSettingsProps } from '../types';

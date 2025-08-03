@@ -8,8 +8,9 @@ import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { Devtools } from './Devtools';
 import { ErrorBoundary } from '../components';
+
+import { Devtools } from './Devtools';
 
 // TODO(burdon): Factor out. See copy paste in testbench-app.
 const useThemeWatcher = () => {

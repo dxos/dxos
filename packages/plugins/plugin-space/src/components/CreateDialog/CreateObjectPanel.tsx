@@ -5,14 +5,14 @@
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
-import { type SpaceId, type Space } from '@dxos/react-client/echo';
+import { type TypeAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
-import { isNonNullable, type MaybePromise } from '@dxos/util';
+import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { SPACE_PLUGIN } from '../../meta';

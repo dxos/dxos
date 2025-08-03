@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { ProjectionModel } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
-import { createKanban, KanbanAction } from '../types';
+import { KanbanAction, createKanban } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, computed } from '@preact/signals-core';
 import { Array, pipe } from 'effect';
 
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj, type Type, type Ref, type Relation } from '@dxos/echo';
+import { Obj, type Ref, type Relation, type Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 

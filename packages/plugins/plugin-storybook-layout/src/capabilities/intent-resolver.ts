@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { contributes, Capabilities, createResolver, type PluginContext, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 
 import { LayoutState } from './state';
 

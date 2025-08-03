@@ -6,11 +6,11 @@ import { Schema } from 'effect';
 
 import {
   DecimalPrecision,
-  TypeEnum,
   FormatEnum,
   JsonProp,
-  SelectOptionSchema,
   type SelectOption,
+  SelectOptionSchema,
+  TypeEnum,
 } from '@dxos/echo-schema';
 
 /**

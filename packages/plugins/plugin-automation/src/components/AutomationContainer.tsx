@@ -5,11 +5,12 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { ControlSection, ControlPage } from '@dxos/react-ui-form';
+import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
 import { AUTOMATION_PLUGIN } from '../meta';
+
+import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
 
 export const AutomationContainer = (props: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);

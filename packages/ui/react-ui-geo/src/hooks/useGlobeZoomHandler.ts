@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type GlobeController, type ControlProps } from '../components';
+import { type ControlProps, type GlobeController } from '../components';
 
 export const useGlobeZoomHandler = (controller: GlobeController | null | undefined): ControlProps['onAction'] => {
   return useCallback<ControlProps['onAction']>(

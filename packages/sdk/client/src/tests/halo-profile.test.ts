@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';

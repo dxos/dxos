@@ -12,7 +12,7 @@ import { live } from '@dxos/live-object';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
-import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
+import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
 import { type ActivityState, CALLS_URL, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 

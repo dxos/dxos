@@ -6,7 +6,7 @@ import { Registry, Rx } from '@effect-rx/rx-react';
 import { Option } from 'effect';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
-import { getGraph, Graph, ROOT_ID, ROOT_TYPE } from './graph';
+import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;

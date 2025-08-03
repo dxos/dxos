@@ -5,9 +5,10 @@
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
+import { type GraphLayoutNode } from '../types';
+
 import { type GraphProjectorOptions } from './graph-projector';
 import { GraphRadialProjector, layoutHorizontal, layoutRadial, updateNode } from './graph-radial-projector';
-import { type GraphLayoutNode } from '../types';
 
 export type GraphRelationalProjectorOptions = GraphProjectorOptions & {
   radius?: number;

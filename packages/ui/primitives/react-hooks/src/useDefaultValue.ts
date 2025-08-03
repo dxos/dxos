@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 /**
  * A custom React hook that provides a stable default value for a potentially undefined reactive value.

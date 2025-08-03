@@ -7,7 +7,7 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan, type ReplicantBrain } from '../plan';
+import { type Platform, type ReplicantBrain, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
 /**

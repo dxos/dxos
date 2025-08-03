@@ -4,9 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { type CellValue, RowColumnMeta, SheetType } from './schema';
 import { SHEET_PLUGIN } from '../meta';
 import { SheetModel } from '../model';
+
+import { type CellValue, RowColumnMeta, SheetType } from './schema';
 
 export type SheetSize = {
   rows: number;

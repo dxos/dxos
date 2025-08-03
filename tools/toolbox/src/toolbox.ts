@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import { execSync } from 'child_process';
-import { Table } from 'console-table-printer';
-import deepEqual from 'deep-equal';
 import fs from 'fs';
-import globrex from 'globrex';
-import defaultsDeep from 'lodash.defaultsdeep';
-import pick from 'lodash.pick';
 import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
+
+import chalk from 'chalk';
+import { Table } from 'console-table-printer';
+import deepEqual from 'deep-equal';
+import globrex from 'globrex';
+import defaultsDeep from 'lodash.defaultsdeep';
+import pick from 'lodash.pick';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';

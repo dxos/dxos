@@ -2,16 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { valueEncoding, MetadataStore, SpaceManager, AuthStatus } from '@dxos/echo-pipeline';
+import { AuthStatus, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { createStorage, type Storage, StorageType } from '@dxos/random-access-storage';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { IdentityManager } from './identity-manager';

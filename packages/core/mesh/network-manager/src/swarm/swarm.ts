@@ -8,19 +8,20 @@ import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
-import { type SwarmEvent, type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash } from '@dxos/messaging';
+import { type ListeningHandle, type Messenger, type PeerInfo, PeerInfoHash, type SwarmEvent } from '@dxos/messaging';
 import { trace } from '@dxos/protocols';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, isNonNullable } from '@dxos/util';
 
-import { type Connection, ConnectionState } from './connection';
-import { type ConnectionLimiter } from './connection-limiter';
-import { Peer } from './peer';
 import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
 import { type SwarmController, type Topology } from '../topology';
 import { type TransportFactory } from '../transport';
 import { type Topic } from '../types';
 import { type WireProtocolProvider } from '../wire-protocol';
+
+import { type Connection, ConnectionState } from './connection';
+import { type ConnectionLimiter } from './connection-limiter';
+import { Peer } from './peer';
 
 const INITIATION_DELAY = 100;
 

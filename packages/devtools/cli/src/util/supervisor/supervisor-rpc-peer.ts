@@ -5,11 +5,11 @@
 // TODO(egorgripasov): Factor out.
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger, Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type Supervisor } from '@dxos/protocols/proto/dxos/service/supervisor';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 export class SupervisorRpcPeer {
   private readonly _socket: WebSocket;

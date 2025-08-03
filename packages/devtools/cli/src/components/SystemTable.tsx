@@ -3,7 +3,7 @@
 //
 
 import Table from 'ink-table';
-import React, { useEffect, type FC, useState } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 // Formatted stats.
 type Stats = {

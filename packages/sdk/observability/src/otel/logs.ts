@@ -9,12 +9,12 @@ import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
-  getContextFromEntry,
-  getRelativeFilename,
   type LogConfig,
   type LogEntry,
   LogLevel,
   type LogProcessor,
+  getContextFromEntry,
+  getRelativeFilename,
 } from '@dxos/log';
 import { jsonlogify } from '@dxos/util';
 

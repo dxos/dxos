@@ -7,9 +7,10 @@ import { type EditorView } from '@codemirror/view';
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { setHeading } from '../../extensions';
 import { translationKey } from '../../translations';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const createHeadingGroupAction = (value: string) =>
   createEditorActionGroup(

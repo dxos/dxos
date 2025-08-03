@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type TraceEvent, type InvocationSpan } from '@dxos/functions';
+import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { Callout, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

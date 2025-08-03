@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext } from 'react';
+import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { type ComputeGraph, type ComputeGraphRegistry } from '@dxos/compute';
 import { raise } from '@dxos/debug';

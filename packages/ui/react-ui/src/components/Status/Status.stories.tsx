@@ -6,8 +6,9 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Status } from './Status';
 import { withTheme } from '../../testing';
+
+import { Status } from './Status';
 
 export default {
   title: 'ui/react-ui-core/Status',

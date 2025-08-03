@@ -11,15 +11,15 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
-import { getTypename, type Space } from '@dxos/react-client/echo';
+import { type Space, getTypename } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType } from '@dxos/schema';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
-import { SchemaTable } from './SchemaTable';
+import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
 import { generator } from './presets';
+import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;

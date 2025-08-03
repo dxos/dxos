@@ -7,7 +7,7 @@ import React from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useGrid, type GridOptions } from '../../hooks';
+import { type GridOptions, useGrid } from '../../hooks';
 
 export type GridProps = ThemedClassName<GridOptions>;
 

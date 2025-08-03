@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { mapMembers, printMembers, TABLE_FLAGS, ARG_SPACE_KEYS } from '@dxos/cli-base';
+import { ARG_SPACE_KEYS, TABLE_FLAGS, mapMembers, printMembers } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';
 

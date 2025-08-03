@@ -22,8 +22,6 @@ import {
 
 import { AssistantCapabilities } from '../capability-definitions';
 
-export * from '@dxos/assistant';
-
 // TODO(burdon): Deconstruct into separate layers?
 export type ChatServices =
   | AiService

@@ -10,16 +10,16 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 import {
-  Form,
-  type InputComponent,
   ControlItem,
   ControlItemInput,
-  ControlSection,
   ControlPage,
+  ControlSection,
+  Form,
+  type InputComponent,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
-import { hexToHue, hexToEmoji } from '@dxos/util';
+import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from '../meta';
 

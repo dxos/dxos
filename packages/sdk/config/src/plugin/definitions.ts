@@ -2,18 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import yaml from 'js-yaml';
 import pkgUp from 'pkg-up';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { setDeep } from '@dxos/util';
 
-import { type ConfigPluginOpts } from './types';
 import { mapFromKeyValues } from '../config';
+
+import { type ConfigPluginOpts } from './types';
 
 const CWD = process.cwd();
 

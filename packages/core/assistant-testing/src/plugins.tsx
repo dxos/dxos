@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
+import { type AnyCapability, Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { defineArtifact } from '@dxos/blueprints';
-import { Type, type Obj } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({

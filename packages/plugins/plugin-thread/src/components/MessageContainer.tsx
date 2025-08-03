@@ -9,18 +9,19 @@ import { Surface } from '@dxos/app-framework';
 import { type Obj, Ref, type Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
 import { type SpaceMember } from '@dxos/react-client/echo';
-import { useIdentity, type Identity } from '@dxos/react-client/halo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { IconButton, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, useTextEditor } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageHeading, MessageRoot } from '@dxos/react-ui-thread';
 import { type DataType } from '@dxos/schema';
 
-import { commentControlClassNames } from './CommentsThreadContainer';
-import { command } from './command-extension';
 import { useOnEditAnalytics } from '../hooks';
 import { meta } from '../meta';
 import { getMessageMetadata } from '../util';
+
+import { command } from './command-extension';
+import { commentControlClassNames } from './CommentsThreadContainer';
 
 export type MessageContainerProps = {
   message: DataType.Message;

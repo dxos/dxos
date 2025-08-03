@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, type NetworkStatus } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
 

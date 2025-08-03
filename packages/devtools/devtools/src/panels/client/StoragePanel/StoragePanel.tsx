@@ -17,7 +17,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { DropdownMenu, Icon, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
+import { DropdownMenu, Icon, Toolbar, Tree, TreeItem } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';

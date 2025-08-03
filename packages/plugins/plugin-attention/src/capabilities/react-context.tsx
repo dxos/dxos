@@ -7,8 +7,9 @@ import React, { type PropsWithChildren } from 'react';
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities } from './capabilities';
 import { ATTENTION_PLUGIN } from '../meta';
+
+import { AttentionCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactContext, {

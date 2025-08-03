@@ -7,6 +7,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  type ComponentPropsWithoutRef,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -15,19 +16,19 @@ import React, {
   useMemo,
   useRef,
   useState,
-  type ComponentPropsWithoutRef,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { translationKey } from '../../translations';
 
 import { BoardCell, type BoardCellProps } from './BoardCell';
 import { defaultGrid, defaultLayout } from './defs';
-import { type BoardGeometry, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
-import { type BoardLayout, type Size, type Position } from './types';
-import { translationKey } from '../../translations';
+import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';
+import { type BoardLayout, type Position, type Size } from './types';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
 // TODO(burdon): Center when has focus; key nav.

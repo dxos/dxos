@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { ViewType } from './schema';
 import { EXPLORER_PLUGIN } from '../meta';
+
+import { ViewType } from './schema';
 
 export namespace ExplorerAction {
   const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -19,7 +19,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban, KanbanView, useKanbanModel } from '@dxos/react-ui-kanban';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';

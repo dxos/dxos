@@ -13,12 +13,13 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
 
+import { InboxCapabilities } from '../../capabilities/capabilities';
+import { InboxAction, type MailboxType } from '../../types';
+
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { Mailbox, type MailboxActionHandler } from './Mailbox';
 import { useMailboxModel } from './model';
 import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef } from './toolbar';
-import { InboxCapabilities } from '../../capabilities/capabilities';
-import { InboxAction, type MailboxType } from '../../types';
 
 export type MailboxContainerProps = {
   mailbox: MailboxType;

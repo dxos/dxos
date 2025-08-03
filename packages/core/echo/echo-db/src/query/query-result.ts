@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type AnyEchoObject } from '@dxos/echo-schema';
@@ -13,8 +13,9 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { isNonNullable } from '@dxos/util';
 
-import { type Query } from './api';
 import { prohibitSignalActions } from '../guarded-scope';
+
+import { type Query } from './api';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends AnyEchoObject> = (a: T, b: T) => -1 | 0 | 1;

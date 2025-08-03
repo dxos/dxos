@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { controlItemClasses, ControlPage, ControlSection } from '@dxos/react-ui-form';
+import { ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { SPACE_PLUGIN } from '../meta';

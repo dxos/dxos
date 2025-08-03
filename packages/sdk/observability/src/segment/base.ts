@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type TrackParams, type PageParams, type IdentifyParams } from '@segment/analytics-node';
+import { type IdentifyParams, type PageParams, type TrackParams } from '@segment/analytics-node';
 
 import { log } from '@dxos/log';
 

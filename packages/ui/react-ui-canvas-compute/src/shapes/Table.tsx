@@ -9,8 +9,8 @@ import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { DataType } from '@dxos/schema';
 
-import { createFunctionAnchors, Box } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { Box, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 const InputSchema = createInputSchema(DataType.Message);
 const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message)));

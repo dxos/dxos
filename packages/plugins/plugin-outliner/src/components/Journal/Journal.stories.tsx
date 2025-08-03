@@ -13,9 +13,10 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Journal } from './Journal';
 import { translations } from '../../translations';
-import { createJournal, createJournalEntry, JournalEntryType, JournalType, OutlineType } from '../../types';
+import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
+
+import { Journal } from './Journal';
 
 const meta: Meta<typeof Journal> = {
   title: 'plugins/plugin-outliner/Journal',

@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { get } from '@dxos/util';
 
-import { type KeyPath, type DocAccessor, isValidKeyPath } from './core-db';
+import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
 import { type AnyLiveObject, createDocAccessor } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.

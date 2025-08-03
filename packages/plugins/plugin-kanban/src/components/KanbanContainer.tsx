@@ -9,10 +9,10 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
-import { useQuery, getSpace } from '@dxos/react-client/echo';
-import { useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Kanban, useKanbanModel } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { ProjectionModel, type DataType } from '@dxos/schema';
+import { type DataType, ProjectionModel } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 

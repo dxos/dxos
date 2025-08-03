@@ -6,8 +6,9 @@ import React, { type FC } from 'react';
 import { type Markdown } from '@dxos/plugin-markdown/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { RevealPlayer } from './RevealPlayer';
 import { useExitPresenter } from '../useExitPresenter';
+
+import { RevealPlayer } from './RevealPlayer';
 
 const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {
   const handleExit = useExitPresenter(document);

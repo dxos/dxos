@@ -5,17 +5,17 @@
 import { Effect, type Schema, SchemaAST } from 'effect';
 
 import { Obj, type Type } from '@dxos/echo';
-import { type EchoDatabase, type AnyLiveObject, Query, Filter } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import {
-  getSchemaReference,
-  getTypename,
   type BaseObject,
   FormatEnum,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  type TypedObject,
   Ref,
+  type TypedObject,
+  getSchemaReference,
+  getTypename,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
-import { getSchemaProperties, type SchemaProperty } from '../properties';
+import { type SchemaProperty, getSchemaProperties } from '../properties';
 
 /**
  * Decouples from faker.

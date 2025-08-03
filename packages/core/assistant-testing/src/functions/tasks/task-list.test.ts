@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { expect, describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { MarkdownTasks, type TaskOperation } from './task-list';
 

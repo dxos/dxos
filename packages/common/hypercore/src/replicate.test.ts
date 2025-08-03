@@ -4,17 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { latch, sleep, Trigger } from '@dxos/async';
+import { Trigger, latch, sleep } from '@dxos/async';
 import { createKeyPair } from '@dxos/crypto';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { range, sum } from '@dxos/util';
 
 import { HypercoreFactory } from './hypercore-factory';
 import { createReadable } from './iterator';
-import { batch, createDataItem, type TestDataItem } from './testing';
+import { type TestDataItem, batch, createDataItem } from './testing';
 
 const noop = () => {};
 

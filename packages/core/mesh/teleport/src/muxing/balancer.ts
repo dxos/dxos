@@ -4,7 +4,7 @@
 
 import varint from 'varint';
 
-import { type Trigger, Event } from '@dxos/async';
+import { Event, type Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

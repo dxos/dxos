@@ -3,6 +3,7 @@
 //
 
 import { inspect } from 'node:util';
+
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
@@ -12,7 +13,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
-import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
+import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();

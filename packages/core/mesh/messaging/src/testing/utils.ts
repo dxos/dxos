@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, type Event } from '@dxos/async';
+import { type Event, asyncTimeout } from '@dxos/async';
 import { type Any } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 
+import { type Message, type PeerInfo, type SignalMethods } from '../signal-methods';
+
 import { PAYLOAD_1 } from './test-messages';
-import { type SignalMethods, type Message, type PeerInfo } from '../signal-methods';
 
 export const expectPeerAvailable = (client: SignalMethods, expectedTopic: PublicKey, peer: PeerInfo) =>
   asyncTimeout(

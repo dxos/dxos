@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObject, getSchema, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, TypedObject, getSchema } from '@dxos/echo-schema';
 
 import { live } from './object';
 

@@ -12,10 +12,11 @@ import {
 } from '@dxos/teleport-extension-automerge-replicator';
 import { ComplexSet, defaultMap } from '@dxos/util';
 
+import { createIdFromSpaceKey } from '../common/space-id';
+
 import { type EchoReplicator, type EchoReplicatorContext, type ShouldAdvertiseParams } from './echo-replicator';
 import { MeshReplicatorConnection } from './mesh-echo-replicator-connection';
 import { getSpaceIdFromCollectionId } from './space-collection';
-import { createIdFromSpaceKey } from '../common/space-id';
 
 // TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
 

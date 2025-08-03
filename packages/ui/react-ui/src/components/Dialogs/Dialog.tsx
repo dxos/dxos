@@ -4,24 +4,24 @@
 
 import { createContext } from '@radix-ui/react-context';
 import {
-  type DialogProps as DialogRootPrimitiveProps,
-  Root as DialogRootPrimitive,
-  DialogTrigger as DialogTriggerPrimitive,
-  type DialogTriggerProps as DialogTriggerPrimitiveProps,
-  DialogPortal as DialogPortalPrimitive,
-  type DialogPortalProps as DialogPortalPrimitiveProps,
-  DialogOverlay as DialogOverlayPrimitive,
-  type DialogOverlayProps as DialogOverlayPrimitiveProps,
-  DialogTitle as DialogTitlePrimitive,
-  type DialogTitleProps as DialogTitlePrimitiveProps,
-  DialogDescription as DialogDescriptionPrimitive,
-  type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
   DialogClose as DialogClosePrimitive,
   type DialogCloseProps as DialogClosePrimitiveProps,
   DialogContent as DialogContentPrimitive,
   type DialogContentProps as DialogContentPrimitiveProps,
+  DialogDescription as DialogDescriptionPrimitive,
+  type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
+  DialogOverlay as DialogOverlayPrimitive,
+  type DialogOverlayProps as DialogOverlayPrimitiveProps,
+  DialogPortal as DialogPortalPrimitive,
+  type DialogPortalProps as DialogPortalPrimitiveProps,
+  Root as DialogRootPrimitive,
+  type DialogProps as DialogRootPrimitiveProps,
+  DialogTitle as DialogTitlePrimitive,
+  type DialogTitleProps as DialogTitlePrimitiveProps,
+  DialogTrigger as DialogTriggerPrimitive,
+  type DialogTriggerProps as DialogTriggerPrimitiveProps,
 } from '@radix-ui/react-dialog';
-import React, { forwardRef, type ForwardRefExoticComponent, type FunctionComponent } from 'react';
+import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

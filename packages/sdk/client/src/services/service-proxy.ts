@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import {
-  clientServiceBundle,
-  ClientServicesProviderResource,
   type ClientServices,
   type ClientServicesProvider,
+  ClientServicesProviderResource,
+  clientServiceBundle,
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
-import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
 /**

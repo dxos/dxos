@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 import { log } from '@dxos/log';
 import { Message, useTranslation } from '@dxos/react-ui';
 
+import { Action, Actions, Input, StepHeading } from '../components';
+
 import { type StepProps } from './StepProps';
-import { Action, Actions, StepHeading, Input } from '../components';
 
 type ConfirmResetOptions = Partial<{
   onCancel: () => void;

@@ -10,8 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
 import { styles } from '../styles';
+
+import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
 
 const TestStory = () => {
   const schema = useMemo<PropertiesSchema>(

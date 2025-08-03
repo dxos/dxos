@@ -10,10 +10,11 @@ import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Pulsar } from './pulsar';
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
+
+import { Pulsar } from './pulsar';
 
 import '../../styles/graph.css';
 

@@ -4,18 +4,19 @@
 
 import React from 'react';
 
-import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MarkdownCapabilities } from './capabilities';
-import { MarkdownContainer, MarkdownSettings, MarkdownCard } from '../components';
+import { MarkdownCard, MarkdownContainer, MarkdownSettings } from '../components';
 import { meta } from '../meta';
 import { Markdown } from '../types';
 import { isEditorModel } from '../util';
+
+import { MarkdownCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

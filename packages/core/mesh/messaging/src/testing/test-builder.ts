@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TestPeer } from './test-peer';
-import { type SignalManager, MemorySignalManager, MemorySignalManagerContext } from '../signal-manager';
+import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '../signal-manager';
 import { type Message } from '../signal-methods';
+
+import { TestPeer } from './test-peer';
 
 export type TestBuilderOptions = {
   signalManagerFactory?: (peer: TestPeer) => Promise<SignalManager>;

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger, Event } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import {
   type AuthenticatingInvitationObservable,
   type CancellableInvitationObservable,

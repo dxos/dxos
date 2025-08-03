@@ -5,6 +5,7 @@
 import { fork } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
 import pkgUp from 'pkg-up';
 
 import { invariant } from '@dxos/invariant';

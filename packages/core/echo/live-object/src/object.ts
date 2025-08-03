@@ -5,21 +5,21 @@
 import { type Schema } from 'effect';
 
 import {
-  ObjectId,
-  defineHiddenProperty,
-  getTypeAnnotation,
   type BaseObject,
   type CreationProps,
   EntityKindId,
   Expando,
+  ObjectId,
   type ObjectMeta,
   ObjectMetaSchema,
+  defineHiddenProperty,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
 import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
-import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
+import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 /**

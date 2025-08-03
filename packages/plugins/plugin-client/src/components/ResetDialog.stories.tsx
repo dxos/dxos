@@ -4,16 +4,17 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
-import { translations } from '../translations';
 
 const Render = (props: ResetDialogProps) => {
   return (

@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join, resolve } from 'path';
+
 import { type StorybookConfig } from '@storybook/react-vite';
 import react from '@vitejs/plugin-react-swc';
-import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';

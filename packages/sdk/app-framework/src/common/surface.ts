@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type JSX, type ForwardedRef, type PropsWithChildren, type ReactNode } from 'react';
+import { type ForwardedRef, type JSX, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type GuardedType, type MakeOptional, type Position } from '@dxos/util';
 

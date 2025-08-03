@@ -8,9 +8,10 @@ import { Type } from '@dxos/echo';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
+import { INBOX_PLUGIN } from '../meta';
+
 import { CalendarType } from './calendar';
 import { MailboxType } from './mail';
-import { INBOX_PLUGIN } from '../meta';
 
 export namespace InboxAction {
   const INBOX_ACTION = `${INBOX_PLUGIN}/action`;

@@ -12,9 +12,10 @@ import React, { useEffect } from 'react';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './Chaos';
 import { useAudioStream } from '../hooks';
 import { type ShaderOptions } from '../shaders';
+
+import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './Chaos';
 
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
 

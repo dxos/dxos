@@ -11,16 +11,16 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./main": {
+      "source": "./src/main.ts",
       "types": "./dist/types/src/main.d.ts",
       "browser": "./dist/lib/browser/main.mjs",
-      "node": "./dist/lib/node-esm/main.mjs",
-      "source": "./src/main.ts"
+      "node": "./dist/lib/node-esm/main.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

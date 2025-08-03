@@ -11,14 +11,14 @@ import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context'
 import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import {
-  type EchoHost,
   type DatabaseRoot,
-  createMappedFeedWriter,
+  type EchoHost,
+  FIND_PARAMS,
   type MetadataStore,
   type Space,
-  FIND_PARAMS,
+  createMappedFeedWriter,
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -28,31 +28,32 @@ import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
 import {
   type CreateEpochRequest,
-  SpaceState,
   type Space as SpaceProto,
+  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
-  SpaceMember,
   type Credential,
   type Epoch,
   type ProfileDocument,
+  SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { CallbackCollection, ComplexSet, type AsyncCallback } from '@dxos/util';
+import { type AsyncCallback, CallbackCollection, ComplexSet } from '@dxos/util';
+
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { EdgeFeedReplicator } from './edge-feed-replicator';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
-import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**

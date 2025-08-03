@@ -3,13 +3,14 @@
 //
 
 import { pipeline } from 'stream';
+
 import { onTestFinished } from 'vitest';
 
 import { FeedFactory, type FeedOptions, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Teleport } from '@dxos/teleport';
 import { range } from '@dxos/util';
 

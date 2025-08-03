@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useReducer, type Reducer, useMemo, useCallback, useEffect } from 'react';
+import { type Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import {

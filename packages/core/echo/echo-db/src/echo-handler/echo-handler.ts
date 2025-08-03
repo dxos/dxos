@@ -2,78 +2,80 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as A from '@automerge/automerge';
-import { Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
-import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { DATA_NAMESPACE, encodeReference, type ObjectStructure, PROPERTY_ID, Reference } from '@dxos/echo-protocol';
+import type * as A from '@automerge/automerge';
+import { Schema } from 'effect';
+
+import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import {
+  ATTR_DELETED,
   ATTR_META,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
   ATTR_TYPE,
+  type BaseEchoObject,
   type BaseObject,
-  defineHiddenProperty,
   DeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
-  getRefSavedTarget,
-  getTypeAnnotation,
-  isInstanceOf,
   MetaId,
+  type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
   Ref,
   RefImpl,
+  RelationSourceDXNId,
   RelationSourceId,
+  RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
   SchemaMetaSymbol,
   SchemaValidator,
-  setRefResolver,
   StoredSchema,
   TypeId,
-  type BaseEchoObject,
-  getEntityKind,
-  getSchema,
-  requireTypeReference,
-  RelationTargetDXNId,
-  RelationSourceDXNId,
   assertObjectModelShape,
+  defineHiddenProperty,
+  getEntityKind,
   getMeta,
-  type ObjectJSON,
-  ATTR_DELETED,
-  ATTR_RELATION_SOURCE,
-  ATTR_RELATION_TARGET,
+  getRefSavedTarget,
+  getSchema,
+  getTypeAnnotation,
+  isInstanceOf,
+  requireTypeReference,
+  setRefResolver,
 } from '@dxos/echo-schema';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {
+  type Live,
+  type ReactiveHandler,
   createProxy,
   getProxyHandler,
   getProxyTarget,
   isLiveObject,
-  type Live,
-  type ReactiveHandler,
   symbolIsProxy,
 } from '@dxos/live-object';
 import { getProxySlot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
+import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
+
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import { ObjectInternals } from './echo-proxy-target';
 import {
   type ProxyTarget,
+  TargetKey,
   symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
-  TargetKey,
 } from './echo-proxy-target';
-import { type DecodedAutomergePrimaryValue, type KeyPath, META_NAMESPACE, ObjectCore } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 
 /**
  * Shared for all targets within one ECHO object.

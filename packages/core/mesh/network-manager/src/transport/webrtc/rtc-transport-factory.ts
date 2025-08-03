@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getRtcConnectionFactory } from './rtc-connection-factory';
-import { RtcPeerConnection } from './rtc-peer-connection';
 import type { IceProvider } from '../../signal';
 import type { TransportFactory } from '../transport';
+
+import { getRtcConnectionFactory } from './rtc-connection-factory';
+import { RtcPeerConnection } from './rtc-peer-connection';
 
 export const createRtcTransportFactory = (
   webrtcConfig?: RTCConfiguration,

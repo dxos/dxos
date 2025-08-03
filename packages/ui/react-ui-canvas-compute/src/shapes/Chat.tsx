@@ -15,9 +15,10 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { Box } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { Box } from './common';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 //
 // Data
