@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
-import { parseGptStream } from './experimental/AiParser';
+import { parseResponse } from './experimental/AiParser';
 
 describe.skip('lmstudio', () => {
   it.effect(
@@ -36,7 +36,7 @@ describe.skip('lmstudio', () => {
           system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
         }).pipe(
-          parseGptStream({
+          parseResponse({
             onPart: Console.log,
           }),
           Stream.runCollect,

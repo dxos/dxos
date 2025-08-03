@@ -11,7 +11,7 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { parseGptStream } from './AiParser';
+import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
@@ -74,7 +74,7 @@ describe('effect AI client', () => {
             toolkit: yield* TestToolkit.pipe(Effect.provide(toolkitLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
-          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
           const message = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },

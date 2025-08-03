@@ -163,7 +163,7 @@ export class AiSession {
           toolkit: toolkitWithBlueprintHandlers,
           disableToolCallResolution: true,
         }).pipe(
-          AiParser.parseGptStream({
+          AiParser.parseResponse({
             onBlock: (block) =>
               Effect.gen(this, function* () {
                 if (block.pending) {
@@ -181,6 +181,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        // console.log(JSON.stringify(blocks, null, 2));
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
