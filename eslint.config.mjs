@@ -205,12 +205,12 @@ export default tseslint.config(
       'react/prop-types': 'off',
 
       // Imports
-      'import-x/newline-after-import': [
-        'error',
-        {
-          count: 1,
-        },
-      ],
+      // 'import-x/newline-after-import': [
+      //   'error',
+      //   {
+      //     count: 1,
+      //   },
+      // ],
       // 'import-x/order': [
       //   'error',
       //   {
