@@ -20,9 +20,9 @@ import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
 export type UseChatProcessorProps = {
-  preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;
+  preset?: AiServicePreset;
 
   // TODO(burdon): Move into layer?
   services?: Layer.Layer<AiChatServices>;
@@ -42,9 +42,9 @@ export type UseChatProcessorProps = {
  * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
-  preset,
   space,
   chat,
+  preset,
   services,
   blueprintRegistry,
   settings,
