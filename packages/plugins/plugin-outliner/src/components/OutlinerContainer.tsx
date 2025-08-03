@@ -6,8 +6,9 @@ import React from 'react';
 
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Outliner } from './Outliner';
 import { type OutlineType } from '../types';
+
+import { Outliner } from './Outliner';
 
 export type OutlinerContainerProps = {
   role: string;

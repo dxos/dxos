@@ -6,11 +6,12 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
+import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 import { openAndClose } from '@dxos/test-utils';
 
-import { WebsocketSignalManager } from './websocket-signal-manager';
 import { createMessage, expectPeerAvailable, expectReceivedMessage } from '../testing';
+
+import { WebsocketSignalManager } from './websocket-signal-manager';
 
 describe.skip('WebSocketSignalManager', () => {
   let broker1: SignalServerRunner;

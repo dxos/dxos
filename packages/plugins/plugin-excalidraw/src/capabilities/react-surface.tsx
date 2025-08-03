@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
-import { isDiagramType, type DiagramType } from '@dxos/plugin-sketch/types';
+import { type DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from '../components';

@@ -5,16 +5,17 @@
 // TODO(burdon): Fix.
 // @ts-nocheck
 
-import { ToolRegistry, AiService } from '@dxos/ai';
+import { AiService, ToolRegistry } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
-import { defineFunction, type FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition, defineFunction } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import PROMPT from './instructions.tpl?raw';
 import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
-import { insertReferences, ReferencedQuotes } from '../quotes';
+import { ReferencedQuotes, insertReferences } from '../quotes';
+
+import PROMPT from './instructions.tpl?raw';
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',

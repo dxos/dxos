@@ -9,8 +9,9 @@ import React, { useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { GridComponent, type GridProps } from './Grid';
 import { type ProjectionState } from '../../hooks';
+
+import { GridComponent, type GridProps } from './Grid';
 
 const DefaultStory = (props: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);

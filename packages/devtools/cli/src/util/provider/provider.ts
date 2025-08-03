@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { table, type TableFlags } from '@dxos/cli-base';
+import { type TableFlags, table } from '@dxos/cli-base';
 
 export const KUBE_TAG = 'kube';
 

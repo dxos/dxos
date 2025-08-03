@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { acceptInvitation } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';

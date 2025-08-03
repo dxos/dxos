@@ -7,10 +7,10 @@ import React, { useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import {
-  ShellDisplay,
-  ShellLayout,
   type InvitationUrlRequest,
   type LayoutRequest,
+  ShellDisplay,
+  ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';

@@ -4,14 +4,15 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { encodeReference, Reference } from '@dxos/echo-protocol';
+import { Reference, encodeReference } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo-schema';
 import { DXN, PublicKey } from '@dxos/keys';
 import { objectPointerCodec } from '@dxos/protocols';
 
-import { IndexGraph } from './index-graph';
 import { TestData } from '../testing';
 import type { FindResult } from '../types';
+
+import { IndexGraph } from './index-graph';
 
 const spaceKey = PublicKey.random();
 

@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask } from '@dxos/async';
-import { cancelWithContext, Resource } from '@dxos/context';
+import { Resource, cancelWithContext } from '@dxos/context';
 import { type EdgeConnection, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -11,17 +11,18 @@ import { log } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { type buf, bufWkt } from '@dxos/protocols/buf';
 import {
-  SwarmRequestSchema,
-  SwarmRequest_Action as SwarmRequestAction,
-  SwarmResponseSchema,
   type Message as EdgeMessage,
   type PeerSchema,
+  SwarmRequest_Action as SwarmRequestAction,
+  SwarmRequestSchema,
+  SwarmResponseSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type Message, type PeerInfo, PeerInfoHash, type SwarmEvent } from '../signal-methods';
+
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message, type SwarmEvent, PeerInfoHash } from '../signal-methods';
 
 export class EdgeSignalManager extends Resource implements SignalManager {
   /**

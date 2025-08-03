@@ -5,8 +5,9 @@
 import { contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
-import { ThreadCapabilities } from './capabilities';
 import { type ThreadState, type ViewStore } from '../types';
+
+import { ThreadCapabilities } from './capabilities';
 
 const initialViewState = { showResolvedThreads: false };
 

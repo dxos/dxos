@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState, type CSSProperties, type PropsWithChildren } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-sfx';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
 

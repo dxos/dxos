@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
-import { type TraceDiagnosticParams, type TraceDiagnostic } from './api';
+import { type TraceDiagnostic, type TraceDiagnosticParams } from './api';
 import { createId } from './util';
 
 export const DIAGNOSTICS_TIMEOUT = 10_000;

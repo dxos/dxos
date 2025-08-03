@@ -6,9 +6,10 @@
 
 import { InvalidConfigError } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import StorageDriver = Runtime.Client.Storage.StorageDriver;
+
 import { getRootPath } from './util';
 
 // TODO(burdon): Factor out.

@@ -4,8 +4,8 @@
 
 import '@dxos-theme';
 
-import { computed, type ReadonlySignal, signal } from '@preact/signals-core';
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type ReadonlySignal, computed, signal } from '@preact/signals-core';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -13,8 +13,9 @@ import { Icon, Input, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ToggleContainer, type ToggleContainerProps } from './ToggleContainer';
 import { MarkdownViewer } from '../MarkdownViewer';
+
+import { ToggleContainer, type ToggleContainerProps } from './ToggleContainer';
 
 class Generator {
   private readonly _current = signal<string>(faker.lorem.sentence(5));

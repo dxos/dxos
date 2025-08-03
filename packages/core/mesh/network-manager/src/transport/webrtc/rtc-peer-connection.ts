@@ -2,18 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized, Trigger, Mutex } from '@dxos/async';
+import { Mutex, Trigger, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { ConnectivityError } from '@dxos/protocols';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { trace } from '@dxos/tracing';
 
+import type { IceProvider } from '../../signal';
+import { type TransportOptions } from '../transport';
+
 import { type RtcConnectionFactory } from './rtc-connection-factory';
 import { RtcTransportChannel } from './rtc-transport-channel';
 import { areSdpEqual, chooseInitiatorPeer } from './utils';
-import type { IceProvider } from '../../signal';
-import { type TransportOptions } from '../transport';
 
 export type RtcPeerChannelFactoryOptions = {
   ownPeerKey: string;

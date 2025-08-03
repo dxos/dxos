@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { contributes, Capabilities, type PluginContext, createSurface } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { BoardContainer } from '../components';

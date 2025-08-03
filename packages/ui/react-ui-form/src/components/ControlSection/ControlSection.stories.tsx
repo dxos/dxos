@@ -10,8 +10,9 @@ import React from 'react';
 import { StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ControlPage, ControlSection, type ControlSectionProps } from './ControlSection';
 import { translations } from '../../translations';
+
+import { ControlPage, ControlSection, type ControlSectionProps } from './ControlSection';
 
 const meta: Meta<ControlSectionProps> = {
   title: 'ui/react-ui-form/ControlSection',

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { spawn } from 'node:child_process';
+
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import clipboard from 'node-clipboardy';
-import { spawn } from 'node:child_process';
 
 import { hostInvitation } from '@dxos/cli-base';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';

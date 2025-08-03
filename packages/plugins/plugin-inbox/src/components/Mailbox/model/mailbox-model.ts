@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
 import { type DataType } from '@dxos/schema';
 import { intersectBy } from '@dxos/util';

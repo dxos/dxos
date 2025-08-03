@@ -4,8 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { FormatEnum, FormatEnums, SelectOptionSchema } from '@dxos/echo-schema';

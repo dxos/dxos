@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useState } from 'react';
 
 import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client';
 import { type Halo } from '@dxos/client/halo';

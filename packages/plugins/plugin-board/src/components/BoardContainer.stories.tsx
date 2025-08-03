@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -17,15 +17,16 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, Ref, type Space } from '@dxos/react-client/echo';
+import { Filter, Ref, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { BoardContainer } from './BoardContainer';
 import { translations } from '../translations';
 import { Board } from '../types';
+
+import { BoardContainer } from './BoardContainer';
 
 faker.seed(0);
 

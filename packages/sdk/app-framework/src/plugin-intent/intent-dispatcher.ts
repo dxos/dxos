@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, pipe, Ref } from 'effect';
+import { Effect, Option, Ref, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
+import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
+
+import { Capabilities, Events } from '../common';
+import { type PluginContext, contributes } from '../core';
 
 import { IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
 import {
-  createIntent,
   type AnyIntent,
   type AnyIntentChain,
   type Intent,
@@ -22,9 +24,8 @@ import {
   type IntentResultData,
   type IntentSchema,
   type Label,
+  createIntent,
 } from './intent';
-import { Events, Capabilities } from '../common';
-import { contributes, type PluginContext } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;

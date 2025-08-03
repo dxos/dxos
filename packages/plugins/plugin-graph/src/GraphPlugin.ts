@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, lazy, Events, definePlugin } from '@dxos/app-framework';
+import { Events, defineModule, definePlugin, lazy } from '@dxos/app-framework';
 
 import { meta } from './meta';
 

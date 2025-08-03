@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import type { SpaceMember } from '@dxos/react-client/echo';
 import { useMembers } from '@dxos/react-client/echo';
-import { useTranslation, List } from '@dxos/react-ui';
+import { List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { IdentityListItem } from './IdentityListItem';

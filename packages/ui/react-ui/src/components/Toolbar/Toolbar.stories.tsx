@@ -6,11 +6,12 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Toolbar } from './Toolbar';
 import { withTheme } from '../../testing';
 import { Toggle } from '../Buttons';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
+
+import { Toolbar } from './Toolbar';
 
 type StorybookToolbarProps = {};
 

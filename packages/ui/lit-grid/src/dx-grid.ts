@@ -3,22 +3,23 @@
 //
 
 import { LitElement, html, nothing } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
-import { ref, createRef, type Ref } from 'lit/directives/ref.js';
+import { customElement, property, state } from 'lit/decorators.js';
+import { type Ref, createRef, ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { unsafeStatic, html as staticHtml } from 'lit/static-html.js';
+import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
 import { defaultColSize, defaultRowSize } from './defs';
 import './dx-grid-axis-resize-handle';
 import {
-  type DxGridAxisMetaProps,
-  type DxGridAxisSizes,
-  type DxGridPlaneCellIndex,
-  type DxGridCellValue,
   DxAxisResize,
   type DxAxisResizeInternal,
   DxEditRequest,
+  type DxGridAnnotatedPanEvent,
+  type DxGridAxis,
   type DxGridAxisMeta,
+  type DxGridAxisMetaProps,
+  type DxGridAxisSizes,
+  type DxGridCellValue,
   type DxGridCells,
   DxGridCellsSelect,
   type DxGridFixedPlane,
@@ -28,36 +29,35 @@ import {
   type DxGridFrozenRowsPlane,
   type DxGridMode,
   type DxGridPlane,
+  type DxGridPlaneCellIndex,
   type DxGridPlaneCells,
   type DxGridPlaneRange,
   type DxGridPlaneRecord,
   type DxGridPointer,
   type DxGridPosition,
-  type DxGridAxis,
-  type DxGridSelectionProps,
-  type DxGridAnnotatedPanEvent,
   type DxGridRange,
+  type DxGridSelectionProps,
   separator,
 } from './types';
 import {
-  toCellIndex,
-  gap,
-  resizeTolerance,
-  sizeColMin,
-  sizeColMax,
-  sizeRowMin,
-  sizeRowMax,
-  shouldSelect,
-  selectionProps,
   cellSelected,
   closestAction,
   closestCell,
-  targetIsPlane,
-  resolveRowPlane,
+  gap,
+  isReadonly,
+  isSameCell,
+  resizeTolerance,
   resolveColPlane,
   resolveFrozenPlane,
-  isSameCell,
-  isReadonly,
+  resolveRowPlane,
+  selectionProps,
+  shouldSelect,
+  sizeColMax,
+  sizeColMin,
+  sizeRowMax,
+  sizeRowMin,
+  targetIsPlane,
+  toCellIndex,
 } from './util';
 
 @customElement('dx-grid')

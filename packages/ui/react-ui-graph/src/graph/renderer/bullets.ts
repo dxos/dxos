@@ -4,7 +4,7 @@
 
 import { easeLinear, interpolate, select } from 'd3';
 
-import { type D3Selection, type D3Callable } from '../../util';
+import { type D3Callable, type D3Selection } from '../../util';
 
 export type BulletOptions = {
   max?: number;

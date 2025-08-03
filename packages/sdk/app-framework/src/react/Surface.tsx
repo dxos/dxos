@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { memo, forwardRef, Suspense, useMemo, Fragment } from 'react';
+import React, { Fragment, Suspense, forwardRef, memo, useMemo } from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
-import { ErrorBoundary } from './ErrorBoundary';
-import { useCapabilities } from './useCapabilities';
 import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
 import { type PluginContext } from '../core';
+
+import { ErrorBoundary } from './ErrorBoundary';
+import { useCapabilities } from './useCapabilities';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 

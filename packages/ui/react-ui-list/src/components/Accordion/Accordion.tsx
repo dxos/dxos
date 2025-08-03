@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AccordionItem, AccordionItemHeader, AccordionItemBody } from './AccordionItem';
+import { AccordionItem, AccordionItemBody, AccordionItemHeader } from './AccordionItem';
 import { AccordionRoot } from './AccordionRoot';
 
 // TODO(burdon): Next iteration should be based on Radix UI Accordion:

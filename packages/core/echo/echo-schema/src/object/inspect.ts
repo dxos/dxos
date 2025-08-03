@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { inspect as inspectFn, InspectOptionsStylized } from 'node:util';
+import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
-import { inspectCustom, type CustomInspectFunction } from '@dxos/debug';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
+
+import { type BaseEchoObject } from '../types';
 
 import { ATTR_META, ATTR_TYPE, MetaId } from './model';
 import { getType } from './typename';
-import { type BaseEchoObject } from '../types';
 
 /*
  * @internal

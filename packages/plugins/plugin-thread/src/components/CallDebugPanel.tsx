@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 import { type GlobalState } from '../calls';

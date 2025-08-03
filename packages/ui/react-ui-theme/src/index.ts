@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { tailwindConfig, type TailwindConfig } from './config';
+import { type TailwindConfig, tailwindConfig } from './config';
 
 const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
 

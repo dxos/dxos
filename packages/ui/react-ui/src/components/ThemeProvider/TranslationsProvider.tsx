@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { enUS as dtLocaleEnUs, type Locale } from 'date-fns/locale';
-import i18Next, { type TFunction, type Resource } from 'i18next';
-import React, { type ReactNode, useEffect, createContext, useState, Suspense, useContext } from 'react';
+import { type Locale, enUS as dtLocaleEnUs } from 'date-fns/locale';
+import i18Next, { type Resource, type TFunction } from 'i18next';
+import React, { type ReactNode, Suspense, createContext, useContext, useEffect, useState } from 'react';
 import { initReactI18next, useTranslation as useI18NextTranslation } from 'react-i18next';
 
 const initialLng = 'en-US';

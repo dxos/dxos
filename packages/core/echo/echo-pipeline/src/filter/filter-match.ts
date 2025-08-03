@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { decodeReference, isEncodedReference, type QueryAST, type ObjectStructure } from '@dxos/echo-protocol';
+import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 

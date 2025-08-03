@@ -12,8 +12,8 @@ import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import {
-  Actions,
   type ActionMenuItem,
+  Actions,
   BifurcatedAction,
   InvitationList,
   type InvitationListProps,

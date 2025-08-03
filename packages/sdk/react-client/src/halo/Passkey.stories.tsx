@@ -13,10 +13,11 @@ import { Button } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useCredentials } from './useCredentials';
-import { useIdentity } from './useIdentity';
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
+
+import { useCredentials } from './useCredentials';
+import { useIdentity } from './useIdentity';
 
 const getNewChallenge = () => Math.random().toString(36).substring(2);
 

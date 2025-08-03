@@ -11,7 +11,7 @@ import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
 
-import { Popup, Container, type PopupProps } from './components';
+import { Container, Popup, type PopupProps } from './components';
 
 const Root = () => {
   const handleAdd: PopupProps['onAdd'] = async () => {

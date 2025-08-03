@@ -8,8 +8,9 @@ import { type DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { MailboxModel, type SortDirection } from './mailbox-model';
 import { MessageState } from '../../../types';
+
+import { MailboxModel, type SortDirection } from './mailbox-model';
 
 /**
  * Hook that initializes a MailboxModel and connects it to a message queue.

@@ -3,7 +3,7 @@
 //
 
 import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError } from '@dxos/protocols';

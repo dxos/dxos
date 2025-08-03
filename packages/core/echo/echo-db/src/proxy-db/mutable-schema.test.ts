@@ -7,14 +7,14 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
   EchoSchema,
-  TypeAnnotationId,
-  getTypeReference,
-  Ref,
-  TypedObject,
-  getTypename,
-  TypeIdentifierAnnotationId,
-  type TypeAnnotation,
   EntityKind,
+  Ref,
+  type TypeAnnotation,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
+  TypedObject,
+  getTypeReference,
+  getTypename,
 } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';

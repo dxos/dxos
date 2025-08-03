@@ -4,7 +4,7 @@
 
 import { type SVGContext } from '../../hooks';
 import { EventEmitter } from '../../util';
-import { defaultIdAccessor, type IdAccessor } from '../types';
+import { type IdAccessor, defaultIdAccessor } from '../types';
 
 export type ProjectorOptions = {
   idAccessor?: IdAccessor;

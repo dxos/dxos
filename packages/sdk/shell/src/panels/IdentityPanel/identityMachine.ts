@@ -3,15 +3,16 @@
 //
 
 import { useMachine } from '@xstate/react';
-import { assign, createMachine, type InterpreterFrom, type StateFrom, type Subscribable } from 'xstate';
+import { type InterpreterFrom, type StateFrom, type Subscribable, assign, createMachine } from 'xstate';
 
 import { log } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
 import { type StepEvent } from '../../steps';
+
+import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
 
 type IdentityMachineContext = {
   initialDisposition?: IdentityPanelInitialDisposition;

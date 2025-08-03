@@ -7,13 +7,14 @@ import '@fontsource/poiret-one';
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, Input, useTranslation, Icon } from '@dxos/react-ui';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
-import { hero } from './hero-image';
-import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
+
+import { hero } from './hero-image';
+import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
 

@@ -9,8 +9,9 @@ import { type HuePalette } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { Avatar, type AvatarVariant, type AvatarStatus, type AvatarAnimation } from './Avatar';
 import { withTheme } from '../../testing';
+
+import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
 type StoryProps = {
   id?: string;

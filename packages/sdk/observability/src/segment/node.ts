@@ -7,9 +7,10 @@ import { Analytics, type IdentifyParams } from '@segment/analytics-node';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { AbstractSegmentTelemetry } from './base';
-import type { SegmentTelemetryOptions, PageOptions, TrackOptions } from './types';
 import { captureException } from '../sentry';
+
+import { AbstractSegmentTelemetry } from './base';
+import type { PageOptions, SegmentTelemetryOptions, TrackOptions } from './types';
 
 /**
  * Node telemetry.

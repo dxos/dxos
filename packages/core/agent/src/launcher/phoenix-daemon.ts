@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { unlinkSync, mkdirSync, existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path, { join } from 'node:path';
 
@@ -10,7 +10,7 @@ import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 import { Phoenix } from '@dxos/phoenix';
 
-import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions, PROFILE_FOLDER } from '../daemon';
+import { type Daemon, PROFILE_FOLDER, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentIsNotStartedByCLIError, AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';

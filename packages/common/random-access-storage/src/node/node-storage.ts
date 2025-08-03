@@ -2,10 +2,11 @@
 // Copyright 2021 DXOS.org
 //
 
-import del from 'del';
 import { existsSync } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import del from 'del';
 import raf from 'random-access-file';
 import { type RandomAccessStorage } from 'random-access-storage';
 

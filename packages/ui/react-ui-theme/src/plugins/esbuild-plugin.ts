@@ -2,16 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import { cp, mkdir } from 'node:fs/promises';
+import { basename, join, relative, resolve } from 'node:path';
+
 import autoprefixer from 'autoprefixer';
 import type { Plugin } from 'esbuild';
 import stylePlugin from 'esbuild-style-plugin';
-import { mkdir, cp } from 'node:fs/promises';
-import { resolve, relative, join, basename } from 'node:path';
 import tailwindcss from 'tailwindcss';
 import type { ThemeConfig } from 'tailwindcss/types/config';
 
-import { resolveKnownPeers } from './resolveContent';
 import { tailwindConfig } from '../config';
+
+import { resolveKnownPeers } from './resolveContent';
 
 export const ThemePlugins = async (options: {
   content: string[];

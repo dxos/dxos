@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Node, type Action, type ActionGroup, ACTION_GROUP_TYPE } from '@dxos/app-graph';
-import { type ToolbarSeparatorProps, type Label, type IconButtonProps, type ClassNameValue } from '@dxos/react-ui';
+import { ACTION_GROUP_TYPE, type Action, type ActionGroup, type Node } from '@dxos/app-graph';
+import { type ClassNameValue, type IconButtonProps, type Label, type ToolbarSeparatorProps } from '@dxos/react-ui';
 
 export type MenuActionProperties = {
   label: Label;

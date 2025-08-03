@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from 'esbuild';
 import { readFile, writeFile } from 'fs/promises';
+
+import { type Plugin } from 'esbuild';
 
 /**
  * When compiling to ESM, esbuild will rewrite all `require` calls to `__require`; which throw runtime errors.

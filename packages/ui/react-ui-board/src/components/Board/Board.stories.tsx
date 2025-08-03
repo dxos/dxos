@@ -5,14 +5,15 @@
 import '@dxos-theme';
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Board, type BoardController, type BoardContentProps, type BoardRootProps } from './Board';
-import { type BoardLayout } from './types';
 import { translations } from '../../translations';
+
+import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
+import { type BoardLayout } from './types';
 
 type TestItem = {
   id: string;

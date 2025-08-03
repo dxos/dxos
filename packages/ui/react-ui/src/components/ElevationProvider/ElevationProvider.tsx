@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, createContext } from 'react';
 
 import { type Elevation } from '@dxos/react-ui-types';
 

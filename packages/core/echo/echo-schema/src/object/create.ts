@@ -8,21 +8,22 @@ import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
+import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
+import { defineHiddenProperty } from '../utils';
+
 import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 import {
-  assertObjectModelShape,
   EntityKindId,
   MetaId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  assertObjectModelShape,
 } from './model';
 import { setTypename } from './typename';
-import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
-import { defineHiddenProperty } from '../utils';
 
 // Make `id` optional.
 type CreateData<T> = T extends { id: string } ? Omit<T, 'id' | typeof EntityKindId> & { id?: string } : T;

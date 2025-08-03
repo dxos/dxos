@@ -5,12 +5,12 @@
 import { type CellValue } from 'hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { DetailedCellError } from '#hyperformula';
+
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
-
-import { DetailedCellError } from '#hyperformula';
 
 import { TestBuilder } from './testing';
 

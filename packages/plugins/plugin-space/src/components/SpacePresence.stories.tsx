@@ -11,8 +11,9 @@ import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { FullPresence, type MemberPresenceProps, SmallPresence, type Member } from './SpacePresence';
 import { translations } from '../translations';
+
+import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } from './SpacePresence';
 
 const nViewers = (n: number, currentlyAttended = true): Member[] =>
   Array.from({ length: n }, () => ({

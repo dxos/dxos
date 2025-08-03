@@ -6,8 +6,9 @@ import { expect, onTestFinished, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
 
-import { fromAgent } from './agent';
 import { Client } from '../client';
+
+import { fromAgent } from './agent';
 
 // Requires running CLI daemon
 test.skip('connect to local CLI', async () => {

@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
-import { DebugInfo } from './DebugInfo';
 import { useAudioStream, usePipeline } from '../hooks';
+
+import { DebugInfo } from './DebugInfo';
 
 export type VoiceProps = {
   active?: boolean;

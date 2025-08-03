@@ -4,12 +4,12 @@
 
 import {
   type BaseEchoObject,
+  type BaseObject,
   EntityKind,
   EntityKindId,
   RelationSourceId,
-  RelationTargetId,
-  type BaseObject,
   type RelationSourceTargetRefs,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';

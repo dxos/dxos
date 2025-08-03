@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type StorybookConfig } from '@storybook/web-components-vite';
 import { resolve } from 'node:path';
 import { join } from 'path';
+
+import { type StorybookConfig } from '@storybook/web-components-vite';
 import { mergeConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 

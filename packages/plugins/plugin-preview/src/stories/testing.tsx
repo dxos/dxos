@@ -10,8 +10,8 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import { type PreviewProps } from '../types';
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
+import { type PreviewProps } from '../types';
 
 faker.seed(1234);
 

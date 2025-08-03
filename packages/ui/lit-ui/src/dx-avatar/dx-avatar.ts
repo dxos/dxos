@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { html, svg, LitElement } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
+import { LitElement, html, svg } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';

@@ -8,11 +8,11 @@ import { type InterpreterValue } from 'hyperformula/typings/interpreter/Interpre
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { debounce, type CleanupFn } from '@dxos/async';
+import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '#hyperformula';
+
+import { type CleanupFn, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-
-import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
 
 // TODO(burdon): Create API gateways:
 //  https://publicapis.io

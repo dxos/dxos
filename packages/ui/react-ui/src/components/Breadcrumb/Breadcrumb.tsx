@@ -4,7 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

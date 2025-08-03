@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isGraphNode } from '@dxos/plugin-graph';
 
-import { CommandsDialogContent, CommandsTrigger, NavTreeDocumentTitle, NavTreeContainer } from '../components';
+import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
 
 export default () =>

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type PluginContext } from '@dxos/app-framework';
-import { type Client, PublicKey, type ClientOptions } from '@dxos/react-client';
+import { type Client, type ClientOptions, PublicKey } from '@dxos/react-client';
 import { type MaybePromise } from '@dxos/util';
 
 import { meta } from '../meta';

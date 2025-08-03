@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { InvitationEncoder, type AuthenticatingInvitation, type CancellableInvitation } from '@dxos/client-protocol';
+import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';

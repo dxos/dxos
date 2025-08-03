@@ -9,15 +9,16 @@ import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 
 import {
+  type ComputeEventLogger,
   ConfiguredCredentialsService,
   type CredentialsService,
   DatabaseService,
-  type ComputeEventLogger,
   QueueService,
   ServiceContainer,
   type ServiceCredential,
   type TracingService,
 } from '../services';
+
 import { consoleLogger, noopLogger } from './logger';
 
 // TODO(burdon): Factor out.

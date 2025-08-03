@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
-import { printTunnels, type TunnelRpcPeer } from '../../util';
+import { type TunnelRpcPeer, printTunnels } from '../../util';
 
 /**
  * @deprecated

@@ -3,12 +3,13 @@
 //
 
 import { type BaseObject, ObjectId } from '@dxos/echo-schema';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
+
+import { ObjectCore } from '../core-db';
 
 import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
-import { ObjectCore } from '../core-db';
 
 export type CloneOptions = {
   /**

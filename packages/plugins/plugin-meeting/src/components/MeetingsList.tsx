@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type ChannelType } from '@dxos/plugin-thread/types';
-import { getSpace, Query, useQuery } from '@dxos/react-client/echo';
+import { Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';

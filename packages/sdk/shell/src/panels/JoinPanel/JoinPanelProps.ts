@@ -5,12 +5,13 @@
 import { type FC, type cloneElement } from 'react';
 
 import type { Identity } from '@dxos/react-client/halo';
-import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
+import type { AuthenticatingInvitationObservable, Invitation, InvitationResult } from '@dxos/react-client/invitations';
+
+import { type ConfirmResetProps, type StepProps } from '../../steps';
+import { type FailReason } from '../../types';
 
 import { type JoinSend } from './joinMachine';
 import { type IdentityInputProps } from './steps';
-import { type ConfirmResetProps, type StepProps } from '../../steps';
-import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
 

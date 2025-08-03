@@ -11,7 +11,7 @@ import { Icon } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { createFunctionAnchors } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const GptRealtimeShape = Schema.extend(
   ComputeShape,

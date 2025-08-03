@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { TcpTransportFactory } from '#tcp-transport';
+
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -13,16 +15,15 @@ import {
 import { schema } from '@dxos/protocols/proto';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
-import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
-import { TcpTransportFactory } from '#tcp-transport';
-
-import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
-import { createRtcTransportFactory, RtcTransportProxyFactory, RtcTransportService } from '../transport';
+import { RtcTransportProxyFactory, RtcTransportService, createRtcTransportFactory } from '../transport';
+
+import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 
 // Signal server will be started by the setup script.
 const port = process.env.SIGNAL_PORT ?? 4000;

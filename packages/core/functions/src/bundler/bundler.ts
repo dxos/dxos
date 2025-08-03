@@ -3,8 +3,8 @@
 //
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Duration, Effect, pipe, Schedule } from 'effect';
-import { type BuildOptions, type Loader, build, initialize, type BuildResult, type Plugin } from 'esbuild-wasm';
+import { Duration, Effect, Schedule, pipe } from 'effect';
+import { type BuildOptions, type BuildResult, type Loader, type Plugin, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
 import { runAndForwardErrors } from '@dxos/effect';

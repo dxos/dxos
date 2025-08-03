@@ -6,12 +6,13 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Relation } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
-import { getSchema, Ref } from '@dxos/echo-schema';
+import { Ref, getSchema } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 
-import { EchoTestBuilder } from './echo-test-builder';
 import type { Queue } from '../queue';
+
+import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;

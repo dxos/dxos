@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { geoPath, select, type GeoStream } from 'd3';
+import { type GeoStream, geoPath, select } from 'd3';
 import { useEffect } from 'react';
 import { feature, mesh } from 'topojson-client';
 import { type GeometryCollection, type GeometryObject, type Objects, type Topology } from 'topojson-specification';

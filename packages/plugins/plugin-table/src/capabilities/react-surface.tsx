@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
-import { TableContainer, TableCard } from '../components';
+import { TableCard, TableContainer } from '../components';
 import { meta } from '../meta';
 
 export default () =>

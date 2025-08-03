@@ -3,8 +3,8 @@
 //
 //
 
-import { waitForCondition, scheduleTaskInterval } from '@dxos/async';
-import { cancelWithContext, type Context } from '@dxos/context';
+import { scheduleTaskInterval, waitForCondition } from '@dxos/async';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 /**
