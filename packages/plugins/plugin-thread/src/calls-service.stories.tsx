@@ -16,7 +16,7 @@ import { Button } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import video from '../../testing/video.mp4';
+import video from '../testing/video.mp4?raw';
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 import { useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
