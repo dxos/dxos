@@ -16,7 +16,7 @@ import { AnthropicClient } from '@effect/ai-anthropic';
 import { AiServiceRouter } from '@dxos/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantCapabilities } from './capability-definitions';
+import { AssistantCapabilities, AssistantActivationEvents } from './defs';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, ServiceType } from './types';
@@ -118,6 +118,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/s`,
       activatesOn: Events.Startup,
+      activatesAfter: [AssistantActivationEvents.AiServiceProvidersReady],
       activate: () => {
         return [
           contributes(
@@ -138,7 +139,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/ai-service`,
       // Must activate after the `AssistantCapabilities.AiModelResolver` were contributed.
-      activatesOn: Events.DispatcherReady,
+      activatesOn: AssistantActivationEvents.AiServiceProvidersReady,
       activate: (context) => {
         const aiModelResolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
         console.log('aiModelResolvers', aiModelResolvers);

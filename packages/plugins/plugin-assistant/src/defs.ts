@@ -5,7 +5,7 @@
 import { type Layer } from 'effect';
 
 import { type AiService, AiServiceRouter } from '@dxos/ai';
-import { defineCapability } from '@dxos/app-framework';
+import { defineCapability, defineEvent } from '@dxos/app-framework';
 
 import { ASSISTANT_PLUGIN } from './meta';
 
@@ -19,4 +19,8 @@ export namespace AssistantCapabilities {
   export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
     `${ASSISTANT_PLUGIN}/capability/ai-model-resolver`,
   );
+}
+
+export namespace AssistantActivationEvents {
+  export const AiServiceProvidersReady = defineEvent(`${ASSISTANT_PLUGIN}/event/ai-service-providers-ready`);
 }

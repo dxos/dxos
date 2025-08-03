@@ -7,6 +7,7 @@ import { definePlugin, Events, defineModule, contributes, Capabilities } from '@
 import { Updater, Ollama } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
+import { AssistantActivationEvents } from '@dxos/plugin-assistant';
 
 export const NativePlugin = () =>
   definePlugin(meta, [
@@ -24,6 +25,7 @@ export const NativePlugin = () =>
       id: `${meta.id}/module/ollama`,
       // TODO(dmaretskyi): Should we do a custom activation event?
       activatesOn: Events.Startup,
+      activateAfter: [AssistantActivationEvents.AiServiceProvidersReady],
       activate: Ollama,
     }),
   ]);

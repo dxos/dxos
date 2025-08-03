@@ -20,7 +20,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 
-import { AssistantCapabilities } from '../capability-definitions';
+import { AssistantCapabilities } from '../defs';
 
 export * from '@dxos/assistant';
 
