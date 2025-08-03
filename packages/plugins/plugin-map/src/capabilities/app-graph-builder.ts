@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { DataType } from '@dxos/schema';

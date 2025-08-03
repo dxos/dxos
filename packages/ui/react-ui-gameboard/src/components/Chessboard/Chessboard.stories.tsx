@@ -11,9 +11,10 @@ import { log } from '@dxos/log';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chessboard, type ChessboardProps } from './Chessboard';
+import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
+
 import { ChessModel } from './chess';
-import { Gameboard, type GameboardRootProps, type Player, type Move } from '../Gameboard';
+import { Chessboard, type ChessboardProps } from './Chessboard';
 
 type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;

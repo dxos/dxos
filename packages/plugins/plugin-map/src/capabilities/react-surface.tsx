@@ -9,14 +9,14 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { DataType } from '@dxos/schema';
 
 import { MapContainer, MapViewEditor } from '../components';
 import { meta } from '../meta';
-import { Map, LocationAnnotationId } from '../types';
+import { LocationAnnotationId, Map } from '../types';
 
 import { MapCapabilities } from './capabilities';
 

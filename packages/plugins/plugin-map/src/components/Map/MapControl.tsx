@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Map, type MapController, useMapZoomHandler, type MapCanvasProps, type ControlProps } from '@dxos/react-ui-geo';
+import { type ControlProps, Map, type MapCanvasProps, type MapController, useMapZoomHandler } from '@dxos/react-ui-geo';
 
 export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
 

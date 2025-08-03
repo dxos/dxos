@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Map, MapAction } from '../types';

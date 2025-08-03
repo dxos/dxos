@@ -6,10 +6,10 @@ import { isNotNullable } from 'effect/Predicate';
 import React, { useEffect, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
+import { type MapCanvasProps, type MapMarker } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 

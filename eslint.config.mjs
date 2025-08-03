@@ -109,18 +109,9 @@ export default tseslint.config(
     ],
     rules: {
       // TODO(burdon): Sort rules.
-      '@typescript-eslint/ban-types': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-extra-parens': 'off',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-use-before-define': 'off',
-      '@typescript-eslint/no-useless-constructor': 'error',
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/consistent-type-exports': 'off', // TODO(dmaretskyi): Seems broken?
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
@@ -128,39 +119,70 @@ export default tseslint.config(
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/consistent-type-exports': 'off', // TODO(dmaretskyi): Seems broken?
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-empty-interface': 'off',
+      '@typescript-eslint/no-extra-parens': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-extra-semi': 'off',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      '@typescript-eslint/no-useless-constructor': 'error',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
 
       // TODO(dmaretskyi): New overrides. Need to review later.
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/await-thenable': 'off',
-      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/unbound-method': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
-      '@typescript-eslint/restrict-template-expressions': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-duplicate-type-constituents': 'off',
-      '@typescript-eslint/no-base-to-string': 'off',
-      '@typescript-eslint/no-for-in-array': 'off',
+      ...{
+        '@typescript-eslint/await-thenable': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+        '@typescript-eslint/no-redundant-type-constituents': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+        '@typescript-eslint/no-empty-object-type': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unused-expressions': 'off',
+        '@typescript-eslint/no-unsafe-function-type': 'off',
+        '@typescript-eslint/no-duplicate-type-constituents': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        '@typescript-eslint/no-for-in-array': 'off',
+        '@typescript-eslint/restrict-template-expressions': 'off',
+        '@typescript-eslint/require-await': 'off',
+        '@typescript-eslint/unbound-method': 'off',
+      },
+
+      // General
       camelcase: 'off',
+      'jsx-quotes': ['error', 'prefer-single'],
+      'no-unused-vars': 'off',
+      'no-constant-binary-expression': 'off',
+      'no-unsafe-optional-chaining': 'off',
       'no-dupe-else-if': 'off',
       'no-empty': 'off',
+      'prefer-arrow-functions/prefer-arrow-functions': [
+        'error',
+        {
+          allowNamedFunctions: true,
+        },
+      ],
       'prefer-const': [
         'error',
         {
           destructuring: 'all',
         },
       ],
-      'jsx-quotes': ['error', 'prefer-single'],
+      'prettier/prettier': 'error',
+      'require-yield': 'off',
+
+      // React
       'react/display-name': 'off',
       'react/function-component-definition': [
         'error',
@@ -181,36 +203,14 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
-      'prefer-arrow-functions/prefer-arrow-functions': [
-        'error',
-        {
-          allowNamedFunctions: true,
-        },
-      ],
-      'require-yield': 'off',
-      '@typescript-eslint/only-throw-error': 'off',
-      'no-unused-vars': 'off',
-      'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': [
-        'warn',
-        {
-          vars: 'all',
-          varsIgnorePattern: '^_',
-          args: 'after-used',
-          argsIgnorePattern: '^_',
-        },
-      ],
-      'prettier/prettier': 'error',
-      'no-constant-binary-expression': 'off',
-      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+
+      // Imports
       'import-x/newline-after-import': [
         'error',
         {
           count: 1,
         },
       ],
-      'no-unsafe-optional-chaining': 'off',
-      '@typescript-eslint/restrict-plus-operands': 'off',
       'import-x/order': [
         'error',
         {
@@ -237,6 +237,16 @@ export default tseslint.config(
           ignoreDeclarationSort: true,
           ignoreMemberSort: false,
           memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+        },
+      ],
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
         },
       ],
     },

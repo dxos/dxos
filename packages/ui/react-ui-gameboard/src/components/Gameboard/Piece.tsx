@@ -5,17 +5,17 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { useState, useRef, useEffect, type FC, type SVGProps, memo } from 'react';
+import React, { type FC, type SVGProps, memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useDynamicRef, useTrackProps, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isEqualLocation, isLocation, type Location, type PieceRecord, type Player } from './types';
-import { type DOMRectBounds } from './util';
 import { useGameboardContext } from './Gameboard';
+import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types';
+import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
   Component: FC<SVGProps<SVGSVGElement>>;

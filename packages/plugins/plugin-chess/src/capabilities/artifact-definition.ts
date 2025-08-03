@@ -3,11 +3,11 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { createArtifactElement, VersionPin, ArtifactId } from '@dxos/assistant';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId, VersionPin, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

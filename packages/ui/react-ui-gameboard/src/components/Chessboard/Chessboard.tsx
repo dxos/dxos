@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, type PropsWithChildren, useRef, useMemo, useEffect, useState, memo } from 'react';
+import React, { Fragment, type PropsWithChildren, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { boardStyles, type ChessModel, type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
   type DOMRectBounds,
   Gameboard,
@@ -20,6 +19,8 @@ import {
   locationToString,
   useGameboardContext,
 } from '../Gameboard';
+
+import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
 
 export type ChessboardProps = ThemedClassName<
   PropsWithChildren<{

@@ -7,10 +7,10 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from '
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   ChessModel,
-  Chessboard as NativeChessboard,
-  type ChessboardProps as NativeChessboardProps,
   Gameboard,
   type GameboardRootProps,
+  Chessboard as NativeChessboard,
+  type ChessboardProps as NativeChessboardProps,
 } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/react-ui-theme';
 

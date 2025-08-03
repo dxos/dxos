@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
+import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
 
 import { type Map } from '../types';
