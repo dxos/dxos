@@ -5,7 +5,7 @@
 // Based upon the useIsFocused hook which is part of the `rci` project:
 /// https://github.com/leonardodino/rci/blob/main/packages/use-is-focused
 
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 
 export const useIsFocused = (inputRef: RefObject<HTMLInputElement>) => {
   const [isFocused, setIsFocused] = useState<boolean | undefined>(undefined);

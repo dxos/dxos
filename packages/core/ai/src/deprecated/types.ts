@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { LLMModel } from '../types';
+
 import { Tool } from './tools';
 
 export const ToolTypes = Object.freeze({

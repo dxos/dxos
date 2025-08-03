@@ -9,7 +9,7 @@ import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { useTextEditor, type UseTextEditorProps } from '../../hooks';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 export type EditorProps = ThemedClassName<
   {

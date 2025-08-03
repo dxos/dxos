@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { createArtifactElement, ArtifactId } from '@dxos/assistant';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';

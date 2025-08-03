@@ -8,8 +8,8 @@ import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { createTool, ToolResult } from '../deprecated/tools';
-import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../experimental/cypher';
+import { ToolResult, createTool } from '../deprecated/tools';
+import { type DataSource, executeQuery, formatJsonSchemaForLLM } from '../experimental/cypher';
 
 export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Schema.Any[] = []) =>
   createTool('dxos.org/echo', {

@@ -1,6 +1,4 @@
 //
-
-//
 // Copyright 2023 DXOS.org
 //
 
@@ -8,9 +6,9 @@ import { InvalidConfigError } from '@dxos/protocols';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import StorageDriver = Runtime.Client.Storage.StorageDriver;
-
 import { getRootPath } from './util';
+
+import StorageDriver = Runtime.Client.Storage.StorageDriver;
 
 // TODO(burdon): Factor out.
 export const createStorageObjects = (config: Runtime.Client.Storage) => {

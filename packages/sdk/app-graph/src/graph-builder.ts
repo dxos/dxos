@@ -4,14 +4,14 @@
 
 import { Registry, Rx } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import { Array, type Option, pipe, Record } from 'effect';
+import { Array, type Option, Record, pipe } from 'effect';
 
-import { type MulticastObservable, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { log } from '@dxos/log';
-import { byPosition, getDebugName, isNode, isNonNullable, type MaybePromise, type Position } from '@dxos/util';
+import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, Graph, ROOT_ID, type GraphParams, type ExpandableGraph } from './graph';
-import { actionGroupSymbol, type ActionData, type Node, type NodeArg, type Relation } from './node';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, Graph, type GraphParams, ROOT_ID } from './graph';
+import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.

@@ -10,7 +10,7 @@ import { ComputeGraphModel } from '@dxos/conductor';
 import { todo } from '@dxos/debug';
 import { DatabaseService, QueueService, ServiceContainer } from '@dxos/functions';
 import { useConfig } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import {
   ComputeContext,
   ComputeGraphController,

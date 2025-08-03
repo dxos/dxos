@@ -8,8 +8,9 @@ import React, { useMemo } from 'react';
 import { SaveConfig, Storage } from '@dxos/config';
 import { useConfig } from '@dxos/react-client';
 
-import { getTarget } from './VaultSelector';
 import { Select } from '../components';
+
+import { getTarget } from './VaultSelector';
 
 const edgeServers = [
   { value: 'https://edge.dxos.workers.dev', label: 'Dev' },

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -12,10 +12,11 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../../translations';
 
 import { MarkdownCard } from './MarkdownCard';
-import { translations } from '../../translations';
 
 faker.seed(1234);
 

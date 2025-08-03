@@ -6,11 +6,11 @@ import { defineCapability } from '@dxos/app-framework';
 
 import { TRANSCRIPTION_PLUGIN } from '../meta';
 import {
-  type TranscriberParams,
-  type Transcriber,
-  type TranscriptionManager,
-  type TranscriptMessageEnricher,
   type MediaStreamRecorderParams,
+  type Transcriber,
+  type TranscriberParams,
+  type TranscriptMessageEnricher,
+  type TranscriptionManager,
 } from '../transcriber';
 
 export namespace TranscriptionCapabilities {

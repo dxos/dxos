@@ -3,20 +3,21 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Option, pipe, type Schema } from 'effect';
+import { Option, type Schema, pipe } from 'effect';
 
 import {
   Capabilities,
   CollaborationActions,
+  type PluginContext,
   contributes,
   createResolver,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
 
-import { MarkdownCapabilities } from './capabilities';
 import { Markdown, MarkdownAction } from '../types';
+
+import { MarkdownCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

@@ -9,15 +9,16 @@ import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor
 import { Filter } from '@dxos/echo-db';
 import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
 import { ControlledSelector, MasterDetailTable, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
+
+import { WorkflowDebugPanel, WorkflowDebugPanelMode } from './WorkflowDebugPanel';
 
 export const WorkflowPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();

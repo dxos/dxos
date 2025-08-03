@@ -5,10 +5,10 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';

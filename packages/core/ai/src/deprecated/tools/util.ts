@@ -10,8 +10,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type ExecutableTool, ToolResult } from './tool';
 import { type AgentStatus } from '../status-report';
+
+import { type ExecutableTool, ToolResult } from './tool';
 
 export const isToolUse = (message: DataType.Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.blocks.at(-1);
