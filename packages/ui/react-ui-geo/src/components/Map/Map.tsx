@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-// eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
-import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
@@ -21,9 +20,9 @@ import { type MapCanvasProps } from '../types';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 // TODO(burdon): react-leaflet v5 is not compatible with react 18.
+// TODO(burdon): Guess initial location.
 
 const defaults = {
-  // TODO(burdon): Guess location.
   center: { lat: 51, lng: 0 } as L.LatLngExpression,
   zoom: 4,
 };
@@ -34,15 +33,26 @@ const defaults = {
 
 type MapRootProps = ThemedClassName<MapContainerProps>;
 
-// https://react-leaflet.js.org/docs/api-map
-const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, ...props }: MapRootProps) => {
+/**
+ * https://react-leaflet.js.org/docs/api-map
+ */
+const MapRoot = ({
+  classNames,
+  scrollWheelZoom = true,
+  doubleClickZoom = true,
+  touchZoom = true,
+  center = defaults.center,
+  zoom = defaults.zoom,
+  ...props
+}: MapRootProps) => {
   return (
     <MapContainer
-      className={mx('relative grid grow bg-baseSurface', classNames)}
+      className={mx('relative grid bs-full is-full bg-baseSurface', classNames)}
       attributionControl={false}
-      // TODO(burdon): Only if attention.
-      scrollWheelZoom={true}
       zoomControl={false}
+      scrollWheelZoom={scrollWheelZoom}
+      doubleClickZoom={doubleClickZoom}
+      touchZoom={touchZoom}
       center={center}
       zoom={zoom}
       {...props}
@@ -51,10 +61,10 @@ const MapRoot = ({ classNames, center = defaults.center, zoom = defaults.zoom, .
 };
 
 //
-// Control
+// Controller
+// TODO(burdon): Normalize with Globe.
 //
 
-// TODO(burdon): Normalize with Globe.
 type MapController = {
   setCenter: (center: LatLngExpression, zoom?: number) => void;
   setZoom: (cb: (zoom: number) => number) => void;
@@ -84,6 +94,37 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
     }
   }, [width, height]);
 
+  // Events.
+  useEffect(() => {
+    const handler = debounce(() => {
+      onChange?.({
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+      });
+    }, 100);
+
+    map.on('move', handler);
+    map.on('zoom', handler);
+    map.on('focus', () => setHasFocus(true));
+    map.on('blur', () => setHasFocus(false));
+    return () => {
+      map.off('move', handler);
+      map.off('zoom', handler);
+      map.off('focus');
+      map.off('blur');
+    };
+  }, [map, onChange]);
+
+  // Support zoom if focused.
+  const [hasFocus, setHasFocus] = useState(false);
+  useEffect(() => {
+    if (hasFocus) {
+      map.scrollWheelZoom.enable();
+    } else {
+      map.scrollWheelZoom.disable();
+    }
+  }, [map, hasFocus]);
+
   // Position.
   useEffect(() => {
     if (center) {
@@ -92,19 +133,6 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
       map.setZoom(zoom);
     }
   }, [center, zoom]);
-
-  // Events.
-  useEffect(() => {
-    const handler = debounce(() => {
-      onChange?.({ center: map.getCenter(), zoom: map.getZoom() });
-    }, 100);
-    map.on('move', handler);
-    map.on('zoom', handler);
-    return () => {
-      map.off('move', handler);
-      map.off('zoom', handler);
-    };
-  }, [map, onChange]);
 
   // Set the viewport around the markers, or show the whole world map if `markers` is empty.
   useEffect(() => {
@@ -117,7 +145,15 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
   }, [markers]);
 
   return (
-    <div ref={ref} className='flex w-full h-full overflow-hidden bg-baseSurface'>
+    <div ref={ref} role='none' className='grid inset-0 overflow-hidden bg-baseSurface'>
+      {/* Focus ring. */}
+      <div
+        className={mx(
+          'z-[9999] absolute inset-0 border border-transparent pointer-events-none',
+          hasFocus && 'border-primary-500 ',
+        )}
+      />
+
       {/* Map tiles. */}
       <TileLayer
         className='dark:filter dark:grayscale dark:invert'
