@@ -67,7 +67,7 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
       SpacePlugin(),
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
-        onClientInitialized: async (context, client) => {
+        onClientInitialized: async ({ client }) => {
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
 

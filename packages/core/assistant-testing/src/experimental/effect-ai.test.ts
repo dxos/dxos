@@ -220,7 +220,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
         do {
           // disableToolCallResolution
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseGptStream());
+          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = AiInput.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));

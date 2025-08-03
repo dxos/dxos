@@ -21,10 +21,33 @@ import { type HasId, type ToMutable } from '../types';
 
 import { type RelationSourceTargetRefs } from './relation';
 
+// TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
+
+// type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
+type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable<T> & ExtraFields>;
+
+export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}>
+  extends TypeMeta,
+    Schema.AnnotableClass<
+      EchoTypeSchema<Self, ExtraFields>,
+      EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>,
+      EchoTypeSchemaProps<Schema.Schema.Encoded<Self>, ExtraFields>,
+      Schema.Schema.Context<Self>
+    > {
+  // make(
+  //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
+  //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
+  //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
+  //   options?: MakeOptions,
+  // ): Simplify<Schema.TypeLiteral.Type<Fields, []>>;
+
+  instanceOf(value: unknown): boolean;
+}
+
 /**
  * Pipeable function to add ECHO object annotations to a schema.
  */
-// TODO(burdon): Rename EchoType.
+// TODO(dmaretskyi): Rename EchoObjectSchema.
 export const EchoObject: {
   // TODO(burdon): Tighten Self type to Schema.TypeLiteral or Schema.Struct to facilitate definition of `make` method.
   // (meta: TypeMeta): <Self extends Schema.Struct<Fields>, Fields extends Schema.Struct.Fields>(self: Self) => EchoObjectSchema<Self, Fields>;
@@ -51,27 +74,12 @@ export const EchoObject: {
 export type EchoRelationOptions<
   TSource extends Schema.Schema.AnyNoContext,
   TTarget extends Schema.Schema.AnyNoContext,
-> = {
-  typename: string;
-  version: string;
+> = TypeMeta & {
   source: TSource;
   target: TTarget;
 };
 
-const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
-  const identifier = getTypeIdentifierAnnotation(schema);
-  if (identifier) {
-    return identifier;
-  }
-
-  const typename = getSchemaTypename(schema);
-  if (!typename) {
-    throw new Error('Schema must have a typename');
-  }
-  return DXN.fromTypename(typename).toString();
-};
-
-// TODO(dmaretskyi): Rename?
+// TODO(dmaretskyi): Rename EchoRelationSchema.
 export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
   options: EchoRelationOptions<Source, Target>,
 ) => {
@@ -109,8 +117,19 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
   };
 };
 
-// type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
-type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable<T> & ExtraFields>;
+const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
+  const identifier = getTypeIdentifierAnnotation(schema);
+  if (identifier) {
+    return identifier;
+  }
+
+  const typename = getSchemaTypename(schema);
+  if (!typename) {
+    throw new Error('Schema must have a typename');
+  }
+
+  return DXN.fromTypename(typename).toString();
+};
 
 // type MakeOptions =
 //   | boolean
@@ -142,24 +161,6 @@ type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<HasId & ToMutable
 
 // const _getDisableValidationMakeOption = (options: MakeOptions | undefined): boolean =>
 //   Predicate.isBoolean(options) ? options : options?.disableValidation ?? false;
-
-export interface EchoTypeSchema<Self extends Schema.Schema.Any, ExtraFields = {}>
-  extends TypeMeta,
-    Schema.AnnotableClass<
-      EchoTypeSchema<Self, ExtraFields>,
-      EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>,
-      EchoTypeSchemaProps<Schema.Schema.Encoded<Self>, ExtraFields>,
-      Schema.Schema.Context<Self>
-    > {
-  // make(
-  //   props: RequiredKeys<Schema.TypeLiteral.Constructor<Fields, []>> extends never
-  //     ? void | Simplify<Schema.TypeLiteral.Constructor<Fields, []>>
-  //     : Simplify<Schema.TypeLiteral.Constructor<Fields, []>>,
-  //   options?: MakeOptions,
-  // ): Simplify<Schema.TypeLiteral.Type<Fields, []>>;
-
-  instanceOf(value: unknown): boolean;
-}
 
 const makeEchoObjectSchema = <Self extends Schema.Schema.Any>(
   // fields: Fields,

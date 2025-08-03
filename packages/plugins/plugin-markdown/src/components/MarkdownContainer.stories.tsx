@@ -52,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, Testing.Contact],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

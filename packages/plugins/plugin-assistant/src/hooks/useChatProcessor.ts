@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
-import { Conversation, createSystemPrompt } from '@dxos/assistant';
+import { AiConversation, createSystemPrompt } from '@dxos/assistant';
 import { type ArtifactDefinition, type AssociatedArtifact, type Blueprint } from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -105,7 +105,7 @@ export const useChatProcessor = ({
       return;
     }
 
-    return new Conversation({ queue: chat.queue.target as Queue<any> });
+    return new AiConversation({ queue: chat.queue.target as Queue<any> });
   }, [chat?.queue.target]);
 
   // Create processor.

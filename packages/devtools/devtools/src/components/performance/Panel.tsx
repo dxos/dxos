@@ -7,8 +7,6 @@ import React, { type JSX, type PropsWithChildren } from 'react';
 import { Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { styles } from '../../styles';
-
 export type PanelProps = {
   className?: string; // TODO(burdon): Change to ThemedClassName.
   id: string;
@@ -36,7 +34,7 @@ export const Panel = ({
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
-    <div className={mx('flex flex-col', styles.bgPanel)}>
+    <div className='flex flex-col'>
       <div
         className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}

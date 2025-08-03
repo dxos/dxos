@@ -11,6 +11,7 @@ declare global {
   }
 }
 
+// TODO(burdon): Not currently used.
 // TODO(dmaretskyi): Find a good home for this.
 export const toolFromFunction = <I, O>(
   namespace: string,

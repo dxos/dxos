@@ -27,7 +27,7 @@ export default defineFunction({
       throw new Error('Document not found.');
     }
 
-    const text = yield* DatabaseService.loadRef(doc.content);
+    const text = yield* DatabaseService.load(doc.content);
     text.content = content;
   }),
 });
