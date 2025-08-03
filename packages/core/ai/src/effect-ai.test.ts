@@ -15,7 +15,7 @@ import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
-import { getToolCalls, runTool } from './tools';
+import { callTool, getToolCalls } from './tools';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -41,7 +41,7 @@ const toolkitLayer = TestToolkit.toLayer({
       const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
       log.info('calculate', { sanitizedInput });
 
-      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       return Function(`"use strict"; return (${sanitizedInput})`)();
     })();
 
@@ -92,7 +92,7 @@ describe('effect AI client', () => {
           }
 
           const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-            runTool(actualToolkit, toolCall),
+            callTool(actualToolkit, toolCall),
           );
           history.push(
             Obj.make(DataType.Message, {

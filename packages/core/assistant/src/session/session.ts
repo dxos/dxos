@@ -15,8 +15,8 @@ import {
   type GenerationStream,
   ToolExecutionService,
   ToolResolverService,
+  callTool,
   getToolCalls,
-  runTool,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { type Blueprint } from '@dxos/blueprints';
@@ -189,13 +189,12 @@ export class AiSession {
         this._pending.push(response);
         this.message.emit(response);
 
-        console.log('###', JSON.stringify(response));
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
         }
 
-        const toolResults = yield* runTools(toolCalls, toolkitWithBlueprintHandlers as any);
+        const toolResults = yield* callTools(toolCalls, toolkitWithBlueprintHandlers as any);
         this._pending.push(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
@@ -205,7 +204,7 @@ export class AiSession {
         );
       } while (true);
 
-      log.info('done', { length: this._pending.length });
+      log.info('done', { pending: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
@@ -326,13 +325,18 @@ export namespace ArtifactDiffResolver {
   };
 }
 
-const runTools: <Tools extends AiTool.Any>(
+/**
+ * Runs a list of tool calls.
+ */
+const callTools: <Tools extends AiTool.Any>(
   toolCalls: ContentBlock.ToolCall[],
   toolkit: AiToolkit.AiToolkit<Tools>,
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('callTools')(
   function* (toolCalls, toolkit) {
-    log.info('runTools', { toolCalls });
     const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-    return yield* Effect.forEach(toolCalls, (toolCall) => runTool(toolkitWithHandlers, toolCall));
+    return yield* Effect.forEach(toolCalls, (toolCall) => {
+      log.info('callTool', { toolCall });
+      return callTool(toolkitWithHandlers, toolCall);
+    });
   },
 );
