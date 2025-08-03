@@ -1,14 +1,16 @@
 // @ts-check
 
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import sortImports from '@trivago/prettier-plugin-sort-imports';
 import reactPlugin from 'eslint-plugin-react';
-import storybook from 'eslint-plugin-storybook';
-import dxos from '@dxos/eslint-plugin-rules';
-import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
-import unusedImports from 'eslint-plugin-unused-imports';
-import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import importX from 'eslint-plugin-import-x';
+import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import storybook from 'eslint-plugin-storybook';
+import unusedImports from 'eslint-plugin-unused-imports';
+import tseslint from 'typescript-eslint';
+
+import dxos from '@dxos/eslint-plugin-rules';
 
 const SOURCES_GLOB = '**/{src,config,.storybook}/**';
 
@@ -62,8 +64,8 @@ export default tseslint.config(
       'packages/apps/composer-app/src/functions/_worker.ts',
       'packages/common/esbuild-plugins/polyfills',
       'packages/common/node-std',
-      'packages/core/mesh/network-manager/module-stub.mjs',
       'packages/core/mesh/signal/testing/setup.js',
+      'packages/core/mesh/network-manager/module-stub.mjs',
       'packages/sdk/config/src/testing',
       'packages/sdk/shell/react-i18next.d.ts',
       'packages/ui/react-ui-geo/data',
@@ -86,9 +88,10 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'prefer-arrow-functions': arrowFunctions,
-      'unused-imports': unusedImports,
       'import-x': importX,
+      'prefer-arrow-functions': arrowFunctions,
+      'sort-imports': sortImports,
+      'unused-imports': unusedImports,
     },
   },
 
@@ -98,16 +101,26 @@ export default tseslint.config(
   {
     files: [[SOURCES_GLOB, '**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
     extends: [
-      dxos.configs.recommended,
       eslint.configs.recommended,
-      reactPlugin.configs.flat.recommended,
       tseslint.configs.recommendedTypeChecked,
+      reactPlugin.configs.flat.recommended,
       prettierRecommended,
+      dxos.configs.recommended,
     ],
     rules: {
-      '@typescript-eslint/await-thenable': 'off',
-      '@typescript-eslint/ban-ts-comment': 'off',
+      // TODO(burdon): Sort rules.
       '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-extra-parens': 'off',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      '@typescript-eslint/no-useless-constructor': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
@@ -115,72 +128,39 @@ export default tseslint.config(
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/consistent-type-exports': 'off', // seems broken
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-base-to-string': 'off',
-      '@typescript-eslint/no-duplicate-type-constituents': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@typescript-eslint/no-extra-parens': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-for-in-array': 'off',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'off',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/consistent-type-exports': 'off', // TODO(dmaretskyi): Seems broken?
+      '@typescript-eslint/no-this-alias': 'off',
+
+      // TODO(dmaretskyi): New overrides. Need to review later.
       '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/no-unsafe-function-type': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-use-before-define': 'off',
-      '@typescript-eslint/no-useless-constructor': 'error',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/prefer-promise-reject-errors': 'off',
-      '@typescript-eslint/restrict-template-expressions': 'off',
-      '@typescript-eslint/restrict-plus-operands': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
       '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-duplicate-type-constituents': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/no-for-in-array': 'off',
       camelcase: 'off',
-      'import-x/newline-after-import': [
-        'error',
-        {
-          count: 1,
-        },
-      ],
-      'import-x/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          pathGroups: [
-            {
-              pattern: '@dxos/**',
-              group: 'internal',
-              position: 'after',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-          'newlines-between': 'always',
-        },
-      ],
-      'jsx-quotes': ['error', 'prefer-single'],
-      'no-constant-binary-expression': 'off',
       'no-dupe-else-if': 'off',
       'no-empty': 'off',
-      'no-unsafe-optional-chaining': 'off',
-      'no-unused-vars': 'off',
       'prefer-const': [
         'error',
         {
           destructuring: 'all',
         },
       ],
-      'prettier/prettier': 'error',
+      'jsx-quotes': ['error', 'prefer-single'],
       'react/display-name': 'off',
       'react/function-component-definition': [
         'error',
@@ -201,15 +181,62 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
+      'prefer-arrow-functions/prefer-arrow-functions': [
+        'error',
+        {
+          allowNamedFunctions: true,
+        },
+      ],
       'require-yield': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
+      'no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',
         {
-          args: 'after-used',
-          argsIgnorePattern: '^_',
           vars: 'all',
           varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
+      'prettier/prettier': 'error',
+      'no-constant-binary-expression': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      'import-x/newline-after-import': [
+        'error',
+        {
+          count: 1,
+        },
+      ],
+      'no-unsafe-optional-chaining': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
+      'import-x/order': [
+        'error',
+        {
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            {
+              pattern: '@dxos/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+        },
+      ],
+      'sort-imports': [
+        'error',
+        {
+          ignoreCase: false,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
         },
       ],
     },
