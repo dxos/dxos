@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { cancelWithContext, type Context } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type TestSwarmConnection } from '@dxos/network-manager/testing';
 

@@ -2,15 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { line, select, polygonHull, easeCubicOut } from 'd3';
+import { easeCubicOut, line, polygonHull, select } from 'd3';
 import * as Clipper from 'js-clipper';
 
 import { log } from '@dxos/log';
 
+import { type D3Callable, type D3Selection, type Point, getCircumferencePoints } from '../../util';
+import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';
+
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
-import { getCircumferencePoints, type D3Selection, type D3Callable, type Point } from '../../util';
-import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 
 const createLine = line<Point>();
 

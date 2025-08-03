@@ -4,19 +4,19 @@
 
 import { defaultRowSize } from './defs';
 import {
-  type DxGridPlaneCellIndex,
+  type DxGridAxis,
   type DxGridCellIndex,
-  type DxGridPosition,
-  type DxGridPointer,
-  type DxGridSelectionProps,
-  type DxGridPositionNullable,
-  type DxGridPlane,
-  type DxGridFrozenRowsPlane,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
-  type DxGridAxis,
+  type DxGridFrozenRowsPlane,
+  type DxGridPlane,
+  type DxGridPlaneCellIndex,
   type DxGridPlanePosition,
+  type DxGridPointer,
+  type DxGridPosition,
+  type DxGridPositionNullable,
   type DxGridReadonlyValue,
+  type DxGridSelectionProps,
   separator,
 } from './types';
 

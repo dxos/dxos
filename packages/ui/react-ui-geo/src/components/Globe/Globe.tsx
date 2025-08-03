@@ -4,14 +4,14 @@
 
 import {
   type GeoProjection,
+  easeLinear,
+  easeSinOut,
   geoMercator,
   geoOrthographic,
   geoPath,
   geoTransverseMercator,
   interpolateNumber,
   transition,
-  easeLinear,
-  easeSinOut,
 } from 'd3';
 import { type ControlPosition } from 'leaflet';
 import React, {
@@ -26,7 +26,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { type ThemedClassName, type ThemeMode, useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -44,7 +44,7 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { ZoomControls, ActionControls, type ControlProps, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute

@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
+import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { SignalRPCClient } from './signal-rpc-client';
 

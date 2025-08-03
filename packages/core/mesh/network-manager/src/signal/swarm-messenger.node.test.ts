@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test, onTestFinished } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';

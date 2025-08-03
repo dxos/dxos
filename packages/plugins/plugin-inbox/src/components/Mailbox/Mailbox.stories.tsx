@@ -9,7 +9,7 @@ import './mailbox.css';
 import { type Meta } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { IntentPlugin, Surface, SettingsPlugin, useCapability } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin, Surface, useCapability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -23,12 +23,13 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { Mailbox } from './Mailbox';
-import { initializeMailbox } from './testing';
-import { InboxPlugin } from '../../InboxPlugin';
 import { InboxCapabilities } from '../../capabilities/capabilities';
+import { InboxPlugin } from '../../InboxPlugin';
 import { createMessages } from '../../testing';
 import { MailboxType } from '../../types';
+
+import { Mailbox } from './Mailbox';
+import { initializeMailbox } from './testing';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Position, type Size, type CellLayout } from './types';
+import { type CellLayout, type Position, type Size } from './types';
 
 export type Rect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 

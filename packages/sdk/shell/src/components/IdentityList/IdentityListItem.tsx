@@ -7,7 +7,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { generateName } from '@dxos/display-name';
 import { SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { ListItem, Avatar, useId, type ThemedClassName } from '@dxos/react-ui';
+import { Avatar, ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
 import { keyToFallback } from '@dxos/util';
 
 type IdentityListItemProps = {

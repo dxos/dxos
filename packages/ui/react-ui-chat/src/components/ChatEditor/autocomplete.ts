@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec, type Extension } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import {
-  EditorView,
   Decoration,
-  ViewPlugin,
-  keymap,
   type DecorationSet,
+  EditorView,
+  ViewPlugin,
   type ViewUpdate,
   WidgetType,
+  keymap,
 } from '@codemirror/view';
 
 export type AutocompleteOptions = {

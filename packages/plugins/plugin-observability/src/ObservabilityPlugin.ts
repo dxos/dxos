@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { type Observability } from '@dxos/observability';
 
 import {
@@ -14,7 +14,7 @@ import {
   ObservabilityState,
   ReactSurface,
 } from './capabilities';
-import { ObservabilityEvents, ClientReadyEvent } from './events';
+import { ClientReadyEvent, ObservabilityEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 

@@ -3,7 +3,7 @@
 //
 
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
-import { SpaceId, type PublicKey } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 

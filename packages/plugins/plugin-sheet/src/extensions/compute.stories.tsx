@@ -19,14 +19,15 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
 
-import { compute, computeGraphFacet } from './compute';
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
+
+import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');
 

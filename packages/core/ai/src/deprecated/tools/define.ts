@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 
 import { type Message } from './message';
-import { type Tool, ToolResult, type ToolExecutionContext, type ExecutableTool } from './tool';
+import { type ExecutableTool, type Tool, type ToolExecutionContext, ToolResult } from './tool';
 
 const createToolName = (name: string) => {
   return name.replace(/[^\w-]/g, '_');

@@ -5,7 +5,7 @@
 import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -14,10 +14,10 @@ import React, {
   type ComponentPropsWithoutRef,
   type Dispatch,
   type ElementRef,
-  forwardRef,
   type ForwardRefExoticComponent,
   type RefAttributes,
   type SetStateAction,
+  forwardRef,
 } from 'react';
 
 import { useId } from '@dxos/react-hooks';

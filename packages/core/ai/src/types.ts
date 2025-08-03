@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OPENAI_MODELS } from './defs';
+import { DEFAULT_EDGE_MODELS, DEFAULT_LMSTUDIO_MODELS, DEFAULT_OLLAMA_MODELS, DEFAULT_OPENAI_MODELS } from './defs';
 
 // TODO(dmaretskyi): Rename `ModelName`.
 export const LLMModel = Schema.Literal(

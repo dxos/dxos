@@ -10,9 +10,10 @@ import { type Signal, signal } from '@preact/signals-core';
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
+import { type AiServiceClient, type GenerationStream } from '../deprecated/service';
+import { type GenerateRequest, type GenerateResponse, type GenerationStreamEvent } from '../types';
+
 import { createReplaySSEStream } from './test-stream';
-import { type GenerationStream, type AiServiceClient } from '../deprecated/service';
-import { type GenerationStreamEvent, type GenerateRequest, type GenerateResponse } from '../types';
 
 declare const createGenerationStream: any;
 declare const GenerationStreamImpl: any;

@@ -2,15 +2,16 @@
 // Copyright 2020 DXOS.org
 //
 
+import { type InspectOptionsStylized, type inspect } from 'node:util';
+
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import { type inspect, type InspectOptionsStylized } from 'node:util';
 
 import {
-  devtoolsFormatter,
   type DevtoolsFormatter,
-  equalsSymbol,
   type Equatable,
+  devtoolsFormatter,
+  equalsSymbol,
   inspectCustom,
   truncateKey,
 } from '@dxos/debug';

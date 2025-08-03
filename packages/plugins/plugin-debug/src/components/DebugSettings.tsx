@@ -5,10 +5,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ConfigProto, defs, SaveConfig, Storage } from '@dxos/config';
+import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useTranslation, Button, Toast, Input, useFileDownload, Select, Icon } from '@dxos/react-ui';
+import { Button, Icon, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 

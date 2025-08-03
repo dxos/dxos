@@ -3,7 +3,7 @@
 //
 
 import { type Obj, type Relation } from '@dxos/echo';
-import { ObjectId, type BaseEchoObject, type HasId } from '@dxos/echo-schema';
+import { type BaseEchoObject, type HasId, ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';

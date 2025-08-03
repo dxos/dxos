@@ -10,14 +10,15 @@ import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { ControlItem, controlItemClasses, ControlPage, ControlSection, Form } from '@dxos/react-ui-form';
+import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { NewTokenSelector } from './NewTokenSelector';
-import { TokenManager } from './TokenManager';
 import { TOKEN_MANAGER_PLUGIN } from '../meta';
 import { TokenManagerAction } from '../types';
+
+import { NewTokenSelector } from './NewTokenSelector';
+import { TokenManager } from './TokenManager';
 
 const initialValues = {
   note: '',

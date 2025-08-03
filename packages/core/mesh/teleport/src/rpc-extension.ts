@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { type ExtensionContext, type TeleportExtension } from './teleport';
 

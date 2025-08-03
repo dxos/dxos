@@ -5,22 +5,23 @@
 import { useMachine } from '@xstate/react';
 import { useCallback } from 'react';
 import {
-  assign,
-  createMachine,
   type InterpreterFrom,
   type StateFrom,
   type StateNodeConfig,
   type Subscribable,
   type Subscription,
+  assign,
+  createMachine,
 } from 'xstate';
 
 import { log } from '@dxos/log';
-import { type Client, AlreadyJoinedError } from '@dxos/react-client';
+import { AlreadyJoinedError, type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
-import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 import { type FailReason } from '../../types';
+
+import { type JoinPanelInitialDisposition, type JoinPanelMode } from './JoinPanelProps';
 
 type InvitationKindContext = Partial<{
   failReason: FailReason | null;

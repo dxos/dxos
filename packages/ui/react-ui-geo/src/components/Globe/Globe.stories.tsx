@@ -11,12 +11,13 @@ import React, { useMemo, useRef, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncState } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
+import { type LatLng, type StyleSet, closestPoint } from '../../util';
+import { type ControlProps } from '../Toolbar';
 
 import { Globe, type GlobeCanvasProps, type GlobeController, type GlobeRootProps } from './Globe';
-import { useDrag, useGlobeZoomHandler, useSpinner, useTour, type Vector } from '../../hooks';
-import { closestPoint, type LatLng, type StyleSet } from '../../util';
-import { type ControlProps } from '../Toolbar';
 
 // TODO(burdon): Load from JSON at runtime?
 const useTopology = () => {

@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 import React, { type FC } from 'react';
 
-import { getAnchorPoints, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeDef, getAnchorPoints } from '@dxos/react-ui-canvas-editor';
 import { createAnchors } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 //
 // Gate utils.

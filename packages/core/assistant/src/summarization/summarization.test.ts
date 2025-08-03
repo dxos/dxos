@@ -5,14 +5,14 @@
 // TODO(burdon): Fix.
 // @ts-nocheck
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
 import { AiService, MixedStreamParser } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';

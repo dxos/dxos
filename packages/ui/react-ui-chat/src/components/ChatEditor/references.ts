@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { autocompletion, completionKeymap, type CompletionResult } from '@codemirror/autocomplete';
+import { type CompletionResult, autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { type Extension, RangeSet } from '@codemirror/state';
 import {
   Decoration,

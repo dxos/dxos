@@ -3,14 +3,14 @@
 //
 
 import * as fc from 'fast-check';
-import { onTestFinished, describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 

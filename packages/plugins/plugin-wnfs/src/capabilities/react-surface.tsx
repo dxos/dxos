@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
-import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type InputProps } from '@dxos/react-ui-form';

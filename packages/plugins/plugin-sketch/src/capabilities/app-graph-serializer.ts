@@ -4,14 +4,14 @@
 
 import { pipe } from 'effect';
 
-import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { translations } from '../translations';
-import { SketchAction, DiagramType } from '../types';
+import { DiagramType, SketchAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [

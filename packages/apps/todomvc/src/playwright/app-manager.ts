@@ -4,7 +4,7 @@
 
 import { type Browser, type ConsoleMessage, type Page } from '@playwright/test';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test-utils/playwright';
 

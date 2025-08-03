@@ -6,10 +6,10 @@ import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from 
 import { Effect } from 'effect';
 
 import {
-  type ToolExecutionService,
-  type ToolResolverService,
   type AiInputPreprocessingError,
   type AiToolNotFoundError,
+  type ToolExecutionService,
+  type ToolResolverService,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';

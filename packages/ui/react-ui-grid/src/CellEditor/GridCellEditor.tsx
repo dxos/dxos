@@ -4,8 +4,9 @@
 
 import React, { useCallback } from 'react';
 
+import { type DxGridCellIndex, type GridScopedProps, useGridContext } from '../Grid';
+
 import { CellEditor, type CellEditorProps } from './CellEditor';
-import { type GridScopedProps, useGridContext, type DxGridCellIndex } from '../Grid';
 
 export type GridCellEditorProps = GridScopedProps<
   Pick<CellEditorProps, 'extension' | 'onBlur' | 'slots'> & {

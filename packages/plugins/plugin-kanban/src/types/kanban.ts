@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { KanbanView } from '@dxos/react-ui-kanban';
-import { type DataType, type CreateViewFromSpaceProps, createViewFromSpace, ProjectionModel } from '@dxos/schema';
+import { type CreateViewFromSpaceProps, type DataType, ProjectionModel, createViewFromSpace } from '@dxos/schema';
 
 type InitializeKanbanProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
   initialPivotColumn?: string;

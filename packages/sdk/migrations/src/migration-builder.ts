@@ -2,19 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as am, type Doc } from '@automerge/automerge';
+import { type Doc, next as am } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import { type Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { ObjectCore, migrateDocument, type DocHandleProxy, type RepoProxy } from '@dxos/echo-db';
+import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import {
+  type DatabaseDirectory,
+  type ObjectStructure,
   Reference,
   SpaceDocVersion,
   encodeReference,
-  type DatabaseDirectory,
-  type ObjectStructure,
 } from '@dxos/echo-protocol';
 import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';

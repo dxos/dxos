@@ -18,9 +18,9 @@ import {
   type ComputeGraph,
   ComputeGraphModel,
   NotExecuted,
+  ValueBag,
   VoidOutput,
   defineComputeNode,
-  ValueBag,
   synchronizedComputeFunction,
 } from '../types';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineEvent, Events } from '@dxos/app-framework';
+import { Events, defineEvent } from '@dxos/app-framework';
 
 import { OBSERVABILITY_PLUGIN } from './meta';
 

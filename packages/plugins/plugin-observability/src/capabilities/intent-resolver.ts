@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, IntentAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, IntentAction, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
-import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 import { type ObservabilitySettingsProps } from '../components';
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
+
+import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 
 export default ({ context, namespace }: { context: PluginContext; namespace: string }) =>
   contributes(Capabilities.IntentResolver, [

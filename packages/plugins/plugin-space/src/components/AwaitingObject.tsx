@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher, useLayout } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher, useLayout } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';

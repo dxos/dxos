@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { log } from '@dxos/log';
 

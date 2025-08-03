@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, type Message, ToolId, ToolTypes } from '@dxos/ai';
+import { type Message, ToolId, ToolTypes, defineTool } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -14,8 +14,9 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type GptInput, gptNode } from './node';
 import { ValueBag } from '../../types';
+
+import { type GptInput, gptNode } from './node';
 
 const ENABLE_LOGGING = true;
 

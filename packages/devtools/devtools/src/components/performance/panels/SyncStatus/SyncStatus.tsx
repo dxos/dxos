@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type PeerSyncState, type SpaceSyncStateMap, type SpaceId } from '@dxos/react-client/echo';
+import { type PeerSyncState, type SpaceId, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';

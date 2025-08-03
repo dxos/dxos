@@ -6,16 +6,16 @@ import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
-import { cancelWithContext, type Context } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
-import { type SpaceState, DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { DatabaseDirectory, SpaceDocVersion, type SpaceState } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { type RepoProxy, type DocHandleProxy } from '../automerge';
+import { type DocHandleProxy, type RepoProxy } from '../automerge';
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 

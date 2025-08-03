@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { Option } from 'effect';
 
-import { Capabilities as AppCapabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities as AppCapabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Keyboard } from '@dxos/keyboard';
 
 import { AttentionCapabilities } from './capabilities';

@@ -9,11 +9,11 @@ import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import {
-  type PeerInfo,
   type AutomergeReplicatorService,
+  type PeerInfo,
   type SyncMessage,
 } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type AutomergeReplicatorParams = {

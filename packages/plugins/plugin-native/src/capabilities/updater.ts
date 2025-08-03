@@ -4,10 +4,10 @@
 
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { check, type DownloadEvent } from '@tauri-apps/plugin-updater';
-import { Duration, Effect, Fiber, Match, pipe, Schedule } from 'effect';
+import { type DownloadEvent, check } from '@tauri-apps/plugin-updater';
+import { Duration, Effect, Fiber, Match, Schedule, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { NATIVE_PLUGIN } from '../meta';

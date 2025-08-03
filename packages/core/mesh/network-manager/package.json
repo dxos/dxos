@@ -20,32 +20,32 @@
       "default": "node-datachannel/*"
     },
     "#tcp-transport": {
+      "source": "./src/transport/tcp/index.ts",
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
       "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
       "import": "./dist/lib/browser/transport/tcp/index.mjs",
-      "require": "./dist/lib/node-esm/transport/tcp/index.mjs",
-      "source": "./src/transport/tcp/index.ts"
+      "require": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs",
-      "source": "./src/testing/index.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./transport/tcp": {
+      "source": "./src/transport/tcp/index.ts",
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "browser": "./dist/lib/browser/transport/tcp/index.mjs",
-      "node": "./dist/lib/node-esm/transport/tcp/index.mjs",
-      "source": "./src/transport/tcp/index.ts"
+      "node": "./dist/lib/node-esm/transport/tcp/index.mjs"
     }
   },
   "browser": {

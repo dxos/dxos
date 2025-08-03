@@ -6,23 +6,24 @@ import { computed, untracked } from '@preact/signals-core';
 import { Schema } from 'effect';
 
 import {
-  formatToType,
-  typeToFormat,
   FormatEnum,
   type JsonProp,
-  TypeEnum,
   type JsonSchemaType,
+  TypeEnum,
+  formatToType,
+  typeToFormat,
 } from '@dxos/echo-schema';
-import { getSchemaReference, createSchemaReference } from '@dxos/echo-schema';
+import { createSchemaReference, getSchemaReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSnapshot, type Live } from '@dxos/live-object';
+import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { omit, pick } from '@dxos/util';
 
-import { type FieldType } from './field';
-import { createFieldId, type Projection } from './view';
 import { PropertySchema, type PropertyType } from '../format';
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from '../util';
+
+import { type FieldType } from './field';
+import { type Projection, createFieldId } from './view';
 
 export const VIEW_FIELD_LIMIT = 32;
 

@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ProtocolStream } from 'hypercore-protocol';
 import { type Duplex } from 'node:stream';
 
-import { asyncTimeout, DeferredTask, synchronized } from '@dxos/async';
+import type { ProtocolStream } from 'hypercore-protocol';
+
+import { DeferredTask, asyncTimeout, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { type FeedWrapper } from '@dxos/feed-store';
@@ -15,7 +16,7 @@ import { log, logInfo } from '@dxos/log';
 import { RpcClosedError, TimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type FeedInfo, type ReplicatorService } from '@dxos/protocols/proto/dxos/mesh/teleport/replicator';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 import { ComplexMap } from '@dxos/util';
 

@@ -5,7 +5,7 @@
 import { RegistryContext, type Rx, useRxValue } from '@effect-rx/rx-react';
 import { useCallback, useContext, useEffect, useState } from 'react';
 
-import { type Edge, type Edges, Graph, type NodeArg, type Node, ROOT_ID } from '@dxos/app-graph';
+import { type Edge, type Edges, Graph, type Node, type NodeArg, ROOT_ID } from '@dxos/app-graph';
 
 import { type MenuItem, type MenuItemGroup } from '../types';
 

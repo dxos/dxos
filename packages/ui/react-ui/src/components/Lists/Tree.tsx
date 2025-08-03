@@ -2,9 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
+import React, { type ComponentPropsWithoutRef, type FC, type ForwardRefExoticComponent, forwardRef } from 'react';
+
+import { type ThemedClassName } from '../../util';
 
 import {
+  LIST_ITEM_NAME,
   List,
   ListItem,
   type ListItemCollapsibleContentProps,
@@ -13,11 +16,9 @@ import {
   type ListItemRootProps,
   type ListProps,
   type ListScopedProps,
-  LIST_ITEM_NAME,
   useListItemContext,
 } from './List';
 import { TreeDropIndicator } from './TreeDropIndicator';
-import { type ThemedClassName } from '../../util';
 
 type TreeRootProps = ListProps;
 

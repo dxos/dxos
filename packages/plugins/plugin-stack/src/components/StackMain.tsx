@@ -16,14 +16,12 @@ import {
 import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Icon, Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
 import { Stack } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { StackContext } from './StackContext';
-import { StackSection } from './StackSection';
 import { STACK_PLUGIN } from '../meta';
 import {
   type AddSectionPosition,
@@ -32,6 +30,9 @@ import {
   type StackSectionMetadata,
   type StackSectionView,
 } from '../types';
+
+import { StackContext } from './StackContext';
+import { StackSection } from './StackSection';
 
 type StackMainProps = {
   id: string;

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { DxRefTagActivate, type DxRefTag } from '@dxos/lit-ui';
+import { type DxRefTag, DxRefTagActivate } from '@dxos/lit-ui';
 import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';

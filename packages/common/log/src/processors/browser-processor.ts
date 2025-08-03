@@ -5,7 +5,7 @@
 import { getDebugName, safariCheck } from '@dxos/util';
 
 import { LogLevel } from '../config';
-import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
   // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)

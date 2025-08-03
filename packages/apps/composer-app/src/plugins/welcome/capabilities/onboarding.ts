@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { WelcomeCapabilities } from './capabilities';
 import { OnboardingManager } from '../onboarding-manager';
+
+import { WelcomeCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);

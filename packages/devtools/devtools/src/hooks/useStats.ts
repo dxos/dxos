@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 
 import { SpaceState } from '@dxos/client/echo';
 import { type NetworkStatus } from '@dxos/client/mesh';
-import { type EchoStatsDiagnostic, type EchoDataStats } from '@dxos/echo-pipeline';
+import { type EchoDataStats, type EchoStatsDiagnostic } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
 import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { type Diagnostics, TRACE_PROCESSOR, type DiagnosticsRequest } from '@dxos/tracing';
+import { type Diagnostics, type DiagnosticsRequest, TRACE_PROCESSOR } from '@dxos/tracing';
 import { DiagnosticsChannel } from '@dxos/tracing';
 import { get } from '@dxos/util';
 

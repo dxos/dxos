@@ -3,7 +3,7 @@
 //
 
 import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -11,8 +11,8 @@ import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type TraceEvent } from '../analysys';
-import { ReplicantRegistry, type ReplicantEnv } from '../env';
-import { type TestPeer, TestBuilder } from '../test-builder';
+import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { TestBuilder, type TestPeer } from '../test-builder';
 import { randomArraySlice } from '../util';
 
 export type ReplicantRunParams = {

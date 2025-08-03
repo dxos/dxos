@@ -6,8 +6,9 @@ import React from 'react';
 
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Journal } from './Journal';
 import { type JournalType } from '../types';
+
+import { Journal } from './Journal';
 
 export type JournalContainerProps = {
   role: string;

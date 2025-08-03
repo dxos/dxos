@@ -3,7 +3,7 @@
 //
 
 import { type PublicKey } from '@dxos/client';
-import { type Presentation, type Credential, type Identity } from '@dxos/client/halo';
+import { type Credential, type Identity, type Presentation } from '@dxos/client/halo';
 
 import { codec } from './codec';
 

@@ -7,7 +7,7 @@ import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, use
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext, type Valence } from './Root';
+import { INPUT_NAME, type InputScopedProps, type Valence, useInputContext } from './Root';
 
 type PinInputProps = Omit<
   ComponentPropsWithRef<typeof CodeInput>,

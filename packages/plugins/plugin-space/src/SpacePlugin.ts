@@ -17,7 +17,7 @@ import {
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { createDefaultSchema, DataType, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2 } from '@dxos/schema';
+import { DataType, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -31,13 +31,13 @@ import {
   SchemaTools,
   SpaceCapabilities,
   SpaceSettings,
-  SpacesReady,
   SpaceState,
+  SpacesReady,
 } from './capabilities';
 import { SpaceEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CollectionAction, defineObjectForm, SpaceAction } from './types';
+import { CollectionAction, SpaceAction, defineObjectForm } from './types';
 
 export type SpacePluginOptions = {
   /**

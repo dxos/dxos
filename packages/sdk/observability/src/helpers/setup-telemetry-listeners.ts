@@ -4,8 +4,9 @@
 
 import type { Client } from '@dxos/client';
 
-import { getTelemetryIdentity } from './common';
 import { type Observability } from '../observability';
+
+import { getTelemetryIdentity } from './common';
 
 let lastFocusEvent = new Date();
 let totalTime = 0;

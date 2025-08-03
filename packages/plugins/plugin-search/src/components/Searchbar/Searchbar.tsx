@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { Input, type TextInputProps, Icon } from '@dxos/react-ui';
+import { Icon, Input, type TextInputProps } from '@dxos/react-ui';
 
 export type SearchbarProps = Pick<TextInputProps, 'variant' | 'placeholder'> & {
   classes?: {

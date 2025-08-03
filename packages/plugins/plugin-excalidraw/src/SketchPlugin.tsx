@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { SpaceCapabilities } from '@dxos/plugin-space';

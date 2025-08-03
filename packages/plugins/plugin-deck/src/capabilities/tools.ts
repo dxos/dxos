@@ -4,13 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
+import { ToolResult, createTool } from '@dxos/ai';
 import {
-  contributes,
-  createIntent,
   Capabilities,
   LayoutAction,
   type PromiseIntentDispatcher,
+  contributes,
+  createIntent,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 

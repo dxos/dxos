@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, onTestFinished, beforeAll, test, describe } from 'vitest';
+import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
+import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { messengerTests } from './messenger.blueprint-test';
 import { WebsocketSignalManager } from './signal-manager';

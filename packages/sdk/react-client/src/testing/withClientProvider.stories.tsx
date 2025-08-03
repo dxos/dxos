@@ -10,9 +10,10 @@ import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { withClientProvider, type WithClientProviderProps, withMultiClientProvider } from './withClientProvider';
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
+
+import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
 
 const SpaceInfo = ({ space }: { space: Space }) => {
   const name = space.isOpen ? space.properties.name : '';

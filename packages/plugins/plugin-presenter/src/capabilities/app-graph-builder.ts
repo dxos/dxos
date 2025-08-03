@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { contributes, type PluginContext, Capabilities, createIntent, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';

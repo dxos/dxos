@@ -6,8 +6,9 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { ContextMenu } from './ContextMenu';
 import { withTheme } from '../../testing';
+
+import { ContextMenu } from './ContextMenu';
 
 const DefaultStory = () => {
   // NOTE(thure): Since long-tap will select text in some OSs, apply `select-none` to `ContextMenu.Trigger` where possible.

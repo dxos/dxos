@@ -9,8 +9,9 @@ import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { FunctionsPanel } from './FunctionsPanel';
 import { AUTOMATION_PLUGIN } from '../meta';
+
+import { FunctionsPanel } from './FunctionsPanel';
 
 export const FunctionsContainer = ({ space }: { space: Space }) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);

@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, Option, pipe } from 'effect';
+import { Option, Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 
 import {
+  type BaseObject,
   FormatEnum,
+  type JsonSchemaType,
+  OptionsAnnotationId,
+  type OptionsAnnotationType,
+  type PropertyKey,
   getFormatAnnotation,
   getSchemaReference,
-  type BaseObject,
-  type JsonSchemaType,
-  type OptionsAnnotationType,
-  OptionsAnnotationId,
-  type PropertyKey,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,

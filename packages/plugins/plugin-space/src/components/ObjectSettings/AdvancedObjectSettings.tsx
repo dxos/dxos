@@ -9,8 +9,9 @@ import { ForeignKey } from '@dxos/echo-schema';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { ForeignKeys } from './ForeignKeys';
 import { SPACE_PLUGIN } from '../../meta';
+
+import { ForeignKeys } from './ForeignKeys';
 
 const initialValues = {
   source: '',

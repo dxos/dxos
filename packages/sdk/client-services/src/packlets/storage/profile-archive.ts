@@ -7,7 +7,7 @@ import { cbor } from '@automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { ProfileArchiveEntryType, type ProfileArchive } from '@dxos/protocols';
+import { type ProfileArchive, ProfileArchiveEntryType } from '@dxos/protocols';
 import type { Storage } from '@dxos/random-access-storage';
 import { arrayToBuffer } from '@dxos/util';
 

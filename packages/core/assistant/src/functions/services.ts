@@ -6,7 +6,7 @@ import { AiTool } from '@effect/ai';
 import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { LocalFunctionExecutionService, type FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition, LocalFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (

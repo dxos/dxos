@@ -4,12 +4,12 @@
 
 import { Effect, Option, ParseResult, Schema, SchemaAST } from 'effect';
 
-import { Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, Reference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 

@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { flock } from 'fs-ext';
 import { existsSync } from 'node:fs';
-import { open, type FileHandle, constants } from 'node:fs/promises';
+import { type FileHandle, constants, open } from 'node:fs/promises';
+
+import { flock } from 'fs-ext';
 
 export class LockFile {
   static async acquire(filename: string): Promise<FileHandle> {

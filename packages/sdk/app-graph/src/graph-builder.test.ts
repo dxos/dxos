@@ -6,10 +6,10 @@ import { Registry, Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 
 import { ROOT_ID } from './graph';
-import { createExtension, GraphBuilder } from './graph-builder';
+import { GraphBuilder, createExtension } from './graph-builder';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;

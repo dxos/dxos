@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import type { BaseEchoObject } from '@dxos/echo-schema';
 
-import { getObjectCore, type AnyLiveObject } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 
 /**
  * @param obj

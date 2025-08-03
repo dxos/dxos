@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -17,11 +17,12 @@ import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { createTable, translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { TableView } from '@dxos/react-ui-table/types';
-import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
+import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TableCard } from './TableCard';
 import { translations } from '../translations';
+
+import { TableCard } from './TableCard';
 
 faker.seed(1234);
 

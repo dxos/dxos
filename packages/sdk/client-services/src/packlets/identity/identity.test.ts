@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createDidFromIdentityKey, CredentialGenerator, verifyCredential } from '@dxos/credentials';
+import { CredentialGenerator, createDidFromIdentityKey, verifyCredential } from '@dxos/credentials';
 import {
-  createIdFromSpaceKey,
-  MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
+  MetadataStore,
   Space,
   SpaceProtocol,
+  createIdFromSpaceKey,
   valueEncoding,
 } from '@dxos/echo-pipeline';
 import { type EdgeConnection, type MessageListener } from '@dxos/edge-client';
@@ -26,7 +26,7 @@ import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manag
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { Identity } from './identity';

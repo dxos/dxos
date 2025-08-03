@@ -11,24 +11,25 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
 } from '../ast';
 import { EntityKind, EntityKindSchema } from '../ast';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
-  getNormalizedEchoAnnotations,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
+  getNormalizedEchoAnnotations,
 } from '../json-schema';
 import { Expando } from '../object';
-import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
+
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 
 /**
  * Create object jsonSchema.

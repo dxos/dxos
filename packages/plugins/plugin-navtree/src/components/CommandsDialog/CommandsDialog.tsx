@@ -4,11 +4,11 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type ActionLike, isAction, isActionGroup } from '@dxos/app-graph';
 import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { useActions } from '@dxos/plugin-graph';
-import { Button, Dialog, Icon, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Button, Dialog, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import {
   cardDialogContent,

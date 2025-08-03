@@ -6,14 +6,14 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { computed, effect } from '@preact/signals-core';
 
-import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { getSpace, getTextInRange, createDocAccessor, fullyQualifiedId, getSource } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSource, getSpace, getTextInRange } from '@dxos/react-client/echo';
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo } from '@dxos/schema';
 
-import { ThreadAction, ThreadType, type ThreadState } from '../types';
+import { ThreadAction, type ThreadState, ThreadType } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { type SheetType } from '../../types';

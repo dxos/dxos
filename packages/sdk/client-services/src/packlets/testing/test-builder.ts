@@ -4,9 +4,9 @@
 
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
+import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { EchoHost, MetadataStore, SpaceManager, valueEncoding, MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { EchoHost, MeshEchoReplicator, MetadataStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
@@ -14,7 +14,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext, type SignalManager } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';

@@ -6,7 +6,7 @@ import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
 import { type MessageData } from './message';
-import { createIFramePort, createWorkerPort, type IFramePortOptions, type WorkerPortOptions } from './ports';
+import { type IFramePortOptions, type WorkerPortOptions, createIFramePort, createWorkerPort } from './ports';
 
 /**
  * Facilitates the multiplexing of multiple RpcPorts over a single MessagePort.

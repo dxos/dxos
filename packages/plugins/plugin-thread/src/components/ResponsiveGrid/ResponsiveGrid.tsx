@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, type FC, useLayoutEffect, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { type ComponentType, type FC, useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';

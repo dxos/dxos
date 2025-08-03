@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
-import { OutlinerAction, JournalType, createJournalEntry, createOutline } from '../types';
+import { JournalType, OutlinerAction, createJournalEntry, createOutline } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [

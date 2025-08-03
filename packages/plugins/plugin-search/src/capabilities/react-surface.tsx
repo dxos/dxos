@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { isSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG, SearchDialog, type SearchDialogProps, SearchMain } from '../components';
 import { SearchContextProvider } from '../hooks';

@@ -8,12 +8,12 @@ import { StackTrace } from '@dxos/debug';
 import type { Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
-  ImmutableSchema,
-  RuntimeSchemaRegistry,
   type AnyEchoObject,
   type BaseObject,
   type BaseSchema,
+  ImmutableSchema,
   type ObjectId,
+  RuntimeSchemaRegistry,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
@@ -27,13 +27,13 @@ import { type AnyLiveObject } from './echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
-  normalizeQuery,
-  QueryResult,
-  SpaceQuerySource,
   type QueryContext,
   type QueryFn,
   type QueryOptions,
+  QueryResult,
   type QuerySource,
+  SpaceQuerySource,
+  normalizeQuery,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
 

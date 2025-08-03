@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Stream, Schema } from 'effect';
+import { Effect, Schema, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
 import { createTestServices } from '@dxos/functions/testing';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
-import { ComputeGraphModel, defineComputeNode, ValueBag, synchronizedComputeFunction } from '../types';
+import { ComputeGraphModel, ValueBag, defineComputeNode, synchronizedComputeFunction } from '../types';
 import { StreamSchema } from '../util';
 
 const ENABLE_LOGGING = false;

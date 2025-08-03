@@ -8,7 +8,7 @@ import { type MixedEncoding } from 'level-transcoder';
 import { Event } from '@dxos/async';
 import type { ProtoCodec } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
-import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
+import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';

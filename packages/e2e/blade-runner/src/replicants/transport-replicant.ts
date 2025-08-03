@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { asyncTimeout, sleep, scheduleTaskInterval } from '@dxos/async';
+import { asyncTimeout, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

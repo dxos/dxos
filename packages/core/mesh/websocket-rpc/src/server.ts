@@ -3,11 +3,12 @@
 //
 
 import { type IncomingMessage } from 'http';
-import WebSocket from 'isomorphic-ws';
 import { type Socket } from 'node:net';
 
+import WebSocket from 'isomorphic-ws';
+
 import { log } from '@dxos/log';
-import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 export type ConnectionInfo = {
   request: IncomingMessage;

@@ -1,7 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
-import { renderTokenSet, type TokenSet } from '@ch-ui/tokens';
+import { type TokenSet, renderTokenSet } from '@ch-ui/tokens';
 
 import { log } from '@dxos/log';
 import { userDefaultTokenSet } from '@dxos/react-ui-theme';

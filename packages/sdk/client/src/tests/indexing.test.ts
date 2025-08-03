@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, Trigger, TriggerState } from '@dxos/async';
+import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
 import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
 import { Expando, Ref } from '@dxos/echo-schema';
@@ -13,7 +13,7 @@ import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
 import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';

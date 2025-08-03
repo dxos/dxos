@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { Client } from '@dxos/react-client';
 
-import { ClientCapabilities } from './capabilities';
 import { ClientEvents } from '../events';
 import { type ClientPluginOptions } from '../types';
+
+import { ClientCapabilities } from './capabilities';
 
 type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationUrl' | 'invitationParam' | 'onReset'> & {
   context: PluginContext;

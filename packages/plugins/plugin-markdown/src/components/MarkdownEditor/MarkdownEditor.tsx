@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { forwardRef, useMemo, useEffect, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
@@ -20,11 +20,12 @@ import {
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
   RefPopover,
+  type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
-  createElement,
   coreSlashCommands,
   createBasicExtensions,
+  createElement,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
@@ -34,14 +35,13 @@ import {
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
+  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
   useTextEditor,
-  useCommandMenu,
-  type UseCommandMenuOptions,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNotFalsy, isNonNullable } from '@dxos/util';
+import { isNonNullable, isNotFalsy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';

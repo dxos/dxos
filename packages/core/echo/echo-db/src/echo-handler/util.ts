@@ -6,11 +6,12 @@ import { Reference } from '@dxos/echo-protocol';
 import { type BaseObject, type ForeignKey } from '@dxos/echo-schema';
 import { getMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getProxyTarget, type Live } from '@dxos/live-object';
+import { type Live, getProxyTarget } from '@dxos/live-object';
 
-import { isEchoObject, type AnyLiveObject } from './echo-handler';
-import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import { type EchoDatabase } from '../proxy-db';
+
+import { type AnyLiveObject, isEchoObject } from './echo-handler';
+import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
 
 export const getDatabaseFromObject = (obj: Live<any>): EchoDatabase | undefined => {
   if (!isEchoObject(obj)) {

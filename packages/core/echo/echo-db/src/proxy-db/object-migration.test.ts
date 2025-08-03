@@ -6,22 +6,23 @@ import { Schema, SchemaAST } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import {
-  getSchema,
-  getSchemaDXN,
-  getSchemaVersion,
-  getTypename,
   FieldSortType,
   JsonPath,
   JsonSchemaType,
   QueryType,
   TypedObject,
+  getSchema,
+  getSchemaDXN,
+  getSchemaVersion,
+  getTypename,
 } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 
-import { defineObjectMigration } from './object-migration';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
+
+import { defineObjectMigration } from './object-migration';
 
 let builder: EchoTestBuilder;
 

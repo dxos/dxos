@@ -7,16 +7,17 @@ import { type ClientServices, type ClientServicesProvider, clientServiceBundle }
 import type { Stream } from '@dxos/codec-protobuf/stream';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
-import { type LogFilter, parseFilter, log, type CallMetadata } from '@dxos/log';
+import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
-import { ClientServicesProxy } from './service-proxy';
-import { SharedWorkerConnection } from './shared-worker-connection';
 import { RPC_TIMEOUT } from '../common';
 import { LOCK_KEY } from '../lock-key';
+
+import { ClientServicesProxy } from './service-proxy';
+import { SharedWorkerConnection } from './shared-worker-connection';
 
 /**
  * Creates services provider connected via worker.

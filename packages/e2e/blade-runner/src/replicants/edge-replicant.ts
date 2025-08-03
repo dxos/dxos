@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { asyncTimeout, Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';

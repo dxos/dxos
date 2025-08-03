@@ -19,8 +19,8 @@ import {
   type TableFeatures,
   TablePresentation,
   TableToolbar,
-  useTableModel,
   useAddRow,
+  useTableModel,
 } from '@dxos/react-ui-table';
 import { type DataType } from '@dxos/schema';
 

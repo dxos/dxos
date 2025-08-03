@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { createCards, Defaultstory, type DefaultstoryProps } from './testing';
 import { translations } from '../translations';
+
+import { Defaultstory, type DefaultstoryProps, createCards } from './testing';
 
 const meta: Meta<DefaultstoryProps> = {
   title: 'plugins/plugin-preview/Card',

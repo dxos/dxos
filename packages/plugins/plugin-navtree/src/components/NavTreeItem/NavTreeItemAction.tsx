@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
-import { useTranslation, toLocalizedString, IconButton, useDensityContext } from '@dxos/react-ui';
-import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
+import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
 
 import { NAVTREE_PLUGIN } from '../../meta';

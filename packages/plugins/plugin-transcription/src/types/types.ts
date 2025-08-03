@@ -6,8 +6,9 @@ import { Schema } from 'effect';
 
 import { SpaceId } from '@dxos/react-client/echo';
 
-import { TranscriptType } from './schema';
 import { TRANSCRIPTION_PLUGIN } from '../meta';
+
+import { TranscriptType } from './schema';
 
 // TODO(burdon): Move to separate proto.
 

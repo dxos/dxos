@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, LayoutAction } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { SpaceCapabilities, SpaceEvents, SPACES } from '@dxos/plugin-space';
+import { LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
 

@@ -3,16 +3,16 @@
 //
 
 import { Event } from '@dxos/async';
-import { appServiceBundle, type AppServiceBundle, type ShellRuntime, shellServiceBundle } from '@dxos/client-protocol';
+import { type AppServiceBundle, type ShellRuntime, appServiceBundle, shellServiceBundle } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import {
   type AppContextRequest,
+  type InvitationUrlRequest,
   type LayoutRequest,
   ShellLayout,
-  type InvitationUrlRequest,
 } from '@dxos/protocols/proto/dxos/iframe';
-import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 
 /**
  * Endpoint that handles shell services.

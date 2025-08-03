@@ -7,7 +7,7 @@ import { Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   createBasicExtensions,

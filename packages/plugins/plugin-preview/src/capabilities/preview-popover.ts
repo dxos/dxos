@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, LayoutAction, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
 import { type Client, resolveRef } from '@dxos/client';
-import { parseId, type Space } from '@dxos/client/echo';
+import { type Space, parseId } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';

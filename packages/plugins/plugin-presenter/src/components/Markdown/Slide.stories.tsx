@@ -6,8 +6,9 @@ import '@dxos-theme';
 
 import { type Meta } from '@storybook/react-vite';
 
-import { Slide } from './Slide';
 import { createSlide } from '../../testing';
+
+import { Slide } from './Slide';
 
 const meta: Meta = {
   title: 'plugins/plugin-presenter/Slide',

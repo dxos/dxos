@@ -3,33 +3,34 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithoutRef, type FC, forwardRef, type ForwardRefExoticComponent } from 'react';
+import React, { type ComponentPropsWithoutRef, type FC, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import {
+  LIST_ITEM_NAME,
+  LIST_NAME,
+  ListItemCollapsibleContent,
+  type ListItemCollapsibleContentProps,
+  type ListItemScopedProps,
   List as ListPrimitive,
-  type ListProps as ListPrimitiveProps,
-  type ListScopedProps,
+  ListItem as ListPrimitiveItem,
   ListItemHeading as ListPrimitiveItemHeading,
   type ListItemHeadingProps as ListPrimitiveItemHeadingProps,
   ListItemOpenTrigger as ListPrimitiveItemOpenTrigger,
   type ListItemOpenTriggerProps as ListPrimitiveItemOpenTriggerProps,
-  ListItemCollapsibleContent,
-  type ListItemCollapsibleContentProps,
-  ListItem as ListPrimitiveItem,
   type ListItemProps as ListPrimitiveItemProps,
-  type ListItemScopedProps,
-  LIST_NAME,
-  LIST_ITEM_NAME,
+  type ListProps as ListPrimitiveProps,
+  type ListScopedProps,
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
 import { type Density } from '@dxos/react-ui-types';
 
-import { ListDropIndicator } from './ListDropIndicator';
 import { useDensityContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';
+
+import { ListDropIndicator } from './ListDropIndicator';
 
 type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
 

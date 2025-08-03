@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
+import { type BaseEchoObject, ObjectId } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(dmaretskyi): Extract.

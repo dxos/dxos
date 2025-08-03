@@ -7,13 +7,13 @@ import { untracked } from '@preact/signals-core';
 import { Array as A, Effect, Either, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { type AnyCapability, PluginContext } from './capabilities';
 import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
-import { type PluginModule, type Plugin } from './plugin';
+import { type Plugin, type PluginModule } from './plugin';
 
 // TODO(wittjosiah): Factor out?
 const isPromise = (value: unknown): value is Promise<unknown> => {

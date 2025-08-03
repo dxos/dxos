@@ -11,7 +11,7 @@ import type { Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { createPopperScope, type PopperAnchorProps } from '@radix-ui/react-popper';
+import { type PopperAnchorProps, createPopperScope } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -23,10 +23,10 @@ import React, {
   type ComponentPropsWithoutRef,
   type ElementRef,
   type FC,
-  type SyntheticEvent,
-  forwardRef,
   type MutableRefObject,
   type ReactNode,
+  type SyntheticEvent,
+  forwardRef,
   useCallback,
   useEffect,
   useMemo,

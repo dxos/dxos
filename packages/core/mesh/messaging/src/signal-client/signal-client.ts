@@ -3,25 +3,26 @@
 //
 
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep } from '@dxos/async';
-import { type Context, cancelWithContext, Resource } from '@dxos/context';
+import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
-import { type QueryRequest, type JoinRequest, type LeaveRequest } from '@dxos/protocols/proto/dxos/edge/signal';
+import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
-import { SignalClientMonitor } from './signal-client-monitor';
-import { SignalLocalState } from './signal-local-state';
-import { SignalRPCClient } from './signal-rpc-client';
 import {
-  type PeerInfo,
   type Message,
+  type PeerInfo,
   type SignalClientMethods,
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
+
+import { SignalClientMonitor } from './signal-client-monitor';
+import { SignalLocalState } from './signal-local-state';
+import { SignalRPCClient } from './signal-rpc-client';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;

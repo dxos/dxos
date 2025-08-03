@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Icon, Avatar, Button } from '@dxos/react-ui';
+import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';

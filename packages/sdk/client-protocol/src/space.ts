@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type MulticastObservable, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, type MulticastObservable } from '@dxos/async';
 import { type SpecificCredential } from '@dxos/credentials';
-import { type QueueFactory, type EchoDatabase, type AnyLiveObject } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Contact,
   type CreateEpochRequest,
   type Invitation,
-  type Space as SpaceData,
   type SpaceArchive,
+  type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
   type UpdateMemberRoleRequest,
