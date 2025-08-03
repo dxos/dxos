@@ -50,6 +50,7 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
+// TODO(burdon): Rename module.
 export class AiSession {
   // TODO(burdon): Move to conversation.
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));

@@ -7,7 +7,7 @@ import { Effect, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
+import { type AiSession, ArtifactDiffResolver, type ContextBinder, type AiConversation } from '@dxos/assistant';
 import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -102,7 +102,7 @@ export class ChatProcessor {
   constructor(
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
     private readonly _services: Layer.Layer<ChatServices>,
-    private readonly _conversation: Conversation,
+    private readonly _conversation: AiConversation,
     private readonly _options: ChatProcessorOptions = defaultOptions,
   ) {
     this._tools = [...(_options.tools ?? [])];

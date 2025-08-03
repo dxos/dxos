@@ -3,14 +3,37 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
+import { Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
-import { type Blueprint } from '@dxos/blueprints';
-import { Obj, type Ref, type Relation, type Type } from '@dxos/echo';
+import { Blueprint } from '@dxos/blueprints';
+import { Obj, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
-import { ContextBinding } from './binding';
+/**
+ * Thread message that binds or unbinds contextual objects to a conversation.
+ */
+// TODO(burdon): Make ContentBlock.
+export const ContextBinding = Schema.Struct({
+  blueprints: Schema.Struct({
+    added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
+    removed: Schema.Array(Type.Ref(Blueprint.Blueprint)),
+  }),
+
+  // TODO(burdon): Type.Expando => Type.Obj (or Obj.Any?)
+  objects: Schema.Struct({
+    added: Schema.Array(Type.Ref(Type.Expando)),
+    removed: Schema.Array(Type.Ref(Type.Expando)),
+  }),
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/ContextBinding',
+    version: '0.1.0',
+  }),
+);
+
+export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding> {}
 
 /**
  * Manages bindings of blueprints and objects to a conversation.
@@ -28,6 +51,7 @@ export class ContextBinder {
   readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]> = computed(() => [
     ...this.bindings.value.blueprints,
   ]);
+
   readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
 
   /**
