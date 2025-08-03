@@ -79,6 +79,8 @@ export const parseResponse =
   <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
+        let blocks = 0;
+        const start = Date.now();
         const transformer = new StreamTransform();
 
         /**
@@ -91,6 +93,7 @@ export const parseResponse =
           log.info('block', { block });
           yield* onBlock(block);
           emit.single(block);
+          blocks++;
         });
 
         const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
@@ -117,7 +120,6 @@ export const parseResponse =
 
         log.info('begin');
         yield* onBegin();
-
         yield* Stream.runForEach(
           input,
           Effect.fnUntraced(function* (response) {
@@ -258,9 +260,9 @@ export const parseResponse =
           }),
         );
 
-        log.info('end');
         yield* flushText();
         yield* onEnd();
+        log.info('end', { blocks, duration: Date.now() - start });
         emit.end();
       }),
     );
