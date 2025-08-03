@@ -22,7 +22,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
@@ -58,7 +58,7 @@ type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
-  processor: ChatProcessor;
+  processor: AiChatProcessor;
   messages: DataType.Message[];
 
   /** @deprecated Remove and replace with context. */

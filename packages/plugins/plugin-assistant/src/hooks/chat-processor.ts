@@ -16,9 +16,10 @@ import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import type { ChatServices } from './useChatServices';
+import { AiServiceOverloadedError } from './errors';
+import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Is this still used?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -26,11 +27,11 @@ declare global {
   }
 }
 
-type RequestOptions = {
+export type AiRequestOptions = {
   // Empty for now.
 };
 
-export type ChatProcessorOptions = {
+export type AiChatProcessorOptions = {
   // TODO(burdon): Change to AiToolkit.
   tools?: readonly ExecutableTool[];
   blueprintRegistry?: Blueprint.Registry;
@@ -41,7 +42,7 @@ export type ChatProcessorOptions = {
   // TODO(burdon): Remove systemPrompt -- should come from blueprint.
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
-const defaultOptions: Partial<ChatProcessorOptions> = {
+const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
@@ -52,8 +53,7 @@ const defaultOptions: Partial<ChatProcessorOptions> = {
  * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Rename ChatContext?
-export class ChatProcessor {
+export class AiChatProcessor {
   /**
    * Pending messages (incl. the current user request).
    * @reactive
@@ -101,9 +101,9 @@ export class ChatProcessor {
 
   constructor(
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
-    private readonly _services: Layer.Layer<ChatServices>,
+    private readonly _services: Layer.Layer<AiChatServices>,
     private readonly _conversation: AiConversation,
-    private readonly _options: ChatProcessorOptions = defaultOptions,
+    private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this._tools = [...(_options.tools ?? [])];
   }
@@ -134,7 +134,7 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<DataType.Message[]> {
+  async request(message: string, _options: AiRequestOptions = {}): Promise<DataType.Message[]> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     this._conversation.onBegin.on(ctx, (session) => {
@@ -306,9 +306,4 @@ export class ChatProcessor {
       return versions;
     },
   };
-}
-
-// TODO(wittjosiah): Move to ai-service-client.
-export class AiServiceOverloadedError extends Error {
-  code = 'AI_SERVICE_OVERLOADED';
 }

@@ -18,7 +18,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-import { type ChatProcessor } from '../../hooks';
+import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
 import { ToolboxContainer } from '../Toolbox';
@@ -30,7 +30,7 @@ export type ChatMessageProps = ThemedClassName<{
   space?: Space;
   message: DataType.Message;
   // TODO(burdon): Move to context.
-  processor?: ChatProcessor;
+  processor?: AiChatProcessor;
   tools?: Tool[];
   onEvent?: (event: ChatEvent) => void;
 }>;
@@ -100,7 +100,7 @@ type BlockComponentProps = {
   space?: Space;
   block: ContentBlock.Any;
   /** @deprecated Replace with context */
-  processor?: ChatProcessor;
+  processor?: AiChatProcessor;
   onEvent?: (event: ChatEvent) => void;
 };
 

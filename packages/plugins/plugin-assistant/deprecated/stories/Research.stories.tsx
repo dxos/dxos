@@ -42,7 +42,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { testPlugins } from './testing';
 import { Thread, type ThreadListProps } from '../components';
-import { ChatProcessor } from '../hooks';
+import { AiChatProcessor } from '../hooks';
 import { createProcessorOptions } from '../testing';
 import { translations } from '../translations';
 
@@ -113,12 +113,12 @@ const DefaultStory = ({ items: _items, prompts = [], ...props }: RenderProps) =>
 
   // TODO(burdon): Replace with useChatProcessor.
   // const processor = useChatProcessor(space);
-  const processor = useMemo<ChatProcessor | undefined>(() => {
+  const processor = useMemo<AiChatProcessor | undefined>(() => {
     if (!space) {
       return;
     }
 
-    return new ChatProcessor(
+    return new AiChatProcessor(
       aiClient,
       tools,
       [],

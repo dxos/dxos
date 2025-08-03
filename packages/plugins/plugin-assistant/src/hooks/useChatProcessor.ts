@@ -15,7 +15,7 @@ import { useConfig } from '@dxos/react-client';
 import { Filter, type Queue, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks';
+import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
@@ -25,7 +25,7 @@ export type UseChatProcessorProps = {
   chat?: Assistant.Chat;
 
   // TODO(burdon): Move into layer?
-  services?: Layer.Layer<ChatServices>;
+  services?: Layer.Layer<AiChatServices>;
   blueprintRegistry?: Blueprint.Registry;
   // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
@@ -39,7 +39,7 @@ export type UseChatProcessorProps = {
 };
 
 /**
- * Configure and create ChatProcessor.
+ * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
   preset,
@@ -51,7 +51,7 @@ export const useChatProcessor = ({
   instructions,
   artifact,
   noPluginArtifacts,
-}: UseChatProcessorProps): ChatProcessor | undefined => {
+}: UseChatProcessorProps): AiChatProcessor | undefined => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
@@ -123,7 +123,7 @@ export const useChatProcessor = ({
       settings,
     });
 
-    return new ChatProcessor(services, conversation, {
+    return new AiChatProcessor(services, conversation, {
       tools,
       extensions,
       blueprintRegistry,
