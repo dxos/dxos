@@ -201,6 +201,19 @@ export const WithTrip = {
         );
         await binder.bind({ objects: [Ref.make(object)] });
       }
+      {
+        const object = space.db.add(
+          Markdown.makeDocument({
+            name: 'Barcelona',
+            content: trim`
+              # Barcelona
+
+              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+            `,
+          }),
+        );
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
     },
   }),
   args: {

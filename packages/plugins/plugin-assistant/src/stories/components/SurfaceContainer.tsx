@@ -38,11 +38,12 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
   }, [chats]);
 
   // TODO(burdon): IMPORTANT: Stack (@thure).
+  // TODO(burdon): Specify role hint for no toolbar.
   return (
-    <div className='grid grid-rows-[repeat(auto-fit,minmax(0,1fr))] h-full overflow-hidden divide-y divide-separator'>
+    <div className='flex flex-col bs-full overflow-hidden divide-y divide-separator'>
       {objects?.map((object) => (
-        <div key={object.id} className='grid overflow-hidden'>
-          <Surface role='article' limit={1} data={{ subject: object }} />
+        <div key={object.id} className='grid bs-full is-full overflow-hidden'>
+          <Surface role='section' limit={1} data={{ subject: object }} />
         </div>
       ))}
     </div>
