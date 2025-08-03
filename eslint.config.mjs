@@ -219,6 +219,11 @@ export default tseslint.config(
           groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           pathGroups: [
             {
+              pattern: '#**',
+              group: 'parent',
+              position: 'before',
+            },
+            {
               pattern: '@dxos/**',
               group: 'internal',
               position: 'after',

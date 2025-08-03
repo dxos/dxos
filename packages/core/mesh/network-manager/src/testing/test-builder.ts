@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { TcpTransportFactory } from '#tcp-transport';
-
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -18,10 +16,18 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 import { ComplexMap } from '@dxos/util';
 
+import { TcpTransportFactory } from '#tcp-transport';
+
 import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
-import { MemoryTransportFactory, type TransportFactory, TransportKind } from '../transport';
-import { RtcTransportProxyFactory, RtcTransportService, createRtcTransportFactory } from '../transport';
+import {
+  MemoryTransportFactory,
+  RtcTransportProxyFactory,
+  RtcTransportService,
+  type TransportFactory,
+  TransportKind,
+  createRtcTransportFactory,
+} from '../transport';
 
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
 
