@@ -8,8 +8,9 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useFormContext } from './FormContext';
 import { translationKey } from '../../translations';
+
+import { useFormContext } from './FormContext';
 
 export type FormOuterSpacing = boolean | 'blockStart-0' | 'scroll-fields';
 

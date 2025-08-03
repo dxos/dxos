@@ -13,8 +13,9 @@ import { faker } from '@dxos/random';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import {
-  EditorToolbar,
   type Comment,
+  EditorToolbar,
+  type EditorViewMode,
   comments,
   createBasicExtensions,
   createDataExtensions,
@@ -25,10 +26,9 @@ import {
   formattingKeymap,
   translations,
   useComments,
+  useEditorToolbarState,
   useFormattingState,
   useTextEditor,
-  useEditorToolbarState,
-  type EditorViewMode,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';

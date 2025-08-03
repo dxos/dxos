@@ -3,7 +3,7 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import React, { type HTMLAttributes, type CSSProperties } from 'react';
+import React, { type CSSProperties, type HTMLAttributes } from 'react';
 
 // Tree item hitbox
 // https://github.com/atlassian/pragmatic-drag-and-drop/blob/main/packages/hitbox/constellation/index/about.mdx#tree-item

@@ -6,10 +6,11 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { type Graph } from '@dxos/plugin-graph';
 import { useClient, useConfig } from '@dxos/react-client';
-import { ToggleGroup, ToggleGroupItem, Toolbar, Icon, IconButton } from '@dxos/react-ui';
+import { Icon, IconButton, ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
+
+import { Container } from '../Container';
 
 import { Json, Tree } from './Tree';
-import { Container } from '../Container';
 
 export const DebugApp: FC<{ graph: Graph }> = ({ graph }) => {
   const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('graph');

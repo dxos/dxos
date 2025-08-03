@@ -3,11 +3,11 @@
 //
 
 import {
+  ToggleGroupItem as ToggleGroupItemPrimitive,
+  type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
+  type ToggleGroupMultipleProps,
   ToggleGroup as ToggleGroupPrimitive,
   type ToggleGroupSingleProps,
-  type ToggleGroupMultipleProps,
-  type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
-  ToggleGroupItem as ToggleGroupItemPrimitive,
 } from '@radix-ui/react-toggle-group';
 import React, { forwardRef } from 'react';
 

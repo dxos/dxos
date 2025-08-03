@@ -6,9 +6,9 @@ import { type Schema } from 'effect';
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { getTypeAnnotation, EchoSchema, getSchema } from '@dxos/echo-schema';
+import { EchoSchema, getSchema, getTypeAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { live, isLiveObject, type Live } from '@dxos/live-object';
+import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { entries, range } from '@dxos/util';
 

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+import yaml from 'js-yaml';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';

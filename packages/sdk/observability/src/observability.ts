@@ -3,19 +3,19 @@
 //
 
 import { Event, scheduleTaskInterval } from '@dxos/async';
-import { PublicKey, type Client, type Config } from '@dxos/client';
+import { type Client, type Config, PublicKey } from '@dxos/client';
 import { type ClientServices, type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log, LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { ConnectionState } from '@dxos/network-manager';
 import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
 import { isNode } from '@dxos/util';
 
 import buildSecrets from './cli-observability-secrets.json';
-import { getTelemetryIdentity, type IPData, mapSpaces } from './helpers';
+import { type IPData, getTelemetryIdentity, mapSpaces } from './helpers';
 import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
-import { type SegmentTelemetry, type TrackOptions, type PageOptions, TelemetryEvent } from './segment';
+import { type PageOptions, type SegmentTelemetry, TelemetryEvent, type TrackOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { type SentryLogProcessor } from './sentry/sentry-log-processor';
 

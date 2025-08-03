@@ -2,21 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo-schema';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
-import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
+import { type CellValue, SheetType } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
-import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;

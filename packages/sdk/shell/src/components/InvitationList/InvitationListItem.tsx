@@ -12,21 +12,22 @@ import {
 } from '@dxos/react-client/invitations';
 import {
   Avatar,
+  type AvatarContentProps,
   Button,
   Clipboard,
   Icon,
   ListItem,
-  Tooltip,
-  type AvatarContentProps,
   type ThemedClassName,
+  Tooltip,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { type SharedInvitationListProps } from './InvitationListProps';
 import { AuthCode } from '../AuthCode';
+
+import { type SharedInvitationListProps } from './InvitationListProps';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;

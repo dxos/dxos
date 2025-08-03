@@ -7,7 +7,7 @@ import { Option, pipe } from 'effect';
 
 import { type PluginContext } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { createExtension, ROOT_ID, type BuilderExtensions } from '@dxos/plugin-graph';
+import { type BuilderExtensions, ROOT_ID, createExtension } from '@dxos/plugin-graph';
 import { faker } from '@dxos/random';
 
 export const storybookGraphBuilders = (context: PluginContext): BuilderExtensions => {

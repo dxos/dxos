@@ -10,8 +10,8 @@ import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints } from '../../hooks';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
-import { ToggleSidebarButton } from '../Sidebar';
 import { fixedSidebarToggleStyles } from '../fragments';
+import { ToggleSidebarButton } from '../Sidebar';
 
 export const ContentEmpty = () => {
   const breakpoint = useBreakpoints();

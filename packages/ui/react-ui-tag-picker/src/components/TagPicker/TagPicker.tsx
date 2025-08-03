@@ -3,7 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type CSSProperties, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -18,9 +18,10 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { TagPickerItem } from './TagPickerItem';
-import { type TagPickerItemData, type TagPickerMode, type TagPickerOptions, createLinks, tagPicker } from './extension';
 import { translationKey } from '../../translations';
+
+import { type TagPickerItemData, type TagPickerMode, type TagPickerOptions, createLinks, tagPicker } from './extension';
+import { TagPickerItem } from './TagPickerItem';
 
 export type TagPickerProps = ThemedClassName<
   {

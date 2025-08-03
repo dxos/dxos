@@ -9,6 +9,7 @@ import React, { type FC } from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
+
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
 

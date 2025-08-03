@@ -3,32 +3,32 @@
 //
 
 import {
-  getBackend,
-  getHeads,
-  isAutomerge,
-  equals as headsEquals,
-  save,
   type Doc,
   type Heads,
+  getBackend,
+  getHeads,
+  equals as headsEquals,
+  isAutomerge,
+  save,
 } from '@automerge/automerge';
 import {
-  type DocHandleChangePayload,
-  Repo,
   type AnyDocumentId,
   type DocHandle,
+  type DocHandleChangePayload,
   type DocumentId,
+  type HandleState,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
+  Repo,
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
-  type HandleState,
 } from '@automerge/automerge-repo';
 
 import { Event, asyncTimeout } from '@dxos/async';
-import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { DatabaseDirectory, type CollectionId } from '@dxos/echo-protocol';
+import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
+import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -39,12 +39,12 @@ import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos
 import { trace } from '@dxos/tracing';
 import { bufferToArray } from '@dxos/util';
 
-import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
+import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
-import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
+import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 

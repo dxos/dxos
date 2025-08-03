@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
 import { type InspectOptionsStylized } from 'node:util';
 
+import { Schema, SchemaAST } from 'effect';
+
 import { inspectCustom } from '@dxos/debug';
-import { defineHiddenProperty, DeletedId, getSchemaDXN, SchemaId, SchemaValidator, TypeId } from '@dxos/echo-schema';
-import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '@dxos/echo-schema';
+import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import {
+  ReactiveArray,
+  type ReactiveHandler,
   createProxy,
   isValidProxyTarget,
   objectData,
-  ReactiveArray,
-  type ReactiveHandler,
   symbolIsProxy,
 } from './proxy';
 

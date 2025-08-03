@@ -3,14 +3,15 @@
 //
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
-import { FileCapabilities } from './capabilities';
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../components';
 import { FILES_PLUGIN } from '../meta';
 import { type FilesSettingsProps, type LocalFile } from '../types';
 import { isLocalFile } from '../util';
+
+import { FileCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [

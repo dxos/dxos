@@ -11,8 +11,9 @@ import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TypescriptEditor } from './TypescriptEditor';
 import { templates } from '../../templates';
+
+import { TypescriptEditor } from './TypescriptEditor';
 
 // TODO(burdon): Features:
 // - language support for S

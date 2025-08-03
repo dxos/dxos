@@ -2,21 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useCallback, useEffect, useMemo, type MouseEvent } from 'react';
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, Surface, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 
-import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
 import { DECK_PLUGIN } from '../../meta';
-import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } from '../../types';
+import { DeckAction, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { soloInlinePadding } from '../fragments';
+
+import { PlankCompanionControls, PlankControls } from './PlankControls';
 
 const MAX_COMPANIONS = 5;
 

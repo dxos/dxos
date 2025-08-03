@@ -6,11 +6,12 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { useClipboard } from './ClipboardProvider';
 import { Button, type ButtonProps, IconButton } from '../Buttons';
 import { Icon, type IconProps } from '../Icon';
 import { useTranslation } from '../ThemeProvider';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
+
+import { useClipboard } from './ClipboardProvider';
 
 export type CopyButtonProps = ButtonProps &
   Pick<IconProps, 'size'> & {

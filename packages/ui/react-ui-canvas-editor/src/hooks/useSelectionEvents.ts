@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { type Rect, getRelativePoint } from '@dxos/react-ui-canvas';
 
-import { getBounds, type Range } from '../layout';
+import { type Range, getBounds } from '../layout';
 
 export type SelectionEvent = { bounds?: Rect | null; shift?: boolean };
 

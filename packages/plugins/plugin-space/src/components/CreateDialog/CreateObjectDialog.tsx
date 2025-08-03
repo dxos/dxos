@@ -17,16 +17,17 @@ import {
 import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { getSpace, isLiveObject, isSpace, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 import { SpaceCapabilities } from '../../capabilities';
 import { SPACE_PLUGIN } from '../../meta';
 import { SpaceAction } from '../../types';
+
+import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 

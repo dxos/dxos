@@ -7,16 +7,16 @@ import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { useApp, type CreateAppOptions } from '../App';
+import { type CreateAppOptions, useApp } from '../App';
 import { Capabilities, Events } from '../common';
 import {
+  type ActivationEvent,
+  type AnyCapability,
+  type PluginContext,
+  PluginManager,
   contributes,
   defineModule,
   definePlugin,
-  type ActivationEvent,
-  type AnyCapability,
-  PluginManager,
-  type PluginContext,
 } from '../core';
 
 // TODO(burdon): Factor out (use consistently in plugin framework?)

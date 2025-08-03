@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-core';
 import { type CleanupFn } from '@dxos/async';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { hyphenize } from '@dxos/util';
 
 type PropType<T> = {

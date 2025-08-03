@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
-import { usePluginManager, useLayout } from '@dxos/app-framework';
+import { useLayout, usePluginManager } from '@dxos/app-framework';
 
-import { type Step, HelpContext } from '../../types';
-import { floaterProps, Tooltip } from '../Tooltip';
+import { HelpContext, type Step } from '../../types';
+import { Tooltip, floaterProps } from '../Tooltip';
 
 const addStepClass = (target: string | HTMLElement) => {
   const element = typeof target === 'string' ? document.querySelector(target) : target;

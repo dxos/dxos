@@ -6,9 +6,8 @@ import { toEffectSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 
-import { Workflow } from './workflow';
-import { compileOrThrow, type ComputeResolver, GraphExecutor } from '../compiler';
-import { inputNode, NODE_INPUT, NODE_OUTPUT, type NodeType, outputNode, registry } from '../nodes';
+import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
+import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
 import { executeFunction, resolveFunctionPath } from '../nodes/function';
 import {
   AnyInput,
@@ -19,6 +18,8 @@ import {
   type Executable,
   synchronizedComputeFunction,
 } from '../types';
+
+import { Workflow } from './workflow';
 
 export type WorkflowLoaderParams = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;

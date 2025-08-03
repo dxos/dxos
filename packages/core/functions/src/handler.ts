@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema, type Context, type Effect } from 'effect';
+import { type Context, type Effect, Schema } from 'effect';
 
 import { type AiServiceClient } from '@dxos/ai';
 // import { type Space } from '@dxos/client/echo';
 import type { EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
-import { type SpaceId, type DXN } from '@dxos/keys';
+import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
 import type { Services } from './services';

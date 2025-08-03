@@ -9,11 +9,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 
-import { type TestBuilder } from './test-builder';
-import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
 import { Messenger } from '../messenger';
 import { type SignalManager } from '../signal-manager';
 import { type Message, type PeerInfo } from '../signal-methods';
+
+import { type TestBuilder } from './test-builder';
+import { expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from './utils';
 
 export class TestPeer extends Resource {
   public peerId = PublicKey.random();

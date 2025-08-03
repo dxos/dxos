@@ -10,8 +10,9 @@ import React from 'react';
 import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Board } from './Board';
 import { translations } from '../../translations';
+
+import { Board } from './Board';
 
 const meta: Meta<typeof Board.Cell> = {
   title: 'ui/react-ui-board/Cell',

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test, afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type EchoDatabase, Query } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -10,8 +10,9 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { stripUndefined } from '@dxos/util';
 
-import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
 import { DataType } from '../common';
+
+import { type TypeSpec, type ValueGenerator, createGenerator, createObjectFactory } from './generator';
 
 faker.seed(1);
 

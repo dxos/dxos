@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';

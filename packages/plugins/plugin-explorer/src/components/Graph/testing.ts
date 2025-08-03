@@ -3,9 +3,9 @@
 //
 
 import { type Space } from '@dxos/client/echo';
-import { Query, Relation, type Obj } from '@dxos/echo';
+import { type Obj, Query, Relation } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
-import { createObjectFactory, type ValueGenerator, type TypeSpec } from '@dxos/schema/testing';
+import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const getObject = (objects: Obj.Any[]) => objects[Math.floor(Math.random() * objects.length)];

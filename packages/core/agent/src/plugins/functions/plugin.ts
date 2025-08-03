@@ -7,9 +7,10 @@ import express from 'express';
 import { log } from '@dxos/log';
 import { type FunctionsConfig } from '@dxos/protocols/proto/dxos/agent/functions';
 
+import { Plugin } from '../plugin';
+
 import { DevFunctionDispatcher } from './dev';
 import { type FunctionDispatcher } from './types';
-import { Plugin } from '../plugin';
 
 const DEFAULT_CONFIG: Partial<FunctionsConfig> = {
   port: 7100, // TODO(burdon): Extract const.

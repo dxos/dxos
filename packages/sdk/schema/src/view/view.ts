@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, pipe, Schema, SchemaAST } from 'effect';
+import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -18,17 +18,18 @@ import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
-  toEffectSchema,
   TypeEnum,
+  toEffectSchema,
 } from '@dxos/echo-schema';
-import { findAnnotation, type JsonProp, type JsonPath } from '@dxos/effect';
+import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
+
+import { getSchemaProperties } from '../properties';
 
 import { FieldSchema } from './field';
 import { ProjectionModel } from './projection-model';
-import { getSchemaProperties } from '../properties';
 
 export const Projection = Schema.Struct({
   /**

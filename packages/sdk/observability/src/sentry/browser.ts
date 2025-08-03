@@ -3,19 +3,19 @@
 //
 
 import {
-  init as naturalInit,
-  setTag,
-  addBreadcrumb as naturalAddBreadcrumb,
-  captureException as naturalCaptureException,
-  captureMessage as naturalCaptureMessage,
-  sendFeedback as naturalSendFeedback,
-  withScope as naturalWithScope,
   breadcrumbsIntegration,
   browserTracingIntegration,
   feedbackIntegration,
   httpClientIntegration,
-  replayIntegration,
   metrics,
+  addBreadcrumb as naturalAddBreadcrumb,
+  captureException as naturalCaptureException,
+  captureMessage as naturalCaptureMessage,
+  init as naturalInit,
+  sendFeedback as naturalSendFeedback,
+  withScope as naturalWithScope,
+  replayIntegration,
+  setTag,
   startInactiveSpan,
 } from '@sentry/browser';
 

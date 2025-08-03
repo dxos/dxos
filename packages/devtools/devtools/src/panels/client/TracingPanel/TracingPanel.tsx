@@ -11,11 +11,12 @@ import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
+import { PanelContainer } from '../../../components';
+
 import { LogTable } from './LogTable';
 import { MetricsView } from './MetricsView';
 import { TraceView } from './TraceView';
 import { type ResourceState, type State } from './types';
-import { PanelContainer } from '../../../components';
 
 export const TracingPanel = () => {
   const client = useClient();

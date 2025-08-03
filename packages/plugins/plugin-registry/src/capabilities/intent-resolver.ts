@@ -3,12 +3,12 @@
 //
 
 import {
-  contributes,
-  SettingsAction,
-  createResolver,
-  LayoutAction,
   Capabilities,
+  LayoutAction,
+  SettingsAction,
+  contributes,
   createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 
 import { REGISTRY_ID } from '../meta';

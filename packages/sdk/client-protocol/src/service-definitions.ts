@@ -6,15 +6,15 @@ import { type Event } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
 import type { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import type {
+  ContactsService,
   DevicesService,
+  EdgeAgentService,
   IdentityService,
   InvitationsService,
   LoggingService,
   NetworkService,
   SpacesService,
   SystemService,
-  ContactsService,
-  EdgeAgentService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';

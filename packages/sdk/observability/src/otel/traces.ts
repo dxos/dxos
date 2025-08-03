@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { trace, type Tracer } from '@opentelemetry/api';
+import { type Tracer, trace } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import {
@@ -14,7 +14,7 @@ import {
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from 'debug';
 
-import { TRACE_PROCESSOR, type StartSpanOptions } from '@dxos/tracing';
+import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
 

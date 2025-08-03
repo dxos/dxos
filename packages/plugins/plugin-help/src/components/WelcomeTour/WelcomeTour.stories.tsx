@@ -11,8 +11,9 @@ import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
 import { useHelp } from '../../hooks';
+
+import { WelcomeTour, type WelcomeTourProps } from './WelcomeTour';
 
 const App = () => {
   const { running, start } = useHelp();

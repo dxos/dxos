@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Plugin } from 'esbuild';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { type Plugin } from 'esbuild';
 
 export type BundleDepsPluginOptions = {
   /**

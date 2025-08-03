@@ -7,25 +7,17 @@ import { Effect, Layer, Schema, Scope } from 'effect';
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import {
+  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  RemoteFunctionExecutionService,
   QueueService,
+  RemoteFunctionExecutionService,
   TracingService,
-  ComputeEventLogger,
 } from '@dxos/functions';
 import { createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import {
-  type TopologyNodeConnector,
-  createTopology,
-  InputKind,
-  type GraphDiagnostic,
-  type Topology,
-  type TopologyNode,
-} from './topology';
 import { ComputeNodeError, ValueValidationError } from '../errors';
 import {
   type ComputeEffect,
@@ -34,10 +26,19 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   type Executable,
-  isNotExecuted,
   NotExecuted,
   ValueBag,
+  isNotExecuted,
 } from '../types';
+
+import {
+  type GraphDiagnostic,
+  InputKind,
+  type Topology,
+  type TopologyNode,
+  type TopologyNodeConnector,
+  createTopology,
+} from './topology';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;

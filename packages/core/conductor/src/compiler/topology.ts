@@ -8,7 +8,7 @@ import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type ComputeGraphModel, type ComputeNode, type ComputeMeta } from '../types';
+import { type ComputeGraphModel, type ComputeMeta, type ComputeNode } from '../types';
 import { pickProperty } from '../util';
 
 /**

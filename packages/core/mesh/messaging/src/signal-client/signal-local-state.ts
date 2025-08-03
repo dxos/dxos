@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import type { Stream } from '@dxos/codec-protobuf/stream';
-import { cancelWithContext, type Context } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -13,8 +13,9 @@ import {
 } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet, safeAwaitAll } from '@dxos/util';
 
-import { type SignalRPCClient } from './signal-rpc-client';
 import type { Message, SwarmEvent } from '../signal-methods';
+
+import { type SignalRPCClient } from './signal-rpc-client';
 
 export class SignalLocalState {
   /**

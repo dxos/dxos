@@ -2,20 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { inspect } from 'util';
+
+import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
+
+import { getSchemaDXN } from '../ast';
+import { Testing } from '../testing';
+import { isInstanceOf } from '../types';
 
 import { getSchema } from './accessors';
 import { create } from './create';
 import { objectToJSON } from './json-serializer';
 import { RelationSourceId, RelationTargetId } from './model';
 import { getType } from './typename';
-import { getSchemaDXN } from '../ast';
-import { Testing } from '../testing';
-import { isInstanceOf } from '../types';
 
 describe('create (static version)', () => {
   test('defaults', ({ expect }) => {

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { useClient } from '@dxos/react-client';

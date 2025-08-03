@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ShapeDefSet } from '../components';
+
 import { ellipseShape } from './Ellipse';
 import { rectangleShape } from './Rectangle';
-import { type ShapeDefSet } from '../components';
 
 /**
  * Order used by toolbar.

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, type Context } from 'effect';
+import { type Context, Effect } from 'effect';
 
 import { LogLevel } from '@dxos/log';
 

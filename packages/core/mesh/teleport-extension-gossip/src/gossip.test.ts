@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { latch } from '@dxos/async';
 import { TestBuilder } from '@dxos/teleport/testing';

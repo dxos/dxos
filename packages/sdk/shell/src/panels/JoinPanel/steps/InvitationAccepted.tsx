@@ -6,7 +6,7 @@ import React, { cloneElement } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 
-import { Actions, Action } from '../../../components';
+import { Action, Actions } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationAcceptedProps extends JoinStepProps {

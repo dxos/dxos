@@ -9,11 +9,12 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
+import { str } from '../testing';
 
 import { EditorStory, content } from './components';
-import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
-import { str } from '../testing';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Experimental',

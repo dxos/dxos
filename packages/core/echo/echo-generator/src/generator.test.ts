@@ -11,7 +11,7 @@ import { getObjectCore } from '@dxos/echo-db';
 import { TypedObject, getType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
-import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType } from './data';
+import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';
 import { SpaceObjectGenerator } from './generator';
 
 faker.seed(3);

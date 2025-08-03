@@ -18,25 +18,26 @@ import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
+import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
-import { SpaceCapabilities } from './capabilities';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  type CreateObjectDialogProps,
   JOIN_DIALOG,
+  type JoinDialogProps,
   POPOVER_RENAME_OBJECT,
   POPOVER_RENAME_SPACE,
-  type CreateObjectDialogProps,
-  type JoinDialogProps,
 } from '../components';
 import { SpaceEvents } from '../events';
 import { SPACE_PLUGIN } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
-import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
+import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
+
+import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 500;

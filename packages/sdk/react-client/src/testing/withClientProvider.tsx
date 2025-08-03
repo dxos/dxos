@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type StoryContext, type Decorator } from '@storybook/react';
-import React, { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
+import { type Decorator, type StoryContext } from '@storybook/react';
+import React, { type PropsWithChildren, createContext, useContext, useEffect, useRef, useState } from 'react';
 import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientStory } from './context';
 import { ClientProvider, type ClientProviderProps } from '../client';
+
+import { ClientStory } from './context';
 
 type InitializeProps = {
   createIdentity?: boolean;

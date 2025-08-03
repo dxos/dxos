@@ -9,8 +9,9 @@ import type { Density } from '@dxos/react-ui';
 import type { TreeProps } from '@dxos/react-ui-list';
 import type { MaybePromise } from '@dxos/util';
 
-import type { L1PanelProps } from './Sidebar';
 import type { FlattenedActions, NavTreeItemGraphNode } from '../types';
+
+import type { L1PanelProps } from './Sidebar';
 
 export type NavTreeContextValue = Pick<
   TreeProps<NavTreeItemGraphNode, { disposition?: string; sort?: boolean }>,

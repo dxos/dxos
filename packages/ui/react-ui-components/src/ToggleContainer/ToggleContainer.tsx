@@ -4,7 +4,7 @@
 
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Icon, useControlledState, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 export type ToggleContainerProps = ThemedClassName<

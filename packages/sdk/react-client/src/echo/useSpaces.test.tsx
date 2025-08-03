@@ -5,8 +5,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { useSpace, useSpaces } from './useSpaces';
 import { createClient, createClientContextProvider } from '../testing/util';
+
+import { useSpace, useSpaces } from './useSpaces';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {

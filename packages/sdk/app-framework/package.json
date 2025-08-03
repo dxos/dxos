@@ -10,22 +10,22 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs",
-      "source": "./src/testing/index.ts"
+      "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./worker": {
+      "source": "./src/worker.ts",
       "types": "./dist/types/src/worker.d.ts",
       "browser": "./dist/lib/browser/worker.mjs",
-      "node": "./dist/lib/node-esm/worker.mjs",
-      "source": "./src/worker.ts"
+      "node": "./dist/lib/node-esm/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

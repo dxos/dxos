@@ -7,19 +7,20 @@ import { type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
-import { type GraphBuilder, type BuilderExtensions } from '@dxos/app-graph';
+import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
 import { type AnchoredTo } from '@dxos/schema';
 
+import { type PluginManager, defineCapability } from '../core';
+import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
+
 import { type FileInfo } from './file';
 import { type NodeSerializer } from './graph';
 import { type SurfaceDefinition } from './surface';
 import { type Resource } from './translations';
-import { type PluginManager, defineCapability } from '../core';
-import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
 
 // TODO(burdon): Sort.
 export namespace Capabilities {

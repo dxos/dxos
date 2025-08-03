@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { createId, createKeyPair, randomBytes, sign, verify } from './keys';
 

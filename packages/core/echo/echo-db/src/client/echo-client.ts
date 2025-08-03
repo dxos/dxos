@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
+import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
 import { QueueFactory, type QueueService } from '../queue';
+
+import { IndexQuerySourceProvider, type LoadObjectParams } from './index-query-source-provider';
 
 export type EchoClientParams = {};
 

@@ -8,8 +8,9 @@ import { type Meta } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ScriptToolbar } from './ScriptToolbar';
 import { templates } from '../../templates';
+
+import { ScriptToolbar } from './ScriptToolbar';
 
 export const Default = {
   args: {

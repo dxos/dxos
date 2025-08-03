@@ -10,9 +10,9 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/src/index.js",
+      "source": "./dist/src/index.ts",
       "types": "./dist/src/index.d.ts",
-      "source": "./dist/src/index.ts"
+      "default": "./dist/src/index.js"
     }
   },
   "main": "dist/src/main.js",

@@ -6,8 +6,9 @@
 import { RangeSetBuilder } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { commandState } from './state';
 import { clientRectsFor, flattenRect } from '../../util';
+
+import { commandState } from './state';
 
 export type HintOptions = {
   delay?: number;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Force, forceX, forceY, type SimulationLinkDatum, type SimulationNodeDatum } from 'd3';
+import { type Force, type SimulationLinkDatum, type SimulationNodeDatum, forceX, forceY } from 'd3';
 
 export type ForcePointOptions = {
   x?: number;

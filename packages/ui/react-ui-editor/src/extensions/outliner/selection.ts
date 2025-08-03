@@ -3,7 +3,7 @@
 //
 
 import { Compartment, type EditorState, Facet, type SelectionRange } from '@codemirror/state';
-import { type EditorView, type Command } from '@codemirror/view';
+import { type Command, type EditorView } from '@codemirror/view';
 
 import { treeFacet } from './tree';
 

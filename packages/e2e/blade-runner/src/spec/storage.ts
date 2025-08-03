@@ -3,7 +3,7 @@
 //
 
 import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type TestParams, type Platform, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { type RunResults, StorageReplicant } from '../replicants/storage-replicant';
 
 /**

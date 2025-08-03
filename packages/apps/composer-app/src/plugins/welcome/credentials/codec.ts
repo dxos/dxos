@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { HeaderCodec, type EncodedKey } from './header-codec';
+import { type EncodedKey, HeaderCodec } from './header-codec';
 
 export const codec = new HeaderCodec<PublicKey>({
   isKey: (value: any): value is PublicKey => value instanceof PublicKey,

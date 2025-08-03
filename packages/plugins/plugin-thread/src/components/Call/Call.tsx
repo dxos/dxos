@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, type FC } from 'react';
+import React, { type FC, type PropsWithChildren } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Toolbar, type ToolbarProps } from './Toolbar';
 import { ThreadCapabilities } from '../../capabilities';
 import { useDebugMode } from '../../hooks';
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
+
+import { Toolbar, type ToolbarProps } from './Toolbar';
 
 //
 // Root

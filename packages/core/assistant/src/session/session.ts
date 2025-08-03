@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, AiToolkit, type AiError, type AiResponse, type AiTool } from '@effect/ai';
-import { Chunk, Context, Effect, Option, pipe, Stream, type Schema } from 'effect';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
+import { Chunk, Context, Effect, Option, type Schema, Stream, pipe } from 'effect';
 import { Array, String } from 'effect';
 
 import {
-  AiParser,
-  AiPreprocessor,
-  getToolCalls,
-  runTool,
-  ToolExecutionService,
-  ToolResolverService,
   type AgentStatus,
   type AiInputPreprocessingError,
+  AiParser,
+  AiPreprocessor,
   type AiToolNotFoundError,
   type GenerationStream,
+  ToolExecutionService,
+  ToolResolverService,
+  getToolCalls,
+  runTool,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { type Blueprint } from '@dxos/blueprints';
@@ -26,7 +26,7 @@ import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { AiAssistantError } from '../errors';
 

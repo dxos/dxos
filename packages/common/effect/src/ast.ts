@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, pipe, SchemaAST, Schema } from 'effect';
+import { Option, Schema, SchemaAST, pipe } from 'effect';
 import { isUndefinedKeyword } from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';

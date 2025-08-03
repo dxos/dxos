@@ -7,8 +7,9 @@ import { Schema } from 'effect';
 import { FileInfoSchema } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/react-client/echo';
 
-import { FileType } from './file';
 import { WNFS_PLUGIN } from '../meta';
+
+import { FileType } from './file';
 
 export namespace WnfsAction {
   export class Create extends Schema.TaggedClass<Create>()(`${WNFS_PLUGIN}/action/create`, {

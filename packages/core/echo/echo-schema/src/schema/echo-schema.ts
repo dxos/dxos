@@ -7,6 +7,11 @@ import { Schema, SchemaAST } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
+import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
+import { type JsonSchemaType } from '../json-schema';
+import { type TypedObject, type TypedObjectPrototype } from '../object';
+
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -16,10 +21,6 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type JsonSchemaType } from '../json-schema';
-import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.

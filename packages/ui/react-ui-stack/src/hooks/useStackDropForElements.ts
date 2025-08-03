@@ -8,7 +8,7 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { attachClosestEdge, extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useLayoutEffect, useState } from 'react';
 
-import { type StackItemRearrangeHandler, type StackItemData, type Orientation } from '../components';
+import { type Orientation, type StackItemData, type StackItemRearrangeHandler } from '../components';
 
 /**
  * Hook to handle drag and drop functionality for Stack components.

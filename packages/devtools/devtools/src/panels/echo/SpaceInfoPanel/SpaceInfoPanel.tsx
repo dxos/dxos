@@ -11,13 +11,14 @@ import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Icon, Toolbar } from '@dxos/react-ui';
 
+import { PanelContainer } from '../../../components';
+import { DataSpaceSelector } from '../../../containers';
+import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
+
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 import { SyncStateInfo } from './SyncStateInfo';
-import { PanelContainer } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 export type SpaceInfoPanelProps = {
   space?: Space;

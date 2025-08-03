@@ -6,14 +6,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import {
-  ScriptType,
   FunctionType,
-  createInvocationSpans,
-  type InvocationTraceEvent,
   InvocationOutcome,
+  type InvocationTraceEvent,
+  ScriptType,
+  createInvocationSpans,
 } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
-import { Filter, getSpace, useQuery, useQueue, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, getSpace, useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
 

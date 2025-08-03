@@ -10,28 +10,28 @@
   "type": "module",
   "exports": {
     "./core": {
+      "source": "./src/core.ts",
       "types": "./dist/types/src/core.d.ts",
       "browser": "./dist/lib/browser/core.mjs",
-      "node": "./dist/lib/node-esm/core.mjs",
-      "source": "./src/core.ts"
+      "node": "./dist/lib/node-esm/core.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts"
+      "node": "./dist/lib/node-esm/index.mjs"
     },
     "./react": {
+      "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
-      "node": "./dist/lib/node-esm/react.mjs",
-      "source": "./src/react.ts"
+      "node": "./dist/lib/node-esm/react.mjs"
     },
     "./runtime": {
+      "source": "./src/runtime/index.ts",
       "types": "./dist/types/src/runtime/index.d.ts",
       "browser": "./dist/lib/browser/runtime/index.mjs",
-      "node": "./dist/lib/node-esm/runtime/index.mjs",
-      "source": "./src/runtime/index.ts"
+      "node": "./dist/lib/node-esm/runtime/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Context, Schema, Layer } from 'effect';
+import { Context, Effect, Layer, Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { log, LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 
 import { TracingService } from './tracing';
 

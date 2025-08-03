@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { PropertyMeta, TypedObject, getTypeAnnotation, getPropertyMetaAnnotation } from '@dxos/echo-schema';
+import { PropertyMeta, TypedObject, getPropertyMetaAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
 
 import { createEchoSchema } from './testing';
 

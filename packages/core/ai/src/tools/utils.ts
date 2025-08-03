@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit, type AiError } from '@effect/ai';
+import { type AiError, type AiTool, type AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import { type DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 
 export const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[] => {
   return message.blocks.filter((block) => block._tag === 'toolCall');

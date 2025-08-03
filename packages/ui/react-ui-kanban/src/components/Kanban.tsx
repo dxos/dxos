@@ -5,8 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
-import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
+import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { AttentionGlyph, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   Card,
   CardDragPreview,
@@ -19,7 +19,7 @@ import {
 } from '@dxos/react-ui-stack';
 
 import { translationKey } from '../translations';
-import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../types';
+import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../types';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;

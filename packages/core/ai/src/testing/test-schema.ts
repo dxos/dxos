@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { EntityKind, TypeAnnotationId, Ref, ObjectId } from '@dxos/echo-schema';
+import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo-schema';
 
 // TODO(burdon): Remove (use @dxos/schema DataType).
 

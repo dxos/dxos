@@ -2,20 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import {
-  iframeServiceBundle,
   type IframeServiceBundle,
   PROXY_CONNECTION_TIMEOUT,
+  iframeServiceBundle,
   workerServiceBundle,
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 import { Callback, type MaybePromise } from '@dxos/util';
 
-import { type ClientServicesHost, ClientRpcServer, type ClientRpcServerParams } from '../services';
+import { ClientRpcServer, type ClientRpcServerParams, type ClientServicesHost } from '../services';
 
 export type WorkerSessionParams = {
   serviceHost: ClientServicesHost;

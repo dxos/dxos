@@ -8,8 +8,8 @@ import {
   Capabilities,
   LayoutAction,
   createIntent,
-  useCapability,
   useCapabilities,
+  useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';

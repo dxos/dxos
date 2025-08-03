@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Toggle } from './Toggle';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
+
+import { Toggle } from './Toggle';
 
 type StorybookToggleProps = {};
 

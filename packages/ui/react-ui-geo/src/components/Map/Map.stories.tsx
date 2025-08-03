@@ -4,14 +4,15 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Map, type MapController } from './Map';
 import { useMapZoomHandler } from '../../hooks';
 import { type MapMarker } from '../../types';
+
+import { Map, type MapController } from './Map';
 
 const DefaultStory = ({ markers = [] }: { markers?: MapMarker[] }) => {
   const [controller, setController] = useState<MapController>();

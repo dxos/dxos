@@ -5,11 +5,11 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { contributes, Capabilities, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
-import { getActiveSpace, SPACE_PLUGIN } from '@dxos/plugin-space';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { SPACE_PLUGIN, getActiveSpace } from '@dxos/plugin-space';
 
 import { DEBUG_PLUGIN } from '../meta';
 import { Devtools } from '../types';

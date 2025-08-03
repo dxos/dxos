@@ -3,9 +3,9 @@
 //
 
 import React, {
-  forwardRef,
   type FunctionComponent,
   type PropsWithChildren,
+  forwardRef,
   useEffect,
   useImperativeHandle,
   useState,
@@ -16,10 +16,11 @@ import { type Config } from '@dxos/config';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { useControlledState } from '@dxos/react-hooks';
-import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
+import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
+
+import { printBanner } from '../banner';
 
 import { ClientContext, type ClientContextProps } from './context';
-import { printBanner } from '../banner';
 
 /**
  * Properties for the ClientProvider.

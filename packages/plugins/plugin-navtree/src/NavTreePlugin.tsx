@@ -3,14 +3,14 @@
 //
 
 import {
-  definePlugin,
-  defineModule,
-  Events,
-  contributes,
   Capabilities,
-  allOf,
-  createIntent,
+  Events,
   LayoutAction,
+  allOf,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
 } from '@dxos/app-framework';
 import { type TreeData } from '@dxos/react-ui-list';
 

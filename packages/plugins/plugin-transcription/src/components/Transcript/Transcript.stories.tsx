@@ -24,7 +24,6 @@ import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { renderMarkdown, Transcript, type TranscriptProps } from './Transcript';
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
 import {
@@ -34,6 +33,8 @@ import {
   useTestTranscriptionQueueWithEntityExtraction,
 } from '../../testing';
 import { translations } from '../../translations';
+
+import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
 
 faker.seed(1);
 

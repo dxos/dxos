@@ -16,7 +16,7 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DataType, DataTypes } from '../common';

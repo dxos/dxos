@@ -5,7 +5,7 @@
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
-import { MessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
 

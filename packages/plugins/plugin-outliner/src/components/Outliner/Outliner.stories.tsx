@@ -12,9 +12,10 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Outliner } from './Outliner';
 import { translations } from '../../translations';
 import { OutlineType } from '../../types';
+
+import { Outliner } from './Outliner';
 
 // TODO(burdon): Can we create a storybook for the Outliner without the database?
 

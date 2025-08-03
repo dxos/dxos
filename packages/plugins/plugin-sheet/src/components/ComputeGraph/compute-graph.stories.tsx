@@ -8,18 +8,19 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { Obj, Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar, Button, Input } from '@dxos/react-ui';
+import { Button, Input, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useComputeGraph } from './ComputeGraphContextProvider';
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
-import { createSheet, SheetType } from '../../types';
+import { SheetType, createSheet } from '../../types';
+
+import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 

@@ -10,10 +10,11 @@ import { PublicKey } from '@dxos/keys';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MessageRoot } from './Message';
+import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
-import { MessageStoryText, type MessageEntity } from '../testing';
 import { translations } from '../translations';
+
+import { MessageRoot } from './Message';
 
 const DefaultStory = () => {
   const [identityKey] = useState(PublicKey.random());

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';

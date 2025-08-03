@@ -7,21 +7,22 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capabilities, contributes, createResolver, IntentPlugin } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SheetContainer } from './SheetContainer';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
 import { SheetAction, SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
+
+import { SheetContainer } from './SheetContainer';
 
 export const Basic = () => {
   const space = useSpace();

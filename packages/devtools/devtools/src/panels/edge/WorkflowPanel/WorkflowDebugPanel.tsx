@@ -9,11 +9,11 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { createEventLogger, RemoteFunctionExecutionService } from '@dxos/functions';
+import { RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { log, LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';

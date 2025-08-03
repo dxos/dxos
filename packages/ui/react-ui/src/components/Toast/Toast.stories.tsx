@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React, { type ReactNode, useState } from 'react';
 
-import { Toast } from './Toast';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Toast } from './Toast';
 
 type ActionTriggerProps = { altText: string; trigger: ReactNode };
 

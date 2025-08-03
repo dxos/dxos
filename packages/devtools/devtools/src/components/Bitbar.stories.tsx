@@ -10,8 +10,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { BitField } from '@dxos/util';
 
-import { Bitbar } from './Bitbar';
 import { styles } from '../styles';
+
+import { Bitbar } from './Bitbar';
 
 const length = 80;
 

@@ -12,9 +12,9 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import React, {
-  forwardRef,
   type MouseEvent,
   type PropsWithChildren,
+  forwardRef,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -25,7 +25,7 @@ import React, {
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
-import { MenuProvider, DropdownMenu, type MenuItem } from '@dxos/react-ui-menu';
+import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';

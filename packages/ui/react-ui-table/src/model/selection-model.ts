@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, effect, type Signal, signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 
-import { type TableRow } from './table-model';
 import { touch } from '../util';
+
+import { type TableRow } from './table-model';
 
 export type SelectionMode = 'single' | 'multiple';
 

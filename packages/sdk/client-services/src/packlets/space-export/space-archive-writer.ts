@@ -4,10 +4,10 @@
 
 import type * as tar from '@obsidize/tar-browserify';
 
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
-import { SpaceArchiveFileStructure, SpaceArchiveVersion, type SpaceArchiveMetadata } from '@dxos/protocols';
+import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
 import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 export type SpaceArchiveBeginProps = {

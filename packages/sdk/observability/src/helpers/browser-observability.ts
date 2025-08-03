@@ -11,8 +11,9 @@ import * as localForage from 'localforage';
 import type { Config } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import type { IPData } from './common';
 import type { Mode, Observability } from '../observability';
+
+import type { IPData } from './common';
 
 export const OBSERVABILITY_DISABLED_KEY = 'observability-disabled';
 export const OBSERVABILITY_GROUP_KEY = 'observability-group';

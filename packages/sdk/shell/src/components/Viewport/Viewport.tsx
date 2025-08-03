@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,

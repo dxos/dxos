@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
-import { SerializationModel, DocumentAdapter, type ChunkRenderer } from './model';
+import { type ChunkRenderer, DocumentAdapter, SerializationModel } from './model';
 
 const blockToMarkdown: ChunkRenderer<DataType.Message> = (
   message: DataType.Message,

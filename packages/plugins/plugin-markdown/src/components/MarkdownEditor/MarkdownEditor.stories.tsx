@@ -14,8 +14,9 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { translations } from '../../translations';
+
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 

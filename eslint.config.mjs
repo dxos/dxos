@@ -203,40 +203,45 @@ export default tseslint.config(
       'react/prop-types': 'off',
 
       // Imports
-      // 'import-x/newline-after-import': [
-      //   'error',
-      //   {
-      //     count: 1,
-      //   },
-      // ],
-      // 'import-x/order': [
-      //   'error',
-      //   {
-      //     alphabetize: {
-      //       order: 'asc',
-      //       caseInsensitive: true,
-      //     },
-      //     groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-      //     pathGroups: [
-      //       {
-      //         pattern: '@dxos/**',
-      //         group: 'internal',
-      //         position: 'after',
-      //       },
-      //     ],
-      //     pathGroupsExcludedImportTypes: ['builtin'],
-      //     'newlines-between': 'always',
-      //   },
-      // ],
-      // 'sort-imports': [
-      //   'error',
-      //   {
-      //     ignoreCase: false,
-      //     ignoreDeclarationSort: true,
-      //     ignoreMemberSort: false,
-      //     memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-      //   },
-      // ],
+      'import-x/newline-after-import': [
+        'error',
+        {
+          count: 1,
+        },
+      ],
+      'import-x/order': [
+        'error',
+        {
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [
+            {
+              pattern: '#**',
+              group: 'parent',
+              position: 'before',
+            },
+            {
+              pattern: '@dxos/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+        },
+      ],
+      'sort-imports': [
+        'error',
+        {
+          ignoreCase: false,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+        },
+      ],
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'warn',

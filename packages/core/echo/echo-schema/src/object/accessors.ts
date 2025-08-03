@@ -4,13 +4,14 @@
 
 import { Option, Schema } from 'effect';
 
-import { getField, type JsonPath } from '@dxos/effect';
+import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SchemaId } from './model';
 import { LabelAnnotation } from '../ast';
+
+import { type InternalObjectProps, SchemaId } from './model';
 
 //
 // Accessors based on model.

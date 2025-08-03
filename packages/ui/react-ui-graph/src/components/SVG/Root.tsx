@@ -3,7 +3,7 @@
 //
 
 import { select } from 'd3';
-import React, { forwardRef, type PropsWithChildren, useEffect, useMemo, useImperativeHandle } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';

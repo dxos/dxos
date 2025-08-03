@@ -12,9 +12,10 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { OVERLAY_STYLE, OVERLAY_CLASSES, Welcome } from './Welcome';
-import { type WelcomeScreenProps, WelcomeState } from './types';
 import { translations } from '../../translations';
+
+import { type WelcomeScreenProps, WelcomeState } from './types';
+import { OVERLAY_CLASSES, OVERLAY_STYLE, Welcome } from './Welcome';
 
 const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();

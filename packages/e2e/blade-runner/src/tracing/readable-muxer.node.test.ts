@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { range } from '@dxos/util';

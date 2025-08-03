@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
-import cliProgress from 'cli-progress';
 import fs from 'fs';
-import folderSize from 'get-folder-size';
 import { join } from 'path';
 import { promisify } from 'util';
+
+import chalk from 'chalk';
+import cliProgress from 'cli-progress';
+import folderSize from 'get-folder-size';
 
 import { createIpfsClient } from '@dxos/cli-base';
 import type { Config } from '@dxos/client';

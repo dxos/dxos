@@ -8,12 +8,13 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DebugPlugin } from './debug';
-import { createNumberPlugin, GeneratorPlugin } from './generator';
-import { LayoutPlugin } from './layout';
-import { LoggerPlugin } from './logger';
 import { useApp } from '../App';
 import { IntentPlugin } from '../plugin-intent';
+
+import { DebugPlugin } from './debug';
+import { GeneratorPlugin, createNumberPlugin } from './generator';
+import { LayoutPlugin } from './layout';
+import { LoggerPlugin } from './logger';
 
 const plugins = [IntentPlugin(), LayoutPlugin(), DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
 
