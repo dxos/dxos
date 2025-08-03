@@ -92,8 +92,8 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
-        contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-          createIntent(Assistant.OnSpaceCreated, { space, rootCollection }),
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
+          createIntent(Assistant.OnSpaceCreated, { rootCollection, space }),
         ),
     }),
     defineModule({

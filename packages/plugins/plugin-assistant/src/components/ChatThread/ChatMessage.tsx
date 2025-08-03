@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, type FC, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,

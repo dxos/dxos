@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
@@ -31,7 +31,7 @@ import {
   SurfaceContainer,
   TasksContainer,
 } from './components';
-import { addTestData, getDecorators, config, testTypes } from './testing';
+import { addTestData, config, getDecorators, testTypes } from './testing';
 
 const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
   const space = useSpace();
@@ -98,7 +98,7 @@ export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ binder, space }) => {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
@@ -122,7 +122,7 @@ export const WithBlueprints = {
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ binder, space }) => {
       const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -137,7 +137,7 @@ export const WithChess = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ binder, space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       const object = space.db.add(
         Chess.makeGame({
@@ -157,7 +157,7 @@ export const WithMap = {
     plugins: [MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ binder, space }) => {
       const object = space.db.add(Map.makeMap());
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -172,7 +172,7 @@ export const WithBoard = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ binder, space }) => {
       const object = space.db.add(Board.makeBoard());
       await binder.bind({ objects: [Ref.make(object)] });
     },

@@ -1,14 +1,16 @@
 // @ts-check
 
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import sortImports from '@trivago/prettier-plugin-sort-imports';
 import reactPlugin from 'eslint-plugin-react';
-import storybook from 'eslint-plugin-storybook';
-import dxos from '@dxos/eslint-plugin-rules';
-import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
-import unusedImports from 'eslint-plugin-unused-imports';
-import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import importX from 'eslint-plugin-import-x';
+import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import storybook from 'eslint-plugin-storybook';
+import unusedImports from 'eslint-plugin-unused-imports';
+import tseslint from 'typescript-eslint';
+
+import dxos from '@dxos/eslint-plugin-rules';
 
 const SOURCES_GLOB = '**/{src,config,.storybook}/**';
 
@@ -86,9 +88,10 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'prefer-arrow-functions': arrowFunctions,
-      'unused-imports': unusedImports,
       'import-x': importX,
+      'prefer-arrow-functions': arrowFunctions,
+      'sort-imports': sortImports,
+      'unused-imports': unusedImports,
     },
   },
 
@@ -211,6 +214,10 @@ export default tseslint.config(
       'import-x/order': [
         'error',
         {
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
           groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           pathGroups: [
             {
@@ -220,11 +227,16 @@ export default tseslint.config(
             },
           ],
           pathGroupsExcludedImportTypes: ['builtin'],
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
           'newlines-between': 'always',
+        },
+      ],
+      'sort-imports': [
+        'error',
+        {
+          ignoreCase: false,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
         },
       ],
     },

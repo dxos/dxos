@@ -24,7 +24,7 @@ const DefaultStory = ({ game }: { game: Chess.Game }) => {
         <Chessboard.Content>
           <Chessboard.Board orientation={orientation} />
         </Chessboard.Content>
-        <div className='flex flex-col justify-center items-center p-8'>
+        <div className='flex flex-col p-8 justify-center items-center'>
           <Chessboard.Info orientation={orientation} onOrientationChange={setOrientation} />
         </div>
         <div className='flex justify-center items-center'>

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, Capabilities, useCapabilities, SettingsPlugin } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin, useCapabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-testing';
 import { ChessPlugin } from '@dxos/plugin-chess';

@@ -23,7 +23,7 @@ import {
   PromptSettings,
   SequenceContainer,
 } from '../components';
-import { meta, ASSISTANT_DIALOG } from '../meta';
+import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
 
 export default () =>

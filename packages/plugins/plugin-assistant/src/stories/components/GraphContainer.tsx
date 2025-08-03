@@ -11,7 +11,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { createFilter, type Expression, QueryParser } from '../../parser';
+import { type Expression, QueryParser, createFilter } from '../../parser';
 import { useFlush, useMatcherExtension } from '../hooks';
 
 import { type ComponentProps } from './types';

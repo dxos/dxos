@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useCapability, Capabilities } from '@dxos/app-framework';
+import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';

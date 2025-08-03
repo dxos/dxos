@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { SpaceSchema, Queue } from '@dxos/client/echo';
+import { Queue, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
