@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type ContextBinder } from '@dxos/assistant';
+import { type AiContextBinder } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type ThemedClassName, useAsyncState, useTranslation } from '@dxos/react-ui';
@@ -16,7 +16,7 @@ import { meta } from '../../meta';
 
 export type ChatReferencesProps = ThemedClassName<{
   space: Space;
-  context: ContextBinder;
+  context: AiContextBinder;
   onUpdate?: (ids: string[]) => void;
 }>;
 

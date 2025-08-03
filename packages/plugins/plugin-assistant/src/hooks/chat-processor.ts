@@ -7,7 +7,7 @@ import { Effect, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiConversation, type AiSession, ArtifactDiffResolver, type ContextBinder } from '@dxos/assistant';
+import { type AiConversation, type AiSession, ArtifactDiffResolver } from '@dxos/assistant';
 import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -112,7 +112,7 @@ export class ChatProcessor {
     return this._conversation;
   }
 
-  get context(): ContextBinder {
+  get context() {
     return this._conversation.context;
   }
 
