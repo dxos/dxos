@@ -172,7 +172,7 @@ export const WithClient: Story = {
         AttentionPlugin(),
         NavTreePlugin(),
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

@@ -10,12 +10,12 @@ import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
-import { Assistant } from '../types';
+import { Assistant, AssistantAction } from '../types';
 
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: Assistant.OnSpaceCreated,
+      intent: AssistantAction.OnSpaceCreated,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -26,17 +26,16 @@ export default (context: PluginContext) => [
             createIntent(CollectionAction.CreateQueryCollection, { typename: Blueprint.Blueprint.typename }),
           );
           rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
-
-          const { object: chat } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
+          const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
 
           // TODO(wittjosiah): Create default blueprint.
-          // const { object: blueprint } = yield* dispatch(createIntent(Assistant.CreateBlueprint, { ... }));
+          // const { object: blueprint } = yield* dispatch(createIntent(AssistantAction.CreateBlueprint, { ... }));
           // space.db.add(blueprint);
         }),
     }),
     createResolver({
-      intent: Assistant.CreateChat,
+      intent: AssistantAction.CreateChat,
       resolve: ({ space, name }) => ({
         data: {
           object: Obj.make(Assistant.Chat, {
@@ -47,13 +46,13 @@ export default (context: PluginContext) => [
       }),
     }),
     createResolver({
-      intent: Assistant.CreateBlueprint,
+      intent: AssistantAction.CreateBlueprint,
       resolve: ({ key, name, description }) => ({
         data: { object: Blueprint.make({ key, name, description }) },
       }),
     }),
     createResolver({
-      intent: Assistant.CreateSequence,
+      intent: AssistantAction.CreateSequence,
       resolve: ({ name }) => ({
         data: {
           object: Obj.make(Sequence, {

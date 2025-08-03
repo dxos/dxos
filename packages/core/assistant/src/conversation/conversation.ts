@@ -15,20 +15,22 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ContextBinder, type ContextBinding } from '../context';
-import type { AiAssistantError } from '../errors';
+import { type AiAssistantError } from '../errors';
 import { AiSession } from '../session';
 
-export interface ConversationRunOptions<Tools extends AiTool.Any> {
+import { ContextBinder, type ContextBinding } from './context';
+
+export interface AiConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
   prompt: string;
 
   toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
-export type ConversationOptions = {
+export type AiConversationOptions = {
   queue: Queue<DataType.Message | ContextBinding>;
 };
 
@@ -37,7 +39,7 @@ export type ConversationOptions = {
  * Context + history + artifacts.
  * Backed by a Queue.
  */
-export class Conversation {
+export class AiConversation {
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
@@ -51,7 +53,7 @@ export class Conversation {
    */
   public readonly context: ContextBinder;
 
-  constructor(options: ConversationOptions) {
+  constructor(options: AiConversationOptions) {
     this._queue = options.queue;
     this.context = new ContextBinder(this._queue);
   }
@@ -62,7 +64,7 @@ export class Conversation {
   }
 
   run = <Tools extends AiTool.Any>(
-    options: ConversationRunOptions<Tools>,
+    options: AiConversationRunOptions<Tools>,
   ): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
@@ -74,9 +76,18 @@ export class Conversation {
 
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
 
-      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+      log.info('run', {
+        history,
+        context,
+        blueprints,
+        contextObjects,
+        systemPrompt: options.systemPrompt,
+        toolkit: options.toolkit,
+        prompt: options.prompt,
+      });
 
       const systemPrompt =
         (options.systemPrompt ?? '') +

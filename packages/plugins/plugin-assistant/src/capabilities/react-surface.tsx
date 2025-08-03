@@ -24,7 +24,7 @@ import {
   SequenceContainer,
 } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant } from '../types';
+import { Assistant, AssistantAction } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -72,7 +72,7 @@ export default () =>
               }
 
               const program = Effect.gen(function* () {
-                const { object } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
+                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {

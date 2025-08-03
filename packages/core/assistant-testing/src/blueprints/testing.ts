@@ -4,10 +4,10 @@
 
 import { Effect } from 'effect';
 
-import { type Conversation, type ConversationRunOptions } from '@dxos/assistant';
+import { type AiConversation, type AiConversationRunOptions } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<ConversationRunOptions<any>, 'prompt' | 'systemPrompt'> & {
+export type TestStep = Pick<AiConversationRunOptions<any>, 'prompt' | 'systemPrompt'> & {
   test?: () => Promise<void>;
 };
 
@@ -18,7 +18,7 @@ export const runSteps = Effect.fn(function* ({
   conversation,
   steps,
 }: {
-  conversation: Conversation;
+  conversation: AiConversation;
   steps: TestStep[];
 }) {
   for (const { test, ...props } of steps) {

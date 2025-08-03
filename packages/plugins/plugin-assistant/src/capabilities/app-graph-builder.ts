@@ -24,7 +24,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, Query, type QueryResult, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant } from '../types';
+import { Assistant, AssistantAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -162,7 +162,7 @@ const getOrCreateChat = async (
     return chats[chats.length - 1];
   }
 
-  const { data } = await dispatch(createIntent(Assistant.CreateChat, { space }));
+  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
   invariant(Obj.instanceOf(Assistant.Chat, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;

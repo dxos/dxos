@@ -17,7 +17,7 @@ type ClientCapabilityOptions = Omit<ClientPluginOptions, 'appKey' | 'invitationU
 export default async ({ context, onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) => {
   const client = new Client(options);
   await client.initialize();
-  await onClientInitialized?.(context, client);
+  await onClientInitialized?.({ context, client });
 
   // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
   client.reloaded.on(() => {
@@ -32,7 +32,7 @@ export default async ({ context, onClientInitialized, onSpacesReady, ...options 
   const subscription = client.spaces.isReady.subscribe(async (ready) => {
     if (ready) {
       await context.activatePromise(ClientEvents.SpacesReady);
-      await onSpacesReady?.(context, client);
+      await onSpacesReady?.({ context, client });
     }
   });
 
