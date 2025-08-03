@@ -16,6 +16,7 @@ import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
+import { log } from '@dxos/log';
 
 import { ContextBinder, type ContextBinding } from '../context';
 import type { AiAssistantError } from '../errors';
@@ -77,6 +78,16 @@ export class Conversation {
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
 
       const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+
+      log.info('run', {
+        history,
+        context,
+        blueprints,
+        contextObjects,
+        systemPrompt: options.systemPrompt,
+        toolkit: options.toolkit,
+        prompt: options.prompt,
+      });
 
       const systemPrompt =
         (options.systemPrompt ?? '') +
