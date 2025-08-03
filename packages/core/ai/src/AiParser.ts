@@ -79,9 +79,10 @@ export const parseResponse =
   <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
-        let blocks = 0;
-        const start = Date.now();
         const transformer = new StreamTransform();
+        const start = Date.now();
+        let blocks = 0;
+        let parts = 0;
 
         /**
          * Current partial block used to accumulate content.
@@ -257,12 +258,14 @@ export const parseResponse =
                 }
               }
             }
+
+            parts++;
           }),
         );
 
         yield* flushText();
         yield* onEnd();
-        log.info('end', { blocks, duration: Date.now() - start });
+        log.info('end', { blocks, parts, duration: Date.now() - start });
         emit.end();
       }),
     );
