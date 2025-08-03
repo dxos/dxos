@@ -8,6 +8,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { type Chess } from '../types';
+
 import { Chessboard } from './Chessboard';
 
 export type ChessboardContainerProps = {

@@ -4,17 +4,18 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChatThread } from './ChatThread';
 import { translations } from '../../translations';
+
+import { ChatThread } from './ChatThread';
 
 faker.seed(1);
 

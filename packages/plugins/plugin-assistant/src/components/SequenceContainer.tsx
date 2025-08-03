@@ -14,8 +14,9 @@ import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { SequenceEditor } from './SequenceEditor';
 import { meta } from '../meta';
+
+import { SequenceEditor } from './SequenceEditor';
 
 // TODO(burdon): Move to config.
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';

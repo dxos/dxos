@@ -83,7 +83,7 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => 
  * @returns Tool name produced from function name by escaping invalid characters.
  */
 const makeToolName = (name: string) => {
-  const toolName = name.replace(/[^a-zA-Z0-9]/g, '');
+  const toolName = name.replace(/[^a-zA-Z0-9]/g, '_');
   invariant(toolName.match(/^[a-zA-Z_][a-zA-Z0-9-_]*$/));
   return toolName;
 };

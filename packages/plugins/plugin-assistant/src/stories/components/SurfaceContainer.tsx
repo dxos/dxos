@@ -7,13 +7,14 @@ import '@dxos-theme';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { log } from '@dxos/log';
-import { Filter, Obj, type Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
 import { ContextBinder } from '@dxos/assistant';
+import { Filter, Obj, type Type } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-ui';
 
 import { Assistant } from '../../types';
+
 import { type ComponentProps } from './types';
 
 /**
@@ -27,7 +28,7 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
     }
 
     // Get the latest chat (is this deterministic?)
-    const chat = chats[chats.length - 1]!;
+    const chat = chats[chats.length - 1];
     const binder = new ContextBinder(chat.queue.target!);
     const ref = binder.objects.value?.[0];
     const object = await ref?.load();

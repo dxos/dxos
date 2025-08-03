@@ -12,7 +12,7 @@ import { type ArtifactDefinition, type AssociatedArtifact, type Blueprint } from
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Queue, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks';

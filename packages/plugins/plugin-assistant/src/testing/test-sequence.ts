@@ -5,7 +5,7 @@
 import { ToolId, ToolRegistry } from '@dxos/ai';
 // import { createExaTool, createGraphWriterTool, createLocalSearchTool } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
-import { SequenceParser, type SequenceDefinition } from '@dxos/conductor';
+import { type SequenceDefinition, SequenceParser } from '@dxos/conductor';
 import { type DXN } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
