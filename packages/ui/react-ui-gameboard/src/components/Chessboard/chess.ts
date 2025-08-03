@@ -8,6 +8,7 @@ import { type FC, type SVGProps } from 'react';
 
 import { log } from '@dxos/log';
 
+import * as Alpha from '../../gen/pieces/chess/alpha';
 import {
   type GameboardModel,
   type Location,
@@ -17,7 +18,6 @@ import {
   type Player,
   locationToString,
 } from '../Gameboard';
-import * as Alpha from '../../gen/pieces/chess/alpha';
 
 export type ChessPiece = 'BK' | 'BQ' | 'BR' | 'BB' | 'BN' | 'BP' | 'WK' | 'WQ' | 'WR' | 'WB' | 'WN' | 'WP';
 

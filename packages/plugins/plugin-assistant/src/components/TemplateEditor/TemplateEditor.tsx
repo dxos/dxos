@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,

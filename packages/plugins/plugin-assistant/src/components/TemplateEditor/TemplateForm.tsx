@@ -10,8 +10,9 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { TemplateEditor } from './TemplateEditor';
 import { meta } from '../../meta';
+
+import { TemplateEditor } from './TemplateEditor';
 
 export type TemplateFormProps = {
   id: string;

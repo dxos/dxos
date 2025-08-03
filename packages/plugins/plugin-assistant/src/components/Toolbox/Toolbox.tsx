@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, Fragment, type FC } from 'react';
+import React, { type FC, Fragment, useEffect, useState } from 'react';
 
-import { parseToolName, type Tool } from '@dxos/ai';
+import { type Tool, parseToolName } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ArtifactDefinition } from '@dxos/blueprints';
 import { type Blueprint } from '@dxos/blueprints';

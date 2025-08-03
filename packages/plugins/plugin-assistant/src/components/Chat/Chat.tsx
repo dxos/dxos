@@ -13,16 +13,15 @@ import { Event } from '@dxos/async';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
+import { type Expando, type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ChatEvent } from './events';
 import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
@@ -37,6 +36,8 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
+
+import { type ChatEvent } from './events';
 
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {

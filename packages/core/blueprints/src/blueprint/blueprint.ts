@@ -7,7 +7,6 @@ import { Schema } from 'effect';
 import { ToolId } from '@dxos/ai';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { Template } from '../template';
@@ -75,13 +74,13 @@ export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
  * Create a new Blueprint.
  */
 export const make = ({
-  key = `example.com/blueprint/${PublicKey.random().truncate()}`,
+  key,
   name,
   description,
   instructions = { source: '' },
   tools = [],
-}: Pick<Blueprint, 'name'> &
-  Omit<Partial<Blueprint>, 'name' | 'instructions'> & {
+}: Pick<Blueprint, 'key' | 'name'> &
+  Omit<Partial<Blueprint>, 'key' | 'name' | 'instructions'> & {
     instructions?: Omit<Partial<Template>, 'source'> & { source: string };
   }) =>
   Obj.make(Blueprint, {

@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type ChatPromptProps } from '../components';
-import { AiServicePresets, type AiServicePreset } from './presets';
+
+import { type AiServicePreset, AiServicePresets } from './presets';
 
 export type UsePresets = { preset: AiServicePreset | undefined } & Pick<ChatPromptProps, 'presets' | 'onChangePreset'>;
 

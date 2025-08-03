@@ -4,7 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type Expression, type BinaryOperator, type RelationalOperator } from './types';
+import { type BinaryOperator, type Expression, type RelationalOperator } from './types';
 
 // TODO(burdon): Move to echo-schema?
 

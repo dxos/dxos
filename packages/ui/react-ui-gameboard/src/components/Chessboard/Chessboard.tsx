@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef, useMemo, useEffect, useState, memo } from 'react';
+import React, { Fragment, type PropsWithChildren, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
 
-import { boardStyles, type ChessModel, type ChessPiece, ChessPieces, getSquareColor, locationToPos } from './chess';
 import {
   type DOMRectBounds,
   Gameboard,
@@ -20,6 +19,8 @@ import {
   locationToString,
   useGameboardContext,
 } from '../Gameboard';
+
+import { type ChessModel, type ChessPiece, ChessPieces, boardStyles, getSquareColor, locationToPos } from './chess';
 
 export type ChessboardProps = ThemedClassName<
   PropsWithChildren<{
@@ -122,22 +123,20 @@ export const Chessboard = memo(
             />
           ))}
         </div>
-        <div>
-          {promoting && (
-            <PromotionSelector
-              grid={grid}
-              piece={promoting}
-              onSelect={(piece) => {
-                onPromotion({
-                  from: Object.values(model!.pieces.value).find((p) => p.id === promoting.id)!.location,
-                  to: piece.location,
-                  piece: promoting.type,
-                  promotion: piece.type,
-                });
-              }}
-            />
-          )}
-        </div>
+        {promoting && (
+          <PromotionSelector
+            grid={grid}
+            piece={promoting}
+            onSelect={(piece) => {
+              onPromotion({
+                from: Object.values(model!.pieces.value).find((p) => p.id === promoting.id)!.location,
+                to: piece.location,
+                piece: promoting.type,
+                promotion: piece.type,
+              });
+            }}
+          />
+        )}
       </div>
     );
   },
@@ -176,17 +175,17 @@ const PromotionSelector = ({
   };
 
   return (
-    <div>
+    <>
       {positions.map(({ piece, bounds }) => (
-        <div key={piece.id} style={bounds} onClick={() => handleSelect(piece)}>
-          <Gameboard.Piece
-            piece={piece}
-            bounds={bounds}
-            Component={ChessPieces[piece.type as ChessPiece]}
-            classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
-          />
-        </div>
+        <Gameboard.Piece
+          key={piece.id}
+          piece={piece}
+          bounds={bounds}
+          Component={ChessPieces[piece.type as ChessPiece]}
+          classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
+          onClick={() => handleSelect(piece)}
+        />
       ))}
-    </div>
+    </>
   );
 };

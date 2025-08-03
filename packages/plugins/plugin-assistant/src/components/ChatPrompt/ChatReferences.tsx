@@ -21,7 +21,7 @@ export type ChatReferencesProps = ThemedClassName<{
 }>;
 
 export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatReferencesProps) => {
-  const { t: _t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.id);
 
   const [items] = useAsyncState<TagPickerItemData[]>(async () => {
     const objects = await Ref.Array.loadAll(context.objects.value ?? []);
@@ -46,7 +46,7 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
     <TagPicker
       classNames={mx('h-[1.75rem] text-sm', classNames)}
       mode='multi-select'
-      // placeholder={t('context objects placeholder')}
+      placeholder={t('context objects placeholder')}
       items={items}
       onSearch={handleSearch}
       onUpdate={onUpdate}

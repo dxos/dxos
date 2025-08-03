@@ -7,21 +7,21 @@ import { Option, pipe } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
+  type PromiseIntentDispatcher,
   contributes,
   createIntent,
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, Filter, Query, type QueryResult, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Filter, Query, type QueryResult, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';

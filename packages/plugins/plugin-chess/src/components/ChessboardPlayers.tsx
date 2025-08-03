@@ -5,13 +5,15 @@
 import React from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { getSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
 import { Icon, Input, Select, useThemeContext } from '@dxos/react-ui';
-import { useGameboardContext } from '@dxos/react-ui-gameboard';
-import { type Chess } from '../types';
-import { type ExtendedChessModel } from './Chessboard';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/react-ui-theme';
+
+import { type Chess } from '../types';
+
+import { type ExtendedChessModel } from './Chessboard';
 
 export type ChessboardPlayersProps = ThemedClassName<{}>;
 

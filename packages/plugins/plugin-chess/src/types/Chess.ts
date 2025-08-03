@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { Chess as ChessJS } from 'chess.js';
+import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
@@ -25,7 +25,9 @@ export const Game = Schema.Struct({
       ),
     }).pipe(Schema.mutable),
   ),
-  pgn: Schema.String,
+  pgn: Schema.String.annotations({
+    description: 'Portable Game Notation.',
+  }),
 }).pipe(
   Schema.partial,
   Type.Obj({

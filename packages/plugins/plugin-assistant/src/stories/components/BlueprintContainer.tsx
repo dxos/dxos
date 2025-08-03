@@ -11,8 +11,9 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 
-import { type ComponentProps } from './types';
 import { TemplateEditor } from '../../components';
+
+import { type ComponentProps } from './types';
 
 export const BlueprintContainer = ({ space }: ComponentProps) => {
   const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
