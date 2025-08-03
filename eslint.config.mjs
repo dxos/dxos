@@ -16,7 +16,7 @@ const SOURCES_GLOB = '**/{src,config,.storybook}/**';
 
 export default tseslint.config(
   //
-  // Global ignores.
+  // Global ignores
   //
   {
     // WARNING: Do not add extra keys to this config object
@@ -96,7 +96,7 @@ export default tseslint.config(
   },
 
   //
-  // All files.
+  // All files
   //
   {
     files: [[SOURCES_GLOB, '**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
@@ -136,28 +136,26 @@ export default tseslint.config(
       '@typescript-eslint/prefer-promise-reject-errors': 'off',
       '@typescript-eslint/restrict-plus-operands': 'off',
 
-      // TODO(dmaretskyi): New overrides. Need to review later.
-      ...{
-        '@typescript-eslint/await-thenable': 'off',
-        '@typescript-eslint/no-misused-promises': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off',
-        '@typescript-eslint/no-unsafe-return': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-        '@typescript-eslint/no-redundant-type-constituents': 'off',
-        '@typescript-eslint/no-unsafe-argument': 'off',
-        '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-        '@typescript-eslint/no-empty-object-type': 'off',
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unused-expressions': 'off',
-        '@typescript-eslint/no-unsafe-function-type': 'off',
-        '@typescript-eslint/no-duplicate-type-constituents': 'off',
-        '@typescript-eslint/no-base-to-string': 'off',
-        '@typescript-eslint/no-for-in-array': 'off',
-        '@typescript-eslint/restrict-template-expressions': 'off',
-        '@typescript-eslint/require-await': 'off',
-        '@typescript-eslint/unbound-method': 'off',
-      },
+      // TODO(dmaretskyi): Review new rules:
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/no-duplicate-type-constituents': 'off',
+      '@typescript-eslint/no-base-to-string': 'off',
+      '@typescript-eslint/no-for-in-array': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off',
 
       // General
       camelcase: 'off',
@@ -253,7 +251,7 @@ export default tseslint.config(
   },
 
   //
-  // Tests.
+  // Tests
   //
   {
     files: [[SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
@@ -263,7 +261,7 @@ export default tseslint.config(
   },
 
   //
-  // Stories.
+  // Storybook
   //
   {
     extends: [storybook.configs['flat/recommended']],
