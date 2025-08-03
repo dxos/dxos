@@ -3,6 +3,7 @@
 //
 
 export * from './chat-processor';
+export * from './errors';
 export * from './presets';
 
 export * from './useBlueprints';
