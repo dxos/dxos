@@ -34,14 +34,7 @@ export const ChatContainer = ({ space }: ComponentProps) => {
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space });
-  const processor = useChatProcessor({
-    preset,
-    chat,
-    space,
-    services,
-    blueprintRegistry,
-    noPluginArtifacts: true,
-  });
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
 
   const handleNewChat = useCallback(() => {
     invariant(space);
