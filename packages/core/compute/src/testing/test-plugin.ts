@@ -5,9 +5,9 @@
 import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 import { type ProcedureAst } from 'hyperformula/typings/parser';
 
-import { FunctionArgumentType } from '#hyperformula';
-
 import { getDeep } from '@dxos/util';
+
+import { FunctionArgumentType } from '#hyperformula';
 
 import { type ComputeGraphPlugin } from '../compute-graph-registry';
 import { type AsyncFunction, AsyncFunctionPlugin } from '../functions';

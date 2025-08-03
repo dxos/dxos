@@ -4,8 +4,6 @@
 
 import { type Listeners } from 'hyperformula/typings/Emitter';
 
-import { ExportedCellChange, type HyperFormula } from '#hyperformula';
-
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
@@ -16,6 +14,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
+
+import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 
 import { ComputeNode } from './compute-node';
 import {
