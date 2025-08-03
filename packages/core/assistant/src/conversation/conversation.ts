@@ -90,6 +90,7 @@ export class AiConversation {
         toolkit: options.toolkit,
       });
 
+      const start = Date.now();
       const session = new AiSession();
       this.onBegin.emit(session);
 
@@ -101,6 +102,7 @@ export class AiConversation {
         prompt: options.prompt,
       });
 
+      log.info('result', { messages: messages.length, duration: Date.now() - start });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));
