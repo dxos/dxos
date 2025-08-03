@@ -20,7 +20,6 @@ import video from '../testing/video.mp4?raw';
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 import { useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
-// @ts-ignore
 
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const config = useConfig();
