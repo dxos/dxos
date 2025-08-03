@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { ContextBinder } from '@dxos/assistant';
+import { AiContextBinder } from '@dxos/assistant';
 import { Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
@@ -29,7 +29,7 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
 
     // Get the latest chat (is this deterministic?)
     const chat = chats[chats.length - 1];
-    const binder = new ContextBinder(chat.queue.target!);
+    const binder = new AiContextBinder(chat.queue.target!);
     const refs = binder.objects.value;
     const objects = await Ref.Array.loadAll(refs);
     // TODO(burdon): Auto log meta for ECHO objects?

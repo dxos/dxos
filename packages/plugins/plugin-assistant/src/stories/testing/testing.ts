@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, IntentPlugin, type Plugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ContextBinder } from '@dxos/assistant';
+import { AiContextBinder } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
@@ -49,7 +49,7 @@ export const config = {
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   blueprints?: Blueprint.Blueprint[];
-  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: ContextBinder }) => Promise<void>;
+  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
 /**
@@ -80,7 +80,7 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
           // Clone blueprints and bind to conversation.
           // TODO(dmaretskyi): This should be done by Obj.clone.
           const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
-          const binder = new ContextBinder(await chat.queue.load());
+          const binder = new AiContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const { id: _id, ...data } = blueprint;
             const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));

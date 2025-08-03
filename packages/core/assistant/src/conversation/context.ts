@@ -14,7 +14,7 @@ import { ComplexSet } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-// TODO(burdon): Make ContentBlock.
+// TODO(burdon): Move to @dxos/schema ContentBlock.
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
@@ -35,10 +35,27 @@ export const ContextBinding = Schema.Struct({
 
 export interface ContextBinding extends Schema.Schema.Type<typeof ContextBinding> {}
 
+export type BindingProps = Partial<{
+  blueprints: Ref.Ref<Blueprint.Blueprint>[];
+  objects: Ref.Ref<Type.Expando>[];
+}>;
+
+export class Bindings {
+  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
+  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
+
+  toJSON() {
+    return {
+      blueprints: Array.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
+      objects: Array.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
+    };
+  }
+}
+
 /**
  * Manages bindings of blueprints and objects to a conversation.
  */
-export class ContextBinder {
+export class AiContextBinder {
   constructor(private readonly _queue: Queue) {}
 
   /**
@@ -47,7 +64,6 @@ export class ContextBinder {
   // TODO(burdon): Cache value?
   readonly bindings: ReadonlySignal<Bindings> = computed(() => this._reduce(this._queue.objects));
 
-  // TODO(burdon): load refs?
   readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]> = computed(() => [
     ...this.bindings.value.blueprints,
   ]);
@@ -114,14 +130,4 @@ export class ContextBinder {
       }),
     );
   }
-}
-
-export type BindingProps = Partial<{
-  blueprints: Ref.Ref<Blueprint.Blueprint>[];
-  objects: Ref.Ref<Type.Expando>[];
-}>;
-
-export class Bindings {
-  blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
-  objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
 }
