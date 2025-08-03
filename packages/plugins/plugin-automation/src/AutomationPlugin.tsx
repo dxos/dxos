@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
-import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';

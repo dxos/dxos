@@ -3,14 +3,14 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { iframeServiceBundle, workerServiceBundle, type WorkerServiceBundle } from '@dxos/client-protocol';
+import { type WorkerServiceBundle, iframeServiceBundle, workerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
-import { getAsyncProviderValue, type MaybePromise, type Provider } from '@dxos/util';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type SharedWorkerConnectionOptions = {

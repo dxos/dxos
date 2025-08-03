@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type Repo, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type DocHandle, type DocumentId, type Repo } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';

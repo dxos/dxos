@@ -8,8 +8,9 @@ import { Filter, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
-import { QueryPlanner } from './query-planner';
 import { TestSchema } from '../testing';
+
+import { QueryPlanner } from './query-planner';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();

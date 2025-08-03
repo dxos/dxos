@@ -8,9 +8,10 @@ import { useGlobalSearch } from '@dxos/plugin-search';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { D3ForceGraph } from './Graph';
 import { useGraphModel } from '../hooks';
 import { type ViewType } from '../types';
+
+import { D3ForceGraph } from './Graph';
 
 type ExplorerContainerProps = {
   role: string;

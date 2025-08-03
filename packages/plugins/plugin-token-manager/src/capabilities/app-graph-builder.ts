@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
 import { SPACE_PLUGIN } from '@dxos/plugin-space';
 

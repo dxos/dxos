@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
-import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
+import { IDENTITY_WAIT_TIMEOUT, IdentityWaitTimeoutError } from '@dxos/cli-base';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';

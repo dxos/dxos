@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { createContext, type PropsWithChildren, useContext, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useMemo, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { filterObjectsSync, queryStringToMatch } from './sync';
 import { type SearchResult } from '../types';
+
+import { filterObjectsSync, queryStringToMatch } from './sync';
 
 type SearchContextType = {
   match?: RegExp;

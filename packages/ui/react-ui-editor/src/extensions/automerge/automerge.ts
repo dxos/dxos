@@ -5,15 +5,16 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { StateField, type Extension } from '@codemirror/state';
+import { type Extension, StateField } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { cursorConverter } from './cursor';
-import { updateHeadsEffect, isReconcile, type State } from './defs';
-import { Syncer } from './sync';
 import { Cursor } from '../../util';
+
+import { cursorConverter } from './cursor';
+import { type State, isReconcile, updateHeadsEffect } from './defs';
+import { Syncer } from './sync';
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({

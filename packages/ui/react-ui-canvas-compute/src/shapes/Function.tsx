@@ -6,21 +6,22 @@ import { Schema } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { getSnapshot, isInstanceOf, Ref } from '@dxos/echo-schema';
+import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo-schema';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {
+  type ShapeComponentProps,
+  type ShapeDef,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
-  type ShapeComponentProps,
-  type ShapeDef,
 } from '@dxos/react-ui-canvas-editor';
 
-import { Box, createFunctionAnchors } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { Box, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const FunctionShape = Schema.extend(
   ComputeShape,

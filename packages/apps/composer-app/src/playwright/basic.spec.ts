@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 

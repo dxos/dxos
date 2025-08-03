@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
 
 import { ProfileContainer } from './ProfileContainer';
-import { translations } from '../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-client/ProfileContainer',

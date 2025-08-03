@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Density, Elevation, ComponentFunction, Theme } from '@dxos/react-ui-types';
+import type { ComponentFunction, Density, Elevation, Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
 import { ghostHover } from '../fragments';

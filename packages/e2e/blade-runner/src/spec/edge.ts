@@ -6,11 +6,11 @@ import path from 'node:path';
 
 import { type ConfigProto } from '@dxos/config';
 import { log } from '@dxos/log';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { TraceReader } from '../analysys/traces';
 import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { EdgeReplicant } from '../replicants/edge-replicant';
 
 export type EdgeTestSpec = {

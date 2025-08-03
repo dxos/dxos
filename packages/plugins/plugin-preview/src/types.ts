@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Schema } from 'effect';
 import { type PropsWithChildren } from 'react';
 
-// TODO(burdon): Better place for these defs?
-export type PreviewProps<T extends object> = PropsWithChildren<{
+export type PreviewProps<T extends Schema.Schema.Type<any>> = PropsWithChildren<{
   subject: T;
   role?: string;
 }>;

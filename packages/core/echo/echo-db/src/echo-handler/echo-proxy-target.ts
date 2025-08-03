@@ -7,13 +7,14 @@ import { type Brand, type Schema } from 'effect';
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import type { SchemaId } from '@dxos/echo-schema';
-import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
+
+import type { KeyPath, ObjectCore } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 import { type EchoArray } from './echo-array';
 import { type AnyLiveObject, type EchoReactiveHandler } from './echo-handler';
-import type { ObjectCore, KeyPath } from '../core-db';
-import { type EchoDatabase } from '../proxy-db';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');

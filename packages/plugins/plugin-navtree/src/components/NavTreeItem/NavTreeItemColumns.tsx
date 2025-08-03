@@ -5,14 +5,15 @@
 import React, { Fragment, memo } from 'react';
 
 import { isAction } from '@dxos/app-graph';
-import { DensityProvider, Popover, toLocalizedString, Treegrid, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { NavTreeItemAction } from './NavTreeItemAction';
 import { useLoadDescendents } from '../../hooks';
 import { NAVTREE_PLUGIN } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';
+
+import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);

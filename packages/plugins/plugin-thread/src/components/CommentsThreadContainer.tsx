@@ -14,12 +14,13 @@ import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps 
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { MessageContainer } from './MessageContainer';
-import { command } from './command-extension';
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
+
+import { command } from './command-extension';
+import { MessageContainer } from './MessageContainer';
 
 // TODO(burdon): Remove need for p-1.
 export const commentControlClassNames = '!p-1 transition-opacity';

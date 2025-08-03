@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { type PushStream, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { type PushStream, Trigger, sleep, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
+import { TestBuilder, type TestPeer } from '../testing';
+
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationsHandler } from './invitations-handler';
 import { SpaceInvitationProtocol } from './space-invitation-protocol';
-import { TestBuilder, type TestPeer } from '../testing';
 
 interface PeerSetup {
   ctx: Context;

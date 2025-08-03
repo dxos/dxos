@@ -10,8 +10,8 @@ import {
   getSize,
   ghostHighlighted,
   modalSurface,
-  surfaceShadow,
   separatorBorderColor,
+  surfaceShadow,
   surfaceZIndex,
 } from '../fragments';
 

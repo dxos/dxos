@@ -9,26 +9,30 @@ import { type AssociaatedArtifact } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chat } from './Chat';
-import { useChatProcessor, useChatServices } from '../hooks';
+import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+
+import { Chat } from './Chat';
 
 export type ChatContainerProps = {
   role: string;
   chat: Assistant.Chat;
+  /** @deprecated */
   artifact?: AssociatedArtifact;
 };
 
-export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
+export const ChatContainer = ({ chat, artifact }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
+
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
   const processor = useChatProcessor({
-    chat,
+    preset, chat,
     services,
     settings,
-    preset: { id: 'testing', model: 'deepseek-r1:latest', provider: 'dxos-local' },
   });
   if (!processor) {
     return null;
@@ -40,7 +44,13 @@ export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
       <Chat.Root chat={chat} processor={processor} artifact={artifact}>
         <Chat.Thread />
         <div className='pbe-4 pis-2 pie-2'>
-          <Chat.Prompt classNames='border border-subduedSeparator rounded-md' />
+          <Chat.Prompt
+            {...chatProps}
+            classNames='border border-subduedSeparator rounded-md'
+            preset={preset?.id}
+            online={online}
+            onChangeOnline={setOnline}
+          />
         </div>
       </Chat.Root>
     </StackItem.Content>

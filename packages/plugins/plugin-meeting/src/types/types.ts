@@ -6,8 +6,9 @@ import { Schema } from 'effect';
 
 import { ChannelType } from '@dxos/plugin-thread/types';
 
-import { MeetingType } from './schema';
 import { MEETING_PLUGIN } from '../meta';
+
+import { MeetingType } from './schema';
 
 export namespace MeetingAction {
   const MEETING_ACTION = `${MEETING_PLUGIN}/action`;

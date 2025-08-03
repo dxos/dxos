@@ -5,17 +5,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType, type EchoSchema } from '@dxos/echo-schema';
+import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 import {
+  type FieldType,
+  type ProjectionModel,
+  type PropertyType,
+  type SchemaProperty,
   getFormatSchema,
   getSchemaProperties,
   sortProperties,
-  type FieldType,
-  type PropertyType,
-  type ProjectionModel,
-  type SchemaProperty,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';

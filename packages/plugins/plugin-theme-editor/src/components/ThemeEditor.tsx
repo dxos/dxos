@@ -6,19 +6,20 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo, useState } from 'react';
 
 import {
-  createGapSeparator,
-  createMenuAction,
   MenuProvider,
   ToolbarMenu,
-  useMenuActions,
+  createGapSeparator,
+  createMenuAction,
   rxFromSignal,
+  useMenuActions,
 } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { JsonEditor } from './JsonEditor';
 import { themeEditorId } from '../defs';
 import { THEME_EDITOR_PLUGIN } from '../meta';
-import { saveAndRender, reset } from '../util';
+import { reset, saveAndRender } from '../util';
+
+import { JsonEditor } from './JsonEditor';
 
 const toolbarCreator = (handleFormat: () => void) =>
   Rx.make((get) =>

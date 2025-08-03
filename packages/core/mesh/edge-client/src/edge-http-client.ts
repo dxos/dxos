@@ -10,13 +10,14 @@ import { Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type CreateAgentResponseBody,
   type CreateAgentRequestBody,
+  type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeHttpResponse,
+  type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
@@ -24,20 +25,19 @@ import {
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
-  type RecoverIdentityRequest,
-  type RecoverIdentityResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueueQuery,
   type QueryResult,
+  type QueueQuery,
+  type RecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
-  type EdgeStatus,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
-import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
+import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;

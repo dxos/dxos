@@ -3,7 +3,7 @@
 //
 
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

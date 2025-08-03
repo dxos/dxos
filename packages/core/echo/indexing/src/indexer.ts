@@ -9,7 +9,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './indexes';

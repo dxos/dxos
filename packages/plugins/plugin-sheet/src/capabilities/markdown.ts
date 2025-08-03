@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 
-import { SheetCapabilities } from './capabilities';
 import { computeGraphFacet } from '../extensions';
+
+import { SheetCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [

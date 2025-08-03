@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
-import { type Dimension, useCanvasContext, type Point } from '@dxos/react-ui-canvas';
+import { type Dimension, type Point, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { getInputPoint, pointSubtract } from '../layout';

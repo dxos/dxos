@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 
 import { type AiServiceClient } from '@dxos/ai';
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -16,12 +16,13 @@ import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugi
 import { type ChannelType } from '@dxos/plugin-thread/types';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { getSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, MeetingType, type MeetingSettingsProps } from '../types';
+import { MeetingAction, type MeetingSettingsProps, MeetingType } from '../types';
+
+import { MeetingCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?

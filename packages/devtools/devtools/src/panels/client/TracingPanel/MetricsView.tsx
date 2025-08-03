@@ -7,8 +7,9 @@ import { type AxisOptions, Chart } from 'react-charts';
 
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 
-import { ResourceName } from './Resource';
 import { JsonView } from '../../../components';
+
+import { ResourceName } from './Resource';
 
 export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   if (!resource) {

@@ -3,12 +3,13 @@
 //
 
 import { StateField } from '@codemirror/state';
-import { showTooltip, type EditorView, type Tooltip, type TooltipView } from '@codemirror/view';
+import { type EditorView, type Tooltip, type TooltipView, showTooltip } from '@codemirror/view';
 
-import { closeEffect, type Action, openEffect } from './action';
-import { type CommandOptions } from './command';
 import { type RenderCallback } from '../../types';
 import { singleValueFacet } from '../../util';
+
+import { type Action, closeEffect, openEffect } from './action';
+import { type CommandOptions } from './command';
 
 export const commandConfig = singleValueFacet<CommandOptions>();
 

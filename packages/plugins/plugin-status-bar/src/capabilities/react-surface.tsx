@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, Surface } from '@dxos/app-framework';
+import { Capabilities, Surface, contributes, createSurface } from '@dxos/app-framework';
 
 import { StatusBarActions, StatusBarPanel, VersionNumber } from '../components';
 import { meta } from '../meta';

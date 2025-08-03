@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import find from 'find-process';
-import fetch from 'node-fetch';
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
+
+import find from 'find-process';
+import fetch from 'node-fetch';
 import pkgUp from 'pkg-up';
 
 import { sleep } from '@dxos/async';

@@ -15,7 +15,7 @@ import { AnthropicClient } from '@effect/ai-anthropic';
 
 import { AiServiceRouter } from '@dxos/ai';
 import { FetchHttpClient } from '@effect/platform';
-import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantCapabilities, AssistantActivationEvents } from './defs';
 import { meta } from './meta';
 import { translations } from './translations';
@@ -94,8 +94,8 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
-        contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-          createIntent(Assistant.OnSpaceCreated, { space, rootCollection }),
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
+          createIntent(Assistant.OnSpaceCreated, { rootCollection, space }),
         ),
     }),
     defineModule({
@@ -158,5 +158,10 @@ export const AssistantPlugin = () =>
           ),
         ];
       },
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

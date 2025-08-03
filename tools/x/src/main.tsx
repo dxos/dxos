@@ -4,9 +4,10 @@
 
 /* eslint-disable camelcase */
 
+import process from 'process';
+
 import { Octokit } from '@octokit/rest';
 import { render } from 'ink';
-import process from 'process';
 import React from 'react';
 
 import { App } from './components';

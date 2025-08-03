@@ -5,9 +5,9 @@
 import { effect, untracked } from '@preact/signals-core';
 import { type Schema, SchemaAST } from 'effect';
 
-import { findNode, isLiteralUnion, isSimpleType, type Path } from '@dxos/effect';
+import { type Path, findNode, isLiteralUnion, isSimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { live, isLiveObject, type Live } from '@dxos/live-object';
+import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep, hyphenize, setDeep } from '@dxos/util';
 

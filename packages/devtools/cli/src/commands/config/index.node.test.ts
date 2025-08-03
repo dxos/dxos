@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import path from 'node:path';
+
 import { runCommand } from '@oclif/test';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
-import path from 'node:path';
 import { expect, test } from 'vitest';
 
 // TODO(burdon): Import (configure esbuild).

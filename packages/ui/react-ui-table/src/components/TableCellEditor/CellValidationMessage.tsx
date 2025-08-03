@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useGridContext, type GridScopedProps } from '@dxos/react-ui-grid';
+import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
 
 export type CellValidationMessageProps = {
   validationError: string | null;

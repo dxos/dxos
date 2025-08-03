@@ -9,15 +9,15 @@ import { live } from '@dxos/client/echo';
 import { BaseGraphNode, Graph } from '@dxos/graph';
 import {
   Polygon,
+  Shape,
   createEllipse,
   createPath,
   createRectangle,
   isPath,
   isPolygon,
-  Shape,
 } from '@dxos/react-ui-canvas-editor';
 
-import { createSwitch, ComputeShape, createFunction } from './shapes';
+import { ComputeShape, createFunction, createSwitch } from './shapes';
 
 describe('compute', () => {
   test('model', ({ expect }) => {

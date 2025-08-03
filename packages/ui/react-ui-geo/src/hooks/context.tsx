@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { createContext, type Dispatch, type PropsWithChildren, type SetStateAction, useContext } from 'react';
+import React, { type Dispatch, type PropsWithChildren, type SetStateAction, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { useControlledState } from '@dxos/react-ui';

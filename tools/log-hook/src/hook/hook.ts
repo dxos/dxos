@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
+
+import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { addHook } from 'pirates';
 
 import { ID_BUGCHECK_STRING, preprocess } from './preprocessor';

@@ -5,14 +5,15 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { createExtension, ROOT_ID } from '@dxos/app-graph';
+import { ROOT_ID, createExtension } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
 import { isNonNullable } from '@dxos/util';
 
-import { SETTINGS_ID, SETTINGS_KEY, SETTINGS_PLUGIN, SettingsAction } from './actions';
 import { Capabilities } from '../common';
-import { contributes, type PluginMeta, type PluginContext } from '../core';
+import { type PluginContext, type PluginMeta, contributes } from '../core';
 import { createIntent } from '../plugin-intent';
+
+import { SETTINGS_ID, SETTINGS_KEY, SETTINGS_PLUGIN, SettingsAction } from './actions';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

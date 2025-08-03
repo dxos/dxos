@@ -5,7 +5,7 @@
 import { useRxValue } from '@effect-rx/rx-react';
 import { Option } from 'effect';
 
-import { type ReadableGraph, type Node, type Relation } from '@dxos/app-graph';
+import { type Node, type ReadableGraph, type Relation } from '@dxos/app-graph';
 
 /**
  * React hook to get a node from the graph.

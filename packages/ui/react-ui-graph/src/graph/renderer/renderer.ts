@@ -7,7 +7,7 @@ import { type RefObject } from 'react';
 import { invariant } from '@dxos/invariant';
 
 import { type SVGContext } from '../../hooks';
-import { defaultIdAccessor, type IdAccessor } from '../types';
+import { type IdAccessor, defaultIdAccessor } from '../types';
 
 export type RendererOptions<T = any> = {
   idAccessor: IdAccessor;

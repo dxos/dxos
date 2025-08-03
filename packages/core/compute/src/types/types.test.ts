@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getIndices, sortByIndex, getIndicesBelow, getIndicesAbove, getIndicesBetween } from '@tldraw/indices';
+import { getIndices, getIndicesAbove, getIndicesBelow, getIndicesBetween, sortByIndex } from '@tldraw/indices';
 import { describe, expect, test } from 'vitest';
 
-import { inRange, addressFromA1Notation, addressToA1Notation, rangeFromA1Notation, rangeToA1Notation } from './types';
+import { addressFromA1Notation, addressToA1Notation, inRange, rangeFromA1Notation, rangeToA1Notation } from './types';
 
 describe('cell', () => {
   test('posToA1Notation', () => {

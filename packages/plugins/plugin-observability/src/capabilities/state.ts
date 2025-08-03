@@ -6,8 +6,9 @@ import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getObservabilityGroup } from '@dxos/observability';
 
-import { ObservabilityCapabilities } from './capabilities';
 import { OBSERVABILITY_PLUGIN } from '../meta';
+
+import { ObservabilityCapabilities } from './capabilities';
 
 export default async ({ namespace }: { namespace: string }) => {
   const state = new LocalStorageStore<ObservabilityCapabilities.State>(OBSERVABILITY_PLUGIN);

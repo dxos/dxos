@@ -3,9 +3,10 @@
 //
 
 import fs from 'fs';
+import path from 'path';
+
 import yaml from 'js-yaml';
 import defaultsDeep from 'lodash.defaultsdeep';
-import path from 'path';
 
 import { Config } from '@dxos/config';
 import type { ConfigProto } from '@dxos/config';

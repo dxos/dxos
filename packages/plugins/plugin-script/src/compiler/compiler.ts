@@ -3,10 +3,10 @@
 //
 
 import {
+  type VirtualTypeScriptEnvironment,
   createDefaultMapFromCDN,
   createSystem,
   createVirtualTypeScriptEnvironment,
-  type VirtualTypeScriptEnvironment,
 } from '@typescript/vfs';
 import ts from 'typescript';
 

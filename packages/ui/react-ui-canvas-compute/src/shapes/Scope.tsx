@@ -6,11 +6,12 @@ import { Schema } from 'effect';
 import React from 'react';
 
 import { DEFAULT_INPUT } from '@dxos/conductor';
-import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { useAudioStream, Chaos, shaderPresets } from '@dxos/react-ui-sfx';
+import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { Chaos, shaderPresets, useAudioStream } from '@dxos/react-ui-sfx';
 
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const ScopeShape = Schema.extend(
   ComputeShape,

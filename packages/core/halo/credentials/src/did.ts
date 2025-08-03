@@ -3,7 +3,7 @@
 //
 
 import { subtleCrypto } from '@dxos/crypto';
-import { PublicKey, IdentityDid } from '@dxos/keys';
+import { IdentityDid, PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 const IDENTITY_DIDS_CACHE = new ComplexMap<PublicKey, IdentityDid>(PublicKey.hash);

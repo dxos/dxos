@@ -3,6 +3,7 @@
 //
 
 import util from 'node:util';
+
 import { describe, test } from 'vitest';
 
 import { latch } from '@dxos/async';

@@ -4,19 +4,19 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, scheduleMicroTask, Trigger } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
-  PropertiesType,
   type ClientServicesProvider,
   type Echo,
+  PropertiesType,
   type Space,
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
-import { Filter, Query, type EchoClient, type QueryOptions, type QueryFn } from '@dxos/echo-db';
+import { type EchoClient, Filter, Query, type QueryFn, type QueryOptions } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
@@ -24,19 +24,20 @@ import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
   Invitation,
-  SpaceState,
   type Space as SerializedSpace,
   type SpaceArchive,
+  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
-import { AgentQuerySourceProvider } from './agent';
-import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
+
+import { AgentQuerySourceProvider } from './agent';
+import { SpaceProxy } from './space-proxy';
 
 const ENABLE_AGENT_QUERY_SOURCE = false;
 

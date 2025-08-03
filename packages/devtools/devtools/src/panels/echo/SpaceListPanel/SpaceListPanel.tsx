@@ -13,10 +13,11 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
-import { DialogRestoreSpace } from './DialogRestoreSpace';
-import { exportData, importData } from './backup';
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
+
+import { exportData, importData } from './backup';
+import { DialogRestoreSpace } from './DialogRestoreSpace';
 
 type SpaceData = {
   key: PublicKey;

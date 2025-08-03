@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { useDynamicRef, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, test, onTestFinished } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { createStorage } from '@dxos/random-access-storage';
 

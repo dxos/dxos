@@ -8,12 +8,13 @@ import { scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type EdgeStatus } from '@dxos/protocols';
-import { EdgeStatus as WsStatus, type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse, EdgeStatus as WsStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { IconButton } from '@dxos/react-ui';
 
+import { type CustomPanelProps, Panel } from '../Panel';
+
 import { Table, type TableProps } from './Table';
-import { Panel, type CustomPanelProps } from '../Panel';
 
 export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdgeStatusResponse }>) => {
   const websocketHealth = edge?.status ?? WsStatus.NOT_CONNECTED;

@@ -25,8 +25,8 @@ import {
   getSizeWidth,
   placeholderText,
   sizeValue,
-  staticFocusRing,
   staticDisabled,
+  staticFocusRing,
   subduedFocus,
   valenceColorText,
 } from '../fragments';

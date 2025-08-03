@@ -9,7 +9,7 @@ import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { parseGptStream } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';

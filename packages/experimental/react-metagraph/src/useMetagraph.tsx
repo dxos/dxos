@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type Context, createContext, type FC, type ReactNode, useContext, useEffect, useState } from 'react';
+import React, { type Context, type FC, type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { log } from '@dxos/log';

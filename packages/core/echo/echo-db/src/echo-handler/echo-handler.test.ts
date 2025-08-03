@@ -2,25 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { effect } from '@preact/signals-core';
 import { Schema } from 'effect';
-import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query } from '@dxos/echo';
-import { decodeReference, encodeReference, Reference } from '@dxos/echo-protocol';
+import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import {
-  getSchema,
-  createQueueDXN,
-  getMeta,
-  getType,
-  isDeleted,
-  RelationTargetId,
-  RelationSourceId,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
+  RelationSourceId,
+  RelationTargetId,
+  createQueueDXN,
+  getMeta,
+  getSchema,
+  getType,
+  isDeleted,
 } from '@dxos/echo-schema';
-import { EchoObject, Expando, TypedObject, foreignKey, getTypeReference, Ref, type Ref$ } from '@dxos/echo-schema';
+import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey, SpaceId } from '@dxos/keys';
@@ -29,13 +30,14 @@ import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
+import { DocAccessor } from '../core-db';
+import { Filter } from '../query';
+import { EchoTestBuilder } from '../testing';
+
 import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
 
 registerSignalsRuntime();
 

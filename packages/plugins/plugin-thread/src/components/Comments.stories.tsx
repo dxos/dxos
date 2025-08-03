@@ -17,10 +17,11 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 import { layoutCentered, render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CommentsContainer } from './CommentsContainer';
-import { createCommentThread } from './testing';
 import { translations } from '../translations';
 import { ThreadType } from '../types';
+
+import { CommentsContainer } from './CommentsContainer';
+import { createCommentThread } from './testing';
 
 faker.seed(1);
 

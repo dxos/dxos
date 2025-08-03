@@ -13,16 +13,17 @@ import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { defaultRowSize, Grid, type GridEditing } from '@dxos/react-ui-grid';
-import { createDefaultSchema, DataType } from '@dxos/schema';
+import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
+import { DataType, createDefaultSchema } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
 import { TableView } from '../../types';
 import { createTable } from '../../util';
+
+import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 
 type StoryProps = {
   editing: GridEditing;

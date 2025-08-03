@@ -7,7 +7,7 @@ import { type DotOptions } from '@observablehq/plot';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type Accessor, createAdapter, type Point } from '../plot';
+import { type Accessor, type Point, createAdapter } from '../plot';
 
 const defaultOptions: DotOptions = {
   r: 4,

@@ -8,9 +8,10 @@ import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 
 
 import { faker } from '@dxos/random';
 
-import { Popover } from './Popover';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Popover } from './Popover';
 
 faker.seed(1234);
 

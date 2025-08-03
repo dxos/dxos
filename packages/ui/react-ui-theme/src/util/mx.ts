@@ -4,7 +4,7 @@
 
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
-import { withLogical, type WithLogicalClassGroups } from './withLogical';
+import { type WithLogicalClassGroups, withLogical } from './withLogical';
 
 type AdditionalClassGroups = 'density' | WithLogicalClassGroups;
 

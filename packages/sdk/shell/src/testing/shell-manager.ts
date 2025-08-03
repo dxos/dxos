@@ -4,7 +4,7 @@
 
 import type { ConsoleMessage, Page } from '@playwright/test';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 
 import { ScopedShellManager } from './scoped-shell-manager';
 

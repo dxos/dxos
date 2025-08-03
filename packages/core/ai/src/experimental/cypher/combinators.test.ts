@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
 import { createRequire } from 'node:module';
+
 import { type Parjser } from 'parjs';
 import { describe, test } from 'vitest';
 

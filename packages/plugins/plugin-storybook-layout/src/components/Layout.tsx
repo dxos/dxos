@@ -10,8 +10,8 @@ import {
   Dialog,
   Main,
   Popover,
-  useTranslation,
   type PopoverContentInteractOutsideEvent,
+  useTranslation,
 } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 

@@ -4,8 +4,9 @@
 
 import type { ComponentFunction, Theme } from '@dxos/react-ui-types';
 
-import { type ButtonStyleProps } from './button';
 import { mx } from '../../util';
+
+import { type ButtonStyleProps } from './button';
 
 export type IconButtonStyleProps = ButtonStyleProps & { iconOnly?: boolean };
 

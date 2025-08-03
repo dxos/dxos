@@ -6,7 +6,7 @@ import { AiTool } from '@effect/ai';
 import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { LocalFunctionExecutionService, type FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition, LocalFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
@@ -83,7 +83,7 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => 
  * @returns Tool name produced from function name by escaping invalid characters.
  */
 const makeToolName = (name: string) => {
-  const toolName = name.replace(/[^a-zA-Z0-9]/g, '');
+  const toolName = name.replace(/[^a-zA-Z0-9]/g, '_');
   invariant(toolName.match(/^[a-zA-Z_][a-zA-Z0-9-_]*$/));
   return toolName;
 };

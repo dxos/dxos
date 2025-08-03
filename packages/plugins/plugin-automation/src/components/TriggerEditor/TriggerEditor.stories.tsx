@@ -8,15 +8,16 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { FunctionType, FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, TriggerKind } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ContactType, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TriggerEditor } from './TriggerEditor';
 import { functions } from '../../testing';
 import { translations } from '../../translations';
+
+import { TriggerEditor } from './TriggerEditor';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

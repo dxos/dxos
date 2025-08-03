@@ -6,9 +6,10 @@ import * as Orama from '@orama/orama';
 import { pipeline } from '@xenova/transformers';
 import { describe, expect, test } from 'vitest';
 
-import { breakIntoChunks, EmbeddingExtractor } from './embeddings';
-import type { ExtractInputBlock } from './text';
 import { TestData } from '../testing';
+
+import { EmbeddingExtractor, breakIntoChunks } from './embeddings';
+import type { ExtractInputBlock } from './text';
 
 // Associated research: https://chatgpt.com/share/6828c870-7f08-8012-b4d6-676f00545e79
 

@@ -4,8 +4,8 @@
 
 import '@dxos/lit-grid/dx-grid.pcss';
 
-import { createComponent, type EventName } from '@lit/react';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type EventName, createComponent } from '@lit/react';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,

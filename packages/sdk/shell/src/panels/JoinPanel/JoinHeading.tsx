@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { type JoinPanelMode } from './JoinPanelProps';
 import { Heading } from '../../components';
+
+import { type JoinPanelMode } from './JoinPanelProps';
 
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;

@@ -4,7 +4,7 @@
 
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import type { EchoDatabase, SerializedSpace } from '@dxos/echo-db';
-import { decodeReferenceJSON, Filter, Serializer } from '@dxos/echo-db';
+import { Filter, Serializer, decodeReferenceJSON } from '@dxos/echo-db';
 
 export const importSpace = async (database: EchoDatabase, data: SerializedSpace) => {
   const {

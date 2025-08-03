@@ -12,10 +12,11 @@ import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-edi
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Thread } from './Thread';
 import { MessageRoot, MessageTextbox } from '../Message';
-import { MessageStoryText, type MessageEntity } from '../testing';
+import { type MessageEntity, MessageStoryText } from '../testing';
 import { translations } from '../translations';
+
+import { Thread } from './Thread';
 
 faker.seed(1);
 

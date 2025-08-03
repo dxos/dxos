@@ -5,8 +5,8 @@
 import '@tldraw/tldraw/tldraw.css';
 
 import { getAssetUrls } from '@tldraw/assets/selfHosted';
-import { type TLInstance, type TLEventInfo, type TLGridProps } from '@tldraw/editor';
-import { type Editor, Tldraw, DefaultToolbar, type TLUiAssetUrlOverrides } from '@tldraw/tldraw';
+import { type TLEventInfo, type TLGridProps, type TLInstance } from '@tldraw/editor';
+import { DefaultToolbar, type Editor, type TLUiAssetUrlOverrides, Tldraw } from '@tldraw/tldraw';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -17,9 +17,9 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type SketchGridType, type DiagramType, type SketchSettingsProps } from '../../types';
+import { type DiagramType, type SketchGridType, type SketchSettingsProps } from '../../types';
 import { handleSnap } from '../actions';
-import { CustomMenu, CustomStylePanel, DottedGrid, MeshGrid, DefaultToolbarContent } from '../custom';
+import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
 import './theme.css';
 

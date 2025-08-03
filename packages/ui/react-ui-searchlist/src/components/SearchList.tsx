@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
 
 import {
   Button,

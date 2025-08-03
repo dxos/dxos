@@ -4,14 +4,15 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
 
 import { MembersContainer } from './MembersContainer';
-import { translations } from '../translations';
 
 const meta: Meta = {
   title: 'plugins/plugin-space/MembersContainer',

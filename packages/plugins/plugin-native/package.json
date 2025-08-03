@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }
@@ -27,6 +28,8 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-help": "workspace:*",
+    "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "^0.89.0",
     "@tauri-apps/plugin-os": "^2.3.0",

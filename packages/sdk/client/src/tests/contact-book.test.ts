@@ -8,11 +8,11 @@ import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
 import { type PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
-import { Invitation, type Contact } from '@dxos/protocols/proto/dxos/client/services';
+import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { performInvitation, TestBuilder, TextV0Type, waitForSpace } from '../testing';
+import { TestBuilder, TextV0Type, performInvitation, waitForSpace } from '../testing';
 
 describe('ContactBook', () => {
   describe('joinBySpaceKey', () => {

@@ -5,17 +5,18 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ThreadCapabilities } from './capabilities';
-import { meta, THREAD_PLUGIN } from '../meta';
+import { THREAD_PLUGIN, meta } from '../meta';
 import { ChannelType, ThreadAction } from '../types';
 import { getAnchor } from '../util';
+
+import { ThreadCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const resolve = (typename: string) =>

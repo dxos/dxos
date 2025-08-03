@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -64,7 +64,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
     };
   }, [themeMode, template.source?.target]);
 
-  return <div ref={parentRef} className={mx('h-full', classNames)} />;
+  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
 };
 
 /**

@@ -9,8 +9,9 @@ import React, { type PropsWithChildren } from 'react';
 import { faker } from '@dxos/random';
 import { activeSurface, surfaceShadow } from '@dxos/react-ui-theme';
 
-import { ScrollArea } from './ScrollArea';
 import { withTheme } from '../../testing';
+
+import { ScrollArea } from './ScrollArea';
 
 faker.seed(1234);
 

@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Breadcrumb } from './Breadcrumb';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Breadcrumb } from './Breadcrumb';
 
 const DefaultStory = () => {
   return (

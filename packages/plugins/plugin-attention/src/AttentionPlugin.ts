@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, definePlugin, Events, contributes, allOf } from '@dxos/app-framework';
+import { Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
 import { AttentionCapabilities, IntentResolver, Keyboard, ReactContext } from './capabilities';

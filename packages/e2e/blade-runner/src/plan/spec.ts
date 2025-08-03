@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type RpcHandle, type ReplicantEnv, type SchedulerEnv } from '../env';
+import { type ReplicantEnv, type RpcHandle, type SchedulerEnv } from '../env';
 
 export const AGENT_LOG_FILE = 'agent.log';
 

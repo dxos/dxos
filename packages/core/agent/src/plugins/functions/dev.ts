@@ -8,12 +8,12 @@ import path from 'node:path';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
+  type Function,
   type FunctionRegistryService,
   type RegisterRequest,
   type RegisterResponse,
   type UnregisterRequest,
   type UpdateRegistrationRequest,
-  type Function,
 } from '@dxos/protocols/proto/dxos/agent/functions';
 
 import { type FunctionDispatcher, type FunctionInvocation, type FunctionInvocationResult } from './types';

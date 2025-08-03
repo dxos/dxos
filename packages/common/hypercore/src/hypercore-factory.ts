@@ -6,7 +6,7 @@ import hypercore from 'hypercore';
 import type { Hypercore, HypercoreOptions } from 'hypercore';
 
 import { invariant } from '@dxos/invariant';
-import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
+import { type Directory, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { py } from './util';
 

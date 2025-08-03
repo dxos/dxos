@@ -2,18 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
-import chalk from 'chalk';
-import { type Schema } from 'effect';
-import * as fs from 'fs-extra';
-import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import { dirname, join } from 'node:path';
 import readline from 'node:readline';
+
+import { Args, Command, Flags, type Interfaces, type Config as OclifConfig, settings } from '@oclif/core';
+import chalk from 'chalk';
+import { type Schema } from 'effect';
+import * as fs from 'fs-extra';
+import yaml from 'js-yaml';
 import pkgUp from 'pkg-up';
 
-import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
+import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemDaemon, SystemctlRunner } from '@dxos/agent';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
@@ -30,7 +31,7 @@ import {
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
+import { LogLevel, createFileProcessor, log, parseFilter } from '@dxos/log';
 import {
   type Observability,
   getObservabilityState,

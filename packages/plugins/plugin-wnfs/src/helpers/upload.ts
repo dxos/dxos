@@ -10,10 +10,11 @@ import { sha256 } from 'multiformats/hashes/sha2';
 import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 
+import { type WnfsCapabilities } from '../capabilities';
+
 import { Rng, filePath, store } from './common';
 import { loadWnfs } from './load';
 import { wnfsUrl } from './wnfs-url';
-import { type WnfsCapabilities } from '../capabilities';
 
 export const upload = async ({
   file,

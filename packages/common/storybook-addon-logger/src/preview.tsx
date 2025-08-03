@@ -5,7 +5,7 @@
 import { type Preview } from '@storybook/react';
 import React, { memo, useEffect } from 'react';
 
-import { log, LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 
 // TODO(burdon): Create separate addon for global types.
 const preview: Preview = {

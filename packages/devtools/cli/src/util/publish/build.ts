@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import { spawnSync } from 'child_process';
 
-import type { PackageModule, Logger } from './common';
+import chalk from 'chalk';
+
+import type { Logger, PackageModule } from './common';
 
 export interface BuildParams {
   log: Logger;

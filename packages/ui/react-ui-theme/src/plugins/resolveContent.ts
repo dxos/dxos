@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import Glob from 'glob';
 import { promisify } from 'node:util';
+
+import Glob from 'glob';
 
 const glob = promisify(Glob.glob);
 

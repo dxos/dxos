@@ -10,9 +10,10 @@ import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
-import { type AudioRecorder, type AudioChunk } from './audio-recorder';
 import { TRANSCRIPTION_URL } from '../types';
 import { mergeFloat64Arrays } from '../util';
+
+import { type AudioChunk, type AudioRecorder } from './audio-recorder';
 
 type WhisperWord = {
   word: string;

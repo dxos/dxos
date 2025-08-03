@@ -13,16 +13,17 @@ import React, {
 } from 'react';
 
 import { LayoutAction, Surface, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
-import { Main, useTranslation, toLocalizedString, IconButton, type Label } from '@dxos/react-ui';
+import { IconButton, type Label, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { DeckCapabilities } from '../../capabilities';
-import { type DeckCompanion, getCompanionId, useDeckCompanions, useBreakpoints, useHoistStatusbar } from '../../hooks';
+import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
+
+import { ToggleComplementarySidebarButton } from './SidebarButton';
 
 const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
 

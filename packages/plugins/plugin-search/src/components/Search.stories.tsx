@@ -4,15 +4,16 @@
 
 import '@dxos-theme';
 
-import { type Meta, type Decorator, type StoryFn } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryFn } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SearchResults } from './SearchResults';
-import { Searchbar, type SearchbarProps } from './Searchbar';
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
+
+import { Searchbar, type SearchbarProps } from './Searchbar';
+import { SearchResults } from './SearchResults';
 
 faker.seed(1);
 

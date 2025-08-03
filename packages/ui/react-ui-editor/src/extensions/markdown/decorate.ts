@@ -3,20 +3,21 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/state';
-import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorState, RangeSetBuilder, StateEffect } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { adjustChanges } from './changes';
-import { image } from './image';
-import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
-import { table } from './table';
-import { theme, type HeadingLevel } from '../../styles';
+import { type HeadingLevel, theme } from '../../styles';
 import { type RenderCallback } from '../../types';
 import { wrapWithCatch } from '../../util';
+
+import { adjustChanges } from './changes';
+import { image } from './image';
+import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
+import { table } from './table';
 
 /**
  * Unicode characters.

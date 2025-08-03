@@ -3,12 +3,12 @@
 //
 
 import {
-  contributes,
   Capabilities,
-  createResolver,
-  type PluginContext,
-  createIntent,
   LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';

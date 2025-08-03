@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useEffect, useState, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
@@ -10,7 +10,7 @@ import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Toolbar, Icon } from '@dxos/react-ui';
+import { Icon, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';

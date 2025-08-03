@@ -6,9 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { createToolsFromApi, resolveAuthorization } from './openapi';
 import { ChatProcessor } from '../hooks';
 import { type ApiAuthorization } from '../types';
+
+import { createToolsFromApi, resolveAuthorization } from './openapi';
 
 describe.skip('openapi', () => {
   describe.skip('mapping', () => {

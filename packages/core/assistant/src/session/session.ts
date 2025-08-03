@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, AiToolkit, type AiError, type AiResponse, type AiTool } from '@effect/ai';
-import { Chunk, Context, Effect, Option, pipe, Stream, type Schema } from 'effect';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
+import { Chunk, Context, Effect, Option, type Schema, Stream, pipe } from 'effect';
 import { Array, String } from 'effect';
 
 import {
@@ -27,7 +27,7 @@ import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { AiAssistantError } from '../errors';
 
@@ -154,7 +154,8 @@ export class AiSession {
         ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
 
         log.info('run', {
-          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
+          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32)].join(''),
+          length: systemPrompt.length,
           tools: Object.keys(blueprintToolkit.tools),
         });
 

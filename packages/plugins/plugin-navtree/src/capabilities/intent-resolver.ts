@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { contributes, type PluginContext, Capabilities, createResolver, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { NavTreeCapabilities } from './capabilities';

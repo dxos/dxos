@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createContext, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { type Dispatch, type RefObject, type SetStateAction, createContext } from 'react';
 
 import { type SelectionModel } from '@dxos/graph';
 import { type Dimension } from '@dxos/react-ui-canvas';
 
-import { type DragMonitor } from './useDragMonitor';
 import { type ActionHandler } from '../actions';
 import { type ShapeLayout, type ShapeRegistry } from '../components';
 import { type CanvasGraphModel, type Connection, type Shape } from '../types';
+
+import { type DragMonitor } from './useDragMonitor';
 
 export type EditingState<S extends Shape> = {
   shape: S;

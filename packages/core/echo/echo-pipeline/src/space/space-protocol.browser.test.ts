@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
+import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.

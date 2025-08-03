@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Dialog } from './Dialog';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Dialog } from './Dialog';
 
 type StoryProps = Partial<{
   title: string;

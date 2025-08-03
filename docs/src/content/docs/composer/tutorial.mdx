@@ -93,7 +93,7 @@ export namespace MapAction {
           space: SpaceSchema,
           coordinates: Schema.optional(GeoPoint),
         }),
-        CreateMapSchema,
+        MapAction.CreateMap,
       ),
       output: Schema.Struct({ object: MapType }),
     },
@@ -179,7 +179,7 @@ defineModule({
       SpaceCapabilities.ObjectForm,
       defineObjectForm({
         objectSchema: MapType,
-        formSchema: CreateMapSchema,
+        formSchema: MapAction.CreateMap,
         getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
       }),
     ),

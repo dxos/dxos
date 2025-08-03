@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { FormatEnum } from '@dxos/echo-schema';

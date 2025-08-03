@@ -4,11 +4,11 @@
 
 import { Event } from '@dxos/async';
 import {
-  ShellLayout,
   type AppContextRequest,
   type InvitationUrlRequest,
   type LayoutRequest,
   type PublicKey,
+  ShellLayout,
   type ShellRuntime,
 } from '@dxos/react-client';
 

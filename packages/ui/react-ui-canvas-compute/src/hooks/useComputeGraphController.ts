@@ -5,7 +5,7 @@
 import { type RefObject, useEffect, useState } from 'react';
 
 import { type CleanupFn } from '@dxos/async';
-import { type EditorRootProps, type EditorController } from '@dxos/react-ui-canvas-editor';
+import { type EditorController, type EditorRootProps } from '@dxos/react-ui-canvas-editor';
 
 import { type ComputeGraphController } from '../graph';
 import { type ComputeShape } from '../shapes';

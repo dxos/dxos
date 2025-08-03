@@ -7,9 +7,10 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Tooltip } from './Tooltip';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Tooltip } from './Tooltip';
 
 type StoryProps = {
   tooltips: { label: string; content: string }[];

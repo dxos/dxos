@@ -4,14 +4,14 @@
 
 import { RegistryContext } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useState, type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Events } from './common';
-import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
+import { type Plugin, PluginManager, type PluginManagerOptions } from './core';
 import { topologicalSort } from './helpers';
 import { ErrorBoundary, PluginManagerProvider, useCapabilities } from './react';
 

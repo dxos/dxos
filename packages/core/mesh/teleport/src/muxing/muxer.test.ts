@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { pipeline, Transform } from 'node:stream';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { Transform, pipeline } from 'node:stream';
 
-import { latch, asyncTimeout } from '@dxos/async';
+import { describe, expect, onTestFinished, test } from 'vitest';
+
+import { asyncTimeout, latch } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
 import { type TestService } from '@dxos/protocols/proto/example/testing/rpc';
 import { createProtoRpcPeer } from '@dxos/rpc';

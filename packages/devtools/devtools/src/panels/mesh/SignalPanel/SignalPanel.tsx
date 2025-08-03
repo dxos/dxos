@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { SignalMessageTable } from './SignalMessageTable';
-import { SignalStatusTable } from './SignalStatusTable';
 import { PanelContainer } from '../../../components';
 import { styles } from '../../../styles';
+
+import { SignalMessageTable } from './SignalMessageTable';
+import { SignalStatusTable } from './SignalStatusTable';
 
 export const SignalPanel = () => {
   return (

@@ -5,17 +5,17 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
-  attachInstruction,
-  extractInstruction,
   type Instruction,
   type ItemMode,
+  attachInstruction,
+  extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Schema } from 'effect';
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC, type KeyboardEvent } from 'react';
+import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
+import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
 import {
   ghostHover,
   hoverableControls,
@@ -23,10 +23,10 @@ import {
   hoverableFocusedWithinControls,
 } from '@dxos/react-ui-theme';
 
+import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
-import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 
 type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 

@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { type AddressInfo, Socket, type Server } from 'node:net';
+import { type AddressInfo, type Server, Socket } from 'node:net';
 
 import { Event } from '@dxos/async';
 import { ErrorStream } from '@dxos/debug';

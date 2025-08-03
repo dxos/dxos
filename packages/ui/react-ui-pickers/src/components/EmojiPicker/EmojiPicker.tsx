@@ -9,7 +9,9 @@ import React, { useState } from 'react';
 
 import {
   Button,
+  ButtonGroup,
   type ButtonProps,
+  Icon,
   Popover,
   type ThemedClassName,
   Toolbar,
@@ -17,8 +19,6 @@ import {
   useMediaQuery,
   useThemeContext,
   useTranslation,
-  Icon,
-  ButtonGroup,
 } from '@dxos/react-ui';
 
 import './emoji.css';

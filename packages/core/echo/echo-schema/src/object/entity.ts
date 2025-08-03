@@ -8,17 +8,18 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type RelationSourceTargetRefs } from './relation';
 import {
-  getEntityKind,
-  getSchemaTypename,
-  getTypeIdentifierAnnotation,
   EntityKind,
   type TypeAnnotation,
   TypeAnnotationId,
   type TypeMeta,
+  getEntityKind,
+  getSchemaTypename,
+  getTypeIdentifierAnnotation,
 } from '../ast';
 import { type HasId, type ToMutable } from '../types';
+
+import { type RelationSourceTargetRefs } from './relation';
 
 /**
  * Pipeable function to add ECHO object annotations to a schema.

@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
@@ -16,14 +16,15 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
-import { useQuery, Query, useSpace } from '@dxos/react-client/echo';
+import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
-import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 import { translations } from '../translations';
 import { MeetingType } from '../types';
+
+import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
 const Story = () => {
   const space = useSpace();
@@ -57,8 +58,8 @@ const meta: Meta<MeetingContainerProps> = {
                 created: new Date().toISOString(),
                 participants: [],
                 transcript: Ref.make(Obj.make(TranscriptType, { queue: Ref.fromDXN(space.queues.create().dxn) })),
-                notes: Ref.make(Obj.make(DataType.Text, { content: 'Notes' })),
-                summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
+                notes: Ref.make(DataType.makeText('Notes')),
+                summary: Ref.make(DataType.makeText()),
                 thread: Ref.make(Obj.make(ThreadType, { messages: [] })),
               }),
             );
