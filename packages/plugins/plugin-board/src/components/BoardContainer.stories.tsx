@@ -101,7 +101,7 @@ const meta: Meta<StoryProps> = {
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
@@ -112,7 +112,7 @@ const meta: Meta<StoryProps> = {
             space.db.add(board);
 
             // Add some sample items
-            Array.from({ length: 10 }).map((_, index) => {
+            Array.from({ length: 10 }).map(() => {
               const org = Obj.make(DataType.Organization, rollOrg());
               space.db.add(org);
               board.items.push(Ref.make(org));

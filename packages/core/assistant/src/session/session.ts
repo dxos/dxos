@@ -123,7 +123,7 @@ export class AiSession {
 
       // Potential tool use loop.
       do {
-        log('request', {
+        log.info('request', {
           pending: this._pending.length,
           history: this._history.length,
           tools: (Object.values(options.toolkit?.tools ?? {}) as AiTool.Any[]).map((tool: AiTool.Any) => tool.name),
@@ -131,10 +131,9 @@ export class AiSession {
 
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
-        const blueprints = options.blueprints ?? [];
-
         // Build system prompt from blueprint templates.
         // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
+        const blueprints = options.blueprints ?? [];
         const systemPrompt = yield* pipe(
           blueprints,
           Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
@@ -144,7 +143,7 @@ export class AiSession {
         );
 
         // Build a combined toolkit from the blueprint tools and the provided toolkit.
-        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
+        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
         const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> =
           yield* blueprintToolkit.toContext(yield* ToolExecutionService.handlersFor(blueprintToolkit));
         const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
@@ -190,6 +189,7 @@ export class AiSession {
         this._pending.push(response);
         this.message.emit(response);
 
+        console.log('###', JSON.stringify(response));
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
@@ -205,12 +205,13 @@ export class AiSession {
         );
       } while (true);
 
+      log.info('done', { length: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
-    schema: S,
-    options: SessionRunOptions<AiTool.Any>,
+    _schema: S,
+    _options: SessionRunOptions<AiTool.Any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);
@@ -330,8 +331,8 @@ const runTools: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.AiToolkit<Tools>,
 ) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
   function* (toolCalls, toolkit) {
+    log.info('runTools', { toolCalls });
     const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-
     return yield* Effect.forEach(toolCalls, (toolCall) => runTool(toolkitWithHandlers, toolCall));
   },
 );

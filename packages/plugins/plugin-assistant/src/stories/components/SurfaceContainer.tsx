@@ -37,8 +37,7 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
     return objects;
   }, [chats]);
 
-  // TODO(burdon): IMPORTANT: Stack (@thure).
-  // TODO(burdon): Specify role hint for no toolbar.
+  // TODO(burdon): Specify role hint to hide toolbar.
   return (
     <div className='flex flex-col bs-full overflow-y-auto divide-y divide-separator'>
       {objects?.map((object) => (

@@ -13,6 +13,9 @@ import type { ServiceContainer, Services } from '../services';
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
 
+  /**
+   *
+   */
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
   async invoke<F extends FunctionDefinition<any, any>>(
     fnDef: F,
