@@ -167,6 +167,47 @@ export const WithMap = {
   },
 } satisfies Story;
 
+export const WithTrip = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin(), MapPlugin()],
+    config: config.remote,
+    types: [Map.Map],
+    onInit: async ({ binder, space }) => {
+      // TODO(burdon): Table.
+      {
+        const object = space.db.add(Map.makeMap({ name: 'Trip' }));
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
+      {
+        const object = space.db.add(
+          Markdown.makeDocument({
+            name: 'Itinerary',
+            content: trim`
+              # Itinerary
+
+              ## Day 1
+
+              - Visit the Sagrada Familia
+              - Visit the Park Güell
+              - Visit the Casa Batlló
+
+              ## Day 2
+
+              - Visit the Eiffel Tower
+              - Visit the Louvre
+              - Visit the Musée d'Orsay
+            `,
+          }),
+        );
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
+    },
+  }),
+  args: {
+    components: [ChatContainer, SurfaceContainer],
+  },
+} satisfies Story;
+
 export const WithBoard = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],

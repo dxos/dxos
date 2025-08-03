@@ -8,7 +8,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { ContextBinder } from '@dxos/assistant';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-ui';
@@ -22,20 +22,29 @@ import { type ComponentProps } from './types';
  */
 export const SurfaceContainer = ({ space }: ComponentProps) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
-  const [object] = useAsyncState<Type.Expando | null>(async () => {
+  const [objects] = useAsyncState<Type.Expando[]>(async () => {
     if (!chats.length) {
-      return null;
+      return [];
     }
 
     // Get the latest chat (is this deterministic?)
     const chat = chats[chats.length - 1];
     const binder = new ContextBinder(chat.queue.target!);
-    const ref = binder.objects.value?.[0];
-    const object = await ref?.load();
+    const refs = binder.objects.value;
+    const objects = await Ref.Array.loadAll(refs);
     // TODO(burdon): Auto log meta for ECHO objects?
-    log.info('loaded', { typename: Obj.getTypename(object), id: object?.id });
-    return object;
+    log.info('loaded', { objects: objects.map((obj) => ({ typename: Obj.getTypename(obj), id: obj.id })) });
+    return objects;
   }, [chats]);
 
-  return <Surface role='article' limit={1} data={{ subject: object }} />;
+  // TODO(burdon): IMPORTANT: Stack (@thure).
+  return (
+    <div className='grid grid-rows-[repeat(auto-fit,minmax(0,1fr))] h-full overflow-hidden divide-y divide-separator'>
+      {objects?.map((object) => (
+        <div key={object.id} className='grid overflow-hidden'>
+          <Surface role='article' limit={1} data={{ subject: object }} />
+        </div>
+      ))}
+    </div>
+  );
 };
