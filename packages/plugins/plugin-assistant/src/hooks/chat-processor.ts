@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, batch, computed, signal } from '@preact/signals-core';
 import { Effect, Option, pipe, Stream, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
@@ -57,57 +56,25 @@ const defaultOptions: Partial<ChatProcessorOptions> = {
 // TODO(burdon): Rename ChatContext?
 export class ChatProcessor {
   /**
-   * Pending messages (incl. the current user request).
-   * @reactive
-   */
-  private readonly _pending: Signal<DataType.Message[]> = signal([]);
-
-  /**
-   * Current streaming message (from the AI service).
-   * @reactive
-   */
-  private readonly _streaming: Signal<DataType.Message | undefined> = signal(undefined);
-
-  /**
-   * Streaming state.
-   * @reactive
-   */
-  public readonly streaming: Signal<boolean> = computed(() => this._streaming.value !== undefined);
-
-  /**
    * Last error.
-   * @reactive
    */
-  public readonly error: Signal<Error | undefined> = signal(undefined);
-
-  /**
-   * Array of Messages (incl. the current message being streamed).
-   * @reactive
-   */
-  public readonly messages: Signal<DataType.Message[]> = computed(() => {
-    const messages = [...this._pending.value];
-    if (this._streaming.value) {
-      // TODO(dmaretskyi): Replace with Obj.clone.
-      // NOTE: We have to clone the message here so that react will re-render.
-      messages.push(Obj.make(DataType.Message, this._streaming.value));
-    }
-
-    return messages;
-  });
+  // TODO(wittjosiah): Error should come from the message stream.
+  readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
   // TODO(burdon): Replace with Toolkit.
   private _tools?: ExecutableTool[];
 
+  private readonly _registry = this._options.registry ?? Registry.make();
+
   /** Current session. */
-  private _session: AiSession | undefined = undefined;
+  private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
 
-  private readonly __registry = this._options.registry ?? Registry.make();
-
-  private readonly __session = Rx.make<Option.Option<AiSession>>(Option.none());
-
-  readonly __streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
+  /**
+   * Current streaming message (from the AI service).
+   */
+  private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
     return pipe(
-      get(this.__session),
+      get(this._session),
       Option.map((session) => Stream.fromQueue(session.blockQueue)),
       Option.getOrElse(() => Stream.make()),
       Stream.scan<Option.Option<DataType.Message>, Option.Option<ContentBlock.Any>>(Option.none(), (acc, blockOption) =>
@@ -131,24 +98,38 @@ export class ChatProcessor {
     );
   });
 
-  readonly __pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+  /**
+   * Streaming state.
+   */
+  readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
+    return pipe(
+      get(this._streaming),
+      Result.map((streaming) => Option.isSome(streaming)),
+      Result.getOrElse(() => false),
+    );
+  });
+
+  /**
+   * Pending messages (incl. the current user request).
+   */
+  private readonly _pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
     // TODO(wittjosiah): For some reason using Option.map here loses reactivity.
-    const session = get(this.__session);
+    const session = get(this._session);
     return Option.isSome(session)
       ? pipe(
           session.value.messageQueue,
           Stream.fromQueue,
-          Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => {
-            console.log('scan', { acc, message });
-            return [...acc, message];
-          }),
+          Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => [...acc, message]),
         )
       : Stream.make();
   });
 
-  readonly __messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
-    const streaming = get(this.__streaming);
-    return Result.map(get(this.__pending), (pending) =>
+  /**
+   * Array of Messages (incl. the current message being streamed).
+   */
+  readonly messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+    const streaming = get(this._streaming);
+    return Result.map(get(this._pending), (pending) =>
       Result.match(streaming, {
         onInitial: () => pending,
         onSuccess: (streaming) =>
@@ -196,19 +177,22 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<DataType.Message[]> {
+  async request(message: string, options: RequestOptions = {}): Promise<void> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     const session = new AiSession();
-    this._session = session;
-    this.__registry.set(this.__session, Option.some(session));
+    this._registry.set(this._session, Option.some(session));
 
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
-      if (this._session === session) {
-        this._session = undefined;
-        this.__registry.set(this.__session, Option.none());
-      }
+      Option.match(this._registry.get(this._session), {
+        onSome: (s) => {
+          if (s === session) {
+            this._registry.set(this._session, Option.none());
+          }
+        },
+        onNone: () => {},
+      });
     });
 
     // TODO(dmaretskyi): Handle tool status reports.
@@ -266,35 +250,30 @@ export class ChatProcessor {
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
-        this.error.value = new AiServiceOverloadedError('AI service overloaded', { cause: err });
+        this._registry.set(
+          this.error,
+          Option.some(new AiServiceOverloadedError('AI service overloaded', { cause: err })),
+        );
       } else {
-        this.error.value = new Error('AI service error', { cause: err });
+        this._registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
       }
     }
-
-    return this._reset();
   }
 
   /**
    * Cancel pending requests.
-   * @returns Pending requests (incl. the request message).
    */
-  async cancel(): Promise<DataType.Message[]> {
+  async cancel(): Promise<void> {
     log.info('cancelling...');
 
     // TODO(dmaretskyi): Conversation should handle aborting.
-    this._session?.abort();
-    return this._reset();
-  }
-
-  private async _reset(): Promise<DataType.Message[]> {
-    const messages = this._pending.value;
-    batch(() => {
-      this._pending.value = [];
-      this._streaming.value = undefined;
+    Option.match(this._registry.get(this._session), {
+      onSome: (session) => {
+        session.abort();
+        this._registry.set(this._session, Option.none());
+      },
+      onNone: () => {},
     });
-
-    return messages;
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {

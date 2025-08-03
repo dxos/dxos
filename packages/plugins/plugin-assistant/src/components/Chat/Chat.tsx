@@ -1,7 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
-import { Array } from 'effect';
+import { Array, Option } from 'effect';
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { createContext } from '@radix-ui/react-context';
@@ -85,7 +85,8 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
 
   // Messages.
   const queue = useQueue<DataType.Message>(chat?.queue.dxn);
-  const pending = useRxValue(processor.__messages);
+  const pending = useRxValue(processor.messages);
+  const streaming = useRxValue(processor.streaming);
 
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
@@ -99,7 +100,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
   // TODO(burdon): Replace with tool.
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   useEffect(() => {
-    if (!processor?.streaming.value && queue?.objects && artifact) {
+    if (!streaming && queue?.objects && artifact) {
       const message = queue.objects[queue.objects.length - 1];
       if (dispatch && space && chat && message) {
         void dispatch(
@@ -111,7 +112,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
         );
       }
     }
-  }, [queue, processor?.streaming.value]);
+  }, [queue, streaming]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
@@ -124,7 +125,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
         }
 
         case 'submit': {
-          if (!processor.streaming.value) {
+          if (!streaming) {
             void processor.request(event.text);
           }
           break;
@@ -140,7 +141,7 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
         }
       }
     });
-  }, [event, onEvent, processor]);
+  }, [event, onEvent, processor, streaming]);
 
   if (!space) {
     return null;
@@ -233,6 +234,8 @@ const ChatPrompt = ({
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
+  const streaming = useRxValue(processor.streaming);
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -300,12 +303,12 @@ const ChatPrompt = ({
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor.streaming.value) {
+      if (!streaming) {
         event.emit({ type: 'submit', text });
         return true;
       }
     },
-    [processor, event],
+    [streaming, event],
   );
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
@@ -328,7 +331,7 @@ const ChatPrompt = ({
       )}
     >
       <Endcap>
-        <ChatStatusIndicator preset={preset} error={processor.error.value} processing={processor.streaming.value} />
+        <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
       </Endcap>
 
       <ChatEditor
@@ -358,7 +361,7 @@ const ChatPrompt = ({
         classNames='col-span-2'
         microphone={true}
         recording={recording}
-        processing={processor.streaming.value}
+        processing={streaming}
         onEvent={handleEvent}
       >
         <>
