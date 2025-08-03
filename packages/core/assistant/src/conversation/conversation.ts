@@ -18,9 +18,10 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ContextBinder, type ContextBinding } from './context';
 import { type AiAssistantError } from '../errors';
 import { AiSession } from '../session';
+
+import { ContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunOptions<Tools extends AiTool.Any> {
   systemPrompt?: string;
