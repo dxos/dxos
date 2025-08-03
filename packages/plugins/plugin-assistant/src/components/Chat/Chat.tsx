@@ -8,12 +8,11 @@ import { createContext } from '@radix-ui/react-context';
 import { dedupeWith } from 'effect/Array';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Expando, type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -22,7 +21,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type ChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
@@ -58,11 +57,8 @@ type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
-  processor: ChatProcessor;
+  processor: AiChatProcessor;
   messages: DataType.Message[];
-
-  /** @deprecated Remove and replace with context. */
-  artifact?: Expando;
 };
 
 // NOTE: Do not export.
@@ -74,13 +70,13 @@ const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('C
 
 type ChatRootProps = ThemedClassName<
   PropsWithChildren<
-    Pick<ChatContextValue, 'chat' | 'processor' | 'artifact'> & {
+    Pick<ChatContextValue, 'chat' | 'processor'> & {
       onEvent?: (event: ChatEvent) => void;
     }
   >
 >;
 
-const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const space = getSpace(chat);
 
@@ -95,22 +91,22 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
     [queue?.objects, processor?.messages.value],
   );
 
-  // TODO(burdon): Replace with tool.
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  useEffect(() => {
-    if (!processor?.streaming.value && queue?.objects && artifact) {
-      const message = queue.objects[queue.objects.length - 1];
-      if (dispatch && space && chat && message) {
-        void dispatch(
-          createIntent(CollaborationActions.InsertContent, {
-            target: artifact,
-            object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
-            label: 'View proposal',
-          }),
-        );
-      }
-    }
-  }, [queue, processor?.streaming.value]);
+  // TODO(burdon): Replace with tool to select artifact.
+  // const { dispatchPromise: dispatch } = useIntentDispatcher();
+  // useEffect(() => {
+  //   if (!processor?.streaming.value && queue?.objects) {
+  //     const message = queue.objects[queue.objects.length - 1];
+  //     if (dispatch && space && chat && message) {
+  //       void dispatch(
+  //         createIntent(CollaborationActions.InsertContent, {
+  //           target: artifact,
+  //           object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
+  //           label: 'View proposal',
+  //         }),
+  //       );
+  //     }
+  //   }
+  // }, [queue, processor?.streaming.value]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
