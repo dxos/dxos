@@ -153,7 +153,8 @@ export class AiSession {
         ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
 
         log.info('run', {
-          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32), systemPrompt.length].join(' '),
+          systemPrompt: [systemPrompt.slice(0, 32), '...', systemPrompt.slice(-32)].join(''),
+          length: systemPrompt.length,
           tools: Object.keys(blueprintToolkit.tools),
         });
 

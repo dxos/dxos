@@ -4,12 +4,13 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type ThemedClassName, Icon, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
+import { mx } from '@dxos/react-ui-theme';
+
+import { meta } from '../meta';
 
 import { type ExtendedChessModel } from './Chessboard';
-import { meta } from '../meta';
 
 export type ChessboardInfoProps = ThemedClassName<{
   orientation?: Player;

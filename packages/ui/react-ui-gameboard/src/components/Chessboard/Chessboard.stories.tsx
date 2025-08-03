@@ -11,9 +11,10 @@ import { log } from '@dxos/log';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chessboard, type ChessboardProps } from './Chessboard';
+import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
+
 import { ChessModel } from './chess';
-import { Gameboard, type GameboardRootProps, type Player, type Move } from '../Gameboard';
+import { Chessboard, type ChessboardProps } from './Chessboard';
 
 type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;
@@ -94,7 +95,7 @@ export const Promotion = {} satisfies Story;
 
 export const Debug = {
   args: {
-    pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. bxc3 *',
+    pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
     orientation: 'black',
     showLabels: true,
     debug: true,

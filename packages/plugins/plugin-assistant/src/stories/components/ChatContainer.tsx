@@ -4,21 +4,20 @@
 
 import '@dxos-theme';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { DESIGN_BLUEPRINT, PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
-import { type ComponentProps } from './types';
 import { Chat } from '../../components';
-import { useChatProcessor, useChatServices } from '../../hooks';
+import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
 import { meta } from '../../meta';
 import { Assistant } from '../../types';
+
+import { type ComponentProps } from './types';
 
 export const ChatContainer = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
@@ -33,8 +32,8 @@ export const ChatContainer = ({ space }: ComponentProps) => {
     }
   }, [space]);
 
+  const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space });
-  const blueprintRegistry = useMemo(() => new Blueprint.Registry([DESIGN_BLUEPRINT, PLANNING_BLUEPRINT]), []);
   const processor = useChatProcessor({
     preset,
     chat,
@@ -62,7 +61,7 @@ export const ChatContainer = ({ space }: ComponentProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
-      <Toolbar.Root classNames='border-b border-subduedSeparator'>
+      <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
         {/* <Toolbar.Button>sss</Toolbar.Button> */}
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton

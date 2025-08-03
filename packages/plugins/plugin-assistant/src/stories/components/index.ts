@@ -5,7 +5,6 @@
 export * from './types';
 
 export * from './BlueprintContainer';
-export * from './BoardContainer';
 export * from './ChatContainer';
 export * from './GraphContainer';
 export * from './SurfaceContainer';
