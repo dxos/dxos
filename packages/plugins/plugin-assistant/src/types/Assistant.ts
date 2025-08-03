@@ -10,6 +10,9 @@ import { LabelAnnotation } from '@dxos/echo-schema';
 
 import { LLM_PROVIDERS } from './defs';
 
+/**
+ * AI chat.
+ */
 export const Chat = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String),
@@ -24,6 +27,9 @@ export const Chat = Schema.Struct({
 
 export interface Chat extends Schema.Schema.Type<typeof Chat> {}
 
+/**
+ * Relation between a Chat and companion objects (e.g., artifacts).
+ */
 export const CompanionTo = Schema.Struct({
   id: Type.ObjectId,
 }).pipe(
@@ -37,10 +43,9 @@ export const CompanionTo = Schema.Struct({
 
 export interface CompanionTo extends Schema.Schema.Type<typeof CompanionTo> {}
 
-//
-// Settings
-//
-
+/**
+ * Plugin settings.
+ */
 export const Settings = Schema.mutable(
   Schema.Struct({
     llmProvider: Schema.optional(Schema.Literal(...LLM_PROVIDERS)),
