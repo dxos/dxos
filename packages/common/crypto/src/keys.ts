@@ -2,10 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
-import crypto from '#hypercore-crypto';
-
 import { invariant } from '@dxos/invariant';
 import { type KeyPair, PUBLIC_KEY_LENGTH, PublicKey, type PublicKeyLike, SECRET_KEY_LENGTH } from '@dxos/keys';
+
+import crypto from '#hypercore-crypto';
 
 export const SIGNATURE_LENGTH = 64;
 
