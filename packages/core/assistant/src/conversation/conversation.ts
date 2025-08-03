@@ -15,8 +15,8 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 import { ContextBinder, type ContextBinding } from '../context';
 import type { AiAssistantError } from '../errors';
@@ -75,9 +75,8 @@ export class Conversation {
 
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
-
-      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
 
       log.info('run', {
         history,

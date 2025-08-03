@@ -138,7 +138,7 @@ export class AiSession {
         const systemPrompt = yield* pipe(
           blueprints,
           Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-          Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
+          Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
           Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
           Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
         );
