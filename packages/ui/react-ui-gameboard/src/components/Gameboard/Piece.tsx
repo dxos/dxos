@@ -5,28 +5,29 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { centerUnderPointer } from '@atlaskit/pragmatic-drag-and-drop/element/center-under-pointer';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
-import React, { useState, useRef, useEffect, type FC, type SVGProps, memo } from 'react';
+import React, { type FC, type SVGProps, memo, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useDynamicRef, useTrackProps, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { isEqualLocation, isLocation, type Location, type PieceRecord, type Player } from './types';
-import { type DOMRectBounds } from './util';
 import { useGameboardContext } from './Gameboard';
+import { type Location, type PieceRecord, type Player, isEqualLocation, isLocation } from './types';
+import { type DOMRectBounds } from './util';
 
 export type PieceProps = ThemedClassName<{
+  Component: FC<SVGProps<SVGSVGElement>>;
   piece: PieceRecord;
   bounds: DOMRectBounds;
   label?: string;
   orientation?: Player;
-  Component: FC<SVGProps<SVGSVGElement>>;
+  onClick?: () => void;
 }>;
 
-export const Piece = memo(({ classNames, piece, orientation, bounds, label, Component }: PieceProps) => {
-  useTrackProps({ classNames, piece, orientation, bounds, label, Component }, Piece.displayName, false);
+export const Piece = memo(({ classNames, Component, piece, orientation, bounds, label, onClick }: PieceProps) => {
+  useTrackProps({ classNames, Component, piece, orientation, bounds, label }, Piece.displayName, false);
   const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
@@ -105,10 +106,10 @@ export const Piece = memo(({ classNames, piece, orientation, bounds, label, Comp
         className={mx(
           'absolute',
           classNames,
-          // orientation === 'black' && '_rotate-180',
           dragging && 'opacity-20', // Must not unmount component while dragging.
           isDragging && 'pointer-events-none', // Don't block the square's drop target.
         )}
+        onClick={onClick}
       >
         <Component className='grow' />
         {label && <div className='absolute inset-1 text-xs text-black'>{label}</div>}

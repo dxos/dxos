@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { matchCompletion, staticCompletion, type TypeaheadContext, typeahead } from '@dxos/react-ui-editor';
+import { type TypeaheadContext, matchCompletion, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 
 export const useMatcherExtension = (space: Space) => {
   return useMemo(() => {

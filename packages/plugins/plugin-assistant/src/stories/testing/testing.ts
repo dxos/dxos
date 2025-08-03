@@ -2,38 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, Events, IntentPlugin, type Plugin, SettingsPlugin } from '@dxos/app-framework';
+import { Capabilities, Events, IntentPlugin, type Plugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ContextBinder } from '@dxos/assistant';
-import { readDocument, remoteServiceEndpoints, updateDocument } from '@dxos/assistant-testing';
+import {
+  DESIGN_BLUEPRINT,
+  PLANNING_BLUEPRINT,
+  readDocument,
+  readTasks,
+  remoteServiceEndpoints,
+  updateDocument,
+  updateTasks,
+} from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
-import { type Space } from '@dxos/client/echo';
 
-export const remoteConfig = new Config({
-  runtime: {
-    services: {
-      ai: {
-        // TODO(burdon): Normalize props ('url'?)
-        server: remoteServiceEndpoints.ai,
-      },
-      edge: {
-        url: remoteServiceEndpoints.edge,
+// TODO(burdon): Factor out.
+export const config = {
+  remote: new Config({
+    runtime: {
+      services: {
+        ai: {
+          // TODO(burdon): Normalize props ('url'?)
+          server: remoteServiceEndpoints.ai,
+        },
+        edge: {
+          url: remoteServiceEndpoints.edge,
+        },
       },
     },
-  },
-});
+  }),
+};
 
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
@@ -85,7 +96,13 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
       AssistantPlugin(),
       ...plugins,
     ],
-    capabilities: [contributes(Capabilities.Functions, [readDocument, updateDocument])],
+    capabilities: [
+      // TOOD(burdon): Factor out capability definitions.
+      contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+      contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+      contributes(Capabilities.Functions, [readDocument, updateDocument]),
+      contributes(Capabilities.Functions, [readTasks, updateTasks]),
+    ],
   }),
   withTheme,
   withLayout({

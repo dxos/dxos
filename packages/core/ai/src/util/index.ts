@@ -4,4 +4,3 @@
 
 export * from './printer';
 export * from './sse';
-export * from './trim';

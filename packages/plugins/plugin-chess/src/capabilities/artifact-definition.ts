@@ -3,16 +3,17 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { createArtifactElement, VersionPin, ArtifactId } from '@dxos/assistant';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId, VersionPin, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
+import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 import { Chess, ChessAction } from '../types';
@@ -30,7 +31,7 @@ export default () => {
     id: `artifact:${meta.id}`,
     name: meta.name,
     description: 'Provides a simple chess engine.',
-    instructions: `
+    instructions: trim`
       - If the user's message relates to a chess game, you must return the chess game inside the artifact tag as a valid FEN string with no additional text.
       - Always inspect the chess game at the start of every prompt realting to a chess game, as it might have changed since the interaction.
    `,

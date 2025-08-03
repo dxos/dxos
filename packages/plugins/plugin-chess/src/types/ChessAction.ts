@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { Game } from './Chess';
 import { meta } from '../meta';
+
+import { Game } from './Chess';
 
 export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
   input: Schema.Struct({

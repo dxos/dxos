@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemeMode, useThemeContext, useAsyncState } from '@dxos/react-ui';
+import { type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,

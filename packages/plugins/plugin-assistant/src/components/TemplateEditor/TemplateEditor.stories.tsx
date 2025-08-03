@@ -14,8 +14,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 import { translations } from '../../translations';
+
+import { TemplateEditor, type TemplateEditorProps } from './TemplateEditor';
 
 const TEMPLATE = trim`
   {{! System Prompt }}
@@ -37,7 +38,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
   const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Blueprint.make({ name: 'Test', instructions: { source } }));
+    return space.db.add(Blueprint.make({ key: 'example.com/blueprint/test', name: 'Test', instructions: { source } }));
   });
 
   return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;

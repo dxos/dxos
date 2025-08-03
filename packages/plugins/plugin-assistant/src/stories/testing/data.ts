@@ -3,7 +3,7 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, type Type, Relation } from '@dxos/echo';
+import { Obj, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
