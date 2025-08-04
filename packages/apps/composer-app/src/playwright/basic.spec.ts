@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test';
 import { log } from '@dxos/log';
 
 import { AppManager, INITIAL_URL } from './app-manager';
+import { INITIAL_OBJECT_COUNT } from './constants';
 import { Markdown } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -44,7 +45,7 @@ test.describe('Basic tests', () => {
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     await expect(textBox).toBeEditable();
   });
 
