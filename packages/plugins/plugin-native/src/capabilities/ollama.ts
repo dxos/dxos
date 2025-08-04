@@ -11,7 +11,7 @@ import { type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
-// Running ollama on non-standard port
+// Running ollama on non-standard port.
 const OLLAMA_HOST = 'http://localhost:21434';
 
 export default (_context: PluginContext) => {
