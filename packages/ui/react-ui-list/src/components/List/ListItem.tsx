@@ -194,10 +194,13 @@ export const ListItemDeleteButton = ({
   classNames,
   disabled,
   icon = 'ph--x--regular',
+  label,
   ...props
-}: Partial<Pick<IconButtonProps, 'icon'>> & Omit<IconButtonProps, 'icon'> & { autoHide?: boolean }) => {
+}: Partial<Pick<IconButtonProps, 'icon'>> &
+  Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
   const { state } = useListContext('DELETE_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
+  const { t } = useTranslation('os');
   return (
     <IconButton
       iconOnly
@@ -205,6 +208,7 @@ export const ListItemDeleteButton = ({
       {...props}
       icon={icon}
       disabled={isDisabled}
+      label={label ?? t('delete label')}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
   );

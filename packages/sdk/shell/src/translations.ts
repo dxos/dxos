@@ -109,6 +109,7 @@ export const translations = [
         'invite options label': 'Change the active invite option.',
         'reset in progress label': 'Resetting...',
         'confirm label': 'Confirm',
+        'delete label': 'Delete',
         'reset storage input label':
           'WARNING: This will delete all data on this device. Type {{confirmationValue}} to continue.',
         'join new identity input label':
