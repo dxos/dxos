@@ -3,8 +3,7 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Chunk, Context, Effect, Option, Queue, type Schema, Stream, pipe } from 'effect';
-import { Array, String } from 'effect';
+import { Array, Chunk, Context, Effect, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
 
 import {
   type AiInputPreprocessingError,
@@ -14,7 +13,7 @@ import {
   type GenerationStream,
   ToolExecutionService,
   ToolResolverService,
-  callTool,
+  callTools,
   getToolCalls,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
@@ -292,19 +291,3 @@ export namespace ArtifactDiffResolver {
     >;
   };
 }
-
-/**
- * Runs a list of tool calls.
- */
-const callTools: <Tools extends AiTool.Any>(
-  toolCalls: ContentBlock.ToolCall[],
-  toolkit: AiToolkit.AiToolkit<Tools>,
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('callTools')(
-  function* (toolCalls, toolkit) {
-    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-    return yield* Effect.forEach(toolCalls, (toolCall) => {
-      log.info('callTool', { toolCall });
-      return callTool(toolkitWithHandlers, toolCall);
-    });
-  },
-);

@@ -48,7 +48,7 @@ export type RunToolsResult =
 /**
  * @deprecated
  */
-export const runTools = async ({
+export const runTools_ = async ({
   message,
   tools,
   extensions,

@@ -3,8 +3,9 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { AssistantEvents } from '@dxos/plugin-assistant';
 
-import { Updater } from './capabilities';
+import { Ollama, Updater } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -19,5 +20,10 @@ export const NativePlugin = () =>
       id: `${meta.id}/module/updater`,
       activatesOn: Events.DispatcherReady,
       activate: Updater,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ollama`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: Ollama,
     }),
   ]);

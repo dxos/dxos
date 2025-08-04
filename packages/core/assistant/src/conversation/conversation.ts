@@ -105,7 +105,7 @@ export class AiConversation {
         prompt: options.prompt,
       });
 
-      log.info('result', { messages: messages.length, duration: Date.now() - start });
+      log.info('result', { messages: messages, duration: Date.now() - start });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));
