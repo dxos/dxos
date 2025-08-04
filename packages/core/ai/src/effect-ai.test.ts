@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { AiLanguageModel, type AiToolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
+import { Chunk, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
@@ -15,8 +15,8 @@ import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
-import { getToolCalls, callTool } from './tools';
 import { CalculatorToolkit, calculatorLayer } from './testing';
+import { callTool, getToolCalls } from './tools';
 
 describe('effect AI client', () => {
   it.effect(

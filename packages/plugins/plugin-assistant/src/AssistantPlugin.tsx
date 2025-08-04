@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { AnthropicClient } from '@effect/ai-anthropic';
+import { FetchHttpClient } from '@effect/platform';
 import { Effect, Layer } from 'effect';
 
+import { AiServiceRouter } from '@dxos/ai';
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -11,12 +14,9 @@ import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { AnthropicClient } from '@effect/ai-anthropic';
 
-import { AiServiceRouter } from '@dxos/ai';
-import { FetchHttpClient } from '@effect/platform';
 import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantCapabilities, AssistantActivationEvents } from './defs';
+import { AssistantActivationEvents, AssistantCapabilities } from './defs';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
@@ -144,7 +144,7 @@ export const AssistantPlugin = () =>
         const aiModelResolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
         console.log('aiModelResolvers', aiModelResolvers);
 
-        // TODO(dmaretskyi): Extract function to read them.
+        // TODO(dmaretskyi): Extract function to reduce them.
         const combinedLayer = aiModelResolvers.reduce(
           (acc, resolver) => resolver.pipe(Layer.provide(acc)),
           AiServiceRouter.AiModelResolver.fromModelMap(Effect.succeed({})), // Empty resolver as fallback.

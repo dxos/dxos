@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, type AiToolkit } from '@effect/ai';
+import { AiLanguageModel } from '@effect/ai';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Console, Effect, Layer, Stream } from 'effect';
+import { Chunk, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
 import { parseGptStream } from './experimental/AiParser';
-import { TestHelpers } from '@dxos/effect';
-import { calculatorLayer, CalculatorToolkit, tapHttpErrors } from './testing';
-import { getToolCalls, runTool, runTools } from './tools';
+import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
+import { getToolCalls, runTools } from './tools';
 
 describe('ollama', () => {
   it.effect(

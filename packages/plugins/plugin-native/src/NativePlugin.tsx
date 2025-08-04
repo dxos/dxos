@@ -3,11 +3,11 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { AssistantActivationEvents } from '@dxos/plugin-assistant';
 
-import { Updater, Ollama } from './capabilities';
+import { Ollama, Updater } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantActivationEvents } from '@dxos/plugin-assistant';
 
 export const NativePlugin = () =>
   definePlugin(meta, [

@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { Command } from '@tauri-apps/plugin-shell';
 import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { AssistantCapabilities } from '@dxos/plugin-assistant';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Command } from '@tauri-apps/plugin-shell';
 
 // Running ollama on non-standard port
 const OLLAMA_HOST = 'http://localhost:21434';

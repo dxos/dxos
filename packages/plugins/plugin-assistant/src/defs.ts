@@ -4,7 +4,7 @@
 
 import { type Layer } from 'effect';
 
-import { type AiService, AiServiceRouter } from '@dxos/ai';
+import { type AiService, type AiServiceRouter } from '@dxos/ai';
 import { defineCapability, defineEvent } from '@dxos/app-framework';
 
 import { ASSISTANT_PLUGIN } from './meta';

@@ -1,6 +1,11 @@
-import { log } from '@dxos/log';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Console, Effect, Schema } from 'effect';
+
+import { log } from '@dxos/log';
 
 // Tool definitions.
 export class CalculatorToolkit extends AiToolkit.make(

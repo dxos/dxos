@@ -1,5 +1,9 @@
-import { describe, it } from '@effect/vitest';
-import { Config, Context, Duration, Effect, Layer, ManagedRuntime, Scope } from 'effect';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { it } from '@effect/vitest';
+import { Context, Duration, Effect, Layer, ManagedRuntime } from 'effect';
 import { test } from 'vitest';
 
 class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}

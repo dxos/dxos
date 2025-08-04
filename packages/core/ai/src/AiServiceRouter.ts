@@ -5,12 +5,12 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
-import { Context, Effect, Layer, Option, Predicate } from 'effect';
+import { type HttpClient } from '@effect/platform';
+import { Context, Effect, Layer, Option } from 'effect';
 
 import { AiService } from './deprecated/service';
 import { AiModelNotAvailableError } from './errors';
 import { type LLMModel as ModelName } from './types';
-import { HttpClient, HttpClientRequest } from '@effect/platform';
 
 // TODO(burdon): Determine canoncical naming and resolution of different models by provider.
 //  Consider: Base model (e.g., claude-opus-4-0), Provider (e.g., anhtropic), Registry (cloudflare), Runtime (dxos-remote).
