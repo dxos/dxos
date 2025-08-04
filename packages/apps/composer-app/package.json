@@ -85,7 +85,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "^5.0.20",
-    "@tauri-apps/plugin-updater": "~2.9.0",
     "effect": "3.17.0",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.1",
