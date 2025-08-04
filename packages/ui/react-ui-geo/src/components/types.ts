@@ -6,14 +6,14 @@ import { type LatLngLiteral } from 'leaflet';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { type MapMarker } from '../types';
+import { type GeoMarker } from '../types';
 
 export { type LatLngLiteral };
 
 export type MapCanvasProps = ThemedClassName<{
-  markers?: MapMarker[];
+  markers?: GeoMarker[];
   selected?: string[];
-  zoom?: number;
   center?: LatLngLiteral;
-  onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
+  zoom?: number;
+  onChange?: (params: { center: LatLngLiteral; zoom: number }) => void;
 }>;
