@@ -20,7 +20,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 
-import { AssistantCapabilities } from '../defs';
+import { AssistantCapabilities } from '../capabilities';
 
 // TODO(burdon): Deconstruct into separate layers?
 export type AiChatServices =

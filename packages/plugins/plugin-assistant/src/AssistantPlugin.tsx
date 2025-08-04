@@ -17,7 +17,8 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantActivationEvents, AssistantCapabilities } from './defs';
+import { AssistantEvents } from './events';
+import { AssistantCapabilities } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
@@ -117,9 +118,9 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/s`,
+      id: `${meta.id}/module/ai-model-resolver`,
       activatesOn: Events.Startup,
-      activatesAfter: [AssistantActivationEvents.AiServiceProvidersReady],
+      activatesAfter: [AssistantEvents.AiServiceProvidersReady],
       activate: () => {
         return [
           contributes(
@@ -140,7 +141,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/ai-service`,
       // Must activate after the `AssistantCapabilities.AiModelResolver` were contributed.
-      activatesOn: AssistantActivationEvents.AiServiceProvidersReady,
+      activatesOn: AssistantEvents.AiServiceProvidersReady,
       activate: (context) => {
         const aiModelResolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
         log.info('Creating AIService', { aiModelResolvers });

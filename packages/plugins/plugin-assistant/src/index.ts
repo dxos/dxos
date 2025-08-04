@@ -3,7 +3,6 @@
 //
 
 export * from './capabilities';
-export * from './defs';
 export * from './components';
 export * from './events';
 export * from './meta';

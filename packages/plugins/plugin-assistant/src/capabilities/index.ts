@@ -4,6 +4,8 @@
 
 import { lazy } from '@dxos/app-framework';
 
+export * from './capabilities';
+
 export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
 export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));

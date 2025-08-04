@@ -678,12 +678,6 @@ importers:
       '@fontsource/poiret-one':
         specifier: ^5.0.20
         version: 5.0.20
-      '@tauri-apps/plugin-shell':
-        specifier: ~2.3.0
-        version: 2.3.0
-      '@tauri-apps/plugin-updater':
-        specifier: ~2.9.0
-        version: 2.9.0
       effect:
         specifier: 3.17.0
         version: 3.17.0
