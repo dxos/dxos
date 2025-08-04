@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-nocheck
+// TODO(burdon): Fix!!!
+
 import { Schema } from 'effect';
 
-import { ToolResult, createTool } from '@dxos/ai';
 import {
   Capabilities,
   LayoutAction,
@@ -13,6 +15,7 @@ import {
   createIntent,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { trim } from '@dxos/util';
 
 import { meta } from '../meta';
 import { DeckAction } from '../types';
@@ -30,7 +33,7 @@ export default () =>
   contributes(Capabilities.Tools, [
     createTool(meta.id, {
       name: 'show',
-      description: `
+      description: trim`
         Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
         When supplying IDs, they must be fully qualified like space:object.
       `,

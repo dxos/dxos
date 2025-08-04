@@ -23,9 +23,9 @@ import { AiSession } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
-export interface AiConversationRunOptions<Tools extends AiTool.Any> {
-  systemPrompt?: string;
+export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
+  system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
@@ -67,7 +67,7 @@ export class AiConversation {
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
   run = <Tools extends AiTool.Any>(
-    options: AiConversationRunOptions<Tools>,
+    params: AiConversationRunParams<Tools>,
   ): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
@@ -77,17 +77,17 @@ export class AiConversation {
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+
+      // TODO(burdon): These don't need to be loaded; just need id and typename from context.
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
-      const systemPrompt = [options.systemPrompt, ...objects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`)]
-        .filter(Boolean)
-        .join('\n');
 
       log.info('run', {
-        history,
-        context,
-        systemPrompt,
-        prompt: options.prompt,
-        toolkit: options.toolkit,
+        prompt: params.prompt,
+        system: params.system,
+        history: history.length,
+        objects: objects.length,
+        blueprints: blueprints.length,
+        toolkit: params.toolkit,
       });
 
       const start = Date.now();
@@ -95,11 +95,12 @@ export class AiConversation {
       this.onBegin.emit(session);
 
       const messages = yield* session.run({
-        blueprints,
-        toolkit: options.toolkit,
+        prompt: params.prompt,
+        system: params.system,
         history,
-        systemPrompt,
-        prompt: options.prompt,
+        objects,
+        blueprints,
+        toolkit: params.toolkit,
       });
 
       log.info('result', { messages: messages.length, duration: Date.now() - start });

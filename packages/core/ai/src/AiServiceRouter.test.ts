@@ -9,8 +9,8 @@ import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
+import { AiService } from './AiService';
 import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
-import { AiService } from './deprecated/service';
 import { AiModelNotAvailableError } from './errors';
 
 const TestRouter = AiModelResolver.buildAiService.pipe(

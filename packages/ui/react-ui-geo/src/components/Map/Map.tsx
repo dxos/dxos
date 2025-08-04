@@ -4,135 +4,221 @@
 
 import 'leaflet/dist/leaflet.css';
 
-import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
-import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds } from 'leaflet';
+import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
-import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
 import { ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
+import { type GeoMarker } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
-import { type MapCanvasProps } from '../types';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4
 // TODO(burdon): react-leaflet v5 is not compatible with react 18.
 // TODO(burdon): Guess initial location.
 
 const defaults = {
-  center: { lat: 51, lng: 0 } as L.LatLngExpression,
+  center: { lat: 51, lng: 0 } as L.LatLngLiteral,
   zoom: 4,
 };
+
+//
+// Controller
+//
+
+type MapController = {
+  setCenter: (center: LatLngLiteral, zoom?: number) => void;
+  setZoom: (cb: (zoom: number) => number) => void;
+};
+
+//
+// Context
+//
+
+type MapContextValue = {
+  attention?: boolean;
+};
+
+const [MapContextProvier, useMapContext] = createContext<MapContextValue>('Map');
 
 //
 // Root
 //
 
-type MapRootProps = ThemedClassName<MapContainerProps>;
+type MapRootProps = ThemedClassName<
+  MapContainerProps & {
+    onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
+  }
+>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-const MapRoot = ({
-  classNames,
-  scrollWheelZoom = true,
-  doubleClickZoom = true,
-  touchZoom = true,
-  center = defaults.center,
-  zoom = defaults.zoom,
-  ...props
-}: MapRootProps) => {
-  return (
-    <MapContainer
-      className={mx('relative grid bs-full is-full bg-baseSurface', classNames)}
-      attributionControl={false}
-      zoomControl={false}
-      scrollWheelZoom={scrollWheelZoom}
-      doubleClickZoom={doubleClickZoom}
-      touchZoom={touchZoom}
-      center={center}
-      zoom={zoom}
-      {...props}
-    />
-  );
-};
-
-//
-// Controller
-// TODO(burdon): Normalize with Globe.
-//
-
-type MapController = {
-  setCenter: (center: LatLngExpression, zoom?: number) => void;
-  setZoom: (cb: (zoom: number) => number) => void;
-};
-
-const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, zoom, onChange }, forwardedRef) => {
-  const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
-  const map = useMap();
-
-  useImperativeHandle(
+const MapRoot = forwardRef<MapController, MapRootProps>(
+  (
+    {
+      classNames,
+      scrollWheelZoom = true,
+      doubleClickZoom = true,
+      touchZoom = true,
+      center = defaults.center,
+      zoom = defaults.zoom,
+      onChange,
+      ...props
+    },
     forwardedRef,
-    () => ({
-      setCenter: (center: LatLngExpression, zoom?: number) => {
-        map.setView(center, zoom);
-      },
-      setZoom: (cb) => {
-        map.setZoom(cb(map.getZoom()));
-      },
-    }),
-    [map],
+  ) => {
+    const [attention, setAttention] = useState(false);
+    const mapRef = useRef<L.Map>(null);
+    const map = mapRef.current;
+
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        setCenter: (center: LatLngLiteral, zoom?: number) => {
+          mapRef.current?.setView(center, zoom);
+        },
+        setZoom: (cb: (zoom: number) => number) => {
+          mapRef.current?.setZoom(cb(mapRef.current?.getZoom() ?? 0));
+        },
+      }),
+      [],
+    );
+
+    // Events.
+    useEffect(() => {
+      if (!map) {
+        return;
+      }
+
+      const handler = debounce(() => {
+        setAttention(true);
+        onChange?.({
+          center: map.getCenter(),
+          zoom: map.getZoom(),
+        });
+      }, 100);
+
+      map.on('move', handler);
+      map.on('zoom', handler);
+      map.on('focus', () => setAttention(true));
+      map.on('blur', () => setAttention(false));
+      return () => {
+        map.off('move');
+        map.off('zoom');
+        map.off('focus');
+        map.off('blur');
+      };
+    }, [map, onChange]);
+
+    // Enable/disable scroll wheel zoom.
+    useEffect(() => {
+      if (!map) {
+        return;
+      }
+
+      if (attention) {
+        map.scrollWheelZoom.enable();
+      } else {
+        map.scrollWheelZoom.disable();
+      }
+    }, [map, attention]);
+
+    return (
+      <MapContextProvier attention={attention}>
+        <MapContainer
+          {...props}
+          ref={mapRef}
+          className={mx('group relative grid bs-full is-full !bg-baseSurface', classNames)}
+          attributionControl={false}
+          zoomControl={false}
+          scrollWheelZoom={scrollWheelZoom}
+          doubleClickZoom={doubleClickZoom}
+          touchZoom={touchZoom}
+          center={center}
+          zoom={zoom}
+          whenReady={() => {
+            console.log('READY');
+          }}
+        />
+      </MapContextProvier>
+    );
+  },
+);
+
+MapRoot.displayName = 'Map.Root';
+
+//
+// Tiles
+// https://react-leaflet.js.org/docs/api-components/#tilelayer
+//
+
+type MapTilesProps = {};
+
+const MapTiles = (_props: MapTilesProps) => {
+  const ref = useRef<L.TileLayer>(null);
+
+  // NOTE: Need to dynamically update data attribute since TileLayer doesn't update, but
+  // Tailwind requires setting the property for static analysis.
+  const { attention } = useMapContext(MapTiles.displayName);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.getContainer().dataset.attention = attention ? '1' : '0';
+    }
+  }, [attention]);
+
+  // TODO(burdon): Option to add class 'invert'.
+  return (
+    <>
+      <TileLayer
+        ref={ref}
+        data-attention={attention}
+        detectRetina={true}
+        className='dark:grayscale dark:invert data-[attention="0"]:!opacity-80'
+        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        keepBuffer={4}
+        // opacity={attention ? 1 : 0.7}
+      />
+
+      {/* Temperature map. */}
+      {/* <WMSTileLayer
+        url='https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi'
+        layers='MODIS_Terra_Land_Surface_Temp_Day'
+        format='image/png'
+        transparent={true}
+        version='1.3.0'
+        attribution='NASA GIBS'
+      /> */}
+
+      {/* US Weather. */}
+      {/* <WMSTileLayer
+        url='https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi'
+        layers='nexrad-n0r' // layers='nexrad-n0r'
+        format='image/png'
+        transparent={true}
+      /> */}
+    </>
   );
+};
 
-  // Resize.
-  useEffect(() => {
-    if (width && height) {
-      map.invalidateSize();
-    }
-  }, [width, height]);
+MapTiles.displayName = 'Map.Tiles';
 
-  // Events.
-  useEffect(() => {
-    const handler = debounce(() => {
-      onChange?.({
-        center: map.getCenter(),
-        zoom: map.getZoom(),
-      });
-    }, 100);
+//
+// Markers
+//
 
-    map.on('move', handler);
-    map.on('zoom', handler);
-    map.on('focus', () => setHasFocus(true));
-    map.on('blur', () => setHasFocus(false));
-    return () => {
-      map.off('move', handler);
-      map.off('zoom', handler);
-      map.off('focus');
-      map.off('blur');
-    };
-  }, [map, onChange]);
+type MapMarkersProps = {
+  markers?: GeoMarker[];
+  selected?: string[];
+};
 
-  // Support zoom if focused.
-  const [hasFocus, setHasFocus] = useState(false);
-  useEffect(() => {
-    if (hasFocus) {
-      map.scrollWheelZoom.enable();
-    } else {
-      map.scrollWheelZoom.disable();
-    }
-  }, [map, hasFocus]);
-
-  // Position.
-  useEffect(() => {
-    if (center) {
-      map.setView(center, zoom);
-    } else if (zoom !== undefined) {
-      map.setZoom(zoom);
-    }
-  }, [center, zoom]);
+const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
+  const map = useMap();
 
   // Set the viewport around the markers, or show the whole world map if `markers` is empty.
   useEffect(() => {
@@ -145,22 +231,7 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
   }, [markers]);
 
   return (
-    <div ref={ref} role='none' className='grid inset-0 overflow-hidden bg-baseSurface'>
-      {/* Focus ring. */}
-      <div
-        className={mx(
-          'z-[9999] absolute inset-0 border border-transparent pointer-events-none',
-          hasFocus && 'border-primary-500 ',
-        )}
-      />
-
-      {/* Map tiles. */}
-      <TileLayer
-        className='dark:filter dark:grayscale dark:invert'
-        url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-      />
-
-      {/* Markers. */}
+    <>
       {markers?.map(({ id, title, location: { lat, lng } }) => {
         return (
           <Marker
@@ -168,6 +239,7 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
             position={{ lat, lng }}
             icon={
               // TODO(burdon): Create custom icon from bundled assets.
+              // TODO(burdon): Selection state.
               new L.Icon({
                 iconUrl: 'https://dxos.network/marker-icon.png',
                 iconRetinaUrl: 'https://dxos.network/marker-icon-2x.png',
@@ -183,9 +255,11 @@ const MapCanvas = forwardRef<MapController, MapCanvasProps>(({ markers, center, 
           </Marker>
         );
       })}
-    </div>
+    </>
   );
-});
+};
+
+MapMarkers.displayName = 'Map.Markers';
 
 //
 // Controls
@@ -228,23 +302,28 @@ const CustomControl = ({
 
 type MapControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 
+const MapZoom = ({ onAction, position = 'bottomleft', ...props }: MapControlProps) => (
+  <CustomControl position={position} {...props}>
+    <ZoomControls onAction={onAction} />
+  </CustomControl>
+);
+
+const MapAction = ({ onAction, position = 'bottomright', ...props }: MapControlProps) => (
+  <CustomControl position={position} {...props}>
+    <ActionControls onAction={onAction} />
+  </CustomControl>
+);
+
 //
 // Map
 //
 
 export const Map = {
   Root: MapRoot,
-  Canvas: MapCanvas,
-  Zoom: ({ onAction, position = 'bottomleft', ...props }: MapControlProps) => (
-    <CustomControl position={position} {...props}>
-      <ZoomControls onAction={onAction} />
-    </CustomControl>
-  ),
-  Action: ({ onAction, position = 'bottomright', ...props }: MapControlProps) => (
-    <CustomControl position={position} {...props}>
-      <ActionControls onAction={onAction} />
-    </CustomControl>
-  ),
+  Tiles: MapTiles,
+  Markers: MapMarkers,
+  Zoom: MapZoom,
+  Action: MapAction,
 };
 
-export { type MapCanvasProps, type MapController };
+export { type MapController, type MapRootProps, type MapTilesProps, type MapMarkersProps, type MapControlProps };

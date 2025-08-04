@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { Tool } from '@dxos/ai';
 import { ObjectId } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
@@ -44,8 +43,8 @@ export type JsonTransformInput = Schema.Schema.Type<typeof JsonTransformInput>;
 export const AppendInput = Schema.Struct({ id: ObjectId, items: Schema.Any });
 export type AppendInput = Schema.Schema.Type<typeof AppendInput>;
 
-export const DatabaseOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });
-export type DatabaseOutput = Schema.Schema.Type<typeof DatabaseOutput>;
+// export const DatabaseOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });
+// export type DatabaseOutput = Schema.Schema.Type<typeof DatabaseOutput>;
 
 //
 // Logic
@@ -81,5 +80,4 @@ export type ReducerOutput = Schema.Schema.Type<typeof ReducerOutput>;
 // GPT Tools
 //
 
-// TODO(dmaretskyi): Update.
-export const TextToImageOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });
+// export const TextToImageOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Tool) });

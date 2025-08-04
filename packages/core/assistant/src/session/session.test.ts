@@ -52,7 +52,7 @@ const toolkitLayer = TestToolkit.toLayer({
         const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
         log.info('calculate', { sanitizedInput });
 
-        // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
         return Function(`"use strict"; return (${sanitizedInput})`)();
       })();
 
@@ -74,7 +74,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
         log.info('response', { response });
       },
       Effect.provide(
-        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+        AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
           Layer.provideMerge(ToolResolverService.layerEmpty),
           Layer.provideMerge(ToolExecutionService.layerEmpty),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
@@ -101,7 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
           toolkitLayer,
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
         ),
@@ -235,7 +235,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
 });
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
-// eslint-disable-next-line no-unused-vars
+
 const _CALENDAR_EVENTS: CalendarEvent[] = [
   Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',

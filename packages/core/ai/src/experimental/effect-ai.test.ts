@@ -11,11 +11,11 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { parseResponse } from './AiParser';
-import { preprocessAiInput } from './AiPreprocessor';
-import { AiService } from './deprecated/service';
-import { AiServiceTestingPreset } from './testing';
-import { callTool, getToolCalls } from './tools';
+import { parseResponse } from '../AiParser';
+import { preprocessAiInput } from '../AiPreprocessor';
+import { AiService } from '../AiService';
+import { AiServiceTestingPreset } from '../testing';
+import { callTool, getToolCalls } from '../tools';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(

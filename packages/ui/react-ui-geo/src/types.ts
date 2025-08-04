@@ -4,7 +4,9 @@
 
 import { type LatLngLiteral } from 'leaflet';
 
-export type MapMarker = {
+export { type LatLngLiteral };
+
+export type GeoMarker = {
   id: string;
   title?: string;
   location: LatLngLiteral;

@@ -4,10 +4,10 @@
 
 export * as AiParser from './AiParser';
 export * as AiPreprocessor from './AiPreprocessor';
+export * as AiService from './AiService';
 export * as AiServiceRouter from './AiServiceRouter';
 
 export * from './defs';
-export * from './deprecated';
 export * from './errors';
 export * from './experimental';
 export * from './status-report';

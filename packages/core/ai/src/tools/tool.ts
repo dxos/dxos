@@ -7,8 +7,6 @@ import { Schema } from 'effect';
 import { JsonSchemaType } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
-import { type AgentStatus } from '../../status-report';
-
 declare global {
   /**
    * Extensions to the tool execution context.
@@ -42,7 +40,7 @@ export type ToolExecutionContext = {
   /**
    * Report what tool is doing currently.
    */
-  reportStatus?: (status: AgentStatus) => void;
+  // reportStatus?: (status: AgentStatus) => void;
 };
 
 /**

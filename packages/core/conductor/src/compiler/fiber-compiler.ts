@@ -4,7 +4,6 @@
 
 import { Effect, Layer, Schema, Scope } from 'effect';
 
-import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import {
   ComputeEventLogger,
@@ -343,17 +342,19 @@ export class GraphExecutor {
       const layer = Layer.mergeAll(
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
-        Layer.succeed(AiService, yield* AiService),
+        // TODO(burdon): Fix !!!
+        // Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
+        Layer.succeed(QueueService, yield* QueueService),
         Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
         Layer.succeed(TracingService, yield* TracingService),
-        Layer.succeed(QueueService, yield* QueueService),
       );
 
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
+
       return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
   }

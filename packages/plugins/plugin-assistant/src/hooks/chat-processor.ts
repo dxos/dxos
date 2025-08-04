@@ -5,9 +5,14 @@
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 import { Effect, type Layer } from 'effect';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiConversation, type AiSession, ArtifactDiffResolver } from '@dxos/assistant';
+import {
+  type AiConversation,
+  type AiConversationRunParams,
+  type AiSession,
+  ArtifactDiffResolver,
+} from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -32,15 +37,14 @@ export type AiRequestOptions = {
 };
 
 export type AiChatProcessorOptions = {
+  model?: string;
   blueprintRegistry?: Blueprint.Registry;
-  tools?: readonly ExecutableTool[];
   extensions?: ToolContextExtensions;
-  // TODO(burdon): Remove systemPrompt -- should come from assistant blueprint?
-} & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+} & Pick<AiConversationRunParams<any>, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  systemPrompt: 'you are a helpful assistant',
+  system: 'you are a helpful assistant',
 };
 
 /**
@@ -89,9 +93,6 @@ export class AiChatProcessor {
     return messages;
   });
 
-  /** Tool implementations.*/
-  private _tools?: ExecutableTool[];
-
   /** Current session. */
   private _session: AiSession | undefined = undefined;
 
@@ -100,31 +101,18 @@ export class AiChatProcessor {
     private readonly _services: Layer.Layer<AiChatServices>,
     private readonly _conversation: AiConversation,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
-  ) {
-    this._tools = [...(_options.tools ?? [])];
+  ) {}
+
+  get context() {
+    return this._conversation.context;
   }
 
   get conversation() {
     return this._conversation;
   }
 
-  get context() {
-    return this._conversation.context;
-  }
-
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
-  }
-
-  get tools() {
-    return this._tools;
-  }
-
-  /**
-   * @deprecated Replace with blueprints
-   */
-  setTools(tools: ExecutableTool[]): void {
-    this._tools = tools;
   }
 
   /**
@@ -226,12 +214,11 @@ export class AiChatProcessor {
         this._conversation
           .run({
             prompt: message,
-            // TODO(burdon): Construct from blueprints?
-            systemPrompt: this._options.systemPrompt,
+            system: this._options.system,
           })
           .pipe(
             //
-            Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+            Effect.provide(AiService.AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
             // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
             Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
             Effect.provide(this._services),
@@ -293,6 +280,7 @@ export class AiChatProcessor {
           if (!object) {
             return;
           }
+
           versions.set(artifact.id, {
             version: getVersion(object),
             diff: `Current state: ${JSON.stringify(object)}`,

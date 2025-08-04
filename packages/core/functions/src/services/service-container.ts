@@ -4,7 +4,6 @@
 
 import { type Context, Layer } from 'effect';
 
-import { AiService } from '@dxos/ai';
 import { entries } from '@dxos/util';
 
 import { ConfiguredCredentialsService, CredentialsService } from './credentials';
@@ -20,7 +19,6 @@ import { TracingService } from './tracing';
  * List of all services.
  */
 const SERVICES = {
-  ai: AiService,
   credentials: CredentialsService,
   database: DatabaseService,
   eventLogger: ComputeEventLogger,
@@ -90,7 +88,6 @@ export class ServiceContainer {
 
   // TODO(dmaretskyi): `getService` is designed to error at runtime if the service is not available, but layer forces us to provide all services and makes stubs for the ones that are not available.
   createLayer(): Layer.Layer<Services> {
-    const ai = this._services.ai != null ? Layer.succeed(AiService, this._services.ai) : AiService.notAvailable;
     const credentials = Layer.succeed(
       CredentialsService,
       this._services.credentials ?? new ConfiguredCredentialsService(),
@@ -108,6 +105,6 @@ export class ServiceContainer {
       this._services.functionCallService ?? RemoteFunctionExecutionService.mock(),
     );
 
-    return Layer.mergeAll(ai, credentials, database, queues, tracing, eventLogger, functionCallService);
+    return Layer.mergeAll(credentials, database, queues, tracing, eventLogger, functionCallService);
   }
 }

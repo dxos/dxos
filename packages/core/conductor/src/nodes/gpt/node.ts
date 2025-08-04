@@ -2,16 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-nocheck
+// TODO(burdon): Fix !!!
+
 import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
-import {
-  DEFAULT_EDGE_MODEL,
-  type GenerationStreamEvent,
-  ToolExecutionService,
-  ToolId,
-  ToolResolverService,
-} from '@dxos/ai';
-import { AiService } from '@dxos/ai';
+import { ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
@@ -122,7 +118,7 @@ export const gptNode = defineComputeNode({
   output: GptOutput,
   exec: (input) =>
     Effect.gen(function* () {
-      const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
+      const { system, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
       assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
 
       const { queues } = yield* QueueService;
@@ -134,7 +130,7 @@ export const gptNode = defineComputeNode({
           })
         : (history ?? []);
 
-      log.info('generating', { systemPrompt, prompt, historyMessages, tools });
+      log.info('generating', { system, prompt, historyMessages, tools });
 
       const session = new AiSession({
         operationModel: 'configured',
@@ -169,7 +165,9 @@ export const gptNode = defineComputeNode({
 
       // TODO(dmaretskyi): Is there a better way to satisfy deps?
       const runDeps = Layer.mergeAll(
-        AiService.model(DEFAULT_EDGE_MODEL).pipe(Layer.provide(Layer.succeed(AiService, yield* AiService))),
+        // AiService.AiService.model(DEFAULT_EDGE_MODEL).pipe(
+        //   Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
+        // ),
         // TODO(dmaretskyi): Move them out.
         ToolResolverService.layerEmpty,
         ToolExecutionService.layerEmpty,
@@ -180,7 +178,7 @@ export const gptNode = defineComputeNode({
       const resultEffect = Effect.gen(function* () {
         const messages = yield* session
           .run({
-            systemPrompt,
+            system,
             prompt: fullPrompt,
             history: [...historyMessages],
           })

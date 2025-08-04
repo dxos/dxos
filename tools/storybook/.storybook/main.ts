@@ -29,7 +29,7 @@ export const modules = [
   'apps/*/src/**',
   'common/*/src/**',
   'devtools/*/src/**',
-  // 'experimental/*/src/**',
+  'experimental/*/src/**',
   'plugins/*/src/**',
   'sdk/*/src/**',
   'ui/*/src/**',

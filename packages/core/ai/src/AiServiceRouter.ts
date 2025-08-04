@@ -7,7 +7,7 @@ import { AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { Context, Effect, Layer, Option } from 'effect';
 
-import { AiService } from './deprecated/service';
+import { AiService } from './AiService';
 import { AiModelNotAvailableError } from './errors';
 import { type LLMModel as ModelName } from './types';
 

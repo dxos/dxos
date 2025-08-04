@@ -7,9 +7,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { load } from '../functions';
-
-// TODO(burdon): Get object from bindings.
+import { load, play } from '../functions';
 
 export default () => {
   return [
@@ -21,12 +19,11 @@ export default () => {
         instructions: {
           source: trim`
           You are an expert chess player.
-          When a game is referenced load it using the load tool to get the PGN string.
         `,
         },
-        tools: [ToolId.make(load.name)],
+        tools: [ToolId.make(load.name), ToolId.make(play.name)],
       }),
     ),
-    contributes(Capabilities.Functions, [load]),
+    contributes(Capabilities.Functions, [load, play]),
   ];
 };

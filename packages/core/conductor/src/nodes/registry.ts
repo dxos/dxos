@@ -5,7 +5,6 @@
 import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { type Tool, ToolTypes, defineTool } from '@dxos/ai';
 import { Filter, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo-schema';
@@ -38,13 +37,11 @@ import { templateNode } from './template/node';
 import {
   AppendInput,
   ConstantOutput,
-  DatabaseOutput,
   JsonTransformInput,
   QueueInput,
   QueueOutput,
   ReducerInput,
   ReducerOutput,
-  TextToImageOutput,
 } from './types';
 
 /**
@@ -399,7 +396,7 @@ export const registry: Record<NodeType, Executable> = {
   // TODO(burdon): Rename 'echo' (since we may have other dbs).
   ['database' as const]: defineComputeNode({
     input: VoidInput,
-    output: DatabaseOutput,
+    output: VoidOutput, // TODO(burdon): Fix.
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
         throw new Error('Not implemented');
@@ -409,16 +406,16 @@ export const registry: Record<NodeType, Executable> = {
 
   ['text-to-image' as const]: defineComputeNode({
     input: VoidInput,
-    output: TextToImageOutput,
-    exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
+    output: VoidOutput, // TODO(burdon): Fix.
+    exec: synchronizedComputeFunction(() => Effect.succeed({})),
   }),
 };
 
-const textToImageTool: Tool = defineTool('testing', {
-  name: 'text-to-image',
-  type: ToolTypes.TextToImage,
-  options: {
-    // TODO(burdon): Testing.
-    // model: '@testing/kitten-in-bubble',
-  },
-});
+// const textToImageTool: Tool = defineTool('testing', {
+//   name: 'text-to-image',
+//   type: ToolTypes.TextToImage,
+//   options: {
+//     // TODO(burdon): Testing.
+//     // model: '@testing/kitten-in-bubble',
+//   },
+// });

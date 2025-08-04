@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
-import { AiConversation, createSystemPrompt } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -70,9 +70,6 @@ export const useChatProcessor = ({
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
-  // TODO(burdon): Create from blueprint.
-  const systemPrompt = useMemo(() => createSystemPrompt(), []);
-
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
       return;
@@ -90,7 +87,6 @@ export const useChatProcessor = ({
 
     log('creating processor', {
       preset,
-      systemPrompt: systemPrompt.length,
       model: preset?.model,
       settings,
     });
@@ -99,10 +95,9 @@ export const useChatProcessor = ({
       tools,
       extensions,
       blueprintRegistry,
-      systemPrompt,
       model: preset?.model,
     });
-  }, [services, conversation, tools, blueprintRegistry, extensions, systemPrompt, preset]);
+  }, [services, conversation, tools, blueprintRegistry, extensions, preset]);
 
   return processor;
 };

@@ -21,7 +21,7 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
 const TestLayer = pipe(
-  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+  AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
   Layer.provideMerge(DatabaseService.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
   Layer.provideMerge(ToolExecutionService.layerEmpty),
@@ -52,7 +52,6 @@ describe('graph', () => {
         const response = yield* session
           .run({
             prompt: 'What is 10 + 20?',
-            history: [],
             toolkit: graphWriteToolkit,
           })
           .pipe(Effect.provide(makeGraphWriterHandler(graphWriteToolkit)));

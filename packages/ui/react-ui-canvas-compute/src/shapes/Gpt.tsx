@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 import React, { useEffect, useState } from 'react';
 
-import { type GenerationStreamEvent } from '@dxos/ai';
 import { GptInput, GptOutput } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -45,7 +44,8 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
           break;
         }
         case 'custom': {
-          const token: GenerationStreamEvent = ev.event;
+          // TODO(burdon): Fix!!!
+          const token = ev.event;
           switch (token.type) {
             case 'content_block_delta':
               switch (token.delta.type) {
