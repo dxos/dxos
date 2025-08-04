@@ -7,15 +7,16 @@ import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { HistoryCache } from './history-cache';
-import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
 import {
-  type SessionResponse,
   type ErrorResponse,
   type RenegotiationResponse,
+  type SessionResponse,
   type TrackObject,
   type TracksResponse,
 } from '../types';
+
+import { HistoryCache } from './history-cache';
+import { BulkRequestDispatcher, FIFOScheduler } from './task-scheduling';
 
 const NETWORK_TIMEOUT = 5_000;
 

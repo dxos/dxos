@@ -3,7 +3,7 @@
 //
 
 import { StateEffect } from '@codemirror/state';
-import { type KeyBinding, type Command, type EditorView } from '@codemirror/view';
+import { type Command, type EditorView, type KeyBinding } from '@codemirror/view';
 
 import { commandState } from './state';
 

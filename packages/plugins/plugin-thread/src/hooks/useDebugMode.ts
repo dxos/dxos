@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // TODO(burdon): Standardize across plugins/composer.
 export const useDebugMode = () => {

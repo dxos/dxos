@@ -5,10 +5,11 @@
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { getSchema } from './accessors';
-import { TypeId } from './model';
 import { getSchemaTypename } from '../ast';
 import { type BaseObject } from '../types';
+
+import { getSchema } from './accessors';
+import { TypeId } from './model';
 
 /**
  * Gets the typename of the object without the version.

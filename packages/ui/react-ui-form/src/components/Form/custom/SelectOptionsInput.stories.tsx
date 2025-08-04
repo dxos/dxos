@@ -8,13 +8,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { SelectOptionSchema, type SelectOption } from '@dxos/echo-schema';
+import { type SelectOption, SelectOptionSchema } from '@dxos/echo-schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SelectOptionInput } from './SelectOptionsInput';
 import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
 import { Form } from '../Form';
+
+import { SelectOptionInput } from './SelectOptionsInput';
 
 const schema = Schema.Struct({
   options: Schema.Array(SelectOptionSchema).pipe(Schema.mutable),

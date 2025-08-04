@@ -5,10 +5,10 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
 import { SEARCH_PLUGIN } from '../meta';

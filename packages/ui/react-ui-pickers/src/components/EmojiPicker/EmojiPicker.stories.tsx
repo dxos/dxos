@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EmojiPickerBlock, EmojiPickerToolbarButton, type EmojiPickerProps } from './EmojiPicker';
+import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
 
 const ToolbarButtonStory = (props: EmojiPickerProps) => {
   const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');

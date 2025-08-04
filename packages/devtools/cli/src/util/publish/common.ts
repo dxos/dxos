@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { table, type TableOptions } from '@dxos/cli-base';
+import { type TableOptions, table } from '@dxos/cli-base';
 import type { ConfigProto } from '@dxos/config';
 
 export type PackageModule = NonNullable<NonNullable<ConfigProto['package']>['modules']>[0];

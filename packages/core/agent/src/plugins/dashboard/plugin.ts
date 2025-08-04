@@ -10,7 +10,7 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { AgentStatus, type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 
 import { Plugin } from '../plugin';
 

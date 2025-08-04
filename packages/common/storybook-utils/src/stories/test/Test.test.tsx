@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 

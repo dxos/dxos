@@ -4,15 +4,16 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useCapability, Capabilities } from '@dxos/app-framework';
+import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat, type ChatRootProps } from './Chat';
 import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+
+import { Chat, type ChatRootProps } from './Chat';
 
 export type ChatDialogProps = {
   chat?: Assistant.Chat;
@@ -26,7 +27,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const services = useChatServices({ space });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const processor = useChatProcessor({ preset, chat, services, settings });
+  const processor = useChatProcessor({ chat, preset, services, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
-import { WnfsCapabilities } from './capabilities';
 import { upload } from '../helpers';
 import { FileType, WnfsAction } from '../types';
+
+import { WnfsCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

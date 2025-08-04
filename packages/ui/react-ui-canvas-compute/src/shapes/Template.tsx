@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import React, { useRef } from 'react';
 
-import { ComputeValueType, getTemplateInputSchema, TemplateOutput, VoidInput } from '@dxos/conductor';
+import { ComputeValueType, TemplateOutput, VoidInput, getTemplateInputSchema } from '@dxos/conductor';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
@@ -16,9 +16,10 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { Box, createFunctionAnchors, TypeSelect } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { Box, TypeSelect, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 //
 // Data

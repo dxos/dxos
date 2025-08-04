@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { type Obj } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { ReactSurface } from './capabilities';
-import { meta, SECTION_IDENTIFIER } from './meta';
+import { SECTION_IDENTIFIER, meta } from './meta';
 import { translations } from './translations';
 import { StackViewType } from './types';
 

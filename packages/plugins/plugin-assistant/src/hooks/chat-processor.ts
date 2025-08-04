@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, pipe, Stream, type Layer } from 'effect';
+import { Registry, Result, Rx } from '@effect-rx/rx-react';
+import { Effect, type Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
-import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
+import { type AiConversation, AiSession, ArtifactDiffResolver } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -15,10 +16,10 @@ import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import type { ChatServices } from './useChatServices';
-import { Registry, Result, Rx } from '@effect-rx/rx-react';
+import { AiServiceOverloadedError } from './errors';
+import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Is this still used?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -26,23 +27,19 @@ declare global {
   }
 }
 
-type RequestOptions = {
+export type AiRequestOptions = {
   // Empty for now.
 };
 
-export type ChatProcessorOptions = {
-  // TODO(burdon): Change to AiToolkit.
-  tools?: readonly ExecutableTool[];
+export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
   registry?: Registry.Registry;
-
-  // TODO(dmaretskyi): Remove.
-  artifacts?: readonly ArtifactDefinition[];
+  tools?: readonly ExecutableTool[];
   extensions?: ToolContextExtensions;
-  // TODO(burdon): Remove systemPrompt -- should come from blueprint.
+  // TODO(burdon): Remove systemPrompt -- should come from assistant blueprint?
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
-const defaultOptions: Partial<ChatProcessorOptions> = {
+const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
@@ -53,15 +50,14 @@ const defaultOptions: Partial<ChatProcessorOptions> = {
  * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Rename ChatContext?
-export class ChatProcessor {
+export class AiChatProcessor {
   /**
    * Last error.
    */
   // TODO(wittjosiah): Error should come from the message stream.
   readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
-  // TODO(burdon): Replace with Toolkit.
+  /** Tool implementations.*/
   private _tools?: ExecutableTool[];
 
   private readonly _registry = this._options.registry ?? Registry.make();
@@ -144,9 +140,9 @@ export class ChatProcessor {
 
   constructor(
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
-    private readonly _services: Layer.Layer<ChatServices>,
-    private readonly _conversation: Conversation,
-    private readonly _options: ChatProcessorOptions = defaultOptions,
+    private readonly _services: Layer.Layer<AiChatServices>,
+    private readonly _conversation: AiConversation,
+    private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this._tools = [...(_options.tools ?? [])];
   }
@@ -155,7 +151,7 @@ export class ChatProcessor {
     return this._conversation;
   }
 
-  get context(): ContextBinder {
+  get context() {
     return this._conversation.context;
   }
 
@@ -177,7 +173,7 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<void> {
+  async request(message: string, _options: AiRequestOptions = {}): Promise<void> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     const session = new AiSession();
@@ -301,9 +297,4 @@ export class ChatProcessor {
       return versions;
     },
   };
-}
-
-// TODO(wittjosiah): Move to ai-service-client.
-export class AiServiceOverloadedError extends Error {
-  code = 'AI_SERVICE_OVERLOADED';
 }

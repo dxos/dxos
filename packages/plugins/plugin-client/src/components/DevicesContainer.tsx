@@ -11,7 +11,7 @@ import { useClient, useMulticastObservable } from '@dxos/react-client';
 import { type Device, useDevices } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Clipboard, IconButton, List, useId, useTranslation, Icon } from '@dxos/react-ui';
+import { Button, Clipboard, Icon, IconButton, List, useId, useTranslation } from '@dxos/react-ui';
 import {
   ControlFrame,
   ControlFrameItem,

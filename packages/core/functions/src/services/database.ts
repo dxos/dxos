@@ -32,6 +32,9 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     return Layer.succeed(DatabaseService, DatabaseService.make(db));
   };
 
+  /**
+   * Resolves an object by its DXN.
+   */
   static resolve: (dxn: DXN) => Effect.Effect<Obj.Any | Relation.Any, Error, DatabaseService> = Effect.fn(
     function* (dxn) {
       const { db } = yield* DatabaseService;
@@ -45,7 +48,10 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     },
   );
 
-  static loadRef: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, never, never> = Effect.fn(function* (ref) {
+  /**
+   * Loads an object reference.
+   */
+  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, never, never> = Effect.fn(function* (ref) {
     return yield* Effect.promise(() => ref.load());
   });
 

@@ -8,25 +8,26 @@ import { debounce } from '@dxos/async';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
+import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, Clipboard, Icon, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { errorText } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
+import { CloseButton, Heading, Viewport } from '../../components';
+import { ConfirmReset, InvitationManager } from '../../steps';
+
+import { useIdentityMachine } from './identityMachine';
 import {
   type IdentityPanelHeadingProps,
   type IdentityPanelImplProps,
   type IdentityPanelProps,
 } from './IdentityPanelProps';
-import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
-import { Viewport, CloseButton, Heading } from '../../components';
-import { ConfirmReset, InvitationManager } from '../../steps';
 
 const viewStyles = 'pbs-1 pbe-3 pli-3';
 

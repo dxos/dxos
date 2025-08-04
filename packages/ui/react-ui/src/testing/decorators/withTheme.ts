@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type StoryContext, type StoryFn } from '@storybook/react';
-import { useEffect, createElement } from 'react';
+import { createElement, useEffect } from 'react';
 
 import { defaultTx } from '@dxos/react-ui-theme';
 

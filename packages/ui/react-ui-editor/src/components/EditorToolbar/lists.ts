@@ -7,8 +7,9 @@ import { type EditorView } from '@codemirror/view';
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
-import { addList, List, removeList } from '../../extensions';
+import { List, addList, removeList } from '../../extensions';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const listStyles = {
   bullet: 'ph--list-bullets--regular',

@@ -14,8 +14,9 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 import { AiSession } from '../session';
+
+import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 

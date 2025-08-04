@@ -7,12 +7,13 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { commands } from './commands';
-import { editor } from './editor';
-import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
-import { outlinerTree, treeFacet } from './tree';
 import { floatingMenu } from '../command';
 import { decorateMarkdown } from '../markdown';
+
+import { commands } from './commands';
+import { editor } from './editor';
+import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
+import { outlinerTree, treeFacet } from './tree';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).

@@ -4,14 +4,15 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
+import { translations } from '../../translations';
+
 import { ChatEditor } from './ChatEditor';
 import { type ReferenceData } from './references';
-import { translations } from '../../translations';
 
 const meta: Meta<typeof ChatEditor> = {
   title: 'ui/react-ui-chat/ChatEditor',

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, flow, type Option } from 'effect';
+import { Context, Effect, type Option, flow } from 'effect';
 
 import { ServiceNotAvailableError } from '../errors';
 

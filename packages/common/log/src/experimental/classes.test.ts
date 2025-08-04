@@ -4,8 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { debugInfo, ownershipClass } from './ownership';
 import { log } from '../log';
+
+import { debugInfo, ownershipClass } from './ownership';
 
 describe('classes', function () {
   test('field instance', function () {

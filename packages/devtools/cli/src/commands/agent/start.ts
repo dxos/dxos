@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { rmSync } from 'node:fs';
+
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
-import { rmSync } from 'node:fs';
 
 import {
   Agent,
@@ -18,7 +19,7 @@ import {
   QueryPlugin,
   parseAddress,
 } from '@dxos/agent';
-import { asyncTimeout, runInContext, scheduleTaskInterval, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, runInContext, scheduleTaskInterval } from '@dxos/async';
 import { AgentAlreadyRunningError } from '@dxos/cli-base';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';

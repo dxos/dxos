@@ -7,9 +7,10 @@ import { generatePath, useNavigate } from 'react-router-dom';
 
 import { ClientProvider } from '@dxos/react-client';
 
-import { Main } from './Main';
 import { getConfig } from '../config';
-import { createTodoList, TodoList, Todo } from '../types';
+import { Todo, TodoList, createTodoList } from '../types';
+
+import { Main } from './Main';
 
 const createWorker = () =>
   new SharedWorker(new URL('../shared-worker', import.meta.url), {

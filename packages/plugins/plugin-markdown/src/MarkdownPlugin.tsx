@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { type Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -16,8 +16,8 @@ import {
   AppGraphSerializer,
   ArtifactDefinition,
   IntentResolver,
-  MarkdownState,
   MarkdownSettings,
+  MarkdownState,
   ReactSurface,
 } from './capabilities';
 import { MarkdownEvents } from './events';

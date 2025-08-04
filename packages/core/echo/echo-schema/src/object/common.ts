@@ -4,8 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { getTypename } from './typename';
 import { type BaseObject } from '../types';
+
+import { getTypename } from './typename';
 
 // TODO(dmaretskyi): Rename to represent commonality between objects and relations (e.g. `entity`).
 export type TypedObjectOptions = {

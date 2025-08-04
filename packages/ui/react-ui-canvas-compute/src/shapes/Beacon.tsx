@@ -7,10 +7,11 @@ import React from 'react';
 
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
-import { createAnchorMap, type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const BeaconShape = Schema.extend(
   ComputeShape,

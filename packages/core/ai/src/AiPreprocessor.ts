@@ -3,7 +3,7 @@
 //
 
 import { AiInput } from '@effect/ai';
-import { Array, Effect, pipe, Predicate } from 'effect';
+import { Array, Effect, Predicate, pipe } from 'effect';
 
 import { getSnapshot } from '@dxos/live-object';
 import { type ContentBlock, type DataType } from '@dxos/schema';

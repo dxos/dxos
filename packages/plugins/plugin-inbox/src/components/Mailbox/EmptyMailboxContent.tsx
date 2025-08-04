@@ -4,10 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { useTranslation, Button } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../../meta';

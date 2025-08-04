@@ -3,9 +3,9 @@
 //
 
 import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Context, cancelWithContext } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
-import { invariant, InvariantViolation } from '@dxos/invariant';
+import { InvariantViolation, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';

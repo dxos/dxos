@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
 
-import { type ComputeGraph, type CellAddress, type CellRange, type CompleteCellRange } from '@dxos/compute';
+import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {

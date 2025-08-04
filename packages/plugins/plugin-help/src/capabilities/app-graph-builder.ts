@@ -5,13 +5,14 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { createExtension } from '@dxos/app-graph';
 
-import { HelpCapabilities } from './capabilities';
 import { SHORTCUTS_DIALOG } from '../components';
 import { HELP_PLUGIN } from '../meta';
 import { HelpAction } from '../types';
+
+import { HelpCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(

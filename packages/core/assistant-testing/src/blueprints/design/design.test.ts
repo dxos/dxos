@@ -8,8 +8,8 @@ import { Effect, Layer, Option, Stream } from 'effect';
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
+  AiConversation,
   AiSession,
-  Conversation,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -22,8 +22,9 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import blueprint from './design';
 import { readDocument, updateDocument } from '../../functions';
+
+import blueprint from './design';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { timeout: 120_000 }, () => {
   it.effect(
@@ -33,7 +34,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
         const { queues } = yield* QueueService;
         const { db } = yield* DatabaseService;
 
-        const conversation = new Conversation({
+        const conversation = new AiConversation({
           queue: queues.create(),
         });
 

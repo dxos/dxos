@@ -27,7 +27,7 @@ export default defineFunction({
     }
 
     // Return content with line numbers prefixed.
-    const { content } = yield* DatabaseService.loadRef(doc.content);
+    const { content } = yield* DatabaseService.load(doc.content);
     const lines = content.split('\n');
     const len = String(lines.length).length;
     const numbered = lines.map((line, i) => `${String(i + 1).padStart(len, ' ')}. ${line}`).join('\n');

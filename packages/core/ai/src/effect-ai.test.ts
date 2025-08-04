@@ -9,13 +9,13 @@ import { Chunk, Console, Effect, Layer, Schema, Stream } from 'effect';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { DataType, type ContentBlock } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { parseGptStream } from './AiParser';
+import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
-import { getToolCalls, runTool } from './tools';
+import { callTool, getToolCalls } from './tools';
 
 // Tool definitions.
 class TestToolkit extends AiToolkit.make(
@@ -41,7 +41,7 @@ const toolkitLayer = TestToolkit.toLayer({
       const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
       log.info('calculate', { sanitizedInput });
 
-      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
       return Function(`"use strict"; return (${sanitizedInput})`)();
     })();
 
@@ -74,7 +74,7 @@ describe('effect AI client', () => {
             toolkit: yield* TestToolkit.pipe(Effect.provide(toolkitLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
-          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
           const message = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
@@ -92,7 +92,7 @@ describe('effect AI client', () => {
           }
 
           const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-            runTool(actualToolkit, toolCall),
+            callTool(actualToolkit, toolCall),
           );
           history.push(
             Obj.make(DataType.Message, {

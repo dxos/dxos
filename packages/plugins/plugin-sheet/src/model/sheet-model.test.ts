@@ -10,9 +10,10 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 
+import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
+
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
-import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
 
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;

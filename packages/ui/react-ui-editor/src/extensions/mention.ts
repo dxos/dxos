@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
 
 import { log } from '@dxos/log';

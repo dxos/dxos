@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, { type ReactNode, useState } from 'react';
@@ -19,9 +19,10 @@ import {
   surfaceShadow,
 } from '@dxos/react-ui-theme';
 
-import { List, ListItem, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
+
+import { List, ListItem, type ListScopedProps } from './List';
 
 export default {
   title: 'ui/react-ui-core/List',

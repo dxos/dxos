@@ -4,13 +4,13 @@
 
 import {
   type Event,
-  init as naturalInit,
-  setTag,
+  metrics,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
   captureMessage as naturalCaptureMessage,
+  init as naturalInit,
   withScope as naturalWithScope,
-  metrics,
+  setTag,
   startInactiveSpan,
 } from '@sentry/node';
 

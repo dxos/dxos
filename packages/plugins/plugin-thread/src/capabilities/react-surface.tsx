@@ -9,17 +9,18 @@ import { Obj, type Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { ThreadCapabilities } from './capabilities';
 import {
-  CallSidebar,
   CallDebugPanel,
+  CallSidebar,
   ChannelContainer,
+  ChatContainer,
   ThreadComplementary,
   ThreadSettings,
-  ChatContainer,
 } from '../components';
 import { THREAD_PLUGIN } from '../meta';
-import { ChannelType, ThreadType, type ThreadSettingsProps } from '../types';
+import { ChannelType, type ThreadSettingsProps, ThreadType } from '../types';
+
+import { ThreadCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

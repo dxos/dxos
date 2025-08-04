@@ -10,9 +10,10 @@ import React from 'react';
 import { Canvas } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Shapes, type ShapesProps } from './Shapes';
 import { createRectangle } from '../../shapes';
 import { Editor } from '../Editor';
+
+import { Shapes, type ShapesProps } from './Shapes';
 
 const DefaultStory = ({ layout }: ShapesProps) => {
   return (

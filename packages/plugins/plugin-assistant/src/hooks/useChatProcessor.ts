@@ -8,60 +8,41 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
-import { Conversation, createSystemPrompt } from '@dxos/assistant';
-import { type ArtifactDefinition, type AssociatedArtifact, type Blueprint } from '@dxos/blueprints';
+import { AiConversation, createSystemPrompt } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/blueprints';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { Filter, fullyQualifiedId, type Queue, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Queue, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
-import { type AiServicePreset, ChatProcessor, type ChatServices } from '../hooks';
+import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../hooks';
 import { convertFunctionToTool, createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
 export type UseChatProcessorProps = {
-  preset?: AiServicePreset;
   space?: Space;
   chat?: Assistant.Chat;
-
-  // TODO(burdon): Move into layer?
-  services?: Layer.Layer<ChatServices>;
+  preset?: AiServicePreset;
+  services?: Layer.Layer<AiChatServices>;
   blueprintRegistry?: Blueprint.Registry;
-  // TODO(burdon): Not currently used.
   settings?: Assistant.Settings;
-
-  /** @deprecated */
-  instructions?: string;
-  /** @deprecated */
-  artifact?: AssociatedArtifact;
-  /** @deprecated */
-  noPluginArtifacts?: boolean;
 };
 
 /**
- * Configure and create ChatProcessor.
+ * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
-  preset,
   space,
   chat,
+  preset,
   services,
   blueprintRegistry,
   settings,
-  instructions,
-  artifact,
-  noPluginArtifacts,
-}: UseChatProcessorProps): ChatProcessor | undefined => {
+}: UseChatProcessorProps): AiChatProcessor | undefined => {
   const registry = useContext(RegistryContext);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
-
-  // TODO(burdon): Spec artifacts.
-  let artifacts: readonly ArtifactDefinition[] = useCapabilities(Capabilities.ArtifactDefinition);
-  if (noPluginArtifacts) {
-    artifacts = Stable.array;
-  }
 
   // Services.
   const remoteServices = useQuery(space, Filter.type(ServiceType));
@@ -76,8 +57,8 @@ export const useChatProcessor = ({
 
   // Tools and context.
   const config = useConfig();
-  const functions = useQuery(space, Filter.type(FunctionType));
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
+  const functions = useQuery(space, Filter.type(FunctionType));
   const [tools, extensions] = useMemo(() => {
     log('creating tools...');
     const tools: ExecutableTool[] = [
@@ -91,23 +72,15 @@ export const useChatProcessor = ({
     return [tools, extensions];
   }, [dispatch, globalTools, space, chatId, serviceTools, functions]);
 
-  // TODO(burdon): Create from template.
-  const systemPrompt = useMemo(
-    () =>
-      createSystemPrompt({
-        artifacts: artifacts.map((definition) => `${definition.name}\n${definition.instructions}`),
-        artifact,
-        instructions,
-      }),
-    [artifacts, artifact, instructions],
-  );
+  // TODO(burdon): Create from blueprint.
+  const systemPrompt = useMemo(() => createSystemPrompt(), []);
 
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
       return;
     }
 
-    return new Conversation({ queue: chat.queue.target as Queue<any> });
+    return new AiConversation({ queue: chat.queue.target as Queue<any> });
   }, [chat?.queue.target]);
 
   // Create processor.
@@ -117,24 +90,22 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    log.info('creating processor', {
+    log('creating processor', {
       preset,
-      artifacts: artifacts.length,
       systemPrompt: systemPrompt.length,
       model: preset?.model,
       settings,
     });
 
-    return new ChatProcessor(services, conversation, {
+    return new AiChatProcessor(services, conversation, {
       tools,
       extensions,
       blueprintRegistry,
       registry,
-      artifacts,
       systemPrompt,
       model: preset?.model,
     });
-  }, [services, conversation, tools, blueprintRegistry, artifacts, extensions, systemPrompt, preset]);
+  }, [services, conversation, tools, blueprintRegistry, extensions, systemPrompt, preset]);
 
   return processor;
 };

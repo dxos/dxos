@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { contributes, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
@@ -16,14 +16,15 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
-import { useQuery, Query, useSpace } from '@dxos/react-client/echo';
+import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
-import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 import { translations } from '../translations';
 import { MeetingType } from '../types';
+
+import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
 const Story = () => {
   const space = useSpace();
@@ -46,10 +47,10 @@ const meta: Meta<MeetingContainerProps> = {
         IntentPlugin(),
         SettingsPlugin(),
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
-          onSpacesReady: async (_, client) => {
+          onSpacesReady: async ({ client }) => {
             const space = client.spaces.default;
             await space.waitUntilReady();
             space.db.add(

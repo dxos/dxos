@@ -6,7 +6,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { PresenterSettingsSchema, type PresenterSettingsProps } from '../types';
+import { type PresenterSettingsProps, PresenterSettingsSchema } from '../types';
 
 export default () => {
   const settings = live<PresenterSettingsProps>({});

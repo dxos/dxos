@@ -22,10 +22,8 @@ import {
 
 import { AssistantCapabilities } from '../capability-definitions';
 
-export * from '@dxos/assistant';
-
 // TODO(burdon): Deconstruct into separate layers?
-export type ChatServices =
+export type AiChatServices =
   | AiService
   | CredentialsService
   | DatabaseService
@@ -42,7 +40,7 @@ export type UseChatServicesProps = {
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
+export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
   const aiServiceLayer =
     useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
   const functions = useCapabilities(Capabilities.Functions).flat();

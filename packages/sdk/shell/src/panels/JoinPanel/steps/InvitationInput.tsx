@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState, useEffect, cloneElement } from 'react';
+import React, { cloneElement, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';
 
-import { Actions, StepHeading, Action, Input } from '../../../components';
+import { Action, Actions, Input, StepHeading } from '../../../components';
 import { type JoinPanelProps, type JoinStepProps } from '../JoinPanelProps';
 
 export interface InvitationInputProps extends JoinStepProps, Pick<JoinPanelProps, 'onExit' | 'exitActionParent'> {

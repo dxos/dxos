@@ -4,7 +4,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { onTestFinished, describe, expect, test } from 'vitest';
+
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';

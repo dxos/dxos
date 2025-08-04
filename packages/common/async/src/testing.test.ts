@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { expectToThrow, raise } from '@dxos/debug';
 
-import { waitForCondition, until } from './testing';
+import { until, waitForCondition } from './testing';
 import { sleep } from './timeout';
 
 describe('waitForCondition', () => {

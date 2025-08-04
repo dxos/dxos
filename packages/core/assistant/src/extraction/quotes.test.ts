@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { insertReferences } from './quotes';
 

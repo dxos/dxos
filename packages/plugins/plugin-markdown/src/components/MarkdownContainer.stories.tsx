@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Capabilities, contributes, IntentPlugin, SettingsPlugin, Surface } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin, Surface, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
 import { Query, Type } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { createObjectFactory, Testing, type ValueGenerator } from '@dxos/schema/testing';
+import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -52,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, Testing.Contact],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

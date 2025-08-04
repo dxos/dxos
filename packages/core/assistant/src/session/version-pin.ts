@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
+import { type BaseEchoObject, ObjectId } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(dmaretskyi): Extract.
@@ -15,7 +15,7 @@ const ObjectVersionSchema = Schema.Unknown as Schema.Schema<ObjectVersion>;
 const VersionPinSchema = Schema.Struct({
   // TODO(dmaretskyi): Use Ref when those support encoding.
   objectId: ObjectId,
-  // TODO(dmaretskyi): Could be opaque
+  // TODO(dmaretskyi): Could be opaque.
   version: ObjectVersionSchema,
 });
 

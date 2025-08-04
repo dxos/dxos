@@ -6,10 +6,11 @@ import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
-import { listItemToString, outlinerTree, treeFacet } from './tree';
 import { str } from '../../testing';
 import { createMarkdownExtensions } from '../markdown';
+
+import { indentItemLess, indentItemMore, moveItemDown, moveItemUp } from './commands';
+import { listItemToString, outlinerTree, treeFacet } from './tree';
 
 const lines = [
   '- [ ] 1',

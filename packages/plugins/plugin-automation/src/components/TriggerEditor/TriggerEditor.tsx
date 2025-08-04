@@ -7,13 +7,13 @@ import React, { useCallback, useMemo } from 'react';
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import {
-  FunctionType,
+  type FunctionTrigger,
   FunctionTriggerSchema,
   type FunctionTriggerType,
-  type FunctionTrigger,
+  FunctionType,
   ScriptType,
 } from '@dxos/functions';
-import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
+import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';

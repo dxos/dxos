@@ -7,7 +7,7 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
+import { Chunk, Config, Console, Effect, Layer, Schedule, Schema, Stream, pipe } from 'effect';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect';
@@ -220,7 +220,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
         do {
           // disableToolCallResolution
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseGptStream());
+          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = AiInput.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));

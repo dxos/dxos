@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -17,15 +17,16 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, Ref, type Space } from '@dxos/react-client/echo';
+import { Filter, Ref, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { BoardContainer } from './BoardContainer';
 import { translations } from '../translations';
 import { Board } from '../types';
+
+import { BoardContainer } from './BoardContainer';
 
 faker.seed(0);
 
@@ -100,7 +101,7 @@ const meta: Meta<StoryProps> = {
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
@@ -111,7 +112,7 @@ const meta: Meta<StoryProps> = {
             space.db.add(board);
 
             // Add some sample items
-            Array.from({ length: 10 }).map((_, index) => {
+            Array.from({ length: 10 }).map(() => {
               const org = Obj.make(DataType.Organization, rollOrg());
               space.db.add(org);
               board.items.push(Ref.make(org));

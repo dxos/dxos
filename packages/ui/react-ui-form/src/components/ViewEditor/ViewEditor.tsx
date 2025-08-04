@@ -12,7 +12,7 @@ import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
-import { FieldSchema, type FieldType, VIEW_FIELD_LIMIT, type DataType, ProjectionModel } from '@dxos/schema';
+import { type DataType, FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';

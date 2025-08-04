@@ -8,8 +8,8 @@ import { Effect, Layer, Option, Stream } from 'effect';
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
+  AiConversation,
   AiSession,
-  Conversation,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -22,9 +22,10 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import blueprint from './planning';
 import { readTasks, updateTasks } from '../../functions';
-import { runSteps, type TestStep } from '../testing';
+import { type TestStep, runSteps } from '../testing';
+
+import blueprint from './planning';
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
   it.effect.only(
@@ -34,7 +35,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         const { queues } = yield* QueueService;
         const { db } = yield* DatabaseService;
 
-        const conversation = new Conversation({
+        const conversation = new AiConversation({
           queue: queues.create(),
         });
 

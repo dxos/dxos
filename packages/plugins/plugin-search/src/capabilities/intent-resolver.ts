@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, LayoutAction, createIntent } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
 
 import { SearchAction } from '../types';
 

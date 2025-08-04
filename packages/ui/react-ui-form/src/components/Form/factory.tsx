@@ -5,9 +5,9 @@
 import { FormatEnum } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 
+import { GeoPointInput } from './custom';
 import { BooleanInput, MarkdownInput, NumberInput, TextInput } from './Defaults';
 import { type InputComponent } from './Input';
-import { GeoPointInput } from './custom';
 
 /**
  * Get property input component.

@@ -10,7 +10,9 @@ import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
-// TODO(dmaretskyi): Consider renaming it to Part.
+/**
+ * Messages are made of typed content blocks.
+ */
 export namespace ContentBlock {
   export const Base = Schema.Struct({
     /**

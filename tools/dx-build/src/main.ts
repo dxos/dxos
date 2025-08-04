@@ -5,8 +5,9 @@
 //
 
 import { spawnSync } from 'node:child_process';
-import { readdir, stat, rm } from 'node:fs/promises';
-import { join, resolve, dirname } from 'node:path';
+import { readdir, rm, stat } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+
 import ts from 'typescript';
 
 const VERBOSE = false;

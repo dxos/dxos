@@ -5,13 +5,14 @@
 import { Schema } from 'effect';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ComputeNode, ComputeMeta } from '@dxos/conductor';
+import type { ComputeMeta, ComputeNode } from '@dxos/conductor';
 import type { ComputeEventPayload } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { useComputeContext } from './compute-context';
 import { type RuntimeValue } from '../graph';
 import { type ComputeShape } from '../shapes';
+
+import { useComputeContext } from './compute-context';
 
 export type ComputeNodeState = {
   node: ComputeNode;

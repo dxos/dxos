@@ -3,14 +3,15 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
 
+import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+
 import * as stories from './FieldEditor.stories';
 import { type FieldEditorDebugObjects } from './FieldEditor.stories';
-import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 

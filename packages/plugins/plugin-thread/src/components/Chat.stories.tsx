@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Capabilities, contributes, createSurface, IntentPlugin } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -19,9 +19,10 @@ import { Thread } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChatContainer } from './ChatContainer';
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
+
+import { ChatContainer } from './ChatContainer';
 
 faker.seed(1);
 

@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { Button, useControlledState, Icon } from '@dxos/react-ui';
+import { Button, Icon, useControlledState } from '@dxos/react-ui';
 
 export type PagerProps = {
   index?: number;

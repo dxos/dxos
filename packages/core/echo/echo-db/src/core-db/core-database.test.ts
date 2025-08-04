@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Filter } from '@dxos/echo';
-import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, getType, ObjectId, Ref } from '@dxos/echo-schema';
+import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { Expando, ObjectId, Ref, getType } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -17,12 +17,13 @@ import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { getObjectCore, type AnyLiveObject } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
 import { EchoTestBuilder } from '../testing';
+
+import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {

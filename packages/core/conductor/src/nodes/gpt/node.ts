@@ -15,7 +15,7 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { defineComputeNode, ValueBag } from '../../types';
+import { ValueBag, defineComputeNode } from '../../types';
 import { StreamSchema } from '../../util';
 
 // TODO(dmaretskyi): Use `Schema.declare` to define the schema.

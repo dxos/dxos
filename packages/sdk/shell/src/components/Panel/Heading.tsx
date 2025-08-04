@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 

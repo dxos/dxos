@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { format, formatDistance, isToday, isThisWeek } from 'date-fns';
+import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
 // https://date-fns.org/v2.29.3/docs/format
 

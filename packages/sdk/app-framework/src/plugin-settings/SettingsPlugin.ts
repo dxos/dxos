@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SETTINGS_PLUGIN } from './actions';
-import { translations } from './translations';
 import { Capabilities, Events } from '../common';
 import { contributes, defineModule, definePlugin, lazy } from '../core';
+
+import { SETTINGS_PLUGIN } from './actions';
+import { translations } from './translations';
 
 // TODO(wittjosiah): Add options to exclude some modules.
 export const SettingsPlugin = () =>

@@ -7,6 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
+import { toJsonSchema } from '../json';
+
 import {
   DateOnly,
   DateTime,
@@ -17,7 +19,6 @@ import {
   toSimpleDate,
   toSimpleTime,
 } from './date';
-import { toJsonSchema } from '../json';
 
 describe.skip('date', () => {
   test('basic', () => {

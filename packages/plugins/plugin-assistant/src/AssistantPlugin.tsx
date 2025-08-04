@@ -13,11 +13,11 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Settings } from './capabilities';
 import { AssistantCapabilities } from './capability-definitions';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType } from './types';
+import { Assistant, AssistantAction, ServiceType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -63,22 +63,22 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Assistant.Chat,
-            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
+            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Blueprint.Blueprint,
-            formSchema: Assistant.BlueprintForm,
-            getIntent: (props) => createIntent(Assistant.CreateBlueprint, props),
+            formSchema: AssistantAction.BlueprintForm,
+            getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Sequence,
-            getIntent: () => createIntent(Assistant.CreateSequence),
+            getIntent: () => createIntent(AssistantAction.CreateSequence),
           }),
         ),
       ],
@@ -92,8 +92,8 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
-        contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-          createIntent(Assistant.OnSpaceCreated, { space, rootCollection }),
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
+          createIntent(AssistantAction.OnSpaceCreated, { rootCollection, space }),
         ),
     }),
     defineModule({
@@ -120,5 +120,10 @@ export const AssistantPlugin = () =>
         // TODO(dmaretskyi): Read config from settings.
         contributes(AssistantCapabilities.AiServiceLayer, AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
       ],
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

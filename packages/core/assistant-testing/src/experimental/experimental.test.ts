@@ -2,23 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe, Schema } from 'effect';
 import { inspect } from 'node:util';
+
+import { Effect, Schema, pipe } from 'effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
+import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AiSession, researchFn } from '@dxos/assistant';
 import {
+  ComputeGraphModel,
   DEFAULT_INPUT,
+  type GptOutput,
   NODE_INPUT,
   NODE_OUTPUT,
-  ComputeGraphModel,
-  type GptOutput,
   ValueBag,
   computeGraphToGraphViz,
 } from '@dxos/conductor';
-import { compileSequence, SequenceParser } from '@dxos/conductor';
+import { SequenceParser, compileSequence } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';

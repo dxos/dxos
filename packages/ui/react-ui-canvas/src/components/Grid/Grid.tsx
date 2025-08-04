@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useMemo, useId } from 'react';
+import React, { forwardRef, useId, useMemo } from 'react';
 
-import { useForwardedRef, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useCanvasContext } from '../../hooks';

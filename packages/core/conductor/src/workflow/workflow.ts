@@ -7,15 +7,15 @@ import { Effect, Schema } from 'effect';
 import { createDefectLogger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
-import { compileOrThrow, type GraphExecutor } from '../compiler';
+import { type GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
   type ComputeNode,
   type Executable,
-  ValueBag,
   NotExecuted,
+  ValueBag,
 } from '../types';
 import { pickProperty } from '../util';
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, ParseResult, Either, Option } from 'effect';
+import { Either, Option, ParseResult, Schema, SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
 import { type PropertyKey } from '@dxos/echo-schema';

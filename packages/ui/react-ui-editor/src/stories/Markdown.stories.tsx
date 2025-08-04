@@ -7,11 +7,12 @@ import '@dxos-theme';
 import { markdown } from '@codemirror/lang-markdown';
 import React from 'react';
 
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
 import { str } from '../testing';
+
+import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './components';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Markdown',

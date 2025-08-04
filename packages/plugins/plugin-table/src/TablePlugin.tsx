@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createIntent, definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';

@@ -2,11 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, describe, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { createStorage } from './storage';
 import { StorageType } from '../common';
 import { storageTests } from '../testing';
+
+import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = 'testing';
 

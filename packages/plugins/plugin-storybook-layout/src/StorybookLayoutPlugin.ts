@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 
 import { IntentResolver, type LayoutState, State } from './capabilities';
 import { Layout } from './components';

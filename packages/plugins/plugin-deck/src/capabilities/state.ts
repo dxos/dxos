@@ -8,9 +8,10 @@ import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
-import { DeckCapabilities } from './capabilities';
 import { DECK_PLUGIN } from '../meta';
-import { getMode, type DeckPluginState, defaultDeck, type DeckState } from '../types';
+import { type DeckPluginState, type DeckState, defaultDeck, getMode } from '../types';
+
+import { DeckCapabilities } from './capabilities';
 
 const boolean = /true|false/;
 

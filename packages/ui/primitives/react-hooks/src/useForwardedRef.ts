@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ForwardedRef, useRef, useEffect } from 'react';
+import { type ForwardedRef, useEffect, useRef } from 'react';
 
 /**
  * Combines a possibly undefined forwarded ref with a locally defined ref.

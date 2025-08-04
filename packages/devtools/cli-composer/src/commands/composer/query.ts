@@ -5,7 +5,7 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { FLAG_SPACE_KEYS, stringify, table, type TableOptions } from '@dxos/cli-base';
+import { FLAG_SPACE_KEYS, type TableOptions, stringify, table } from '@dxos/cli-base';
 import { Filter, getMeta, getTypename } from '@dxos/client/echo';
 import { omit } from '@dxos/log';
 import { DataType } from '@dxos/schema';

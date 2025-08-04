@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -12,13 +12,13 @@ import {
   findNode,
   findProperty,
   getAnnotation,
-  getDiscriminatingProps,
   getDiscriminatedType,
+  getDiscriminatingProps,
   getSimpleType,
+  isArrayType,
   isOption,
   isSimpleType,
   visit,
-  isArrayType,
 } from './ast';
 import { type JsonPath, type JsonProp } from './jsonPath';
 

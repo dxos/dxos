@@ -6,8 +6,9 @@ import pb from 'protobufjs';
 
 import { invariant } from '@dxos/invariant';
 
-import { codegen, ref } from './codegen';
 import { type MapingDescriptors, type TypeMapperContext } from '../mapping';
+
+import { codegen, ref } from './codegen';
 
 export type Mapper = (obj: any, extraArgs: any[]) => any;
 

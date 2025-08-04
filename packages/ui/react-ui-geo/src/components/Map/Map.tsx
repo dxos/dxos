@@ -5,18 +5,18 @@
 // eslint-disable-next-line no-restricted-imports
 import 'leaflet/dist/leaflet.css';
 
-import L, { Control, DomEvent, DomUtil, latLngBounds, type ControlPosition, type LatLngExpression } from 'leaflet';
-import React, { forwardRef, useEffect, useImperativeHandle, type PropsWithChildren } from 'react';
+import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngExpression, latLngBounds } from 'leaflet';
+import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { MapContainerProps } from 'react-leaflet';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { debounce } from '@dxos/async';
-import { ThemeProvider, Tooltip, type ThemedClassName } from '@dxos/react-ui';
+import { ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
-import { ActionControls, controlPositions, ZoomControls, type ControlProps } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 import { type MapCanvasProps } from '../types';
 
 // TODO(burdon): Explore plugins: https://www.npmjs.com/search?q=keywords%3Areact-leaflet-v4

@@ -11,13 +11,13 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import {
-  SpaceMember,
   type Device,
   type Identity,
   type LogEntry,
   type Metrics,
   type NetworkStatus,
   type Platform,
+  SpaceMember,
   type Space as SpaceProto,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToFeedsResponse } from '@dxos/protocols/proto/dxos/devtools/host';

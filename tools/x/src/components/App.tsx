@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import process from 'process';
+
 import { Box } from 'ink';
 import WrappedTextInput from 'ink-text-input';
 import { NotificationCenter } from 'node-notifier';
-import process from 'process';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { WorkflowTable } from './WorkflowTable';
 import { useOctokit } from '../hooks';
+
+import { WorkflowTable } from './WorkflowTable';
 
 // TODO(burdon): Call on state change.
 const _notifier = new NotificationCenter({});

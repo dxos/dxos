@@ -8,11 +8,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Trigger, sleep } from '@dxos/async';
 import { Expando } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
-import { createSubscription } from './subscription';
 import { EchoTestBuilder } from '../testing';
+
+import { createSubscription } from './subscription';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

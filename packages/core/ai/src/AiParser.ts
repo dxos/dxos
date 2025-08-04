@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
-import { StreamTransform, type StreamBlock } from './parser';
+import { type StreamBlock, StreamTransform } from './parser';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -36,9 +36,9 @@ enum ModelTags {
   TOOL_LIST = 'tool-list',
 }
 
-export interface ParseGptStreamOptions {
+export interface ParseResponseOptions {
   /**
-   * Whether to parse reasoning tags: <cot> <think>
+   * Whether to parse reasoning tags: <cot> and <think>.
    */
   parseReasoningTags?: boolean;
 
@@ -65,23 +65,24 @@ export interface ParseGptStreamOptions {
 }
 
 /**
- * Parses the part stream into a set of complete message blocks.
- * Each block emitted is final.
- *
- * Callbacks can be provided to watch for incomplete blocks.
+ * Transforms the AiResponse stream into a stream of complete ContentBlock messages.
+ * Partial blocks are emitted to support streaming to the UI.
  */
-export const parseGptStream =
+export const parseResponse =
   ({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
-  }: ParseGptStreamOptions = {}) =>
+  }: ParseResponseOptions = {}) =>
   <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
+        const start = Date.now();
+        let blocks = 0;
+        let parts = 0;
 
         /**
          * Current partial block used to accumulate content.
@@ -90,8 +91,10 @@ export const parseGptStream =
         const stack: StreamBlock[] = [];
 
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+          log.info('block', { block });
           yield* onBlock(block);
           emit.single(block);
+          blocks++;
         });
 
         const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
@@ -116,13 +119,13 @@ export const parseGptStream =
           }
         });
 
+        log.info('begin');
         yield* onBegin();
-
         yield* Stream.runForEach(
           input,
           Effect.fnUntraced(function* (response) {
             for (const part of response.parts) {
-              // log.info('part', { part });
+              log('part', { part });
               yield* onPart(part);
               switch (part._tag) {
                 case 'TextPart': {
@@ -207,7 +210,7 @@ export const parseGptStream =
                   break;
                 }
 
-                case 'ToolCallPart':
+                case 'ToolCallPart': {
                   yield* flushText();
                   yield* emitFullBlock({
                     _tag: 'toolCall',
@@ -216,6 +219,8 @@ export const parseGptStream =
                     input: part.params,
                   } satisfies ContentBlock.ToolCall);
                   break;
+                }
+
                 case 'ReasoningPart': {
                   yield* flushText();
                   const block: ContentBlock.Reasoning = {
@@ -228,30 +233,39 @@ export const parseGptStream =
                   yield* emitFullBlock(block);
                   break;
                 }
-                case 'RedactedReasoningPart':
+
+                case 'RedactedReasoningPart': {
                   yield* flushText();
                   yield* emitFullBlock({
                     _tag: 'reasoning',
                     redactedText: part.redactedText,
                   } satisfies ContentBlock.Reasoning);
                   break;
-                case 'MetadataPart':
+                }
+
+                case 'MetadataPart': {
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log('metadata', { metadata: part });
                   break;
-                case 'FinishPart':
+                }
+
+                case 'FinishPart': {
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log('finish', { finish: part });
                   break;
+                }
               }
             }
+
+            parts++;
           }),
         );
 
         yield* flushText();
         yield* onEnd();
+        log.info('end', { blocks, parts, duration: Date.now() - start });
         emit.end();
       }),
     );
@@ -261,7 +275,7 @@ export const parseGptStream =
  */
 const makeContentBlock = (
   block: StreamBlock,
-  { parseReasoningTags }: Pick<ParseGptStreamOptions, 'parseReasoningTags'>,
+  { parseReasoningTags }: Pick<ParseResponseOptions, 'parseReasoningTags'>,
 ): ContentBlock.Any | undefined => {
   switch (block.type) {
     //

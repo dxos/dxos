@@ -16,11 +16,11 @@ import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/servic
 import {
   type ControlPipelineSnapshot,
   type EchoMetadata,
-  type SpaceMetadata,
-  type IdentityRecord,
-  type SpaceCache,
-  type LargeSpaceMetadata,
   type EdgeReplicationSetting,
+  type IdentityRecord,
+  type LargeSpaceMetadata,
+  type SpaceCache,
+  type SpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';

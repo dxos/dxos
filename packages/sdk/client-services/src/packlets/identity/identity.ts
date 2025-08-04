@@ -6,16 +6,16 @@ import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
 import { type Context } from '@dxos/context';
 import {
-  DeviceStateMachine,
   type CredentialSigner,
-  createCredentialSignerWithKey,
-  createCredentialSignerWithChain,
+  DeviceStateMachine,
   ProfileStateMachine,
+  createCredentialSignerWithChain,
+  createCredentialSignerWithKey,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
 import { type Space } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
-import { writeMessages, type FeedWrapper } from '@dxos/feed-store';
+import { type FeedWrapper, writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type IdentityDid, PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,9 +23,9 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
   AdmittedFeed,
+  type Credential,
   type DeviceProfileDocument,
   type ProfileDocument,
-  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Presence } from '@dxos/teleport-extension-gossip';
@@ -33,9 +33,10 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
+import { EdgeFeedReplicator } from '../spaces';
+
 import { TrustedKeySetAuthVerifier } from './authenticator';
 import { DefaultSpaceStateMachine } from './default-space-state-machine';
-import { EdgeFeedReplicator } from '../spaces';
 
 export type IdentityParams = {
   did: IdentityDid;

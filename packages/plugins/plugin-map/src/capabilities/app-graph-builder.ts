@@ -5,13 +5,13 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { DataType } from '@dxos/schema';
 
 import { MAP_PLUGIN } from '../meta';
-import { MapAction, MapView } from '../types';
+import { Map, MapAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(
@@ -24,7 +24,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.View, node.data) &&
-              Obj.instanceOf(MapView, get(rxFromSignal(() => node.data.presentation.target)))
+              Obj.instanceOf(Map.Map, get(rxFromSignal(() => node.data.presentation.target)))
                 ? Option.some(node)
                 : Option.none(),
             ),

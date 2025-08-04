@@ -8,8 +8,9 @@ import React, { useRef } from 'react';
 
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { type SVGContext, useGrid, useZoom } from '../../hooks';
+
 import { SVG } from './SVG';
-import { useGrid, useZoom, type SVGContext } from '../../hooks';
 
 import '../../../styles/graph.css';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 
 import { AppGraphBuilder, PresenterSettings, ReactSurface } from './capabilities';
 import { meta } from './meta';

@@ -4,9 +4,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { GraphModel, type Graph } from '@dxos/graph';
+import { type Graph, GraphModel } from '@dxos/graph';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
-import { type SpaceMember, useMembers, type Space } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';

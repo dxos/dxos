@@ -16,23 +16,24 @@ import {
   LayoutAction,
   Surface,
   createIntent,
-  useCapability,
   useAppGraph,
+  useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
-import { useNode, type Node } from '@dxos/plugin-graph';
+import { type Node, useNode } from '@dxos/plugin-graph';
 import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/react-ui-theme';
 
+import { DeckCapabilities } from '../../capabilities';
+import { useCompanions, useMainSize } from '../../hooks';
+import { parseEntryId } from '../../layout';
+import { DeckAction, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+
 import { PlankContentError, PlankError } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
-import { DeckCapabilities } from '../../capabilities';
-import { useMainSize, useCompanions } from '../../hooks';
-import { parseEntryId } from '../../layout';
-import { DeckAction, type LayoutMode, type ResolvedPart, type DeckSettingsProps } from '../../types';
 
 const UNKNOWN_ID = 'unknown_id';
 

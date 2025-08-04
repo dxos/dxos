@@ -3,6 +3,7 @@
 //
 
 import {
+  next as A,
   type Heads,
   change,
   clone,
@@ -10,7 +11,6 @@ import {
   from,
   getBackend,
   getHeads,
-  next as A,
   save,
   saveSince,
 } from '@automerge/automerge';
@@ -19,14 +19,14 @@ import {
   type DocHandle,
   type DocumentId,
   type HandleState,
-  type StorageAdapterInterface,
   type PeerId,
   Repo,
   type SharePolicy,
+  type StorageAdapterInterface,
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
@@ -36,11 +36,12 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
+import { TestAdapter, type TestConnectionStateProvider } from '../testing';
+
 import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
-import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 

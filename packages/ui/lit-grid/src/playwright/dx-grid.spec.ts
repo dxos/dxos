@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { expect, test, type Page } from '@playwright/test';
+import { type Page, expect, test } from '@playwright/test';
 
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 

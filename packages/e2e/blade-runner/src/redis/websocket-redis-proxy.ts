@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import type WebSocket from 'isomorphic-ws';
-import { createConnection, type NetConnectOpts, type Socket } from 'node:net';
+import { type NetConnectOpts, type Socket, createConnection } from 'node:net';
 import { type Duplex } from 'node:stream';
-import { createServer, type Server, type WebSocketDuplex } from 'websocket-stream';
+
+import type WebSocket from 'isomorphic-ws';
+import { type Server, type WebSocketDuplex, createServer } from 'websocket-stream';
 
 import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';

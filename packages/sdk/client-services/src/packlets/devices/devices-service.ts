@@ -9,8 +9,8 @@ import { invariant } from '@dxos/invariant';
 import {
   Device,
   DeviceKind,
-  EdgeStatus,
   type DevicesService,
+  EdgeStatus,
   type QueryDevicesResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';

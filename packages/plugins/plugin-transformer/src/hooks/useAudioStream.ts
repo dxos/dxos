@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 

@@ -3,21 +3,22 @@
 //
 
 import { useComputed, useSignal } from '@preact/signals-react';
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { fullyQualifiedId, type Space, Filter, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
+import { INBOX_PLUGIN } from '../../meta';
+import { InboxAction, type MailboxType } from '../../types';
+
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
 import { useMessageToolbarActions } from './toolbar';
-import { INBOX_PLUGIN } from '../../meta';
-import { type MailboxType, InboxAction } from '../../types';
 
 export type MessageContainerProps = {
   space?: Space;

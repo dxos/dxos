@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import { Schema } from 'effect';
 import { useMemo } from 'react';
 
-import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { LayoutAction, createResolver, useIntentResolver } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 

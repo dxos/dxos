@@ -4,32 +4,34 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
-import { Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ChessType } from '@dxos/plugin-chess/types';
+import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { MapPlugin } from '@dxos/plugin-map';
+import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 import { render } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { translations } from '../translations';
+
 import {
   BlueprintContainer,
-  BoardContainer,
   ChatContainer,
   type ComponentProps,
-  DocumentContainer,
   GraphContainer,
+  SurfaceContainer,
+  TasksContainer,
 } from './components';
-import { addTestData, getDecorators, remoteConfig, testTypes } from './testing';
+import { addTestData, config, getDecorators, testTypes } from './testing';
 
 const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
   const space = useSpace();
@@ -50,13 +52,13 @@ const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<Com
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
+              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
                 <Component space={space} />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface border border-separator'>
+          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
             <Component space={space} />
           </div>
         ),
@@ -85,7 +87,7 @@ type Story = StoryObj<typeof storybook>;
 
 export const Default = {
   decorators: getDecorators({
-    config: remoteConfig,
+    config: config.remote,
   }),
   args: {
     components: [ChatContainer],
@@ -94,74 +96,143 @@ export const Default = {
 
 export const WithDocument = {
   decorators: getDecorators({
-    config: remoteConfig,
     plugins: [MarkdownPlugin()],
+    config: config.remote,
+    onInit: async ({ binder, space }) => {
+      const object = space.db.add(
+        Markdown.makeDocument({
+          name: 'Document',
+          content: trim`
+            # Hello, world!
+
+            This is a test.
+          `,
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
   }),
   args: {
-    components: [ChatContainer, DocumentContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
 export const WithBlueprints = {
   decorators: getDecorators({
-    plugins: [ChessPlugin(), InboxPlugin(), MapPlugin(), MarkdownPlugin(), TablePlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    context: true,
-    config: remoteConfig,
-  }),
-  args: {
-    components: [ChatContainer, [DocumentContainer, BlueprintContainer]],
-  },
-} satisfies Story;
-
-export const WithSearch = {
-  decorators: getDecorators({
-    context: true,
-    config: remoteConfig,
-    types: testTypes,
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
-      await addTestData(space);
+    config: config.remote,
+    onInit: async ({ binder, space }) => {
+      const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, [TasksContainer, BlueprintContainer]],
   },
 } satisfies Story;
 
-// TODO(burdon): Artifact surface (showing currently bound artifacts).
 export const WithChess = {
   decorators: getDecorators({
-    context: true,
-    config: remoteConfig,
-    types: [ChessType],
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
-      space.db.add(
-        Obj.make(ChessType, {
-          fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    plugins: [ChessPlugin()],
+    config: config.remote,
+    types: [Chess.Game],
+    onInit: async ({ binder, space }) => {
+      // TODO(burdon): Add player DID (for user and assistant).
+      const object = space.db.add(
+        Chess.makeGame({
+          pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
         }),
       );
+      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
-    components: [ChatContainer],
+    components: [ChatContainer, SurfaceContainer],
+  },
+} satisfies Story;
+
+export const WithMap = {
+  decorators: getDecorators({
+    plugins: [MapPlugin()],
+    config: config.remote,
+    types: [Map.Map],
+    onInit: async ({ binder, space }) => {
+      const object = space.db.add(Map.makeMap());
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, SurfaceContainer],
+  },
+} satisfies Story;
+
+export const WithTrip = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin(), MapPlugin()],
+    config: config.remote,
+    types: [Map.Map],
+    onInit: async ({ binder, space }) => {
+      // TODO(burdon): Table.
+      {
+        const object = space.db.add(Map.makeMap({ name: 'Trip' }));
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
+      {
+        const object = space.db.add(
+          Markdown.makeDocument({
+            name: 'Itinerary',
+            content: trim`
+              # Itinerary
+
+              ## Day 1
+
+              - Visit the Sagrada Familia
+              - Visit the Park Güell
+              - Visit the Casa Batlló
+
+              ## Day 2
+
+              - Visit the Eiffel Tower
+              - Visit the Louvre
+              - Visit the Musée d'Orsay
+            `,
+          }),
+        );
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
+      {
+        const object = space.db.add(
+          Markdown.makeDocument({
+            name: 'Barcelona',
+            content: trim`
+              # Barcelona
+
+              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+            `,
+          }),
+        );
+        await binder.bind({ objects: [Ref.make(object)] });
+      }
+    },
+  }),
+  args: {
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
 export const WithBoard = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
-    context: true,
-    config: remoteConfig,
+    config: config.remote,
     types: [Board.Board],
-    onSpacesReady: async (_, client) => {
-      const space = client.spaces.default;
-      space.db.add(Board.makeBoard());
+    onInit: async ({ binder, space }) => {
+      const object = space.db.add(Board.makeBoard());
+      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
-    components: [ChatContainer, BoardContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
@@ -169,10 +240,22 @@ export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     blueprints: [PLANNING_BLUEPRINT],
-    context: true,
-    config: remoteConfig,
+    config: config.remote,
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
+  },
+} satisfies Story;
+
+export const WithSearch = {
+  decorators: getDecorators({
+    config: config.remote,
+    types: testTypes,
+    onInit: async ({ space }) => {
+      await addTestData(space);
+    },
+  }),
+  args: {
+    components: [ChatContainer, [GraphContainer]],
   },
 } satisfies Story;

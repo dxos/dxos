@@ -16,8 +16,8 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { autocomplete, type AutocompleteOptions } from './autocomplete';
-import { references as referencesExtension, type ReferencesOptions } from './references';
+import { type AutocompleteOptions, autocomplete } from './autocomplete';
+import { type ReferencesOptions, references as referencesExtension } from './references';
 
 // TODO(burdon): Handle object references.
 

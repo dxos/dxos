@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorViewMode, createEditorStateStore } from '@dxos/react-ui-editor';
 
-import { MarkdownCapabilities } from './capabilities';
 import { meta } from '../meta';
 import { type Markdown, type MarkdownPluginState } from '../types';
+
+import { MarkdownCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const state = new LocalStorageStore<MarkdownPluginState>(meta.id, { extensionProviders: [], viewMode: {} });

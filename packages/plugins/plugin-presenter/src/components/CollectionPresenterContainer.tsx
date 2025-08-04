@@ -8,9 +8,10 @@ import { Surface } from '@dxos/app-framework';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { Layout, PageNumber, Pager } from './Presenter';
 import { PresenterContext } from '../types';
 import { useExitPresenter } from '../useExitPresenter';
+
+import { Layout, PageNumber, Pager } from './Presenter';
 
 const CollectionPresenterContainer: FC<{ collection: DataType.Collection }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);

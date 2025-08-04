@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj, Ref, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

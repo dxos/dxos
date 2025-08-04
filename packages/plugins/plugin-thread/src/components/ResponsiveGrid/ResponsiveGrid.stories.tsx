@@ -4,15 +4,16 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../../translations';
 
 import { ResponsiveGrid, type ResponsiveGridProps } from './ResponsiveGrid';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from './ResponsiveGridItem';
-import { translations } from '../../translations';
 
 type TestItem = {
   id: string;

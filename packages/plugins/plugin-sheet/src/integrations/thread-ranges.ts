@@ -6,19 +6,19 @@ import { Schema, pipe } from 'effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
+  LayoutAction,
+  chain,
   createIntent,
   createResolver,
-  LayoutAction,
-  useIntentResolver,
   useIntentDispatcher,
-  chain,
+  useIntentResolver,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
-import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
+import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
 

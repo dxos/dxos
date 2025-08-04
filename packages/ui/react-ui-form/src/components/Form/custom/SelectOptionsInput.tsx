@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState, useRef } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { type SelectOption } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';

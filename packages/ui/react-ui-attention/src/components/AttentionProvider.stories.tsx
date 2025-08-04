@@ -8,8 +8,9 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useAttentionAttributes } from './AttentionProvider';
 import { withAttention } from '../testing';
+
+import { useAttentionAttributes } from './AttentionProvider';
 
 const Attendable = ({ id }: { id: string }) => {
   const attentionAttrs = useAttentionAttributes(id);

@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react-vite';
-import { Match, Option, pipe, Schema } from 'effect';
+import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -30,18 +30,19 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { command, type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
+import { type EditorSelection, type Range, command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { MarkdownContainer } from './MarkdownContainer';
-import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
+import { MarkdownPlugin } from '../MarkdownPlugin';
 import { meta } from '../meta';
 import { translations } from '../translations';
 import { Markdown } from '../types';
+
+import { MarkdownContainer } from './MarkdownContainer';
 
 faker.seed(1);
 
@@ -166,7 +167,7 @@ const storybook: Meta<typeof DefaultStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

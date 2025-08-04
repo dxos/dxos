@@ -6,13 +6,14 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { join } from 'node:path';
+
 import type { BrowserContext, BrowserType } from 'playwright';
 
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
+import { CONSOLE_PROCESSOR, LogLevel, type LogProcessor, createFileProcessor, log } from '@dxos/log';
 
-import { type ReplicantParams, type GlobalOptions, type Platform, type ReplicantRuntimeParams } from './spec';
+import { type GlobalOptions, type Platform, type ReplicantParams, type ReplicantRuntimeParams } from './spec';
 
 const DEBUG_PORT_START = 9229;
 

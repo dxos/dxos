@@ -10,9 +10,10 @@ import { Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ClientRepeater, type ClientRepeatedComponentProps } from './ClientRepeater';
 import { useClient } from '../client';
 import { useSpace } from '../echo';
+
+import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
 
 export default {
   title: 'sdk/react-client/ClientRepeater',

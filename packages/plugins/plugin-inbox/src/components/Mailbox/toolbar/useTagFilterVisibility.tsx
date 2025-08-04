@@ -3,7 +3,7 @@
 //
 
 import { useComputed, useSignal } from '@preact/signals-react';
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { TagPickerHandle } from '@dxos/react-ui-tag-picker';
 

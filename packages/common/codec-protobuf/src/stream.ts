@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { throwUnhandledError, type MaybePromise } from '@dxos/util';
+import { type MaybePromise, throwUnhandledError } from '@dxos/util';
 
 type Callbacks<T> = {
   ctx: Context;
