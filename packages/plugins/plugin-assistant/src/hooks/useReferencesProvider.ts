@@ -13,8 +13,7 @@ import { type ReferencesProvider } from '@dxos/react-ui-chat';
  * Resolve references to objects in the space.
  */
 export const useReferencesProvider = (space?: Space): ReferencesProvider | undefined => {
-  // TODO(burdon): Pass in.
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
+  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
 
   return useMemo<ReferencesProvider | undefined>((): ReferencesProvider | undefined => {
     if (!space) {
@@ -23,7 +22,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
 
     return {
       getReferences: async ({ query }) => {
-        const schemas = artifactDefinitions.map((artifact) => artifact.schema);
+        const schemas = blueprints.map((blueprint) => blueprint.schema);
         const { objects } = await space.db
           .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
           .run();
@@ -49,7 +48,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
         return { uri, label: Obj.getLabel(object) ?? '' };
       },
     } satisfies ReferencesProvider;
-  }, [space, artifactDefinitions]);
+  }, [space, blueprints]);
 };
 
 const stringMatch = (query: string, label: string) => label.toLowerCase().startsWith(query.toLowerCase());
