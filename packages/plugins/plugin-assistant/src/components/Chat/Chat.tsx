@@ -259,7 +259,11 @@ const ChatPrompt = ({
     },
   });
 
-  const [blueprints, handleUpdateBlueprints] = useBlueprints(space, processor.context, processor.blueprintRegistry);
+  const {
+    blueprints,
+    active: activeBlueprints,
+    update: handleUpdateBlueprints,
+  } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
   const contextProvider = useReferencesProvider(space);
@@ -349,11 +353,7 @@ const ChatPrompt = ({
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatOptionsMenu
-        blueprintRegistry={processor.blueprintRegistry}
-        blueprints={blueprints}
-        onChange={handleUpdateBlueprints}
-      />
+      <ChatOptionsMenu blueprints={blueprints} active={activeBlueprints} onChange={handleUpdateBlueprints} />
       <ChatActions
         classNames='col-span-2'
         microphone={true}
