@@ -2,9 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Layer } from 'effect';
-
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -13,8 +10,16 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, BlueprintDefinition, IntentResolver, ReactSurface, Settings } from './capabilities';
-import { AssistantCapabilities } from './capability-definitions';
+import {
+  AiService,
+  AppGraphBuilder,
+  BlueprintDefinition,
+  EdgeModelResolver,
+  IntentResolver,
+  ReactSurface,
+  Settings,
+} from './capabilities';
+import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
@@ -114,12 +119,16 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
+      id: `${meta.id}/module/ai-model-resolver`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: EdgeModelResolver,
+    }),
+    defineModule({
       id: `${meta.id}/module/ai-service`,
+      activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+      // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
       activatesOn: Events.Startup,
-      activate: () => [
-        // TODO(dmaretskyi): Read config from settings.
-        contributes(AssistantCapabilities.AiServiceLayer, AiServiceTestingPreset('edge-remote').pipe(Layer.orDie)),
-      ],
+      activate: AiService,
     }),
     defineModule({
       id: `${meta.id}/module/blueprint`,

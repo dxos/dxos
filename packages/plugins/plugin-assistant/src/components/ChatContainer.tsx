@@ -26,7 +26,12 @@ export const ChatContainer = ({ chat }: ChatContainerProps) => {
 
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const processor = useChatProcessor({ chat, services, settings });
+  const processor = useChatProcessor({
+    preset,
+    chat,
+    services,
+    settings,
+  });
   if (!processor) {
     return null;
   }
