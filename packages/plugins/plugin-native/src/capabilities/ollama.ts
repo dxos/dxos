@@ -8,8 +8,8 @@ import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
 import { type PluginContext, contributes } from '@dxos/app-framework';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
 import { log } from '@dxos/log';
+import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 // Running ollama on non-standard port
 const OLLAMA_HOST = 'http://localhost:21434';

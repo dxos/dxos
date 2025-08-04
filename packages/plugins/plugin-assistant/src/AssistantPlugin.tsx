@@ -11,6 +11,7 @@ import { Capabilities, Events, contributes, createIntent, defineModule, definePl
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -20,7 +21,6 @@ import { AssistantActivationEvents, AssistantCapabilities } from './defs';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
-import { log } from '@dxos/log';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
