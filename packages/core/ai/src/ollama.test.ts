@@ -14,9 +14,9 @@ import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
-import { parseGptStream } from './experimental/AiParser';
+import { parseGptStream } from './AiParser';
 import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
-import { getToolCalls, runTools } from './tools';
+import { getToolCalls, callTools } from './tools';
 
 describe('ollama', () => {
   it.effect(
@@ -94,7 +94,7 @@ describe('ollama', () => {
             break;
           }
 
-          const toolResults: ContentBlock.ToolResult[] = yield* runTools(toolCalls, toolkit);
+          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolCalls, toolkit);
           history.push(
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),
