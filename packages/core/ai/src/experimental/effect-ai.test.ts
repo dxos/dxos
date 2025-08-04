@@ -14,8 +14,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
 import { AiService } from '../AiService';
-import { AiServiceTestingPreset } from '../testing';
-import { CalculatorToolkit, calculatorLayer } from './testing';
+import { AiServiceTestingPreset, CalculatorToolkit, calculatorLayer } from '../testing';
 import { callTool, getToolCalls } from '../tools';
 
 describe('effect AI client', () => {

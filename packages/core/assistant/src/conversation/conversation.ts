@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
-import { type AiSession } from '../session';
+import { AiSession } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
@@ -69,9 +69,10 @@ export class AiConversation {
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run = <Tools extends AiTool.Any>(
-    params: AiConversationRunParams<Tools>,
-  ): Effect.Effect<
+  run = <Tools extends AiTool.Any>({
+    session = new AiSession(),
+    ...params
+  }: AiConversationRunParams<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
