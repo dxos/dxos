@@ -27,18 +27,9 @@ export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
-  striped?: boolean;
 }>;
 
-export const Toolbox = ({
-  classNames,
-  artifacts,
-  functions,
-  services,
-  blueprints,
-  activeBlueprints,
-  striped,
-}: ToolboxProps) => {
+export const Toolbox = ({ classNames, artifacts, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
   const { t } = useTranslation(meta.id);
 
   return (

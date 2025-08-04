@@ -51,6 +51,7 @@ export const Blueprint = Schema.Struct({
   /**
    * Array of tools that the AI assistant can use when this blueprint is active.
    */
+  // TODO(burdon): Include meta (e.g., description)?
   tools: Schema.Array(ToolId).annotations({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
