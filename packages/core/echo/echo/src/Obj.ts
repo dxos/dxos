@@ -140,6 +140,13 @@ export const getLabel = (obj: Any): string | undefined => {
   }
 };
 
+export const setLabel = (obj: Any, label: string) => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    EchoSchema.setLabel(schema, obj, label);
+  }
+};
+
 /**
  * JSON representation of an object.
  */

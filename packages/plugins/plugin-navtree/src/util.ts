@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
+import { type Action, type Node, type ReadableGraph, isActionLike } from '@dxos/app-graph';
 import { isNonNullable } from '@dxos/util';
 
-import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
+import { type NavTreeItemGraphNode } from './types';
 
 export const getParent = (
   graph: ReadableGraph,
@@ -86,24 +86,6 @@ export const getChildren = (
       return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
     })
     .filter(isNonNullable) as NavTreeItemGraphNode[];
-};
-
-export const getActions = (graph: ReadableGraph, node: Node): FlattenedActions => {
-  return graph.getActions(node.id).reduce(
-    (acc: FlattenedActions, arg) => {
-      if (arg.properties.disposition === 'item') {
-        return acc;
-      }
-
-      acc.actions.push(arg);
-      if (!isAction(arg)) {
-        const actionGroup = graph.getActions(arg.id);
-        acc.groupedActions[arg.id] = actionGroup;
-      }
-      return acc;
-    },
-    { actions: [], groupedActions: {} },
-  );
 };
 
 export const l0ItemType = (item: Node<any>) => {
