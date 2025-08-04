@@ -5,12 +5,12 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
-import { Obj } from '@dxos/echo';
 
 export const POPOVER_RENAME_OBJECT = `${SPACE_PLUGIN}/PopoverRenameObject`;
 
