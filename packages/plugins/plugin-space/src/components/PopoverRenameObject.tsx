@@ -10,27 +10,21 @@ import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
+import { Obj } from '@dxos/echo';
 
 export const POPOVER_RENAME_OBJECT = `${SPACE_PLUGIN}/PopoverRenameObject`;
 
-export const PopoverRenameObject = ({ object: obj }: { object: Live<any> }) => {
+export const PopoverRenameObject = ({ object }: { object: Live<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
-  // TODO(wittjosiah): Use schema here.
-  const object = obj as any;
-  // TODO(burdon): Field should not be hardcoded field.
-  const [name, setName] = useState(object.name || object.title || '');
+  const [name, setName] = useState(Obj.getLabel(object));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleDone = useCallback(() => {
     try {
-      object.name = name;
+      name && Obj.setLabel(object, name);
     } catch (err) {
-      try {
-        object.title = name;
-      } catch {
-        log.error('Failed to rename object', { err });
-      }
+      log.error('Failed to rename object', { err });
     }
     void dispatch(
       createIntent(LayoutAction.UpdatePopover, {

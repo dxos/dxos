@@ -94,3 +94,14 @@ export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.
 
   return undefined;
 };
+
+/**
+ * Sets the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+  const annotation = LabelAnnotation.get(schema).pipe(
+    Option.map((field) => field[0]),
+    Option.getOrElse(() => 'name'),
+  );
+  object[annotation] = label;
+};
