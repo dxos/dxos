@@ -450,7 +450,10 @@ export const createObjectNode = ({
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 
-  const label = Obj.getLabel(object) ||
+  // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
+  //   e.g., create new collection with no name and rename it.
+  const label = (object as any).name ||
+    Obj.getLabel(object) ||
     // TODO(wittjosiah): Remove metadata labels.
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
