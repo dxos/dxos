@@ -3,10 +3,9 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Array, Chunk, Context, Effect, Option, type Schema, Stream, String, pipe } from 'effect';
+import { Array, Chunk, Context, Effect, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
 
 import {
-  type AgentStatus,
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
@@ -17,7 +16,6 @@ import {
   callTools,
   getToolCalls,
 } from '@dxos/ai';
-import { Event } from '@dxos/async';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
@@ -63,41 +61,14 @@ export class AiSession {
   /** Prior history from queue. */
   private _history: DataType.Message[] = [];
 
-  /**
-   * New message.
-   */
-  public readonly message = new Event<DataType.Message>();
+  /** Blocks streaming from the model during the session. */
+  public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
 
-  /**
-   * Complete block added to Message.
-   */
-  public readonly block = new Event<ContentBlock.Any>();
+  /** Complete messages fired during the session, both from the model and from the user. */
+  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
-  /**
-   * Update partial block (while streaming).
-   */
-  public readonly update = new Event<ContentBlock.Any>();
-
-  /**
-   * Unparsed events from the underlying generation stream.
-   */
-  public readonly streamEvent = new Event<AiResponse.Part>();
-
-  /**
-   * User prompt or tool result.
-   */
-  public readonly userMessage = new Event<DataType.Message>();
-
-  /**
-   * Agent self-reporting its status.
-   * Triggered by the model.
-   */
-  public readonly statusReport = new Event<AgentStatus>();
-
-  /**
-   * Emits when the session is done.
-   */
-  public readonly done = new Event<void>();
+  /** Unparsed events from the underlying generation stream. */
+  public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
@@ -119,7 +90,7 @@ export class AiSession {
 
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
-      this.userMessage.emit(promptMessages);
+      yield* this.messageQueue.offer(promptMessages);
 
       // Potential tool use loop.
       do {
@@ -164,22 +135,13 @@ export class AiSession {
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
-            onBlock: (block) =>
-              Effect.gen(this, function* () {
-                if (block.pending) {
-                  this.update.emit(block);
-                } else {
-                  this.block.emit(block);
-                }
-              }),
-            onPart: (part) =>
-              Effect.gen(this, function* () {
-                this.streamEvent.emit(part);
-              }),
+            onBlock: (block) => this.blockQueue.offer(Option.some(block)),
+            onPart: (part) => this.eventQueue.offer(part),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+        yield* this.blockQueue.offer(Option.none());
 
         // console.log(JSON.stringify(blocks, null, 2));
         const response = Obj.make(DataType.Message, {
@@ -188,7 +150,7 @@ export class AiSession {
           blocks,
         });
         this._pending.push(response);
-        this.message.emit(response);
+        yield* this.messageQueue.offer(response);
 
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
@@ -196,14 +158,18 @@ export class AiSession {
         }
 
         const toolResults = yield* callTools(toolCalls, toolkitWithBlueprintHandlers as any);
-        this._pending.push(
-          Obj.make(DataType.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'user' },
-            blocks: toolResults,
-          }),
-        );
+        const toolResultMessage = Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'user' },
+          blocks: toolResults,
+        });
+        this._pending.push(toolResultMessage);
+        yield* this.messageQueue.offer(toolResultMessage);
       } while (true);
+
+      yield* Queue.shutdown(this.eventQueue);
+      yield* Queue.shutdown(this.blockQueue);
+      yield* Queue.shutdown(this.messageQueue);
 
       log.info('done', { pending: this._pending.length });
       return this._pending;

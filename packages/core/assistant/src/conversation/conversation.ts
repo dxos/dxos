@@ -24,6 +24,7 @@ import { AiSession } from '../session';
 import { AiContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunOptions<Tools extends AiTool.Any> {
+  session?: AiSession;
   systemPrompt?: string;
   prompt: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
@@ -44,6 +45,8 @@ export class AiConversation {
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
+   *
+   * @deprecated Pass in a session instead.
    */
   public readonly onBegin = new Event<AiSession>();
 
@@ -66,9 +69,10 @@ export class AiConversation {
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run = <Tools extends AiTool.Any>(
-    options: AiConversationRunOptions<Tools>,
-  ): Effect.Effect<
+  run = <Tools extends AiTool.Any>({
+    session = new AiSession(),
+    ...options
+  }: AiConversationRunOptions<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
@@ -91,7 +95,6 @@ export class AiConversation {
       });
 
       const start = Date.now();
-      const session = new AiSession();
       this.onBegin.emit(session);
 
       const messages = yield* session.run({
