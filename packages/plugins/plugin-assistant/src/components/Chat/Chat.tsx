@@ -1,11 +1,11 @@
 //
 // Copyright 2025 DXOS.org
 //
-
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
+import { Result, useRxValue } from '@effect-rx/rx-react';
 import { createContext } from '@radix-ui/react-context';
-import { dedupeWith } from 'effect/Array';
+import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
@@ -82,14 +82,17 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
   // Messages.
   const queue = useQueue<DataType.Message>(chat?.queue.dxn);
-  const messages = useMemo(
-    () =>
-      dedupeWith(
-        [...(queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? []), ...(processor?.messages.value ?? [])],
-        (a, b) => a.id === b.id,
-      ),
-    [queue?.objects, processor?.messages.value],
-  );
+  const pending = useRxValue(processor.messages);
+  const streaming = useRxValue(processor.streaming);
+
+  const messages = useMemo(() => {
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
+    return Result.match(pending, {
+      onInitial: () => queueMessages,
+      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
+      onFailure: () => queueMessages,
+    });
+  }, [queue?.objects, pending]);
 
   // TODO(burdon): Replace with tool to select artifact.
   // const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -119,7 +122,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
         }
 
         case 'submit': {
-          if (!processor.streaming.value) {
+          if (!streaming) {
             void processor.request(event.text);
           }
           break;
@@ -135,7 +138,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
         }
       }
     });
-  }, [event, onEvent, processor]);
+  }, [event, onEvent, processor, streaming]);
 
   if (!space) {
     return null;
@@ -228,6 +231,8 @@ const ChatPrompt = ({
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
+  const streaming = useRxValue(processor.streaming);
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -254,7 +259,11 @@ const ChatPrompt = ({
     },
   });
 
-  const [blueprints, handleUpdateBlueprints] = useBlueprints(space, processor.context, processor.blueprintRegistry);
+  const {
+    blueprints,
+    active: activeBlueprints,
+    update: handleUpdateBlueprints,
+  } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
   const contextProvider = useReferencesProvider(space);
@@ -295,12 +304,12 @@ const ChatPrompt = ({
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor.streaming.value) {
+      if (!streaming) {
         event.emit({ type: 'submit', text });
         return true;
       }
     },
-    [processor, event],
+    [streaming, event],
   );
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
@@ -323,7 +332,7 @@ const ChatPrompt = ({
       )}
     >
       <Endcap>
-        <ChatStatusIndicator preset={preset} error={processor.error.value} processing={processor.streaming.value} />
+        <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
       </Endcap>
 
       <ChatEditor
@@ -344,16 +353,12 @@ const ChatPrompt = ({
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatOptionsMenu
-        blueprintRegistry={processor.blueprintRegistry}
-        blueprints={blueprints}
-        onChange={handleUpdateBlueprints}
-      />
+      <ChatOptionsMenu blueprints={blueprints} active={activeBlueprints} onChange={handleUpdateBlueprints} />
       <ChatActions
         classNames='col-span-2'
         microphone={true}
         recording={recording}
-        processing={processor.streaming.value}
+        processing={streaming}
         onEvent={handleEvent}
       >
         <>

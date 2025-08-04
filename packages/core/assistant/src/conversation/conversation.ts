@@ -19,11 +19,12 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
-import { AiSession } from '../session';
+import { type AiSession } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
+  session?: AiSession;
   prompt: string;
   system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
@@ -44,6 +45,8 @@ export class AiConversation {
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
+   *
+   * @deprecated Pass in a session instead.
    */
   public readonly onBegin = new Event<AiSession>();
 
@@ -91,7 +94,6 @@ export class AiConversation {
       });
 
       const start = Date.now();
-      const session = new AiSession();
       this.onBegin.emit(session);
 
       const messages = yield* session.run({
@@ -103,7 +105,7 @@ export class AiConversation {
         toolkit: params.toolkit,
       });
 
-      log.info('result', { messages: messages.length, duration: Date.now() - start });
+      log.info('result', { messages: messages, duration: Date.now() - start });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));

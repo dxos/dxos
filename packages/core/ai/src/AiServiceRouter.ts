@@ -5,6 +5,7 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import { type HttpClient } from '@effect/platform';
 import { Context, Effect, Layer, Option } from 'effect';
 
 import { AiService } from './AiService';
@@ -106,6 +107,30 @@ export const LMStudioResolver = AiModelResolver.fromModelMap(
   ),
 );
 
+export const OllamaResolver = ({
+  host = 'http://localhost:11434',
+  transformClient,
+}: {
+  readonly host?: string;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+} = {}) =>
+  AiModelResolver.fromModelMap(
+    Effect.gen(function* () {
+      return {
+        'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest' as any),
+        'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b' as any),
+        '@google/gemma-3-12b': yield* OpenAiLanguageModel.model('gemma3:12b' as any),
+      };
+    }).pipe(
+      Effect.provide(
+        OpenAiClient.layer({
+          apiUrl: host + '/v1',
+          transformClient,
+        }),
+      ),
+    ),
+  );
+
 export const OpenAiResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
     return {
@@ -118,6 +143,9 @@ export const OpenAiResolver = AiModelResolver.fromModelMap(
   }),
 );
 
+/**
+ * @deprecated This is a preset and we should not use it directly.
+ */
 export const AiServiceRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver),
   Layer.provide(LMStudioResolver),

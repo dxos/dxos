@@ -11,7 +11,6 @@ import { ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { contextFromScope } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { ComputeEventLogger } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
@@ -136,29 +135,18 @@ export const gptNode = defineComputeNode({
         operationModel: 'configured',
       });
 
-      const ctx = yield* contextFromScope();
       const logger = yield* ComputeEventLogger;
-
-      session.streamEvent.on(ctx, (event) => {
-        logger.log({
-          type: 'custom',
-          nodeId: logger.nodeId!,
-          event,
-        });
-      });
-
-      const eventStream = Stream.asyncPush<GenerationStreamEvent>(
-        Effect.fnUntraced(function* (push) {
-          const ctx = yield* contextFromScope();
-          session.streamEvent.on(ctx, (event) => {
-            // TODO(dmaretskyi): Fix streaming.
-            // push.single(event);
-          });
-
-          session.done.on(ctx, () => {
-            push.end();
-          });
-        }),
+      const tokenStream = Stream.fromQueue(session.eventQueue).pipe(
+        Stream.mapEffect((event) =>
+          Effect.sync(() => {
+            // TODO(wittjosiah): Consider using Effect logger.
+            logger.log({
+              type: 'custom',
+              nodeId: logger.nodeId!,
+              event,
+            });
+          }),
+        ),
       );
 
       const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
@@ -211,7 +199,7 @@ export const gptNode = defineComputeNode({
       });
 
       return ValueBag.make<GptOutput>({
-        tokenStream: eventStream,
+        tokenStream,
         messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
         tokenCount: resultEffect.pipe(Effect.map(Struct.get('tokenCount'))),
         text: resultEffect.pipe(Effect.map(Struct.get('text'))),

@@ -215,7 +215,8 @@
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch",
-      "vite@5.4.7": "patches/vite@5.4.7.patch"
+      "vite@5.4.7": "patches/vite@5.4.7.patch",
+      "@effect/ai-openai": "patches/@effect__ai-openai.patch"
     }
   }
 }

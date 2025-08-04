@@ -6,26 +6,29 @@ settings:
 
 overrides:
   '@automerge/automerge': 3.1.1
-  ipfs-utils: 9.0.14
-  micromatch: ^4.0.8
-  nan: 2.19.0
-  react: ~18.2.0
-  react-dom: ~18.2.0
-  '@types/node': 22.10.2
-  '@types/react': ~18.2.0
-  '@types/react-dom': ~18.2.0
-  '@opentelemetry/core': ^1.25.1
   '@lezer/lr': ^1.4.2
+  '@opentelemetry/core': ^1.25.1
   '@opentelemetry/exporter-trace-otlp-http': ^0.52.1
   '@opentelemetry/instrumentation-http': ^0.52.1
   '@opentelemetry/resources': ^1.25.1
   '@opentelemetry/sdk-metrics': ^1.25.1
   '@opentelemetry/sdk-node': ^0.52.1
   '@opentelemetry/sdk-trace-node': ^1.25.1
+  '@types/node': 22.10.2
+  '@types/react': ~18.2.0
+  '@types/react-dom': ~18.2.0
+  ipfs-utils: 9.0.14
+  micromatch: ^4.0.8
+  nan: 2.19.0
+  react: ~18.2.0
+  react-dom: ~18.2.0
 
 pnpmfileChecksum: sha256-I26ibQHzR4rDQrxFzxv3gV/eiaOj3gHH1boJmPZ5xig=
 
 patchedDependencies:
+  '@effect/ai-openai':
+    hash: 3a13edd18b4a73a828db326b81d6f5b40253fcac7d44fea7aa9f5b1cf7b1c554
+    path: patches/@effect__ai-openai.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -675,9 +678,6 @@ importers:
       '@fontsource/poiret-one':
         specifier: ^5.0.20
         version: 5.0.20
-      '@tauri-apps/plugin-updater':
-        specifier: ~2.9.0
-        version: 2.9.0
       effect:
         specifier: 3.17.0
         version: 3.17.0
@@ -2254,7 +2254,7 @@ importers:
         version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/ai-openai':
         specifier: 0.26.1
-        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+        version: 0.26.1(patch_hash=3a13edd18b4a73a828db326b81d6f5b40253fcac7d44fea7aa9f5b1cf7b1c554)(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/platform':
         specifier: ^0.89.0
         version: 0.89.0(effect@3.17.0)
@@ -2446,7 +2446,7 @@ importers:
         version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/ai-openai':
         specifier: 0.26.1
-        version: 0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
+        version: 0.26.1(patch_hash=3a13edd18b4a73a828db326b81d6f5b40253fcac7d44fea7aa9f5b1cf7b1c554)(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@effect/cluster':
         specifier: 0.44.0
         version: 0.44.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/sql@0.43.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(@effect/workflow@0.6.0(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
@@ -5469,6 +5469,9 @@ importers:
       '@effect/ai':
         specifier: 0.23.0
         version: 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      '@effect/ai-anthropic':
+        specifier: ^0.13.0
+        version: 0.13.0(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -7694,12 +7697,18 @@ importers:
 
   packages/plugins/plugin-native:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-help':
         specifier: workspace:*
         version: link:../plugin-help
@@ -7709,10 +7718,16 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: ^0.89.0
+        version: 0.89.0(effect@3.17.0)
       '@tauri-apps/plugin-os':
         specifier: ^2.3.0
         version: 2.3.0
       '@tauri-apps/plugin-process':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@tauri-apps/plugin-shell':
         specifier: ^2.3.0
         version: 2.3.0
       '@tauri-apps/plugin-updater':
@@ -21324,6 +21339,9 @@ packages:
 
   '@tauri-apps/plugin-process@2.3.0':
     resolution: {integrity: sha512-0DNj6u+9csODiV4seSxxRbnLpeGYdojlcctCuLOCgpH9X3+ckVZIEj6H7tRQ7zqWr7kSTEWnrxtAdBb0FbtrmQ==}
+
+  '@tauri-apps/plugin-shell@2.3.0':
+    resolution: {integrity: sha512-6GIRxO2z64uxPX4CCTuhQzefvCC0ew7HjdBhMALiGw74vFBDY95VWueAHOHgNOMV4UOUAFupyidN9YulTe5xlA==}
 
   '@tauri-apps/plugin-updater@2.9.0':
     resolution: {integrity: sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==}
@@ -35468,7 +35486,7 @@ snapshots:
       '@effect/platform': 0.89.0(effect@3.17.0)
       effect: 3.17.0
 
-  '@effect/ai-openai@0.26.1(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
+  '@effect/ai-openai@0.26.1(patch_hash=3a13edd18b4a73a828db326b81d6f5b40253fcac7d44fea7aa9f5b1cf7b1c554)(@effect/ai@0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)':
     dependencies:
       '@effect/ai': 0.23.0(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
       '@effect/experimental': 0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2)
@@ -40874,6 +40892,10 @@ snapshots:
       '@tauri-apps/api': 2.7.0
 
   '@tauri-apps/plugin-process@2.3.0':
+    dependencies:
+      '@tauri-apps/api': 2.7.0
+
+  '@tauri-apps/plugin-shell@2.3.0':
     dependencies:
       '@tauri-apps/api': 2.7.0
 

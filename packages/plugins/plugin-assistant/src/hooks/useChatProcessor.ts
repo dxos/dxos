@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { RegistryContext } from '@effect-rx/rx-react';
 import { type Layer } from 'effect';
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { Capabilities, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
@@ -39,6 +40,7 @@ export const useChatProcessor = ({
   blueprintRegistry,
   settings,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
+  const registry = useContext(RegistryContext);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const globalTools = useCapabilities(Capabilities.Tools);
 
@@ -95,6 +97,7 @@ export const useChatProcessor = ({
       tools,
       extensions,
       blueprintRegistry,
+      registry,
       model: preset?.model,
     });
   }, [services, conversation, tools, blueprintRegistry, extensions, preset]);

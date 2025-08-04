@@ -83,7 +83,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'calculator',
     Effect.fn(
       function* ({ expect }) {
