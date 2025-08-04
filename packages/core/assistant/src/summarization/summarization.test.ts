@@ -17,8 +17,6 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
 
-const REMOTE_AI = true;
-
 const summarizationFn = defineFunction({
   description: 'Summarize a document',
   inputSchema: Schema.Struct({

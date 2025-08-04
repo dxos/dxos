@@ -5,7 +5,7 @@
 import { type Signal, batch, computed, signal } from '@preact/signals-core';
 import { Effect, type Layer } from 'effect';
 
-import { AiService, DEFAULT_EDGE_MODEL } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, type LLMModel } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
@@ -37,7 +37,7 @@ export type AiRequestOptions = {
 };
 
 export type AiChatProcessorOptions = {
-  model?: string;
+  model?: LLMModel;
   blueprintRegistry?: Blueprint.Registry;
   extensions?: ToolContextExtensions;
 } & Pick<AiConversationRunParams<any>, 'system'>;
