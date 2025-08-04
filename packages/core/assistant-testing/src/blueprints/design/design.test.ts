@@ -3,11 +3,16 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Option, Stream } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  AiConversation,
+  AiSession,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
@@ -33,12 +38,23 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
           queue: queues.create(),
         });
 
+        const session = new AiSession();
         const printer = new ConsolePrinter();
-        conversation.onBegin.on((session) => {
-          session.message.on((message) => printer.printMessage(message));
-          session.userMessage.on((message) => printer.printMessage(message));
-          session.block.on((block) => printer.printContentBlock(block));
-        });
+        const messageQueue = session.messageQueue.pipe(
+          Stream.fromQueue,
+          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
+        );
+        const blockQueue = session.blockQueue.pipe(
+          Stream.fromQueue,
+          Stream.runForEach((block) =>
+            Effect.sync(() =>
+              Option.match(block, {
+                onSome: (block) => printer.printContentBlock(block),
+                onNone: () => Effect.void,
+              }),
+            ),
+          ),
+        );
 
         db.add(blueprint);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
@@ -46,7 +62,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
         const artifact = db.add(Markdown.makeDocument({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
-        yield* conversation.run({
+        const run = conversation.run({
+          session,
           prompt: trim`
             Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
@@ -61,6 +78,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
             The store spec in ${Obj.getDXN(artifact)}
           `,
         });
+        yield* Effect.all([run, messageQueue, blockQueue]);
         log.info('spec', { doc: artifact });
         expect(artifact.content).not.toBe(prevContent);
         prevContent = artifact.content;

@@ -3,11 +3,16 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Option, Stream } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import {
+  AiConversation,
+  AiSession,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
@@ -34,15 +39,23 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           queue: queues.create(),
         });
 
+        const session = new AiSession();
         const printer = new ConsolePrinter({ mode: 'json' });
-        conversation.onBegin.on((session) => {
-          session.userMessage.on((message) => printer.printMessage(message));
-          session.message.on((message) => printer.printMessage(message));
-          session.block.on((block) => printer.printContentBlock(block));
-          session.streamEvent.on((part) => {
-            log('part', { part });
-          });
-        });
+        const messageQueue = session.messageQueue.pipe(
+          Stream.fromQueue,
+          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
+        );
+        const blockQueue = session.blockQueue.pipe(
+          Stream.fromQueue,
+          Stream.runForEach((block) =>
+            Effect.sync(() =>
+              Option.match(block, {
+                onSome: (block) => printer.printContentBlock(block),
+                onNone: () => Effect.void,
+              }),
+            ),
+          ),
+        );
 
         db.add(blueprint);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
@@ -100,7 +113,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           },
         ];
 
-        yield* runSteps({ conversation, steps });
+        const run = runSteps({ conversation, steps });
+        yield* Effect.all([run, messageQueue, blockQueue]);
       },
       Effect.provide(
         Layer.mergeAll(
