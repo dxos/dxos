@@ -22,6 +22,7 @@ import { translationKey } from '../../translations';
 import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
+  readonly?: boolean;
   projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry;
@@ -32,7 +33,15 @@ export type FieldEditorProps = {
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({ projection, field, registry, onSave, onCancel, outerSpacing }: FieldEditorProps) => {
+export const FieldEditor = ({
+  readonly,
+  projection,
+  field,
+  registry,
+  onSave,
+  onCancel,
+  outerSpacing,
+}: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
@@ -178,6 +187,7 @@ export const FieldEditor = ({ projection, field, registry, onSave, onCancel, out
     <Form<PropertyType>
       key={field.id}
       autoFocus
+      readonly={readonly}
       values={props}
       schema={fieldSchema}
       filter={propIsNotType}

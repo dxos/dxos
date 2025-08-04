@@ -129,6 +129,8 @@ export const translations = [
         'expires label': 'Expires {{timeLeft}}',
         'no expiration label': 'Doesn’t expire',
         'drag handle label': 'Drag to rearrange',
+        'expand label': 'Expand',
+        'collapse label': 'Collapse',
 
         // TODO(burdon): Factor out.
         'red label': 'Red',
