@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Action, type Node, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
+import { type Action, type Node, type ReadableGraph, isActionLike } from '@dxos/app-graph';
 import { isNonNullable } from '@dxos/util';
 
-import { type FlattenedActions, type NavTreeItemGraphNode } from './types';
+import { type NavTreeItemGraphNode } from './types';
 
 export const getParent = (
   graph: ReadableGraph,

@@ -18,7 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { type Node, ROOT_ID, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { useActions as useGraphActions, useConnections } from '@dxos/plugin-graph';
+import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,7 +26,7 @@ import { arrayMove, byPosition } from '@dxos/util';
 
 import { NavTreeCapabilities } from '../capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
-import { FlattenedActions, type NavTreeItemGraphNode } from '../types';
+import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
@@ -69,21 +69,25 @@ const useActions = (node: Node): FlattenedActions => {
   const { graph } = useAppGraph();
   const actions = useGraphActions(graph, node.id);
 
-  return useMemo(() => actions.reduce(
-    (acc: FlattenedActions, arg) => {
-      if (arg.properties.disposition === 'item') {
-        return acc;
-      }
+  return useMemo(
+    () =>
+      actions.reduce(
+        (acc: FlattenedActions, arg) => {
+          if (arg.properties.disposition === 'item') {
+            return acc;
+          }
 
-      acc.actions.push(arg);
-      if (!isAction(arg)) {
-        const actionGroup = graph.getActions(arg.id);
-        acc.groupedActions[arg.id] = actionGroup;
-      }
-      return acc;
-    },
-    { actions: [], groupedActions: {} },
-  ), [actions]);
+          acc.actions.push(arg);
+          if (!isAction(arg)) {
+            const actionGroup = graph.getActions(arg.id);
+            acc.groupedActions[arg.id] = actionGroup;
+          }
+          return acc;
+        },
+        { actions: [], groupedActions: {} },
+      ),
+    [actions],
+  );
 };
 
 export type NavTreeContainerProps = {
