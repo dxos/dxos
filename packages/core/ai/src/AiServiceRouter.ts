@@ -107,7 +107,13 @@ export const LMStudioResolver = AiModelResolver.fromModelMap(
   ),
 );
 
-export const OllamaResolver = ({ host = 'http://localhost:11434' }: { host?: string } = {}) =>
+export const OllamaResolver = ({
+  host = 'http://localhost:11434',
+  transformClient,
+}: {
+  readonly host?: string;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+} = {}) =>
   AiModelResolver.fromModelMap(
     Effect.gen(function* () {
       return {
@@ -118,9 +124,7 @@ export const OllamaResolver = ({ host = 'http://localhost:11434' }: { host?: str
       Effect.provide(
         OpenAiClient.layer({
           apiUrl: host + '/v1',
-          // TODO(dmaretskyi): Try `HttpClient.withTracerPropagation(true)`
-          // TODO(dmaretskyi): Extract to options.
-          transformClient: HttpClient.withTracerDisabledWhen(() => true),
+          transformClient,
         }),
       ),
     ),

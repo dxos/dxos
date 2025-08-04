@@ -7,7 +7,7 @@ import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 import { AiServiceRouter } from '@dxos/ai';
 import { contributes, type PluginContext } from '@dxos/app-framework';
 import { AssistantCapabilities } from '@dxos/plugin-assistant';
-import { FetchHttpClient } from '@effect/platform';
+import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { Command } from '@tauri-apps/plugin-shell';
 
 // Running ollama on non-standard port
@@ -68,6 +68,9 @@ const OllamaSidecarModelResolver: Layer.Layer<AiServiceRouter.AiModelResolver, n
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const { endpoint } = yield* OllamaSidecar;
-      return AiServiceRouter.OllamaResolver({ host: endpoint });
+      return AiServiceRouter.OllamaResolver({
+        host: endpoint,
+        transformClient: HttpClient.withTracerPropagation(false),
+      });
     }),
   ).pipe(Layer.provide(FetchHttpClient.layer));
