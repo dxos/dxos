@@ -9,12 +9,13 @@ import React, { useRef } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { RefDropdownMenu } from '../components';
+import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
+import { str } from '../testing';
 
 import { EditorStory } from './components';
-import { RefDropdownMenu } from '../components';
-import { outliner, listItemToString, treeFacet, deleteItem, hashtag } from '../extensions';
-import { str } from '../testing';
 
 type StoryProps = {
   text: string;

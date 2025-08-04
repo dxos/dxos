@@ -4,14 +4,15 @@
 
 import { EditorView } from '@codemirror/view';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { commentClickedEffect, commentsState, type EditorState, overlap } from '@dxos/react-ui-editor';
+import { type EditorState, commentClickedEffect, commentsState, overlap } from '@dxos/react-ui-editor';
+
+import { threads } from '../extensions';
 
 import { ThreadCapabilities } from './capabilities';
-import { threads } from '../extensions';
 
 export default (context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [

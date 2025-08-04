@@ -3,6 +3,7 @@
 //
 
 import { EventEmitter } from 'node:events';
+
 import { describe, expect, test } from 'vitest';
 
 import { onEvent, waitForEvent } from './event-emitter';

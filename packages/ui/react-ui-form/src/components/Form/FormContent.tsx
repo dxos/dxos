@@ -9,18 +9,19 @@ import React, { forwardRef, useMemo } from 'react';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
+import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
+
+import { type QueryRefOptions } from '../../hooks';
+import { getRefProps } from '../../util';
 
 import { ArrayField } from './ArrayField';
 import { SelectInput } from './Defaults';
+import { getInputComponent } from './factory';
 import { type ComponentLookup } from './Form';
-import { useInputProps, useFormValues } from './FormContext';
+import { useFormValues, useInputProps } from './FormContext';
 import { type InputComponent } from './Input';
 import { RefField } from './RefField';
-import { getInputComponent } from './factory';
-import { type QueryRefOptions } from '../../hooks';
-import { getRefProps } from '../../util';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;

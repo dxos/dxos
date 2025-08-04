@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { CredentialGenerator, createCredential } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
@@ -11,12 +11,13 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 
-import { ControlPipeline } from './control-pipeline';
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
+
+import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
   test('admits feeds', async () => {

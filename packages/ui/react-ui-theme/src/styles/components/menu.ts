@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Theme, type Elevation } from '@dxos/react-ui-types';
+import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
 import {

@@ -3,12 +3,12 @@
 //
 
 import type * as A from '@automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
-import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
+import { type DocMetrics, measureDocMetrics } from './automerge-metrics';
 
 export class DatabaseRoot {
   static mapLinks(doc: DocHandle<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {

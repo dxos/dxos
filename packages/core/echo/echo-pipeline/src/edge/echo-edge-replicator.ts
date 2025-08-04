@@ -4,7 +4,7 @@
 
 import { cbor } from '@automerge/automerge-repo';
 
-import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
+import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
@@ -12,7 +12,7 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, type AutomergeProtocolMessage, type PeerId } from '@dxos/protocols';
+import { type AutomergeProtocolMessage, EdgeService, type PeerId } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -20,15 +20,16 @@ import {
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
-import { InflightRequestLimiter } from './inflight-request-limiter';
 import {
-  getSpaceIdFromCollectionId,
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
+  getSpaceIdFromCollectionId,
 } from '../automerge';
+
+import { InflightRequestLimiter } from './inflight-request-limiter';
 
 /**
  * Delay before restarting the connection after receiving a forbidden error.

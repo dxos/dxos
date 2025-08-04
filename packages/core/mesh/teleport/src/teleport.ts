@@ -4,7 +4,7 @@
 
 import { type Duplex } from 'node:stream';
 
-import { runInContextAsync, synchronized, scheduleTask, type Event } from '@dxos/async';
+import { type Event, runInContextAsync, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

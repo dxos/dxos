@@ -2,29 +2,30 @@
 // Copyright 2023 DXOS.org
 //
 
-import type WebSocket from 'isomorphic-ws';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
 import { type Socket } from 'node:net';
 import { dirname } from 'node:path';
 
+import type WebSocket from 'isomorphic-ws';
+
 import { Trigger } from '@dxos/async';
 import {
-  type Config,
   Client,
-  PublicKey,
   type ClientServices,
   type ClientServicesProvider,
+  type Config,
+  PublicKey,
   fromHost,
 } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { createIceProvider, createRtcTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { type TransportFactory, createIceProvider, createRtcTransportFactory } from '@dxos/network-manager';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { tracer } from '@dxos/util';
 import { WebsocketRpcServer, authenticateRequestWithTokenAuth } from '@dxos/websocket-rpc';
 
-import { getPluginConfig, type Plugin } from './plugins';
+import { type Plugin, getPluginConfig } from './plugins';
 import { lockFilePath, parseAddress } from './util';
 
 interface Service {

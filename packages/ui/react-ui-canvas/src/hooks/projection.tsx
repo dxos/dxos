@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { interpolate, interpolateObject, transition, easeSinOut } from 'd3';
+import { easeSinOut, interpolate, interpolateObject, transition } from 'd3';
 import {
   type Matrix,
   applyToPoints,
@@ -13,7 +13,7 @@ import {
   translate as translateMatrix,
 } from 'transformation-matrix';
 
-import { type Point, type Dimension } from '../types';
+import { type Dimension, type Point } from '../types';
 
 export const defaultOrigin: Point = { x: 0, y: 0 };
 

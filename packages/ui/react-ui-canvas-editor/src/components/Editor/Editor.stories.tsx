@@ -17,13 +17,14 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
-import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
+import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
-import { useSelection, Container, DragTest } from '../../testing';
+import { Container, DragTest, useSelection } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
+
+import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 

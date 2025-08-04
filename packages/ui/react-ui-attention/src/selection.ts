@@ -6,7 +6,7 @@ import { untracked } from '@preact/signals-core';
 import { Match, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph.
 

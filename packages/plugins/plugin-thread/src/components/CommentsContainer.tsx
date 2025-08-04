@@ -9,9 +9,10 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
 
-import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
+
+import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
 
 export type CommentsContainerProps = Omit<CommentsThreadContainerProps, 'anchor' | 'current'> & {
   anchors: AnchoredTo[];

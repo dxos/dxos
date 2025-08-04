@@ -10,8 +10,9 @@ import React from 'react';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chart } from './Chart';
 import CitiesData from '../../../data/cities.js';
+
+import { Chart } from './Chart';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?

@@ -3,6 +3,7 @@
 //
 
 import util from 'node:util';
+
 import { Writable } from 'streamx';
 import { describe, test } from 'vitest';
 

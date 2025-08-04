@@ -4,8 +4,10 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { useSyncState, getSyncSummary } from '@dxos/react-client/echo';
+import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, Toggle } from '@dxos/react-ui';
+
+import { type Stats, removeEmpty } from '../../hooks';
 
 import { Panel, type PanelProps } from './Panel';
 import {
@@ -22,7 +24,6 @@ import {
   SyncStatusPanel,
   TimeSeries,
 } from './panels';
-import { removeEmpty, type Stats } from '../../hooks';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
 

@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { SpaceCapabilities } from './capabilities';
 import { type ObjectForm } from '../types';
+
+import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const registry = context.getCapability(Capabilities.RxRegistry);

@@ -3,8 +3,9 @@
 //
 
 import fs from 'fs';
-import { type CID, type KuboRPCClient } from 'kubo-rpc-client';
 import { join } from 'path';
+
+import { type CID, type KuboRPCClient } from 'kubo-rpc-client';
 
 import { importESM } from '@dxos/cli-base';
 

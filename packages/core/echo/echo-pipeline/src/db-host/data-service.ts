@@ -11,23 +11,24 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
+  type BatchedDocumentUpdates,
   type DataService,
   type FlushRequest,
-  type SubscribeRequest,
-  type BatchedDocumentUpdates,
-  type UpdateSubscriptionRequest,
   type GetDocumentHeadsRequest,
   type GetDocumentHeadsResponse,
-  type ReIndexHeadsRequest,
-  type WaitUntilHeadsReplicatedRequest,
-  type UpdateRequest,
   type GetSpaceSyncStateRequest,
+  type ReIndexHeadsRequest,
   type SpaceSyncState,
+  type SubscribeRequest,
+  type UpdateRequest,
+  type UpdateSubscriptionRequest,
+  type WaitUntilHeadsReplicatedRequest,
 } from '@dxos/protocols/proto/dxos/echo/service';
+
+import { type AutomergeHost, deriveCollectionIdFromSpaceId } from '../automerge';
 
 import { DocumentsSynchronizer } from './documents-synchronizer';
 import { type SpaceStateManager } from './space-state-manager';
-import { deriveCollectionIdFromSpaceId, type AutomergeHost } from '../automerge';
 
 export type DataServiceParams = {
   automergeHost: AutomergeHost;

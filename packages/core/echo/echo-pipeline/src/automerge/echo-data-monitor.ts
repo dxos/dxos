@@ -5,7 +5,7 @@
 import { type Message } from '@automerge/automerge-repo';
 
 import { type TimeAware, trace } from '@dxos/tracing';
-import { CircularBuffer, mapValues, SlidingWindowSummary, type SlidingWindowSummaryConfig } from '@dxos/util';
+import { CircularBuffer, SlidingWindowSummary, type SlidingWindowSummaryConfig, mapValues } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
 import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';

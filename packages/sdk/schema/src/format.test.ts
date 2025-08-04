@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type JsonProp, TypeEnum, FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum, type JsonProp, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { formatToSchema, getFormatSchema, PropertySchema, type PropertyType } from './format';
+import { PropertySchema, type PropertyType, formatToSchema, getFormatSchema } from './format';
 import { getSchemaProperties } from './properties';
 
 describe('format', () => {

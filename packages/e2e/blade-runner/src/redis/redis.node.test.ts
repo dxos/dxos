@@ -4,7 +4,7 @@
 
 import { type Message, type PeerId } from '@automerge/automerge-repo';
 import { Redis, type RedisOptions } from 'ioredis';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';

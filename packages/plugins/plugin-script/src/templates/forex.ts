@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 
 export default defineFunction({
   description: 'Returns the exchange rate between two currencies.',

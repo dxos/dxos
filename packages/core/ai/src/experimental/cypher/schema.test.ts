@@ -6,8 +6,9 @@ import { test } from 'vitest';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 
-import { formatJsonSchemaForLLM } from './schema';
 import { Contact, Organization, Project, Task } from '../../testing';
+
+import { formatJsonSchemaForLLM } from './schema';
 
 test('formatJsonSchemaForLLM', async ({ expect }) => {
   const jsonSchema = [Organization, Project, Task, Contact].map((schema) => toJsonSchema(schema));

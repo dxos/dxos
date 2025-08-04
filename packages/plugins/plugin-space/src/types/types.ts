@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { EchoSchema, StoredSchema, type TypedObject, type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject, EchoSchema, StoredSchema, type TypedObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';

@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
-import type { inspect, InspectOptionsStylized } from 'node:util';
+import type { InspectOptionsStylized, inspect } from 'node:util';
 
-import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { Schema } from 'effect';
+
+import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 
 import { ObjectId } from './object-id';
@@ -119,7 +120,7 @@ export class DXN {
   static tryParse(dxn: string): DXN | undefined {
     try {
       return DXN.parse(dxn);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }

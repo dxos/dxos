@@ -6,7 +6,7 @@ import type { JsonPath } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { mapValues } from '@dxos/util';
 
-import { createExecutionPlan, type ExecutionPlan, type VariableName } from './execution-plan';
+import { type ExecutionPlan, type VariableName, createExecutionPlan } from './execution-plan';
 import { parseCypherQuery } from './parser';
 
 export interface DataSource {

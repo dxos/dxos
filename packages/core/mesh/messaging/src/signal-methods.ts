@@ -4,13 +4,13 @@
 
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
-import { type SwarmResponse, type Peer } from '@dxos/protocols/proto/dxos/edge/messenger';
+import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
+  type JoinRequest,
   type LeaveRequest,
   type Message,
-  type SwarmEvent,
-  type JoinRequest,
   type QueryRequest,
+  type SwarmEvent,
 } from '@dxos/protocols/proto/dxos/edge/signal';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 

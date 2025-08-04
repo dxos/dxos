@@ -13,11 +13,11 @@ import {
   ButtonGroup,
   type ButtonGroupProps,
   type ButtonProps,
+  IconButton,
+  type IconButtonProps,
   Toggle,
   type ToggleGroupItemProps,
   type ToggleProps,
-  IconButton,
-  type IconButtonProps,
 } from '../Buttons';
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';

@@ -3,17 +3,17 @@
 //
 
 // TODO(burdon): workerize-loader dep.
-import { Graph, type Edge, type PlainObject } from '@antv/graphlib';
+import { type Edge, Graph, type PlainObject } from '@antv/graphlib';
 import {
-  type Layout,
   D3ForceLayout,
   type D3ForceLayoutOptions,
   GridLayout,
   type GridLayoutOptions,
+  type Layout,
   RadialLayout,
   type RadialLayoutOptions,
 } from '@antv/layout';
-import { createBindingId, createShapeId, type Editor, type SerializedStore, type TLRecord } from '@tldraw/tldraw';
+import { type Editor, type SerializedStore, type TLRecord, createBindingId, createShapeId } from '@tldraw/tldraw';
 
 import { faker } from '@dxos/random';
 import { isNotFalsy, range } from '@dxos/util';

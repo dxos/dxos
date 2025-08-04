@@ -3,8 +3,8 @@
 //
 
 import { type Label, useAppGraph } from '@dxos/app-framework';
-import { ROOT_ID, useConnections, type Node } from '@dxos/plugin-graph';
-import { byPosition, type Position } from '@dxos/util';
+import { type Node, ROOT_ID, useConnections } from '@dxos/plugin-graph';
+import { type Position, byPosition } from '@dxos/util';
 
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';
 

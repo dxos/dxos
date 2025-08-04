@@ -5,7 +5,7 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
-import { table, type TableOptions } from '@dxos/cli-base';
+import { type TableOptions, table } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
 import { FunctionTrigger } from '@dxos/functions';
 

@@ -4,8 +4,8 @@
 
 import { Record } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { flattenExtensions, GraphBuilder, type ExpandableGraph, ROOT_ID } from '@dxos/app-graph';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { GRAPH_PLUGIN } from './meta';

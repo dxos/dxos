@@ -4,6 +4,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, test } from 'vitest';
 import { WaveFile } from 'wavefile';
 
@@ -11,7 +12,7 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 import { openAndClose } from '@dxos/test-utils';
-import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
+import { TRACE_PROCESSOR, trace } from '@dxos/tracing';
 
 import { type AudioChunk, type AudioRecorder, Transcriber } from '../transcriber';
 import { mergeFloat64Arrays } from '../util';

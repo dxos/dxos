@@ -9,11 +9,12 @@ import path from 'node:path';
 import { waitForCondition } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type Runner } from './runner';
-import { type Daemon, type ProcessInfo, type StartOptions, type StopOptions, PROFILE_FOLDER } from '../daemon';
+import { type Daemon, PROFILE_FOLDER, type ProcessInfo, type StartOptions, type StopOptions } from '../daemon';
 import { CHECK_INTERVAL, DAEMON_STOP_TIMEOUT } from '../defs';
 import { AgentWaitTimeoutError } from '../errors';
 import { lockFilePath, removeLockFile, removeSocketFile, waitForAgentToStart } from '../util';
+
+import { type Runner } from './runner';
 
 /**
  * Manager of system daemon processes using system service manager.

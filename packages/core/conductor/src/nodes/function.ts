@@ -5,7 +5,7 @@
 import { Effect, Schema } from 'effect';
 
 import { Obj, type Ref } from '@dxos/echo';
-import { getUserFunctionUrlInMetadata, type FunctionType } from '@dxos/functions';
+import { type FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { RemoteFunctionExecutionService } from '@dxos/functions';
 
 import { type ComputeRequirements } from '../types';

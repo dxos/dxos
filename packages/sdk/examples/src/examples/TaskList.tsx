@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
+import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } from 'react';
 
 import type { PublicKey } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 import { live } from '@dxos/live-object';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Button, Input, Icon } from '@dxos/react-ui';
+import { Button, Icon, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
 

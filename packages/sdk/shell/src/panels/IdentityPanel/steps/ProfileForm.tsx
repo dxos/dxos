@@ -11,9 +11,9 @@ import { useClipboard, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
-import { type IdentityPanelStepProps } from '../IdentityPanelProps';
+import { Action, Actions, Input, StepHeading } from '../../../components';
 import { type IdentityEvent } from '../identityMachine';
+import { type IdentityPanelStepProps } from '../IdentityPanelProps';
 
 export interface ProfileFormProps extends Omit<IdentityPanelStepProps, 'send' | 'devices'> {
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;

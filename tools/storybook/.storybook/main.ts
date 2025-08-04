@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { join, resolve } from 'path';
+
 import { type StorybookConfig } from '@storybook/react-vite';
 import react from '@vitejs/plugin-react-swc';
-import { join, resolve } from 'path';
 import { type InlineConfig, mergeConfig } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -26,10 +27,10 @@ export const storyFiles = '*.{mdx,stories.tsx}';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
 export const modules = [
   'apps/*/src/**',
+  'common/*/src/**',
   'devtools/*/src/**',
-  'experimental/*/src/**',
+  // 'experimental/*/src/**',
   'plugins/*/src/**',
-  'plugins/plugin-assistant/src/**',
   'sdk/*/src/**',
   'ui/*/src/**',
 ];
@@ -38,7 +39,6 @@ export const stories = modules.map((dir) => join(packages, dir, storyFiles));
 export const content = modules.map((dir) => join(packages, dir, contentFiles));
 
 if (isTrue(process.env.DX_DEBUG)) {
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify({ stories, content }, null, 2));
 }
 
@@ -56,8 +56,7 @@ export const createConfig = ({
   framework: {
     name: '@storybook/react-vite',
     options: {
-      // TODO(wittjosiah): Re-enable strict mode in stories.
-      // strictMode: true,
+      strictMode: true,
     },
   },
   stories: baseStories ?? stories,
@@ -82,7 +81,6 @@ export const createConfig = ({
    */
   viteFinal: async (config: InlineConfig, options: { configType?: string }) => {
     if (isTrue(process.env.DX_DEBUG)) {
-      // eslint-disable-next-line no-console
       console.log(JSON.stringify({ config, options }, null, 2));
     }
 
@@ -168,7 +166,6 @@ export const createConfig = ({
 const config = createConfig();
 
 if (isTrue(process.env.DX_DEBUG)) {
-  // eslint-disable-next-line no-console
   console.log(JSON.stringify({ config }, null, 2));
 }
 

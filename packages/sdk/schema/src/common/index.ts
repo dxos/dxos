@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Obj } from '@dxos/echo';
 import * as EchoSchema$ from '@dxos/echo-schema';
+
+import * as View$ from '../view';
 
 import * as AccessToken$ from './access-token';
 import * as Actor$ from './actor';
@@ -16,7 +19,6 @@ import * as Project$ from './project';
 import * as Relations$ from './relations';
 import * as Task$ from './task';
 import * as Text$ from './text';
-import * as View$ from '../view';
 
 // TODO(burdon): Remove (fix The inferred type of 'DeleteMessage' cannot be named without a reference.)
 export * from './message';
@@ -126,6 +128,7 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
+  export const makeText = (content = '') => Obj.make(Text, { content });
 
   //
   // View

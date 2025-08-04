@@ -5,7 +5,7 @@
 //
 
 import { next as A, type Heads } from '@automerge/automerge';
-import { type EditorState, type StateField, type Transaction, type Text } from '@codemirror/state';
+import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
 import { type IDocHandle } from '@dxos/react-client/echo';
 

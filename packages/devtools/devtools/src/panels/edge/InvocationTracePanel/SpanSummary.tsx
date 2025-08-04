@@ -3,9 +3,9 @@
 //
 
 import { formatDate } from 'date-fns/format';
-import React, { type FC, useEffect, useState, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { type InvocationSpan, InvocationOutcome } from '@dxos/functions';
+import { InvocationOutcome, type InvocationSpan } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 

@@ -5,14 +5,15 @@
 import { Schema, String, pipe } from 'effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Obj, Type, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { createView, createViewWithReferences } from './view';
 import { getSchemaProperties } from '../properties';
 import { Testing } from '../testing';
+
+import { createView, createViewWithReferences } from './view';
 
 describe('Projection', () => {
   let builder: EchoTestBuilder;

@@ -23,9 +23,10 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
-import type { SpaceStateManager } from './space-state-manager';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
+
+import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceParams = {
   indexer: Indexer;

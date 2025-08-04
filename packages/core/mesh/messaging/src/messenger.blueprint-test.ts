@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
 import { WebsocketSignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
-import { messageEqual, PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder } from './testing';
+import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing';
 
 export const messengerTests = (signalManagerFactory: TestBuilder['createSignalManager']) => {
   test('Message between peers', async () => {

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, Mutex, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, Event, Mutex } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import type { SchemaRegistryPreparedQuery } from './schema-registry-api';

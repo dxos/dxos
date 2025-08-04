@@ -10,7 +10,7 @@ import { SVG, type SVGContext } from '@dxos/react-ui-graph';
 import { SpaceGraphModel } from '@dxos/schema';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
-import { mapGraphToTreeData, type TreeNode } from './types';
+import { type TreeNode, mapGraphToTreeData } from './types';
 
 // TODO(burdon): Create dge bundling graph using d3.hierarchy.
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork

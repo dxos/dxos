@@ -3,34 +3,35 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
 import {
-  createIntent,
   LayoutAction,
   Surface,
+  createIntent,
   useAppGraph,
   useCapability,
   useIntentDispatcher,
   useLayout,
 } from '@dxos/app-framework';
-import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '@dxos/app-graph';
+import { type Node, ROOT_ID, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { useConnections } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { isTreeData, type TreeItemDataProps, type TreeData } from '@dxos/react-ui-list';
+import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree } from './NavTree';
-import { NavTreeContext } from './NavTreeContext';
-import { type NavTreeContextValue } from './types';
 import { NavTreeCapabilities } from '../capabilities';
 import { NAVTREE_PLUGIN } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, getActions as naturalGetActions, resolveMigrationOperation } from '../util';
+
+import { NAV_TREE_ITEM, NavTree } from './NavTree';
+import { NavTreeContext } from './NavTreeContext';
+import { type NavTreeContextValue } from './types';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';

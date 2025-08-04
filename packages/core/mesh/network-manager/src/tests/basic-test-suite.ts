@@ -2,16 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import { onTestFinished, expect, test } from 'vitest';
+import { expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
 import { type TestBuilder } from '../testing';
 import { FullyConnectedTopology, StarTopology } from '../topology';
+
+import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
 
 // TODO(burdon): Use PublicKey throughout (remove conversion to strings, from buffers, etc.)
 

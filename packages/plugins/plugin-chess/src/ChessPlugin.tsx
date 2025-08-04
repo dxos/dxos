@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { ChessAction, ChessType } from './types';
+import { Chess, ChessAction } from './types';
 
 export const ChessPlugin = () =>
   definePlugin(meta, [
@@ -24,7 +24,7 @@ export const ChessPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: ChessType.typename,
+          id: Chess.Game.typename,
           metadata: {
             icon: 'ph--shield-chevron--regular',
           },
@@ -37,7 +37,7 @@ export const ChessPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: ChessType,
+            objectSchema: Chess.Game,
             getIntent: () => createIntent(ChessAction.Create),
           }),
         ),
@@ -53,8 +53,8 @@ export const ChessPlugin = () =>
       activate: IntentResolver,
     }),
     defineModule({
-      id: `${meta.id}/module/artifact-definition`,
+      id: `${meta.id}/module/blueprint`,
       activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

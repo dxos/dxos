@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { Capabilities, Events } from '../../common';
-import { contributes, defineEvent, defineCapability, defineModule, definePlugin } from '../../core';
-import { createResolver, type IntentSchema } from '../../plugin-intent';
+import { contributes, defineCapability, defineEvent, defineModule, definePlugin } from '../../core';
+import { type IntentSchema, createResolver } from '../../plugin-intent';
 
 export const Number = defineCapability<number>('dxos.org/test/generator/number');
 

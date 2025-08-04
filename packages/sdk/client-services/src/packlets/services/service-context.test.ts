@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { MemorySignalManagerContext, MemorySignalManager } from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { openAndClose } from '@dxos/test-utils';
 

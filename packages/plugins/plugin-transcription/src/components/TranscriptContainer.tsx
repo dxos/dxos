@@ -9,9 +9,10 @@ import { useMembers, useQueue } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { Transcript, renderMarkdown } from './Transcript';
 import { useQueueModelAdapter } from '../hooks';
 import { type TranscriptType } from '../types';
+
+import { Transcript, renderMarkdown } from './Transcript';
 
 export type TranscriptionContainerProps = {
   role: string;

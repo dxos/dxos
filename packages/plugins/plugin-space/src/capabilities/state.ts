@@ -4,14 +4,15 @@
 
 import { effect } from '@preact/signals-core';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/keys';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { SpaceCapabilities } from './capabilities';
 import { SPACE_PLUGIN } from '../meta';
 import { type PluginState } from '../types';
+
+import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {

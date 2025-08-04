@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Main, useSidebars } from './Main';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 

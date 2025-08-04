@@ -5,19 +5,20 @@
 import '@dxos-theme';
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { Path } from '../../util';
+
+import { type TestItem, createTree, updateState } from './testing';
 import { Tree } from './Tree';
 import { type TreeData } from './TreeItem';
-import { createTree, updateState, type TestItem } from './testing';
-import { Path } from '../../util';
 
 faker.seed(1234);
 

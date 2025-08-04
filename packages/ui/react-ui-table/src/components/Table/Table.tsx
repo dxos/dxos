@@ -9,10 +9,10 @@ import React, {
   type WheelEvent,
   forwardRef,
   useCallback,
-  useImperativeHandle,
-  useState,
-  useMemo,
   useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
 } from 'react';
 
 import { type Client } from '@dxos/client';
@@ -24,27 +24,28 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  closestCell,
   type DxGridElement,
-  type DxGridPosition,
-  type GridContentProps,
-  Grid,
   type DxGridPlane,
   type DxGridPlaneRange,
-  gridSeparatorInlineEnd,
+  type DxGridPosition,
+  Grid,
+  type GridContentProps,
+  closestCell,
   gridSeparatorBlockEnd,
+  gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
+
+import { ModalController, type TableModel, type TablePresentation } from '../../model';
+import { translationKey } from '../../translations';
+import { tableButtons, tableControls } from '../../util';
+import { type TableCellEditorProps, TableValueEditor, createOption } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
-import { ModalController, type TableModel, type TablePresentation } from '../../model';
-import { translationKey } from '../../translations';
-import { tableButtons, tableControls } from '../../util';
-import { createOption, TableValueEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 //
 // Table.Root
@@ -282,7 +283,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         switch (event.key) {
           case 'Backspace':
           case 'Delete': {
-            model.setCellData(cell, undefined);
+            try {
+              model.setCellData(cell, undefined);
+              event.preventDefault();
+            } catch {
+              // Delete results in a validation error; don’t prevent default so dx-grid can emit an edit request.
+            }
             break;
           }
         }
@@ -391,7 +397,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
-          onKeyDown={handleKeyDown}
+          onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
           ref={setDxGrid}
         />

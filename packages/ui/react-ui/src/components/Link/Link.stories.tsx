@@ -4,8 +4,9 @@
 
 import '@dxos-theme';
 
-import { Link } from './Link';
 import { withTheme } from '../../testing';
+
+import { Link } from './Link';
 
 export default {
   title: 'ui/react-ui-core/Link',

@@ -25,7 +25,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, type ThemedClassName, ListItem as NaturalListItem } from '@dxos/react-ui';
+import { Icon, ListItem as NaturalListItem, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useListContext } from './ListRoot';

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type Client } from '../client';
-import { live, Expando, SpaceState } from '../echo';
+import { Expando, SpaceState, live } from '../echo';
 import { createInitializedClientsWithContext, performInvitation, waitForSpace } from '../testing';
 
 describe('Lazy Space Loading', () => {

@@ -4,7 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
-import { createMenuItemGroup, createMenuAction } from '@dxos/react-ui-menu';
+import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
 import { SCRIPT_PLUGIN } from '../meta';
 import { templates } from '../templates';

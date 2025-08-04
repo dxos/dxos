@@ -9,8 +9,9 @@ import React, { useEffect, useState } from 'react';
 
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Mesh } from './Mesh';
 import { SVG, type SVGRootProps } from '../SVG';
+
+import { Mesh } from './Mesh';
 
 // TODO(burdon): Create waves/game of life.
 const DefaultStory = (props: SVGRootProps) => {

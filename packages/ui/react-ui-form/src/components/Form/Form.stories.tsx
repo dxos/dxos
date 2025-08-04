@@ -9,16 +9,17 @@ import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
-import { type BaseObject, Expando, Format, getObjectDXN, Ref, type TypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { SelectInput } from './Defaults';
-import { Form, type FormProps } from './Form';
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
+
+import { SelectInput } from './Defaults';
+import { Form, type FormProps } from './Form';
 
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),

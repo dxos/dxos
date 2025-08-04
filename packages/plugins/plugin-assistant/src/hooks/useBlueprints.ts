@@ -6,7 +6,8 @@ import { effect } from '@preact/signals-react';
 import { Array, Effect, Option, pipe } from 'effect';
 import { useCallback, useEffect, useState } from 'react';
 
-import { type ContextBinder } from '@dxos/assistant';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -17,11 +18,20 @@ import { isNonNullable } from '@dxos/util';
 export type UpdateCallback = (key: string, active: boolean) => void;
 
 /**
+ * Provide a registry of blueprints from plugins.
+ */
+// TODO(burdon): Reconcile with public registry.
+export const useBlueprintRegistry = () => {
+  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
+};
+
+/**
  * Get collection of active blueprints based on the context.
  */
 export const useBlueprints = (
   space: Space,
-  context: ContextBinder,
+  context: AiContextBinder,
   blueprintRegistry?: Blueprint.Registry,
 ): { blueprints: Blueprint.Blueprint[]; active: string[]; update: UpdateCallback } => {
   const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));

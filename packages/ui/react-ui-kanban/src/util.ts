@@ -4,7 +4,7 @@
 
 import { type SelectOption } from '@dxos/echo-schema';
 
-import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanView } from './types';
+import { type BaseKanbanItem, type KanbanView, UNCATEGORIZED_VALUE } from './types';
 
 export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
   kanban,

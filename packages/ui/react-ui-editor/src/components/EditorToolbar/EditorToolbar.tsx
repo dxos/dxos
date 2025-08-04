@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { memo, useMemo } from 'react';
 
-import { rxFromSignal, type NodeArg } from '@dxos/app-graph';
+import { type NodeArg, rxFromSignal } from '@dxos/app-graph';
 import { ElevationProvider } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 

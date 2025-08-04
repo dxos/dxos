@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type ContextBinder } from '@dxos/assistant';
+import { type AiContextBinder } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type ThemedClassName, useAsyncState, useTranslation } from '@dxos/react-ui';
@@ -16,16 +16,18 @@ import { meta } from '../../meta';
 
 export type ChatReferencesProps = ThemedClassName<{
   space: Space;
-  context: ContextBinder;
+  context: AiContextBinder;
   onUpdate?: (ids: string[]) => void;
 }>;
 
 export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatReferencesProps) => {
-  const { t: _t } = useTranslation(meta.id);
+  const { t } = useTranslation(meta.id);
 
   const [items] = useAsyncState<TagPickerItemData[]>(async () => {
     const objects = await Ref.Array.loadAll(context.objects.value ?? []);
-    return objects.filter(isNonNullable).map((obj) => ({ id: obj.id, label: Obj.getLabel(obj) ?? obj.id }));
+    return objects
+      .filter(isNonNullable)
+      .map((obj) => ({ id: obj.id, label: Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id }));
   }, [context]);
 
   const handleSearch = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
@@ -44,7 +46,7 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
     <TagPicker
       classNames={mx('h-[1.75rem] text-sm', classNames)}
       mode='multi-select'
-      // placeholder={t('context objects placeholder')}
+      placeholder={t('context objects placeholder')}
       items={items}
       onSearch={handleSearch}
       onUpdate={onUpdate}

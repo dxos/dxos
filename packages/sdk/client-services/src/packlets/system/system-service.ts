@@ -7,14 +7,14 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type Config } from '@dxos/config';
 import {
   GetDiagnosticsRequest,
+  type Platform,
+  type QueryStatusRequest,
+  type QueryStatusResponse,
   type SystemService,
   type SystemStatus,
   type UpdateStatusRequest,
-  type QueryStatusRequest,
-  type QueryStatusResponse,
-  type Platform,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonKeyReplacer, type MaybePromise } from '@dxos/util';
+import { type MaybePromise, jsonKeyReplacer } from '@dxos/util';
 
 import { type Diagnostics } from '../diagnostics';
 import { getPlatform } from '../services/platform';

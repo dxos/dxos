@@ -6,17 +6,18 @@ import { SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
-import { findNode, getDiscriminatedType, isDiscriminatedUnion, SimpleType } from '@dxos/effect';
+import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { getSchemaProperties, type SchemaProperty } from '@dxos/schema';
+import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
+
+import { translationKey } from '../../translations';
+import { findArrayElementType } from '../../util';
 
 import { type ComponentLookup } from './Form';
 import { FormField } from './FormContent';
-import { useFormValues, type FormInputStateProps } from './FormContext';
-import { InputHeader, type InputComponent } from './Input';
-import { translationKey } from '../../translations';
-import { findArrayElementType } from '../../util';
+import { type FormInputStateProps, useFormValues } from './FormContext';
+import { type InputComponent, InputHeader } from './Input';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;

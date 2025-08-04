@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { scheduleTask, type Trigger } from '@dxos/async';
+import { type Trigger, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { ProtocolError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionDiscoveryService,
-  type GetAdmissionCredentialResponse,
   type GetAdmissionCredentialRequest,
+  type GetAdmissionCredentialResponse,
 } from '@dxos/protocols/proto/dxos/mesh/teleport';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 

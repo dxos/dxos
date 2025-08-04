@@ -3,15 +3,16 @@
 //
 
 import { createKeyborg } from 'keyborg';
-import React, { createContext, type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
 import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
 
-import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
+
+import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeMode = 'dark' | 'light';
 

@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
+
+import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';

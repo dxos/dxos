@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { type ObjectStructure, Reference, encodeReference } from '@dxos/echo-protocol';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
-import { IndexStore } from './index-store';
 import { IndexSchema } from '../indexes';
+
+import { IndexStore } from './index-store';
 
 describe('IndexStore', () => {
   test('basic', async () => {

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createTool, ToolResult, type ExecutableTool } from '@dxos/ai';
-import { FunctionExecutor, type FunctionDefinition, type ServiceContainer } from '@dxos/functions';
+import { type ExecutableTool, ToolResult, createTool } from '@dxos/ai';
+import { type FunctionDefinition, FunctionExecutor, type ServiceContainer } from '@dxos/functions';
 
 declare global {
   interface ToolContextExtensions {
@@ -11,6 +11,7 @@ declare global {
   }
 }
 
+// TODO(burdon): Not currently used.
 // TODO(dmaretskyi): Find a good home for this.
 export const toolFromFunction = <I, O>(
   namespace: string,

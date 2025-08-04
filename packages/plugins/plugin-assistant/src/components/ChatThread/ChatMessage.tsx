@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, type FC, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -18,18 +18,19 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-import { Json, ToolBlock, isToolMessage } from './ToolBlock';
-import { type ChatProcessor } from '../../hooks';
+import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
 import { ToolboxContainer } from '../Toolbox';
+
+import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
   message: DataType.Message;
   // TODO(burdon): Move to context.
-  processor?: ChatProcessor;
+  processor?: AiChatProcessor;
   tools?: Tool[];
   onEvent?: (event: ChatEvent) => void;
 }>;
@@ -99,7 +100,7 @@ type BlockComponentProps = {
   space?: Space;
   block: ContentBlock.Any;
   /** @deprecated Replace with context */
-  processor?: ChatProcessor;
+  processor?: AiChatProcessor;
   onEvent?: (event: ChatEvent) => void;
 };
 

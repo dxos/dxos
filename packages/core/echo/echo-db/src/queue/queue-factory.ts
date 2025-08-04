@@ -5,12 +5,13 @@
 import { Resource } from '@dxos/context';
 import type { Obj, Relation } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
-import { DXN, ObjectId, QueueSubspaceTags, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
+
+import { type Hypergraph } from '../hypergraph';
 
 import { QueueImpl } from './queue';
 import type { QueueService } from './queue-service';
 import type { Queue } from './types';
-import { type Hypergraph } from '../hypergraph';
 
 export interface QueueAPI {
   get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T>;

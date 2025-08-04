@@ -9,6 +9,7 @@ import { type Node } from '@dxos/app-graph';
 import { useLoadDescendents } from '../../hooks';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
+
 import { L1Panel, type L1PanelProps } from './L1Panel';
 
 export type L1TabsProps = Pick<L1PanelProps, 'open' | 'currentItemId' | 'onBack'> & {

@@ -6,6 +6,7 @@ import { exec } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
+
 import pkgUp from 'pkg-up';
 
 import { asyncTimeout } from '@dxos/async';

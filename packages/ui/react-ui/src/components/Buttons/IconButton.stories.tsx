@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { IconButton, type IconButtonProps } from './IconButton';
 import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
+
+import { IconButton, type IconButtonProps } from './IconButton';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (

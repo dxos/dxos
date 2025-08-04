@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeploymentDialog, DEPLOYMENT_DIALOG } from './DeploymentDialog';
+import { DEPLOYMENT_DIALOG, DeploymentDialog } from './DeploymentDialog';
 
 export { DEPLOYMENT_DIALOG };
 

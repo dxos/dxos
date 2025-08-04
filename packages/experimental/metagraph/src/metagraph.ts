@@ -4,7 +4,7 @@
 
 import fetch from 'cross-fetch';
 
-import { type ObservableValue, ObservableProvider } from '@dxos/async';
+import { ObservableProvider, type ObservableValue } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { ApiError } from '@dxos/protocols';

@@ -11,6 +11,7 @@ import { createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 import { processTranscriptMessage } from '../extraction';
+
 import { extractionAnthropicFn } from './extraction-llm-function';
 
 // TODO(burdon): Rewrite test.

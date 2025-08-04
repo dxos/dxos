@@ -10,31 +10,32 @@ import { Option, pipe } from 'effect';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
-  live,
-  isSpace,
+  Expando,
+  Filter,
+  type Live,
   Query,
   type QueryResult,
   type Space,
   SpaceState,
-  Expando,
-  type Live,
-  Filter,
+  isSpace,
+  live,
 } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Input, Select, Icon, IconButton } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
-import { JsonTree } from './Tree';
 import { type ExpandableGraph, ROOT_ID } from '../graph';
 import { GraphBuilder, createExtension, rxFromObservable, rxFromSignal } from '../graph-builder';
 import { type Node } from '../node';
 import { rxFromQuery } from '../testing';
+
+import { JsonTree } from './Tree';
 
 const DEFAULT_PERIOD = 500;
 

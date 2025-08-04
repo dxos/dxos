@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createJsonPath, getField, isJsonPath, type JsonPath, splitJsonPath } from './jsonPath';
+import { type JsonPath, createJsonPath, getField, isJsonPath, splitJsonPath } from './jsonPath';
 
 describe('createJsonPath', () => {
   test('supported path subset', () => {

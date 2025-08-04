@@ -3,43 +3,43 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { PropertiesType, TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
-  createAdmissionCredentials,
-  getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
   type MemberInfo,
+  createAdmissionCredentials,
+  getCredentialAssertion,
 } from '@dxos/credentials';
 import {
-  DatabaseRoot,
-  findInlineObjectOfType,
-  type EchoEdgeReplicator,
-  type EchoHost,
   AuthStatus,
   CredentialServerExtension,
+  DatabaseRoot,
+  type EchoEdgeReplicator,
+  type EchoHost,
+  FIND_PARAMS,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,
   type SpaceManager,
   type SpaceProtocol,
   type SpaceProtocolSession,
-  FIND_PARAMS,
+  findInlineObjectOfType,
 } from '@dxos/echo-pipeline';
 import {
+  type DatabaseDirectory,
+  type ObjectStructure,
   SpaceDocVersion,
   createIdFromSpaceKey,
   encodeReference,
-  type ObjectStructure,
-  type DatabaseDirectory,
 } from '@dxos/echo-protocol';
 import { ObjectId, getTypeReference } from '@dxos/echo-schema';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
-import { writeMessages, type FeedStore } from '@dxos/feed-store';
+import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -48,20 +48,21 @@ import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type SpaceMetadata, EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, setDeep, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, deferFunction, forEachAsync, setDeep } from '@dxos/util';
+
+import { createAuthProvider } from '../identity';
+import { type InvitationsManager } from '../invitations';
 
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
-import { createAuthProvider } from '../identity';
-import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;

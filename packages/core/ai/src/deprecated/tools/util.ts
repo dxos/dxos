@@ -10,14 +10,21 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type ExecutableTool, ToolResult } from './tool';
 import { type AgentStatus } from '../status-report';
 
+import { type ExecutableTool, ToolResult } from './tool';
+
+/**
+ * @deprecated
+ */
 export const isToolUse = (message: DataType.Message, { onlyToolNames }: { onlyToolNames?: string[] } = {}) => {
   const block = message.blocks.at(-1);
   return block && block._tag === 'toolCall' && (!onlyToolNames || onlyToolNames.includes(block.name));
 };
 
+/**
+ * @deprecated
+ */
 export type RunToolsOptions = {
   message: DataType.Message;
   tools: ExecutableTool[];
@@ -25,6 +32,9 @@ export type RunToolsOptions = {
   reportStatus: (status: AgentStatus) => void;
 };
 
+/**
+ * @deprecated
+ */
 export type RunToolsResult =
   | {
       type: 'continue';
@@ -35,7 +45,10 @@ export type RunToolsResult =
       result: unknown;
     };
 
-export const runTools = async ({
+/**
+ * @deprecated
+ */
+export const runTools_ = async ({
   message,
   tools,
   extensions,

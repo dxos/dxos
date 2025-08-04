@@ -72,8 +72,8 @@ export const translations = [
         'select option add': 'Add option',
 
         // System schema message.
-        'system schema title': 'System Schema',
-        'system schema description': 'This is a system schema and cannot be modified.',
+        'system schema title': 'System record type',
+        'system schema description': 'This is a system record type and cannot be modified.',
       },
     },
   },

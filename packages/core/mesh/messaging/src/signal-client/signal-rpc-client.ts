@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTaskInterval, TimeoutError, Trigger } from '@dxos/async';
+import { TimeoutError, Trigger, scheduleTaskInterval } from '@dxos/async';
 import { type Any, type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -12,8 +12,8 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type Signal, type Message as SignalMessage } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 
 import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 

@@ -14,11 +14,11 @@ import {
   type QueueTrigger,
   QueueTriggerOutput,
   type SubscriptionTrigger,
+  SubscriptionTriggerOutput,
   type TimerTrigger,
+  TimerTriggerOutput,
   TriggerKind,
   type TriggerType,
-  SubscriptionTriggerOutput,
-  TimerTriggerOutput,
   type WebhookTrigger,
   WebhookTriggerOutput,
 } from '@dxos/functions';
@@ -27,8 +27,8 @@ import { live, useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors, FunctionBody, getHeight } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { FunctionBody, createFunctionAnchors, getHeight } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const TriggerShape = Schema.extend(
   ComputeShape,

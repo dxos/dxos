@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { getObjectDXN, type TypeAnnotation } from '@dxos/echo-schema';
+import { type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 

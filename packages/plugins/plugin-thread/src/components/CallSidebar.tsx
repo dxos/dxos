@@ -6,8 +6,9 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 
-import { ChannelContainer } from './ChannelContainer';
 import { ThreadCapabilities } from '../capabilities';
+
+import { ChannelContainer } from './ChannelContainer';
 
 export const CallSidebar = () => {
   const call = useCapability(ThreadCapabilities.CallManager);

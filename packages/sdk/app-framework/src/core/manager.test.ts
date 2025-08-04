@@ -12,11 +12,12 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
-import { contributes, defineCapability, type PluginContext } from './capabilities';
+import { Events } from '../common';
+
+import { type PluginContext, contributes, defineCapability } from './capabilities';
 import { allOf, defineEvent, oneOf } from './events';
 import { PluginManager } from './manager';
-import { definePlugin, defineModule, type Plugin } from './plugin';
-import { Events } from '../common';
+import { type Plugin, defineModule, definePlugin } from './plugin';
 
 registerSignalsRuntime();
 

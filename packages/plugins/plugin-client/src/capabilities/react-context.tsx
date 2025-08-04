@@ -7,8 +7,9 @@ import React from 'react';
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { ClientProvider } from '@dxos/react-client';
 
-import { ClientCapabilities } from './capabilities';
 import { CLIENT_PLUGIN } from '../meta';
+
+import { ClientCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactContext, {

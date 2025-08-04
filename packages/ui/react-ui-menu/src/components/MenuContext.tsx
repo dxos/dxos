@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../types';

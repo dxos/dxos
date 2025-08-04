@@ -6,9 +6,10 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Treegrid } from './Treegrid';
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
+
+import { Treegrid } from './Treegrid';
 
 faker.seed(1234);
 

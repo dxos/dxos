@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Filter, getMeta, type Space } from '@dxos/client/echo';
+import { Filter, type Space, getMeta } from '@dxos/client/echo';
 import { FunctionType, getUserFunctionUrlInMetadata, makeFunctionUrl } from '@dxos/functions';
 
 export const findFunctionByDeploymentId = async (space: Space, functionId?: string) => {

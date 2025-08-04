@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { interpretAsDocumentId, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import { type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 import isEqual from 'lodash.isequal';
 
 import { Event, UpdateScheduler } from '@dxos/async';
-import { Resource, Context, LifecycleState } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

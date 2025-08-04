@@ -4,17 +4,18 @@
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
+  SettingsAction,
   contributes,
   createIntent,
-  LayoutAction,
-  SettingsAction,
-  type PluginContext,
 } from '@dxos/app-framework';
-import { setupTelemetryListeners, type Observability } from '@dxos/observability';
+import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
-import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
+
+import { ClientCapability, ObservabilityCapabilities } from './capabilities';
 
 type ClientReadyOptions = {
   context: PluginContext;

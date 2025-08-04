@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, ParseResult, Effect, Either } from 'effect';
+import { Effect, Either, ParseResult, Schema } from 'effect';
 
 export type ValidationError = { path: string; message: string };
 

@@ -10,7 +10,7 @@ import { type EditorView } from '@codemirror/view';
 
 import { type IDocHandle } from '@dxos/react-client/echo';
 
-import { getLastHeads, getPath, isReconcile, reconcileAnnotation, type State, updateHeads } from './defs';
+import { type State, getLastHeads, getPath, isReconcile, reconcileAnnotation, updateHeads } from './defs';
 import { updateAutomerge } from './update-automerge';
 import { updateCodeMirror } from './update-codemirror';
 

@@ -6,11 +6,9 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 
-const TextSchema = Schema.Struct({
+export const Text = Schema.Struct({
   content: Schema.String,
-});
-
-export const Text = TextSchema.pipe(
+}).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Text',
     version: '0.1.0',

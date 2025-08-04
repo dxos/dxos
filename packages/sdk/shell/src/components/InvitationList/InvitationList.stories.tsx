@@ -9,8 +9,9 @@ import React from 'react';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { InvitationList } from './InvitationList';
 import { inviteWithState } from '../../testing/fixtures';
+
+import { InvitationList } from './InvitationList';
 
 export default {
   title: 'sdk/shell/InvitationList',

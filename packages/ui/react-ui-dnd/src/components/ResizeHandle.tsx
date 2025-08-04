@@ -12,7 +12,7 @@ import React, { useLayoutEffect, useRef } from 'react';
 import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/react-ui-theme';
 
-import { type Size, type Side } from '../types';
+import { type Side, type Size } from '../types';
 import { REM } from '../util';
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {

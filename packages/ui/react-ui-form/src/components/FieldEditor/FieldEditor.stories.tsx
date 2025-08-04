@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
@@ -13,9 +13,10 @@ import { ProjectionModel } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import { translations } from '../../translations';
-import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
+
+import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
 // Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {

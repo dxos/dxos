@@ -9,7 +9,7 @@ import { Capabilities, contributes, createSurface, useCapabilities } from '@dxos
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { KanbanView } from '@dxos/react-ui-kanban';
 import { DataType } from '@dxos/schema';

@@ -8,7 +8,7 @@ import React, { type JSX, useRef, useState } from 'react';
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { type Polygon, type Shape } from '@dxos/react-ui-canvas-editor';
-import { getParentShapeElement, createAnchors, rowHeight } from '@dxos/react-ui-canvas-editor';
+import { createAnchors, getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
 import { Box, type BoxProps, footerHeight, headerHeight } from '../common';
 import { createAnchorId, getProperties } from '../defs';

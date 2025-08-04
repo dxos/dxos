@@ -4,8 +4,8 @@
 
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
-import { synchronized, trackLeaks, Trigger } from '@dxos/async';
-import { getCredentialAssertion, type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
+import { Trigger, synchronized, trackLeaks } from '@dxos/async';
+import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -19,11 +19,12 @@ import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
+import { createIdFromSpaceKey } from '../common/space-id';
+import { type MetadataStore } from '../metadata';
+
 import { CredentialRetrieverExtension } from './admission-discovery-extension';
 import { Space } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
-import { createIdFromSpaceKey } from '../common/space-id';
-import { type MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;

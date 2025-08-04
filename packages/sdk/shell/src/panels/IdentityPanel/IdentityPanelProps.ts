@@ -9,9 +9,10 @@ import type { Device, Identity } from '@dxos/react-client/halo';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
 import type { ConnectionState } from '@dxos/react-client/mesh';
 
-import type { IdentityEvent } from './identityMachine';
 import type { AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
+
+import type { IdentityEvent } from './identityMachine';
 
 export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation';
 

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StreamLanguage, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
 import { tags } from '@dxos/react-ui-editor';

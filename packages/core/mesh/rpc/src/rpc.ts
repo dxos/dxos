@@ -2,12 +2,12 @@
 // Copyright 2021 DXOS.org
 //
 
-import { asyncTimeout, synchronized, Trigger } from '@dxos/async';
-import { type Any, Stream, type RequestOptions, type ProtoCodec } from '@dxos/codec-protobuf';
+import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { encodeError, RpcClosedError, RpcNotOpenError } from '@dxos/protocols';
+import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
