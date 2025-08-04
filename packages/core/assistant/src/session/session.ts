@@ -125,7 +125,6 @@ export class AiSession {
         // TODO(burdon): Pass objects here? Should they be pre-processed?
         const prompts = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
         const prompt = [prompts, '', ...context].filter(Boolean).join('\n');
-
         console.log(prompt);
 
         // Build a combined toolkit from the blueprint tools and the provided toolkit.
