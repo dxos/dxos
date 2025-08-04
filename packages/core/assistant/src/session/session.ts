@@ -3,26 +3,19 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Chunk, Context, Effect, Option, type Schema, Stream, pipe } from 'effect';
-import { Array, String } from 'effect';
+import { Array, Chunk, Context, Effect, Option, type Schema, Stream, String, pipe } from 'effect';
 
 import {
+  type AgentStatus,
+  type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
   type GenerationStream,
   ToolExecutionService,
   ToolResolverService,
-  callTool,
+  callTools,
   getToolCalls,
-  runTool,
-  runTools,
-  ToolExecutionService,
-  ToolResolverService,
-  type AgentStatus,
-  type AiInputPreprocessingError,
-  type AiToolNotFoundError,
-  type GenerationStream,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { type Blueprint } from '@dxos/blueprints';
@@ -332,4 +325,3 @@ export namespace ArtifactDiffResolver {
     >;
   };
 }
-
