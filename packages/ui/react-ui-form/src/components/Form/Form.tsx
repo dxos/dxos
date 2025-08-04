@@ -100,7 +100,7 @@ export const Form = <T extends BaseObject>({
           readonly={readonly}
           schema={schema}
         />
-        {(onCancel || onSave) && !autoSave && (
+        {(onCancel || onSave) && !autoSave && !readonly && (
           <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={outerSpacing} />
         )}
       </div>
