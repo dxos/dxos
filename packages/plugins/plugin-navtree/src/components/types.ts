@@ -22,7 +22,7 @@ export type NavTreeContextValue = Pick<
     topbar?: boolean;
     popoverAnchorId?: string;
     renderItemEnd?: FC<{ node: Node; open: boolean }>;
-    getActions: (node: Node) => FlattenedActions;
+    useActions: (node: Node) => FlattenedActions;
     loadDescendents?: (node: Node) => MaybePromise<void>;
     isAlternateTree?: (path: string[], item: NavTreeItemGraphNode) => boolean;
     setAlternateTree?: (path: string[], open: boolean) => void;

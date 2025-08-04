@@ -88,24 +88,6 @@ export const getChildren = (
     .filter(isNonNullable) as NavTreeItemGraphNode[];
 };
 
-export const getActions = (graph: ReadableGraph, node: Node): FlattenedActions => {
-  return graph.getActions(node.id).reduce(
-    (acc: FlattenedActions, arg) => {
-      if (arg.properties.disposition === 'item') {
-        return acc;
-      }
-
-      acc.actions.push(arg);
-      if (!isAction(arg)) {
-        const actionGroup = graph.getActions(arg.id);
-        acc.groupedActions[arg.id] = actionGroup;
-      }
-      return acc;
-    },
-    { actions: [], groupedActions: {} },
-  );
-};
-
 export const l0ItemType = (item: Node<any>) => {
   if (item.properties.disposition === 'collection') {
     return 'collection';
