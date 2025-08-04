@@ -18,6 +18,8 @@ import { preprocessAiInput } from './AiPreprocessor';
 import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
 import { callTools, getToolCalls } from './tools';
 
+const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
+
 describe('ollama', () => {
   it.effect(
     'streaming',
@@ -50,7 +52,7 @@ describe('ollama', () => {
         Layer.provide(
           OpenAiLanguageModel.model('deepseek-r1' as any),
           OpenAiClient.layer({
-            apiUrl: 'http://localhost:11434/v1/',
+            apiUrl: OLLAMA_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),

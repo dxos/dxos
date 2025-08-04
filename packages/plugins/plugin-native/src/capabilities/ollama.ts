@@ -9,6 +9,7 @@ import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 import { AiServiceRouter } from '@dxos/ai';
 import { type PluginContext, contributes } from '@dxos/app-framework';
 import { AssistantCapabilities } from '@dxos/plugin-assistant';
+import { log } from '@dxos/log';
 
 // Running ollama on non-standard port
 const OLLAMA_HOST = 'http://localhost:21434';
@@ -45,17 +46,19 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
           OLLAMA_ORIGINS: '*', // CORS
         },
       });
+
+      // NOTE: Keeping those as console.log for consistent formatting.
       command.stdout.on('data', (data) => console.log('[ollama]', data.toString()));
       command.stderr.on('data', (data) => console.error('[ollama]', data.toString()));
-      command.on('close', (code) => console.log('Ollama closed with code', code));
-      command.on('error', (error) => console.error('Ollama error', error));
+      command.on('close', (code) => log.info('Ollama process exited', { code }));
+      command.on('error', (error) => log.error('Ollama error', { error }));
       const child = yield* Effect.promise(() => command.spawn());
       yield* Effect.addFinalizer(
         Effect.fn(function* () {
           yield* Effect.promise(() => child.kill());
         }),
       );
-      console.log('Running ollama with pid', child.pid);
+      log.info('Running ollama', { pid: child.pid });
 
       return {
         endpoint: OLLAMA_HOST,

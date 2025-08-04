@@ -20,6 +20,7 @@ import { AssistantActivationEvents, AssistantCapabilities } from './defs';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
+import { log } from '@dxos/log';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -142,7 +143,7 @@ export const AssistantPlugin = () =>
       activatesOn: AssistantActivationEvents.AiServiceProvidersReady,
       activate: (context) => {
         const aiModelResolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
-        console.log('aiModelResolvers', aiModelResolvers);
+        log.info('Creating AIService', { aiModelResolvers });
 
         // TODO(dmaretskyi): Extract function to reduce them.
         const combinedLayer = aiModelResolvers.reduce(
