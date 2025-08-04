@@ -17,7 +17,6 @@ import React, {
   type MutableRefObject,
   type PropsWithChildren,
   type ReactNode,
-  forwardRef,
   useEffect,
   useRef,
   useState,
@@ -25,7 +24,13 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { Icon, ListItem as NaturalListItem, type ThemedClassName } from '@dxos/react-ui';
+import {
+  IconButton,
+  type IconButtonProps,
+  ListItem as NaturalListItem,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useListContext } from './ListRoot';
@@ -186,18 +191,6 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
 // List item components
 //
 
-export type IconButtonProps = ThemedClassName<ComponentProps<'button'>> & { icon: string };
-
-export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ classNames, icon, ...props }, forwardedRef) => {
-    return (
-      <button ref={forwardedRef} className={mx('flex items-center justify-center', classNames)} {...props}>
-        <Icon icon={icon} classNames='cursor-pointer' size={4} />
-      </button>
-    );
-  },
-);
-
 export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
@@ -219,18 +212,36 @@ export const ListItemDeleteButton = ({
 
 export const ListItemButton = ({
   autoHide = true,
+  iconOnly = true,
+  variant = 'ghost',
   classNames,
   disabled,
   ...props
 }: IconButtonProps & { autoHide?: boolean }) => {
   const { state } = useListContext('ITEM_BUTTON');
   const isDisabled = state.type !== 'idle' || disabled;
-  return <IconButton disabled={isDisabled} classNames={[classNames, autoHide && disabled && 'hidden']} {...props} />;
+  return (
+    <IconButton
+      iconOnly={iconOnly}
+      variant={variant}
+      disabled={isDisabled}
+      {...props}
+      classNames={[classNames, autoHide && disabled && 'hidden']}
+    />
+  );
 };
 
 export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled'>) => {
   const { dragHandleRef } = useListItemContext('DRAG_HANDLE');
-  return <IconButton ref={dragHandleRef as any} icon='ph--dots-six-vertical--regular' disabled={disabled} />;
+  const { t } = useTranslation('os');
+  return (
+    <IconButton
+      label={t('drag handle label')}
+      ref={dragHandleRef as any}
+      icon='ph--dots-six-vertical--regular'
+      disabled={disabled}
+    />
+  );
 };
 
 export const ListItemDragPreview = <T extends ListItemRecord>({
