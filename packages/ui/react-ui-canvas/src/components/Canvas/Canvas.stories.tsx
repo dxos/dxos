@@ -9,11 +9,12 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Canvas } from './Canvas';
 import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
+
+import { Canvas } from './Canvas';
 
 const size = 128;
 

@@ -7,7 +7,7 @@
 
 import { Schema } from 'effect';
 
-import { DEFAULT_EDGE_MODEL, AiService } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';

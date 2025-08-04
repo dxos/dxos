@@ -7,21 +7,21 @@ import { EditorState, type StateCommand } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
 import {
+  type Formatting,
+  Inline,
+  List,
   addBlockquote,
   addCodeblock,
   addLink,
   addList,
   addStyle,
   getFormatting,
-  removeStyle,
-  removeLink,
-  removeList,
   removeBlockquote,
   removeCodeblock,
+  removeLink,
+  removeList,
+  removeStyle,
   setHeading,
-  Inline,
-  List,
-  type Formatting,
 } from './formatting';
 
 export const emptyFormatting: Formatting = {

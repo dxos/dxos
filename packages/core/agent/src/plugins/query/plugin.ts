@@ -3,7 +3,7 @@
 //
 
 import { type AnyLiveObject } from '@dxos/client/echo';
-import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
+import { type Any, type WithTypeUrl } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';

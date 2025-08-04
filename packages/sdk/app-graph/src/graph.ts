@@ -3,15 +3,15 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe, Record } from 'effect';
+import { Option, Record, pipe } from 'effect';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { isNonNullable, type MakeOptional } from '@dxos/util';
+import { type MakeOptional, isNonNullable } from '@dxos/util';
 
-import { type NodeArg, type Node, type Relation, type Action, type ActionGroup } from './node';
+import { type Action, type ActionGroup, type Node, type NodeArg, type Relation } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };

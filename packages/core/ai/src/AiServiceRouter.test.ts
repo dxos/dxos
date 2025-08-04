@@ -3,7 +3,7 @@
 //
 
 import { AiLanguageModel } from '@effect/ai';
-import { AnthropicLanguageModel, AnthropicClient } from '@effect/ai-anthropic';
+import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';

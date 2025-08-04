@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, type Extension, RangeSet, type Range } from '@codemirror/state';
+import { Annotation, type Extension, type Range, RangeSet } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
@@ -16,7 +16,7 @@ import {
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 
-import { singleValueFacet, Cursor, type CursorConverter } from '../../util';
+import { Cursor, type CursorConverter, singleValueFacet } from '../../util';
 
 export interface AwarenessProvider {
   remoteStateChange: Event<void>;

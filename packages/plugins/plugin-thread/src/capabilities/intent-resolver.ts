@@ -4,19 +4,20 @@
 
 import { Effect } from 'effect';
 
-import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
+import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { ThreadCapabilities } from './capabilities';
 import { THREAD_PLUGIN } from '../meta';
 import { ChannelType, ThreadAction, ThreadType } from '../types';
+
+import { ThreadCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

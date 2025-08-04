@@ -8,10 +8,11 @@ import { asyncTimeout } from '@dxos/async';
 import { type Space, SpaceMember, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './keys';
-import { table, type TableOptions } from './table';
 import { SPACE_WAIT_TIMEOUT } from '../defaults';
 import { SpaceTimeoutError } from '../errors';
+
+import { maybeTruncateKey } from './keys';
+import { type TableOptions, table } from './table';
 
 export const selectSpace = async (spaces: Space[]) => {
   // TODO(burdon): https://esbuild.github.io/content-types/#direct-eval

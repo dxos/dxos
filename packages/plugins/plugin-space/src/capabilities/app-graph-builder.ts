@@ -3,23 +3,24 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Array, Option, pipe, Schema } from 'effect';
+import { Array, Option, Schema, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
-import { getSpace, SpaceState, type Space, isSpace, type QueryResult } from '@dxos/client/echo';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension, rxFromObservable, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { SpaceCapabilities } from './capabilities';
 import { getActiveSpace } from '../hooks';
 import { SPACE_PLUGIN } from '../meta';
 import { SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
 import {
+  SHARED,
+  SPACES,
   constructObjectActions,
   constructSpaceActions,
   constructSpaceNode,
@@ -27,9 +28,9 @@ import {
   createStaticSchemaActions,
   createStaticSchemaNode,
   rxFromQuery,
-  SHARED,
-  SPACES,
 } from '../util';
+
+import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   // TODO(wittjosiah): Make reactive.
@@ -611,7 +612,13 @@ export default (context: PluginContext) => {
                 query = space.db.query(Filter.type(DataType.View));
               }
 
-              let deletable = !isSchema;
+              let deletable =
+                !isSchema &&
+                // Don't allow the Records smart collection to be deleted.
+                !(
+                  Obj.instanceOf(DataType.QueryCollection, object) &&
+                  object.query.typename === DataType.StoredSchema.typename
+                );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(

@@ -14,6 +14,7 @@ import { Testing } from '@dxos/schema/testing';
 
 import { search } from '../search';
 import { type SearchResult } from '../types';
+
 import { getStringProperty } from './sync';
 
 export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {

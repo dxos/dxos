@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import isEqual from 'lodash.isequal';
 
 import { type Client } from '@dxos/client';
 import { Filter, Serializer, normalizeSerializedObjectData } from '@dxos/echo-db';

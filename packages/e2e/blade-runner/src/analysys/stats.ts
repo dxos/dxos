@@ -7,9 +7,10 @@ import { mean, std } from 'mathjs';
 import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
-import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
 import { type ReplicantsSummary, type TestParams } from '../plan';
 import { type SignalTestSpec } from '../spec';
+
+import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
 
 export const mapToJson = (m: Map<string, any>) => {
   return Object.fromEntries(

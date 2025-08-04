@@ -10,16 +10,16 @@ import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui'
 import { meta } from '../../meta';
 
 export type ChatOptionsMenuProps = {
-  blueprintRegistry?: Blueprint.Registry;
   blueprints?: Blueprint.Blueprint[];
+  active?: string[];
   onChange?: (key: string, active: boolean) => void;
 };
 
-export const ChatOptionsMenu = ({ blueprintRegistry, blueprints, onChange }: ChatOptionsMenuProps) => {
+export const ChatOptionsMenu = ({ blueprints, active, onChange }: ChatOptionsMenuProps) => {
   const { t } = useTranslation(meta.id);
   const blueprintOptions = useMemo(
-    () => blueprintRegistry?.query().map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
-    [blueprintRegistry],
+    () => blueprints?.map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
+    [blueprints],
   );
 
   return (
@@ -34,7 +34,7 @@ export const ChatOptionsMenu = ({ blueprintRegistry, blueprints, onChange }: Cha
               <DropdownMenu.Item key={option.key}>
                 <Input.Root>
                   <Input.Checkbox
-                    checked={!!blueprints?.find((blueprint) => blueprint.key === option.key)}
+                    checked={!!active?.includes(option.key)}
                     onCheckedChange={(checked) => onChange?.(option.key, !!checked)}
                   />
                   {/* TODO(burdon): Remove need for custom margin. */}

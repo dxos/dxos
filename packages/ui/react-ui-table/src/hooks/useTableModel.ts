@@ -13,7 +13,7 @@ import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { type TableRow, TableModel, type TableModelProps, type TableRowAction } from '../model';
+import { TableModel, type TableModelProps, type TableRow, type TableRowAction } from '../model';
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   view?: DataType.View;

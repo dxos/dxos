@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Prec, type Extension } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { isNonNullable } from '@dxos/util';
 
 import { closeEffect, commandKeyBindings } from './action';
-import { hint, type HintOptions } from './hint';
-import { commandConfig, commandState, type PopupOptions } from './state';
+import { type HintOptions, hint } from './hint';
+import { type PopupOptions, commandConfig, commandState } from './state';
 
 // TODO(burdon): Create knowledge base for CM notes and ideas.
 // https://discuss.codemirror.net/t/inline-code-hints-like-vscode/5533/4

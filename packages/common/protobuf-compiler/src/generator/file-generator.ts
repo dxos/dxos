@@ -3,16 +3,18 @@
 //
 
 import { dirname, join } from 'path';
+
 import type pb from 'protobufjs';
 import * as ts from 'typescript';
+
+import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
+import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
+import { type SubstitutionsMap } from '../parser';
 
 import { type GeneratorContext } from './context';
 import { createDeclarations, createTypeDictionary } from './declaration-generator';
 import { createSerializerDefinition } from './serializer-definition-generator';
 import { createServicesDictionary } from './service';
-import { CODEC_MODULE, ModuleSpecifier } from '../module-specifier';
-import { getSafeNamespaceIdentifier, parseFullyQualifiedName } from '../namespaces';
-import { type SubstitutionsMap } from '../parser';
 
 const f = ts.factory;
 

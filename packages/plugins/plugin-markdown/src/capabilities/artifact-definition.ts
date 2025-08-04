@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { createArtifactElement, ArtifactId } from '@dxos/assistant';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { DocumentType, MarkdownAction } from '../types';
+import { Markdown, MarkdownAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -26,14 +26,14 @@ declare global {
 
 export default () => {
   const definition = defineArtifact({
-    id: `artifact:${meta.id}`,
+    id: `artifact:${meta.id}`, // TODO(burdon): meta.id/artifact?
     name: meta.name,
     instructions: `
       - The markdown plugin allows you to work with text documents in the current space.
       - Use these tools to interact with documents, including listing available documents and retrieving their content.
       - Documents are stored in Markdown format.
     `,
-    schema: DocumentType,
+    schema: Markdown.Document,
     tools: [
       createTool(meta.id, {
         name: 'create',
@@ -76,9 +76,9 @@ export default () => {
         execute: async (_input, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const space = extensions.space;
-          const { objects: documents } = await space.db.query(Filter.type(DocumentType)).run();
+          const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
           const documentInfo = documents.map((doc) => {
-            invariant(Obj.instanceOf(DocumentType, doc));
+            invariant(Obj.instanceOf(Markdown.Document, doc));
             return {
               id: fullyQualifiedId(doc),
               name: doc.name || doc.fallbackName || 'Unnamed Document',
@@ -99,7 +99,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
-          assertArgument(Obj.instanceOf(DocumentType, document), 'Invalid type');
+          assertArgument(Obj.instanceOf(Markdown.Document, document), 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

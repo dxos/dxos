@@ -25,8 +25,8 @@ export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Schema.optional(
     Schema.String.annotations({
-      [TypenameAnnotationId]: ['limited-static', 'dynamic'],
-      title: 'Select card schema (leave empty to start fresh)',
+      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+      title: 'Select card record type (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: Schema.optional(

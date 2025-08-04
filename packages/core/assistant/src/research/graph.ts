@@ -3,27 +3,27 @@
 //
 
 import { AiTool, AiToolkit } from '@effect/ai';
-import { Context, Effect, identity, Option, Schema, SchemaAST } from 'effect';
+import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
 
 import type { Obj, Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
-  create,
+  type BaseObject,
   EntityKind,
-  getEntityKind,
-  getSchemaDXN,
-  getSchemaTypename,
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
   ObjectId,
   ReferenceAnnotationId,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  type BaseObject,
+  create,
+  getEntityKind,
+  getSchemaDXN,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
@@ -134,7 +134,7 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
 /**
  * Attached as an annotation to the writer tool.
  */
-class GraphWriterSchema extends Context.Tag('GraphWriterSchema')<
+class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')<
   GraphWriterSchema,
   { schema: Schema.Schema.AnyNoContext[] }
 >() {}

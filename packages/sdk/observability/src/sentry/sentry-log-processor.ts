@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
+import type { Breadcrumb, Event, SeverityLevel } from '@sentry/types';
 
 import { InvariantViolation } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
-import { withScope, captureException, captureMessage } from './node';
+import { captureException, captureMessage, withScope } from './node';
 
 const MAX_LOG_BREADCRUMBS = 150;
 

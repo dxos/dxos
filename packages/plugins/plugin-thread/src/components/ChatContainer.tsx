@@ -5,7 +5,7 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -21,12 +21,13 @@ import {
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { MessageContainer } from './MessageContainer';
-import { command } from './command-extension';
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
+
+import { command } from './command-extension';
+import { MessageContainer } from './MessageContainer';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(meta.id);

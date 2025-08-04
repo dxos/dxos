@@ -6,7 +6,7 @@ import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useCredentials } from '@dxos/react-client/halo';
-import { Icon, IconButton, List, ListItem, useTranslation, Message } from '@dxos/react-ui';
+import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 

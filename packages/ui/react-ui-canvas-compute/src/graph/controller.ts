@@ -8,11 +8,9 @@ import { type ImageContentBlock } from '@dxos/ai';
 import { Event, synchronized } from '@dxos/async';
 import {
   type ComputeEdge,
-  type ComputeEvent,
   type ComputeGraphModel,
   type ComputeMeta,
   type ComputeNode,
-  type EventLogger,
   type GptInput,
   type GptOutput,
   type GraphDiagnostic,
@@ -21,13 +19,15 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
+import { type ComputeEventLogger, type ComputeEventPayload } from '@dxos/functions';
 import { type ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type CanvasGraphModel } from '@dxos/react-ui-canvas-editor';
 
-import { resolveComputeNode } from './node-defs';
 import { createComputeGraph } from '../hooks';
 import { type ComputeShape } from '../shapes';
+
+import { resolveComputeNode } from './node-defs';
 
 // TODO(burdon): API package for conductor.
 export const InvalidStateError = Error;
@@ -110,7 +110,7 @@ export class ComputeGraphController extends Resource {
   /** Computed result. */
   public readonly output = new Event<ComputeOutputEvent>();
 
-  public readonly events = new Event<ComputeEvent>();
+  public readonly events = new Event<ComputeEventPayload>();
 
   constructor(
     private readonly _serviceContainer: ServiceContainer,
@@ -322,7 +322,7 @@ export class ComputeGraphController extends Resource {
     this.update.emit();
   }
 
-  private _createLogger(): Context.Tag.Service<EventLogger> {
+  private _createLogger(): Context.Tag.Service<ComputeEventLogger> {
     return {
       log: (event) => {
         this._handleEvent(event);
@@ -331,7 +331,7 @@ export class ComputeGraphController extends Resource {
     };
   }
 
-  private _handleEvent(event: ComputeEvent): void {
+  private _handleEvent(event: ComputeEventPayload): void {
     log('handleEvent', { event });
     switch (event.type) {
       case 'compute-input': {

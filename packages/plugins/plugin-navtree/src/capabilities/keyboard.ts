@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities as AppCapabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities as AppCapabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
-import { isAction, type Node } from '@dxos/plugin-graph';
+import { type Node, isAction } from '@dxos/plugin-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import { KEY_BINDING } from '../meta';

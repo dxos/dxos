@@ -4,13 +4,14 @@
 
 import { Option, Schema } from 'effect';
 
-import { getField, type JsonPath } from '@dxos/effect';
+import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SchemaId } from './model';
 import { LabelAnnotation } from '../ast';
+
+import { type InternalObjectProps, SchemaId } from './model';
 
 //
 // Accessors based on model.
@@ -92,4 +93,15 @@ export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.
   }
 
   return undefined;
+};
+
+/**
+ * Sets the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+  const annotation = LabelAnnotation.get(schema).pipe(
+    Option.map((field) => field[0]),
+    Option.getOrElse(() => 'name'),
+  );
+  object[annotation] = label;
 };

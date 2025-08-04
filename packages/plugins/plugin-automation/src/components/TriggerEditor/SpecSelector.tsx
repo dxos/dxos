@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type FunctionTriggerType, TriggerKind, type TriggerType } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
-import { SelectInput, type InputProps, useInputProps } from '@dxos/react-ui-form';
+import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../../meta';
 

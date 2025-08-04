@@ -2,9 +2,10 @@
 // Copyright 2021 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import yaml from 'js-yaml';
 
 import { log } from '@dxos/log';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';

@@ -19,8 +19,8 @@ import { schema } from '@dxos/protocols/proto';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
-  type AdmissionResponse,
   type AdmissionRequest,
+  type AdmissionResponse,
   type SpaceAdmissionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 

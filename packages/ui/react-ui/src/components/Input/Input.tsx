@@ -5,31 +5,31 @@
 import { type IconWeight } from '@phosphor-icons/react';
 import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, forwardRef, type ForwardRefExoticComponent, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef, useCallback } from 'react';
 
 import {
-  InputRoot,
-  type InputRootProps,
-  PinInput as PinInputPrimitive,
-  type PinInputProps as PinInputPrimitiveProps,
-  TextInput as TextInputPrimitive,
-  type TextInputProps as TextInputPrimitiveProps,
-  TextArea as TextAreaPrimitive,
-  type TextAreaProps as TextAreaPrimitiveProps,
-  useInputContext,
-  INPUT_NAME,
-  type InputScopedProps,
-  Description as DescriptionPrimitive,
   DescriptionAndValidation as DescriptionAndValidationPrimitive,
   type DescriptionAndValidationProps as DescriptionAndValidationPrimitiveProps,
+  Description as DescriptionPrimitive,
   type DescriptionProps as DescriptionPrimitiveProps,
+  INPUT_NAME,
+  InputRoot,
+  type InputRootProps,
+  type InputScopedProps,
   Label as LabelPrimitive,
   type LabelProps as LabelPrimitiveProps,
+  PinInput as PinInputPrimitive,
+  type PinInputProps as PinInputPrimitiveProps,
+  TextArea as TextAreaPrimitive,
+  type TextAreaProps as TextAreaPrimitiveProps,
+  TextInput as TextInputPrimitive,
+  type TextInputProps as TextInputPrimitiveProps,
   Validation as ValidationPrimitive,
   type ValidationProps as ValidationPrimitiveProps,
+  useInputContext,
 } from '@dxos/react-input';
 import { mx } from '@dxos/react-ui-theme';
-import { type Density, type Elevation, type ClassNameValue, type Size } from '@dxos/react-ui-types';
+import { type ClassNameValue, type Density, type Elevation, type Size } from '@dxos/react-ui-types';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

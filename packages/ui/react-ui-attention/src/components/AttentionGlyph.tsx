@@ -3,7 +3,7 @@
 //
 
 import { type Primitive } from '@radix-ui/react-primitive';
-import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
+import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef, useMemo } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

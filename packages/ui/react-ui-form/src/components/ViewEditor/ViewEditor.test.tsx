@@ -3,15 +3,16 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { EchoSchema, isInstanceOf } from '@dxos/echo-schema';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 

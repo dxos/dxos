@@ -6,29 +6,31 @@ import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from 
 import { Effect } from 'effect';
 
 import {
-  type ToolExecutionService,
-  type ToolResolverService,
   type AiInputPreprocessingError,
   type AiToolNotFoundError,
+  type ToolExecutionService,
+  type ToolResolverService,
 } from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { ContextBinder, type ContextBinding } from '../context';
-import type { AiAssistantError } from '../errors';
+import { type AiAssistantError } from '../errors';
 import { AiSession } from '../session';
 
-export interface ConversationRunOptions<Tools extends AiTool.Any> {
+import { AiContextBinder, type ContextBinding } from './context';
+
+export interface AiConversationRunOptions<Tools extends AiTool.Any> {
+  session?: AiSession;
   systemPrompt?: string;
   prompt: string;
-
   toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
-export type ConversationOptions = {
+export type AiConversationOptions = {
   queue: Queue<DataType.Message | ContextBinding>;
 };
 
@@ -37,23 +39,25 @@ export type ConversationOptions = {
  * Context + history + artifacts.
  * Backed by a Queue.
  */
-export class Conversation {
+export class AiConversation {
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
+   *
+   * @deprecated Pass in a session instead.
    */
   public readonly onBegin = new Event<AiSession>();
 
   /**
    * Blueprints bound to the conversation.
    */
-  public readonly context: ContextBinder;
+  public readonly context: AiContextBinder;
 
-  constructor(options: ConversationOptions) {
+  constructor(options: AiConversationOptions) {
     this._queue = options.queue;
-    this.context = new ContextBinder(this._queue);
+    this.context = new AiContextBinder(this._queue);
   }
 
   async getHistory(): Promise<DataType.Message[]> {
@@ -61,36 +65,48 @@ export class Conversation {
     return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
 
-  run = <Tools extends AiTool.Any>(
-    options: ConversationRunOptions<Tools>,
-  ): Effect.Effect<
+  /**
+   * Executes a prompt.
+   * Each invocation creates a new `AiSession`, which handles potential tool calls.
+   */
+  run = <Tools extends AiTool.Any>({
+    session = new AiSession(),
+    ...options
+  }: AiConversationRunOptions<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      const session = new AiSession();
-      this.onBegin.emit(session);
-
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadRef);
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
+      const systemPrompt = [options.systemPrompt, ...objects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`)]
+        .filter(Boolean)
+        .join('\n');
 
-      const contextObjects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadRef);
+      log.info('run', {
+        history,
+        context,
+        systemPrompt,
+        prompt: options.prompt,
+        toolkit: options.toolkit,
+      });
 
-      const systemPrompt =
-        (options.systemPrompt ?? '') +
-        '\n\n' +
-        contextObjects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`).join('\n');
+      const start = Date.now();
+      this.onBegin.emit(session);
 
       const messages = yield* session.run({
-        prompt: options.prompt,
+        blueprints,
+        toolkit: options.toolkit,
         history,
         systemPrompt,
-        toolkit: options.toolkit,
-        blueprints,
+        prompt: options.prompt,
       });
+
+      log.info('result', { messages: messages, duration: Date.now() - start });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('Conversation.run'));
+    }).pipe(Effect.withSpan('AiConversation.run'));
 }

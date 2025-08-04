@@ -5,9 +5,10 @@
 import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
+import type { Live } from '../live';
+
 import { ReactiveArray } from './array';
 import { type ReactiveHandler } from './types';
-import type { Live } from '../live';
 
 export const symbolIsProxy = Symbol.for('@dxos/schema/Proxy');
 

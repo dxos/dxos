@@ -4,9 +4,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { resolve } from 'node:path';
+
 import { ArgumentParser } from 'argparse';
 import glob from 'glob';
-import { resolve } from 'node:path';
 import readPkg from 'read-pkg';
 
 import { preconfigureProtobufjs } from './configure';

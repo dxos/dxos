@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { chain, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
-  createAdmissionKeypair,
   type DataSpace,
+  InvitationsManager,
   InvitationsServiceImpl,
   type ServiceContext,
-  InvitationsManager,
+  createAdmissionKeypair,
 } from '@dxos/client-services';
 import {
   type PerformInvitationParams,
@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';

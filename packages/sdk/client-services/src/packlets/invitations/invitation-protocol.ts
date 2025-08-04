@@ -5,7 +5,7 @@
 import { type PublicKey } from '@dxos/keys';
 import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import type { ProfileDocument, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { DeviceProfileDocument, ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type {
   AdmissionRequest,
   AdmissionResponse,

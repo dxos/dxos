@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useRef, useState, useEffect, useCallback, type RefObject } from 'react';
+import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';

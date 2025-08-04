@@ -5,13 +5,14 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
-import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
-import { type ToolbarState } from './useToolbarState';
 import { SHEET_PLUGIN } from '../../meta';
 import { type SheetModel } from '../../model';
-import { type AlignKey, alignKey, type AlignValue, rangeFromIndex, rangeToIndex } from '../../types';
+import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '../../types';
 import { useSheetContext } from '../SheetContext';
+
+import { type ToolbarState } from './useToolbarState';
 
 export type AlignAction = { key: AlignKey; value: AlignValue };
 

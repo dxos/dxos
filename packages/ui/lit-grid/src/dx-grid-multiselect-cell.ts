@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { html, LitElement } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 export type DxGridSelectValue = {

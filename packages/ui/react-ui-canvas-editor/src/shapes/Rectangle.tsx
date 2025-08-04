@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DefaultFrameComponent } from './Default';
-import { defaultAnchors, createAnchorMap } from '../components';
+import { createAnchorMap, defaultAnchors } from '../components';
 import { type ShapeDef } from '../components';
 import { type RectangleShape } from '../types';
+
+import { DefaultFrameComponent } from './Default';
 
 export type CreateRectangleProps = Omit<RectangleShape, 'type'>;
 

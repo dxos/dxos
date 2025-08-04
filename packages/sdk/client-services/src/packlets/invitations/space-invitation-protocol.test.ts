@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { chain, Trigger } from '@dxos/async';
+import { Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

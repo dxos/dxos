@@ -8,7 +8,7 @@ import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { MessageSchema, TextMessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema, TextMessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from '../defs';
 import { WebSocketMuxer } from '../edge-ws-muxer';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 // s
 
-import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@automerge/automerge-repo';
+import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
 import { LifecycleState, Resource } from '@dxos/context';

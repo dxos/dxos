@@ -8,12 +8,12 @@ import React, { useMemo } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
+  EditorView,
   createBasicExtensions,
   createThemeExtensions,
   editorMonospace,
-  useTextEditor,
-  EditorView,
   folding,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 
 import { themeEditorId } from '../defs';

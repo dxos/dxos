@@ -9,7 +9,7 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { LLM_PROVIDERS, type Assistant } from '../../types';
+import { type Assistant, LLM_PROVIDERS } from '../../types';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';

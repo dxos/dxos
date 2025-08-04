@@ -4,7 +4,7 @@
 
 import { setAutoFreeze } from 'immer';
 
-import { allOf, Capabilities, contributes, defineModule, definePlugin, Events, oneOf } from '@dxos/app-framework';
+import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import {

@@ -6,19 +6,20 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { Format, type EchoSchema, toJsonSchema, TypedObject } from '@dxos/echo-schema';
+import { type EchoSchema, Format, TypedObject, toJsonSchema } from '@dxos/echo-schema';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType, ProjectionModel, createView } from '@dxos/schema';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+
+import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {

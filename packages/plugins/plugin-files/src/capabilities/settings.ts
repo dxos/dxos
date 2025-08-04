@@ -6,7 +6,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { FilesSettingsSchema, type FilesSettingsProps } from '../types';
+import { type FilesSettingsProps, FilesSettingsSchema } from '../types';
 
 export default async () => {
   const settings = live<FilesSettingsProps>({

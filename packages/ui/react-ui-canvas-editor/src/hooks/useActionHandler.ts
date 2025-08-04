@@ -6,16 +6,17 @@ import { useEffect } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomTo, zoomInPlace } from '@dxos/react-ui-canvas';
+import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomInPlace, zoomTo } from '@dxos/react-ui-canvas';
 import { isNotFalsy } from '@dxos/util';
 
-import { useEditorContext } from './useEditorContext';
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
-import { doLayout, getCenter, getRect, rectUnion, fireBullet } from '../layout';
+import { doLayout, fireBullet, getCenter, getRect, rectUnion } from '../layout';
 import { createRectangle } from '../shapes';
 import { createId, itemSize } from '../testing';
 import { type Connection, isPolygon } from '../types';
+
+import { useEditorContext } from './useEditorContext';
 
 // TODO(burdon): Handle multiple actions.
 export const useActionHandler = () => {

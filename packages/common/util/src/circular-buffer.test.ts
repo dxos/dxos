@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
 import { CircularBuffer } from './circular-buffer';
 

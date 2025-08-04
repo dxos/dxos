@@ -4,7 +4,7 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { Input as UiInput, type TextInputProps } from '@dxos/react-ui';
+import { type TextInputProps, Input as UiInput } from '@dxos/react-ui';
 
 export type LargeInputProps = TextInputProps & {
   validationMessage?: string;

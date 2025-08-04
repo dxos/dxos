@@ -14,10 +14,10 @@ import {
 
 import { Obj } from '@dxos/echo';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { useSpace, useQuery, Filter, Query } from '@dxos/react-client/echo';
+import { Filter, Query, useQuery, useSpace } from '@dxos/react-client/echo';
 
-import { TaskList } from './TaskList';
 import { getConfig } from './config';
+import { TaskList } from './TaskList';
 import { Task } from './types';
 
 export const TaskListContainer = () => {

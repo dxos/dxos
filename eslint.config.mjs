@@ -1,20 +1,22 @@
 // @ts-check
 
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import sortImports from '@trivago/prettier-plugin-sort-imports';
 import reactPlugin from 'eslint-plugin-react';
-import storybook from 'eslint-plugin-storybook';
-import dxos from '@dxos/eslint-plugin-rules';
-import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
-import unusedImports from 'eslint-plugin-unused-imports';
-import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import importX from 'eslint-plugin-import-x';
+import arrowFunctions from 'eslint-plugin-prefer-arrow-functions';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import storybook from 'eslint-plugin-storybook';
+import unusedImports from 'eslint-plugin-unused-imports';
+import tseslint from 'typescript-eslint';
+
+import dxos from '@dxos/eslint-plugin-rules';
 
 const SOURCES_GLOB = '**/{src,config,.storybook}/**';
 
 export default tseslint.config(
   //
-  // Global ignores.
+  // Global ignores
   //
   {
     // WARNING: Do not add extra keys to this config object
@@ -59,16 +61,16 @@ export default tseslint.config(
       '**/bin',
       '**/scripts',
       '**/vendor',
-      'packages/common/esbuild-plugins/polyfills',
-      'packages/core/mesh/signal/testing/setup.js',
-      'tools/esbuild/cli.js',
-      'packages/sdk/shell/react-i18next.d.ts',
-      'packages/core/mesh/network-manager/module-stub.mjs',
-      'packages/ui/react-ui-geo/data',
       'packages/apps/composer-app/src/functions/_worker.ts',
+      'packages/common/esbuild-plugins/polyfills',
       'packages/common/node-std',
+      'packages/core/mesh/signal/testing/setup.js',
+      'packages/core/mesh/network-manager/module-stub.mjs',
       'packages/sdk/config/src/testing',
+      'packages/sdk/shell/react-i18next.d.ts',
+      'packages/ui/react-ui-geo/data',
       'tools/dx-tools',
+      'tools/esbuild/cli.js',
       'tools/storybook/.storybook/stub.mjs',
     ],
     // WARNING: Do not add extra keys to this config object
@@ -86,14 +88,15 @@ export default tseslint.config(
       },
     },
     plugins: {
-      'prefer-arrow-functions': arrowFunctions,
-      'unused-imports': unusedImports,
       'import-x': importX,
+      'prefer-arrow-functions': arrowFunctions,
+      'sort-imports': sortImports,
+      'unused-imports': unusedImports,
     },
   },
 
   //
-  // All files.
+  // All files
   //
   {
     files: [[SOURCES_GLOB, '**/*.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
@@ -103,21 +106,12 @@ export default tseslint.config(
       reactPlugin.configs.flat.recommended,
       prettierRecommended,
       dxos.configs.recommended,
-      prettierRecommended,
     ],
     rules: {
-      '@typescript-eslint/ban-types': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-extra-parens': 'off',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-namespace': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
+      // TODO(burdon): Sort rules.
       '@typescript-eslint/ban-ts-comment': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-use-before-define': 'off',
-      '@typescript-eslint/no-useless-constructor': 'error',
+      '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/consistent-type-exports': 'off', // TODO(dmaretskyi): Seems broken?
       '@typescript-eslint/consistent-type-imports': [
         'error',
         {
@@ -125,39 +119,68 @@ export default tseslint.config(
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/consistent-type-exports': 'off', // seems broken
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-empty-interface': 'off',
+      '@typescript-eslint/no-extra-parens': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-extra-semi': 'off',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/no-use-before-define': 'off',
+      '@typescript-eslint/no-useless-constructor': 'error',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
 
-      // TODO(dmaretskyi): New overrides. Need to review later.
+      // TODO(dmaretskyi): Review new rules:
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
-      '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/await-thenable': 'off',
-      '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-      '@typescript-eslint/unbound-method': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
-      '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-duplicate-type-constituents': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-for-in-array': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+
+      // General
       camelcase: 'off',
+      'jsx-quotes': ['error', 'prefer-single'],
+      'no-unused-vars': 'off',
+      'no-constant-binary-expression': 'off',
+      'no-unsafe-optional-chaining': 'off',
       'no-dupe-else-if': 'off',
       'no-empty': 'off',
+      'prefer-arrow-functions/prefer-arrow-functions': [
+        'error',
+        {
+          allowNamedFunctions: true,
+        },
+      ],
       'prefer-const': [
         'error',
         {
           destructuring: 'all',
         },
       ],
-      'jsx-quotes': ['error', 'prefer-single'],
+      'prettier/prettier': 'error',
+      'require-yield': 'off',
+
+      // React
       'react/display-name': 'off',
       'react/function-component-definition': [
         'error',
@@ -178,28 +201,8 @@ export default tseslint.config(
       ],
       'react/jsx-wrap-multilines': 'off',
       'react/prop-types': 'off',
-      'prefer-arrow-functions/prefer-arrow-functions': [
-        'error',
-        {
-          allowNamedFunctions: true,
-        },
-      ],
-      'require-yield': 'off',
-      '@typescript-eslint/only-throw-error': 'off',
-      'no-unused-vars': 'off',
-      'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': [
-        'warn',
-        {
-          vars: 'all',
-          varsIgnorePattern: '^_',
-          args: 'after-used',
-          argsIgnorePattern: '^_',
-        },
-      ],
-      'prettier/prettier': 'error',
-      'no-constant-binary-expression': 'off',
-      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+
+      // Imports
       'import-x/newline-after-import': [
         'error',
         {
@@ -211,27 +214,49 @@ export default tseslint.config(
         {
           alphabetize: {
             order: 'asc',
+            caseInsensitive: true,
           },
-          groups: [['builtin', 'external'], 'internal'],
-          'newlines-between': 'always',
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           pathGroups: [
             {
-              pattern: '@{dxos,braneframe}/**',
-              group: 'internal',
+              pattern: '#**',
+              group: 'parent',
               position: 'before',
             },
+            {
+              pattern: '@dxos/**',
+              group: 'internal',
+              position: 'after',
+            },
           ],
-          pathGroupsExcludedImportTypes: ['@{dxos,braneframe}/**'],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
         },
       ],
-      // TODO(dmaretskyi): To re-enable.
-      'no-unsafe-optional-chaining': 'off',
-      '@typescript-eslint/restrict-plus-operands': 'off',
+      'sort-imports': [
+        'error',
+        {
+          ignoreCase: false,
+          ignoreDeclarationSort: true,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+        },
+      ],
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 
   //
-  // Tests.
+  // Tests
   //
   {
     files: [[SOURCES_GLOB, '**/*.{test,stories,blueprint-test}.{js,ts,jsx,tsx,mts,cts,mjs,cjs}']],
@@ -241,11 +266,11 @@ export default tseslint.config(
   },
 
   //
-  // Stories.
+  // Storybook
   //
   {
-    files: [[SOURCES_GLOB, '**/*.stories.{tsx,jsx}']],
     extends: [storybook.configs['flat/recommended']],
+    files: [[SOURCES_GLOB, '**/*.stories.{tsx,jsx}']],
     rules: {
       'storybook/context-in-play-function': 'off',
     },

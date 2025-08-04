@@ -4,14 +4,14 @@
 
 import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
-  AuthenticatingInvitation,
   AUTHENTICATION_CODE_LENGTH,
+  AuthenticatingInvitation,
   CancellableInvitation,
   INVITATION_TIMEOUT,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { generatePasscode } from '@dxos/credentials';
-import { hasInvitationExpired, type MetadataStore } from '@dxos/echo-pipeline';
+import { type MetadataStore, hasInvitationExpired } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -23,7 +23,7 @@ import {
 import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { InvitationProtocol } from './invitation-protocol';
-import { createAdmissionKeypair, type InvitationsHandler } from './invitations-handler';
+import { type InvitationsHandler, createAdmissionKeypair } from './invitations-handler';
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and

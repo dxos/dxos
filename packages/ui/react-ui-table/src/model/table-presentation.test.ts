@@ -3,7 +3,7 @@
 //
 
 import { Schema } from 'effect';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
@@ -11,9 +11,10 @@ import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView } from '@dxos/schema';
 
+import { TableView } from '../types';
+
 import { TableModel, type TableModelProps } from './table-model';
 import { TablePresentation } from './table-presentation';
-import { TableView } from '../types';
 
 describe('TablePresentation', () => {
   describe('row reactivity', () => {

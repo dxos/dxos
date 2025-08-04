@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, Option } from 'effect';
+import { Option, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { invariant } from '@dxos/invariant';

@@ -5,7 +5,7 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren } from 'react';
 
-import { ResizeHandle, resizeAttributes, sizeStyle, type Size } from '@dxos/react-ui-dnd';
+import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
 // Default size in rem
 const DEFAULT_SIZE = 24;

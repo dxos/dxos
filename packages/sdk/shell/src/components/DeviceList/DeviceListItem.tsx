@@ -5,18 +5,18 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { Device, DeviceType, DeviceKind } from '@dxos/react-client/halo';
+import { Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import {
-  ListItem,
   Avatar,
-  useId,
-  type ThemedClassName,
-  Tag,
-  useTranslation,
-  DropdownMenu,
   Button,
+  DropdownMenu,
   Icon,
+  ListItem,
+  Tag,
+  type ThemedClassName,
+  useId,
+  useTranslation,
 } from '@dxos/react-ui';
 import { keyToFallback } from '@dxos/util';
 

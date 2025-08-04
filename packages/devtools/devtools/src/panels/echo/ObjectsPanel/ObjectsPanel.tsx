@@ -6,7 +6,7 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
-import { checkoutVersion, Filter, getEditHistory, Query, type AnyLiveObject } from '@dxos/echo-db';
+import { type AnyLiveObject, Filter, Query, checkoutVersion, getEditHistory } from '@dxos/echo-db';
 import {
   FormatEnum,
   getObjectDXN,
@@ -16,7 +16,7 @@ import {
   getTypename,
   isDeleted,
 } from '@dxos/echo-schema';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
@@ -24,7 +24,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -193,7 +192,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
+      <div className='bs-full grid grid-cols-[4fr_3fr] overflow-hidden'>
         <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}

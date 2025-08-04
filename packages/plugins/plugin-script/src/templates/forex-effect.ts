@@ -5,9 +5,9 @@
 // @ts-ignore
 import { S, defineFunction } from 'dxos:functions';
 import {
+  FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  FetchHttpClient,
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 // @ts-ignore

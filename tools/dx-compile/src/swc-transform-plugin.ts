@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { readFile } from 'fs/promises';
+
 import * as Swc from '@swc/core';
 import { type Plugin } from 'esbuild';
-import { readFile } from 'fs/promises';
 
 /**
  * Factory so that plugins can share the transform cache.

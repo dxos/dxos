@@ -7,9 +7,9 @@ import { type Signal } from '@preact/signals-react';
 import { useMemo } from 'react';
 
 import {
+  type MenuAction,
   createMenuAction,
   createMenuItemGroup,
-  type MenuAction,
   rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';

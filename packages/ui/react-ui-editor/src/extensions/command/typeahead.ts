@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, Prec, RangeSetBuilder, type Extension } from '@codemirror/state';
+import { EditorSelection, type Extension, Prec, RangeSetBuilder } from '@codemirror/state';
 import {
   type Command,
   Decoration,
   type DecorationSet,
   type EditorView,
-  keymap,
   ViewPlugin,
   type ViewUpdate,
+  keymap,
 } from '@codemirror/view';
 
 import { Hint } from './hint';

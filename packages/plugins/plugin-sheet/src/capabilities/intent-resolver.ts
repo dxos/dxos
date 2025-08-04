@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 
 import { SHEET_PLUGIN } from '../meta';
-import { createSheet, SheetAction } from '../types';
+import { SheetAction, createSheet } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [

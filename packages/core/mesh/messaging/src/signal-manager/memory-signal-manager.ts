@@ -13,8 +13,9 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { type Message, type PeerInfo, PeerInfoHash, type SignalStatus, type SwarmEvent } from '../signal-methods';
+
 import { type SignalManager } from './signal-manager';
-import { type SwarmEvent, type PeerInfo, type SignalStatus, type Message, PeerInfoHash } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.

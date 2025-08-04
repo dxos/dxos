@@ -3,7 +3,7 @@
 //
 
 import { curveNatural, line, select } from 'd3';
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';

@@ -3,16 +3,17 @@
 //
 
 import { type Schema } from 'effect';
-import React, { useRef, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Table, type TableController } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRowAction } from '../../model';
-import { getBaseSchema, makeDynamicTable, type TablePropertyDefinition } from '../../util';
+import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '../../util';
+
+import { Table, type TableController } from './Table';
 
 type DynamicTableProps = ThemedClassName<{
   name?: string; // TODO(burdon): Remove?

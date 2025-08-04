@@ -2,15 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
+import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { Trigger, synchronized } from '@dxos/async';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
+
+import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
   type EchoReplicator,
@@ -20,12 +22,11 @@ import {
   type ShouldSyncCollectionParams,
 } from './echo-replicator';
 import {
-  isCollectionQueryMessage,
-  isCollectionStateMessage,
   type CollectionQueryMessage,
   type CollectionStateMessage,
+  isCollectionQueryMessage,
+  isCollectionStateMessage,
 } from './network-protocol';
-import { createIdFromSpaceKey } from '../common/space-id';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;

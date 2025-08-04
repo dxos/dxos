@@ -8,7 +8,7 @@ import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, D
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { type GraphMonitor, type CanvasGraphModel, type Connection } from '@dxos/react-ui-canvas-editor';
+import { type CanvasGraphModel, type Connection, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
 import { isNonNullable } from '@dxos/util';
 
 import { createComputeNode, isValidComputeNode } from '../graph';

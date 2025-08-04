@@ -10,7 +10,9 @@ import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 
 import { Actor } from './actor';
 
-// TODO(dmaretskyi): Consider renaming it to Part.
+/**
+ * Messages are made of typed content blocks.
+ */
 export namespace ContentBlock {
   export const Base = Schema.Struct({
     /**
@@ -205,7 +207,7 @@ export namespace ContentBlock {
    * Multiple choice selection.
    * Usually an answer to assistant's question.
    */
-  // TODO(burdon): Rename Option/Choice.
+  // TODO(burdon): Rename Choice.
   export const Select = Schema.TaggedStruct('select', {
     options: Schema.Array(Schema.String),
 

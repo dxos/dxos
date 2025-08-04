@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { type ObjectStructure, Reference, encodeReference } from '@dxos/echo-protocol';
 
 import { IndexSchema } from './index-schema';
 

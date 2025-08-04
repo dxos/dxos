@@ -3,31 +3,32 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { Root as DialogRoot, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
+import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type Dispatch,
-  forwardRef,
+  type KeyboardEvent,
   type PropsWithChildren,
   type SetStateAction,
+  forwardRef,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type KeyboardEvent,
-  type ComponentPropsWithoutRef,
 } from 'react';
 
 import { log } from '@dxos/log';
-import { useMediaQuery, useForwardedRef } from '@dxos/react-hooks';
+import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
 
-import { useSwipeToDismiss } from './useSwipeToDismiss';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
+
+import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';

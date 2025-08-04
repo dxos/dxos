@@ -4,17 +4,18 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { VideoObject } from './VideoObject';
 import { getUserMediaTrack } from '../../calls';
 import { ResponsiveContainer } from '../ResponsiveGrid';
+
+import { VideoObject } from './VideoObject';
 
 const meta: Meta<typeof VideoObject> = {
   title: 'plugins/plugin-thread/VideoObject',

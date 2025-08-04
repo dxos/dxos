@@ -12,9 +12,10 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
-import { loadObjectReferences } from './load-object';
 import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder } from '../testing';
+
+import { loadObjectReferences } from './load-object';
 
 // TODO(dmaretskyi): Refactor to test Ref.load() instead.
 describe.skip('loadObjectReferences', () => {

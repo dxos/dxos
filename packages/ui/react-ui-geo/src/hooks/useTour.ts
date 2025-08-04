@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { geoPath, geoInterpolate, geoDistance, selection as d3Selection } from 'd3';
-import { type SetStateAction, type Dispatch, useEffect, useState, useMemo } from 'react';
+import { selection as d3Selection, geoDistance, geoInterpolate, geoPath } from 'd3';
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 import versor from 'versor';
 
 import type { GlobeController } from '../components';
-import { geoToPosition, type LatLng, positionToRotation, type StyleSet } from '../util';
+import { type LatLng, type StyleSet, geoToPosition, positionToRotation } from '../util';
 
 const TRANSITION_NAME = 'globe-tour';
 

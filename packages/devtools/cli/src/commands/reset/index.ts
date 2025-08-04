@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import fs from 'fs';
+
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
-import fs from 'fs';
 import inquirer from 'inquirer';
 
 import { DX_CACHE, DX_CONFIG, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';

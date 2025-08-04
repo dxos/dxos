@@ -3,10 +3,10 @@
 //
 
 import {
-  autocompletion,
-  pickedCompletion,
   type CompletionContext,
   type CompletionResult,
+  autocompletion,
+  pickedCompletion,
 } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';

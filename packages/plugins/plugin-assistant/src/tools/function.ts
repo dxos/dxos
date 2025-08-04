@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createTool, type ExecutableTool, ToolResult } from '@dxos/ai';
+import { type ExecutableTool, ToolResult, createTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { type FunctionType } from '@dxos/functions';

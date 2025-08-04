@@ -4,17 +4,18 @@
 
 import { Effect } from 'effect';
 
-import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { Filter, fullyQualifiedId, getSpace, parseId, Query } from '@dxos/react-client/echo';
+import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { MeetingAction, MeetingType } from '../types';
+
 import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
@@ -35,8 +36,8 @@ export default (context: PluginContext) =>
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(Obj.make(DataType.Text, { content: '' })),
-            summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            notes: Ref.make(DataType.makeText()),
+            summary: Ref.make(DataType.makeText()),
             thread: Ref.make(thread),
           });
 

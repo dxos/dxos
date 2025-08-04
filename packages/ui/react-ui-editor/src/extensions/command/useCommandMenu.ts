@@ -8,9 +8,10 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
 import { type MaybePromise } from '@dxos/util';
 
+import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from '../../components';
+
 import { commandMenu, commandRangeEffect } from './command-menu';
 import { type PlaceholderOptions } from './placeholder';
-import { getItem, getNextItem, getPreviousItem, type CommandMenuGroup, type CommandMenuItem } from '../../components';
 
 export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | undefined>;

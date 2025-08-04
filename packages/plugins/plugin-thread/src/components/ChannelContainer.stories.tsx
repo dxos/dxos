@@ -12,12 +12,13 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
-import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
+import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
-import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
+
+import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const Story = ({ roomId }: ChannelContainerProps) => {

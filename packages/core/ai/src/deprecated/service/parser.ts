@@ -9,9 +9,10 @@ import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy, safeParseJson } from '@dxos/util';
 
-import { type GenerationStream } from './service';
-import { StreamTransform, type StreamBlock } from '../../parser';
+import { type StreamBlock, StreamTransform } from '../../parser';
 import { type GenerationStreamEvent } from '../../types';
+
+import { type GenerationStream } from './service';
 
 /**
  * Parse mixed content of plain text, XML fragments, and JSON blocks.

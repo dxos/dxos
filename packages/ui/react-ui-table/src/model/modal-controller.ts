@@ -3,7 +3,7 @@
 //
 
 import { signal } from '@preact/signals-core';
-import { type RefObject, type MutableRefObject } from 'react';
+import { type MutableRefObject, type RefObject } from 'react';
 
 import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';

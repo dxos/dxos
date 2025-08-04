@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { readFileSync } from 'fs';
+import { dirname, join } from 'path';
+
 import {
   type CallExpression,
   type Expression,
@@ -10,12 +13,10 @@ import {
   type Program,
   type Span,
   type Super,
-  transformSync,
   type TsType,
+  transformSync,
 } from '@swc/core';
 import Visitor from '@swc/core/Visitor';
-import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
 import { SourceMapConsumer } from 'source-map';
 
 import { type SourcePosition } from './source-map';

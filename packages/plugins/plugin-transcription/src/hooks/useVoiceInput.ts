@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
+import { type TranscriberParams } from '../transcriber';
+
 import { useAudioTrack } from './useAudioTrack';
 import { useTranscriber } from './useTranscriber';
-import { type TranscriberParams } from '../transcriber';
 
 export type UseVoiceInputProps = {
   active?: boolean;

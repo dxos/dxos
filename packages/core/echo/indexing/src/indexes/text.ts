@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { decodeReference, isEncodedReference, ObjectStructure } from '@dxos/echo-protocol';
+import { ObjectStructure, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { visitValues } from '@dxos/util';
 
 /**

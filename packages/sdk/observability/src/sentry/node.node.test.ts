@@ -5,8 +5,9 @@
 import type { Stacktrace } from '@sentry/types';
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
-import * as Sentry from './node';
 import { sentryTestkit } from '../testing';
+
+import * as Sentry from './node';
 
 const { testkit, sentryTransport } = sentryTestkit();
 

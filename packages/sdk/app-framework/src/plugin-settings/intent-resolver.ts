@@ -4,10 +4,11 @@
 
 import { pipe } from 'effect';
 
-import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 import { Capabilities, LayoutAction } from '../common';
 import { contributes } from '../core';
-import { createResolver, createIntent, chain } from '../plugin-intent';
+import { chain, createIntent, createResolver } from '../plugin-intent';
+
+import { SETTINGS_ID, SETTINGS_KEY, SettingsAction } from './actions';
 
 export default () =>
   contributes(

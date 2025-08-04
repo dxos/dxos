@@ -9,25 +9,26 @@ import { Obj, Type } from '@dxos/echo';
 import { EchoSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
+  EchoObject,
   EntityKind,
   Format,
   FormatEnum,
+  type JsonPath,
+  type JsonProp,
   Ref,
+  RuntimeSchemaRegistry,
   TypeAnnotationId,
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
-  type JsonPath,
-  type JsonProp,
-  EchoObject,
-  RuntimeSchemaRegistry,
 } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 
-import { ProjectionModel } from './projection-model';
-import { createFieldId, createView, createViewWithReferences, type Projection } from './view';
 import { DataType } from '../common';
+
+import { ProjectionModel } from './projection-model';
+import { type Projection, createFieldId, createView, createViewWithReferences } from './view';
 
 registerSignalsRuntime();
 

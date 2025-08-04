@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, signal, type ReadonlySignal, type Signal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
 import { invariant } from '@dxos/invariant';
 

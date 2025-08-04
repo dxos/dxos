@@ -5,7 +5,7 @@
 import { TABLE_FLAGS } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';
-import { printTunnels, type TunnelRpcPeer } from '../../util';
+import { type TunnelRpcPeer, printTunnels } from '../../util';
 
 /**
  * @deprecated

@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { AnthropicClient } from '@effect/ai-anthropic';
 import { FetchHttpClient } from '@effect/platform';
 import { Config, Layer, ManagedRuntime } from 'effect';
-import { inspect } from 'node:util';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { AiService, AiServiceRouter, structuredOutputParser } from '@dxos/ai';

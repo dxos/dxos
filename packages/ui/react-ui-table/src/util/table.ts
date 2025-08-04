@@ -5,7 +5,7 @@
 import { Match } from 'effect';
 
 import { Obj } from '@dxos/echo';
-import { type JsonPath, toEffectSchema, type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
 import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace, getSchemaProperties } from '@dxos/schema';
 

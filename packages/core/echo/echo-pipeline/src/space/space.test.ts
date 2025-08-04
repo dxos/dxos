@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';

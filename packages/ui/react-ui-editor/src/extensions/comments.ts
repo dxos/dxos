@@ -5,25 +5,26 @@
 import { invertedEffects } from '@codemirror/commands';
 import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import {
-  hoverTooltip,
-  keymap,
   type Command,
   Decoration,
   EditorView,
-  type Rect,
   type PluginValue,
+  type Rect,
   ViewPlugin,
+  hoverTooltip,
+  keymap,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
-import { debounce, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
+import { type Comment, type Range, type RenderCallback } from '../types';
+import { Cursor, callbackWrapper, singleValueFacet } from '../util';
+
 import { documentId } from './selection';
-import { type RenderCallback, type Comment, type Range } from '../types';
-import { Cursor, singleValueFacet, callbackWrapper } from '../util';
 
 //
 // State management.

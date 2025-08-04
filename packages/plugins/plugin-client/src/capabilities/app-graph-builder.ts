@@ -6,13 +6,14 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { createExtension, rxFromObservable, ROOT_ID } from '@dxos/plugin-graph';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { ROOT_ID, createExtension, rxFromObservable } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
-import { ClientCapabilities } from './capabilities';
 import { CLIENT_PLUGIN } from '../meta';
 import { Account, ClientAction } from '../types';
+
+import { ClientCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(

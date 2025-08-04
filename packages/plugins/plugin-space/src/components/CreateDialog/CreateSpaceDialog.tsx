@@ -5,7 +5,7 @@
 import { Effect, type Schema } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';

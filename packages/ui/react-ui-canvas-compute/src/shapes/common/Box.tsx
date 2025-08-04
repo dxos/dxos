@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';

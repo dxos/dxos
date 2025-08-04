@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import { printDevices, TABLE_FLAGS, IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
+import { IDENTITY_WAIT_TIMEOUT, IdentityWaitTimeoutError, TABLE_FLAGS, printDevices } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';
 

@@ -3,15 +3,16 @@
 //
 
 import Redis, { type RedisOptions } from 'ioredis';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { WebSocketConnector } from './websocket-connector';
-import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { ReplicantEnvImpl } from '../env';
 import { type ReplicantParams } from '../plan';
+
+import { WebSocketConnector } from './websocket-connector';
+import { WebSocketRedisProxy } from './websocket-redis-proxy';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.

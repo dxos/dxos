@@ -3,12 +3,12 @@
 //
 
 import {
-  autocompletion,
-  completionKeymap,
-  type CompletionSource,
   type Completion,
   type CompletionContext,
   type CompletionResult,
+  type CompletionSource,
+  autocompletion,
+  completionKeymap,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { type Extension } from '@codemirror/state';

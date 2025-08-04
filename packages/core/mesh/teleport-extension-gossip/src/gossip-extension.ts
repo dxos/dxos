@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type GossipMessage, type GossipService } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { type ExtensionContext, type TeleportExtension } from '@dxos/teleport';
 
 export type GossipCallbacks = {

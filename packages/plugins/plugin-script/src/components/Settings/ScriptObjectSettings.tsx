@@ -5,11 +5,11 @@
 import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 
-import { createIntent, SettingsAction, useIntentDispatcher } from '@dxos/app-framework';
+import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Filter, getMeta, getSpace, Ref, useQuery } from '@dxos/react-client/echo';
+import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 

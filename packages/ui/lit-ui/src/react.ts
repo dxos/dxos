@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createComponent, type EventName } from '@lit/react';
+import { type EventName, createComponent } from '@lit/react';
 import React, { type ComponentPropsWithRef } from 'react';
 
 import {
+  type DxRefTagActivate,
+  type DxTagPickerItemClick,
   DxAvatar as NaturalDxAvatar,
   DxRefTag as NaturalDxRefTag,
-  DxIcon as NaturalIcon,
-  type DxRefTagActivate,
   DxTagPickerItem as NaturalDxTagPickerItem,
-  type DxTagPickerItemClick,
+  DxIcon as NaturalIcon,
 } from './index';
 
 export const DxRefTag = createComponent({

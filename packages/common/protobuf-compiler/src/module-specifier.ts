@@ -3,7 +3,7 @@
 //
 
 import { createRequire } from 'node:module';
-import { isAbsolute, resolve, relative } from 'path';
+import { isAbsolute, relative, resolve } from 'path';
 
 import { invariant } from '@dxos/invariant';
 

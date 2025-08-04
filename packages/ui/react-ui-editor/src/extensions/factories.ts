@@ -31,11 +31,12 @@ import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { hexToHue, isNotFalsy } from '@dxos/util';
 
+import { editorGutter, editorMonospace } from '../defaults';
+import { type ThemeStyles, defaultTheme } from '../styles';
+
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
-import { editorGutter, editorMonospace } from '../defaults';
-import { type ThemeStyles, defaultTheme } from '../styles';
 
 //
 // Basic

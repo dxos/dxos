@@ -4,8 +4,7 @@
 
 import { raise } from '@dxos/debug';
 import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaType } from '@dxos/echo-schema';
-
-import { trim } from '../../util';
+import { trim } from '@dxos/util';
 
 /**
  * Formats ECHO schema to be consumed by LLM.

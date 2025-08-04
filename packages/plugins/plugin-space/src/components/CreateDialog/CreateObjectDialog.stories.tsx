@@ -15,8 +15,9 @@ import { DataType } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 import { translations } from '../../translations';
+
+import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 
 const Story = (args: CreateObjectDialogProps) => {
   return (

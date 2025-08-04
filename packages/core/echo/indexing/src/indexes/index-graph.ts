@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { decodeReference, ObjectStructure } from '@dxos/echo-protocol';
+import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
 import { EntityKind, ObjectId } from '@dxos/echo-schema';
 import { InternalError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';

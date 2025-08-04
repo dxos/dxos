@@ -6,15 +6,16 @@ import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import React, { useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { DropdownMenu, Icon, useTranslation, IconButton } from '@dxos/react-ui';
+import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { mx, getSize, textBlockWidth } from '@dxos/react-ui-theme';
+import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
+
+import { STACK_PLUGIN } from '../meta';
+import { type StackSectionItem } from '../types';
 
 import { CaretDownUp } from './CaretDownUp';
 import { useStack } from './StackContext';
-import { STACK_PLUGIN } from '../meta';
-import { type StackSectionItem } from '../types';
 
 const sectionActionDimensions = 'p-1 mlb-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 

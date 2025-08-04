@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { StateField, type Transaction, type Extension, type EditorState } from '@codemirror/state';
+import { type EditorState, type Extension, StateField, type Transaction } from '@codemirror/state';
 import { Facet } from '@codemirror/state';
 import { type SyntaxNode } from '@lezer/common';
 

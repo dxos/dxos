@@ -6,17 +6,17 @@ import { registerSW } from 'virtual:pwa-register';
 
 import {
   Capabilities,
+  Events,
+  LayoutAction,
   contributes,
   createIntent,
   defineModule,
   definePlugin,
-  Events,
-  LayoutAction,
 } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
-import { meta, PWA_PLUGIN } from './meta';
+import { PWA_PLUGIN, meta } from './meta';
 import { translations } from './translations';
 
 export const PwaPlugin = () =>

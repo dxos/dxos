@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createSurface, Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -13,12 +13,12 @@ import {
   JoinDialog,
   ProfileContainer,
   RECOVERY_CODE_DIALOG,
-  RecoveryCodeDialog,
-  RecoveryCredentialsContainer,
   RESET_DIALOG,
+  RecoveryCodeDialog,
+  type RecoveryCodeDialogProps,
+  RecoveryCredentialsContainer,
   ResetDialog,
   type ResetDialogProps,
-  type RecoveryCodeDialogProps,
 } from '../components';
 import { Account, type ClientPluginOptions } from '../types';
 

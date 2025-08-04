@@ -6,7 +6,7 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { useHaloInvitations, DeviceType } from '@dxos/react-client/halo';
+import { DeviceType, useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 import { AgentConfig, type AgentFormProps, DeviceList, type DeviceListProps } from '../../../components';

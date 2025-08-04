@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
@@ -13,15 +13,16 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
-import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table } from './Table';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
 import { TableView } from '../../types';
 import { createTable } from '../../util';
+
+import { Table } from './Table';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;

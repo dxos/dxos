@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import React, { useRef, useState } from 'react';
 
-import { DropdownMenu } from './DropdownMenu';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { DropdownMenu } from './DropdownMenu';
 
 const DefaultStory = () => {
   return (

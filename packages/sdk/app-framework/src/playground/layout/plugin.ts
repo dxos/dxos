@@ -3,7 +3,7 @@
 //
 
 import { Events } from '../../common';
-import { definePlugin, lazy, defineModule } from '../../core';
+import { defineModule, definePlugin, lazy } from '../../core';
 
 const Layout = lazy(() => import('./Layout'));
 

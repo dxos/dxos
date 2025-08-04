@@ -5,7 +5,7 @@
 import { untracked } from '@preact/signals-core';
 import { Schema } from 'effect';
 
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';
 
 // NOTE: Chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html

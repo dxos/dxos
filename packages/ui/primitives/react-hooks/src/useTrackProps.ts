@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { log } from '@dxos/log';
 

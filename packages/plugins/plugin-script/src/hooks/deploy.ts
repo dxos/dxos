@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { FunctionType, type ScriptType, getUserFunctionUrlInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { getMeta, getSpace, Query, Ref, type Space, useQuery } from '@dxos/react-client/echo';
+import { Query, Ref, type Space, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';

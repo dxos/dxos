@@ -15,7 +15,7 @@ import {
   extractionNerFn,
   getNer,
   processTranscriptMessage,
-} from '@dxos/assistant';
+} from '@dxos/assistant/extraction';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo-schema';
@@ -30,16 +30,17 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { seedTestData, Testing } from '@dxos/schema/testing';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TranscriptionStory } from './TranscriptionStory';
-import { useIsSpeaking } from './useIsSpeaking';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderMarkdown } from '../Transcript';
+
+import { TranscriptionStory } from './TranscriptionStory';
+import { useIsSpeaking } from './useIsSpeaking';
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
@@ -202,7 +203,7 @@ const meta: Meta<typeof DefaultStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

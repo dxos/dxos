@@ -5,20 +5,21 @@
 import { invariant } from '@dxos/invariant';
 import { type Point, type Rect } from '@dxos/react-ui-canvas';
 
-import { type DragDropPayload } from './useDragMonitor';
-import { useEditorContext } from './useEditorContext';
-import { type Anchor, defaultAnchorSize, type ShapeLayout } from '../components';
-import { getDistance, findClosestIntersection, createNormalsFromRectangles, getRect, pointAdd } from '../layout';
-import { createAnchorId, parseAnchorId, createPath } from '../shapes';
+import { type Anchor, type ShapeLayout, defaultAnchorSize } from '../components';
+import { createNormalsFromRectangles, findClosestIntersection, getDistance, getRect, pointAdd } from '../layout';
+import { createAnchorId, createPath, parseAnchorId } from '../shapes';
 import {
   type CanvasGraphModel,
   type Connection,
-  isPolygon,
   type Layout,
   type PathShape,
   type Polygon,
   type Shape,
+  isPolygon,
 } from '../types';
+
+import { type DragDropPayload } from './useDragMonitor';
+import { useEditorContext } from './useEditorContext';
 
 /**
  * Generate layout from graph (including linking).

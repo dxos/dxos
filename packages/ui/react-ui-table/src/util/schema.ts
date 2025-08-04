@@ -3,7 +3,7 @@
 //
 
 import { Schema } from 'effect';
-import { isTypeLiteral, TypeLiteral } from 'effect/SchemaAST';
+import { TypeLiteral, isTypeLiteral } from 'effect/SchemaAST';
 
 /**
  * Creates a narrowed schema from an original schema that only includes

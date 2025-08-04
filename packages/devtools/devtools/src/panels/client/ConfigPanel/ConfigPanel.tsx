@@ -8,7 +8,7 @@ import { useConfig } from '@dxos/react-client';
 import { Toolbar } from '@dxos/react-ui';
 
 import { JsonView, PanelContainer } from '../../../components';
-import { VaultSelector, EdgeSelector } from '../../../containers';
+import { EdgeSelector, VaultSelector } from '../../../containers';
 
 type ConfigPanelProps = {
   vaultSelector?: boolean;
