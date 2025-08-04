@@ -120,14 +120,14 @@ export const AssistantPlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/ai-model-resolver`,
-      activatesOn: Events.Startup,
-      activatesAfter: [AssistantEvents.AiServiceProvidersReady],
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: EdgeModelResolver,
     }),
     defineModule({
       id: `${meta.id}/module/ai-service`,
-      // Must activate after the `AssistantCapabilities.AiModelResolver` were contributed.
-      activatesOn: AssistantEvents.AiServiceProvidersReady,
+      activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+      // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
+      activatesOn: Events.Startup,
       activate: AiService,
     }),
     defineModule({

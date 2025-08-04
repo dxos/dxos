@@ -23,9 +23,7 @@ export const NativePlugin = () =>
     }),
     defineModule({
       id: `${meta.id}/module/ollama`,
-      // TODO(dmaretskyi): Should we do a custom activation event?
-      activatesOn: Events.Startup,
-      activatesAfter: [AssistantEvents.AiServiceProvidersReady],
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: Ollama,
     }),
   ]);
