@@ -31,6 +31,7 @@ export class DxGridMultiselectCell extends LitElement {
       aria-haspopup="dialog"
       class="dx-grid__cell__multiselect"
       data-dx-grid-accessory="invoke-multiselect"
+      data-dx-grid-action="accessory"
     >
       ${this.values.length > 0
         ? this.values.map(({ label }) => html`<span class="dx-grid__cell__multiselect__value">${label}</span>`)

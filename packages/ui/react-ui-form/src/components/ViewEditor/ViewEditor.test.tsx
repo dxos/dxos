@@ -42,7 +42,7 @@ describe('ViewEditor', () => {
   test('renders view editor', async () => {
     await Default.run();
     await waitForViewEditor();
-    expect(screen.getByText('Typename')).toBeInTheDocument();
+    expect(screen.getByText('Record type')).toBeInTheDocument();
   });
 
   test('change property name', async () => {
