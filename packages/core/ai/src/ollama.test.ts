@@ -58,7 +58,7 @@ describe('ollama', () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'tools',
     Effect.fn(
       function* ({ expect }) {
