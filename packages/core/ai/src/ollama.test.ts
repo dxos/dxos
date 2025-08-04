@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { preprocessAiInput } from './AiPreprocessor';
-import { parseGptStream } from './AiParser';
+import { parseResponse } from './AiParser';
 import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
 import { getToolCalls, callTools } from './tools';
 
@@ -37,7 +37,7 @@ describe('ollama', () => {
           prompt,
           system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
-        }).pipe(parseGptStream({}), Stream.runCollect, Effect.map(Chunk.toArray));
+        }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
         const message = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -80,7 +80,7 @@ describe('ollama', () => {
             toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
-          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
           const message = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
