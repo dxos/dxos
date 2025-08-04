@@ -5,7 +5,7 @@
 import { Effect, Layer } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
 import { AssistantCapabilities } from './capabilities';

@@ -10,6 +10,7 @@ import { AiServiceRouter } from '@dxos/ai';
 import { contributes } from '@dxos/app-framework';
 
 import { AssistantCapabilities } from './capabilities';
+
 export default () => {
   return [
     contributes(
