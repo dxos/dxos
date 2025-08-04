@@ -119,6 +119,7 @@ export const OllamaResolver = ({
       return {
         'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest' as any),
         'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b' as any),
+        '@google/gemma-3-12b': yield* OpenAiLanguageModel.model('gemma3:27b' as any),
       };
     }).pipe(
       Effect.provide(
