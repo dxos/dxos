@@ -4,7 +4,7 @@
 
 import { effect } from '@preact/signals-react';
 import { Array, Effect, Option, pipe } from 'effect';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type AiContextBinder } from '@dxos/assistant';
