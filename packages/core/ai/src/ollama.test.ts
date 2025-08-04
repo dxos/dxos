@@ -13,10 +13,10 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { preprocessAiInput } from './AiPreprocessor';
 import { parseResponse } from './AiParser';
+import { preprocessAiInput } from './AiPreprocessor';
 import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
-import { getToolCalls, callTools } from './tools';
+import { callTools, getToolCalls } from './tools';
 
 describe('ollama', () => {
   it.effect(
