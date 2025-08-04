@@ -7,7 +7,8 @@ import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from
 import versor from 'versor';
 
 import type { GlobeController } from '../components';
-import { type LatLng, type StyleSet, geoToPosition, positionToRotation } from '../util';
+import { type LatLngLiteral } from '../types';
+import { type StyleSet, geoToPosition, positionToRotation } from '../util';
 
 const TRANSITION_NAME = 'globe-tour';
 
@@ -29,7 +30,7 @@ export type TourOptions = {
  */
 export const useTour = (
   controller?: GlobeController | null,
-  points?: LatLng[],
+  points?: LatLngLiteral[],
   options: TourOptions = {},
 ): [boolean, Dispatch<SetStateAction<boolean>>] => {
   const selection = useMemo(() => d3Selection(), []);
@@ -48,7 +49,7 @@ export const useTour = (
         const path = geoPath(projection, context).pointRadius(2);
 
         const tilt = options.tilt ?? 0;
-        let last: LatLng;
+        let last: LatLngLiteral;
         try {
           const p = [...points];
           if (options.loop) {
@@ -82,14 +83,14 @@ export const useTour = (
                 {
                   context.beginPath();
                   context.strokeStyle = options?.styles?.arc?.strokeStyle ?? 'yellow';
-                  context.lineWidth = (options?.styles?.arc?.lineWidth ?? 1.5) * (controller?.scale ?? 1);
+                  context.lineWidth = (options?.styles?.arc?.lineWidth ?? 1.5) * (controller?.zoom ?? 1);
                   context.setLineDash(options?.styles?.arc?.lineDash ?? []);
                   path({ type: 'LineString', coordinates: [ip(t1), ip(t2)] });
                   context.stroke();
 
                   context.beginPath();
                   context.fillStyle = options?.styles?.cursor?.fillStyle ?? 'orange';
-                  path.pointRadius((options?.styles?.cursor?.pointRadius ?? 2) * (controller?.scale ?? 1));
+                  path.pointRadius((options?.styles?.cursor?.pointRadius ?? 2) * (controller?.zoom ?? 1));
                   path({ type: 'Point', coordinates: ip(t2) });
                   context.fill();
                 }
@@ -104,7 +105,7 @@ export const useTour = (
             await transition.end();
             last = next;
           }
-        } catch (err) {
+        } catch {
           // Ignore.
         } finally {
           setRunning(false);
