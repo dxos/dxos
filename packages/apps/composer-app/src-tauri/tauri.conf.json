@@ -22,13 +22,16 @@
     ],
     "security": {
       "csp": {
-        "default-src": "'self' customprotocol: asset:",
-        "connect-src": "ipc: http://ipc.localhost http://localhost:21434",
+        "connect-src": "https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434",
+        "script-src": "https: http://localhost:* 'unsafe-eval' 'unsafe-inline'",
+        "frame-src": "https: http://localhost:* composer: blob:;",
+        "worker-src": "https: http://localhost:* blob:;",
         "font-src": [
           "https://fonts.gstatic.com"
         ],
-        "img-src": "'self' asset: http://asset.localhost blob: data:",
-        "style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com"
+        "img-src": "https: data: file: socket://* http://localhost:* blob:;",
+        "child-src": "'none'",
+        "object-src": "'none'"
       }
     },
     "withGlobalTauri": true
