@@ -112,11 +112,11 @@ export class AiSession {
         const context: string[] =
           params.objects?.map(
             (object) => trim`
-            <object>
-              <dxn>${Obj.getDXN(object)}</dxn>
-              <typename>${Obj.getTypename(object)}</typename>
-            </object>
-          `,
+              <object>
+                <dxn>${Obj.getDXN(object)}</dxn>
+                <typename>${Obj.getTypename(object)}</typename>
+              </object>
+            `,
           ) ?? [];
         if (context.length) {
           context.splice(0, 0, 'Context objects:');
