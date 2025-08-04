@@ -188,7 +188,7 @@ const meta: Meta<typeof QueueStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

@@ -8,7 +8,7 @@ import { Chunk, Effect, Function, Stream } from 'effect';
 
 import { type ContentBlock } from '@dxos/schema';
 
-import { parseGptStream } from './AiParser';
+import { parseResponse } from './AiParser';
 
 describe('parser', () => {
   describe('accumulation', () => {
@@ -16,7 +16,7 @@ describe('parser', () => {
       'single text block',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('Hello, world!')])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -33,7 +33,7 @@ describe('parser', () => {
       'consecutive text blocks get combined',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('Hello,'), text(' world!')])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -50,7 +50,7 @@ describe('parser', () => {
       'status parsed',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('<status>I am thinking...</status>')])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -74,7 +74,7 @@ describe('parser', () => {
             params: { bar: 'baz' },
           }),
         ])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -104,7 +104,7 @@ describe('parser', () => {
             params: { bar: 'baz' },
           }),
         ])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -132,7 +132,7 @@ describe('parser', () => {
           }),
           text('Hello, world!'),
         ])
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -153,7 +153,7 @@ describe('parser', () => {
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('<cot>My thoughts are...</cot>')])
-          .pipe(parseGptStream({ parseReasoningTags: true }))
+          .pipe(parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -170,7 +170,7 @@ describe('parser', () => {
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([text('<think>My thoughts are...</think>')])
-          .pipe(parseGptStream({ parseReasoningTags: true }))
+          .pipe(parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -187,7 +187,7 @@ describe('parser', () => {
       'tool list',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream(['<tool-list/>'].flatMap(splitByWord).map(text))
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -205,7 +205,7 @@ describe('parser', () => {
         const result = yield* makeInputStream(
           ['<select><option>Yes</option><option>No</option></select>'].flatMap(splitByWord).map(text),
         )
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -232,7 +232,7 @@ describe('parser', () => {
             .flatMap(splitByCharacter)
             .map(text),
         )
-          .pipe(parseGptStream())
+          .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
@@ -277,7 +277,7 @@ describe('parser', () => {
       'onPart is called with every part',
       Effect.fn(function* ({ expect }) {
         const onPart = vi.fn(Function.constant(Effect.void));
-        yield* makeInputStream(PARTS).pipe(parseGptStream({ onPart })).pipe(Stream.runCollect);
+        yield* makeInputStream(PARTS).pipe(parseResponse({ onPart })).pipe(Stream.runCollect);
         expect(onPart.mock.calls).toEqual(PARTS.map((part) => [part]));
       }),
     );
@@ -286,7 +286,7 @@ describe('parser', () => {
       'gets partial content blocks',
       Effect.fn(function* ({ expect }) {
         const onBlock = vi.fn(Function.constant(Effect.void));
-        yield* makeInputStream(PARTS).pipe(parseGptStream({ onBlock })).pipe(Stream.runCollect);
+        yield* makeInputStream(PARTS).pipe(parseResponse({ onBlock })).pipe(Stream.runCollect);
         expect(onBlock.mock.calls).toEqual(
           (
             [

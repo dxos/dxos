@@ -76,7 +76,7 @@ const meta: Meta = {
         IntentPlugin(),
         ClientPlugin({
           types: [DataType.Message, ThreadType, AnchoredTo],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

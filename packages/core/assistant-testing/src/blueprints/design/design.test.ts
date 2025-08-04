@@ -7,7 +7,7 @@ import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Conversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
@@ -29,7 +29,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
         const { queues } = yield* QueueService;
         const { db } = yield* DatabaseService;
 
-        const conversation = new Conversation({
+        const conversation = new AiConversation({
           queue: queues.create(),
         });
 

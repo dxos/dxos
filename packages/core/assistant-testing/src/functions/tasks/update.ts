@@ -39,7 +39,7 @@ export default defineFunction({
     }
 
     // Create task manager and apply operations if provided.
-    const { content } = yield* DatabaseService.loadRef(doc.content);
+    const { content } = yield* DatabaseService.load(doc.content);
     const taskManager = new MarkdownTasks(content);
     if (operations.length > 0) {
       taskManager.applyOperations(operations as TaskOperation[]);

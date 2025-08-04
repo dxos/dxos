@@ -7,8 +7,8 @@ import { Effect, type Layer } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiSession, ArtifactDiffResolver, type ContextBinder, type Conversation } from '@dxos/assistant';
-import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
+import { type AiConversation, type AiSession, ArtifactDiffResolver } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -16,9 +16,10 @@ import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import type { ChatServices } from './useChatServices';
+import { AiServiceOverloadedError } from './errors';
+import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Is this still used?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -26,22 +27,18 @@ declare global {
   }
 }
 
-type RequestOptions = {
+export type AiRequestOptions = {
   // Empty for now.
 };
 
-export type ChatProcessorOptions = {
-  // TODO(burdon): Change to AiToolkit.
-  tools?: readonly ExecutableTool[];
+export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
-
-  // TODO(dmaretskyi): Remove.
-  artifacts?: readonly ArtifactDefinition[];
+  tools?: readonly ExecutableTool[];
   extensions?: ToolContextExtensions;
-  // TODO(burdon): Remove systemPrompt -- should come from blueprint.
+  // TODO(burdon): Remove systemPrompt -- should come from assistant blueprint?
 } & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
 
-const defaultOptions: Partial<ChatProcessorOptions> = {
+const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
   systemPrompt: 'you are a helpful assistant',
 };
@@ -52,8 +49,7 @@ const defaultOptions: Partial<ChatProcessorOptions> = {
  * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Rename ChatContext?
-export class ChatProcessor {
+export class AiChatProcessor {
   /**
    * Pending messages (incl. the current user request).
    * @reactive
@@ -93,7 +89,7 @@ export class ChatProcessor {
     return messages;
   });
 
-  // TODO(burdon): Replace with Toolkit.
+  /** Tool implementations.*/
   private _tools?: ExecutableTool[];
 
   /** Current session. */
@@ -101,9 +97,9 @@ export class ChatProcessor {
 
   constructor(
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
-    private readonly _services: Layer.Layer<ChatServices>,
-    private readonly _conversation: Conversation,
-    private readonly _options: ChatProcessorOptions = defaultOptions,
+    private readonly _services: Layer.Layer<AiChatServices>,
+    private readonly _conversation: AiConversation,
+    private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this._tools = [...(_options.tools ?? [])];
   }
@@ -112,7 +108,7 @@ export class ChatProcessor {
     return this._conversation;
   }
 
-  get context(): ContextBinder {
+  get context() {
     return this._conversation.context;
   }
 
@@ -134,7 +130,7 @@ export class ChatProcessor {
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<DataType.Message[]> {
+  async request(message: string, _options: AiRequestOptions = {}): Promise<DataType.Message[]> {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     this._conversation.onBegin.on(ctx, (session) => {
@@ -306,9 +302,4 @@ export class ChatProcessor {
       return versions;
     },
   };
-}
-
-// TODO(wittjosiah): Move to ai-service-client.
-export class AiServiceOverloadedError extends Error {
-  code = 'AI_SERVICE_OVERLOADED';
 }

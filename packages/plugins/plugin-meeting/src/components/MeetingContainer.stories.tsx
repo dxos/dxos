@@ -47,10 +47,10 @@ const meta: Meta<MeetingContainerProps> = {
         IntentPlugin(),
         SettingsPlugin(),
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
-          onSpacesReady: async (_, client) => {
+          onSpacesReady: async ({ client }) => {
             const space = client.spaces.default;
             await space.waitUntilReady();
             space.db.add(

@@ -3,14 +3,14 @@
 //
 
 import { Effect } from 'effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
-import { fullyQualifiedId, getSpace, getTypename } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Filter, type Key, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -24,7 +24,7 @@ import {
   SequenceContainer,
 } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant } from '../types';
+import { Assistant, AssistantAction } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -50,15 +50,8 @@ export default () =>
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();
-        const associatedArtifact = useMemo(
-          () => ({
-            id: fullyQualifiedId(data.companionTo),
-            typename: getTypename(data.companionTo) ?? 'unknown',
-            spaceId: (getSpace(data.companionTo)?.id ?? 'unknown') as Key.SpaceId,
-          }),
-          [data.companionTo],
-        );
 
+        // TODO(burdon): Document.
         // TODO(wittjosiah): Factor out to container.
         useEffect(() => {
           const timeout = setTimeout(async () => {
@@ -72,7 +65,7 @@ export default () =>
               }
 
               const program = Effect.gen(function* () {
-                const { object } = yield* dispatch(createIntent(Assistant.CreateChat, { space }));
+                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
                   createIntent(SpaceAction.AddRelation, {
@@ -83,6 +76,7 @@ export default () =>
                   }),
                 );
               });
+
               void Effect.runPromise(program);
             }
           });
@@ -90,11 +84,15 @@ export default () =>
           return () => clearTimeout(timeout);
         }, [data.subject]);
 
+        // TODO(burdon): Bind object to chat.
+        useEffect(() => {}, [data.companionTo]);
+
+        // TODO(burdon): Document.
         if (data.subject === 'assistant-chat') {
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} artifact={associatedArtifact} />;
+        return <ChatContainer role={role} chat={data.subject} />;
       },
     }),
     createSurface({

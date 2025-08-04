@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ContextBinder } from '@dxos/assistant';
+import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
@@ -29,7 +29,7 @@ export const useBlueprintRegistry = () => {
  */
 export const useBlueprints = (
   space: Space,
-  context: ContextBinder,
+  context: AiContextBinder,
   blueprintRegistry?: Blueprint.Registry,
 ): [Blueprint.Blueprint[], UpdateCallback] => {
   const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);

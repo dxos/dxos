@@ -16,7 +16,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ChatProcessor } from '../../hooks';
+import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
@@ -136,7 +136,7 @@ const Section: FC<{
 
 export type ToolboxContainerProps = ThemedClassName<{
   space?: Space;
-  processor?: ChatProcessor;
+  processor?: AiChatProcessor;
 }>;
 
 export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {

@@ -6,11 +6,8 @@ import '@dxos-theme';
 
 import React, { useEffect, useState } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { BitField } from '@dxos/util';
-
-import { styles } from '../styles';
 
 import { Bitbar } from './Bitbar';
 
@@ -42,7 +39,7 @@ const TestStory = () => {
   }, []);
 
   return (
-    <div className={mx('flex flex-col p-4 gap-16', styles.bgPanel)}>
+    <div className='flex flex-col p-4 gap-16'>
       {series.map((series, i) => (
         <div key={i}>
           <div className='flex flex-col gap-4'>

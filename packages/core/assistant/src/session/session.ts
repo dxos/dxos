@@ -9,6 +9,11 @@ import { Array, String } from 'effect';
 import {
   AiParser,
   AiPreprocessor,
+  type AiToolNotFoundError,
+  type GenerationStream,
+  ToolExecutionService,
+  ToolResolverService,
+  callTool,
   getToolCalls,
   runTool,
   runTools,
@@ -51,6 +56,7 @@ export type SessionRunOptions<Tools extends AiTool.Any> = {
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
+// TODO(burdon): Rename module.
 export class AiSession {
   // TODO(burdon): Move to conversation.
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
@@ -124,7 +130,7 @@ export class AiSession {
 
       // Potential tool use loop.
       do {
-        log('request', {
+        log.info('request', {
           pending: this._pending.length,
           history: this._history.length,
           tools: (Object.values(options.toolkit?.tools ?? {}) as AiTool.Any[]).map((tool: AiTool.Any) => tool.name),
@@ -132,20 +138,19 @@ export class AiSession {
 
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
-        const blueprints = options.blueprints ?? [];
-
         // Build system prompt from blueprint templates.
         // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
+        const blueprints = options.blueprints ?? [];
         const systemPrompt = yield* pipe(
           blueprints,
           Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-          Effect.flatMap(Effect.forEach((template) => DatabaseService.loadRef(template.source))),
+          Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
           Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
           Effect.map(Array.reduce(options.systemPrompt ?? '', String.concat)),
         );
 
         // Build a combined toolkit from the blueprint tools and the provided toolkit.
-        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap((bp) => bp.tools));
+        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
         const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> =
           yield* blueprintToolkit.toContext(yield* ToolExecutionService.handlersFor(blueprintToolkit));
         const toolkit = options.toolkit != null ? AiToolkit.merge(options.toolkit, blueprintToolkit) : blueprintToolkit;
@@ -165,7 +170,7 @@ export class AiSession {
           toolkit: toolkitWithBlueprintHandlers,
           disableToolCallResolution: true,
         }).pipe(
-          AiParser.parseGptStream({
+          AiParser.parseResponse({
             onBlock: (block) =>
               Effect.gen(this, function* () {
                 if (block.pending) {
@@ -183,6 +188,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        // console.log(JSON.stringify(blocks, null, 2));
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -196,7 +202,7 @@ export class AiSession {
           break;
         }
 
-        const toolResults = yield* runTools(toolCalls, toolkitWithBlueprintHandlers as any);
+        const toolResults = yield* callTools(toolCalls, toolkitWithBlueprintHandlers as any);
         this._pending.push(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
@@ -206,12 +212,13 @@ export class AiSession {
         );
       } while (true);
 
+      log.info('done', { pending: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
   async runStructured<S extends Schema.Schema.AnyNoContext>(
-    schema: S,
-    options: SessionRunOptions<AiTool.Any>,
+    _schema: S,
+    _options: SessionRunOptions<AiTool.Any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);

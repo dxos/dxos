@@ -11,11 +11,11 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { parseGptStream } from './AiParser';
+import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
 import { AiService } from './deprecated/service';
 import { AiServiceTestingPreset } from './testing';
-import { getToolCalls, runTool } from './tools';
+import { getToolCalls, callTool } from './tools';
 import { CalculatorToolkit, calculatorLayer } from './testing';
 
 describe('effect AI client', () => {
@@ -41,7 +41,7 @@ describe('effect AI client', () => {
             toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
-          }).pipe(parseGptStream(), Stream.runCollect, Effect.map(Chunk.toArray));
+          }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
           const message = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
@@ -59,7 +59,7 @@ describe('effect AI client', () => {
           }
 
           const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-            runTool(actualToolkit, toolCall),
+            callTool(actualToolkit, toolCall),
           );
           history.push(
             Obj.make(DataType.Message, {

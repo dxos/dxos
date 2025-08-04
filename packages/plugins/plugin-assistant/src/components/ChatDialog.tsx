@@ -27,7 +27,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const services = useChatServices({ space });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const processor = useChatProcessor({ preset, chat, services, settings });
+  const processor = useChatProcessor({ chat, preset, services, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

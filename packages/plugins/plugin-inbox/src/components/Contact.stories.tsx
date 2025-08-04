@@ -128,7 +128,7 @@ const meta: Meta = {
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
