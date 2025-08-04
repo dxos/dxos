@@ -11,3 +11,5 @@ export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
 export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const Settings = lazy(() => import('./settings'));
+export const AiService = lazy(() => import('./ai-service'));
+export const EdgeModelResolver = lazy(() => import('./edge-model-resolver'));
