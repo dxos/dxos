@@ -8,6 +8,19 @@
   "permissions": [
     "core:default",
     "os:default",
-    "process:default"
+    "process:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "args": [
+            "serve"
+          ],
+          "name": "sidecar/ollama",
+          "sidecar": true
+        }
+      ]
+    },
+    "shell:allow-open"
   ]
 }
