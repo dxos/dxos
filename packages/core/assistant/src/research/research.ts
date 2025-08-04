@@ -83,6 +83,6 @@ export const researchFn = defineFunction({
       //   `,
       // };
     },
-    Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+    Effect.provide(AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
   ),
 });

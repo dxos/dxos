@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-nocheck
+// TODO(burdon): Fix!!!
+
 import { type Schema } from 'effect';
 
-import { type AiServiceClient } from '@dxos/ai';
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';

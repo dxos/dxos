@@ -23,7 +23,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
   outputSchema: ExtractionOutput,
   handler: async ({ data: { message, objects }, context }) => {
     const startTime = performance.now();
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const session = new AiSession({ operationModel: 'configured' });
     const result = await session.runStructured(ReferencedQuotes, {
       generationOptions: {

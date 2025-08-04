@@ -24,9 +24,9 @@ import { AiSession } from '../session';
 import { AiContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
-  session?: AiSession;
   prompt: string;
   system?: string;
+  session?: AiSession;
   toolkit?: AiToolkit.AiToolkit<Tools>;
 }
 
@@ -48,6 +48,7 @@ export class AiConversation {
    *
    * @deprecated Pass in a session instead.
    */
+  // TODO(burdon): Fix!!!
   public readonly onBegin = new Event<AiSession>();
 
   /**

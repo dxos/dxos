@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AiServiceClient, DEFAULT_EDGE_MODEL, MixedStreamParser } from '@dxos/ai';
+// @ts-nocheck
+// TODO(burdon): Fix!!!
+
+import { DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

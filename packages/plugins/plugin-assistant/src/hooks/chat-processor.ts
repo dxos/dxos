@@ -7,12 +7,7 @@ import { Effect, type Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type LLMModel } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import {
-  type AiConversation,
-  type AiConversationRunParams,
-  AiSession,
-  ArtifactDiffResolver,
-} from '@dxos/assistant';
+import { type AiConversation, type AiConversationRunParams, AiSession, ArtifactDiffResolver } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -59,8 +54,8 @@ export class AiChatProcessor {
    * Last error.
    */
   // TODO(wittjosiah): Error should come from the message stream.
-  readonly error = Rx.make<Option.Option<Error>>(Option.none());;
-  private readonly _registry = this._options.registry ?? Registry.make()
+  readonly error = Rx.make<Option.Option<Error>>(Option.none());
+  private readonly _registry = this._options.registry ?? Registry.make();
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());

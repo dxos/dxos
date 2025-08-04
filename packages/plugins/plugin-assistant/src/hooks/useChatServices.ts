@@ -24,7 +24,7 @@ import { AssistantCapabilities } from '../capabilities';
 
 // TODO(burdon): Deconstruct into separate layers?
 export type AiChatServices =
-  | AiService
+  | AiService.AiService
   | CredentialsService
   | DatabaseService
   | QueueService
