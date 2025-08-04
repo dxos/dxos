@@ -266,10 +266,10 @@ const ChatPrompt = ({
   } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
-  const contextProvider = useReferencesProvider(space);
+  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      contextProvider && references({ provider: contextProvider }),
+      referencesProvider && references({ provider: referencesProvider }),
       expandable &&
         Prec.highest(
           keymap.of([
@@ -300,7 +300,7 @@ const ChatPrompt = ({
           ]),
         ),
     ].filter(isNotFalsy);
-  }, [event, expandable, contextProvider]);
+  }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {

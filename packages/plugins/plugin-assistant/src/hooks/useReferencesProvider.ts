@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import { Filter, Obj, type Type } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { type ReferencesProvider } from '@dxos/react-ui-chat';
 
 /**
@@ -22,10 +22,13 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
 
     return {
       getReferences: async ({ query }) => {
-        const schemas = blueprints.map((blueprint) => blueprint.schema);
-        const { objects } = await space.db
-          .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
-          .run();
+        // TODO(burdon): Previously we filtered by types declared by the artifact definitions.
+        // const schemas = blueprints.map((blueprint) => blueprint.schema).flat();
+        // const { objects } = await space.db
+        //   .query(Filter.or(...schemas.map((schema) => Filter.type(schema as Type.Schema))))
+        //   .run();
+
+        const { objects } = await space.db.query(Filter.everything()).run();
 
         return (
           objects
