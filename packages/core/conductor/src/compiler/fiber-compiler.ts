@@ -349,7 +349,6 @@ export class GraphExecutor {
 
   /**
    * Creates a layer with all required services from the current context.
-   * This centralizes the service layer creation logic.
    */
   private _createServiceLayer() {
     return Effect.gen(this, function* () {
