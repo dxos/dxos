@@ -191,7 +191,7 @@ export class WebFile extends EventEmitter implements File {
   /**
    * Current view of the file contents.
    */
-  private _buffer: Uint8Array | null = null;
+  private _buffer: Uint8Array<ArrayBuffer> | null = null;
 
   private _loadBufferPromise: Promise<void> | null = null;
 

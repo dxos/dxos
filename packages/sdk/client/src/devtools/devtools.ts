@@ -212,7 +212,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       log.info('done profile export', { storageEntries: archive.storage.length });
 
-      downloadFile(cbor.encode(archive), 'application/octet-stream', 'profile.dxprofile');
+      downloadFile(cbor.encode(archive) as Uint8Array<ArrayBuffer>, 'application/octet-stream', 'profile.dxprofile');
     };
 
     hook.importProfile = async () => {
@@ -382,7 +382,7 @@ const reset = async () => {
   }
 };
 
-const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
+const downloadFile = (data: string | Uint8Array<ArrayBuffer>, contentType: string, filename: string) => {
   const url = URL.createObjectURL(new Blob([data], { type: contentType }));
   const element = document.createElement('a');
   element.setAttribute('href', url);
