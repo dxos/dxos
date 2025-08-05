@@ -43,6 +43,11 @@ export class AiConversation {
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
+   * Blueprints bound to the conversation.
+   */
+  public readonly _context: AiContextBinder;
+
+  /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
    *
@@ -51,14 +56,13 @@ export class AiConversation {
   // TODO(burdon): Is this still deprecated?
   public readonly onBegin = new Event<AiSession>();
 
-  /**
-   * Blueprints bound to the conversation.
-   */
-  public readonly context: AiContextBinder;
-
   constructor(options: AiConversationOptions) {
     this._queue = options.queue;
-    this.context = new AiContextBinder(this._queue);
+    this._context = new AiContextBinder(this._queue);
+  }
+
+  get context() {
+    return this._context;
   }
 
   async getHistory(): Promise<DataType.Message[]> {

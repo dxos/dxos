@@ -23,10 +23,8 @@ export class AiService extends Context.Tag('@dxos/ai/AiService')<
         Effect.map((_) => _.model(model)),
         Layer.unwrapEffect,
       );
-
-  static notAvailable = Layer.succeed(AiService, {
-    model(model) {
-      return Layer.fail(new AiModelNotAvailableError(model));
-    },
-  });
 }
+
+export const notAvailable = Layer.succeed(AiService, {
+  model: (model) => Layer.fail(new AiModelNotAvailableError(model)),
+});

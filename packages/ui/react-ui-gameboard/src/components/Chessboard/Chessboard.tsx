@@ -5,7 +5,6 @@
 import React, { Fragment, type PropsWithChildren, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { log } from '@dxos/log';
 import { type ThemedClassName, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy } from '@dxos/util';
@@ -80,7 +79,6 @@ export const Chessboard = memo(
 
     // Get the bounds of each square and piece.
     const positions = useMemo<{ piece: PieceRecord; bounds: DOMRectBounds }[]>(() => {
-      log.info('update', { pgn: model?.pgn });
       if (!gridRef.current) {
         return [];
       }

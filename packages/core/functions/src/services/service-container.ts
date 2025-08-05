@@ -91,9 +91,7 @@ export class ServiceContainer {
   // TODO(dmaretskyi): `getService` is designed to error at runtime if the service is not available, but Layer forces us to provide all services and makes stubs for the ones that are not available.
   createLayer(): Layer.Layer<Services> {
     const ai =
-      this._services.ai != null
-        ? Layer.succeed(AiService.AiService, this._services.ai)
-        : AiService.AiService.notAvailable;
+      this._services.ai != null ? Layer.succeed(AiService.AiService, this._services.ai) : AiService.notAvailable;
     const credentials = Layer.succeed(
       CredentialsService,
       this._services.credentials ?? new ConfiguredCredentialsService(),

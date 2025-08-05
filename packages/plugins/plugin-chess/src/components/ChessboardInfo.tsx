@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -12,48 +12,56 @@ import { meta } from '../meta';
 
 import { type ExtendedChessModel } from './Chessboard';
 
-export type ChessboardInfoProps = ThemedClassName<{
-  orientation?: Player;
-  onOrientationChange?: (orientation: Player) => void;
-}>;
+export type ChessboardInfoProps = ThemedClassName<
+  {
+    orientation?: Player;
+    onOrientationChange?: (orientation: Player) => void;
+  } & Pick<HistoryProps, 'min' | 'max'>
+>;
 
-export const ChessboardInfo = ({ classNames, orientation = 'white', onOrientationChange }: ChessboardInfoProps) => {
+export const ChessboardInfo = ({
+  classNames,
+  orientation = 'white',
+  onOrientationChange,
+  ...props
+}: ChessboardInfoProps) => {
+  const { t } = useTranslation(meta.id);
   const { model } = useGameboardContext<ExtendedChessModel>(ChessboardInfo.displayName);
 
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] bg-inputSurface p-2 rounded',
+        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] overflow-hidden bg-inputSurface p-2 rounded',
         classNames,
       )}
     >
-      <div className='flex items-center justify-between'>
-        <PlayerIndicator
-          model={model}
-          player={orientation === 'white' ? 'black' : 'white'}
-          title={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
-        />
+      <PlayerIndicator
+        model={model}
+        player={orientation === 'white' ? 'black' : 'white'}
+        title={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
+      >
         {onOrientationChange && (
-          <button onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}>
-            <Icon icon='ph--arrow-u-right-down--thin' size={6} />
-          </button>
+          <IconButton
+            icon='ph--arrows-down-up--regular'
+            iconOnly
+            label={t('button flip')}
+            size={6}
+            classNames={mx('transition duration-200', orientation === 'white' && 'rotate-180')}
+            onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
+          />
         )}
-      </div>
-
-      <div className='pbs-2 pbe-2'>
-        <History model={model} classNames='_h-[calc(4*24px)]' />
-      </div>
-
-      <div className='flex items-center justify-between'>
-        <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]} />
-      </div>
+      </PlayerIndicator>
+      <History model={model} {...props} />
+      <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]} />
     </div>
   );
 };
 
 ChessboardInfo.displayName = 'Chessboard.Info';
 
-const History = ({ classNames, model }: ThemedClassName<{ model: ExtendedChessModel }>) => {
+type HistoryProps = ThemedClassName<{ model: ExtendedChessModel; min?: number; max?: number }>;
+
+const History = ({ classNames, model, min, max }: HistoryProps) => {
   const { t } = useTranslation(meta.id);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
@@ -85,10 +93,17 @@ const History = ({ classNames, model }: ThemedClassName<{ model: ExtendedChessMo
   }, [history.length]);
 
   return (
-    <div ref={scrollerRef} className={mx('overflow-y-scroll', classNames)}>
+    <div
+      ref={scrollerRef}
+      className={mx('overflow-y-scroll', classNames)}
+      style={{
+        minHeight: min === undefined ? 'auto' : `${min * 24}px`,
+        maxHeight: max === undefined ? 'auto' : `${max * 24}px`,
+      }}
+    >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[2rem_1fr_1fr] leading-1'>
-          <div className='content-center text-xs pis-1'>{index + 1}</div>
+        <div key={index} className='grid grid-cols-[3rem_1fr_1fr] pis-4 leading-1'>
+          <div className='content-center text-xs text-subdued'>{index + 1}</div>
           <div>{a}</div>
           <div>{b}</div>
         </div>
@@ -98,16 +113,24 @@ const History = ({ classNames, model }: ThemedClassName<{ model: ExtendedChessMo
   );
 };
 
-const PlayerIndicator = ({ model, player, title }: { model: ExtendedChessModel; player: Player; title?: string }) => {
+const PlayerIndicator = ({
+  children,
+  model,
+  player,
+  title,
+}: PropsWithChildren<{ model: ExtendedChessModel; player: Player; title?: string }>) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='flex items-center gap-2 leading-1'>
-      <Icon
-        icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
-        size={4}
-        classNames={mx(turn && (model.game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
-      />
+    <div className='grid grid-cols-[2rem_1fr_2rem] gap-1 bs-[--rail-size] pis-1 pie-1 flex items-center overflow-hidden'>
+      <div className='place-items-center'>
+        <Icon
+          icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
+          size={6}
+          classNames={mx(turn && (model.game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
+        />
+      </div>
       <div className='truncate'>{title}</div>
+      {children}
     </div>
   );
 };

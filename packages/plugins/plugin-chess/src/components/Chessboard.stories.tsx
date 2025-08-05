@@ -20,12 +20,12 @@ const DefaultStory = ({ game }: { game: Chess.Game }) => {
   const [orientation, setOrientation] = useState<Player>('white');
   return (
     <Chessboard.Root game={game}>
-      <div className='grid grid-cols-[1fr_min-content] grid-rows-[1fr_4rem] bs-full is-full gap-2'>
+      <div className='grid grid-cols-[1fr_320px] grid-rows-[1fr_4rem] bs-full is-full gap-2'>
         <Chessboard.Content>
           <Chessboard.Board orientation={orientation} />
         </Chessboard.Content>
-        <div className='flex flex-col p-8 justify-center items-center'>
-          <Chessboard.Info orientation={orientation} onOrientationChange={setOrientation} />
+        <div className='flex flex-col p-8 justify-center items-center overflow-hidden'>
+          <Chessboard.Info orientation={orientation} onOrientationChange={setOrientation} min={8} max={8} />
         </div>
         <div className='flex justify-center items-center'>
           <Chessboard.Players />
