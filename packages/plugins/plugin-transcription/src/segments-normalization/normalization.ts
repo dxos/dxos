@@ -14,6 +14,7 @@ import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 const MessageWithRangeId = Schema.extend(
   DataType.Message,
