@@ -209,6 +209,7 @@ export class AiSession {
   }
 }
 
+// TODO(burdon): Move to AiPreprocessor.
 const formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
   Effect.gen(function* () {
     const prelude: ContentBlock.Any[] = [];
