@@ -41,7 +41,7 @@ export const ChessboardInfo = ({ classNames, orientation = 'white', onOrientatio
       </div>
 
       <div className='pbs-2 pbe-2'>
-        <History model={model} classNames='h-[calc(4*24px)]' />
+        <History model={model} classNames='_h-[calc(4*24px)]' />
       </div>
 
       <div className='flex items-center justify-between'>

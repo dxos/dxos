@@ -6,6 +6,7 @@ import React from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type Chess } from '../types';
 
@@ -35,11 +36,13 @@ export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) =>
       );
     }
 
+    // TODO(burdon): Hint/toggle to show/hide info.
     default: {
+      const info = true;
       return (
         <StackItem.Content classNames='bs-full is-full overflow-hidden'>
           <Chessboard.Root game={game}>
-            <div className='grid grid-cols-[1fr_min-content] gap-2'>
+            <div className={mx('grid', info && 'grid-cols-[1fr_min-content]')}>
               <div role='none' className='grid grid-rows-[5rem_1fr_5rem]'>
                 <div />
                 <Chessboard.Content>
@@ -47,9 +50,11 @@ export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) =>
                 </Chessboard.Content>
                 <Chessboard.Players />
               </div>
-              <div className='p-2'>
-                <Chessboard.Info />
-              </div>
+              {info && (
+                <div className='flex p-3'>
+                  <Chessboard.Info />
+                </div>
+              )}
             </div>
           </Chessboard.Root>
         </StackItem.Content>

@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 
 import { Chess } from '../types';
 
+// TODO(burdon): Common error handling.
 // TODO(burdon): Factor out as generic tool to load objects?
-// TODO(burdon): Error handling.
 export default defineFunction({
   name: 'dxos.org/function/chess/read',
   description: 'Loads the chess object.',

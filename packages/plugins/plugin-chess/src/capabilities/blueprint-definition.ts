@@ -9,6 +9,8 @@ import { trim } from '@dxos/util';
 
 import { load, play } from '../functions';
 
+const functions = [load, play];
+
 export default () => {
   return [
     contributes(
@@ -18,12 +20,12 @@ export default () => {
         name: 'Chess',
         instructions: {
           source: trim`
-          You are an expert chess player.
-        `,
+            You are an expert chess player.
+          `,
         },
-        tools: [ToolId.make(load.name), ToolId.make(play.name)],
+        tools: functions.map((tool) => ToolId.make(tool.name)),
       }),
     ),
-    contributes(Capabilities.Functions, [load, play]),
+    contributes(Capabilities.Functions, functions),
   ];
 };
