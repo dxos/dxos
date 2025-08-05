@@ -16,6 +16,7 @@ export type ChessboardInfoProps = ThemedClassName<
   {
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
+    onClose?: () => void;
   } & Pick<HistoryProps, 'min' | 'max'>
 >;
 
@@ -23,6 +24,7 @@ export const ChessboardInfo = ({
   classNames,
   orientation = 'white',
   onOrientationChange,
+  onClose,
   ...props
 }: ChessboardInfoProps) => {
   const { t } = useTranslation(meta.id);
@@ -40,19 +42,21 @@ export const ChessboardInfo = ({
         player={orientation === 'white' ? 'black' : 'white'}
         title={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
       >
+        {onClose && <IconButton icon='ph--x--regular' iconOnly label={t('button flip')} size={4} onClick={onClose} />}
+      </PlayerIndicator>
+      <History model={model} {...props} />
+      <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]}>
         {onOrientationChange && (
           <IconButton
             icon='ph--arrows-down-up--regular'
             iconOnly
             label={t('button flip')}
             size={6}
-            classNames={mx('transition duration-200', orientation === 'white' && 'rotate-180')}
+            classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
             onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
           />
         )}
       </PlayerIndicator>
-      <History model={model} {...props} />
-      <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]} />
     </div>
   );
 };

@@ -1,0 +1,56 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useState } from 'react';
+
+import { IconButton, useTranslation } from '@dxos/react-ui';
+import { type Player } from '@dxos/react-ui-gameboard';
+import { StackItem } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
+
+import { meta } from '../meta';
+import { type Chess } from '../types';
+
+import { Chessboard } from './Chessboard';
+
+export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
+  const { t } = useTranslation(meta.id);
+  const [orientation, setOrientation] = useState<Player>('white');
+  const [open, setOpen] = useState(true);
+
+  return (
+    <StackItem.Content classNames='bs-full is-full overflow-hidden'>
+      <Chessboard.Root game={game}>
+        <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && 'grid-cols-[1fr_320px]')}>
+          <Chessboard.Content>
+            <Chessboard.Board orientation={orientation} />
+          </Chessboard.Content>
+          {open && (
+            <div className='flex flex-col p-8 justify-center items-center overflow-hidden'>
+              <Chessboard.Info
+                orientation={orientation}
+                min={8}
+                max={8}
+                onOrientationChange={setOrientation}
+                onClose={() => setOpen(false)}
+              />
+            </div>
+          )}
+          <div className='flex justify-center items-center'>
+            <Chessboard.Players>
+              <IconButton
+                variant='ghost'
+                icon='ph--info--regular'
+                iconOnly
+                label={t('button toggle info')}
+                size={5}
+                onClick={() => setOpen((open) => !open)}
+              />
+            </Chessboard.Players>
+          </div>
+        </div>
+      </Chessboard.Root>
+    </StackItem.Content>
+  );
+};
