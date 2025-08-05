@@ -101,6 +101,12 @@ export class ChessModel implements GameboardModel<ChessPiece> {
 
   constructor(pgn?: string) {
     this.initialize(pgn);
+    // TODO(burdon): Get from TS.
+    this._chess.setHeader('Date', createDate());
+    this._chess.setHeader('Site', 'dxos.org');
+    // TODO(burdon): Update player keys.
+    // this._chess.setHeader('White', 'White');
+    // this._chess.setHeader('Black', 'Black');
   }
 
   get turn(): Player {
@@ -115,6 +121,18 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._chess;
   }
 
+  /**
+   * PGN with headers.
+   *
+   * [Event "?"]
+   * [Site "?"]
+   * [Date "2025.08.05"]
+   * [Round "?"]
+   * [White "?"]
+   * [Black "?"]
+   * [Result "*"]
+   */
+  // TODO(burdon): Update headers.
   get pgn(): string {
     return this._chess.pgn();
   }
@@ -231,3 +249,5 @@ export const mapPieces = <T extends PieceType>(before: PieceMap<T>, after: Piece
 
   return after;
 };
+
+const createDate = (date = new Date()) => date.toISOString().slice(0, 10).replace(/-/g, '.'); // e.g., "2025.08.05"

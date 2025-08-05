@@ -13180,8 +13180,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       chess.js:
-        specifier: ^1.0.0
-        version: 1.2.0
+        specifier: ^1.4.0
+        version: 1.4.0
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -23492,6 +23492,9 @@ packages:
 
   chess.js@1.2.0:
     resolution: {integrity: sha512-QWdfpAkMslQ48hDDoEzEko6GbYTAKKx4UdXAPEF8nFnAuqp+woyL8LHSbziRP8u1aMAbnlOF0YkXF4ui0Nsubg==}
+
+  chess.js@1.4.0:
+    resolution: {integrity: sha512-BBJgrrtKQOzFLonR0l+k64A98NLemPwNsCskwb+29bRwobUa4iTm51E1kwGPbWXAcfdDa18nad6vpPPKPWarqw==}
 
   chevrotain@6.5.0:
     resolution: {integrity: sha512-BwqQ/AgmKJ8jcMEjaSnfMybnKMgGTrtDKowfTP3pX4jwVy0kNjRsT/AP6h+wC3+3NC+X8X15VWBnTCQlX+wQFg==}
@@ -43540,6 +43543,8 @@ snapshots:
       parse5-htmlparser2-tree-adapter: 7.0.0
 
   chess.js@1.2.0: {}
+
+  chess.js@1.4.0: {}
 
   chevrotain@6.5.0:
     dependencies:
