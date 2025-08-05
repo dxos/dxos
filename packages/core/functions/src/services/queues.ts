@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Layer } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
+import type { Obj, Relation } from '@dxos/echo';
+import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
 /**
  * Gives access to all queues.
@@ -45,6 +47,21 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 
   static makeLayer = (queues: QueueFactory, contextQueue?: Queue): Layer.Layer<QueueService> =>
     Layer.succeed(QueueService, QueueService.make(queues, contextQueue));
+
+  /**
+   * Gets a queue by its DXN.
+   */
+  static getQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
+    dxn: DXN,
+  ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
+
+  /**
+   * Creates a new queue.
+   */
+  static createQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
+    subspaceTag?: QueueSubspaceTag;
+  }): Effect.Effect<Queue<T>, never, QueueService> =>
+    QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
 }
 
 /**

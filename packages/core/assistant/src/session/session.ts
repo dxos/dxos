@@ -3,13 +3,14 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Array, Chunk, Context, Effect, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
+import { Array, Chunk, Context, Effect, Function, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
 
 import {
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
+  type ConsolePrinter,
   type GenerationStream,
   ToolExecutionService,
   ToolResolverService,
@@ -29,12 +30,76 @@ import { AiAssistantError } from '../errors';
 
 export type AiSessionOptions = {};
 
+/**
+ * Live observer of the generation process.
+ */
+export interface GenerationObserver {
+  /**
+   * Unparsed content block parts from the model.
+   */
+  onPart: (part: AiResponse.Part) => Effect.Effect<void>;
+
+  /**
+   * Parsed content blocks from the model.
+   * NOTE: Use block.pending to determine if the block was completed.
+   * For each block this will be called 0..n times with a pending block and then once with the final state of the block.
+   *
+   * Example:
+   *  1. { pending: true, text: "Hello"}
+   *  2. { pending: true, text: "Hello, I am a"}
+   *  3. { pending: false, text: "Hello, I am a helpful assistant!"}
+   */
+  onBlock: (block: ContentBlock.Any) => Effect.Effect<void>;
+
+  /**
+   * Complete messages fired during the session, both from the model and from the user.
+   * This message will contain all message blocks emitted through the `onBlock` callback.
+   */
+  onMessage: (message: DataType.Message) => Effect.Effect<void>;
+}
+
+export const GenerationObserver = Object.freeze({
+  make: ({
+    onPart = Function.constant(Effect.void),
+    onBlock = Function.constant(Effect.void),
+    onMessage = Function.constant(Effect.void),
+  }: Partial<GenerationObserver> = {}): GenerationObserver => ({
+    onPart,
+    onBlock,
+    onMessage,
+  }),
+
+  noop: () => GenerationObserver.make(),
+
+  /**
+   * Debug printer to be used in unit-tests and browser devtools.
+   */
+  fromPrinter: (printer: ConsolePrinter) =>
+    GenerationObserver.make({
+      onBlock: (block) =>
+        Effect.sync(() => {
+          if (block.pending) {
+            return; // Only prints full blocks (better for unit-tests and browser devtools).
+          }
+          printer.printContentBlock(block);
+        }),
+      onMessage: (message) =>
+        Effect.sync(() => {
+          if (message.sender.role === 'assistant') {
+            return; // Skip assistant messages since they are printed in the `onBlock` callback.
+          }
+          printer.printMessage(message);
+        }),
+    }),
+});
+
 export type SessionRunOptions<Tools extends AiTool.Any> = {
   prompt: string;
   history: DataType.Message[];
   systemPrompt?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
   blueprints?: Blueprint.Blueprint[];
+  observer?: GenerationObserver;
 };
 
 /**
@@ -61,13 +126,24 @@ export class AiSession {
   /** Prior history from queue. */
   private _history: DataType.Message[] = [];
 
-  /** Blocks streaming from the model during the session. */
+  // TODO(dmaretskyi): Remove the queues and convert everything to observer.
+
+  /**
+   * Blocks streaming from the model during the session.
+   * @deprecated Use `observer.onBlock` instead.
+   */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
 
-  /** Complete messages fired during the session, both from the model and from the user. */
+  /**
+   * Complete messages fired during the session, both from the model and from the user.
+   * @deprecated Use `observer.onMessage` instead.
+   */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
-  /** Unparsed events from the underlying generation stream. */
+  /**
+   * Unparsed events from the underlying generation stream.
+   * @deprecated Use `observer.onPart` instead.
+   */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
@@ -86,11 +162,14 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
+      const observer = options.observer ?? GenerationObserver.noop();
+
       this._history = [...options.history];
 
       const promptMessages = yield* this._formatUserPrompt(options.prompt, options.history);
       this._pending = [promptMessages];
       yield* this.messageQueue.offer(promptMessages);
+      yield* observer.onMessage(promptMessages);
 
       // Potential tool use loop.
       do {
@@ -135,8 +214,9 @@ export class AiSession {
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
-            onBlock: (block) => this.blockQueue.offer(Option.some(block)),
-            onPart: (part) => this.eventQueue.offer(part),
+            onBlock: (block) =>
+              Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], { discard: true }),
+            onPart: (part) => Effect.all([this.eventQueue.offer(part), observer.onPart(part)], { discard: true }),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
@@ -151,6 +231,7 @@ export class AiSession {
         });
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
+        yield* observer.onMessage(response);
 
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
@@ -165,6 +246,7 @@ export class AiSession {
         });
         this._pending.push(toolResultMessage);
         yield* this.messageQueue.offer(toolResultMessage);
+        yield* observer.onMessage(toolResultMessage);
       } while (true);
 
       yield* Queue.shutdown(this.eventQueue);

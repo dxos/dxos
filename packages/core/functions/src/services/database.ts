@@ -77,4 +77,10 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
     );
+
+  /**
+   * Adds an object to the database.
+   */
+  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 }
