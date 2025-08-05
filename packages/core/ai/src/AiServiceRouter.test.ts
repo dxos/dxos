@@ -9,7 +9,7 @@ import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService } from './AiService';
+import * as AiService from './AiService';
 import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 import { AiModelNotAvailableError } from './errors';
 

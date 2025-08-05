@@ -13,7 +13,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
-import { AiService } from '../AiService';
+import * as AiService from '../AiService';
 import { AiServiceTestingPreset, CalculatorToolkit, calculatorLayer } from '../testing';
 import { callTool, getToolCalls } from '../tools';
 
@@ -21,7 +21,7 @@ describe('effect AI client', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
