@@ -170,7 +170,7 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, processor, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
 
   const scrollerRef = useRef<ScrollController>(null);
@@ -197,7 +197,6 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
-      tools={processor?.tools}
       onEvent={(ev) => event.emit(ev)}
     />
   );

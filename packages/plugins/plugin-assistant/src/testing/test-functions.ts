@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type GenerateRequest } from '@dxos/ai';
+import { DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { createSystemPrompt } from '@dxos/assistant';
+
+import { type AiChatProcessorOptions } from '../hooks';
 
 /**
  * @deprecated
  */
-export const createProcessorOptions = (blueprints: string[]): Pick<GenerateRequest, 'model' | 'systemPrompt'> => ({
+export const createProcessorOptions = (blueprints: string[]): Pick<AiChatProcessorOptions, 'model' | 'system'> => ({
   model: DEFAULT_EDGE_MODEL,
-  systemPrompt: createSystemPrompt({ blueprints }),
+  system: createSystemPrompt({ blueprints }),
 });

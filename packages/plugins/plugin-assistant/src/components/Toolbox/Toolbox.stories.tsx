@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin, useCapabilities } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
@@ -22,14 +22,7 @@ import { translations } from '../../translations';
 import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  return (
-    <Toolbox
-      {...props}
-      artifacts={artifactDefinitions}
-      classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1'
-    />
-  );
+  return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
 };
 
 const meta: Meta<typeof Toolbox> = {
@@ -66,4 +59,4 @@ export default meta;
 
 type Story = Meta<typeof Toolbox>;
 
-export const Default: Story = {};
+export const Default = {} satisfies Story;

@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-ignore
+// TODO(burdon): Fix!!!
+
 import { type ExecutableTool, ToolResult, createTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
 import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';

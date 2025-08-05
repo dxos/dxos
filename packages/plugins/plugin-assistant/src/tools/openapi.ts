@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-ignore
+// TODO(burdon): Fix!!!
+
 import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';

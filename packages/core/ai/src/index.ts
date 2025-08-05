@@ -14,3 +14,6 @@ export * from './status-report';
 export * from './tools';
 export * from './types';
 export * from './util';
+
+// TODO(burdon): REMOVE!!!
+export * from './deprecated/tools';
