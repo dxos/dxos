@@ -2,15 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-nocheck
-// TODO(burdon): Fix!!!
-
 import { inspect } from 'node:util';
 
 import { Effect, Schema, pipe } from 'effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
+import { ToolId, ToolRegistry, ToolResult } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AiSession, researchFn } from '@dxos/assistant';
 import {
@@ -33,9 +30,25 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType, DataTypes } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
+import { AiTool, AiToolkit } from '@effect/ai';
 
 const REMOTE_AI = true;
 const MOCK_SEARCH = false;
+
+class SageToolkit extends AiToolkit.make(
+  AiTool.make('test', {
+    description: 'Can say what the meaning of life is.',
+    parameters: {
+      question: Schema.String,
+    },
+  }),
+) {
+  static layer = SageToolkit.layer({
+    test: Effect.fn(function* ({ question }) {
+      return 'The meaning of life is your own to decide.';
+    }),
+  });
+}
 
 // Priority: Unify all compute functionality using ComputeGraph (which is the most powerful tool).
 // - Demonstrate simple Sequence-like functionality via ComputeGraph (i.e., research demo).
@@ -156,33 +169,23 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     console.log(text);
   });
 
-  test('conversation', { timeout: 120_000 }, async () => {
-    const session = new AiSession({
-      operationModel: 'configured',
-    });
+  it.effect(
+    'conversation',
+    { timeout: 120_000 },
+    Effect.fn(function* () {
+      const session = new AiSession({
+        operationModel: 'configured',
+      });
 
-    const _sage = createTool('test', {
-      name: 'sage',
-      description: 'Can say what the meaning of life is.',
-      schema: Schema.Struct({
-        question: Schema.String,
-      }),
-      execute: async (params) => {
-        return ToolResult.Success('The meaning of life is your own to decide.');
-      },
-    });
+      yield* session.run({
+        history: [],
+        prompt: 'What is the meaning of life?',
+        toolkit: SageToolkit,
+      });
 
-    // TODO(dmaretskyi): Fix with effect
-    void session.run({
-      // client,
-      history: [],
-      prompt: 'What is the meaning of life?',
-      // executableTools: [sage],
-      // toolResolver: serviceContainer.getService(ToolResolverService).toolResolver,
-    });
-
-    // log.info('result', { result });
-  });
+      // log.info('result', { result });
+    }, Effect.provide(SageToolkit.layer)),
+  );
 
   test('function', { timeout: 120_000 }, async () => {
     db.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
