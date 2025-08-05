@@ -96,7 +96,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, updateDocument]),
           makeToolExecutionServiceFromFunctions([readDocument, updateDocument]),
-          AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(LocalFunctionExecutionService.layer),

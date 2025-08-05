@@ -336,14 +336,13 @@ export class GraphExecutor {
   computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
-      const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
 
       // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
       const layer = Layer.mergeAll(
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
-        // TODO(burdon): Fix !!!
-        // Layer.succeed(AiService.AiService, yield* AiService.AiService),
+        Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
         Layer.succeed(QueueService, yield* QueueService),

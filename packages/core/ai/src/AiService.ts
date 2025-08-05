@@ -16,14 +16,15 @@ export class AiService extends Context.Tag('@dxos/ai/AiService')<
   {
     readonly model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
   }
->() {
-  static model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, AiService> =
-    (model) =>
-      AiService.pipe(
-        Effect.map((_) => _.model(model)),
-        Layer.unwrapEffect,
-      );
-}
+>() {}
+
+export const model: (
+  model: LLMModel,
+) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, AiService> = (model) =>
+  AiService.pipe(
+    Effect.map((_) => _.model(model)),
+    Layer.unwrapEffect,
+  );
 
 export const notAvailable = Layer.succeed(AiService, {
   model: (model) => Layer.fail(new AiModelNotAvailableError(model)),

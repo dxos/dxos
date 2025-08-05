@@ -113,7 +113,6 @@ export const gptNode = defineComputeNode({
     assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
 
     const { queues } = yield* QueueService;
-
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
           try: () => queues.get<DataType.Message>(conversation.dxn).queryObjects(),
@@ -145,7 +144,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Is there a better way to satisfy deps?
     const runDeps = Layer.mergeAll(
-      AiService.AiService.model(DEFAULT_EDGE_MODEL).pipe(
+      AiService.model(DEFAULT_EDGE_MODEL).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

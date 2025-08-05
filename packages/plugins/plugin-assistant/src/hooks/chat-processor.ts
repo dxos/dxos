@@ -183,7 +183,7 @@ export class AiChatProcessor {
           })
           .pipe(
             //
-            Effect.provide(AiService.AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+            Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
             // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
             Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
             Effect.provide(this._services),

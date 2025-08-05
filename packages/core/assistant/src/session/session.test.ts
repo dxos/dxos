@@ -64,7 +64,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
   it.effect(
     'no tools',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
 
         const response = yield* session.run({
@@ -74,7 +74,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
         log.info('response', { response });
       },
       Effect.provide(
-        AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
           Layer.provideMerge(ToolResolverService.layerEmpty),
           Layer.provideMerge(ToolExecutionService.layerEmpty),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
@@ -101,7 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
           toolkitLayer,
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
-          AiService.AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
         ),
