@@ -2,20 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Fix.
-// @ts-nocheck
-
 import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataTypes } from '@dxos/schema';
 
-import { AiSession } from '../session';
+import { AiSession, GenerationObserver } from '../session';
 
-import { ExaToolkit, LiveExaHandler, MockExaHandler } from './exa';
+import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
@@ -25,6 +22,7 @@ import PROMPT from './instructions-research.tpl?raw';
  */
 // TODO(burdon): Rename.
 export const researchFn = defineFunction({
+  name: 'dxos.org/function/research',
   description: 'Research the web for information',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
@@ -44,31 +42,26 @@ export const researchFn = defineFunction({
     function* ({ data: { query, mockSearch } }) {
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
-      const graphWriteToolkit = makeGraphWriterToolkit({ schema: DataTypes });
-      const toolkit = yield* AiToolkit.merge(ExaToolkit, LocalSearchToolkit, graphWriteToolkit).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            mockSearch ? MockExaHandler : LiveExaHandler,
-            LocalSearchHandler,
-            makeGraphWriterHandler(graphWriteToolkit),
-          ),
-        ),
-      );
-
-      const printer = new ConsolePrinter();
-      const session = new AiSession();
-      session.message.on((message) => printer.printMessage(message));
-      session.userMessage.on((message) => printer.printMessage(message));
-      session.block.on((block) => printer.printContentBlock(block));
-      session.streamEvent.on((event) => log('stream', { event }));
+      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: DataTypes });
 
       // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
-      const result = yield* session.run({
-        prompt: query,
-        history: [],
-        systemPrompt: PROMPT,
-        toolkit,
-      });
+      const result = yield* new AiSession()
+        .run({
+          prompt: query,
+          history: [],
+          systemPrompt: PROMPT,
+          toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
+        })
+        .pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
+              LocalSearchHandler,
+              makeGraphWriterHandler(GraphWriterToolkit),
+            ),
+          ),
+        );
 
       return {
         result,
@@ -83,6 +76,12 @@ export const researchFn = defineFunction({
       //   `,
       // };
     },
-    Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022')),
+    Effect.provide(
+      Layer.mergeAll(
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+        ToolResolverService.layerEmpty,
+        ToolExecutionService.layerEmpty,
+      ),
+    ),
   ),
 });

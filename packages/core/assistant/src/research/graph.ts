@@ -171,6 +171,7 @@ export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWrite
     }),
   });
 };
+
 /**
  * Create a schema for structured data extraction.
  */

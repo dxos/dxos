@@ -20,57 +20,57 @@ export class ExaToolkit extends AiToolkit.make(
     success: Schema.Unknown,
     failure: Schema.Never,
   }).addRequirement<CredentialsService>(),
-) {}
+) {
+  static layerLive = ExaToolkit.toLayer({
+    exa_search: Effect.fn(function* ({ query }) {
+      const credential = yield* CredentialsService.getCredential({ service: 'exa.ai' });
+      const exa = new Exa(credential.apiKey);
 
-export const LiveExaHandler = ExaToolkit.toLayer({
-  exa_search: Effect.fn(function* ({ query }) {
-    const credential = yield* CredentialsService.getCredential({ service: 'exa.ai' });
-    const exa = new Exa(credential.apiKey);
+      const context = yield* Effect.promise(async () =>
+        exa.searchAndContents(query, {
+          type: 'auto',
+          text: {
+            maxCharacters: 3_000,
+          },
+          livecrawl: 'always',
+        }),
+      );
 
-    const context = yield* Effect.promise(async () =>
-      exa.searchAndContents(query, {
-        type: 'auto',
-        text: {
-          maxCharacters: 3_000,
+      log.info('exa search', { query, costDollars: context.costDollars });
+
+      return context;
+    }),
+  });
+
+  static layerMock = ExaToolkit.toLayer({
+    exa_search: Effect.fn(function* ({ query }) {
+      // Find result with closest matching autoprompt using weighted Levenshtein distance
+      const result = SEARCH_RESULTS.reduce(
+        (closest, current) => {
+          if (!current.autopromptString) {
+            return closest;
+          }
+          if (!closest) {
+            return current;
+          }
+
+          // Calculate Levenshtein distance
+          const dist1 = levenshteinDistance(query, current.autopromptString);
+          const dist2 = levenshteinDistance(query, closest.autopromptString || '');
+
+          // Weight by length of the longer string to normalize
+          const weight1 = dist1 / Math.max(query.length, current.autopromptString.length);
+          const weight2 = dist2 / Math.max(query.length, closest.autopromptString?.length || 0);
+
+          return weight1 < weight2 ? current : closest;
         },
-        livecrawl: 'always',
-      }),
-    );
+        null as (typeof SEARCH_RESULTS)[0] | null,
+      );
 
-    log.info('exa search', { query, costDollars: context.costDollars });
-
-    return context;
-  }),
-});
-
-export const MockExaHandler = ExaToolkit.toLayer({
-  exa_search: Effect.fn(function* ({ query }) {
-    // Find result with closest matching autoprompt using weighted Levenshtein distance
-    const result = SEARCH_RESULTS.reduce(
-      (closest, current) => {
-        if (!current.autopromptString) {
-          return closest;
-        }
-        if (!closest) {
-          return current;
-        }
-
-        // Calculate Levenshtein distance
-        const dist1 = levenshteinDistance(query, current.autopromptString);
-        const dist2 = levenshteinDistance(query, closest.autopromptString || '');
-
-        // Weight by length of the longer string to normalize
-        const weight1 = dist1 / Math.max(query.length, current.autopromptString.length);
-        const weight2 = dist2 / Math.max(query.length, closest.autopromptString?.length || 0);
-
-        return weight1 < weight2 ? current : closest;
-      },
-      null as (typeof SEARCH_RESULTS)[0] | null,
-    );
-
-    return result;
-  }),
-});
+      return result;
+    }),
+  });
+}
 
 const levenshteinDistance = (str1: string, str2: string): number => {
   const m = str1.length;
