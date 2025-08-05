@@ -5,7 +5,7 @@
 import { Context, Effect, Layer } from 'effect';
 
 import type { Filter, Live, Obj, Query, Ref, Relation } from '@dxos/echo';
-import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
+import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
 import type { DXN } from '@dxos/keys';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
@@ -83,4 +83,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    */
   static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
+
+  static flush = (opts?: FlushOptions) =>
+    DatabaseService.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts))));
 }
