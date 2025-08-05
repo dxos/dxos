@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Fix.
+// ISSUE(burdon): defineFunction
 // @ts-nocheck
 
 import { Schema, pipe } from 'effect';
@@ -17,8 +17,6 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
 
-const REMOTE_AI = true;
-
 const summarizationFn = defineFunction({
   description: 'Summarize a document',
   inputSchema: Schema.Struct({
@@ -27,7 +25,7 @@ const summarizationFn = defineFunction({
   }),
   outputSchema: DataType.Text,
   handler: async ({ data: { document, transcript }, context }) => {
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',
@@ -92,7 +90,7 @@ const refinementFn = defineFunction({
     summary: DataType.Text,
   }),
   handler: async ({ data: { summaries }, context }) => {
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',

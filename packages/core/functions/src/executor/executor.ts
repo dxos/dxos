@@ -4,7 +4,7 @@
 
 import { Effect, Schema } from 'effect';
 
-import type { SpaceId } from '@dxos/client/echo';
+import { type SpaceId } from '@dxos/client/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import type { FunctionContext, FunctionDefinition } from '../handler';
@@ -26,13 +26,10 @@ export class FunctionExecutor {
     (assertInput as any)(input);
 
     const context: FunctionContext = {
+      space: undefined,
       getService: this._services.getService.bind(this._services),
       getSpace: async (_spaceId: SpaceId) => {
         throw new Error('Not available. Use the database service instead.');
-      },
-      space: undefined,
-      get ai(): never {
-        throw new Error('Not available. Use the ai service instead.');
       },
     };
 

@@ -8,8 +8,9 @@ import { Effect, Layer, Schema } from 'effect';
 
 import { log } from '@dxos/log';
 
-import { ToolExecutionService, ToolResolverService } from './tools';
-import { ToolId } from './tools';
+import { ToolId } from './tool';
+import { ToolExecutionService } from './tool-execution-service';
+import { ToolResolverService } from './tool-resolver-service';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (id: ToolId) =>
@@ -38,7 +39,7 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
           const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
           log.info('calculate', { sanitizedInput });
 
-          // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
+          // eslint-disable-next-line @typescript-eslint/no-implied-eval
           return Function(`"use strict"; return (${sanitizedInput})`)();
         })();
 

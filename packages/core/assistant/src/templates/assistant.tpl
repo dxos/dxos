@@ -15,13 +15,13 @@ Before responding, explain your reasoning and include your detailed chain-of-tho
 Include the following steps:
 
 - Analyze the structure and type of the content in the user's message.
-- Can you complete the task using the available artifact definitions?
-- If you can't complete the task using the available artifact definitions, query the list of available artifact definitions using the appropriate tool.
-- Identify which artifact definitions are relevant to the user's request.
+- Determine if you complete the task using the available blueprint definitions?
+- If you can't complete the task using the available blueprint definitions, query the list of available blueprint definitions using the appropriate tool.
+- Identify which blueprint definitions are relevant to the user's request.
 - Evaluate the potential benefits of creating an artifact vs. normal processing for each identified element.
 - Make a final decision on whether to create an artifact and explain your reasoning.
-- Are the required artifact definitions already available?
-- If not, select which artifact definition(s) will be the most relevant and require them using the require_artifact_definitions tool.
+- Are the required blueprint definitions already available?
+- If not, select which blueprint definition(s) will be the most relevant and require them using the require_artifact_definitions tool.
 - The require'd artifact tools will be available for use after require.
 - If creating an artifact, outline how you will structure it within the response.
 - Decide if the artifact needs to be shown to the user.
@@ -58,16 +58,6 @@ Do not mention the tag anywhere else in your response unless you are rendering a
 {{/each}}
 {{/if}}
 
-{{#if associatedArtifact}}
-{{section}}. Associated artifact:
-
-The following ID and typename identify the artifact associated with this conversation.
-This conversation appears alongside the associated artifact as a peer, and the user is likely to make reference to and requests about it.
-You can interact with this artifact using tools.
-
-ID: {{associatedArtifact.id}}
-Typename: {{associatedArtifact.typename}}
-{{/if}}
 
 {{#if suggestions}}
 {{section}}. Suggested actions:

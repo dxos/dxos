@@ -55,6 +55,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "0.23.0",
     "@effect/platform": "0.89.0",
     "@preact/signals-core": "^1.9.0",
     "chalk": "^4.1.2",
