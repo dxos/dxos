@@ -61,7 +61,7 @@ export const ViewEditor = ({
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
     return new ProjectionModel(jsonSchema, view.projection);
   }, [schema, view.projection]);
-  const [expandedField, setExpandedField] = useState<FieldType>();
+  const [expandedField, setExpandedField] = useState<FieldType['id']>();
   const readonly = _readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
@@ -75,7 +75,7 @@ export const ViewEditor = ({
 
   const handleToggleField = useCallback(
     (field: FieldType) => {
-      setExpandedField((prevExpandedField) => (prevExpandedField === field ? undefined : field));
+      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
     },
     [readonly],
   );
@@ -85,7 +85,7 @@ export const ViewEditor = ({
   const handleAdd = useCallback(() => {
     invariant(!readonly);
     const field = projection.createFieldProjection();
-    setExpandedField(field);
+    setExpandedField(field.id);
   }, [schema, projection, readonly]);
 
   const handleUpdate = useCallback(
@@ -103,7 +103,7 @@ export const ViewEditor = ({
   const handleDelete = useCallback(
     (fieldId: string) => {
       invariant(!readonly);
-      if (fieldId === expandedField?.id) {
+      if (fieldId === expandedField) {
         setExpandedField(undefined);
       }
 
@@ -183,11 +183,10 @@ export const ViewEditor = ({
               <div role='list' className={listGrid}>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
-                    role='button'
                     key={field.id}
                     item={field}
                     classNames={listItemGrid}
-                    aria-expanded={expandedField === field}
+                    aria-expanded={expandedField === field.id}
                   >
                     <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                       <List.ItemDragHandle disabled={readonly} />
@@ -207,16 +206,17 @@ export const ViewEditor = ({
                         autoHide={false}
                         disabled={readonly || view.projection.fields.length <= 1}
                         onClick={() => handleDelete(field.id)}
+                        data-testid='field.delete'
                       />
                       <IconButton
                         iconOnly
                         variant='ghost'
                         label={t('toggle expand label', { ns: 'os' })}
-                        icon={expandedField === field ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                        icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                         onClick={() => handleToggleField(field)}
                       />
                     </div>
-                    {expandedField === field && (
+                    {expandedField === field.id && (
                       <div role='none' className='col-span-5'>
                         <FieldEditor
                           readonly={readonly}

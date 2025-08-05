@@ -25,6 +25,7 @@ export const translations = [
         'field limit reached': 'Maximum number of fields reached',
         'boolean input true value': 'Yes',
         'boolean input false value': 'No',
+        'delete field label': 'Delete field',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',
