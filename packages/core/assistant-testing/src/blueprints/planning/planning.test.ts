@@ -79,10 +79,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             prevContent = artifact.content;
           };
 
-        const systemPrompt = 'You are a helpful assistant.';
+        const system = 'You are a helpful assistant.';
         const steps: TestStep[] = [
           {
-            systemPrompt,
+            system,
             prompt: trim`
               I'm building a shelf.
               Maintain a shopping list here: ${Obj.getDXN(artifact)}
@@ -93,7 +93,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             }),
           },
           {
-            systemPrompt,
+            system,
             prompt: trim`
               I will need a board too.
             `,
@@ -102,7 +102,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             }),
           },
           {
-            systemPrompt,
+            system,
             prompt: trim`
               Actually I'm going to use screws and a screwdriver.
             `,

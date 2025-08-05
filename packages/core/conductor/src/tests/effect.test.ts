@@ -7,27 +7,12 @@ import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { isStream } from '../util';
-
 describe('effect-basics', () => {
   describe('streams', () => {
     test('stream', async ({ expect }) => {
       const stream = Stream.range(1, 10);
       const sum = stream.pipe(Stream.runFold(0, (acc, x) => acc + x));
       await expect(Effect.runPromise(sum)).resolves.toBe(55);
-    });
-
-    test('stream instanceof checks', ({ expect }) => {
-      expect(isStream(Stream.range(1, 10))).toBe(true);
-      expect(isStream(Effect.succeed(1))).toBe(false);
-      expect(isStream({})).toBe(false);
-      expect(isStream(1)).toBe(false);
-      expect(isStream('')).toBe(false);
-      expect(isStream(null)).toBe(false);
-      expect(isStream(undefined)).toBe(false);
-      expect(isStream(true)).toBe(false);
-      expect(isStream(false)).toBe(false);
-      expect(isStream(new ReadableStream())).toBe(false);
     });
 
     test('stream is not an effect', ({ expect }) => {

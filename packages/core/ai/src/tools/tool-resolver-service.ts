@@ -5,8 +5,9 @@
 import { type AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
-import { type ToolId } from '../deprecated/tools';
 import { AiToolNotFoundError } from '../errors';
+
+import { type ToolId } from './tool';
 
 // TODO(burdon): Ai prefix?
 export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverService')<

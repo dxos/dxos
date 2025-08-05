@@ -6,7 +6,6 @@ import { Effect, Schema } from 'effect';
 
 import { Filter } from '@dxos/echo-db';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { log } from '@dxos/log';
 
 import { Assistant } from '../types';
 
@@ -26,7 +25,6 @@ export default defineFunction({
     // TODO(burdon): Unit test and error handling for tools/functions.
     // TODO(burdon): Hack to get all chats and guess which one we are in.
     const { objects: chats } = yield* DatabaseService.runQuery(Filter.type(Assistant.Chat));
-    log.info('###', { chats: chats.length });
     return { objects: [] };
   }),
 });

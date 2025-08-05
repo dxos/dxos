@@ -15,6 +15,3 @@ export const LLMModel = Schema.Literal(
 );
 
 export type LLMModel = Schema.Schema.Type<typeof LLMModel>;
-
-// Re-export deprecated types for backward compatibility
-export type { GenerateRequest, GenerateResponse, GenerationStreamEvent } from './deprecated/types';

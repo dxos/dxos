@@ -12,6 +12,8 @@ import { huePalettes, physicalColors } from './physical-colors';
 import { semanticColors } from './semantic-colors';
 import { systemAliases, systemSememes } from './sememes-system';
 
+// TODO(burdon): index.ts file should just contain exports.
+
 export const tokenSet = {
   colors: {
     physical: physicalColors,

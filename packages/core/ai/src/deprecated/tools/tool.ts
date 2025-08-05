@@ -8,6 +8,9 @@ import { JsonSchemaType } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 import { type AgentStatus } from '../../status-report';
+import { type ToolId } from '../../tools';
+
+// TODO(burdon): REMOVE!!!
 
 declare global {
   /**
@@ -135,13 +138,6 @@ export type Tool = Schema.Schema.Type<typeof Tool>;
 export interface ExecutableTool extends Tool {
   execute: (params: unknown, context: ToolExecutionContext) => Promise<ToolResult>;
 }
-
-export const ToolId = Schema.String.pipe(Schema.brand('ToolId')).annotations({
-  identifier: 'ToolId',
-  name: 'ToolId',
-  description: 'Unique identifier for a tool.',
-});
-export type ToolId = Schema.Schema.Type<typeof ToolId>;
 
 export interface ToolResolver {
   resolve: (id: ToolId) => Promise<ExecutableTool>;

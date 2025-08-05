@@ -14,7 +14,6 @@ import { DataType } from '@dxos/schema';
 import {
   AnchorSort,
   AppGraphSerializer,
-  ArtifactDefinition,
   IntentResolver,
   MarkdownSettings,
   MarkdownState,
@@ -112,10 +111,5 @@ export const MarkdownPlugin = () =>
       // TODO(wittjosiah): More relevant event?
       activatesOn: Events.AppGraphReady,
       activate: AnchorSort,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
     }),
   ]);
