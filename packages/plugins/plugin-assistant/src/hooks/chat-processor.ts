@@ -173,35 +173,6 @@ export class AiChatProcessor {
       });
     });
 
-    // TODO(dmaretskyi): Handle tool status reports.
-    // session.toolStatusReport.on(({ message, status }) => {
-    //   const msg = this._pending.peek().find((m) => m.id === message.id);
-    //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-    //   if (!toolUse) {
-    //     return;
-    //   }
-
-    //   const block = msg?.content.find(
-    //     (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-    //   );
-    //   if (block) {
-    //     this._pending.value = this._pending.value.map((m) => {
-    //       if (m.id === message.id) {
-    //         return {
-    //           ...m,
-    //           content: m.content.map((block) =>
-    //             block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
-    //           ),
-    //         };
-    //       }
-
-    //       return m;
-    //     });
-    //   } else {
-    //     log.warn('no block for status report');
-    //   }
-    // });
-
     try {
       const messages = await runAndForwardErrors(
         this._conversation
@@ -243,14 +214,7 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     log.info('cancelling...');
 
-    // TODO(dmaretskyi): Conversation should handle aborting.
-    // Option.match(this._registry.get(this._session), {
-    //   onSome: (session) => {
-    //     session.abort();
-    //     this._registry.set(this._session, Option.none());
-    //   },
-    //   onNone: () => {},
-    // });
+    // TODO(dmaretskyi): Abort using Fiber.interrupt.
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {
