@@ -48,7 +48,7 @@ export class AiConversation {
    *
    * @deprecated Pass in a session instead.
    */
-  // TODO(burdon): Fix!!!
+  // ISSUE(burdon): Is this still deprecated?
   public readonly onBegin = new Event<AiSession>();
 
   /**

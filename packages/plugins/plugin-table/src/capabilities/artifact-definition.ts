@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): defineArtifact
 // @ts-nocheck
-// TODO(burdon): Fix!!!
 
 import { Schema, pipe } from 'effect';
 

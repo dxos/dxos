@@ -2,9 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-nocheck
-// TODO(burdon): Fix!!!
-
 import { type Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -85,12 +82,11 @@ export default (context: PluginContext) => {
 };
 
 type EntityExtractionEnricherFactoryOptions = {
-  aiClient: AiServiceClient;
   contextTypes: Schema.Schema.AnyNoContext[];
   space: Space;
 };
 
-const _createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   const executor = new FunctionExecutor(new ServiceContainer());
 
   return async (message: DataType.Message) => {

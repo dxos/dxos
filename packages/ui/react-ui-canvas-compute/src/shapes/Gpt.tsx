@@ -43,8 +43,9 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
           setText('');
           break;
         }
+
         case 'custom': {
-          // TODO(burdon): Fix!!!
+          // TODO(burdon): Any?
           const token = ev.event;
           switch (token.type) {
             case 'content_block_delta':

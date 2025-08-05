@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): tools
 // @ts-ignore
-// TODO(burdon): Fix!!!
 
 import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';

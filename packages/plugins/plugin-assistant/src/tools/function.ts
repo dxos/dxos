@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
-// TODO(burdon): Fix!!!
+// ISSUE(burdon): deprecated types: ToolResult
 
 import { type ExecutableTool, ToolResult, createTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
@@ -29,6 +28,7 @@ export const convertFunctionToTool = (
 
   const url = getInvocationUrl(existingFunctionUrl, edgeUrl, { spaceId });
 
+  // TODO(burdon): Should be DXN?
   return createTool('user-function', {
     name: fn.name,
     description: fn.description,

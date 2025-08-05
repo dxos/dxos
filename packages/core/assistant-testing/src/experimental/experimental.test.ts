@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): deprecated types: createTool
 // @ts-nocheck
-// TODO(burdon): Fix!!!
 
 import { inspect } from 'node:util';
 

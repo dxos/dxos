@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): deprecated types: GenerationStreamEvent
 // @ts-nocheck
-// TODO(burdon): Fix!!!
 
 import { it } from '@effect/vitest';
 import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';

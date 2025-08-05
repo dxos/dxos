@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): tools
 // @ts-nocheck
-// TODO(burdon): Fix!!!
 
 import { Schema } from 'effect';
 

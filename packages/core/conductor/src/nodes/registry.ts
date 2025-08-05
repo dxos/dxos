@@ -407,7 +407,11 @@ export const registry: Record<NodeType, Executable> = {
   ['text-to-image' as const]: defineComputeNode({
     input: VoidInput,
     output: VoidOutput, // TODO(burdon): Fix.
-    exec: synchronizedComputeFunction(() => Effect.succeed({})),
+    exec: synchronizedComputeFunction(() =>
+      Effect.gen(function* () {
+        throw new Error('Not implemented');
+      }),
+    ),
   }),
 };
 

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): deprecated types: MixedStreamParser
 // @ts-nocheck
-// TODO(burdon): Fix!!!
 
 import { Option, Schema, SchemaAST } from 'effect';
 import Exa from 'exa-js';

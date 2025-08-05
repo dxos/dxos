@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Fix.
+// ISSUE(burdon): defineFunction
 // @ts-nocheck
 
 import { Schema, pipe } from 'effect';
