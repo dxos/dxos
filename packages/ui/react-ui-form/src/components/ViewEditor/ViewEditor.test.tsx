@@ -141,7 +141,7 @@ describe('ViewEditor', () => {
     // Find the delete button for the 'name' property.
     const nameProperty = screen.getByText('name');
     const propertyRow = nameProperty.closest('[role="listitem"]');
-    const deleteButton = propertyRow?.querySelector('button:last-child');
+    const deleteButton = propertyRow?.querySelector('[data-testid="field.delete"]');
 
     if (!deleteButton) {
       throw new Error('Delete button not found');
