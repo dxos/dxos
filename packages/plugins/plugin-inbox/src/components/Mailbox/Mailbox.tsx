@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
+import { getFirstTwoRenderableChars, toHue, trim } from '@dxos/util';
 
 import { type MailboxType } from '../../types';
 import { formatDate, hashString } from '../util';
@@ -37,7 +37,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, isCurrent?: boolean) => {
+const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);
@@ -47,36 +47,38 @@ const renderMessageCell = (message: DataType.Message, now: Date, isCurrent?: boo
   const subject = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
 
-  return `<button
+  return trim`
+    <button
       class="message__thumb dx-focus-ring-inset"
       data-inbox-action="select-message"
       data-message-id="${id}"
-      ><dx-avatar
+    >
+      <dx-avatar
         hue="${hue}"
         hueVariant="surface"
         variant="square"
         size="8"
         fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
-      ></dx-avatar
-    ></button
-    ><button
+      ></dx-avatar>
+    </button>
+    <button
       class="message__abstract dx-focus-ring-inset"
       data-inbox-action="current-message"
       data-message-id="${id}"
-      ><p class="message__abstract__heading"
-        ><span class="message__abstract__from">${from}</span
-        ><span class="message__abstract__date">${date}</span
-      ></p
-      ><p class="message__abstract__body">${subject}</p
-  >
-  ${
-    message.properties?.tags
-      ? `<div class="message__tag-row">
-    ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
-  </div>`
-      : ''
-  }
-  </button>`;
+    >
+      <p class="message__abstract__heading">
+      <span class="message__abstract__from">${from}</span>
+      <span class="message__abstract__date">${date}</span>
+      </p>
+      <p class="message__abstract__body">${subject}</p>
+    ${
+      message.properties?.tags
+        ? `<div class="message__tag-row">
+            ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+          </div>`
+        : ''
+    }
+    </button>`;
 };
 
 const messageCellClassName = 'message';
@@ -128,7 +130,6 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const handleClick = useCallback(
     (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-
       const label = target.getAttribute('data-label');
       if (label) {
         onAction?.({ type: 'tag-select', label });
