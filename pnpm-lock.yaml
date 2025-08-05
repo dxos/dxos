@@ -104,6 +104,9 @@ importers:
       '@dxos/typings':
         specifier: workspace:*
         version: link:packages/common/typings
+      '@dxos/vitest-plugin-import-source':
+        specifier: workspace:*
+        version: link:tools/vitest-plugin-import-source
       '@effect/language-service':
         specifier: ^0.28.0
         version: 0.28.0
@@ -14861,6 +14864,15 @@ importers:
       '@types/picomatch':
         specifier: ^3.0.1
         version: 3.0.1
+
+  tools/vitest-plugin-import-source:
+    dependencies:
+      minimatch:
+        specifier: '*'
+        version: 5.1.6
+      oxc-resolver:
+        specifier: '*'
+        version: 11.6.0
 
   tools/x:
     dependencies:
@@ -36663,7 +36675,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.1':
     dependencies:
-      '@emnapi/runtime': 1.4.3
+      '@emnapi/runtime': 1.4.5
     optional: true
 
   '@img/sharp-win32-ia32@0.33.5':
@@ -37233,7 +37245,7 @@ snapshots:
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
       '@emnapi/core': 1.4.5
-      '@emnapi/runtime': 1.4.3
+      '@emnapi/runtime': 1.4.5
       '@tybys/wasm-util': 0.10.0
     optional: true
 

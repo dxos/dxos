@@ -1,0 +1,25 @@
+{
+  "name": "@dxos/vitest-plugin-import-source",
+  "version": "0.1.0",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "source": "./index.ts",
+      "import": "./index.ts",
+      "types": "./index.ts"
+    }
+  },
+  "dependencies": {
+    "minimatch": "*",
+    "oxc-resolver": "*"
+  },
+  "peerDependencies": {
+    "vite": "*"
+  }
+}
