@@ -101,7 +101,7 @@ export class AiSession {
         // Build system prompt from blueprint templates.
         // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
         const blueprints = params.blueprints ?? [];
-        const system = yield* pipe(
+        let system = yield* pipe(
           blueprints,
           Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
           Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
@@ -112,20 +112,19 @@ export class AiSession {
         const context: string[] =
           params.objects?.map(
             (object) => trim`
-              <object>
-                <dxn>${Obj.getDXN(object)}</dxn>
-                <typename>${Obj.getTypename(object)}</typename>
-              </object>
-            `,
+          <object>
+            <dxn>${Obj.getDXN(object)}</dxn>
+            <typename>${Obj.getTypename(object)}</typename>
+          </object>
+        `,
           ) ?? [];
         if (context.length) {
           context.splice(0, 0, 'Context objects:');
+          system += '\n\n' + context.join('\n');
         }
 
         // TODO(burdon): Pass objects here? Should they be pre-processed?
-        const prompts = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
-        const prompt = [prompts, '', ...context].filter(Boolean).join('\n');
-        console.log(prompt);
+        const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
         // Build a combined toolkit from the blueprint tools and the provided toolkit.
         const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
