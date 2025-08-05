@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { Result, useRxValue } from '@effect-rx/rx-react';
