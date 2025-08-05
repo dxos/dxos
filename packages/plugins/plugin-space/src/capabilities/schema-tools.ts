@@ -2,11 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-nocheck
-// TODO(burdon): Fix!!!
-
 import { Schema, SchemaAST } from 'effect';
 
+import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
