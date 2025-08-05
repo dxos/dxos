@@ -26,7 +26,7 @@ export const ChessboardPlayers = ({ classNames, children }: ChessboardPlayersPro
   }
 
   return (
-    <div role='none' className={mx('grid grid-cols-3 gap-8', classNames)}>
+    <div role='none' className={mx('grid grid-cols-[1fr_min-content_1fr] pis-2 pie-2 overflow-hidden', classNames)}>
       <div role='none' className='flex flex-row-reverse items-center gap-2'>
         <PlayerSelect
           side='white'

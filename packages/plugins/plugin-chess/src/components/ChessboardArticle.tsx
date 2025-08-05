@@ -20,14 +20,14 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
   const [open, setOpen] = useState(true);
 
   return (
-    <StackItem.Content classNames='bs-full is-full overflow-hidden'>
+    <StackItem.Content classNames='@container bs-full is-full overflow-hidden'>
       <Chessboard.Root game={game}>
-        <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && 'grid-cols-[1fr_320px]')}>
+        <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && 'lg:grid-cols-[1fr_320px]')}>
           <Chessboard.Content>
             <Chessboard.Board orientation={orientation} />
           </Chessboard.Content>
           {open && (
-            <div className='flex flex-col p-8 justify-center items-center overflow-hidden'>
+            <div className='hidden @lg:flex flex-col p-8 justify-center items-center overflow-hidden'>
               <Chessboard.Info
                 orientation={orientation}
                 min={8}
@@ -45,6 +45,7 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
                 iconOnly
                 label={t('button toggle info')}
                 size={5}
+                classNames={mx('invisible', !open && 'lg:visible')}
                 onClick={() => setOpen((open) => !open)}
               />
             </Chessboard.Players>
