@@ -88,12 +88,12 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     Effect.fn(
       function* ({ expect }) {
         const session = new AiSession({ operationModel: 'configured' });
-
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
           history: [],
           toolkit: TestToolkit,
         });
+
         log.info('response', { response });
       },
       Effect.provide(

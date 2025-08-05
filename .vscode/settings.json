@@ -386,5 +386,6 @@
     "9D3C26",
     "6B2210"
   ],
-  "hediet.vscode-drawio.resizeImages": null
+  "hediet.vscode-drawio.resizeImages": null,
+  "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }]
 }

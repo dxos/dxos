@@ -10,14 +10,11 @@ import { type ExecutableTool } from '@dxos/ai';
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { useConfig } from '@dxos/react-client';
 import { Filter, type Queue, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
-import { isNonNullable } from '@dxos/util';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../hooks';
-import { convertFunctionToTool, createToolsFromService } from '../tools';
+import { createToolsFromService } from '../tools';
 import { type Assistant, ServiceType } from '../types';
 
 export type UseChatProcessorProps = {
@@ -55,20 +52,8 @@ export const useChatProcessor = ({
   }, [remoteServices]);
 
   // Tools and context.
-  const config = useConfig();
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
-  const functions = useQuery(space, Filter.type(FunctionType));
-  const [tools, extensions] = useMemo(() => {
-    log('creating tools...');
-    const tools: ExecutableTool[] = [
-      ...serviceTools,
-      ...functions
-        .map((fn) => convertFunctionToTool(fn, config.values.runtime?.services?.edge?.url ?? '', space?.id))
-        .filter(isNonNullable),
-    ];
-    const extensions = { space, dispatch, pivotId: chatId };
-    return [tools, extensions];
-  }, [dispatch, space, chatId, serviceTools, functions]);
+  const extensions = useMemo(() => ({ space, dispatch, pivotId: chatId }), [dispatch, space, chatId]);
 
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {

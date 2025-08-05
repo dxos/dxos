@@ -244,13 +244,13 @@ export class AiChatProcessor {
     log.info('cancelling...');
 
     // TODO(dmaretskyi): Conversation should handle aborting.
-    Option.match(this._registry.get(this._session), {
-      onSome: (session) => {
-        session.abort();
-        this._registry.set(this._session, Option.none());
-      },
-      onNone: () => {},
-    });
+    // Option.match(this._registry.get(this._session), {
+    //   onSome: (session) => {
+    //     session.abort();
+    //     this._registry.set(this._session, Option.none());
+    //   },
+    //   onNone: () => {},
+    // });
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {

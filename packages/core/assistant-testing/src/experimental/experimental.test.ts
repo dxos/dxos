@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// ISSUE(burdon): deprecated types: createTool
+// ISSUE(burdon): deprecated types: createTool -> defineFunction (artifact defs, plugins, blueprints), AiTool.make
 // @ts-nocheck
 
 import { inspect } from 'node:util';

@@ -48,7 +48,7 @@ export class AiConversation {
    *
    * @deprecated Pass in a session instead.
    */
-  // ISSUE(burdon): Is this still deprecated?
+  // TODO(burdon): Is this still deprecated?
   public readonly onBegin = new Event<AiSession>();
 
   /**
@@ -71,6 +71,7 @@ export class AiConversation {
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
   run = <Tools extends AiTool.Any>({
+    // TODO(burdon): Decide whether to pass in or to fully encapsulate.
     session = new AiSession(),
     ...params
   }: AiConversationRunParams<Tools>): Effect.Effect<

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-// ISSUE(burdon): deprecated types: MixedStreamParser
+// ISSUE(burdon): deprecated types: MixedStreamParser => effect
 // @ts-nocheck
 
 import { DEFAULT_EDGE_MODEL } from '@dxos/ai';

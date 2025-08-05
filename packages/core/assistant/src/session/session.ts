@@ -201,12 +201,6 @@ export class AiSession {
     // });
     // return parser.getResult(result);
   }
-
-  // TODO(burdon): Implement abort.
-  abort(): void {
-    // this._stream?.abort();
-    // Effect.interrupt?
-  }
 }
 
 // TODO(burdon): Move to AiPreprocessor.

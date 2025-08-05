@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// ISSUE(burdon): deprecated types: MixedStreamParser
+// ISSUE(burdon): deprecated types: MixedStreamParser => effect
 // @ts-nocheck
 
 import { Option, Schema, SchemaAST } from 'effect';
@@ -20,15 +20,11 @@ import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
   query?: string;
-
   // TODO(dmaretskyi): How can we pass this through.
   context?: string;
-
   schema: Schema[];
-
   AiService: AiServiceClient;
   exaApiKey: string;
-
   liveCrawl?: boolean;
 };
 
