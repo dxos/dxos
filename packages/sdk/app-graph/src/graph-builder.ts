@@ -4,14 +4,19 @@
 
 import { Registry, Rx } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import { Array, type Option, Record, pipe } from 'effect';
+import { Array, Option, Record, pipe } from 'effect';
 
-import { type CleanupFn, type MulticastObservable } from '@dxos/async';
+import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNode, isNonNullable } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE, type ExpandableGraph, Graph, type GraphParams, ROOT_ID } from './graph';
 import { type ActionData, type Node, type NodeArg, type Relation, actionGroupSymbol } from './node';
+
+/**
+ * Graph builder extension for adding nodes to the graph based on a node id.
+ */
+export type ResolverExtension = (id: string) => Rx.Rx<NodeArg<any> | null>;
 
 /**
  * Graph builder extension for adding nodes to the graph based on a connection to an existing node.
@@ -49,8 +54,7 @@ export type CreateExtensionOptions = {
   id: string;
   relation?: Relation;
   position?: Position;
-  // TODO(wittjosiah): On initialize to restore state from cache.
-  // resolver?: ResolverExtension;
+  resolver?: ResolverExtension;
   connector?: ConnectorExtension;
   actions?: ActionsExtension;
   actionGroups?: ActionGroupsExtension;
@@ -64,11 +68,15 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
     id,
     position = 'static',
     relation = 'outbound',
+    resolver: _resolver,
     connector: _connector,
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
   const getId = (key: string) => `${id}/${key}`;
+
+  const resolver =
+    _resolver && Rx.family((id: string) => _resolver(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
     _connector &&
@@ -87,7 +95,7 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
     Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
 
   return [
-    // resolver ? { id: getId('resolver'), position, resolver } : undefined,
+    resolver ? { id: getId('resolver'), position, resolver } : undefined,
     connector
       ? ({
           id: getId('connector'),
@@ -157,7 +165,7 @@ export type BuilderExtension = Readonly<{
   id: string;
   position: Position;
   relation?: Relation; // Only for connector.
-  // resolver?: ResolverExtension;
+  resolver?: ResolverExtension;
   connector?: (node: Rx.Rx<Option.Option<Node>>) => Rx.Rx<NodeArg<any>[]>;
 }>;
 
@@ -179,12 +187,12 @@ export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExte
 //   Should track LRU nodes that are not in the set/radius and remove them beyond a certain threshold.
 export class GraphBuilder {
   // TODO(wittjosiah): Use Context.
-  private readonly _connectorSubscriptions = new Map<string, CleanupFn>();
+  private readonly _subscriptions = new Map<string, CleanupFn>();
   private readonly _extensions = Rx.make(Record.empty<string, BuilderExtension>()).pipe(
     Rx.keepAlive,
     Rx.withLabel('graph-builder:extensions'),
   );
-
+  private readonly _initialized: Record<string, Trigger> = {};
   private readonly _registry: Registry.Registry;
   private readonly _graph: Graph;
 
@@ -194,7 +202,7 @@ export class GraphBuilder {
       ...params,
       registry: this._registry,
       onExpand: (id, relation) => this._onExpand(id, relation),
-      // onInitialize: (id) => this._onInitialize(id),
+      onInitialize: (id) => this._onInitialize(id),
       onRemoveNode: (id) => this._onRemoveNode(id),
     });
   }
@@ -275,9 +283,24 @@ export class GraphBuilder {
   }
 
   destroy(): void {
-    this._connectorSubscriptions.forEach((unsubscribe) => unsubscribe());
-    this._connectorSubscriptions.clear();
+    this._subscriptions.forEach((unsubscribe) => unsubscribe());
+    this._subscriptions.clear();
   }
+
+  private readonly _resolvers = Rx.family<string, Rx.Rx<Option.Option<NodeArg<any>>>>((id) => {
+    return Rx.make((get) => {
+      return pipe(
+        get(this._extensions),
+        Record.values,
+        Array.sortBy(byPosition),
+        Array.map(({ resolver }) => resolver),
+        Array.filter(isNonNullable),
+        Array.map((resolver) => get(resolver(id))),
+        Array.filter(isNonNullable),
+        Array.head,
+      );
+    });
+  });
 
   private readonly _connectors = Rx.family<string, Rx.Rx<NodeArg<any>[]>>((key) => {
     return Rx.make((get) => {
@@ -341,17 +364,38 @@ export class GraphBuilder {
       { immediate: true },
     );
 
-    this._connectorSubscriptions.set(id, cancel);
+    this._subscriptions.set(id, cancel);
   }
 
-  // TODO(wittjosiah): On initialize to restore state from cache.
-  // private async _onInitialize(id: string) {
-  //   log('onInitialize', { id });
-  // }
+  // TODO(wittjosiah): If the same node is added by a connector, the resolver should probably cancel itself?
+  private async _onInitialize(id: string) {
+    log('onInitialize', { id });
+    const resolver = this._resolvers(id);
+
+    const cancel = this._registry.subscribe(
+      resolver,
+      (node) => {
+        const trigger = this._initialized[id];
+        Option.match(node, {
+          onSome: (node) => {
+            this._graph.addNodes([node]);
+            trigger?.wake();
+          },
+          onNone: () => {
+            trigger?.wake();
+            this._graph.removeNodes([id]);
+          },
+        });
+      },
+      { immediate: true },
+    );
+
+    this._subscriptions.set(id, cancel);
+  }
 
   private _onRemoveNode(id: string): void {
-    this._connectorSubscriptions.get(id)?.();
-    this._connectorSubscriptions.delete(id);
+    this._subscriptions.get(id)?.();
+    this._subscriptions.delete(id);
   }
 }
 
