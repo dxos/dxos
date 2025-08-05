@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
@@ -27,7 +27,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const services = useChatServices({ space });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const processor = useChatProcessor({ chat, preset, services, settings });
+  const blueprintRegistry = useBlueprintRegistry();
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);

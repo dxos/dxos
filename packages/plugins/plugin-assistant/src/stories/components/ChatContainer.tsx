@@ -55,7 +55,6 @@ export const ChatContainer = ({ space }: ComponentProps) => {
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
       <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-        {/* <Toolbar.Button>sss</Toolbar.Button> */}
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton
           disabled
