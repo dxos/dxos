@@ -2,17 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import { execSync } from 'child_process';
-import { Table } from 'console-table-printer';
-import deepEqual from 'deep-equal';
 import fs from 'fs';
-import globrex from 'globrex';
-import defaultsDeep from 'lodash.defaultsdeep';
-import pick from 'lodash.pick';
 import { existsSync } from 'node:fs';
 import { inspect } from 'node:util';
 import { dirname, join, relative } from 'path';
+
+import chalk from 'chalk';
+import { Table } from 'console-table-printer';
+import deepEqual from 'deep-equal';
+import globrex from 'globrex';
+import defaultsDeep from 'lodash.defaultsdeep';
+import pick from 'lodash.pick';
 import sortPackageJson from 'sort-package-json';
 
 import { loadJson, saveJson, sortJson } from './util';
@@ -209,6 +210,11 @@ export class Toolbox {
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
             'packages/sdk/client-services/src/version.ts',
+            {
+              type: 'json',
+              path: 'packages/apps/composer-app/src-tauri/tauri.conf.json',
+              jsonpath: '$.version',
+            },
             ...this.graph.projects
               .sort((projectA, projectB) => projectA.path.localeCompare(projectB.path))
               .map((project) => ({
@@ -584,68 +590,91 @@ export class Toolbox {
       }
 
       const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
-      const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
 
-      const entrypoints = projectJson.targets?.compile?.options?.entryPoints;
-      if (!Array.isArray(entrypoints)) {
-        console.log(`skip ${project.name}`);
-        continue;
+      for (const [key, config] of Object.entries(packageJson.exports ?? {})) {
+        if (typeof config !== 'object' || typeof config.types !== 'string') {
+          continue;
+        }
+        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
+        if (!existsSync(join(project.path, src))) {
+          console.log(`Missing src file for ${project.name}: ${src}`);
+        }
+        config.source = src;
       }
 
-      const isNode =
-        !projectJson.targets?.compile?.options?.platforms ||
-        projectJson.targets?.compile?.options?.platforms.includes('node');
-      const isBrowser =
-        !projectJson.targets?.compile?.options?.platforms ||
-        projectJson.targets?.compile?.options?.platforms.includes('browser');
-
-      packageJson.exports = {};
-      // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
-      packageJson.types = 'dist/types/src/index.d.ts';
-      packageJson.typesVersions = {
-        '*': {},
-      };
-      delete packageJson.main;
-
-      for (const entrypoint of entrypoints) {
-        const substituted = entrypoint.replace(/{projectRoot}/, project.path);
-        const relativePath = relative(project.path, substituted);
-
-        const exportName = relativePath
-          .replace(/^src\//, './')
-          .replace(/\/index\.tsx?$/, '')
-          .replace(/\.tsx?$/, '');
-        const distSlug = relativePath.replace(/^src\//, '').replace(/\.tsx?$/, '');
-
-        // console.log({ relativePath, exportName, distSlug });
-        packageJson.exports[exportName] = {};
-        (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
-        if (isBrowser) {
-          (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
+      for (const [key, config] of Object.entries(packageJson.imports ?? {})) {
+        if (typeof config !== 'object' || typeof config.types !== 'string') {
+          continue;
         }
-        if (isNode) {
-          (packageJson.exports[exportName] as any).node = `./dist/lib/node-esm/${distSlug}.mjs`;
+        const src = config.types.replace('./dist/types/src', './src').replace('.d.ts', '.ts');
+        if (!existsSync(join(project.path, src))) {
+          console.log(`Missing src file for ${project.name}: ${src}`);
         }
-
-        // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
-        if (exportName !== '.') {
-          packageJson.typesVersions['*'][exportName.replace(/^\.\//, '')] = [`dist/types/src/${distSlug}.d.ts`];
-        }
+        config.source = src;
       }
 
-      packageJson.exports = sortJson(packageJson.exports, { depth: 1 });
-      packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
+      // const projectJson = await loadJson<ProjectJson>(join(project.path, 'project.json'));
 
-      if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {
-        for (const key in packageJson.browser) {
-          if (key.startsWith('./dist/lib')) {
-            delete packageJson.browser[key];
-          }
-        }
-        if (Object.keys(packageJson.browser).length === 0) {
-          delete packageJson.browser;
-        }
-      }
+      // const entrypoints = projectJson.targets?.compile?.options?.entryPoints;
+      // if (!Array.isArray(entrypoints)) {
+      //   console.log(`skip ${project.name}`);
+      //   continue;
+      // }
+
+      // const isNode =
+      //   !projectJson.targets?.compile?.options?.platforms ||
+      //   projectJson.targets?.compile?.options?.platforms.includes('node');
+      // const isBrowser =
+      //   !projectJson.targets?.compile?.options?.platforms ||
+      //   projectJson.targets?.compile?.options?.platforms.includes('browser');
+
+      // packageJson.exports = {};
+      // // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
+      // packageJson.types = 'dist/types/src/index.d.ts';
+      // packageJson.typesVersions = {
+      //   '*': {},
+      // };
+      // delete packageJson.main;
+
+      // for (const entrypoint of entrypoints) {
+      //   const substituted = entrypoint.replace(/{projectRoot}/, project.path);
+      //   const relativePath = relative(project.path, substituted);
+
+      //   const exportName = relativePath
+      //     .replace(/^src\//, './')
+      //     .replace(/\/index\.tsx?$/, '')
+      //     .replace(/\.tsx?$/, '');
+      //   const distSlug = relativePath.replace(/^src\//, '').replace(/\.tsx?$/, '');
+
+      //   // console.log({ relativePath, exportName, distSlug });
+      //   packageJson.exports[exportName] = {};
+      //   (packageJson.exports[exportName] as any).types = `./dist/types/src/${distSlug}.d.ts`;
+      //   if (isBrowser) {
+      //     (packageJson.exports[exportName] as any).browser = `./dist/lib/browser/${distSlug}.mjs`;
+      //   }
+      //   if (isNode) {
+      //     (packageJson.exports[exportName] as any).node = `./dist/lib/node-esm/${distSlug}.mjs`;
+      //   }
+
+      //   // exports.types are only used with modern module resolution strategies so we keep this for compatibility.
+      //   if (exportName !== '.') {
+      //     packageJson.typesVersions['*'][exportName.replace(/^\.\//, '')] = [`dist/types/src/${distSlug}.d.ts`];
+      //   }
+      // }
+
+      // packageJson.exports = sortJson(packageJson.exports, { depth: 1 });
+      // packageJson.typesVersions['*'] = sortJson(packageJson.typesVersions['*'], { depth: -1 });
+
+      // if (typeof packageJson.browser === 'object' && packageJson.browser !== null) {
+      //   for (const key in packageJson.browser) {
+      //     if (key.startsWith('./dist/lib')) {
+      //       delete packageJson.browser[key];
+      //     }
+      //   }
+      //   if (Object.keys(packageJson.browser).length === 0) {
+      //     delete packageJson.browser;
+      //   }
+      // }
 
       // {
       //   const { name, exports, types, typesVersions } = packageJson;

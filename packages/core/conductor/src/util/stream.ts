@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Predicate, Stream, Schema } from 'effect';
+import { Predicate, Schema, Stream } from 'effect';
 
 export const isStream = (value: any): value is Stream.Stream<any> =>
   Predicate.hasProperty(value, Stream.StreamTypeId) && Predicate.isObject(value[Stream.StreamTypeId]);

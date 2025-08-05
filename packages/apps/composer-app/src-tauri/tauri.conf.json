@@ -1,0 +1,66 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Composer",
+  "version": "0.8.3",
+  "identifier": "org.dxos.composer",
+  "build": {
+    "frontendDist": "../out/composer",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "moon run composer-app:serve",
+    "beforeBuildCommand": "moon run composer-app:bundle"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Composer",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "devtools": true
+      }
+    ],
+    "security": {
+      "csp": {
+        "connect-src": "https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434",
+        "script-src": "https: http://localhost:* 'unsafe-eval' 'unsafe-inline'",
+        "frame-src": "https: http://localhost:* composer: blob:;",
+        "worker-src": "https: http://localhost:* blob:;",
+        "font-src": [
+          "https://fonts.gstatic.com"
+        ],
+        "img-src": "https: data: file: socket://* http://localhost:* blob:;",
+        "child-src": "'none'",
+        "object-src": "'none'"
+      }
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "entitlements": "./Entitlements.plist"
+    },
+    "iOS": {},
+    "createUpdaterArtifacts": true,
+    "externalBin": [
+      "sidecar/ollama"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK",
+      "endpoints": [
+        "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"
+      ]
+    }
+  }
+}

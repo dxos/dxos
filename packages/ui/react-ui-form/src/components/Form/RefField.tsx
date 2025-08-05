@@ -3,27 +3,28 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useCallback, useMemo, type FocusEvent } from 'react';
+import React, { type FocusEvent, useCallback, useMemo } from 'react';
 
 import {
   Expando,
-  getTypeAnnotation,
   Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxRefTag } from '@dxos/lit-ui/react';
 import { Input, useTranslation } from '@dxos/react-ui';
-import { TagPicker, type TagPickerMode, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { TagPicker, type TagPickerItemData, type TagPickerMode } from '@dxos/react-ui-tag-picker';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { TextInput } from './Defaults';
-import { InputHeader, type InputProps } from './Input';
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 import { translationKey } from '../../translations';
+
+import { TextInput } from './Defaults';
+import { InputHeader, type InputProps } from './Input';
 
 type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;

@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, Capabilities, contributes, Events, defineModule, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { ReactSurface, IntentResolver } from './capabilities';
+import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { TemplateAction, TemplateType } from './types';
+import { Template } from './types';
 
 export const TemplatePlugin = () =>
   definePlugin(meta, [
@@ -24,7 +24,7 @@ export const TemplatePlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: TemplateType.typename,
+          id: Template.Data.typename,
           metadata: {
             icon: 'ph--asterisk--regular',
           },
@@ -37,15 +37,15 @@ export const TemplatePlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TemplateType,
-            getIntent: () => createIntent(TemplateAction.Create),
+            objectSchema: Template.Data,
+            getIntent: () => createIntent(Template.Create),
           }),
         ),
     }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [TemplateType]),
+      activate: () => contributes(ClientCapabilities.Schema, [Template.Data]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

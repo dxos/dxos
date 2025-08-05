@@ -9,8 +9,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withMultiClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Main } from './Main';
 import { Item } from '../data';
+
+import { Main } from './Main';
 
 const meta: Meta<typeof Main> = {
   title: 'apps/testbench-app/Main',

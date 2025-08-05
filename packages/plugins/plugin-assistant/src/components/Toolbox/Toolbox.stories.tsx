@@ -7,9 +7,9 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, Capabilities, useCapabilities, SettingsPlugin } from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin, useCapabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities } from '@dxos/artifact-testing';
+import { capabilities } from '@dxos/assistant-testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
@@ -17,8 +17,9 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbox, type ToolboxProps } from './Toolbox';
 import { translations } from '../../translations';
+
+import { Toolbox, type ToolboxProps } from './Toolbox';
 
 const DefaultStory = (props: ToolboxProps) => {
   const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
@@ -39,7 +40,7 @@ const meta: Meta<typeof Toolbox> = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

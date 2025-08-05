@@ -5,29 +5,28 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
-  attachInstruction,
-  extractInstruction,
   type Instruction,
   type ItemMode,
+  attachInstruction,
+  extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Schema } from 'effect';
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState, type FC, type KeyboardEvent } from 'react';
+import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { Treegrid, TreeItem as NaturalTreeItem } from '@dxos/react-ui';
+import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
 import {
   ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
-  mx,
 } from '@dxos/react-ui-theme';
 
+import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
-import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
 
 type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
@@ -41,8 +40,15 @@ export const TreeDataSchema = Schema.Struct({
 });
 
 export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
-
 export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
+
+export type ColumnRenderer<T extends HasId = any> = FC<{
+  item: T;
+  path: string[];
+  open: boolean;
+  menuOpen: boolean;
+  setMenuOpen: (open: boolean) => void;
+}>;
 
 export type TreeItemProps<T extends HasId = any> = {
   item: T;
@@ -50,13 +56,7 @@ export type TreeItemProps<T extends HasId = any> = {
   levelOffset?: number;
   last: boolean;
   draggable?: boolean;
-  renderColumns?: FC<{
-    item: T;
-    path: string[];
-    open: boolean;
-    menuOpen: boolean;
-    setMenuOpen: (open: boolean) => void;
-  }>;
+  renderColumns?: ColumnRenderer<T>;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
@@ -223,7 +223,7 @@ const RawTreeItem = <T extends HasId = any>({
         id={id}
         aria-labelledby={`${id}__label`}
         parentOf={parentOf?.join(Treegrid.PARENT_OF_SEPARATOR)}
-        classNames={mx(
+        classNames={[
           'grid grid-cols-subgrid col-[tree-row] mbs-0.5 aria-[current]:bg-activeSurface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
@@ -231,7 +231,7 @@ const RawTreeItem = <T extends HasId = any>({
           hoverableDescriptionIcons,
           ghostHover,
           className,
-        )}
+        ]}
         data-itemid={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS

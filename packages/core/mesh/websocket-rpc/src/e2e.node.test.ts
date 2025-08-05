@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { schema } from '@dxos/protocols/proto';
-import { createServiceBundle, type ServiceTypesOf } from '@dxos/rpc';
+import { type ServiceTypesOf, createServiceBundle } from '@dxos/rpc';
 
 import { WebsocketRpcClient } from './client';
 import { WebsocketRpcServer } from './server';

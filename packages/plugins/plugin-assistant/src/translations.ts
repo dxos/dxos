@@ -2,24 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant, TemplateType } from './types';
+import { Assistant } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [Assistant.Chat.typename]: {
-        'typename label': 'Assistant',
-        'typename label_zero': 'Assistants',
-        'typename label_one': 'Assistant',
-        'typename label_other': 'Assistants',
-        'object name placeholder': 'New assistant',
-        'rename object label': 'Rename assistant',
-        'delete object label': 'Delete assistant',
+      // TODO(burdon): From assistant.
+      [Blueprint.Blueprint.typename]: {
+        'typename label': 'Blueprint',
+        'typename label_zero': 'Blueprints',
+        'typename label_one': 'Blueprint',
+        'typename label_other': 'Blueprints',
+        'object name placeholder': 'New blueprint',
+        'rename object label': 'Rename blueprint',
+        'delete object label': 'Delete blueprint',
       },
+      // TODO(burdon): From conductor.
       [Sequence.typename]: {
         'typename label': 'Sequence',
         'typename label_zero': 'Sequences',
@@ -29,14 +32,14 @@ export const translations = [
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
       },
-      [TemplateType.typename]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
-        'rename object label': 'Rename template',
-        'delete object label': 'Delete template',
+      [Assistant.Chat.typename]: {
+        'typename label': 'Assistant',
+        'typename label_zero': 'Assistants',
+        'typename label_one': 'Assistant',
+        'typename label_other': 'Assistants',
+        'object name placeholder': 'New assistant',
+        'rename object label': 'Rename assistant',
+        'delete object label': 'Delete assistant',
       },
       [meta.id]: {
         'templates label': 'Templates',

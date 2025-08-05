@@ -7,8 +7,9 @@ import { type AxisOptions, Chart } from 'react-charts';
 
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 
-import { ResourceName } from './Resource';
 import { JsonView } from '../../../components';
+
+import { ResourceName } from './Resource';
 
 export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   if (!resource) {
@@ -24,7 +25,9 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
 
       <div className='p-1'>
         <h4>Metrics</h4>
-        {resource.metrics?.map((metric, idx) => <MetricComponent key={idx} metric={metric} />)}
+        {resource.metrics?.map((metric, idx) => (
+          <MetricComponent key={idx} metric={metric} />
+        ))}
       </div>
     </div>
   );

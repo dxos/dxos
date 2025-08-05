@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type AbstractValueEncoding, type Crypto } from 'hypercore';
 import { callbackify } from 'node:util';
+
+import { type AbstractValueEncoding, type Crypto } from 'hypercore';
 
 import { type Codec, type EncodingOptions } from '@dxos/codec-protobuf';
 import { type Signer, verifySignature } from '@dxos/crypto';

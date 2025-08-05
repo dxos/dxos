@@ -8,11 +8,11 @@ import { Obj } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
 import {
-  createView,
   type DataType,
-  getSchemaFromPropertyDefinitions,
   ProjectionModel,
   type SchemaPropertyDefinition,
+  createView,
+  getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
 import { TableView } from '../types';

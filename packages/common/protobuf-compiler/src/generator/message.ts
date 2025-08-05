@@ -3,6 +3,7 @@
 //
 
 import { dirname, relative } from 'path';
+
 import type * as protobufjs from 'protobufjs';
 import * as ts from 'typescript';
 

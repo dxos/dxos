@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
 
 import { ThemeEditor } from '../components';
 import { THEME_EDITOR_PLUGIN } from '../meta';

@@ -11,8 +11,9 @@ import { type AttendableId, type Related, useAttention } from '@dxos/react-ui-at
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { MenuSignifierHorizontal } from './MenuSignifier';
 import { translationKey } from '../../translations';
+
+import { MenuSignifierHorizontal } from './MenuSignifier';
 
 export type KeyBinding = {
   windows?: string;

@@ -9,6 +9,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -27,9 +28,9 @@
     "@antv/layout": "^1.2.13",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -59,7 +60,7 @@
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact-testing": "workspace:*",
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",

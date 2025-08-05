@@ -14,20 +14,23 @@ export const CardContainer = ({
   role,
 }: PropsWithChildren<{ icon?: string; role?: string }>) => {
   switch (role) {
-    case 'popover':
+    case 'card--popover':
       return <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>;
-    case 'card--intrinsic':
-      return (
-        <IntrinsicCardContainer>
-          <Card.StaticRoot>{children}</Card.StaticRoot>
-        </IntrinsicCardContainer>
-      );
+
     case 'card--extrinsic':
       return (
         <ExtrinsicCardContainer>
           <Card.StaticRoot>{children}</Card.StaticRoot>
         </ExtrinsicCardContainer>
       );
+
+    case 'card--intrinsic':
+      return (
+        <IntrinsicCardContainer>
+          <Card.StaticRoot>{children}</Card.StaticRoot>
+        </IntrinsicCardContainer>
+      );
+
     default:
       return <Card.StaticRoot>{children}</Card.StaticRoot>;
   }

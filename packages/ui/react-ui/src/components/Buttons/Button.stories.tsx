@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
-import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { withSurfaceVariantsLayout, withTheme } from '../../testing';
+import { Icon } from '../Icon';
+
+import { Button, ButtonGroup, type ButtonProps } from './Button';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
@@ -21,10 +22,10 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
       {(args.variant === 'default' || args.variant === 'primary') && (
         <ButtonGroup>
           <Button {...args}>
-            <CaretLeft />
+            <Icon icon='ph--caret-left--regular' />
           </Button>
           <Button {...args}>
-            <CaretRight />
+            <Icon icon='ph--caret-right--regular' />
           </Button>
         </ButtonGroup>
       )}

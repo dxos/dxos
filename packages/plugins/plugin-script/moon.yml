@@ -8,6 +8,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--entryPoint=src/types.ts'
+      - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
       - '--preactSignalTracking'

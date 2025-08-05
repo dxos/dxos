@@ -3,34 +3,35 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { extractInstruction, type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { untracked } from '@preact/signals-core';
 import React, { memo, useCallback, useEffect, useMemo } from 'react';
 
 import {
-  createIntent,
   LayoutAction,
   Surface,
+  createIntent,
   useAppGraph,
   useCapability,
   useIntentDispatcher,
   useLayout,
 } from '@dxos/app-framework';
-import { isAction, isActionLike, ROOT_ID, type Node, type ReadableGraph } from '@dxos/app-graph';
+import { type Node, ROOT_ID, type ReadableGraph, isAction, isActionLike } from '@dxos/app-graph';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { useConnections } from '@dxos/plugin-graph';
+import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
-import { isTreeData, type TreeItemDataProps, type TreeData } from '@dxos/react-ui-list';
+import { type TreeData, type TreeItemDataProps, isTreeData } from '@dxos/react-ui-list';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
+
+import { NavTreeCapabilities } from '../capabilities';
+import { NAVTREE_PLUGIN } from '../meta';
+import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
+import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
 import { NAV_TREE_ITEM, NavTree } from './NavTree';
 import { NavTreeContext } from './NavTreeContext';
 import { type NavTreeContextValue } from './types';
-import { NavTreeCapabilities } from '../capabilities';
-import { NAVTREE_PLUGIN } from '../meta';
-import { type NavTreeItemGraphNode } from '../types';
-import { getChildren, getParent, getActions as naturalGetActions, resolveMigrationOperation } from '../util';
 
 // TODO(thure): Is NavTree truly authoritative in this regard?
 export const NODE_TYPE = 'dxos/app-graph/node';
@@ -64,6 +65,31 @@ const useItems = (node?: Node, options?: { disposition?: string; sort?: boolean 
   return options?.sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
 };
 
+const useActions = (node: Node): FlattenedActions => {
+  const { graph } = useAppGraph();
+  const actions = useGraphActions(graph, node.id);
+
+  return useMemo(
+    () =>
+      actions.reduce(
+        (acc: FlattenedActions, arg) => {
+          if (arg.properties.disposition === 'item') {
+            return acc;
+          }
+
+          acc.actions.push(arg);
+          if (!isAction(arg)) {
+            const actionGroup = graph.getActions(arg.id);
+            acc.groupedActions[arg.id] = actionGroup;
+          }
+          return acc;
+        },
+        { actions: [], groupedActions: {} },
+      ),
+    [actions],
+  );
+};
+
 export type NavTreeContainerProps = {
   popoverAnchorId?: string;
   topbar?: boolean;
@@ -76,8 +102,6 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
   const layout = useLayout();
   const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
-
-  const getActions = useCallback((node: Node) => naturalGetActions(graph, node), [graph]);
 
   const getProps = useCallback(
     (node: Node, path: string[]): TreeItemDataProps => {
@@ -269,7 +293,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     () => ({
       useItems,
       tab,
-      getActions,
+      useActions,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,
@@ -287,7 +311,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
     }),
     [
       tab,
-      getActions,
+      useActions,
       loadDescendents,
       renderItemEnd,
       popoverAnchorId,

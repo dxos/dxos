@@ -3,13 +3,13 @@
 //
 
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { dropTargetForElements, draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { useCanvasContext, type Dimension } from '@dxos/react-ui-canvas';
+import { type Dimension, useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type DragDropPayload, useEditorContext } from '../../hooks';

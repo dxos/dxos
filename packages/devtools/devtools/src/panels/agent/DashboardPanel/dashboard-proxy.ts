@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { schema } from '@dxos/protocols/proto';
 import { type DashboardService } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { createProtoRpcPeer, type RpcPort, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
 
 type ServiceBundle = {
   DashboardService: DashboardService;

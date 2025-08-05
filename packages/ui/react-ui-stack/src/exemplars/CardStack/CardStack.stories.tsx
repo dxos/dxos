@@ -6,15 +6,16 @@ import '@dxos-theme';
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CardStack } from './CardStack';
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
+
+import { CardStack } from './CardStack';
 
 // Set a seed for reproducible random values
 faker.seed(0);

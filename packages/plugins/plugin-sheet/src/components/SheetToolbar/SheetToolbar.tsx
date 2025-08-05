@@ -12,18 +12,19 @@ import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
-  createGapSeparator,
   MenuProvider,
-  rxFromSignal,
   ToolbarMenu,
+  createGapSeparator,
+  rxFromSignal,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+
+import { type SheetModel } from '../../model';
+import { useSheetContext } from '../SheetContext';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
 import { type ToolbarState, useToolbarState } from './useToolbarState';
-import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetContext';
 
 //
 // Root

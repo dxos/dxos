@@ -8,14 +8,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Match, Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
-import { EdgeAiServiceClient, type AiServiceEdgeClientOptions } from '@dxos/ai';
-import { SpyAiService } from '@dxos/ai/testing';
 import { Events } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/artifact-testing';
+import { localServiceEndpoints, remoteServiceEndpoints } from '@dxos/assistant-testing';
 import { combine } from '@dxos/async';
 import { Queue, type Space } from '@dxos/client/echo';
-import { SequenceMachine, SequenceParser, BufferedLogger, setConsolePrinter, setLogger } from '@dxos/conductor';
+import { BufferedLogger, SequenceMachine, SequenceParser, setConsolePrinter, setLogger } from '@dxos/conductor';
 import { DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -26,8 +24,8 @@ import { useQueue } from '@dxos/react-client/echo';
 import { IconButton, Toolbar, useAsyncState, useTranslation } from '@dxos/react-ui';
 import {
   matchCompletion,
-  typeahead,
   staticCompletion,
+  typeahead,
   type TypeaheadContext,
   type TypeaheadOptions,
 } from '@dxos/react-ui-editor';
@@ -38,13 +36,12 @@ import { DataType, DataTypes, SpaceGraphModel } from '@dxos/schema';
 import { createObjectFactory, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { addTestData } from './test-data';
-import { testPlugins } from './testing';
 import { ChatDialog, PromptBar, type PromptBarProps, type PromptController } from '../components';
-import { ASSISTANT_PLUGIN } from '../meta';
-import { QueryParser, createFilter, type Expression } from '../parser';
+import { createFilter, QueryParser, type Expression } from '../parser';
 import { createToolRegistry, RESEARCH_SEQUENCE } from '../testing';
 import { meta } from '../translations';
+import { addTestData } from './test-data';
+import { testPlugins } from './testing';
 
 faker.seed(1);
 
@@ -53,15 +50,6 @@ const generator = faker as any as ValueGenerator;
 
 const LOCAL = false;
 const endpoints = LOCAL ? localServiceEndpoints : remoteServiceEndpoints;
-
-// TODO(burdon) Move to story args.
-const aiConfig: AiServiceEdgeClientOptions = {
-  endpoint: endpoints.ai,
-  defaultGenerationOptions: {
-    model: '@anthropic/claude-3-5-sonnet-20241022',
-    // model: '@anthropic/claude-sonnet-4-20250514',
-  },
-};
 
 /**
  * Container for a set of ephemeral research results.
@@ -168,7 +156,7 @@ const DefaultStory = ({ mode, spec, ...props }: StoryProps) => {
   // AI
   //
 
-  const aiClient = useMemo(() => new SpyAiService(new EdgeAiServiceClient(aiConfig)), []);
+  const aiClient = useMemo(() => todo('new SpyAiService(new Edge AiServiceClient(aiConfig))'), []);
   const tools = useMemo(
     () => space && researchGraph && createToolRegistry(space, researchGraph.queue.dxn),
     [space, researchGraph?.queue.dxn],

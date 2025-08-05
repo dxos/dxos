@@ -7,19 +7,16 @@ import JSON5 from 'json5';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ToolRegistry } from '@dxos/ai';
-import { useCapability } from '@dxos/app-framework';
-import { createLocalSearchTool, createExaTool, createGraphWriterTool } from '@dxos/assistant';
 import { getSpace } from '@dxos/client/echo';
-import { type Sequence, type SequenceDefinition, SequenceMachine } from '@dxos/conductor';
-import { DXN, Key } from '@dxos/echo';
+import { type Sequence, type SequenceDefinition } from '@dxos/conductor';
+import { Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { getSelectionSet, useSelectionManager } from '@dxos/react-ui-attention';
+import { useSelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { SequenceEditor } from './SequenceEditor';
-import { AssistantCapabilities } from '../capabilities';
 import { meta } from '../meta';
-import { QueueLogger } from '../queue-logger';
+
+import { SequenceEditor } from './SequenceEditor';
 
 // TODO(burdon): Move to config.
 export const EXA_API_KEY = '9c7e17ff-0c85-4cd5-827a-8b489f139e03';
@@ -37,7 +34,6 @@ const parseSequence = (text: string): SequenceDefinition | undefined => {
 
 export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
   const { t } = useTranslation(meta.id);
-  const aiClient = useCapability(AssistantCapabilities.AiClient);
   const selectionManager = useSelectionManager();
   const [definition, setDefinition] = useState<SequenceDefinition>();
   useEffect(() => {
@@ -56,19 +52,20 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     }
 
     // TODO(burdon): How should the queue be created?
-    const queue = space.queues.create();
+    // eslint-disable-next-line no-unused-vars
+    const _queue = space.queues.create();
 
     return new ToolRegistry([
-      createExaTool({ apiKey: EXA_API_KEY }),
-      createLocalSearchTool(space.db, queue),
-      createGraphWriterTool({
-        db: space.db,
-        queue,
-        schema: [], // TODO(burdon): Get schema from client/sequence?
-        onDone: async (objects) => {
-          await queue.append(objects);
-        },
-      }),
+      // createExaTool({ apiKey: EXA_API_KEY }),
+      // createLocalSearchTool(space.db, queue),
+      // createGraphWriterTool({
+      //   db: space.db,
+      //   queue,
+      //   schema: [], // TODO(burdon): Get schema from client/sequence?
+      //   onDone: async (objects) => {
+      //     await queue.append(objects);
+      //   },
+      // }),
     ]);
   }, [sequence]);
 
@@ -109,21 +106,18 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
   const handleSave = useCallback(() => formatAndSave(), [formatAndSave]);
 
   const handleRun = useCallback(async () => {
-    if (!aiClient?.value || !toolRegistry) {
-      return;
-    }
-
-    formatAndSave();
-
-    // Get input from selection.
-    const input = Array.from(getSelectionSet(selectionManager)).map((id) => DXN.fromLocalObjectId(id));
-    if (!input.length) {
-      return;
-    }
-
-    const machine = new SequenceMachine(toolRegistry, sequence).setLogger(new QueueLogger(sequence));
-    await machine.runToCompletion({ aiClient: aiClient.value, input });
-  }, [aiClient.value, sequence, formatAndSave, selectionManager, toolRegistry]);
+    // if (!aiClient?.value || !toolRegistry) {
+    //   return;
+    // }
+    // formatAndSave();
+    // // Get input from selection.
+    // const input = Array.from(getSelectionSet(selectionManager)).map((id) => DXN.fromLocalObjectId(id));
+    // if (!input.length) {
+    //   return;
+    // }
+    // const machine = new SequenceMachine(toolRegistry, sequence).setLogger(new QueueLogger(sequence));
+    // await machine.runToCompletion({ aiClient: aiClient.value, input });
+  }, [sequence, formatAndSave, selectionManager, toolRegistry]);
 
   return (
     <StackItem.Content toolbar>

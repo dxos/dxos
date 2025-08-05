@@ -8,8 +8,9 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { EventList } from './EventtList';
 import { type CalendarType } from '../../types';
+
+import { EventList } from './EventtList';
 
 const byDate =
   (direction = -1) =>

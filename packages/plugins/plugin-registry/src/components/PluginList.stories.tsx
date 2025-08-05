@@ -7,14 +7,15 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { definePlugin, type Plugin } from '@dxos/app-framework';
+import { type Plugin, definePlugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
 
 import { PluginList } from './PluginList';
-import { translations } from '../translations';
 
 faker.seed(1);
 

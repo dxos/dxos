@@ -10,12 +10,12 @@ import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
-import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
+import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
+import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { SpaceState, Filter, getMeta } from '../echo';
+import { Filter, SpaceState, getMeta } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;

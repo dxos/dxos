@@ -20,16 +20,17 @@ import {
   SpaceNotFoundError,
 } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
   type IntroductionRequest,
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 
+import { type DataSpaceManager, type SigningContext } from '../spaces';
+
 import { type InvitationProtocol } from './invitation-protocol';
 import { computeExpirationTime } from './utils';
-import { type DataSpaceManager, type SigningContext } from '../spaces';
 
 export class SpaceInvitationProtocol implements InvitationProtocol {
   constructor(

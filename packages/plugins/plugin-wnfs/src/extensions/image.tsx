@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, StateField, type Range } from '@codemirror/state';
+import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 import type { Blockstore } from 'interface-blockstore';
 import React from 'react';

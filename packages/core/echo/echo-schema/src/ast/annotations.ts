@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, Schema, SchemaAST } from 'effect';
+import { Option, Schema, SchemaAST, flow, pipe } from 'effect';
 
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -156,8 +156,13 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-/** [path, probability] */
-export type GeneratorAnnotationValue = string | [string, number];
+export type GeneratorAnnotationValue =
+  | string
+  | {
+      generator: string;
+      args?: any[];
+      probability?: number;
+    };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
 

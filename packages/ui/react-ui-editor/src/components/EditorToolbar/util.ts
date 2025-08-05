@@ -7,7 +7,7 @@ import { type Rx } from '@effect-rx/rx-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,

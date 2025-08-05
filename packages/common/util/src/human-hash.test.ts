@@ -4,7 +4,7 @@
 
 import { expect, test } from 'vitest';
 
-import { createKeyPair, createId } from '@dxos/crypto';
+import { createId, createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
 import { humanize } from './human-hash';

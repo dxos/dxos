@@ -4,14 +4,14 @@
 
 import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
+import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { KanbanView } from '@dxos/react-ui-kanban';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -49,7 +49,7 @@ export default () => {
         caption: 'Creating kanban board...',
         schema: Schema.Struct({
           typename: Schema.String.annotations({
-            description: 'The fully qualified typename of the schema to use for the kanban cards.',
+            description: 'The fully qualified name of the record type to use for the kanban cards.',
           }),
           pivotColumn: Schema.optional(Schema.String).annotations({
             description: 'Optional field name to use as the column pivot.',

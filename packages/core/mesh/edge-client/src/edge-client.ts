@@ -2,16 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  Trigger,
-  scheduleMicroTask,
-  TriggerState,
-  PersistentLifecycle,
-  Event,
-  scheduleTaskInterval,
-} from '@dxos/async';
-import { type Context, Resource, type Lifecycle } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
+import { Event, PersistentLifecycle, Trigger, TriggerState, scheduleMicroTask } from '@dxos/async';
+import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';

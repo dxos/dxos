@@ -39,10 +39,10 @@
       "path": "../ai"
     },
     {
-      "path": "../artifact"
+      "path": "../assistant"
     },
     {
-      "path": "../assistant"
+      "path": "../blueprints"
     },
     {
       "path": "../echo/echo"

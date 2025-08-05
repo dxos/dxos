@@ -2,25 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema } from 'effect';
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
+import { type Schema } from 'effect';
+
+import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
-  DEFAULT_CLIENT_CHANNEL,
-  STATUS_TIMEOUT,
-  clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
+  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
   PropertiesType,
+  STATUS_TIMEOUT,
+  clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { EchoClient, type QueueService, QueueServiceImpl, type Hypergraph } from '@dxos/echo-db';
+import { EchoClient, type Hypergraph, type QueueService, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
 import { getTypename } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -29,15 +30,16 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
-import { ClientRuntime } from './client-runtime';
 import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
+
+import { ClientRuntime } from './client-runtime';
 
 /**
  * This options object configures the DXOS Client.

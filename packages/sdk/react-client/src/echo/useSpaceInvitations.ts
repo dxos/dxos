@@ -8,8 +8,9 @@ import { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/client';
 import { useMulticastObservable } from '@dxos/react-hooks';
 
-import { useSpace } from './useSpaces';
 import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
+
+import { useSpace } from './useSpaces';
 
 export const useSpaceInvitations = (spaceKey?: PublicKey): CancellableInvitationObservable[] => {
   const space = useSpace(spaceKey);

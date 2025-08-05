@@ -6,10 +6,11 @@ import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import { type RelationSourceTargetRefs } from './relation';
-import { EntityKind, TypeAnnotationId, Typename, Version, type TypeAnnotation, type TypeMeta } from '../ast';
+import { EntityKind, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename, Version } from '../ast';
 import { type HasId } from '../types';
+
+import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
+import { type RelationSourceTargetRefs } from './relation';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.

@@ -7,4 +7,4 @@ import { lazy } from 'react';
 export * from './MarkdownSettings';
 
 export const MarkdownContainer = lazy(() => import('./MarkdownContainer'));
-export const MarkdownPreview = lazy(() => import('./MarkdownPreview'));
+export const MarkdownCard = lazy(() => import('./MarkdownCard'));

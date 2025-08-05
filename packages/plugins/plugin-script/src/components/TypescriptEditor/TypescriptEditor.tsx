@@ -11,10 +11,10 @@ import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
-import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
+import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorInputMode,
   InputModeExtensions,

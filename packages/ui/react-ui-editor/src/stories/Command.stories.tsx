@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
-import React, { useState, type KeyboardEvent } from 'react';
+import React, { type KeyboardEvent, useState } from 'react';
 
-import { Button, Icon, Input, DropdownMenu } from '@dxos/react-ui';
+import { Button, DropdownMenu, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorStory } from './components';
 import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
-import { command, type Action, floatingMenu } from '../extensions';
+import { type Action, command, floatingMenu } from '../extensions';
 import { str } from '../testing';
 import { createRenderer } from '../util';
+
+import { EditorStory } from './components';
 
 const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
   const [text, setText] = useState('');

@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }
@@ -23,18 +24,26 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
+    "@effect/platform": "^0.89.0",
+    "@tauri-apps/plugin-os": "^2.3.0",
+    "@tauri-apps/plugin-process": "^2.3.0",
+    "@tauri-apps/plugin-shell": "^2.3.0",
+    "@tauri-apps/plugin-updater": "^2.9.0",
     "effect": "3.17.0"
   },
   "devDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "vite": "5.4.7"
   },
   "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
     "effect": "^3.13.3"
   },
   "publishConfig": {

@@ -10,11 +10,11 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { useLoadDescendents } from '../../hooks';
 import { type NavTreeItemGraphNode } from '../../types';
 import { useNavTreeContext } from '../NavTreeContext';
-import { L0Menu, L1Panels, type L1PanelsProps } from '../Sidebar';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
+export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1TabsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const { tab, useItems, onBack } = useNavTreeContext();
@@ -56,7 +56,7 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
         path={path}
         parent={root}
       />
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
+      <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
     </Tabs.Root>
   );
 };

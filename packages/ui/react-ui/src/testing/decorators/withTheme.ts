@@ -3,7 +3,7 @@
 //
 
 import { type Decorator, type StoryContext, type StoryFn } from '@storybook/react';
-import { useEffect, createElement } from 'react';
+import { createElement, useEffect } from 'react';
 
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -15,8 +15,11 @@ export const withTheme: Decorator = (Story: StoryFn, context: StoryContext) => {
     document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('dark');
   }, [theme]);
 
-  return createElement(ThemeProvider, {
-    children: createElement(Story),
-    tx: defaultTx,
-  });
+  return createElement(
+    ThemeProvider,
+    {
+      tx: defaultTx,
+    },
+    createElement(Story),
+  );
 };

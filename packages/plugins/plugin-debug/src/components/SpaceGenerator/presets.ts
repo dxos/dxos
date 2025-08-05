@@ -18,8 +18,8 @@ import {
   createFunction,
   createGpt,
   createQueue,
-  createSurface,
   createRandom,
+  createSurface,
   createTemplate,
   createText,
   createTrigger,
@@ -36,15 +36,15 @@ import { range } from '@dxos/util';
 import { type ObjectGenerator } from './ObjectGenerator';
 
 export enum PresetName {
-  EMAIL_TABLE = 'email-table',
+  // EMAIL_TABLE = 'email-table',
   GPT_QUEUE = 'webhook-gpt-queue',
   CHAT_GPT = 'chat-gpt-text',
-  EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
+  // EMAIL_WITH_SUMMARY = 'email-gptSummary-table',
   OBJECT_CHANGE_QUEUE = 'objectChange-queue',
   FOREX_FUNCTION_CALL = 'forex-function-call',
   TIMER_TICK_QUEUE = 'timerTick-queue',
   DISCORD_MESSAGES = 'discord-messages',
-  KANBAN_QUEUE = 'kanban-queue',
+  // KANBAN_QUEUE = 'kanban-queue',
 }
 
 export const generator = () => ({

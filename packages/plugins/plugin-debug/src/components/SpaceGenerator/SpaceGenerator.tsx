@@ -4,21 +4,22 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, type Obj } from '@dxos/echo';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { SheetType } from '@dxos/plugin-sheet/types';
 import { DiagramType } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
-import { getTypename, type Space } from '@dxos/react-client/echo';
+import { type Space, getTypename } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType } from '@dxos/schema';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
-import { createGenerator, staticGenerators, type ObjectGenerator } from './ObjectGenerator';
-import { SchemaTable } from './SchemaTable';
+import { type ObjectGenerator, createGenerator, staticGenerators } from './ObjectGenerator';
 import { generator } from './presets';
+import { SchemaTable } from './SchemaTable';
 
 export type SpaceGeneratorProps = {
   space: Space;
@@ -26,22 +27,23 @@ export type SpaceGeneratorProps = {
 };
 
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const staticTypes = [DocumentType, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
-  const mutableTypes = [DataType.Organization, DataType.Project, DataType.Person, DataType.Message];
+  const staticTypes = [Markdown.Document, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
+  const recordTypes = [DataType.Organization, DataType.Person, DataType.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
   const presets = useMemo(() => generator(), []);
 
   // Create type generators.
   const typeMap = useMemo(() => {
-    client.addTypes([...staticTypes, ...presets.schemas]);
-    const mutableGenerators = new Map<string, ObjectGenerator<any>>(
-      mutableTypes.map((type) => [type.typename, createGenerator(type as any)]),
+    client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
+    const recordGenerators = new Map<string, ObjectGenerator<any>>(
+      recordTypes.map((type) => [type.typename, createGenerator(client, dispatch, type as any)]),
     );
 
-    return new Map([...staticGenerators, ...presets.items, ...mutableGenerators]);
-  }, [client, mutableTypes]);
+    return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
+  }, [client, recordTypes]);
 
   // Query space to get info.
   const updateInfo = async () => {
@@ -106,7 +108,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
 
       <div className='flex flex-col overflow-y-auto divide-y divide-separator'>
         <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-        <SchemaTable types={mutableTypes} objects={info.objects} label='Mutable Types' onClick={handleCreateData} />
+        <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
         <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
 
         <div>

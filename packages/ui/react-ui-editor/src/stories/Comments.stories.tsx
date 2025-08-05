@@ -10,13 +10,14 @@ import React, { type FC } from 'react';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorStory, content, longText } from './components';
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';
 import { type Comment } from '../types';
 import { createRenderer } from '../util';
+
+import { EditorStory, content, longText } from './components';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/Comments',

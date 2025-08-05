@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
-import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
+import { FormatAnnotation, FormatEnum } from '@dxos/echo-schema';
 
-import { Obj, Ref, Relation, Type, type Live } from '../index';
+import { type Live, Obj, Ref, Relation, Type } from '../index';
 
 namespace Testing {
   export const Organization = Schema.Struct({

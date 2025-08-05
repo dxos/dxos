@@ -10,11 +10,13 @@
   "type": "module",
   "exports": {
     "./data": {
+      "source": "./src/data.ts",
       "types": "./dist/types/src/data.d.ts",
       "browser": "./dist/lib/browser/data.mjs",
       "node": "./dist/lib/node-esm/data.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -40,6 +42,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
+    "@radix-ui/react-context": "^1.0.5",
     "d3": "^7.9.0",
     "d3-geo-projection": "^4.0.0",
     "d3-hexbin": "^0.2.2",

@@ -12,25 +12,26 @@ import { type DxGrid } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
+  type DxGridPlanePosition,
+  type EditorBlurHandler,
+  type EditorKeyEvent,
+  type EditorKeyOrBlurHandler,
+  GridCellEditor,
+  type GridCellEditorProps,
+  type GridScopedProps,
   cellQuery,
   editorKeys,
   parseCellIndex,
   useGridContext,
-  type DxGridPlanePosition,
-  type EditorKeyEvent,
-  type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
-  GridCellEditor,
-  type GridCellEditorProps,
-  type GridScopedProps,
 } from '@dxos/react-ui-grid';
-import { tagPicker, createLinks } from '@dxos/react-ui-tag-picker';
+import { createLinks, tagPicker } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { type ModalController, type TableModel } from '../../model';
+
 import { CellValidationMessage } from './CellValidationMessage';
-import { FormCellEditor } from './FormCellEditor';
 import { completion } from './extension';
-import { type TableModel, type ModalController } from '../../model';
+import { FormCellEditor } from './FormCellEditor';
 
 const newValue = Symbol.for('newValue');
 

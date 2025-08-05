@@ -3,18 +3,18 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
+  FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  FetchHttpClient,
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.14.21?bundle=false';
 
 export default defineFunction({
   inputSchema: S.Struct({
@@ -160,7 +160,7 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/S.
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;

@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from './testing';
+import { TestItemSchema, type TestItemType, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';

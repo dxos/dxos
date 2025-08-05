@@ -4,7 +4,7 @@
 
 import { Effect, pipe } from 'effect';
 
-import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { SpaceAction } from '@dxos/plugin-space/types';
 
 import { WnfsAction } from '../types';

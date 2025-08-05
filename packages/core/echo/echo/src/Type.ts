@@ -39,7 +39,7 @@ export type Schema = EchoSchema.EchoSchema;
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
-export type Properties<T> = Omit<T, 'id' | KindId | RelationModule.Source | RelationModule.Target>;
+export type Properties<T = any> = Omit<T, 'id' | KindId | RelationModule.Source | RelationModule.Target>;
 
 //
 // Obj

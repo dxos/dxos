@@ -5,9 +5,10 @@
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { translationKey } from '../../translations';
 import { type EditorViewMode } from '../../types';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const createViewModeGroupAction = (value: string) =>
   createEditorActionGroup(

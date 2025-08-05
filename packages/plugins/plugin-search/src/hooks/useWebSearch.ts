@@ -4,23 +4,20 @@
 
 import { useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY } from '@dxos/ai/testing';
+import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 
-import { getStringProperty } from './sync';
 import { search } from '../search';
 import { type SearchResult } from '../types';
 
-export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {
-  const AiService = new EdgeAiServiceClient({
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
+import { getStringProperty } from './sync';
 
+export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,7 +29,7 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
         query,
         context,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
+        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 

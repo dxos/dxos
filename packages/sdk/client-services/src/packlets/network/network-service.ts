@@ -7,15 +7,15 @@ import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
-  type SubscribeSwarmStateRequest,
   type NetworkService,
   type NetworkStatus,
+  type SubscribeSwarmStateRequest,
   type UpdateConfigRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Peer, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import {
-  type LeaveRequest,
   type JoinRequest,
+  type LeaveRequest,
   type Message,
   type QueryRequest,
 } from '@dxos/protocols/proto/dxos/edge/signal';

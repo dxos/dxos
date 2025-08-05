@@ -7,8 +7,9 @@ import { styleTags, tags } from '@lezer/highlight';
 import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import React from 'react';
 
+import { type Template } from '@dxos/blueprints';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { useThemeContext, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -16,9 +17,9 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { isNotFalsy } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { type TemplateType } from '../../types';
 
 handlebarsLanguage.configure({
   props: [
@@ -29,48 +30,62 @@ handlebarsLanguage.configure({
 });
 
 export type TemplateEditorProps = ThemedClassName<{
-  template: TemplateType;
+  id: string;
+  template: Template.Template;
 }>;
 
-export const TemplateEditor = ({ classNames, template }: TemplateEditorProps) => {
+export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue: template.source,
+  const { parentRef } = useTextEditor(() => {
+    const text = template.source?.target;
+    return {
+      initialValue: text?.content ?? '',
       extensions: [
-        createDataExtensions({
-          id: template.id,
-          text: template.source !== undefined ? createDocAccessor(template, ['template']) : undefined,
-        }),
+        text &&
+          createDataExtensions({
+            id,
+            text: createDocAccessor(text, ['content']),
+          }),
         createBasicExtensions({
           bracketMatching: false,
+          lineNumbers: true,
           lineWrapping: true,
+          monospace: true,
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({
           themeMode,
-          slots: {
-            content: { className: '!p-3' },
-          },
         }),
 
         // https://github.com/xiechao/lang-handlebars
         new LanguageSupport(handlebarsLanguage, syntaxHighlighting(handlebarsHighlightStyle)),
-      ],
-    }),
-    [themeMode, prompt],
-  );
+      ].filter(isNotFalsy),
+    };
+  }, [themeMode, template.source?.target]);
 
-  return <div ref={parentRef} className={mx(classNames)} />;
+  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
 };
 
 /**
  * https://github.com/xiechao/lang-handlebars/blob/direct/src/highlight.js
  */
 export const handlebarsHighlightStyle = HighlightStyle.define([
-  { tag: tags.tagName, class: 'text-redText' }, // Braces.
-  { tag: tags.variableName, class: 'text-blueText' },
-  { tag: tags.keyword, class: 'text-greenText' },
-  { tag: tags.comment, class: 'text-subdued' },
+  {
+    // Braces.
+    tag: tags.tagName,
+    class: 'text-redText',
+  },
+  {
+    tag: tags.variableName,
+    class: 'text-blueText',
+  },
+  {
+    tag: tags.keyword,
+    class: 'text-greenText',
+  },
+  {
+    tag: tags.comment,
+    class: 'text-subdued',
+  },
 ]);

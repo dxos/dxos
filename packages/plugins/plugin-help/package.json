@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
+      "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs"
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -29,7 +32,7 @@
         "dist/types/src/meta.d.ts"
       ],
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -61,7 +64,6 @@
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
     "@effect/platform": "0.89.0",
-    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
     "effect": "3.17.0",
@@ -76,7 +78,6 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
-    "@phosphor-icons/react": "^2.1.5",
     "effect": "^3.13.3",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

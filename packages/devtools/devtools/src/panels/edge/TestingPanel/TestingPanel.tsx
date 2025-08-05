@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { type SpaceId, type Space } from '@dxos/client/echo';
+import { type Space, type SpaceId } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -69,7 +69,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
         <Toolbar.Root>
           <DataSpaceSelector />
           <Toolbar.Button onClick={handleSpaceCreate}>
-            <Icon icon='ph--plus' />
+            <Icon icon='ph--plus--regular' />
             Create Space
           </Toolbar.Button>
         </Toolbar.Root>

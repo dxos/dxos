@@ -6,8 +6,9 @@ import React, { useCallback, useEffect, useRef } from 'react';
 
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 
-import { type InputProps, InputHeader } from './Input';
 import { translationKey } from '../../translations';
+
+import { InputHeader, type InputProps } from './Input';
 
 export const TextInput = ({
   type,

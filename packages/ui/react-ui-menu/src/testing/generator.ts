@@ -6,20 +6,20 @@ import { Rx } from '@effect-rx/rx-react';
 import { useEffect } from 'react';
 
 import {
+  ACTION_GROUP_TYPE,
+  ACTION_TYPE,
   type Action,
   Graph,
   type NodeArg,
-  ACTION_TYPE,
-  ACTION_GROUP_TYPE,
-  actionGroupSymbol,
   ROOT_ID,
+  actionGroupSymbol,
 } from '@dxos/app-graph';
 import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { type DeepWriteable } from '@dxos/util';
 
 import { type ActionGraphProps } from '../hooks/useMenuActions';
-import { type MenuAction, type MenuItemGroup, type MenuItem } from '../types';
+import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 export type CreateActionsParams = Partial<{
   type?: typeof ACTION_TYPE | typeof ACTION_GROUP_TYPE;

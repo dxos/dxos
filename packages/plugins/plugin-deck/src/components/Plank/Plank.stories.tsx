@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -12,11 +12,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Stack } from '@dxos/react-ui-stack';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { DeckStateFactory } from '../../capabilities';
+import { translations } from '../../translations';
 
 import { Plank, type PlankProps } from './Plank';
-import DeckStateFactory from '../../capabilities/state'; // TODO(burdon): !!!
-import { translations } from '../../translations';
 
 const meta: Meta<PlankProps> = {
   title: 'plugins/plugin-deck/Plank',

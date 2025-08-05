@@ -8,11 +8,12 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
+import { StorybookDialog } from '../StorybookDialog';
+
 import { Action } from './Action';
 import { Actions } from './Actions';
 import { Heading } from './Heading';
 import { Label } from './Label';
-import { StorybookDialog } from '../StorybookDialog';
 
 export default {
   title: 'sdk/shell/StorybookDialog',

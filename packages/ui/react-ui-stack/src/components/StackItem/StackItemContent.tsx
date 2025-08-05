@@ -54,6 +54,7 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
             },
       [toolbar, statusbar, layoutManaged],
     );
+
     return (
       <div
         role='none'

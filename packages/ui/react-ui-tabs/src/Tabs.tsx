@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders, useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';

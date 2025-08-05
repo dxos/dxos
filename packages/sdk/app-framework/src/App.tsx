@@ -4,14 +4,14 @@
 
 import { RegistryContext } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useState, type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Events } from './common';
-import { PluginManager, type PluginManagerOptions, type Plugin } from './core';
+import { type Plugin, PluginManager, type PluginManagerOptions } from './core';
 import { topologicalSort } from './helpers';
 import { ErrorBoundary, PluginManagerProvider, useCapabilities } from './react';
 
@@ -251,7 +251,7 @@ const DefaultFallback = ({ error }: { error: Error }) => {
     <div style={{ margin: '0.5rem', padding: '1rem', overflow: 'hidden', border: '1px solid red' }}>
       {/* TODO(wittjosiah): Link to docs for replacing default. */}
       <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem' }}>[ERROR]: {error.message}</h1>
-      <pre style={{ overflow: 'auto', fontSize: '1rem' }}>{error.stack}</pre>
+      <pre style={{ overflow: 'auto', fontSize: '1rem', whiteSpace: 'pre-wrap', color: '#888888' }}>{error.stack}</pre>
     </div>
   );
 };

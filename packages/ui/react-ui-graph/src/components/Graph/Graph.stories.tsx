@@ -9,31 +9,32 @@ import { type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { Pulsar } from '../../fx';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
   GraphHierarchicalProjector,
   type GraphHierarchicalProjectorOptions,
+  type GraphLayoutEdge,
+  type GraphLayoutNode,
+  type GraphProjector,
   GraphRadialProjector,
   type GraphRadialProjectorOptions,
   GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
-  type GraphLayoutEdge,
-  type GraphLayoutNode,
-  type GraphProjector,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
+
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 
 import '../../../styles/graph.css';
 
@@ -255,7 +256,7 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='popover'>
+          <Card.SurfaceRoot role='card--popover'>
             <SyntaxHighlighter
               classNames='bg-transparent text-xs !mlb-cardSpacingBlock !pli-cardSpacingInline !overflow-visible'
               language='json'

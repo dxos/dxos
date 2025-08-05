@@ -13,7 +13,7 @@ import { useClientProvider } from '@dxos/react-client/testing';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
 import { type TableController } from '../components';
-import { useTableModel, useAddRow } from '../hooks';
+import { useAddRow, useTableModel } from '../hooks';
 import { TablePresentation } from '../model';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.

@@ -8,7 +8,7 @@ import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
 import type { ForeignKey } from './foreign-key';
-import { isEncodedReference, type EncodedReference } from './reference';
+import { type EncodedReference, isEncodedReference } from './reference';
 import { type SpaceDocVersion } from './space-doc-version';
 
 export type SpaceState = {

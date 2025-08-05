@@ -7,14 +7,14 @@ import { syntaxTree } from '@codemirror/language';
 import {
   type ChangeSpec,
   EditorSelection,
-  type Extension,
   type EditorState,
+  type Extension,
   type Line,
   type StateCommand,
   type Text,
 } from '@codemirror/state';
-import { EditorView, keymap, type ViewUpdate } from '@codemirror/view';
-import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
+import { EditorView, type ViewUpdate, keymap } from '@codemirror/view';
+import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
 import { useCallback, useMemo } from 'react';
 
 import { debounceAndThrottle } from '@dxos/async';

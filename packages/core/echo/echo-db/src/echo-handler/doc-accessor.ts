@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
-import { isLiveObject, type Live } from '@dxos/live-object';
+import { type Live, isLiveObject } from '@dxos/live-object';
+
+import { type DocAccessor, type KeyPath, isValidKeyPath } from '../core-db/types';
 
 import { getObjectCore } from './echo-handler';
-import { symbolPath, type ProxyTarget } from './echo-proxy-target';
-import { isValidKeyPath, type DocAccessor, type KeyPath } from '../core-db/types';
+import { type ProxyTarget, symbolPath } from './echo-proxy-target';
 
 //   TODO(burdon): Move to @dxos/live-object?
 export const createDocAccessor = <T extends BaseObject>(obj: Live<T>, path: KeyPath | keyof T): DocAccessor<T> => {

@@ -5,7 +5,7 @@
 import { RootSettingsStore } from '@dxos/local-storage';
 
 import { Capabilities } from '../common';
-import { contributes, type PluginContext } from '../core';
+import { type PluginContext, contributes } from '../core';
 
 export default (context: PluginContext) => {
   // TODO(wittjosiah): Replace with rx?

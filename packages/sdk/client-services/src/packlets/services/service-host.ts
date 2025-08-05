@@ -3,20 +3,20 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
+import { type ClientServices, clientServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { EdgeClient, EdgeHttpClient, createStubEdgeIdentity, type EdgeConnection } from '@dxos/edge-client';
+import { EdgeClient, type EdgeConnection, EdgeHttpClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { EdgeSignalManager, WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { EdgeSignalManager, type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
 import {
   SwarmNetworkManager,
+  type TransportFactory,
   createIceProvider,
   createRtcTransportFactory,
-  type TransportFactory,
 } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -24,17 +24,15 @@ import { type Storage } from '@dxos/random-access-storage';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
-import { ServiceRegistry } from './service-registry';
 import { EdgeAgentServiceImpl } from '../agents';
 import { DevicesServiceImpl } from '../devices';
 import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
 import {
+  type CollectDiagnosticsBroadcastHandler,
   createCollectDiagnosticsBroadcastHandler,
   createDiagnostics,
-  type CollectDiagnosticsBroadcastHandler,
 } from '../diagnostics';
-import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
+import { type CreateIdentityOptions, IdentityServiceImpl } from '../identity';
 import { ContactsServiceImpl } from '../identity/contacts-service';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
@@ -43,6 +41,9 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
+import { ServiceRegistry } from './service-registry';
 
 export type ClientServicesHostParams = {
   /**
@@ -81,8 +82,9 @@ export class ClientServicesHost {
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
 
-  private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
+
+  private _config?: Config;
   private _signalManager?: SignalManager;
   private _networkManager?: SwarmNetworkManager;
   private _storage?: Storage;

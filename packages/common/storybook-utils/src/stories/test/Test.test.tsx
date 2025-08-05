@@ -3,7 +3,7 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -18,7 +18,6 @@ const { Default } = composeStories(stories);
  * Vitest sanity test (should be visible in the storybook).
  * https://storybook.js.org/docs/writing-tests/integrations/vitest-addon
  */
-// TODO(burdon): Not working.
 describe('Test', () => {
   it('should render', async () => {
     await Default.run();

@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withTheme } from '@dxos/storybook-utils';
 
-import { withPluginManager } from './withPluginManager';
 import { Capabilities, createSurface } from '../common';
 import { contributes } from '../core';
 import { Surface } from '../react';
+
+import { withPluginManager } from './withPluginManager';
 
 const DefaultStory = () => {
   console.log('Render');

@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -31,7 +32,7 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "lodash.defaultsdeep": "^4.6.1",
-    "storybook": "^9.0.15"
+    "storybook": "^9.1.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -14,16 +14,17 @@ import type { ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
-import { EmbeddingExtractor } from './embeddings';
-import { extractTextBlocks } from './text';
 import {
-  type IndexQuery,
-  staticImplements,
+  type FindResult,
   type Index,
+  type IndexQuery,
   type IndexStaticProps,
   type LoadParams,
-  type FindResult,
+  staticImplements,
 } from '../types';
+
+import { EmbeddingExtractor } from './embeddings';
+import { extractTextBlocks } from './text';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;

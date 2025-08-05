@@ -4,17 +4,17 @@
 
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { sleep, latch } from '@dxos/async';
+import { latch, sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { SystemError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import {
-  type TestStreamService,
   type TestRpcResponse,
   type TestService,
+  type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
 
-import { createProtoRpcPeer, type ProtoRpcPeer, createServiceBundle } from './service';
+import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts, encodeMessage } from './testing';
 
 // TODO(dmaretskyi): Rename alice and bob to peer1 and peer2.

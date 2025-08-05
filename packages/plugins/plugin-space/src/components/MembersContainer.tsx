@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Check, X } from '@phosphor-icons/react';
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
-import { ControlPage, ControlSection, ControlFrame, ControlFrameItem, ControlItemInput } from '@dxos/react-ui-form';
+import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -280,5 +278,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? <Check className={mx('m-1.5', getSize(6))} /> : <X className={mx('m-1.5', getSize(6))} />;
+  return statusValue > 0 ? (
+    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+  ) : (
+    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+  );
 };

@@ -80,7 +80,7 @@ export const createToolsFromApi = async (
           inputSchema.properties![name] = normalizeSchema(schema);
           if (required) {
             inputSchema.required ??= [];
-            inputSchema.required!.push(name);
+            inputSchema.required.push(name);
           }
         }
       }

@@ -9,21 +9,8 @@ import { openSearchPanel } from '@codemirror/search';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import {
-  EditorStory,
-  allExtensions,
-  content,
-  defaultExtensions,
-  global,
-  largeWithImages,
-  links,
-  longText,
-  names,
-  renderLinkButton,
-  text,
-} from './components';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
@@ -38,6 +25,20 @@ import {
   typeahead,
 } from '../extensions';
 import { str } from '../testing';
+
+import {
+  EditorStory,
+  allExtensions,
+  content,
+  defaultExtensions,
+  global,
+  largeWithImages,
+  links,
+  longText,
+  names,
+  renderLinkButton,
+  text,
+} from './components';
 
 const meta: Meta<typeof EditorStory> = {
   title: 'ui/react-ui-editor/TextEditor',

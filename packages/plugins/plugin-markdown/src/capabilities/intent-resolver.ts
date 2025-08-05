@@ -3,33 +3,28 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Option, pipe, type Schema } from 'effect';
+import { Option, type Schema, pipe } from 'effect';
 
 import {
   Capabilities,
   CollaborationActions,
+  type PluginContext,
   contributes,
   createResolver,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
+
+import { Markdown, MarkdownAction } from '../types';
 
 import { MarkdownCapabilities } from './capabilities';
-import { DocumentType, MarkdownAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        const doc = Obj.make(DocumentType, {
-          name,
-          content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
-        });
-
-        return { data: { object: doc } };
+        return { data: { object: Markdown.makeDocument({ name, content }) } };
       },
     }),
     createResolver({
@@ -44,8 +39,8 @@ export default (context: PluginContext) =>
       filter: (
         data,
       ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
-        target: DocumentType;
-      } => Obj.instanceOf(DocumentType, data.target),
+        target: Markdown.Document;
+      } => Obj.instanceOf(Markdown.Document, data.target),
       resolve: async ({ target, object: objectRef, at, label }) => {
         const text = await target.content.load();
         const accessor = createDocAccessor(text, ['content']);

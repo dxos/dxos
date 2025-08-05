@@ -13,9 +13,10 @@ import { schema } from '@dxos/protocols/proto';
 import { type SystemService, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createLinkedPorts, createProtoRpcPeer, createServiceBundle } from '@dxos/rpc';
 
-import { ServiceRegistry } from './service-registry';
 import { SystemServiceImpl } from '../system';
 import { createServiceContext } from '../testing';
+
+import { ServiceRegistry } from './service-registry';
 
 // TODO(burdon): Create TestService (that doesn't require peers).
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { definePlugin, defineModule, Events, contributes, Capabilities, allOf } from '@dxos/app-framework';
+import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ROOT_TYPE } from '@dxos/plugin-graph';
 

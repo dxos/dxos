@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node-esm/types.mjs"
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     },
     "./templates": {
+      "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
       "browser": "./dist/lib/browser/templates/index.mjs",
       "node": "./dist/lib/node-esm/templates/index.mjs"
@@ -29,7 +32,7 @@
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ],
       "templates": [
         "dist/types/src/templates/index.d.ts"
@@ -50,9 +53,9 @@
     "@codemirror/view": "^6.34.1",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/artifact": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -101,7 +104,7 @@
     "codemirror": "^6.0.1",
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",
-    "prettier": "^3.2.4",
+    "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.5.0",
     "typescript": "^5.8.3"
   },

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState, useEffect, useMemo, type ChangeEvent } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type GeoPoint, GeoLocation } from '@dxos/echo-schema';
+import { GeoLocation, type GeoPoint } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 

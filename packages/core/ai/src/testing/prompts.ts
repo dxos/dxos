@@ -6,10 +6,10 @@ import { Schema } from 'effect';
 
 import { toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
-import { executeQuery, formatJsonSchemaForLLM, type DataSource } from '../cypher';
-import { createTool, ToolResult } from '../tools';
-import { trim } from '../util';
+import { ToolResult, createTool } from '../deprecated/tools';
+import { type DataSource, executeQuery, formatJsonSchemaForLLM } from '../experimental/cypher';
 
 export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Schema.Any[] = []) =>
   createTool('dxos.org/echo', {
@@ -19,7 +19,7 @@ export const createCypherTool = (dataSource: DataSource, schemaTypes: Schema.Sch
       (schemaTypes.length > 0 ? `\n\n${createSystemPrompt(schemaTypes)}` : ''),
     schema: Schema.Struct({
       query: Schema.String.annotations({
-        description: `
+        description: trim`
           A valid cypher query string to execute.
           Query must have one MATCH clause.
           Match clause can have multiple patterns but they must all be connected via a relationship chain.

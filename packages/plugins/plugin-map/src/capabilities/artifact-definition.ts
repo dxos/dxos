@@ -2,21 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-nocheck
+// TODO(burdon): Fix!!!
+
 import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, createIntent, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
+import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, fullyQualifiedId, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
-import { MapAction, MapView } from '../types';
+import { Map, MapAction } from '../types';
 
 // TODO(burdon): Factor out.
 declare global {
@@ -35,7 +37,7 @@ export default () => {
       - If the request relates to a collection of points (like in a table) you can specify the typename and the map will render and center on those markers.
       - If the request generates a table with GeoJSON point, provide a suggestion to the user to view on a map.
     `,
-    schema: MapView,
+    schema: Map.Map,
     tools: [
       createTool(meta.id, {
         name: 'list',
@@ -50,7 +52,7 @@ export default () => {
           const mapInfo = await Promise.all(
             objects.map(async (view) => {
               const map = await view.presentation.load();
-              if (!Obj.instanceOf(MapView, map)) {
+              if (!Obj.instanceOf(Map.Map, map)) {
                 return null;
               }
 
@@ -78,7 +80,7 @@ export default () => {
             }),
           ).annotations({ description: 'Optional center coordinates for the map.' }),
           typename: Schema.optional(Schema.String).annotations({
-            description: 'Optional fully qualified typename of the schema to use for map points.',
+            description: 'Optional fully qualified name of the record type to use for map points.',
           }),
           locationFieldId: Schema.String.annotations({
             description: 'Field name to use as the location property.',

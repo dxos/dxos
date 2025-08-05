@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, ScriptType } from '@dxos/functions';
-import { Filter, fullyQualifiedId, useQuery, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';

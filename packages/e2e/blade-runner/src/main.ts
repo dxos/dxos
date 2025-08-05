@@ -19,7 +19,11 @@ import {
   type RunParams,
 } from './plan';
 import {
+  AutomergeTestPlan,
+  EdgeReplication,
   EmptyTestPlan,
+  QueryTestPlan,
+  ReplicationTestPlan,
   StorageTestPlan,
   TransportTestPlan,
   QueryTestPlan,

@@ -45,8 +45,7 @@ export const Layout = Schema.Struct({
 
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
-// TODO(wittjosiah): Rename ConductorType? WorkflowType?
-// TODO(wittjosiah): Factor out?
+// TODO(wittjosiah): Rename WorkflowType?
 export class CanvasBoardType extends TypedObject({
   typename: 'dxos.org/type/CanvasBoard',
   version: '0.1.0',

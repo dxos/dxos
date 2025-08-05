@@ -2,19 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo-schema';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
-import { SheetType, type CellValue } from '@dxos/plugin-sheet/types';
+import { type CellValue, SheetType } from '@dxos/plugin-sheet/types';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
+import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { createTable } from '@dxos/react-ui-table';
 import { DataType } from '@dxos/schema';
-import { createAsyncGenerator, type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
@@ -25,39 +27,39 @@ const findViewByTypename = async (views: DataType.View[], typename: string) => {
   return views.find((view) => view.query.typename === typename);
 };
 
-export const createGenerator = <T extends Obj.Any>(type: TypedObject<T>): ObjectGenerator<T> => {
+export const createGenerator = <T extends Obj.Any>(
+  client: Client,
+  dispatch: PromiseIntentDispatcher,
+  schema: TypedObject<T>,
+): ObjectGenerator<T> => {
   return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
-    // Find or create mutable schema.
-    const schema =
-      (await space.db.schemaRegistry.query({ typename: type.typename }).firstOrUndefined()) ??
-      (await space.db.schemaRegistry.register([type]))[0];
-
-    // Create objects.
-    const generate = createAsyncGenerator(generator, schema.snapshot, { db: space.db });
-    const objects = await generate.createObjects(n);
+    const typename = schema.typename;
 
     // Find or create table and view.
     const { objects: views } = await space.db.query(Filter.type(DataType.View)).run();
-    const view = await findViewByTypename(views, type.typename);
-    if (!view) {
-      const name = type.typename.split('/').pop() ?? type.typename;
-      const { view } = await createTable({ space, typename: type.typename, name });
-      space.db.add(view);
+    const view = await findViewByTypename(views, typename);
+    const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
+    if (!view && !staticSchema) {
+      await dispatch(createIntent(SpaceAction.AddSchema, { space, schema }));
+    } else if (!view && staticSchema) {
+      await dispatch(createIntent(SpaceAction.UseStaticSchema, { space, typename }));
     }
 
-    return objects;
+    // Create objects.
+    const generate = createAsyncGenerator(generator, schema, { db: space.db });
+    return generate.createObjects(n);
   };
 };
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    DocumentType.typename,
+    Markdown.Document.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
-          Obj.make(DocumentType, {
+          Markdown.makeDocument({
             name: faker.commerce.productName(),
-            content: Ref.make(Obj.make(DataType.Text, { content: faker.lorem.sentences(5) })),
+            content: faker.lorem.sentences(5),
           }),
         );
       });

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space, live, SpaceState } from '@dxos/client/echo';
+import { type Space, SpaceState, live } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 

@@ -5,26 +5,27 @@
 import { Option, Schema, SchemaAST } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { findAnnotation, type JsonProp } from '@dxos/effect';
+import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
+  EntityKind,
   FieldLookupAnnotationId,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMeta,
-  EntityKind,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
 } from '../ast';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
-import { getNormalizedEchoAnnotations, getSchemaProperty, JsonSchemaType, setSchemaProperty } from '../json-schema';
+import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { EchoObject, TypedObject } from '../object';
-import { createSchemaReference, getSchemaReference, Ref } from '../ref';
+import { Ref, createSchemaReference, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
-import { prepareAstForCompare, Testing } from '../testing';
+import { Testing, prepareAstForCompare } from '../testing';
+
+import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -65,7 +66,6 @@ describe('effect-to-json', () => {
   });
 
   // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
-  // eslint-disable-next-line mocha/no-skipped-tests
   // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({

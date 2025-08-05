@@ -4,22 +4,21 @@
 
 import { type GeoGeometryObjects, geoCircle as d3GeoCircle } from 'd3';
 import { type Point, type Polygon, type Position } from 'geojson';
+import { type LatLngLiteral } from 'leaflet';
 
 import type { Vector } from '../hooks';
 
-export type LatLng = { lat: number; lng: number };
-
 export const positionToRotation = ([lng, lat]: [number, number], tilt = 0): Vector => [-lng, tilt - lat, 0];
 
-export const geoToPosition = ({ lat, lng }: LatLng): [number, number] => [lng, lat];
+export const geoToPosition = ({ lat, lng }: LatLngLiteral): [number, number] => [lng, lat];
 
-export const geoPoint = (point: LatLng): Point => ({ type: 'Point', coordinates: geoToPosition(point) });
+export const geoPoint = (point: LatLngLiteral): Point => ({ type: 'Point', coordinates: geoToPosition(point) });
 
 // https://github.com/d3/d3-geo#geoCircle
-export const geoCircle = ({ lat, lng }: LatLng, radius: number): Polygon =>
+export const geoCircle = ({ lat, lng }: LatLngLiteral, radius: number): Polygon =>
   d3GeoCircle().radius(radius).center([lng, lat])();
 
-export const geoLine = (p1: LatLng, p2: LatLng): GeoGeometryObjects => ({
+export const geoLine = (p1: LatLngLiteral, p2: LatLngLiteral): GeoGeometryObjects => ({
   type: 'LineString',
   coordinates: [
     [p1.lng, p1.lat],

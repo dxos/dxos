@@ -14,6 +14,11 @@
         "packages/sdk/client-services/src/version.ts",
         {
           "type": "json",
+          "path": "packages/apps/composer-app/src-tauri/tauri.conf.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "docs/package.json",
           "jsonpath": "$.version"
         },
@@ -85,16 +90,6 @@
         {
           "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -229,17 +224,17 @@
         },
         {
           "type": "json",
-          "path": "packages/core/artifact/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/artifact-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/assistant-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/blueprints/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -945,6 +940,16 @@
         {
           "type": "json",
           "path": "tools/dx-compile/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/dx-tools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

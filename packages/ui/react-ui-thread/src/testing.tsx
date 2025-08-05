@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 
 import { MessageBody, MessageHeading } from './Message';
@@ -31,7 +30,7 @@ export const MessageStoryText = ({ text, onDelete, authorName, timestamp }: Mess
             classNames={['p-1.5 min-bs-0 mie-1 items-start transition-opacity', hoverableControlItem]}
             onClick={() => onDelete()}
           >
-            <X />
+            <Icon icon='ph--x--regular' />
           </Button>
         )}
       </MessageHeading>

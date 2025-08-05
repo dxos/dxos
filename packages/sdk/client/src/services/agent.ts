@@ -4,11 +4,11 @@
 
 import { Event } from '@dxos/async';
 import {
+  type ClientServices,
+  type ClientServicesProvider,
   DX_RUNTIME,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
-  type ClientServices,
-  type ClientServicesProvider,
   clientServiceBundle,
   getProfilePath,
 } from '@dxos/client-protocol';

@@ -3,30 +3,30 @@
 //
 
 import { getHeads } from '@automerge/automerge';
-import { interpretAsDocumentId, type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import {
-  asyncTimeout,
+  type CleanupFn,
   Event,
-  runInContextAsync,
-  synchronized,
+  type ReadOnlyEvent,
   TimeoutError,
   Trigger,
   UpdateScheduler,
-  type CleanupFn,
-  type ReadOnlyEvent,
+  asyncTimeout,
+  runInContextAsync,
+  synchronized,
 } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import {
-  encodeReference,
-  Reference,
   type DatabaseDirectory,
   type ObjectStructure,
+  Reference,
   type SpaceState,
+  encodeReference,
 } from '@dxos/echo-protocol';
-import { Ref, type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId, Ref } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -36,16 +36,17 @@ import type { DataService, SpaceSyncState } from '@dxos/protocols/proto/dxos/ech
 import { trace } from '@dxos/tracing';
 import { chunkArray, deepMapValues, defaultMap } from '@dxos/util';
 
+import { type ChangeEvent, type DocHandleProxy, RepoProxy, type SaveStateChangedEvent } from '../automerge';
+import { type Hypergraph } from '../hypergraph';
+
 import {
-  AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
+  AutomergeDocumentLoaderImpl,
   type DocumentChanges,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
-import { RepoProxy, type ChangeEvent, type DocHandleProxy, type SaveStateChangedEvent } from '../automerge';
-import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: ObjectCore) => void;
 

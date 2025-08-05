@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipeline, type FeatureExtractionPipeline } from '@xenova/transformers';
+import { type FeatureExtractionPipeline, pipeline } from '@xenova/transformers';
 
 import { Resource } from '@dxos/context';
 

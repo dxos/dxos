@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Option, Schema } from 'effect';
 
-import { getField, type JsonPath } from '@dxos/effect';
+import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import { LabelAnnotation } from '../ast';
+
 import { type InternalObjectProps, SchemaId } from './model';
-import { LabelAnnotationId } from '../ast';
 
 //
 // Accessors based on model.
@@ -73,15 +74,8 @@ export const getLabelForObject = (obj: unknown | undefined): string | undefined 
  */
 // TODO(burdon): Convert to JsonPath?
 export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
-  let annotation = schema.ast.annotations[LabelAnnotationId];
-  if (!annotation) {
-    return undefined;
-  }
-  if (!Array.isArray(annotation)) {
-    annotation = [annotation];
-  }
-
-  for (const accessor of annotation as string[]) {
+  const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
+  for (const accessor of annotation) {
     assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
     const value = getField(object, accessor as JsonPath);
     switch (typeof value) {
@@ -99,4 +93,15 @@ export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.
   }
 
   return undefined;
+};
+
+/**
+ * Sets the label for a given object based on {@link LabelAnnotationId}.
+ */
+export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
+  const annotation = LabelAnnotation.get(schema).pipe(
+    Option.map((field) => field[0]),
+    Option.getOrElse(() => 'name'),
+  );
+  object[annotation] = label;
 };

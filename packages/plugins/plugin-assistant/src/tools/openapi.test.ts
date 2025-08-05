@@ -6,9 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { createToolsFromApi, resolveAuthorization } from './openapi';
-import { ChatProcessor } from '../hooks';
+import { AiChatProcessor } from '../hooks';
 import { type ApiAuthorization } from '../types';
+
+import { createToolsFromApi, resolveAuthorization } from './openapi';
 
 describe.skip('openapi', () => {
   describe.skip('mapping', () => {
@@ -70,9 +71,9 @@ describe.skip('openapi', () => {
   describe.skip('AI uses tools', () => {
     test('amadeus flight availabilities', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(FLIGHT_SEARCH_API, { authorization: AMADEUS_AUTH });
-      // const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
-      const processor = new ChatProcessor(null as any, { tools });
+      const processor = new AiChatProcessor(null as any, null as any, { tools });
       const reply = await processor.request(
         `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
       );
@@ -83,9 +84,9 @@ describe.skip('openapi', () => {
     // TODO(dmaretskyi): Doesn't work.
     test('amadeus hotel name autocomplete', { timeout: 60_000 }, async () => {
       const tools = await createToolsFromApi(HOTEL_NAME_AUTOCOMPLETE_API, { authorization: AMADEUS_AUTH });
-      // const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
-      const processor = new ChatProcessor(null as any, { tools });
+      const processor = new AiChatProcessor(null as any, null as any, { tools });
       const reply = await processor.request('Find me the William Wale in Brooklyn New York');
 
       log.info('reply', { reply });
@@ -96,9 +97,9 @@ describe.skip('openapi', () => {
         authorization: VISUAL_CROSSING_CREDENTIALS,
         instructions: WEATHER_INSTRUCTIONS,
       });
-      // const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
+      // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
-      const processor = new ChatProcessor(null as any, { tools });
+      const processor = new AiChatProcessor(null as any, null as any, { tools });
       const reply = await processor.request(
         `Today's date is ${new Date().toISOString().split('T')[0]}. Give me weather forecast for Warsaw for next 5 days.`,
       );

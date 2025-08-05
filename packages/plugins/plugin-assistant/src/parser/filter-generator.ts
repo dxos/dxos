@@ -4,14 +4,7 @@
 
 import { Filter } from '@dxos/echo';
 
-import {
-  type BinaryExpression,
-  type Expression,
-  type Identifier,
-  type Literal,
-  type RelationalOperator,
-  type UnaryExpression,
-} from './types';
+import { type Expression, type Identifier, type Literal, type RelationalOperator } from './types';
 
 const relationalOperators: Record<RelationalOperator, (value: any) => Filter<any>> = {
   EQ: Filter.eq,
@@ -26,7 +19,7 @@ const specialPredicates: Record<string, (value: string) => Filter<any>> = {
 export const createFilter = (ast: Expression): Filter<any> => {
   switch (ast.type) {
     case 'binary': {
-      const { operator, left, right } = ast as BinaryExpression;
+      const { operator, left, right } = ast;
 
       // Handle logical operators.
       if (operator === 'AND') {
@@ -44,7 +37,7 @@ export const createFilter = (ast: Expression): Filter<any> => {
       }
 
       // Handle relational operators
-      const filterFn = relationalOperators[operator as RelationalOperator];
+      const filterFn = relationalOperators[operator];
       if (filterFn) {
         return filterFn((right as Literal).value);
       }
@@ -53,7 +46,7 @@ export const createFilter = (ast: Expression): Filter<any> => {
     }
 
     case 'unary': {
-      const { operator, argument } = ast as UnaryExpression;
+      const { operator, argument } = ast;
       if (operator === 'NOT') {
         return Filter.not(createFilter(argument));
       }
@@ -61,12 +54,12 @@ export const createFilter = (ast: Expression): Filter<any> => {
     }
 
     case 'identifier': {
-      const { name } = ast as Identifier;
+      const { name } = ast;
       return Filter._props({ [name]: true });
     }
 
     case 'literal': {
-      const { value } = ast as Literal;
+      const { value } = ast;
       // Handle special '*' value for empty input.
       if (value === '*') {
         return Filter.everything();

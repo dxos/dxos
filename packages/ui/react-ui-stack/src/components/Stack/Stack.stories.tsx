@@ -6,14 +6,15 @@ import '@dxos-theme';
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Stack } from './Stack';
-import { StackItem } from '../StackItem';
 import { type StackItemData } from '../defs';
+import { StackItem } from '../StackItem';
+
+import { Stack } from './Stack';
 
 type StoryStackItem = {
   id: string;

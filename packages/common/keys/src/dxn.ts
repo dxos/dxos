@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
-import type { inspect, InspectOptionsStylized } from 'node:util';
+import type { InspectOptionsStylized, inspect } from 'node:util';
 
-import { devtoolsFormatter, type DevtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { Schema } from 'effect';
+
+import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { assertArgument, invariant } from '@dxos/invariant';
 
 import { ObjectId } from './object-id';
 import { SpaceId } from './space-id';
@@ -119,7 +120,7 @@ export class DXN {
   static tryParse(dxn: string): DXN | undefined {
     try {
       return DXN.parse(dxn);
-    } catch (error) {
+    } catch {
       return undefined;
     }
   }
@@ -143,6 +144,7 @@ export class DXN {
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
   static fromLocalObjectId(id: string): DXN {
+    assertArgument(ObjectId.isValid(id), `Invalid object ID: ${id}`);
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 

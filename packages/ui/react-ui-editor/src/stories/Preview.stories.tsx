@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorView } from '@codemirror/view';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
@@ -14,12 +14,13 @@ import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { PreviewProvider, useRefPopover } from '../components';
+import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
+import { str } from '../testing';
 
 import { EditorStory } from './components';
-import { PreviewProvider, useRefPopover } from '../components';
-import { preview, image, type PreviewLinkRef, type PreviewLinkTarget, getLinkRef } from '../extensions';
-import { str } from '../testing';
 
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
@@ -48,7 +49,7 @@ const PreviewCard = () => {
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='popover'>
+          <Card.SurfaceRoot role='card--popover'>
             <Card.Heading>{target?.label}</Card.Heading>
             {target && <Card.Text classNames='line-clamp-3'>{target.text}</Card.Text>}
           </Card.SurfaceRoot>

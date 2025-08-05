@@ -10,8 +10,8 @@ import {
   Dialog,
   Main,
   Popover,
-  useTranslation,
   type PopoverContentInteractOutsideEvent,
+  useTranslation,
 } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
@@ -109,7 +109,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           hideWhenDetached
         >
           <Popover.Viewport>
-            <Surface role='popover' data={layout.popoverContent} limit={1} />
+            <Surface role='card--popover' data={layout.popoverContent} limit={1} />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>

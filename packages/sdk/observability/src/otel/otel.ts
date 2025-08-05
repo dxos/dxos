@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { DiagConsoleLogger, DiagLogLevel, diag } from '@opentelemetry/api';
 
 export type OtelOptions = {
   endpoint: string;

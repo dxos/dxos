@@ -7,46 +7,47 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import {
+  type Edge,
   attachClosestEdge,
   extractClosestEdge,
-  type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
-  forwardRef,
-  useLayoutEffect,
-  useState,
   type ComponentPropsWithRef,
-  useCallback,
   type ReactNode,
+  forwardRef,
+  useCallback,
+  useLayoutEffect,
   useMemo,
+  useState,
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
+
+import { type StackItemData, type StackItemSize } from '../defs';
+import { type ItemDragState, StackItemContext, idle, useStack, useStackItem } from '../StackContext';
 
 import { StackItemContent, type StackItemContentProps } from './StackItemContent';
 import { StackItemDragHandle, type StackItemDragHandleProps } from './StackItemDragHandle';
 import {
   StackItemHeading,
   StackItemHeadingLabel,
-  type StackItemHeadingProps,
   type StackItemHeadingLabelProps,
+  type StackItemHeadingProps,
   StackItemHeadingStickyContent,
 } from './StackItemHeading';
 import { StackItemResizeHandle, type StackItemResizeHandleProps } from './StackItemResizeHandle';
 import {
   StackItemSigil,
-  type StackItemSigilProps,
   type StackItemSigilAction,
-  type StackItemSigilButtonProps,
   StackItemSigilButton,
+  type StackItemSigilButtonProps,
+  type StackItemSigilProps,
 } from './StackItemSigil';
-import { useStack, StackItemContext, idle, type ItemDragState, useStackItem } from '../StackContext';
-import { type StackItemSize, type StackItemData } from '../defs';
 
 // NOTE: 48rem fills the screen on a MacbookPro with the sidebars closed.
 export const DEFAULT_HORIZONTAL_SIZE = 48 satisfies StackItemSize;

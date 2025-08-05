@@ -6,7 +6,7 @@ import { type ClientServicesProvider, ClientServicesProviderResource } from '@dx
 import { type Config, ConfigResource } from '@dxos/config';
 import { GetDiagnosticsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { type JsonKeyOptions, jsonKeyReplacer, isNonNullable } from '@dxos/util';
+import { type JsonKeyOptions, isNonNullable, jsonKeyReplacer } from '@dxos/util';
 
 import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
 

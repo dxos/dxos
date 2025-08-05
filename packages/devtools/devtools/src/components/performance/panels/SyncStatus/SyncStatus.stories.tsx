@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { type Client } from '@dxos/client';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { getSyncSummary, type SpaceSyncStateMap } from '@dxos/react-client/echo';
+import { type SpaceSyncStateMap, getSyncSummary } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';

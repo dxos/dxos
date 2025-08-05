@@ -3,15 +3,16 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { EchoSchema, isInstanceOf } from '@dxos/echo-schema';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
+import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
+
 import * as stories from './ViewEditor.stories';
 import { type ViewEditorDebugObjects } from './ViewEditor.stories';
-import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 const { Default } = composeStories(stories);
 
@@ -41,7 +42,7 @@ describe('ViewEditor', () => {
   test('renders view editor', async () => {
     await Default.run();
     await waitForViewEditor();
-    expect(screen.getByText('Typename')).toBeInTheDocument();
+    expect(screen.getByText('Record type')).toBeInTheDocument();
   });
 
   test('change property name', async () => {
@@ -140,7 +141,7 @@ describe('ViewEditor', () => {
     // Find the delete button for the 'name' property.
     const nameProperty = screen.getByText('name');
     const propertyRow = nameProperty.closest('[role="listitem"]');
-    const deleteButton = propertyRow?.querySelector('button:last-child');
+    const deleteButton = propertyRow?.querySelector('[data-testid="field.delete"]');
 
     if (!deleteButton) {
       throw new Error('Delete button not found');

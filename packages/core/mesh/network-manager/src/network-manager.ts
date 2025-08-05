@@ -13,7 +13,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { ConnectionLog } from './connection-log';
 import { type SignalConnection } from './signal';
-import { Swarm, SwarmMapper, ConnectionLimiter } from './swarm';
+import { ConnectionLimiter, Swarm, SwarmMapper } from './swarm';
 import { type Topology } from './topology';
 import { type TransportFactory } from './transport';
 import { type WireProtocolProvider } from './wire-protocol';

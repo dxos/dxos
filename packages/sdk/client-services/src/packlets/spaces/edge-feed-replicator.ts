@@ -15,8 +15,8 @@ import { log, logInfo } from '@dxos/log';
 import { EdgeService } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
-  MessageSchema as RouterMessageSchema,
   type Message as RouterMessage,
+  MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { FeedBlock, ProtocolMessage } from '@dxos/protocols/feed-replication';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';

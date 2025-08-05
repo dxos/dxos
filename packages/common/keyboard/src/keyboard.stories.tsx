@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import React, { useEffect, useState } from 'react';
 
-import { Select, Input } from '@dxos/react-ui';
+import { Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { type KeyHandler, Keyboard } from './keyboard';

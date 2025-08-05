@@ -4,14 +4,14 @@
 
 import { Schema, pipe } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, chain, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
+import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, Filter, type Space } from '@dxos/react-client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -55,7 +55,7 @@ export default () => {
         caption: 'Creating table...',
         schema: Schema.Struct({
           typename: Schema.String.annotations({
-            description: 'The fully qualified typename of the schema to use for the table.',
+            description: 'The fully qualified name of the record type to use for the table.',
           }),
           name: Schema.optional(Schema.String).annotations({
             description: 'Optional name for the table.',
@@ -124,7 +124,7 @@ export default () => {
       createTool(meta.id, {
         name: 'inspect',
         // TODO(ZaymonFC): Tell the LLM how to present the tables to the user.
-        description: 'Get the current schema of the table.',
+        description: 'Get the current record type of the table.',
         caption: 'Loading table...',
         schema: Schema.Struct({ id: QualifiedId }),
         execute: async ({ id }, { extensions }) => {

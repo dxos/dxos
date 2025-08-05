@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
-import { useNode, useActions } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Icon,
   IconButton,
   type IconButtonProps,
-  type ThemedClassName,
   Toolbar as NativeToolbar,
+  type ThemedClassName,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -174,7 +174,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? state.on.classNames ?? 'bg-callActive' : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-callActive') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}

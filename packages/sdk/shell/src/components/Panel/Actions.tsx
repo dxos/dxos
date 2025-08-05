@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef, type ReactNode } from 'react';
+import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

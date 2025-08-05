@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
 import fs from 'fs';
 
-import { debounce, Trigger } from '@dxos/async';
+import { Args, Flags } from '@oclif/core';
+
+import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
@@ -70,7 +71,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
         if (event === 'rename') {
           trigger.wake();
         } else {
-          updateSource();
+          void updateSource();
         }
       });
 

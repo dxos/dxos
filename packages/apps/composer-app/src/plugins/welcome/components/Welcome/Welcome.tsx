@@ -4,17 +4,17 @@
 
 import '@fontsource/poiret-one';
 
-import { CaretRight, Key, Planet, QrCode, Receipt, User } from '@phosphor-icons/react';
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
-import { hero } from './hero-image';
-import { WelcomeState, type WelcomeScreenProps, validEmail } from './types';
 import { WELCOME_PLUGIN } from '../../meta';
+
+import { hero } from './hero-image';
+import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
 
@@ -70,7 +70,7 @@ export const Welcome = ({
           passkey: {
             label: t('redeem passkey button label'),
             description: t('redeem passkey button description'),
-            icon: Key,
+            icon: (props: any) => <Icon icon='ph--key--regular' {...props} />,
             onClick: onPasskey,
           },
         }),
@@ -78,7 +78,7 @@ export const Welcome = ({
         deviceInvitation: {
           label: t('join device button label'),
           description: t('join device button description'),
-          icon: QrCode,
+          icon: (props: any) => <Icon icon='ph--qr-code--regular' {...props} />,
           onClick: onJoinIdentity,
         },
       }),
@@ -86,7 +86,7 @@ export const Welcome = ({
         recoveryCode: {
           label: t('recover identity button label'),
           description: t('recover identity button description'),
-          icon: Receipt,
+          icon: (props: any) => <Icon icon='ph--receipt--regular' {...props} />,
           onClick: onRecoverIdentity,
         },
       }),
@@ -169,8 +169,8 @@ export const Welcome = ({
             </div>
             <CompoundButton
               slots={{ root: { className: 'is-full' } }}
-              after={<CaretRight className={getSize(4)} weight='bold' />}
-              before={<Planet className={getSize(6)} />}
+              after={<Icon icon='ph--caret-right--bold' />}
+              before={<Icon icon='ph--planet--regular' />}
               onClick={onSpaceInvitation}
             >
               {t('join space button label')}
@@ -181,8 +181,8 @@ export const Welcome = ({
             </div>
             <CompoundButton
               slots={{ root: { className: 'is-full' } }}
-              after={<CaretRight className={getSize(4)} weight='bold' />}
-              before={<User className={getSize(6)} />}
+              after={<Icon icon='ph--caret-right--bold' />}
+              before={<Icon icon='ph--user--regular' />}
               onClick={onGoToLogin}
             >
               {t('go to login button label')}

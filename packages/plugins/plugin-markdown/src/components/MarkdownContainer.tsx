@@ -16,29 +16,30 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
   type CommandMenuGroup,
   type CommandMenuItem,
-  insertAtCursor,
-  insertAtLineStart,
   type PreviewLinkRef,
   type PreviewOptions,
+  insertAtCursor,
+  insertAtLineStart,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 import { useExtensions } from '../extensions';
-import { DocumentType, type MarkdownSettingsProps } from '../types';
+import { Markdown } from '../types';
 import { getFallbackName } from '../util';
+
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
 export type MarkdownContainerProps = Pick<
   MarkdownEditorProps,
   'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
 > & {
   id: string;
-  object: DocumentType | DataType.Text | any;
-  settings: MarkdownSettingsProps;
+  object: Markdown.Document | DataType.Text | any;
+  settings: Markdown.Settings;
   selectionManager?: SelectionManager;
 };
 
-const MarkdownContainer = ({
+export const MarkdownContainer = ({
   id,
   role,
   object,
@@ -50,7 +51,7 @@ const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = Obj.instanceOf(DocumentType, object) ? object : undefined;
+  const doc = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
   const previewOptions = useMemo(
@@ -95,15 +96,19 @@ const MarkdownContainer = ({
   );
   const onLinkQuery = useCallback(
     async (query?: string): Promise<CommandMenuGroup[]> => {
-      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : query?.toLowerCase() ?? '';
+      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
       // TODO(wittjosiah): Use `Obj.Any` type.
       const getLabel = (object: any) => {
+        const label = Obj.getLabel(object);
+        if (label) {
+          return label;
+        }
+
+        // TODO(wittjosiah): Remove metadata labels.
         const type = Obj.getTypename(object)!;
         const metadata = resolve(type);
-        return (
-          metadata.label?.(object) || object.name || ['object name placeholder', { ns: type, default: 'New object' }]
-        );
+        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
       };
       const items =
         results?.objects
@@ -190,12 +195,12 @@ const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) =
   const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface role='transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
 };
 
 type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
   Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'> & {
-    document: DocumentType;
+    document: Markdown.Document;
   };
 
 export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {

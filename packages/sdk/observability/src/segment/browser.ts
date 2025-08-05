@@ -7,9 +7,10 @@ import snippet from '@segment/snippet';
 
 import { log } from '@dxos/log';
 
-import { AbstractSegmentTelemetry } from './base';
-import type { TrackOptions, SegmentTelemetryOptions, PageOptions } from './types';
 import { captureException } from '../sentry';
+
+import { AbstractSegmentTelemetry } from './base';
+import type { PageOptions, SegmentTelemetryOptions, TrackOptions } from './types';
 
 /**
  * Browser telemetry.

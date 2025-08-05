@@ -6,7 +6,10 @@ import { Context, Layer } from 'effect';
 
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 
-export class QueueService extends Context.Tag('QueueService')<
+/**
+ * Gives access to all queues.
+ */
+export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   QueueService,
   {
     /**
@@ -16,8 +19,8 @@ export class QueueService extends Context.Tag('QueueService')<
 
     /**
      * The queue that is used to store the context of the current research.
+     * @deprecated Use `ContextQueueService` instead.
      */
-    // TODO(dmaretskyi): Is this really part of the queue service?
     readonly contextQueue: Queue | undefined;
   }
 >() {
@@ -33,10 +36,23 @@ export class QueueService extends Context.Tag('QueueService')<
     contextQueue: undefined,
   });
 
-  static make = (queues: QueueFactory, contextQueue: Queue | undefined): Context.Tag.Service<QueueService> => {
+  static make = (queues: QueueFactory, contextQueue?: Queue): Context.Tag.Service<QueueService> => {
     return {
       queues,
       contextQueue,
     };
   };
+
+  static makeLayer = (queues: QueueFactory, contextQueue?: Queue): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues, contextQueue));
 }
+
+/**
+ * Gives access to a specific queue passed as a context.
+ */
+export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
+  ContextQueueService,
+  {
+    readonly contextQueue: Queue;
+  }
+>() {}

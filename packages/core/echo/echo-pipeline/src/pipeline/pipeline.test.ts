@@ -2,15 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { describe, expect, test, onTestFinished } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
-import { Pipeline } from './pipeline';
 import { TestFeedBuilder } from '../testing';
+
+import { Pipeline } from './pipeline';
 
 const TEST_MESSAGE: FeedMessage = {
   timeframe: new Timeframe(),

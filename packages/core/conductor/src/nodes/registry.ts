@@ -5,10 +5,10 @@
 import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { defineTool, Message, type Tool, ToolTypes } from '@dxos/ai';
+import { type Tool, ToolTypes, defineTool } from '@dxos/ai';
 import { Filter, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo-schema';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -16,9 +16,24 @@ import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
+import {
+  AnyInput,
+  AnyOutput,
+  DEFAULT_INPUT,
+  DEFAULT_OUTPUT,
+  DefaultInput,
+  type Executable,
+  NotExecuted,
+  ValueBag,
+  VoidInput,
+  VoidOutput,
+  defineComputeNode,
+  synchronizedComputeFunction,
+} from '../types';
+
 import { executeFunction, resolveFunctionPath } from './function';
 import { gptNode } from './gpt';
-import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
+import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
 import { templateNode } from './template/node';
 import {
   AppendInput,
@@ -31,20 +46,6 @@ import {
   ReducerOutput,
   TextToImageOutput,
 } from './types';
-import {
-  AnyInput,
-  AnyOutput,
-  DEFAULT_INPUT,
-  DEFAULT_OUTPUT,
-  DefaultInput,
-  defineComputeNode,
-  type Executable,
-  NotExecuted,
-  synchronizedComputeFunction,
-  ValueBag,
-  VoidInput,
-  VoidOutput,
-} from '../types';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -223,7 +224,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(Message),
+      messages: Schema.Array(DataType.Message),
     }),
   }),
 

@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { PluginDetail, type PluginDetailProps } from './PluginDetail';
 import { translations } from '../translations';
+
+import { PluginDetail, type PluginDetailProps } from './PluginDetail';
 
 const meta: Meta<PluginDetailProps> = {
   title: 'plugins/plugin-registry/PluginDetail',

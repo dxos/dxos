@@ -1,0 +1,51 @@
+name: Crab Nebula Update Config
+description: Generate a tauri config which sets the endpoints for Crab Nebula update server.
+
+inputs:
+  version:
+    description: 'Version'
+    required: true
+  working-directory:
+    description: 'Working directory'
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/cn-channel
+      # TODO(wittjosiah): Switch to production.
+      if: github.ref_name != 'labs'
+      id: release-channel
+
+    - name: Find tauri.conf.json
+      id: find-tauri-config
+      run: |
+        if [ -f "${{ inputs.working-directory }}/tauri.conf.json" ]; then
+          echo "tauri_conf_json_path=${{ inputs.working-directory }}/tauri.conf.json" >> $GITHUB_OUTPUT
+        else
+          echo "Error: tauri.conf.json not found in ${{ inputs.working-directory }}"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Update endpoints in tauri.conf.json
+      # TODO(wittjosiah): Switch to production.
+      if: github.ref_name != 'labs'
+      run: |
+        jq \
+          --arg channel "${{ steps.release-channel.outputs.channel }}" \
+          '.plugins.updater.endpoints = [
+            "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}?channel=\($channel)"
+          ]' \
+          "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" && \
+        mv "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}.tmp" "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash
+
+    - name: Update version in tauri.conf.json
+      run: |
+        jq \
+          --arg version "${{ inputs.version }}" \
+          '.version = $version' \
+          "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
+        mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash

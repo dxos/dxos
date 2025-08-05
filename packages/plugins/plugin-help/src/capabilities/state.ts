@@ -5,8 +5,9 @@
 import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
-import { HelpCapabilities } from './capabilities';
 import { HELP_PLUGIN } from '../meta';
+
+import { HelpCapabilities } from './capabilities';
 
 export default () => {
   const state = new LocalStorageStore<HelpCapabilities.State>(HELP_PLUGIN, {

@@ -15,7 +15,7 @@ import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { MessengerMonitor } from './messenger-monitor';
 import { type SignalManager } from './signal-manager';
-import { type PeerInfo, type Message } from './signal-methods';
+import { type Message, type PeerInfo } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
 
 export type OnMessage = (params: Message) => Promise<void>;

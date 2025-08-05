@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     }
@@ -23,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.0.0",
+    "@automerge/automerge": "3.1.1",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",

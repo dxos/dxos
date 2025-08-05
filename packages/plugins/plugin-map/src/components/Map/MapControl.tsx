@@ -4,11 +4,13 @@
 
 import React, { useState } from 'react';
 
-import { Map, type MapController, useMapZoomHandler, type MapCanvasProps, type ControlProps } from '@dxos/react-ui-geo';
+import { type ControlProps, Map, type MapController, type MapRootProps, useMapZoomHandler } from '@dxos/react-ui-geo';
 
-export type MapControlProps = MapCanvasProps & { onToggle?: () => void };
+import { type GeoControlProps } from '../types';
 
-export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChange }: MapControlProps) => {
+export type MapControlProps = GeoControlProps & MapRootProps;
+
+export const MapControl = ({ classNames, center, zoom, markers, selected, onToggle, onChange }: MapControlProps) => {
   const [controller, setController] = useState<MapController | null>(null);
   const handleZoomAction = useMapZoomHandler(controller);
 
@@ -22,8 +24,9 @@ export const MapControl = ({ classNames, markers, center, zoom, onToggle, onChan
   };
 
   return (
-    <Map.Root classNames={classNames} center={center} zoom={zoom}>
-      <Map.Canvas ref={setController} markers={markers} onChange={onChange} />
+    <Map.Root ref={setController} classNames={classNames} center={center} zoom={zoom} onChange={onChange}>
+      <Map.Tiles />
+      <Map.Markers markers={markers} selected={selected} />
       {onToggle && <Map.Action onAction={handleAction} />}
       <Map.Zoom onAction={handleZoomAction} />
     </Map.Root>

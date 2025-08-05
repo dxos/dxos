@@ -4,109 +4,105 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Message } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { type ContentBlock, DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ChatThread } from './ChatThread';
 import { translations } from '../../translations';
+
+import { ChatThread } from './ChatThread';
 
 faker.seed(1);
 
-const TEST_MESSAGES: Message[] = [
-  Obj.make(Message, {
-    role: 'user',
-    content: [
-      {
-        type: 'text',
-        text: faker.lorem.sentence(5),
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'assistant',
-    content: [
-      {
-        type: 'text',
-        disposition: 'cot',
-        text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-          .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-          .join('\n'),
-      },
-      {
-        type: 'text',
-        text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
-          .map(() => faker.lorem.paragraphs())
-          .join('\n\n'),
-      },
-      {
-        type: 'tool_use',
-        id: '1234',
-        name: 'search',
-        input: {},
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'user',
-    content: [
-      {
-        type: 'tool_result',
-        toolUseId: '1234',
-        content: 'This is a tool result.',
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'assistant',
-    content: [
-      {
-        type: 'tool_use',
-        id: '4567',
-        name: 'create',
-        input: {},
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'user',
-    content: [
-      {
-        type: 'tool_result',
-        toolUseId: '4567',
-        content: 'This is a tool result.',
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'assistant',
-    content: [
-      {
-        type: 'text',
-        text: faker.lorem.paragraphs(1),
-      },
-    ],
-  }),
-  Obj.make(Message, {
-    role: 'assistant',
-    content: [
-      {
-        type: 'json',
-        disposition: 'suggest',
-        json: JSON.stringify({ text: 'Search...' }),
-      },
-      {
-        type: 'json',
-        disposition: 'suggest',
-        json: JSON.stringify({ text: faker.lorem.paragraphs(1) }),
-      },
-    ],
-  }),
+const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
+  return Obj.make(DataType.Message, {
+    created: new Date().toISOString(),
+    sender: { role },
+    blocks,
+  });
+};
+
+const TEST_MESSAGES: DataType.Message[] = [
+  createMessage('user', [
+    {
+      _tag: 'text',
+      text: faker.lorem.sentence(5),
+    } satisfies ContentBlock.Text,
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'text',
+      disposition: 'cot',
+      text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+        .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+        .join('\n'),
+    },
+    {
+      _tag: 'text',
+      text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
+        .map(() => faker.lorem.paragraphs())
+        .join('\n\n'),
+    },
+    {
+      _tag: 'toolCall',
+      toolCallId: '1234',
+      name: 'search',
+      input: {},
+    } satisfies ContentBlock.ToolCall,
+  ]),
+
+  createMessage('user', [
+    {
+      _tag: 'toolResult',
+      toolCallId: '1234',
+      name: 'search',
+      result: 'This is a tool result.',
+    } satisfies ContentBlock.ToolResult,
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'toolCall',
+      toolCallId: '4567',
+      name: 'create',
+      input: {},
+    } satisfies ContentBlock.ToolCall,
+  ]),
+
+  createMessage('user', [
+    {
+      _tag: 'toolResult',
+      toolCallId: '4567',
+      name: 'create',
+      result: 'This is a tool result.',
+    } satisfies ContentBlock.ToolResult,
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'text',
+      text: faker.lorem.paragraphs(1),
+    } satisfies ContentBlock.Text,
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'json',
+      disposition: 'suggest',
+      data: JSON.stringify({ text: 'Search...' }),
+    },
+    {
+      _tag: 'json',
+      disposition: 'suggest',
+      data: JSON.stringify({ text: faker.lorem.paragraphs(1) }),
+    } satisfies ContentBlock.Json,
+  ]),
 ];
 
 const meta = {
@@ -130,7 +126,7 @@ export const Default = {
 
 export const Incremental = {
   render: () => {
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<DataType.Message[]>([]);
     useEffect(() => {
       let i = 0;
       const interval = setInterval(() => {

@@ -10,11 +10,12 @@ import { faker } from '@dxos/random';
 import { Button, List, ListItem } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { PluginManagerProvider, usePluginManager } from './PluginManagerProvider';
-import { Surface, useSurfaces } from './Surface';
 import { Capabilities, createSurface } from '../common';
 import { type PluginManager } from '../core';
 import { setupPluginManager } from '../testing';
+
+import { PluginManagerProvider, usePluginManager } from './PluginManagerProvider';
+import { Surface, useSurfaces } from './Surface';
 
 const randomColor = (): string => {
   const hue = faker.number.int({ min: 0, max: 360 });

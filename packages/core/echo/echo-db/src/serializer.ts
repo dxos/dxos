@@ -3,12 +3,12 @@
 //
 
 import { Filter } from '@dxos/echo';
-import { decodeReference, type EncodedReference, encodeReference, Reference } from '@dxos/echo-protocol';
+import { type EncodedReference, Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, isNonNullable, stripUndefined } from '@dxos/util';
 
 import { ObjectCore } from './core-db';
-import { getObjectCore, type AnyLiveObject } from './echo-handler';
+import { type AnyLiveObject, getObjectCore } from './echo-handler';
 import { type EchoDatabase } from './proxy-db';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 

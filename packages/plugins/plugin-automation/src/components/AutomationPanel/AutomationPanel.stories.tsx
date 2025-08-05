@@ -8,14 +8,15 @@ import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { AutomationPanel } from './AutomationPanel';
 import { functions } from '../../testing';
 import { translations } from '../../translations';
+
+import { AutomationPanel } from './AutomationPanel';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

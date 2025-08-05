@@ -2,26 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  Capabilities,
-  Events,
-  allOf,
-  contributes,
-  createIntent,
-  defineModule,
-  definePlugin,
-} from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AiClient, AppGraphBuilder, IntentResolver, ReactSurface, Settings } from './capabilities';
+import {
+  AiService,
+  AppGraphBuilder,
+  BlueprintDefinition,
+  EdgeModelResolver,
+  IntentResolver,
+  ReactSurface,
+  Settings,
+} from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Assistant, ServiceType, TemplateType } from './types';
+import { Assistant, AssistantAction, ServiceType } from './types';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -40,15 +41,21 @@ export const AssistantPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Sequence),
-          metadata: {
-            icon: 'ph--circuitry--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
           id: Type.getTypename(Assistant.Chat),
           metadata: {
             icon: 'ph--atom--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(Blueprint.Blueprint),
+          metadata: {
+            icon: 'ph--blueprint--regular',
+          },
+        }),
+        contributes(Capabilities.Metadata, {
+          id: Type.getTypename(Sequence),
+          metadata: {
+            icon: 'ph--circuitry--regular',
           },
         }),
       ],
@@ -61,14 +68,22 @@ export const AssistantPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Assistant.Chat,
-            getIntent: (_, options) => createIntent(Assistant.CreateChat, { space: options.space }),
+            getIntent: (_, options) => createIntent(AssistantAction.CreateChat, { space: options.space }),
+          }),
+        ),
+        contributes(
+          SpaceCapabilities.ObjectForm,
+          defineObjectForm({
+            objectSchema: Blueprint.Blueprint,
+            formSchema: AssistantAction.BlueprintForm,
+            getIntent: (props) => createIntent(AssistantAction.CreateBlueprint, props),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Sequence,
-            getIntent: () => createIntent(Assistant.CreateSequence),
+            getIntent: () => createIntent(AssistantAction.CreateSequence),
           }),
         ),
       ],
@@ -76,14 +91,14 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, TemplateType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
       activatesOn: SpaceEvents.SpaceCreated,
       activate: () =>
-        contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-          createIntent(Assistant.OnSpaceCreated, { space, rootCollection }),
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
+          createIntent(AssistantAction.OnSpaceCreated, { rootCollection, space }),
         ),
     }),
     defineModule({
@@ -104,9 +119,20 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/ai-client`,
-      activatesOn: allOf(ClientEvents.ClientReady, Events.SettingsReady),
-      activatesAfter: [AssistantEvents.AiClientReady],
-      activate: AiClient,
+      id: `${meta.id}/module/ai-model-resolver`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: EdgeModelResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/ai-service`,
+      activatesBefore: [AssistantEvents.SetupAiServiceProviders],
+      // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
+      activatesOn: Events.Startup,
+      activate: AiService,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

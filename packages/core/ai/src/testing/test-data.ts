@@ -8,23 +8,24 @@ import { raise } from '@dxos/debug';
 import type { EchoDatabase } from '@dxos/echo-db';
 import {
   JSON_SCHEMA_ECHO_REF_ID,
-  ObjectId,
-  toJsonSchema,
   type JsonSchemaType,
+  ObjectId,
   type Ref,
   Ref as RefImpl,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 
-import { Contact, Organization, Project, Task } from './test-schema';
 import {
-  formatInferredRelationshipLabel,
-  formatNodeLabel,
   type DataSource,
   type Node,
   type Relationship,
-} from '../cypher';
+  formatInferredRelationshipLabel,
+  formatNodeLabel,
+} from '../experimental/cypher';
+
+import { Contact, Organization, Project, Task } from './test-schema';
 
 export const seedTestData = (db: EchoDatabase) => {
   const contactRich = db.add(

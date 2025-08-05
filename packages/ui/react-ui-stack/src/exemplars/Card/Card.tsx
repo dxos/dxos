@@ -5,19 +5,20 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
-  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type FC,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardRoot, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
+
+import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
@@ -43,11 +44,11 @@ const CardSurfaceRoot = ({
   children,
   classNames,
 }: ThemedClassName<PropsWithChildren<{ role?: string }>>) => {
-  if (['popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
+  if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
       <div
         className={mx(
-          role === 'popover'
+          role === 'card--popover'
             ? 'popover-card-width'
             : ['card--intrinsic', 'card--extrinsic'].includes(role)
               ? 'contents'
@@ -61,7 +62,11 @@ const CardSurfaceRoot = ({
   } else {
     return (
       <CardStaticRoot
-        classNames={[role === 'transclusion' && 'mlb-[1em]', role === 'transclusion' && hoverableControls, classNames]}
+        classNames={[
+          role === 'card--transclusion' && 'mlb-[1em]',
+          role === 'card--transclusion' && hoverableControls,
+          classNames,
+        ]}
       >
         {children}
       </CardStaticRoot>

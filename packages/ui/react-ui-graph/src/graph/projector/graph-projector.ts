@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SelectionModel, type Graph } from '@dxos/graph';
+import { type Graph, type SelectionModel } from '@dxos/graph';
+
+import { type SVGContext } from '../../hooks';
+import { type GraphLayout, type GraphLayoutNode, emptyGraph } from '../types';
 
 import { Projector, type ProjectorOptions } from './projector';
-import { type SVGContext } from '../../hooks';
-import { emptyGraph, type GraphLayout, type GraphLayoutNode } from '../types';
 
 export type GraphProjectorOptions = ProjectorOptions & {};
 

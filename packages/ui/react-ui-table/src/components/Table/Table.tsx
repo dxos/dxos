@@ -9,10 +9,10 @@ import React, {
   type WheelEvent,
   forwardRef,
   useCallback,
-  useImperativeHandle,
-  useState,
-  useMemo,
   useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
 } from 'react';
 
 import { type Client } from '@dxos/client';
@@ -24,27 +24,28 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  closestCell,
   type DxGridElement,
-  type DxGridPosition,
-  type GridContentProps,
-  Grid,
   type DxGridPlane,
   type DxGridPlaneRange,
-  gridSeparatorInlineEnd,
+  type DxGridPosition,
+  Grid,
+  type GridContentProps,
+  closestCell,
   gridSeparatorBlockEnd,
+  gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
+
+import { ModalController, type TableModel, type TablePresentation } from '../../model';
+import { translationKey } from '../../translations';
+import { tableButtons, tableControls } from '../../util';
+import { type TableCellEditorProps, TableValueEditor, createOption } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
-import { ModalController, type TableModel, type TablePresentation } from '../../model';
-import { translationKey } from '../../translations';
-import { tableButtons, tableControls } from '../../util';
-import { createOption, TableValueEditor, type TableCellEditorProps } from '../TableCellEditor';
 
 //
 // Table.Root
@@ -58,10 +59,10 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
       role='none'
       className={mx(
         'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'popover' && 'popover-card-height',
+        role === 'card--popover' && 'popover-card-height',
         role === 'section' && 'attention-surface',
         role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
+        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
         ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
       )}
     >
@@ -126,30 +127,26 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     /**
      * Provides an external controller that can be called to repaint the table.
      */
-    useImperativeHandle<TableController, TableController>(
-      forwardedRef,
-      () => {
-        if (!presentation || !dxGrid) {
-          return {};
-        }
+    useImperativeHandle<TableController, TableController>(forwardedRef, () => {
+      if (!presentation || !dxGrid) {
+        return {};
+      }
 
-        return {
-          update: (cell) => {
-            if (cell) {
-              dxGrid.updateIfWithinBounds(cell, true);
-            } else {
-              dxGrid.updateCells(true);
-              dxGrid.requestUpdate();
-            }
-          },
-        };
-      },
-      [presentation, dxGrid],
-    );
+      return {
+        update: (cell) => {
+          if (cell) {
+            dxGrid.updateIfWithinBounds(cell, true);
+          } else {
+            dxGrid.updateCells(true);
+            dxGrid.requestUpdate();
+          }
+        },
+      };
+    }, [presentation, dxGrid]);
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).ariaRowIndex ?? '');
+        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
         if (rowIndex != null) {
           if (onRowClick) {
             const row = model?.getRowAt(rowIndex);
@@ -286,7 +283,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         switch (event.key) {
           case 'Backspace':
           case 'Delete': {
-            model.setCellData(cell, undefined);
+            try {
+              model.setCellData(cell, undefined);
+              event.preventDefault();
+            } catch {
+              // Delete results in a validation error; don’t prevent default so dx-grid can emit an edit request.
+            }
             break;
           }
         }
@@ -395,7 +397,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           overscroll='trap'
           onAxisResize={handleAxisResize}
           onClick={handleGridClick}
-          onKeyDown={handleKeyDown}
+          onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
           ref={setDxGrid}
         />

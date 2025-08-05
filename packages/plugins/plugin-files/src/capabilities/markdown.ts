@@ -6,9 +6,10 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { listener } from '@dxos/react-ui-editor';
 
-import { FileCapabilities } from './capabilities';
 import { FILES_PLUGIN } from '../meta';
 import { type FilesSettingsProps } from '../types';
+
+import { FileCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const extensionProvider = () =>

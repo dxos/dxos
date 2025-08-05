@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { sendMessage, onMessage } from 'webext-bridge/content-script';
+import { onMessage, sendMessage } from 'webext-bridge/content-script';
 
 import { log } from '@dxos/log';
 

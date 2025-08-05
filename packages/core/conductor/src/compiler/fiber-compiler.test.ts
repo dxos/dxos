@@ -7,20 +7,20 @@ import { Effect, Either, Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
+import { logCustomEvent } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { DXN } from '@dxos/keys';
 import { mapValues } from '@dxos/util';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { logCustomEvent } from '../services';
 import { TestRuntime } from '../testing';
 import {
   type ComputeGraph,
   ComputeGraphModel,
   NotExecuted,
+  ValueBag,
   VoidOutput,
   defineComputeNode,
-  ValueBag,
   synchronizedComputeFunction,
 } from '../types';
 

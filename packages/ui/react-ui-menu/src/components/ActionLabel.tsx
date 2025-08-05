@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { type Action as GraphAction, type ActionGroup } from '@dxos/app-graph';
+import { type ActionGroup, type Action as GraphAction } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { toLocalizedString, useTranslation, type TFunction } from '@dxos/react-ui';
-import { mx, descriptionText } from '@dxos/react-ui-theme';
+import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import { type MenuActionProperties } from '../types';

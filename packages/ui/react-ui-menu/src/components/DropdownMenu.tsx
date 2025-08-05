@@ -5,11 +5,12 @@
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, useCallback } from 'react';
 
-import { DropdownMenu as NaturalDropdownMenu, Icon, type DropdownMenuRootProps } from '@dxos/react-ui';
+import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+
+import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 import { ActionLabel } from './ActionLabel';
 import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
-import { type MenuAction, type MenuItem, type MenuItemGroup } from '../types';
 
 export type DropdownMenuProps = DropdownMenuRootProps & {
   group?: MenuItemGroup;
@@ -80,7 +81,9 @@ const DropdownMenuRoot = ({
       <NaturalDropdownMenu.Portal>
         <NaturalDropdownMenu.Content>
           <NaturalDropdownMenu.Viewport>
-            {items?.map((item) => <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />)}
+            {items?.map((item) => (
+              <DropdownMenuItem key={item.id} item={item} onClick={handleActionClick} />
+            ))}
           </NaturalDropdownMenu.Viewport>
           <NaturalDropdownMenu.Arrow />
         </NaturalDropdownMenu.Content>

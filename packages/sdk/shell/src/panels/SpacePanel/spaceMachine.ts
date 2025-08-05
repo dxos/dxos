@@ -3,14 +3,15 @@
 //
 
 import { useMachine } from '@xstate/react';
-import { assign, createMachine, type InterpreterFrom, type StateFrom } from 'xstate';
+import { type InterpreterFrom, type StateFrom, assign, createMachine } from 'xstate';
 
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { type ErsatzSpace } from './SpacePanelProps';
 import { type StepEvent } from '../../steps';
+
+import { type ErsatzSpace } from './SpacePanelProps';
 
 type SpaceMachineContext = {
   invitation?: CancellableInvitationObservable;

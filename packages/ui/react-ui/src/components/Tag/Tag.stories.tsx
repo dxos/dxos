@@ -7,8 +7,9 @@ import { hues } from '@dxos/react-ui-theme';
 import '@dxos-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
 
-import { Tag } from './Tag';
 import { withTheme } from '../../testing';
+
+import { Tag } from './Tag';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 

@@ -4,7 +4,7 @@
 
 import { ux } from '@oclif/core';
 
-import { table, type TableFlags } from '@dxos/cli-base';
+import { type TableFlags, table } from '@dxos/cli-base';
 import { type TunnelResponse } from '@dxos/protocols/proto/dxos/service/tunnel';
 
 export const mapTunnels = (tunnels: TunnelResponse[]) => {

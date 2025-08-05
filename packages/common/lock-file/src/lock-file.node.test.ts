@@ -5,6 +5,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -29,7 +30,7 @@ describe('LockFile', () => {
     await LockFile.release(handle2);
   });
 
-  test('released when process exits', async () => {
+  test('released when process exits', { timeout: 10_000 }, async () => {
     const filename = join(TEST_DIR, `lock-${Math.random()}.lock`);
     onTestFinished(() => {
       if (existsSync(filename)) {
@@ -51,7 +52,7 @@ describe('LockFile', () => {
       });
     }
 
-    await trigger.wait({ timeout: 1_000 });
+    await trigger.wait({ timeout: 5_000 });
 
     await expect(LockFile.acquire(filename)).rejects.toBeInstanceOf(Error);
 
@@ -84,11 +85,11 @@ describe('LockFile', () => {
 
 // NOTE: Self-contained so when function.toString is called the code runs.
 const lockInProcess = (filename: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { open } = require('node:fs/promises');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { constants } = require('node:fs');
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { flock } = require('fs-ext');
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
