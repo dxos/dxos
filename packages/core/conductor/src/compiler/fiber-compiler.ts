@@ -338,9 +338,22 @@ export class GraphExecutor {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
       const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const layer = yield* this._createServiceLayer();
+      const entries = node.inputs.map(
+        (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
+      );
 
-      // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
-      const layer = Layer.mergeAll(
+      return ValueBag.make(Object.fromEntries(entries));
+    }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
+  }
+
+  /**
+   * Creates a layer with all required services from the current context.
+   * This centralizes the service layer creation logic.
+   */
+  private _createServiceLayer() {
+    return Effect.gen(this, function* () {
+      return Layer.mergeAll(
         Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
@@ -350,13 +363,7 @@ export class GraphExecutor {
         Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
         Layer.succeed(TracingService, yield* TracingService),
       );
-
-      const entries = node.inputs.map(
-        (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
-      );
-
-      return ValueBag.make(Object.fromEntries(entries));
-    }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
+    });
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
