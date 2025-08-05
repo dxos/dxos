@@ -5,8 +5,6 @@
 import { type Context, Effect, type Layer, type Scope } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { AiService } from '@dxos/ai';
-import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
@@ -252,7 +250,6 @@ const createTestExecutionContext = (mocks?: {
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
       functionCallService: mocks?.functions,
-      ai: AiService.make(new MockAiServiceClient()),
     })
     .createLayer();
 };

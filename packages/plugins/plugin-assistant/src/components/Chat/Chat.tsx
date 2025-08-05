@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { Result, useRxValue } from '@effect-rx/rx-react';
@@ -170,7 +171,7 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, processor, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
 
   const scrollerRef = useRef<ScrollController>(null);
@@ -197,7 +198,6 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
-      tools={processor?.tools}
       onEvent={(ev) => event.emit(ev)}
     />
   );
@@ -266,10 +266,10 @@ const ChatPrompt = ({
   } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
-  const contextProvider = useReferencesProvider(space);
+  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      contextProvider && references({ provider: contextProvider }),
+      referencesProvider && references({ provider: referencesProvider }),
       expandable &&
         Prec.highest(
           keymap.of([
@@ -300,7 +300,7 @@ const ChatPrompt = ({
           ]),
         ),
     ].filter(isNotFalsy);
-  }, [event, expandable, contextProvider]);
+  }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {

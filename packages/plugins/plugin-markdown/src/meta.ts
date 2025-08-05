@@ -18,5 +18,5 @@ export const meta: PluginMeta = {
   screenshots: ['https://dxos.network/plugin-details-markdown-dark.png'],
 };
 
-// TODO(burdon): Workaround for suspected vitest bug?
+// TODO(burdon): Workaround for suspected vitest bug? Update vitest?
 export const not_meta = meta;

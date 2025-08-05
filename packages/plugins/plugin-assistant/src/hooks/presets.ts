@@ -27,11 +27,11 @@ const createModelLabel = (model: LLMModel) => {
 export const AiServicePresets: AiServicePreset[] = [
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-3-5-haiku-20241022' as const,
+    model: '@anthropic/claude-opus-4-0' as const,
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-opus-4-0' as const,
+    model: '@anthropic/claude-3-5-haiku-20241022' as const,
   },
   {
     provider: 'lm-studio' as const,

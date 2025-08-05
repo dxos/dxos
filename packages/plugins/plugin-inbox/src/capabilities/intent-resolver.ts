@@ -178,7 +178,7 @@ export default (context: PluginContext) =>
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
 
         // const serviceContainer = new ServiceContainer().setServices({
-        //   ai: AiService.make(aiClient.value),
+        //   ai: AiService.AiService.make(aiClient.value),
         //   database: DatabaseService.make(space.db),
         //   queues: QueueService.make(space.queues, undefined),
         //   // eventLogger: consoleLogger,

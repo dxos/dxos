@@ -49,14 +49,13 @@ const messages: MessageWithRangeId[] = [
   'in classical physics objects have well-defined properties such as position speed and momentum',
 ].map((string, index) =>
   Obj.make(DataType.Message, {
-    created: new Date(Date.now() + 1000 * index).toISOString(),
+    created: new Date(Date.now() + 1_000 * index).toISOString(),
     sender,
-    blocks: [{ _tag: 'transcript', started: new Date(Date.now() + 1000 * index).toISOString(), text: string }],
+    blocks: [{ _tag: 'transcript', started: new Date(Date.now() + 1_000 * index).toISOString(), text: string }],
   }),
 );
 
-// eslint-disable-next-line no-unused-vars
-const _REMOTE_AI = true;
+// const REMOTE_AI = true;
 
 describe.skip('SentenceNormalization', () => {
   const getExecutor = () => {
@@ -98,6 +97,7 @@ describe.skip('SentenceNormalization', () => {
         buffer = sentences.slice(activeSentenceIndex);
       }
     }
+
     log.info('sentences', {
       originalMessages: JSON.stringify(messages, null, 2),
       sentences: JSON.stringify(sentences, null, 2),

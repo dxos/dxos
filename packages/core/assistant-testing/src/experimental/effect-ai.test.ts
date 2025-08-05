@@ -169,7 +169,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const chat = yield* AiChat.empty;
         const toolkit = yield* TestToolkit;
 
@@ -201,7 +201,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect.only(
     'with parser',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const system = trim`
           Before you answer I want you to emit your current status (what are you doing?) inside <status></status> XML tags.
           After your answer emit the suggestions for follow-up user prompts inside <suggest></suggest> XML tags.

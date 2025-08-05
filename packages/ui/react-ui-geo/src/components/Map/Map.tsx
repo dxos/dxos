@@ -117,6 +117,8 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
     }, [map, onChange]);
 
     // Enable/disable scroll wheel zoom.
+    // TODO(burdon): Use attention:
+    // const {hasAttention} = useAttention(props.id);
     useEffect(() => {
       if (!map) {
         return;
@@ -134,7 +136,7 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
         <MapContainer
           {...props}
           ref={mapRef}
-          className={mx('group relative grid bs-full is-full !bg-baseSurface', classNames)}
+          className={mx('group relative grid bs-full is-full !bg-baseSurface dx-focus-ring-inset', classNames)}
           attributionControl={false}
           zoomControl={false}
           scrollWheelZoom={scrollWheelZoom}
@@ -142,9 +144,7 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
           touchZoom={touchZoom}
           center={center}
           zoom={zoom}
-          whenReady={() => {
-            console.log('READY');
-          }}
+          // whenReady={() => {}}
         />
       </MapContextProvier>
     );

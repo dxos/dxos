@@ -337,25 +337,32 @@ export class GraphExecutor {
   computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
-      const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-
-      // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
-      const layer = Layer.mergeAll(
-        Layer.succeed(Scope.Scope, yield* Scope.Scope),
-        Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
-        Layer.succeed(AiService, yield* AiService),
-        Layer.succeed(CredentialsService, yield* CredentialsService),
-        Layer.succeed(DatabaseService, yield* DatabaseService),
-        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
-        Layer.succeed(TracingService, yield* TracingService),
-        Layer.succeed(QueueService, yield* QueueService),
-      );
-
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const layer = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
+
       return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
+  }
+
+  /**
+   * Creates a layer with all required services from the current context.
+   */
+  private _createServiceLayer() {
+    return Effect.gen(this, function* () {
+      return Layer.mergeAll(
+        Layer.succeed(AiService.AiService, yield* AiService.AiService),
+        Layer.succeed(Scope.Scope, yield* Scope.Scope),
+        Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
+        Layer.succeed(CredentialsService, yield* CredentialsService),
+        Layer.succeed(DatabaseService, yield* DatabaseService),
+        Layer.succeed(QueueService, yield* QueueService),
+        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
+        Layer.succeed(TracingService, yield* TracingService),
+      );
+    });
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {

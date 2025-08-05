@@ -63,6 +63,7 @@ export const preprocessAiInput: (
                   }),
                 ),
               );
+
             case 'assistant':
               return [
                 new AiInput.AssistantMessage({
@@ -73,6 +74,7 @@ export const preprocessAiInput: (
                   ),
                 }),
               ];
+
             default:
               return [];
           }

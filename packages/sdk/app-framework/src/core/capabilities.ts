@@ -79,6 +79,7 @@ export const contributes = <T>(
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
 type LoadCapabilities<T> = () => Promise<{ default: (props: T) => MaybePromise<AnyCapability[]> }>;
+
 // TODO(wittjosiah): Not having the array be `any` causes type errors when using the lazy capability.
 type LazyCapability<T, U> = (props?: T) => Promise<() => Promise<Capability<U> | AnyCapability[]>>;
 

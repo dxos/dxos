@@ -24,7 +24,7 @@ describe('ollama', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -63,7 +63,7 @@ describe('ollama', () => {
   it.effect(
     'tools',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
