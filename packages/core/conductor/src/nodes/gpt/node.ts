@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiResponse } from '@effect/ai';
 import { Effect, Layer, Schema, Stream, Struct } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
@@ -12,7 +13,6 @@ import { ComputeEventLogger, QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-import { AiResponse } from '@effect/ai';
 
 import { ValueBag, defineComputeNode } from '../../types';
 import { StreamSchema } from '../../util';

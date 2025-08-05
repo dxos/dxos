@@ -3,13 +3,13 @@
 //
 
 import { it } from '@effect/vitest';
-import { Chunk, Console, Effect, Exit, flow, Option, Scope, Stream } from 'effect';
+import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
-import { NODE_INPUT, NODE_OUTPUT, type GptOutput } from '../nodes';
+import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
 

@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type AiError } from '@effect/ai';
+import { Effect, Layer } from 'effect';
+
+import {
+  type AiInputPreprocessingError,
+  type AiModelNotAvailableError,
+  AiService,
+  type AiToolNotFoundError,
+  ToolExecutionService,
+  ToolResolverService,
+} from '@dxos/ai';
+import { type AiAssistantError, AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { trim } from '@dxos/util';
 
-import {
-  AiService,
-  ToolExecutionService,
-  ToolResolverService,
-  type AiInputPreprocessingError,
-  type AiModelNotAvailableError,
-  type AiToolNotFoundError,
-} from '@dxos/ai';
-import { AiError } from '@effect/ai';
-import { AiSession, type AiAssistantError } from '@dxos/assistant';
-import { Effect, Layer } from 'effect';
 import { type MeetingType } from './types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
