@@ -227,11 +227,7 @@ const formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
         catch: AiAssistantError.wrap('Artifact diff resolution error'),
       });
 
-      log.info('vision', {
-        artifactDiff,
-        versions,
-      });
-
+      log.info('vision', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);
