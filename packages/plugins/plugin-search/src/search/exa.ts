@@ -3,19 +3,13 @@
 //
 
 // ISSUE(burdon): deprecated types: MixedStreamParser => effect
-// @ts-nocheck
 
 import { Option, Schema, SchemaAST } from 'effect';
-import Exa from 'exa-js';
 
-import { type AiServiceClient, type GenerateRequest, MixedStreamParser, createTool } from '@dxos/ai';
-import { Key, Obj, Type } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { ReferenceAnnotationId } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
-import { assertArgument, failedInvariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
 import { deepMapValues, trim } from '@dxos/util';
 
 export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
@@ -23,7 +17,6 @@ export type SearchOptions<Schema extends Schema.Schema.AnyNoContext> = {
   // TODO(dmaretskyi): How can we pass this through.
   context?: string;
   schema: Schema[];
-  AiService: AiServiceClient;
   exaApiKey: string;
   liveCrawl?: boolean;
 };
@@ -39,91 +32,77 @@ export type SearchResult<T = unknown> = {
 export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   options: SearchOptions<Schema>,
 ): Promise<SearchResult<Schema.Schema.Type<Schema>>> => {
-  assertArgument(options.query || options.context, 'query or context is required');
-
-  let contextSearchTerms: readonly string[] = [];
-  if (options.context) {
-    contextSearchTerms = await getSearchTerms(options.AiService, options.context);
-    log.info('context search terms', { additionalSearchTerms: contextSearchTerms });
-  }
-
-  const mappedSchema = options.schema.map(mapSchemaRefs);
-
-  let startTime = performance.now();
-
-  const exa = new Exa(options.exaApiKey);
-  const context = await exa.searchAndContents(options.query + ' ' + contextSearchTerms.join(' '), {
-    type: 'auto',
-    text: { maxCharacters: 3_000 },
-    livecrawl: options.liveCrawl ? 'always' : undefined,
-  });
-  log.info('context', { context });
-
-  const sourceQueryTime = performance.now() - startTime;
-  startTime = performance.now();
-
-  let systemPrompt = DATA_EXTRACTION_INSTRUCTIONS;
-  if (options.query) {
-    systemPrompt += `\n<query>${options.query}</query>`;
-  }
-  if (options.context) {
-    systemPrompt += `\n<search_context>${options.context}</search_context>`;
-  }
-
-  const result = await getStructuredOutput(options.AiService, {
-    model: '@anthropic/claude-3-5-haiku-20241022',
-    systemPrompt,
-    history: [
-      Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: context.results.map(
-          (result): ContentBlock.Text => ({
-            _tag: 'text',
-            text: `# ${result.title}\n\n${result.text}`,
-          }),
-        ),
-      }),
-    ],
-
-    schema: Schema.Struct({
-      ...Object.fromEntries(
-        mappedSchema.map((schema, index) => [
-          `objects_${index}`,
-          Schema.Array(schema).annotations({
-            description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
-          }),
-        ]),
-      ),
-    }),
-  });
-
-  const dataExtractionTime = performance.now() - startTime;
-
-  log.info('result', { result });
-
-  const rawObjects = Object.values(result);
-
-  // log('rawObjects', { rawObjects });
-
-  const entries = mappedSchema.flatMap((schema, i) => {
-    return (
-      (rawObjects[i] as any[])?.map((object: any) => ({
-        data: object,
-        schema: options.schema[i],
-      })) ?? []
-    );
-  });
-
-  // log('verified objects', { entries });
-
-  return {
-    data: sanitizeObjects(entries),
-    metrics: {
-      sourceQueryTime,
-      dataExtractionTime,
-    },
-  };
+  throw new Error('Not implemented');
+  // assertArgument(options.query || options.context, 'query or context is required');
+  // let contextSearchTerms: readonly string[] = [];
+  // if (options.context) {
+  //   contextSearchTerms = await getSearchTerms(options.AiService, options.context);
+  //   log.info('context search terms', { additionalSearchTerms: contextSearchTerms });
+  // }
+  // const mappedSchema = options.schema.map(mapSchemaRefs);
+  // let startTime = performance.now();
+  // const exa = new Exa(options.exaApiKey);
+  // const context = await exa.searchAndContents(options.query + ' ' + contextSearchTerms.join(' '), {
+  //   type: 'auto',
+  //   text: { maxCharacters: 3_000 },
+  //   livecrawl: options.liveCrawl ? 'always' : undefined,
+  // });
+  // log.info('context', { context });
+  // const sourceQueryTime = performance.now() - startTime;
+  // startTime = performance.now();
+  // let systemPrompt = DATA_EXTRACTION_INSTRUCTIONS;
+  // if (options.query) {
+  //   systemPrompt += `\n<query>${options.query}</query>`;
+  // }
+  // if (options.context) {
+  //   systemPrompt += `\n<search_context>${options.context}</search_context>`;
+  // }
+  // const result = await getStructuredOutput(options.AiService, {
+  //   model: '@anthropic/claude-3-5-haiku-20241022',
+  //   systemPrompt,
+  //   history: [
+  //     Obj.make(DataType.Message, {
+  //       created: new Date().toISOString(),
+  //       sender: { role: 'user' },
+  //       blocks: context.results.map(
+  //         (result): ContentBlock.Text => ({
+  //           _tag: 'text',
+  //           text: `# ${result.title}\n\n${result.text}`,
+  //         }),
+  //       ),
+  //     }),
+  //   ],
+  //   schema: Schema.Struct({
+  //     ...Object.fromEntries(
+  //       mappedSchema.map((schema, index) => [
+  //         `objects_${index}`,
+  //         Schema.Array(schema).annotations({
+  //           description: `The objects to answer the query of type ${Type.getTypename(schema) ?? SchemaAST.getIdentifierAnnotation(schema.ast).pipe(Option.getOrNull)}`,
+  //         }),
+  //       ]),
+  //     ),
+  //   }),
+  // });
+  // const dataExtractionTime = performance.now() - startTime;
+  // log.info('result', { result });
+  // const rawObjects = Object.values(result);
+  // // log('rawObjects', { rawObjects });
+  // const entries = mappedSchema.flatMap((schema, i) => {
+  //   return (
+  //     (rawObjects[i] as any[])?.map((object: any) => ({
+  //       data: object,
+  //       schema: options.schema[i],
+  //     })) ?? []
+  //   );
+  // });
+  // // log('verified objects', { entries });
+  // return {
+  //   data: sanitizeObjects(entries),
+  //   metrics: {
+  //     sourceQueryTime,
+  //     dataExtractionTime,
+  //   },
+  // };
 };
 
 const DATA_EXTRACTION_INSTRUCTIONS = trim`
@@ -145,59 +124,59 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 /**
  * Runs the LLM to produce a structured output matching a schema
  */
-const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
-  AiService: AiServiceClient,
-  request: Omit<GenerateRequest, 'tools'> & { schema: S },
-): Promise<Schema.Schema.Type<S>> => {
-  const result = await new MixedStreamParser().parse(
-    await AiService.execStream({
-      ...request,
-      systemPrompt:
-        request.systemPrompt +
-        '\nDo not output anything other then the tool call. Call the submit_result tool with the result.',
-      tools: [
-        createTool('submit_result', {
-          name: 'submit_result',
-          description: 'Submit the result',
-          schema: request.schema,
-          execute: async () => failedInvariant(),
-        }),
-      ],
-    }),
-  );
-  return result[0].blocks.find((c) => c._tag === 'toolCall')?.input as any;
-};
+// const getStructuredOutput = async <S extends Schema.Schema.AnyNoContext>(
+//   AiService: AiServiceClient,
+//   request: Omit<GenerateRequest, 'tools'> & { schema: S },
+// ): Promise<Schema.Schema.Type<S>> => {
+//   const result = await new MixedStreamParser().parse(
+//     await AiService.execStream({
+//       ...request,
+//       systemPrompt:
+//         request.systemPrompt +
+//         '\nDo not output anything other then the tool call. Call the submit_result tool with the result.',
+//       tools: [
+//         createTool('submit_result', {
+//           name: 'submit_result',
+//           description: 'Submit the result',
+//           schema: request.schema,
+//           execute: async () => failedInvariant(),
+//         }),
+//       ],
+//     }),
+//   );
+//   return result[0].blocks.find((c) => c._tag === 'toolCall')?.input as any;
+// };
 
-const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
-  const { terms } = await getStructuredOutput(AiService, {
-    model: '@anthropic/claude-3-5-haiku-20241022',
-    systemPrompt: trim`
-      You are a search term extraction agent.
-      Extract the relevant search terms from the context.
-      Return the search terms as an array of strings.
-      Prefer own names of people, companies, and projects, technologies, and other entities.
-    `,
-    history: [
-      Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'text',
-            text: `# Context to extract search terms from:\n\n${context}`,
-          },
-        ],
-      }),
-    ],
-    schema: Schema.Struct({
-      terms: Schema.Array(Schema.String).annotations({
-        description: 'The search terms to use to find the objects. 0-10 terms.',
-      }),
-    }),
-  });
+// const getSearchTerms = async (AiService: AiServiceClient, context: string) => {
+//   const { terms } = await getStructuredOutput(AiService, {
+//     model: '@anthropic/claude-3-5-haiku-20241022',
+//     systemPrompt: trim`
+//       You are a search term extraction agent.
+//       Extract the relevant search terms from the context.
+//       Return the search terms as an array of strings.
+//       Prefer own names of people, companies, and projects, technologies, and other entities.
+//     `,
+//     history: [
+//       Obj.make(DataType.Message, {
+//         created: new Date().toISOString(),
+//         sender: { role: 'user' },
+//         blocks: [
+//           {
+//             _tag: 'text',
+//             text: `# Context to extract search terms from:\n\n${context}`,
+//           },
+//         ],
+//       }),
+//     ],
+//     schema: Schema.Struct({
+//       terms: Schema.Array(Schema.String).annotations({
+//         description: 'The search terms to use to find the objects. 0-10 terms.',
+//       }),
+//     }),
+//   });
 
-  return terms;
-};
+//   return terms;
+// };
 
 const sanitizeObjects = (entries: { data: any; schema: Schema.Schema.AnyNoContext }[]) => {
   const idMap = new Map<string, string>();

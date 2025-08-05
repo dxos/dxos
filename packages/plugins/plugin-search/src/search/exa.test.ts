@@ -5,9 +5,9 @@
 import { describe, test } from 'vitest';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
+import { trim } from '@dxos/util';
 
 import { search } from './exa';
 
@@ -17,7 +17,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact],
-        AiService: null as any, // TODO: Implement AiService
         exaApiKey: EXA_API_KEY,
       });
 
@@ -28,7 +27,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact, Testing.Project, Testing.Organization],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -39,7 +37,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -50,7 +47,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'companies building CRDTs',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -63,7 +59,6 @@ describe.skip('Search', () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -74,7 +69,6 @@ describe.skip('Search', () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 
@@ -84,8 +78,7 @@ describe.skip('Search', () => {
 });
 
 // TODO(dmaretskyi): Import as txt.
-const COMPOSER_DXOS_DOC = `
-
+const COMPOSER_DXOS_DOC = trim`
 ![img](https://dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 
@@ -219,6 +212,4 @@ const EDGE_ARCHITECTURE_DOC = `
 - given the fq id of the deployment object, anyone in the space should be able to invoke the function even if they don't have access to the object itself
 
 ### Service Side
-
-
 `;

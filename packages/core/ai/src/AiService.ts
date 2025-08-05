@@ -5,7 +5,7 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
-import { type AiModelNotAvailableError } from './errors';
+import { AiModelNotAvailableError } from './errors';
 import { type LLMModel } from './types';
 
 /**
@@ -23,4 +23,10 @@ export class AiService extends Context.Tag('@dxos/ai/AiService')<
         Effect.map((_) => _.model(model)),
         Layer.unwrapEffect,
       );
+
+  static notAvailable = Layer.succeed(AiService, {
+    model(model) {
+      return Layer.fail(new AiModelNotAvailableError(model));
+    },
+  });
 }

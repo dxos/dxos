@@ -50,7 +50,7 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  */
 // TODO(burdon): Rename module.
 export class AiSession {
-  // TODO(burdon): Move to conversation.
+  // TODO(burdon): Review this.
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   /** Pending messages (incl. the current user request). */
@@ -99,7 +99,7 @@ export class AiSession {
         });
 
         // Build system prompt from blueprint templates.
-        // TODO(dmaretskyi): Loading BP from the Database should be done at the higher level. We need a type for the resolved blueprint.
+        // TODO(dmaretskyi): Loading Blueprint from the Database should be done at the higher level. We need a type for the resolved blueprint.
         const blueprints = params.blueprints ?? [];
         let system = yield* pipe(
           blueprints,
@@ -112,11 +112,11 @@ export class AiSession {
         const context: string[] =
           params.objects?.map(
             (object) => trim`
-          <object>
-            <dxn>${Obj.getDXN(object)}</dxn>
-            <typename>${Obj.getTypename(object)}</typename>
-          </object>
-        `,
+              <object>
+                <dxn>${Obj.getDXN(object)}</dxn>
+                <typename>${Obj.getTypename(object)}</typename>
+              </object>
+            `,
           ) ?? [];
         if (context.length) {
           context.splice(0, 0, 'Context objects:');
