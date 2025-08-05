@@ -20,7 +20,7 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
   const [open, setOpen] = useState(true);
 
   return (
-    <StackItem.Content classNames='@container bs-full is-full overflow-hidden is-[450px]'>
+    <StackItem.Content classNames='@container bs-full is-full overflow-hidden'>
       <Chessboard.Root game={game}>
         <div
           className={mx(
