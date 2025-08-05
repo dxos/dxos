@@ -8,3 +8,4 @@ export * from './research';
 export * from './session';
 export * from './templates';
 export * from './types';
+export * from './errors';
