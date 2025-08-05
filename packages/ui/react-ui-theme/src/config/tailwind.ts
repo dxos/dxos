@@ -51,6 +51,8 @@ export const tailwindConfig = ({
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
+          md: '768px',
+          lg: '1024px',
         },
         fontSize: {
           // Base size 16px
