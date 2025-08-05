@@ -4,6 +4,7 @@
 
 import { Effect, Layer, Schema, Scope } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import {
   ComputeEventLogger,
@@ -340,9 +341,9 @@ export class GraphExecutor {
 
       // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
       const layer = Layer.mergeAll(
+        Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(Scope.Scope, yield* Scope.Scope),
         Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
-        Layer.succeed(AiService.AiService, yield* AiService.AiService),
         Layer.succeed(CredentialsService, yield* CredentialsService),
         Layer.succeed(DatabaseService, yield* DatabaseService),
         Layer.succeed(QueueService, yield* QueueService),
