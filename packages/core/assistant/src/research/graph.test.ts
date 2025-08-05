@@ -45,7 +45,7 @@ describe('graph', () => {
   it.effect.skip(
     'calculator',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const graphWriteToolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
 
         const session = new AiSession();

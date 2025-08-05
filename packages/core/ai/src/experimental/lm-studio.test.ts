@@ -20,7 +20,7 @@ describe.skip('lmstudio', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
