@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @ts-nocheck
+// TODO(burdon): Fix!!!
+
 import { Schema, pipe } from 'effect';
 
-import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';

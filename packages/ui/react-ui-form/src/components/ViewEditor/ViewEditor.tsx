@@ -11,18 +11,19 @@ import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
-import { ghostHover, inputTextLabel, mx } from '@dxos/react-ui-theme';
+import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import { type DataType, FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD_LIMIT } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
 import { Form, type FormProps } from '../Form';
 
-const grid = 'grid grid-cols-[32px_1fr_32px_32px] min-bs-[2.5rem]';
+const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
+const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
 const ViewMetaSchema = Schema.Struct({
   typename: Format.URL.annotations({
-    title: 'Typename',
+    title: 'Record type',
   }),
 }).pipe(Schema.mutable);
 
@@ -60,7 +61,7 @@ export const ViewEditor = ({
     const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : toJsonSchema(schema);
     return new ProjectionModel(jsonSchema, view.projection);
   }, [schema, view.projection]);
-  const [field, setField] = useState<FieldType>();
+  const [expandedField, setExpandedField] = useState<FieldType['id']>();
   const readonly = _readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
@@ -72,12 +73,9 @@ export const ViewEditor = ({
     };
   }, [view.query.typename]);
 
-  const handleSelect = useCallback(
+  const handleToggleField = useCallback(
     (field: FieldType) => {
-      if (readonly) {
-        return;
-      }
-      setField((f) => (f === field ? undefined : field));
+      setExpandedField((prevExpandedFieldId) => (prevExpandedFieldId === field.id ? undefined : field.id));
     },
     [readonly],
   );
@@ -87,7 +85,7 @@ export const ViewEditor = ({
   const handleAdd = useCallback(() => {
     invariant(!readonly);
     const field = projection.createFieldProjection();
-    setField(field);
+    setExpandedField(field.id);
   }, [schema, projection, readonly]);
 
   const handleUpdate = useCallback(
@@ -105,13 +103,13 @@ export const ViewEditor = ({
   const handleDelete = useCallback(
     (fieldId: string) => {
       invariant(!readonly);
-      if (fieldId === field?.id) {
-        setField(undefined);
+      if (fieldId === expandedField) {
+        setExpandedField(undefined);
       }
 
       onDelete?.(fieldId);
     },
-    [field, onDelete, readonly],
+    [expandedField, onDelete, readonly],
   );
 
   const handleMove = useCallback(
@@ -126,13 +124,13 @@ export const ViewEditor = ({
     [view.projection.fields, readonly],
   );
 
-  const handleClose = useCallback(() => setField(undefined), []);
+  const handleClose = useCallback(() => setExpandedField(undefined), []);
 
   const hiddenProperties = projection.getHiddenProperties();
 
   const handleHide = useCallback(
     (fieldId: string) => {
-      setField(undefined);
+      setExpandedField(undefined);
       projection.hideFieldProjection(fieldId);
     },
     [projection],
@@ -140,7 +138,7 @@ export const ViewEditor = ({
 
   const handleShow = useCallback(
     (property: string) => {
-      setField(undefined);
+      setExpandedField(undefined);
       projection.showFieldProjection(property as JsonProp);
     },
     [projection],
@@ -169,46 +167,65 @@ export const ViewEditor = ({
       />
 
       <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
-        <label className={mx(inputTextLabel)}>{t('fields label')}</label>
+        <h2 className={mx(inputTextLabel)}>{t('fields label')}</h2>
 
         <List.Root<FieldType>
           items={view.projection.fields}
           isItem={Schema.is(FieldSchema)}
           getId={(field) => field.id}
-          readonly={readonly}
           onMove={readonly ? undefined : handleMove}
+          readonly={readonly}
         >
           {({ items: fields }) => (
             <>
-              {showHeading && (
-                <div role='heading' className={grid}>
-                  <div />
-                  <div className='flex items-center text-sm'>{t('field path label')}</div>
-                </div>
-              )}
+              {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
 
-              <div role='list' className='flex flex-col is-full'>
+              <div role='list' className={listGrid}>
                 {fields?.map((field) => (
                   <List.Item<FieldType>
                     key={field.id}
                     item={field}
-                    classNames={mx(grid, ghostHover, 'overflow-hidden', !readonly && 'cursor-pointer')}
+                    classNames={listItemGrid}
+                    aria-expanded={expandedField === field.id}
                   >
-                    <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleSelect(field)}>{field.path}</List.ItemTitle>
-                    <List.ItemButton
-                      data-testid='hide-field-button'
-                      icon='ph--eye-slash--regular'
-                      // TDOO(burdon): Is this the correct test?
-                      disabled={view.projection.fields.length <= 1}
-                      onClick={() => handleHide(field.id)}
-                    />
-                    {/* TODO(burdon): Remove unless implement undo. */}
-                    {!readonly && (
-                      <List.ItemDeleteButton
-                        disabled={view.projection.fields.length <= 1}
-                        onClick={() => handleDelete(field.id)}
+                    <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                      <List.ItemDragHandle disabled={readonly} />
+                      <List.ItemTitle onClick={() => handleToggleField(field)}>{field.path}</List.ItemTitle>
+                      <List.ItemButton
+                        label={t('hide field label')}
+                        data-testid='hide-field-button'
+                        icon='ph--eye-slash--regular'
+                        autoHide={false}
+                        // TDOO(burdon): Is this the correct test?
+                        disabled={readonly || view.projection.fields.length <= 1}
+                        onClick={() => handleHide(field.id)}
                       />
+                      {/* TODO(burdon): Remove unless implement undo. */}
+                      <List.ItemDeleteButton
+                        label={t('delete field label')}
+                        autoHide={false}
+                        disabled={readonly || view.projection.fields.length <= 1}
+                        onClick={() => handleDelete(field.id)}
+                        data-testid='field.delete'
+                      />
+                      <IconButton
+                        iconOnly
+                        variant='ghost'
+                        label={t('toggle expand label', { ns: 'os' })}
+                        icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                        onClick={() => handleToggleField(field)}
+                      />
+                    </div>
+                    {expandedField === field.id && (
+                      <div role='none' className='col-span-5'>
+                        <FieldEditor
+                          readonly={readonly}
+                          projection={projection}
+                          field={field}
+                          registry={registry}
+                          onSave={handleClose}
+                        />
+                      </div>
                     )}
                   </List.Item>
                 ))}
@@ -219,7 +236,7 @@ export const ViewEditor = ({
 
         {hiddenProperties.length > 0 && (
           <>
-            <label className={mx(inputTextLabel)}>{t('hidden fields label')}</label>
+            <h2 className={mx(inputTextLabel)}>{t('hidden fields label')}</h2>
 
             <List.Root<string>
               items={hiddenProperties}
@@ -227,16 +244,17 @@ export const ViewEditor = ({
               getId={(property) => property}
             >
               {({ items: properties }) => (
-                <div role='list' className='flex flex-col is-full'>
+                <div role='list' className='grid grid-cols-[1fr_min-content]'>
                   {properties?.map((property) => (
                     <List.Item<string>
                       key={property}
                       item={property}
-                      classNames={mx(grid, ghostHover, !readonly && 'cursor-pointer')}
+                      classNames={mx('grid grid-cols-subgrid col-span-2 rounded-sm', subtleHover)}
                     >
-                      <List.ItemDragHandle disabled />
                       <List.ItemTitle>{property}</List.ItemTitle>
                       <List.ItemButton
+                        label={t('show field label')}
+                        disabled={readonly}
                         icon='ph--eye--regular'
                         onClick={() => handleShow(property)}
                         data-testid='show-field-button'
@@ -250,11 +268,7 @@ export const ViewEditor = ({
         )}
       </div>
 
-      {field && (
-        <FieldEditor key={field.id} projection={projection} field={field} registry={registry} onSave={handleClose} />
-      )}
-
-      {!readonly && !field && (
+      {!readonly && !expandedField && (
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
           <IconButton
             icon='ph--plus--regular'
@@ -262,7 +276,7 @@ export const ViewEditor = ({
             onClick={readonly ? undefined : handleAdd}
             // TODO(burdon): Show field limit in ux (not tooltip).
             disabled={view.projection.fields.length >= VIEW_FIELD_LIMIT}
-            classNames='flex is-full'
+            classNames='is-full'
           />
         </div>
       )}

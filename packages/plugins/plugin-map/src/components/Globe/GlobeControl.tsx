@@ -9,14 +9,16 @@ import {
   type ControlProps,
   Globe,
   type GlobeController,
-  type LatLng,
-  type MapCanvasProps,
+  type GlobeRootProps,
+  type LatLngLiteral,
   loadTopology,
   useDrag,
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
+
+import { type GeoControlProps } from '../types';
 
 const globeStyles = (themeMode: ThemeMode) =>
   themeMode === 'dark'
@@ -75,14 +77,14 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export type GlobeControlProps = MapCanvasProps & { onToggle?: () => void };
+export type GlobeControlProps = GeoControlProps & GlobeRootProps;
 
 export const GlobeControl = ({
   classNames,
-  markers = [],
-  selected = [],
   center,
   zoom,
+  markers = [],
+  selected = [],
   onToggle,
 }: GlobeControlProps) => {
   const [topology] = useAsyncState(loadTopology);
@@ -100,7 +102,7 @@ export const GlobeControl = ({
     [markers],
   );
 
-  const selectedPoints = useMemo<LatLng[]>(() => {
+  const selectedPoints = useMemo<LatLngLiteral[]>(() => {
     if (selected?.length === 0) {
       return features.points;
     }
@@ -143,7 +145,7 @@ export const GlobeControl = ({
   };
 
   return (
-    <Globe.Root classNames={classNames} center={center} scale={zoom}>
+    <Globe.Root classNames={classNames} center={center} zoom={zoom}>
       <Globe.Canvas
         ref={setController}
         topology={topology}
