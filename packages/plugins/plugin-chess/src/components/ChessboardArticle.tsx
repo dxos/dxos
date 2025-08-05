@@ -45,7 +45,7 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
                 iconOnly
                 label={t('button toggle info')}
                 size={5}
-                classNames={mx('invisible', !open && 'lg:visible')}
+                classNames={mx('invisible', !open && '@lg:visible')}
                 onClick={() => setOpen((open) => !open)}
               />
             </Chessboard.Players>
