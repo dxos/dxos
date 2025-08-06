@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array as A, Effect, Either, Match, pipe } from 'effect';
+import { Array as A, Duration, Effect, Either, Fiber, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -374,11 +374,35 @@ export class PluginManager {
 
       // Concurrently triggers loading of lazy capabilities.
       const getCapabilities = yield* Effect.all(
-        modules.map(({ activate }) =>
+        modules.map(({ id, activate }) =>
           Effect.tryPromise({
-            try: async () => activate(this.context),
+            try: async () => {
+              const start = performance.now();
+              try {
+                log('activating module', { module: id });
+                return activate(this.context);
+              } catch (error) {
+                log.error('failed to activate module', { module: id, error });
+                throw error;
+              } finally {
+                performance.measure('activate-module', {
+                  start,
+                  end: performance.now(),
+                  detail: {
+                    module: id,
+                  },
+                });
+                log('activated module', { module: id, elapsed: performance.now() - start });
+              }
+            },
             catch: (error) => error as Error,
-          }),
+          }).pipe(
+            together(
+              Effect.sleep(Duration.seconds(10)).pipe(
+                Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: id }))),
+              ),
+            ),
+          ),
         ),
         { concurrency: 'unbounded' },
       );
@@ -517,3 +541,17 @@ export class PluginManager {
     });
   }
 }
+
+/**
+ * Runs an effect concurrently with another effect.
+ * If the first effect completes, the second effect is interrupted.
+ */
+const together =
+  <R1>(togetherEffect: Effect.Effect<void, never, R1>) =>
+  <A, E, R2>(effect: Effect.Effect<A, E, R2>): Effect.Effect<A, E, R1 | R2> =>
+    Effect.gen(function* () {
+      const togetherFiber = yield* Effect.fork(togetherEffect);
+      const result = yield* effect;
+      yield* Fiber.interrupt(togetherFiber);
+      return result;
+    });
