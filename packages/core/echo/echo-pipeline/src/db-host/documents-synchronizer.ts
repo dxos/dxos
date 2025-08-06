@@ -90,13 +90,13 @@ export class DocumentsSynchronizer extends Resource {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
         const doc = this._params.repo.import<DatabaseDirectory>(mutation, { docId: documentId as DocumentId });
-        // TODO(mykola): This should not be required.
-        await this._params.repo.flush([documentId as DocumentId]);
         this._startSync(doc);
       } else {
         this._writeMutation(documentId as DocumentId, mutation);
       }
     }
+    // TODO(mykola): This should not be required.
+    await this._params.repo.flush(updates.map(({ documentId }) => documentId as DocumentId));
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>): void {
