@@ -3,14 +3,14 @@
 //
 
 import { Effect } from 'effect';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -23,6 +23,7 @@ import {
   PromptSettings,
   SequenceContainer,
 } from '../components';
+import { type AiChatProcessor } from '../hooks';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
 
@@ -51,7 +52,7 @@ export default () =>
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();
 
-        // TODO(burdon): Document.
+        // Initialize companion chat if it doesn't exist.
         // TODO(wittjosiah): Factor out to container.
         useEffect(() => {
           const timeout = setTimeout(async () => {
@@ -84,15 +85,23 @@ export default () =>
           return () => clearTimeout(timeout);
         }, [data.subject]);
 
-        // TODO(burdon): Bind object to chat.
-        useEffect(() => {}, [data.companionTo]);
+        // TODO(wittjosiah): Factor out to container.
+        const handleProcessorReady = useCallback(
+          (processor: AiChatProcessor) => {
+            if (Obj.instanceOf(Blueprint.Blueprint, data.companionTo)) {
+              void processor.context.bind({ blueprints: [Ref.make(data.companionTo)] });
+            } else {
+              void processor.context.bind({ objects: [Ref.make(data.companionTo)] });
+            }
+          },
+          [data.companionTo],
+        );
 
-        // TODO(burdon): Document.
         if (data.subject === 'assistant-chat') {
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} />;
+        return <ChatContainer role={role} chat={data.subject} onProcessorReady={handleProcessorReady} />;
       },
     }),
     createSurface({

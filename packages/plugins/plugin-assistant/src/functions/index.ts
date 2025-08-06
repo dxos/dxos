@@ -3,3 +3,4 @@
 //
 
 export { default as analysis } from './analysis';
+export { default as load } from './load';
