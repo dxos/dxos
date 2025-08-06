@@ -257,7 +257,6 @@ const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 
     const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
     if (Option.isSome(artifactDiffResolver)) {
       const versions = gatherObjectVersions(history);
-
       const artifactDiff = yield* Effect.tryPromise({
         try: () =>
           artifactDiffResolver.value.resolve(
@@ -275,6 +274,7 @@ const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 
 
         prelude.push({ _tag: 'anchor', objectId: id, version });
       }
+
       if (artifactDiff.size > 0) {
         prelude.push(createArtifactUpdateBlock(artifactDiff));
       }
@@ -307,7 +307,7 @@ const createArtifactUpdateBlock = (
     _tag: 'text',
     // TODO(dmaretskyi): Does this need to be a special content-block?
     disposition: 'artifact-update',
-    text: `
+    text: trim`
       The following artifacts have been updated since the last message:
       ${[...artifactDiff.entries()]
         .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
