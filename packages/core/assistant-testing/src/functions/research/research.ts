@@ -41,6 +41,7 @@ export default defineFunction({
     function* ({ data: { query, mockSearch } }) {
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+      yield* DatabaseService.flush({ indexes: true });
 
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
