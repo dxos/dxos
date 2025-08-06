@@ -23,3 +23,4 @@ export * from './ViewEditor';
 
 export const CollectionMain = lazy(() => import('./CollectionMain'));
 export const ObjectDetailsPanel = lazy(() => import('./ObjectDetailsPanel'));
+export const RecordMain = lazy(() => import('./RecordMain'));
