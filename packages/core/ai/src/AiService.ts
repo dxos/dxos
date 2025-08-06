@@ -6,7 +6,7 @@ import { type AiLanguageModel } from '@effect/ai';
 import { Context, Effect, Layer } from 'effect';
 
 import { AiModelNotAvailableError } from './errors';
-import { type LLMModel } from './types';
+import { type ModelName } from './model';
 
 /**
  * AI Model Factory.
@@ -14,12 +14,12 @@ import { type LLMModel } from './types';
 export class AiService extends Context.Tag('@dxos/ai/AiService')<
   AiService,
   {
-    readonly model: (model: LLMModel) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
+    readonly model: (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
   }
 >() {}
 
 export const model: (
-  model: LLMModel,
+  model: ModelName,
 ) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, AiService> = (model) =>
   AiService.pipe(
     Effect.map((_) => _.model(model)),

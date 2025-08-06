@@ -10,7 +10,7 @@ import { type AiChatProcessorOptions } from '../hooks';
 /**
  * @deprecated
  */
-export const createProcessorOptions = (blueprints: string[]): Pick<AiChatProcessorOptions, 'model' | 'system'> => ({
+export const createProcessorOptions = (): Pick<AiChatProcessorOptions, 'model' | 'system'> => ({
   model: DEFAULT_EDGE_MODEL,
-  system: createSystemPrompt({ blueprints }),
+  system: createSystemPrompt({}),
 });

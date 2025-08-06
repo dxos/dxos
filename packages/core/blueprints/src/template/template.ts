@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -46,3 +46,8 @@ export const Template = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export interface Template extends Schema.Schema.Type<typeof Template> {}
+
+export const make = ({ source, inputs = [] }: { source: string; inputs?: Input[] }): Template => ({
+  source: Ref.make(DataType.makeText(source)),
+  inputs,
+});
