@@ -2,18 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
+import importSource from '@dxos/vitest-plugin-import-source';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
-import importSource from '@dxos/vitest-plugin-import-source';
-import devtoolsJson from 'vite-plugin-devtools-json';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -28,6 +28,29 @@ const isFalse = (str?: string) => str === 'false' || str === '0';
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
+
+const __dirname = dirname(new URL(import.meta.url).pathname);
+
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  env.command === 'serve' && devtoolsJson(),
+
+  // Building from dist when creating a prod bundle.
+  env.command === 'serve' &&
+    importSource({
+      exclude: [
+        '**/node_modules/**',
+        '**/common/random-access-storage/**',
+        '**/common/lock-file/**',
+        '**/mesh/network-manager/**',
+        '**/mesh/teleport/**',
+        '**/sdk/config/**',
+        '**/sdk/client-services/**',
+        '**/sdk/observability/**',
+      ],
+    }),
+  wasm(),
+  sourcemaps(),
+];
 
 /**
  * https://vitejs.dev/config
@@ -87,26 +110,12 @@ export default defineConfig((env) => ({
   },
   worker: {
     format: 'es' as const,
-    plugins: () => [wasm(), sourcemaps()],
+
+    plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
-    sourcemaps(),
+    ...sharedPlugins(env),
 
-    // Building from dist when creating a prod bundle.
-    env.command === 'serve' &&
-      importSource({
-        exclude: [
-          '**/node_modules/**',
-          '**/common/random-access-storage/**',
-          '**/mesh/network-manager/**',
-          '**/mesh/teleport/**',
-          '**/sdk/config/**',
-          '**/sdk/observability/**',
-        ],
-      }),
-    env.command === 'serve' && devtoolsJson(),
-
-    wasm(),
     react({
       tsDecorators: true,
       plugins: [
