@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array as A, Duration, Effect, Either, Fiber, Match, pipe } from 'effect';
+import { Array, Duration, Effect, Either, Fiber, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -329,7 +329,7 @@ export class PluginManager {
         .map(eventKey)
         .filter((key) => this._state.eventsFired.includes(key));
 
-      const pendingReset = Array.from(new Set(activationEvents)).filter(
+      const pendingReset = Array.fromIterable(new Set(activationEvents)).filter(
         (event) => !this._state.pendingReset.includes(event),
       );
       if (pendingReset.length > 0) {
@@ -371,50 +371,34 @@ export class PluginManager {
 
       log('activating modules', { key, modules: modules.map((module) => module.id) });
       this.activation.emit({ event: key, state: 'activating' });
+      yield* Effect.all(
+        modules.flatMap((module) => module.activatesBefore ?? []).map((event) => this._activate(event)),
+        {
+          concurrency: 'unbounded',
+        },
+      );
 
       // Concurrently triggers loading of lazy capabilities.
       const getCapabilities = yield* Effect.all(
-        modules.map(({ id, activate }) =>
-          Effect.tryPromise({
-            try: async () => {
-              const start = performance.now();
-              try {
-                log('activating module', { module: id });
-                return activate(this.context);
-              } catch (error) {
-                log.error('failed to activate module', { module: id, error });
-                throw error;
-              } finally {
-                performance.measure('activate-module', {
-                  start,
-                  end: performance.now(),
-                  detail: {
-                    module: id,
-                  },
-                });
-                log('activated module', { module: id, elapsed: performance.now() - start });
-              }
-            },
-            catch: (error) => error as Error,
-          }).pipe(
-            together(
-              Effect.sleep(Duration.seconds(10)).pipe(
-                Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: id }))),
-              ),
-            ),
-          ),
-        ),
+        modules.map((mod) => this._loadModule(mod)),
         { concurrency: 'unbounded' },
       );
 
       const result = yield* pipe(
         modules,
-        A.zip(getCapabilities),
-        A.map(([module, getCapabilities]) => this._activateModule(module, getCapabilities)),
+        Array.zip(getCapabilities),
+        Array.map(([module, capabilities]) => this._contributeCapabilities(module, capabilities)),
         // TODO(wittjosiah): This currently can't be run in parallel.
         //   Running this with concurrency causes races with `allOf` activation events.
         Effect.all,
         Effect.either,
+      );
+
+      yield* Effect.all(
+        modules.flatMap((module) => module.activatesAfter ?? []).map((event) => this._activate(event)),
+        {
+          concurrency: 'unbounded',
+        },
       );
 
       if (Either.isLeft(result)) {
@@ -433,43 +417,54 @@ export class PluginManager {
     });
   }
 
-  private _activateModule(
-    module: PluginModule,
-    getCapabilities: AnyCapability | AnyCapability[] | (() => Promise<AnyCapability | AnyCapability[]>),
-  ): Effect.Effect<void, Error> {
-    return Effect.gen(this, function* () {
-      yield* Effect.all(module.activatesBefore?.map((event) => this._activate(event)) ?? [], {
-        concurrency: 'unbounded',
+  private _loadModule = (mod: PluginModule): Effect.Effect<AnyCapability[], Error> =>
+    Effect.gen(this, function* () {
+      return yield* Effect.tryPromise({
+        try: async () => {
+          const start = performance.now();
+          try {
+            log.info('loading module', { module: mod.id });
+            let activationResult = await mod.activate(this.context);
+            if (typeof activationResult === 'function') {
+              activationResult = await activationResult();
+            }
+            if (Array.isArray(activationResult)) {
+              return activationResult;
+            } else {
+              return [activationResult];
+            }
+          } catch (error) {
+            log.error('failed to load module', { module: mod.id, error });
+            throw error;
+          } finally {
+            performance.measure('activate-module', {
+              start,
+              end: performance.now(),
+              detail: {
+                module: mod.id,
+              },
+            });
+            log.info('loaded module', { module: mod.id, elapsed: performance.now() - start });
+          }
+        },
+        catch: (error) => error as Error,
       });
-
-      log('activating module...', { module: module.id });
-      // TODO(wittjosiah): This is not handling errors thrown if this is synchronous.
-      const maybeCapabilities = typeof getCapabilities === 'function' ? getCapabilities() : getCapabilities;
-      const resolvedCapabilities = yield* Match.value(maybeCapabilities).pipe(
-        // TODO(wittjosiah): Activate with an effect?
-        // Match.when(Effect.isEffect, (effect) => effect),
-        Match.when(isPromise, (promise) =>
-          Effect.tryPromise({
-            try: () => promise,
-            catch: (error) => error as Error,
-          }),
+    }).pipe(
+      together(
+        Effect.sleep(Duration.seconds(10)).pipe(
+          Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: mod.id }))),
         ),
-        Match.orElse((program) => Effect.succeed(program)),
-      );
-      const capabilities = Match.value(resolvedCapabilities).pipe(
-        Match.when(Array.isArray, (array) => array),
-        Match.orElse((value) => [value]),
-      );
+      ),
+      Effect.withSpan('PluginManager._loadModule'),
+    );
+
+  private _contributeCapabilities(module: PluginModule, capabilities: AnyCapability[]): Effect.Effect<void, Error> {
+    return Effect.gen(this, function* () {
       capabilities.forEach((capability) => {
         this.context.contributeCapability({ module: module.id, ...capability });
       });
       this._state.active.push(module.id);
       this._capabilities.set(module.id, capabilities);
-      log('activated module', { module: module.id });
-
-      yield* Effect.all(module.activatesAfter?.map((event) => this._activate(event)) ?? [], {
-        concurrency: 'unbounded',
-      });
     });
   }
 
@@ -546,6 +541,7 @@ export class PluginManager {
  * Runs an effect concurrently with another effect.
  * If the first effect completes, the second effect is interrupted.
  */
+// TODO(dmaretskyi): Effect.race > Effect.asVoid
 const together =
   <R1>(togetherEffect: Effect.Effect<void, never, R1>) =>
   <A, E, R2>(effect: Effect.Effect<A, E, R2>): Effect.Effect<A, E, R1 | R2> =>
