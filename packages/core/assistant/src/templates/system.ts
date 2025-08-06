@@ -24,7 +24,7 @@ type PromptOptions = {
  * Base system prompt.
  * NOTE: This contains protocol instructions that can not be dynamically edited.
  */
-export const createSystemPrompt = (options: PromptOptions) => Template.createPrompt<PromptOptions>(FORMAT, options);
+export const createSystemPrompt = (options: PromptOptions) => Template.process<PromptOptions>(FORMAT, options);
 
 export const templates = {
   // Editable system prompt.

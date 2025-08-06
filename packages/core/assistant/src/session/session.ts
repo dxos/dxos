@@ -15,7 +15,7 @@ import {
   callTools,
   getToolCalls,
 } from '@dxos/ai';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint, Template } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
@@ -208,6 +208,7 @@ const formatSystemPrompt = ({
   objects = [],
 }: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
+    // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
@@ -216,12 +217,13 @@ const formatSystemPrompt = ({
         Array.map(
           (template) => trim`
             <blueprint>
-              ${template.content.trim()}
+              ${Template.process(template.content)}
             </blueprint>
           `,
         ),
       ),
-      Effect.map(Array.reduce('\n## Blueprints:\n\n', String.concat)),
+      // Effect.tap((templates) => log.info('templates', { templates })),
+      Effect.map(Array.reduce('\n\n## Blueprints:\n\n', String.concat)),
     );
 
     const objectDefs = yield* pipe(
