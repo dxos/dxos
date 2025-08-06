@@ -498,6 +498,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       setValue(snapshot, field.path, transformedValue);
 
       const validationErrors = this.validateDraftRowData(snapshot);
+      // TODO(thure): These errors sometimes result in a useless message like “is missing” (what is missing?)
       if (validationErrors.length > 0) {
         const error = validationErrors.find((err) => err.path === field.path);
         if (error) {
