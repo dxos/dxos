@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, useCapabilities, useCapabilityLayer } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import {
@@ -41,8 +41,7 @@ export type UseChatServicesProps = {
  * Construct service layer.
  */
 export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
-  const aiServiceLayer =
-    useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
+  const aiServiceLayer = useCapabilityLayer(AssistantCapabilities.AiServiceLayer);
   const functions = useCapabilities(Capabilities.Functions).flat();
 
   return useMemo(() => {
