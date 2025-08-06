@@ -75,7 +75,7 @@ export const Transcript = ({
   const { parentRef } = useTextEditor(() => {
     return {
       extensions: [
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),

@@ -5,9 +5,15 @@
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Effect, type Layer, Option, Stream, pipe } from 'effect';
 
-import { AiService, DEFAULT_EDGE_MODEL, type LLMModel } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiConversation, type AiConversationRunParams, AiSession, ArtifactDiffResolver } from '@dxos/assistant';
+import {
+  type AiConversation,
+  type AiConversationRunParams,
+  AiSession,
+  ArtifactDiffResolver,
+  createSystemPrompt,
+} from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -32,7 +38,8 @@ export type AiRequestOptions = {
 };
 
 export type AiChatProcessorOptions = {
-  model?: LLMModel;
+  model?: ModelName;
+  modelRegistry?: ModelRegistry;
   blueprintRegistry?: Blueprint.Registry;
   registry?: Registry.Registry;
   extensions?: ToolContextExtensions;
@@ -40,7 +47,6 @@ export type AiChatProcessorOptions = {
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  system: 'you are a helpful assistant',
 };
 
 /**
@@ -138,7 +144,12 @@ export class AiChatProcessor {
     private readonly _services: Layer.Layer<AiChatServices>,
     private readonly _conversation: AiConversation,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
-  ) {}
+  ) {
+    if (this._options.model && !this._options.system) {
+      const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
+      this._options.system = createSystemPrompt(capabilities);
+    }
+  }
 
   get context() {
     return this._conversation.context;

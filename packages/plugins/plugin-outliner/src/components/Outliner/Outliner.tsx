@@ -49,7 +49,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
         initialValue: text.content,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
-          createBasicExtensions({ readOnly: false }),
+          createBasicExtensions({ readOnly: false, search: true }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),
