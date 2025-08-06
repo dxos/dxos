@@ -24,11 +24,11 @@ import { inspect } from 'node:util';
 
 import { structuredOutputParser } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { DataTypes } from '@dxos/schema';
 
 import { TestHelpers } from '@dxos/effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
+import { ResearchDataTypes } from './types';
 
 const MOCK_SEARCH = false;
 
@@ -41,7 +41,7 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
-      TestDatabaseLayer({ indexing: { vector: true }, types: [DataType.Text] }),
+      TestDatabaseLayer({ indexing: { vector: true }, types: [...ResearchDataTypes] }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
@@ -76,23 +76,23 @@ describe('Research', { timeout: 300_000 }, () => {
 
 describe('misc', () => {
   it('createExtractionSchema', () => {
-    const _schema = createExtractionSchema(DataTypes);
+    const _schema = createExtractionSchema(ResearchDataTypes);
     // log.info('schema', { schema });
   });
 
   it('extract schema json schema', () => {
-    const schema = createExtractionSchema(DataTypes);
+    const schema = createExtractionSchema(ResearchDataTypes);
     const _parser = structuredOutputParser(schema);
     // log.info('schema', { json: parser.tool.parameters });
   });
 
   it('getSanitizedSchemaName', () => {
-    const _names = DataTypes.map(getSanitizedSchemaName);
-    // log.info('names', { names });
+    const _names = ResearchDataTypes.map(getSanitizedSchemaName);
+    // log.info('names', { names }) ;
   });
 
   it('getTypeAnnotation', () => {
-    for (const schema of DataTypes) {
+    for (const schema of ResearchDataTypes) {
       const _dxn = Type.getDXN(schema);
       // log.info('dxn', { schema, dxn });
     }

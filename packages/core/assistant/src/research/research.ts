@@ -7,8 +7,6 @@ import { Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TracingService, defineFunction } from '@dxos/functions';
-import { log } from '@dxos/log';
-import { DataTypes } from '@dxos/schema';
 
 import { AiSession, GenerationObserver } from '../session';
 
@@ -16,6 +14,7 @@ import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
+import { ResearchDataTypes } from './types';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -42,14 +41,14 @@ export const researchFn = defineFunction({
     function* ({ data: { query, mockSearch } }) {
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
-      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: DataTypes });
+      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
 
       // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
       const result = yield* new AiSession()
         .run({
           prompt: query,
           history: [],
-          systemPrompt: PROMPT,
+          system: PROMPT,
           toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
           observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
         })
