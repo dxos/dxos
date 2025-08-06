@@ -31,30 +31,9 @@ const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
 
 const __dirname = dirname(new URL(import.meta.url).pathname);
 
-const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
-  // https://github.com/antfu-collective/vite-plugin-inspect#readme
-  // Open: http://localhost:5173/__inspect
-  isTrue(process.env.DX_INSPECT) && inspect(),
-
-  env.command === 'serve' && devtoolsJson(),
-
-  // Building from dist when creating a prod bundle.
-  env.command === 'serve' &&
-    importSource({
-      exclude: [
-        '**/node_modules/**',
-        '**/common/random-access-storage/**',
-        '**/common/lock-file/**',
-        '**/mesh/network-manager/**',
-        '**/mesh/teleport/**',
-        '**/sdk/config/**',
-        '**/sdk/client-services/**',
-        '**/sdk/observability/**',
-      ],
-    }),
-  wasm(),
-  sourcemaps(),
-];
+// Shared plugins for worker that are using in prod build.
+// In dev vite uses root plugins for both worker and page.
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
 
 /**
  * https://vitejs.dev/config
@@ -119,6 +98,29 @@ export default defineConfig((env) => ({
   },
   plugins: [
     ...sharedPlugins(env),
+
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // Open: http://localhost:5173/__inspect
+    isTrue(process.env.DX_INSPECT) && inspect(),
+
+    env.command === 'serve' && devtoolsJson(),
+
+    // Building from dist when creating a prod bundle.
+    env.command === 'serve' &&
+      importSource({
+        exclude: [
+          '**/node_modules/**',
+          '**/common/random-access-storage/**',
+          '**/common/lock-file/**',
+          '**/mesh/network-manager/**',
+          '**/mesh/teleport/**',
+          '**/sdk/config/**',
+          '**/sdk/client-services/**',
+          '**/sdk/observability/**',
+          // TODO(dmaretskyi): Decorators break in lit.
+          '**/ui/lit-*/**',
+        ],
+      }),
 
     react({
       tsDecorators: true,
