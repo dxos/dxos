@@ -7,7 +7,9 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { context } from '../functions';
+import { context, load } from '../functions';
+
+const functions = [context, load];
 
 export default () => {
   return [
@@ -22,9 +24,9 @@ export default () => {
             You are a helpful assistant.
           `,
         },
-        tools: [ToolId.make(context.name)],
+        tools: functions.map((tool) => ToolId.make(tool.name)),
       }),
     ),
-    contributes(Capabilities.Functions, [context]),
+    contributes(Capabilities.Functions, functions),
   ];
 };
