@@ -13,6 +13,7 @@ import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
 import importSource from '@dxos/vitest-plugin-import-source';
+import devtoolsJson from 'vite-plugin-devtools-json';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -103,6 +104,7 @@ export default defineConfig((env) => ({
           '**/sdk/observability/**',
         ],
       }),
+    env.command === 'serve' && devtoolsJson(),
 
     wasm(),
     react({
