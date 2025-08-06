@@ -8,7 +8,7 @@ import { Effect, Layer, Schema } from 'effect';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { ContextQueueService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
 
-import { AiSession, GenerationObserver } from '../session';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 
 import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
@@ -20,8 +20,7 @@ import { ResearchDataTypes } from './types';
 /**
  * Exec external service and return the results as a Subgraph.
  */
-// TODO(burdon): Rename.
-export const researchFn = defineFunction({
+export default defineFunction({
   name: 'dxos.org/function/research',
   description: 'Research the web for information',
   inputSchema: Schema.Struct({

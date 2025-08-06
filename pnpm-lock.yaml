@@ -2361,9 +2361,6 @@ importers:
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
-      exa-js:
-        specifier: ^1.5.12
-        version: 1.7.0(encoding@0.1.13)
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -2407,6 +2404,12 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo/echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
@@ -2437,6 +2440,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      exa-js:
+        specifier: ^1.5.12
+        version: 1.7.0(encoding@0.1.13)
     devDependencies:
       '@effect/ai':
         specifier: 0.23.0

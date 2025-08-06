@@ -14,7 +14,7 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { AiSession } from '../session';
+import { AiSession } from '@dxos/assistant';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 

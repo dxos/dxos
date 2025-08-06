@@ -3,5 +3,5 @@
 //
 
 export * from './exa';
-export * from './research';
+export { default as research } from './research';
 export * from './graph';

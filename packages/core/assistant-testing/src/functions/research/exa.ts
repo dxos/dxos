@@ -9,7 +9,7 @@ import Exa from 'exa-js';
 import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { SEARCH_RESULTS } from '../testing';
+import { SEARCH_RESULTS } from '../../testing';
 
 export class ExaToolkit extends AiToolkit.make(
   AiTool.make('exa_search', {

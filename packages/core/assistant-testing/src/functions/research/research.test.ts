@@ -28,7 +28,7 @@ import { Type } from '@dxos/echo';
 
 import { TestHelpers } from '@dxos/effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
-import { researchFn } from './research';
+import { default as research } from './research';
 import { ResearchDataTypes } from './types';
 import { queryResearchGraph, ResearchGraph } from './research-graph';
 
@@ -62,7 +62,7 @@ describe('Research', { timeout: 300_000 }, () => {
         );
         yield* DatabaseService.flush({ indexes: true });
 
-        const result = yield* LocalFunctionExecutionService.invokeFunction(researchFn, {
+        const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
           query: 'Who are the founders of Notion?',
           mockSearch: MOCK_SEARCH,
         });
