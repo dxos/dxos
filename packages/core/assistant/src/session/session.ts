@@ -23,7 +23,7 @@ import { type ObjectId } from '@dxos/echo-schema';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { trim } from '@dxos/util';
+import { isNotFalsy, trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 
@@ -48,16 +48,9 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  * Could be run locally in the app or remotely.
  * Could be personal or shared.
  */
-// TODO(burdon): Rename module.
 export class AiSession {
   // TODO(burdon): Review this.
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
-
-  /** Pending messages (incl. the current user request). */
-  private _pending: DataType.Message[] = [];
-
-  /** Prior history from queue. */
-  private _history: DataType.Message[] = [];
 
   /** Blocks streaming from the model during the session. */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
@@ -67,6 +60,12 @@ export class AiSession {
 
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
+
+  /** Pending messages (incl. the current user request). */
+  private _pending: DataType.Message[] = [];
+
+  /** Prior history from queue. */
+  private _history: DataType.Message[] = [];
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
@@ -84,28 +83,15 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
+      // Create toolkit.
+      const toolkitWithHandlers = yield* createToolkit(params);
+
       // Generate system prompt.
       const system = yield* formatSystemPrompt(params);
-      console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
-
-      // Build a combined toolkit from the blueprint tools and the provided toolkit.
-      const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
-        (params.blueprints ?? []).flatMap(({ tools }) => tools),
-      );
-      const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-        yield* ToolExecutionService.handlersFor(blueprintToolkit),
-      );
-      const toolkit = params.toolkit != null ? AiToolkit.merge(params.toolkit, blueprintToolkit) : blueprintToolkit;
-      const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
-        Effect.provide(blueprintToolkitHandler) as any,
-      ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-
-      const b = yield* createToolkit(params);
-      console.log(b);
 
       this._history = [...(params.history ?? [])];
       this._pending = [promptMessages];
@@ -118,8 +104,7 @@ export class AiSession {
           pending: this._pending.length,
           history: this._history.length,
           objects: params.objects?.length ?? 0,
-          tools: (Object.values(params.toolkit?.tools ?? {}) as AiTool.Any[]).map((tool: AiTool.Any) => tool.name),
-          // tools: Object.keys(blueprintToolkit.tools),
+          tools: Object.values(toolkitWithHandlers.tools).map((tool: AiTool.Any) => tool.name),
         });
 
         // Generate the prompt and make request.
@@ -127,7 +112,7 @@ export class AiSession {
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
-          toolkit: toolkitWithBlueprintHandlers,
+          toolkit: toolkitWithHandlers,
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
@@ -157,7 +142,7 @@ export class AiSession {
         }
 
         // TODO(burdon): Comment.
-        const toolResults = yield* callTools(toolCalls, toolkitWithBlueprintHandlers as any);
+        const toolResults = yield* callTools(toolCalls, toolkitWithHandlers as any);
         const toolResultMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
@@ -190,40 +175,23 @@ export class AiSession {
   }
 }
 
-// Build a combined toolkit from the blueprint tools and the provided toolkit.
+/**
+ * Build a combined toolkit from the blueprint tools and the provided toolkit.
+ */
 const createToolkit = <Tools extends AiTool.Any>({
-  blueprints,
+  blueprints = [],
   toolkit,
 }: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
   Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
-      (blueprints ?? []).flatMap(({ tools }) => tools),
-    );
-
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-      yield* ToolExecutionService.handlersFor(blueprintToolkit),
+      ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
-    const tk = toolkit != null ? AiToolkit.merge(toolkit, blueprintToolkit) : blueprintToolkit;
-    return yield* tk.pipe(Effect.provide(blueprintToolkitHandler) as any) as Effect.Effect<
-      AiToolkit.ToHandler<any>,
-      never,
-      AiTool.ToHandler<Tools>
-    >;
+    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
+      Effect.provide(blueprintToolkitHandler),
+    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
   });
-
-// Build a combined toolkit from the blueprint tools and the provided toolkit.
-// const createToolkit = <Tools extends AiTool.Any>({
-//   blueprints,
-//   toolkit,
-// }: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
-//   Effect.gen(function* () {
-//     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
-//       (blueprints ?? []).flatMap(({ tools }) => tools),
-//     );
-
-//     return toolkit != null ? AiToolkit.merge(toolkit, blueprintToolkit) : blueprintToolkit;
-//   });
 
 /**
  * Formats the system prompt.
@@ -243,7 +211,7 @@ const formatSystemPrompt = ({
         Array.map(
           (template) => trim`
             <blueprint>
-              ${template.content}
+              ${template.content.trim()}
             </blueprint>
           `,
         ),
