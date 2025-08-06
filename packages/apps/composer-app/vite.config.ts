@@ -32,6 +32,10 @@ const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
 const __dirname = dirname(new URL(import.meta.url).pathname);
 
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  // https://github.com/antfu-collective/vite-plugin-inspect#readme
+  // Open: http://localhost:5173/__inspect
+  isTrue(process.env.DX_INSPECT) && inspect(),
+
   env.command === 'serve' && devtoolsJson(),
 
   // Building from dist when creating a prod bundle.
@@ -248,10 +252,6 @@ export default defineConfig((env) => ({
         name: `${APP_KEY}@${process.env.npm_package_version}`,
       },
     }),
-
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
 
     process.env.DX_STATS && [
       visualizer({
