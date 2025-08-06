@@ -122,8 +122,8 @@ export const TableCellEditor = ({
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
-  const [_validationError, setValidationError] = useState<string | null>(null);
-  const [_validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -396,11 +396,7 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage
-        validationError={_validationError}
-        variant={_validationVariant}
-        __gridScope={__gridScope}
-      />
+      <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );
