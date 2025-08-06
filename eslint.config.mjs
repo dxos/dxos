@@ -58,6 +58,7 @@ export default tseslint.config(
       'packages/plugins/plugin-assistant/deprecated',
 
       // Other
+      '**/*.tpl',
       '**/bin',
       '**/scripts',
       '**/vendor',

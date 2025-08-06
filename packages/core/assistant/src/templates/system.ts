@@ -4,6 +4,7 @@
 
 import { Template } from '@dxos/blueprints';
 
+import FORMAT from './format.tpl?raw';
 import SYSTEM from './system.tpl?raw';
 
 type PromptOptions = {
@@ -20,13 +21,12 @@ type PromptOptions = {
 };
 
 /**
- * @deprecated
+ * Base system prompt.
+ * NOTE: This contains protocol instructions that can not be dynamically edited.
  */
-// TODO(burdon): Remove.
-export const createSystemPrompt = (options: PromptOptions = {}) => {
-  return Template.createPrompt(SYSTEM, options);
-};
+export const createSystemPrompt = (options: PromptOptions) => Template.createPrompt<PromptOptions>(FORMAT, options);
 
 export const templates = {
+  // Editable system prompt.
   system: Template.make({ source: SYSTEM }),
 };
