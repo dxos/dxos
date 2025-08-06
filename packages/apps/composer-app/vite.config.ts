@@ -12,7 +12,7 @@ import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import importSource from '@dxos/vitest-plugin-import-source';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
@@ -91,11 +91,8 @@ export default defineConfig((env) => ({
   plugins: [
     sourcemaps(),
 
-    // TODO(wittjosiah): Causing issues with bundle.
-    env.command === 'serve' &&
-      tsconfigPaths({
-        projects: [join(rootDir, './tsconfig.paths.json')],
-      }),
+    // Building from dist when creating a prod bundle.
+    env.command === 'serve' && importSource(),
 
     wasm(),
     react({

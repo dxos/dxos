@@ -745,6 +745,9 @@ importers:
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-icons
+      '@dxos/vitest-plugin-import-source':
+        specifier: workspace:*
+        version: link:../../../tools/vitest-plugin-import-source
       '@effect/platform':
         specifier: 0.89.0
         version: 0.89.0(effect@3.17.0)
@@ -14873,6 +14876,10 @@ importers:
       oxc-resolver:
         specifier: '*'
         version: 11.6.0
+    devDependencies:
+      '@types/minimatch':
+        specifier: '*'
+        version: 5.1.2
 
   tools/x:
     dependencies:
