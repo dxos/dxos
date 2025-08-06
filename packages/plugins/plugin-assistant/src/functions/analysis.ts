@@ -15,6 +15,6 @@ export default defineFunction({
   }),
   outputSchema: Schema.Void,
   handler: Effect.fn(function* ({ data: { enable } }) {
-    log.info('analysis', { enable });
+    log.info('analysis mode', { enable });
   }),
 });
