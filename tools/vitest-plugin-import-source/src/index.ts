@@ -57,6 +57,7 @@ const PluginImportSource = ({
           if (!match) {
             return null;
           }
+          this.addWatchFile(resolvedPath);
 
           verbose && console.log(`${source} -> ${resolvedPath}`);
           return resolvedPath;
