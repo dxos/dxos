@@ -1,10 +1,10 @@
 import { type Plugin } from 'vite';
-// import { ResolverFactory } from 'oxc-resolver';
-// import Minimatch from 'minimatch';
+import { ResolverFactory } from 'oxc-resolver';
+import Minimatch from 'minimatch';
 
-// const resolver = new ResolverFactory({
-//   conditionNames: ['source'],
-// });
+const resolver = new ResolverFactory({
+  conditionNames: ['source'],
+});
 
 interface PluginImportSourceOptions {
   include?: string[];
@@ -33,33 +33,33 @@ const PluginImportSource = ({
           if (!importer) {
             return null;
           }
-          // const resolved = await resolver.async(importer, source);
-          // verbose &&
-          //   console.log({
-          //     source,
-          //     importer,
-          //     resolved,
-          //   });
-          // if (resolved.error || !resolved.path) {
-          //   return null;
-          // }
-          // const resolvedPath = resolved.path!;
-          // const match =
-          //   include.some((pattern) => Minimatch(resolvedPath, pattern, globOptions)) &&
-          //   !exclude.some((pattern) => Minimatch(resolvedPath, pattern, globOptions));
-          // verbose &&
-          //   console.log({
-          //     match,
-          //     path: resolvedPath,
-          //     include: include.map((pattern) => [pattern, Minimatch(resolvedPath, pattern, globOptions)]),
-          //     exclude: exclude.map((pattern) => [pattern, Minimatch(resolvedPath, pattern, globOptions)]),
-          //   });
-          // if (!match) {
-          //   return null;
-          // }
+          const resolved = await resolver.async(importer, source);
+          verbose &&
+            console.log({
+              source,
+              importer,
+              resolved,
+            });
+          if (resolved.error || !resolved.path) {
+            return null;
+          }
+          const resolvedPath = resolved.path!;
+          const match =
+            include.some((pattern) => Minimatch(resolvedPath, pattern, globOptions)) &&
+            !exclude.some((pattern) => Minimatch(resolvedPath, pattern, globOptions));
+          verbose &&
+            console.log({
+              match,
+              path: resolvedPath,
+              include: include.map((pattern) => [pattern, Minimatch(resolvedPath, pattern, globOptions)]),
+              exclude: exclude.map((pattern) => [pattern, Minimatch(resolvedPath, pattern, globOptions)]),
+            });
+          if (!match) {
+            return null;
+          }
 
-          // verbose && console.log(`${source} -> ${resolvedPath}`);
-          // return resolvedPath;
+          verbose && console.log(`${source} -> ${resolvedPath}`);
+          return resolvedPath;
         } catch (error) {
           verbose && console.error(error);
           // If resolution fails, return null to skip to next resolver
