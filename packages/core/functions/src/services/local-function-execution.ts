@@ -37,13 +37,10 @@ const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect
     (assertInput as any)(input);
 
     const context: FunctionContext = {
+      space: undefined,
       getService: () => todo(),
       getSpace: async (_spaceId: any) => {
         throw new Error('Not available. Use the database service instead.');
-      },
-      space: undefined,
-      get ai(): never {
-        throw new Error('Not available. Use the ai service instead.');
       },
     };
 

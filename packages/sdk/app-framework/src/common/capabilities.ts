@@ -8,7 +8,7 @@ import { type FC, type PropsWithChildren } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
-import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
@@ -156,15 +156,9 @@ export namespace Capabilities {
 
   /**
    * @category Capability
+   * @deprecated
    */
   export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
-
-  /**
-   * @category Capability
-   */
-  export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
-    'dxos.org/app-framework/capability/artifact-definition',
-  );
 
   /**
    * @category Capability

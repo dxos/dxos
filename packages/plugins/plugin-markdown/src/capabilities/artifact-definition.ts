@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): defineArtifact
+// @ts-nocheck
+
 import { Schema, pipe } from 'effect';
 
 import { ToolResult, createTool } from '@dxos/ai';

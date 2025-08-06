@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AssociatedArtifact, Template } from '@dxos/blueprints';
+import { Template } from '@dxos/blueprints';
 
 import ASSISTANT from './assistant.tpl?raw';
 
@@ -12,26 +12,19 @@ import ASSISTANT from './assistant.tpl?raw';
 // TODO(burdon): Replace with builder?
 export type AssistantPromptOptions = {
   /**
-   * Instructions for each artifact.
+   * Instructions for each blueprint.
    */
-  // TODO(burdon): Change to blueprint.
-  artifacts?: string[];
-
-  /**
-   * Associated artifact to include in the prompt.
-   * @deprecated
-   */
-  artifact?: AssociatedArtifact;
-
-  /**
-   * Whether to include suggestions in the prompt.
-   */
-  suggestions?: boolean;
+  blueprints?: string[];
 
   /**
    * Additional instructions to include in the prompt.
    */
   instructions?: string;
+
+  /**
+   * Whether to include suggestions in the prompt.
+   */
+  suggestions?: boolean;
 
   /**
    * Emit chain-of-thought inside <cot> tag.

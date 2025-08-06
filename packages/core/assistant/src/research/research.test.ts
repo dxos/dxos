@@ -22,6 +22,11 @@ import { Config } from 'effect';
 
 import { AiServiceRouter, structuredOutputParser } from '@dxos/ai';
 import { tapHttpErrors } from '@dxos/ai/testing';
+import { type AiService, AiServiceRouter } from '@dxos/ai';
+import { EXA_API_KEY, tapHttpErrors } from '@dxos/ai/testing';
+import { Obj } from '@dxos/echo';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { getSchemaDXN } from '@dxos/echo-schema';
 import { DataTypes } from '@dxos/schema';
 

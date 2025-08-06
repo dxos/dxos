@@ -46,7 +46,7 @@ const ServerLive = Layer.scoped(
 it.effect.skip(
   'test',
   Effect.fn(
-    function* ({ expect }) {
+    function* ({ expect: _ }) {
       const client = yield* Client;
       yield* client.call();
     },

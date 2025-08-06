@@ -4,9 +4,7 @@
 
 import { type Context, type Effect, Schema } from 'effect';
 
-import { type AiServiceClient } from '@dxos/ai';
-// import { type Space } from '@dxos/client/echo';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
@@ -43,8 +41,6 @@ export interface FunctionContext {
    * Space from which the function was invoked.
    */
   space: SpaceAPI | undefined;
-
-  ai: AiServiceClient;
 
   /**
    * Resolves a service available to the function.

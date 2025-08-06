@@ -23,9 +23,9 @@ import { AiSession, type GenerationObserver } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
-export interface AiConversationRunOptions<Tools extends AiTool.Any> {
-  systemPrompt?: string;
+export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
+  system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
 
   observer?: GenerationObserver;
@@ -49,21 +49,26 @@ export class AiConversation {
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
+   * Blueprints bound to the conversation.
+   */
+  public readonly _context: AiContextBinder;
+
+  /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
    *
    * @deprecated Pass in a session instead.
    */
+  // TODO(burdon): Is this still deprecated?
   public readonly onBegin = new Event<AiSession>();
-
-  /**
-   * Blueprints bound to the conversation.
-   */
-  public readonly context: AiContextBinder;
 
   constructor(options: AiConversationOptions) {
     this._queue = options.queue;
-    this.context = new AiContextBinder(this._queue);
+    this._context = new AiContextBinder(this._queue);
+  }
+
+  get context() {
+    return this._context;
   }
 
   async getHistory(): Promise<DataType.Message[]> {
@@ -76,9 +81,10 @@ export class AiConversation {
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
   run = <Tools extends AiTool.Any>({
+    // TODO(burdon): Decide whether to pass in or to fully encapsulate.
     session = new AiSession(),
-    ...options
-  }: AiConversationRunOptions<Tools>): Effect.Effect<
+    ...params
+  }: AiConversationRunParams<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
@@ -87,29 +93,30 @@ export class AiConversation {
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+
+      // TODO(burdon): These don't need to be loaded; just need id and typename from context.
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
-      const systemPrompt = [options.systemPrompt, ...objects.map((obj) => `<object>${Obj.getDXN(obj)}</object>`)]
-        .filter(Boolean)
-        .join('\n');
 
       log.info('run', {
-        history,
-        context,
-        systemPrompt,
-        prompt: options.prompt,
-        toolkit: options.toolkit,
+        prompt: params.prompt,
+        system: params.system,
+        history: history.length,
+        objects: objects.length,
+        blueprints: blueprints.length,
+        toolkit: params.toolkit,
       });
 
       const start = Date.now();
       this.onBegin.emit(session);
 
       const messages = yield* session.run({
-        blueprints,
-        toolkit: options.toolkit,
+        prompt: params.prompt,
+        system: params.system,
         history,
-        systemPrompt,
-        observer: options.observer,
-        prompt: options.prompt,
+        observer: params.observer,
+        objects,
+        blueprints,
+        toolkit: params.toolkit,
       });
 
       log.info('result', { messages: messages, duration: Date.now() - start });

@@ -33,7 +33,7 @@ export const SurfaceContainer = ({ space }: ComponentProps) => {
     const refs = binder.objects.value;
     const objects = await Ref.Array.loadAll(refs);
     // TODO(burdon): Auto log meta for ECHO objects?
-    log.info('loaded', { objects: objects.map((obj) => ({ typename: Obj.getTypename(obj), id: obj.id })) });
+    log('loaded', { objects: objects.map((obj) => ({ typename: Obj.getTypename(obj), id: obj.id })) });
     return objects;
   }, [chats]);
 

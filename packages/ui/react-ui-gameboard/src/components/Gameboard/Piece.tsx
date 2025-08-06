@@ -63,9 +63,14 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
       canDrag: () => !promotingRef.current && model?.turn === piece.side,
       onDragStart: () => setDragging(true),
       onDrop: ({ location: { current } }) => {
-        const location = current.dropTargets[0].data.location;
-        if (isLocation(location)) {
-          setCurrent((current) => ({ ...current, location }));
+        // TODO(burdon): Create wrapper function to catch errors.
+        try {
+          const location = current.dropTargets[0]?.data.location;
+          if (isLocation(location)) {
+            setCurrent((current) => ({ ...current, location }));
+          }
+        } catch {
+          // Ignore.
         }
 
         setDragging(false);

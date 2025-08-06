@@ -5,47 +5,25 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { type Player } from '@dxos/react-ui-gameboard';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { Chess } from '../types';
 
-import { Chessboard } from './Chessboard';
+import { ChessboardArticle } from './ChessboardArticle';
 
-const DefaultStory = ({ game }: { game: Chess.Game }) => {
-  const [orientation, setOrientation] = useState<Player>('white');
-  return (
-    <Chessboard.Root game={game}>
-      <div className='grid grid-cols-[1fr_min-content] grid-rows-[1fr_4rem] bs-full is-full gap-2'>
-        <Chessboard.Content>
-          <Chessboard.Board orientation={orientation} />
-        </Chessboard.Content>
-        <div className='flex flex-col p-8 justify-center items-center'>
-          <Chessboard.Info orientation={orientation} onOrientationChange={setOrientation} />
-        </div>
-        <div className='flex justify-center items-center'>
-          <Chessboard.Players />
-        </div>
-      </div>
-    </Chessboard.Root>
-  );
-};
-
-const meta: Meta<typeof Chessboard.Root> = {
+const meta: Meta<typeof ChessboardArticle> = {
   title: 'plugins/plugin-chess/Chessboard',
-  component: Chessboard.Root,
-  render: DefaultStory,
+  component: ChessboardArticle,
   decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ fullscreen: true })],
   parameters: {
     translations,
   },
 };
 
-type Story = StoryObj<typeof Chessboard.Root>;
+type Story = StoryObj<typeof meta>;
 
 export default meta;
 
