@@ -3,7 +3,7 @@
 //
 
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
-import { Remote } from '@dxos/react-client';
+import { Remote } from '@dxos/client';
 
 export const setupConfig = async () => {
   const sources = [await Storage(), Envs(), Local(), Defaults()];
