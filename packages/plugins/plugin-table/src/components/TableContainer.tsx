@@ -3,11 +3,13 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
+import { Match } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -17,12 +19,16 @@ import {
   Table,
   type TableController,
   type TableFeatures,
+  type TableModelProps,
   TablePresentation,
+  type TableRowAction,
   TableToolbar,
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type DataType } from '@dxos/schema';
+
+import { TABLE_PLUGIN } from '../meta';
 
 export type TableContainerProps = {
   role: string;
@@ -80,16 +86,42 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     return schema ? Type.toJsonSchema(schema) : undefined;
   }, [schema]);
 
+  const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const rowActions = useMemo(
+    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: TABLE_PLUGIN }] }],
+    [],
+  );
+  const handleRowAction = useCallback(
+    (actionId: string, data: any) =>
+      Match.value(actionId).pipe(
+        Match.when('open', () => {
+          invariant(view.query.typename);
+          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(data)] }));
+        }),
+        Match.orElseAbsurd,
+      ),
+    [dispatch, view.query.typename],
+  );
+
+  const handleRowOrderChange = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
   const model = useTableModel({
     view,
     schema: jsonSchema,
     features,
     rows: filteredObjects,
+    rowActions,
     onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChange: () => tableRef.current?.update?.(),
+    onCellUpdate: handleCellUpdate,
+    onRowAction: handleRowAction,
+    onRowOrderChange: handleRowOrderChange,
   });
 
   const handleInsertRow = useCallback(() => {

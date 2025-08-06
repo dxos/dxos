@@ -176,9 +176,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         rows={rows}
         features={features}
         rowActions={[
-          { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
-          { id: 'backup', translationKey: 'download space backup label' },
-          { id: 'archive', translationKey: 'download space archive label' },
+          { id: 'toggleOpen', label: 'Toggle space open closed' },
+          { id: 'backup', label: 'Download space backup' },
+          { id: 'archive', label: 'Download space archive' },
         ]}
         onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
