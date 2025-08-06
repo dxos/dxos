@@ -92,7 +92,17 @@ export default defineConfig((env) => ({
     sourcemaps(),
 
     // Building from dist when creating a prod bundle.
-    env.command === 'serve' && importSource(),
+    env.command === 'serve' &&
+      importSource({
+        exclude: [
+          '**/node_modules/**',
+          '**/common/random-access-storage/**',
+          '**/mesh/network-manager/**',
+          '**/mesh/teleport/**',
+          '**/sdk/config/**',
+          '**/sdk/observability/**',
+        ],
+      }),
 
     wasm(),
     react({

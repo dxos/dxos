@@ -14,9 +14,9 @@
       "default": "hypercore-crypto"
     },
     "#subtle": {
-      "types": "./lib/subtle.d.ts",
-      "node": "./src/node/subtle.ts",
-      "browser": "./src/browser/subtle.ts"
+      "types": "./vendor/subtle.d.ts",
+      "node": "./vendor/subtle-node.mjs",
+      "browser": "./vendor/subtle-browser.mjs"
     }
   },
   "exports": {
@@ -34,7 +34,7 @@
   "files": [
     "dist",
     "src",
-    "lib"
+    "vendor"
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",
