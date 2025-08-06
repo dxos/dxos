@@ -8,11 +8,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type DxGrid } from '@dxos/lit-grid';
+import { type DxGrid, type DxGridPosition } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
-  type DxGridPlanePosition,
   type EditorBlurHandler,
   type EditorKeyEvent,
   type EditorKeyOrBlurHandler,
@@ -48,7 +47,7 @@ export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
-  onEnter?: (cell: DxGridPlanePosition) => void;
+  onEnter?: (cell: DxGridPosition) => void;
   onFocus?: DxGrid['refocus'];
   onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;

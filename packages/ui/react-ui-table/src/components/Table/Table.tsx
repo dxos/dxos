@@ -144,6 +144,27 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       };
     }, [presentation, dxGrid]);
 
+    const handleSaveDraftRow = useCallback(
+      (rowIndex = 0, insertAgain = false) => {
+        if (model && dxGrid) {
+          const didCommitSuccessfully = model.commitDraftRow(rowIndex);
+          if (didCommitSuccessfully) {
+            if (insertAgain) {
+              model.insertRow();
+              requestAnimationFrame(() => {
+                dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+              });
+            } else {
+              requestAnimationFrame(() => {
+                dxGrid.scrollToEndRow();
+              });
+            }
+          }
+        }
+      },
+      [model, dxGrid],
+    );
+
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
         const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
@@ -193,14 +214,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               break;
             }
             case 'saveDraftRow': {
-              if (model) {
-                const didCommitSuccessfully = model.commitDraftRow(data.rowIndex);
-                if (dxGrid && didCommitSuccessfully) {
-                  requestAnimationFrame(() => {
-                    dxGrid.scrollToEndRow();
-                  });
-                }
-              }
+              handleSaveDraftRow();
               break;
             }
           }
@@ -255,18 +269,20 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return;
         }
 
-        // TODO(burdon): Insert row only if bottom row isn't completely blank already.
-        if (model && cell.row === model.getRowCount() - 1) {
-          model.insertRow();
-          if (dxGrid) {
+        if (model && dxGrid) {
+          if (cell.plane === 'grid' && cell.row >= model.getRowCount() - 1) {
+            if (draftRowCount < 1) {
+              model.insertRow();
+            }
             requestAnimationFrame(() => {
-              dxGrid?.scrollToRow(cell.row + 1);
-              dxGrid?.refocus('row', 1);
+              dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
             });
+          } else if (cell.plane === 'frozenRowsEnd') {
+            handleSaveDraftRow(cell.row, true);
           }
         }
       },
-      [model, dxGrid],
+      [model, dxGrid, draftRowCount],
     );
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
