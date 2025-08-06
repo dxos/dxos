@@ -6,78 +6,61 @@ import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService } from '@dxos/functions';
+import {
+  ComputeEventLogger,
+  CredentialsService,
+  DatabaseService,
+  LocalFunctionExecutionService,
+  RemoteFunctionExecutionService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 
 import { inspect } from 'node:util';
 
-import { AnthropicClient } from '@effect/ai-anthropic';
-import { FetchHttpClient } from '@effect/platform';
-import { Config } from 'effect';
-
-import { AiServiceRouter, structuredOutputParser } from '@dxos/ai';
-import { tapHttpErrors } from '@dxos/ai/testing';
-import { type AiService, AiServiceRouter } from '@dxos/ai';
-import { EXA_API_KEY, tapHttpErrors } from '@dxos/ai/testing';
-import { Obj } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { getSchemaDXN } from '@dxos/echo-schema';
+import { structuredOutputParser } from '@dxos/ai';
+import { Type } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 
+import { TestHelpers } from '@dxos/effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
-import { TestHelpers } from '@dxos/effect';
 
 const MOCK_SEARCH = false;
 
-const AnthropicLayer = AnthropicClient.layerConfig({
-  apiKey: Config.redacted('ANTHROPIC_API_KEY'),
-  transformClient: tapHttpErrors,
-});
-
-const AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
-  Layer.provide(AnthropicLayer),
-  Layer.provide(FetchHttpClient.layer),
+const TestLayer = Layer.mergeAll(
+  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+  makeToolResolverFromFunctions([]),
+  makeToolExecutionServiceFromFunctions([]),
+  ComputeEventLogger.layerFromTracing,
+).pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      AiServiceTestingPreset('direct'),
+      TestDatabaseLayer({ indexing: { vector: true }, types: [DataType.Text] }),
+      CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
+      LocalFunctionExecutionService.layer,
+      RemoteFunctionExecutionService.mockLayer,
+      TracingService.layerNoop,
+    ),
+  ),
 );
 
 describe('Research', { timeout: 300_000 }, () => {
-  // beforeAll(async () => {
-  //   runtime = ManagedRuntime.make(AiServiceLayer);
-
-  //   // TODO(dmaretskyi): Helper to scaffold this from a config.
-  //   builder = await new EchoTestBuilder().open();
-
-  //   db = (await builder.createDatabase({ indexing: { vector: true } })).db;
-
-  //   executor = new FunctionExecutor(
-  //     new ServiceContainer().setServices({
-  //       ai: await runtime.runPromise(AiService),
-  //       credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  //       database: { db },
-  //       tracing: TracingService.console,
-  //     }),
-  //   );
-  // });
-
-  // afterAll(async () => {
-  //   await runtime.dispose();
-  // });
-
-  // TODO(dmaretskyi): Refactor using effect.
   it.effect(
     'should generate a research report',
-    Effect.fn(
+    Effect.fnUntraced(
       function* ({ expect }) {
-        yield* DatabaseService.add(Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }));
-        await db.flush({ indexes: true });
+        yield* DatabaseService.add(
+          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
+        );
+        yield* DatabaseService.flush({ indexes: true });
 
-        const result = yield* executor.invoke(researchFn, {
+        const result = yield* LocalFunctionExecutionService.invokeFunction(researchFn, {
           query: 'Who are the founders of Notion?',
           mockSearch: MOCK_SEARCH,
         });
@@ -85,17 +68,7 @@ describe('Research', { timeout: 300_000 }, () => {
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
       },
-      Effect.provide(
-        Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text] }),
-          makeToolResolverFromFunctions([]),
-          makeToolExecutionServiceFromFunctions([]),
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-        ).pipe(
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(LocalFunctionExecutionService.layer),
-        ),
-      ),
+      Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),
     ),
   );
@@ -120,7 +93,7 @@ describe('misc', () => {
 
   it('getTypeAnnotation', () => {
     for (const schema of DataTypes) {
-      const _dxn = getSchemaDXN(schema);
+      const _dxn = Type.getDXN(schema);
       // log.info('dxn', { schema, dxn });
     }
   });
