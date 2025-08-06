@@ -314,7 +314,7 @@ describe('effect-to-json', () => {
         id: {
           type: 'string',
           pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
-          description: 'a Universally Unique Lexicographically Sortable Identifier',
+          description: 'A Universally Unique Lexicographically Sortable Identifier',
         },
         name: {
           type: 'string',
