@@ -54,7 +54,7 @@
     "@types/lodash.merge": "^4.6.6",
     "@types/postcss-import": "^14.0.3",
     "esbuild": "0.25.6",
-    "vite": "5.4.7"
+    "vite": "7.0.6"
   },
   "publishConfig": {
     "access": "public"
