@@ -10,7 +10,7 @@ import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
@@ -319,9 +319,9 @@ const ChatPrompt = ({
     [event],
   );
 
-  // TODO(burdon): Update context.
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((ids) => {
-    log.info('update', { ids });
+  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
+    log.info('update', { dxns });
+    void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
   return (
