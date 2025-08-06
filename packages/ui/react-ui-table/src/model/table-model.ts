@@ -21,6 +21,7 @@ import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -54,7 +55,7 @@ export type TableRow = Record<JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  translationKey: string;
+  label: Label;
 };
 
 export type TableFeatures = {

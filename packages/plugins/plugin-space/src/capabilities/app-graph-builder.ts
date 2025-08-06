@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import { Array, Option, Schema, pipe } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { type QueryResult, type Space, SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import { type QueryResult, type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -590,6 +590,37 @@ export default (context: PluginContext) => {
             Option.getOrElse(() => []),
           ),
         );
+      },
+    }),
+
+    // Create record nodes.
+    createExtension({
+      id: `${SPACE_PLUGIN}/records`,
+      resolver: (id) => {
+        let query: QueryResult<Type.Expando> | undefined;
+        return Rx.make((get) => {
+          const client = context.getCapability(ClientCapabilities.Client);
+          const { spaceId, objectId } = parseId(id);
+          if (!spaceId || !objectId) {
+            return null;
+          }
+
+          const space = client.spaces.get(spaceId);
+          if (!space) {
+            return null;
+          }
+
+          if (!query) {
+            query = space.db.query(Filter.ids(objectId));
+          }
+
+          const object = get(rxFromQuery(query)).at(0);
+          if (!object) {
+            return null;
+          }
+
+          return createObjectNode({ object, space, resolve, disposition: 'hidden' });
+        });
       },
     }),
 
