@@ -6,7 +6,7 @@ import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { TracingService, defineFunction } from '@dxos/functions';
+import { ContextQueueService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
 
 import { AiSession, GenerationObserver } from '../session';
 
@@ -14,6 +14,7 @@ import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
 import PROMPT from './instructions-research.tpl?raw';
+import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -39,11 +40,13 @@ export const researchFn = defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch } }) {
+      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
+      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
 
-      // TODO(dmaretskyi): Consider adding this pattern as the "Graph" output mode for the session.
       const result = yield* new AiSession()
         .run({
           prompt: query,
@@ -58,6 +61,7 @@ export const researchFn = defineFunction({
               mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
               LocalSearchHandler,
               makeGraphWriterHandler(GraphWriterToolkit),
+              ContextQueueService.layer(researchQueue),
             ),
           ),
         );
@@ -65,15 +69,6 @@ export const researchFn = defineFunction({
       return {
         result,
       };
-
-      // queues.contextQueue!.append(data);
-
-      // return {
-      //   result: `
-      //   The research results are placed in the following objects:
-      //     ${data.map((object, id) => `[obj_${id}][dxn:echo:@:${object.id}]`).join('\n')}
-      //   `,
-      // };
     },
     Effect.provide(
       Layer.mergeAll(

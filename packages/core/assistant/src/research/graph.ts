@@ -5,7 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
 
-import type { Obj, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
@@ -27,7 +27,7 @@ import {
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
+import { DXN, QueueSubspaceTags } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable } from '@dxos/util';
 
@@ -151,6 +151,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
       failure: Schema.Never,
     })
       .addRequirement<DatabaseService>()
+      .addRequirement<ContextQueueService>()
       .annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
@@ -163,11 +164,14 @@ export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWrite
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
       const { db } = yield* DatabaseService;
-      const contextQueue = yield* Effect.serviceOption(ContextQueueService);
-      const data = yield* Effect.promise(() =>
-        sanitizeObjects(schema, input as any, db, contextQueue.pipe(Option.getOrUndefined)?.contextQueue),
-      );
-      return data as Obj.Any[];
+      const contextQueue = yield* ContextQueueService;
+      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, contextQueue.contextQueue));
+      yield* Effect.promise(() => contextQueue.contextQueue.append(data as Obj.Any[]));
+
+      // TODO(dmaretskyi): Obj.getDXN should work here, but currently the objects are not aware of their location.
+      const dxns = data.map((obj) => new DXN(DXN.kind.QUEUE, [...contextQueue.contextQueue.dxn.parts, obj.id]));
+
+      return dxns;
     }),
   });
 };

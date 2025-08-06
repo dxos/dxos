@@ -72,4 +72,6 @@ export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQue
   {
     readonly contextQueue: Queue;
   }
->() {}
+>() {
+  static layer = (contextQueue: Queue) => Layer.succeed(ContextQueueService, { contextQueue });
+}

@@ -14,6 +14,7 @@ import {
   CredentialsService,
   DatabaseService,
   LocalFunctionExecutionService,
+  QueueService,
   RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
@@ -29,6 +30,7 @@ import { TestHelpers } from '@dxos/effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { researchFn } from './research';
 import { ResearchDataTypes } from './types';
+import { queryResearchGraph, ResearchGraph } from './research-graph';
 
 const MOCK_SEARCH = false;
 
@@ -41,7 +43,7 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
-      TestDatabaseLayer({ indexing: { vector: true }, types: [...ResearchDataTypes] }),
+      TestDatabaseLayer({ indexing: { vector: true }, types: [...ResearchDataTypes, ResearchGraph] }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
@@ -67,6 +69,12 @@ describe('Research', { timeout: 300_000 }, () => {
 
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
+
+        const researchGraph = yield* queryResearchGraph();
+        const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
+          Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
+        );
+        console.log(inspect(data, { depth: null, colors: true }));
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),
