@@ -2,6 +2,8 @@ import { type Plugin } from 'vite';
 import { ResolverFactory } from 'oxc-resolver';
 import Minimatch from 'minimatch';
 
+// TODO(dmaretskyi): Rename to vite-plugin-import-source
+
 const resolver = new ResolverFactory({
   conditionNames: ['source'],
 });

@@ -118,6 +118,21 @@ export const createConfig = ({
         // NOTE: Order matters.
         //
 
+        importSource({
+          exclude: [
+            '**/node_modules/**',
+            '**/common/random-access-storage/**',
+            '**/common/lock-file/**',
+            '**/mesh/network-manager/**',
+            '**/mesh/teleport/**',
+            '**/sdk/config/**',
+            '**/sdk/client-services/**',
+            '**/sdk/observability/**',
+            // TODO(dmaretskyi): Decorators break in lit.
+            '**/ui/lit-*/**',
+          ],
+        }),
+
         // https://www.npmjs.com/package/vite-plugin-wasm
         wasm(),
 
@@ -170,3 +185,7 @@ if (isTrue(process.env.DX_DEBUG)) {
 }
 
 export default config;
+function importSource(arg0: { exclude: string[]; }): any {
+  throw new Error('Function not implemented.');
+}
+
