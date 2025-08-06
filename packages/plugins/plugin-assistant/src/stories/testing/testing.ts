@@ -29,6 +29,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
+import type { DataType } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -50,13 +51,21 @@ export const config = {
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   blueprints?: Blueprint.Blueprint[];
+  accessTokens?: DataType.AccessToken[];
   onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({ types = [], plugins = [], blueprints = [], onInit, ...props }: DecoratorsProps) => [
+export const getDecorators = ({
+  types = [],
+  plugins = [],
+  blueprints = [],
+  accessTokens = [],
+  onInit,
+  ...props
+}: DecoratorsProps) => [
   withPluginManager({
     fireEvents: [Events.SetupArtifactDefinition],
     plugins: [
@@ -78,13 +87,16 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
           // TODO(burdon): onSpacesReady is never called.
           await space.waitUntilReady();
 
+          for (const accessToken of accessTokens) {
+            space.db.add(Obj.clone(accessToken));
+          }
+          await space.db.flush({ indexes: true });
+
           // Clone blueprints and bind to conversation.
-          // TODO(dmaretskyi): This should be done by Obj.clone.
           const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           const binder = new AiContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
-            const { id: _id, ...data } = blueprint;
-            const obj = space.db.add(Obj.make(Blueprint.Blueprint, data));
+            const obj = space.db.add(Obj.clone(blueprint));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
 

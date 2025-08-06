@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -31,6 +31,8 @@ import {
   TasksContainer,
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
+import { DataType } from '@dxos/schema';
+import { EXA_API_KEY } from '@dxos/ai/testing';
 
 const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
   const space = useSpace();
@@ -241,7 +243,8 @@ export const WithResearch = {
     plugins: [MarkdownPlugin(), TablePlugin()],
     blueprints: [RESEARCH_BLUEPRINT],
     config: config.remote,
-    types: [...ResearchDataTypes, ResearchGraph],
+    types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
