@@ -130,7 +130,7 @@ describe('RepoProxy', () => {
     }
   });
 
-  test('document persists without flush', async () => {
+  test('new document persists without `flush`', async () => {
     const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
     let url: AutomergeUrl;
 
@@ -141,9 +141,42 @@ describe('RepoProxy', () => {
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-      const clientHandle = clientRepo.create<{ text: string }>({ text });
+      const clientHandle = clientRepo.create<{ text: string; mutation_text?: string }>({ text });
       url = clientHandle.url;
-      await sleep(500); // Wait for the object to be saved.
+      await sleep(200); // Wait for the object to be saved.
+      await level.close();
+      await host.close();
+      await clientRepo.close();
+    }
+
+    {
+      const level = createTestLevel(path);
+      const { dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
+
+      const clientHandle = clientRepo.find<{ text: string }>(url);
+      await asyncTimeout(clientHandle.whenReady(), 1000);
+
+      expect(clientHandle.doc()?.text).to.equal('Hello World!');
+    }
+  });
+
+  test('document mutation persists without `flush`', async () => {
+    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    let url: AutomergeUrl;
+
+    {
+      const level = createTestLevel(path);
+      const { host, dataService } = await setup(level);
+      const [clientRepo] = createProxyRepos(dataService);
+      await openAndClose(clientRepo);
+
+      const text = 'Hello World!';
+      const clientHandle = clientRepo.create<{ text?: string }>();
+      clientHandle.change((doc) => (doc.text = text));
+      url = clientHandle.url;
+      await sleep(200); // Wait for the object to be saved.
       await level.close();
       await host.close();
       await clientRepo.close();
@@ -321,9 +354,9 @@ const setup = async (kv = createTestLevel()) => {
 };
 
 function* createProxyRepos(dataService: DataServiceImpl): Generator<RepoProxy> {
-  for (let i = 0; i < 1_0000; i++) {
+  for (let i = 0; i < 1_00; i++) {
     // Counter just to protect against infinite loops.
     yield new RepoProxy(dataService, SpaceId.random());
   }
-  throw new Error('Too many keys requested');
+  throw new Error('Too many repos requested');
 }

@@ -12,8 +12,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type BatchedDocumentUpdates, type DocumentUpdate } from '@dxos/protocols/proto/dxos/echo/service';
 
-import { FIND_PARAMS } from '../automerge';
-
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 
 export type DocumentsSynchronizerParams = {
@@ -91,8 +89,9 @@ export class DocumentsSynchronizer extends Resource {
   async update(updates: DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation, isNew } of updates) {
       if (isNew) {
-        const doc = await this._params.repo.find<DatabaseDirectory>(documentId as DocumentId, FIND_PARAMS);
-        doc.update((doc) => A.loadIncremental(doc, mutation));
+        const doc = this._params.repo.import<DatabaseDirectory>(mutation, { docId: documentId as DocumentId });
+        // TODO(mykola): This should not be required.
+        await this._params.repo.flush([documentId as DocumentId]);
         this._startSync(doc);
       } else {
         this._writeMutation(documentId as DocumentId, mutation);
