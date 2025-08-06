@@ -2,8 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, PersistentLifecycle, Trigger, TriggerState, scheduleMicroTask } from '@dxos/async';
-import { type Lifecycle, Resource } from '@dxos/context';
+import {
+  Event,
+  PersistentLifecycle,
+  Trigger,
+  TriggerState,
+  scheduleMicroTask,
+  scheduleTaskInterval,
+} from '@dxos/async';
+import { type Context, type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -299,9 +306,17 @@ class MessageCounter {
 
   public getStats() {
     return {
-      ...this._stats,
-      receivedRPS: this._stats.receivedRPS,
-      sentRPS: this._stats.sentRPS,
+      received: this._stats.received,
+      sent: this._stats.sent,
+      maxReceivedRPS: Math.max(...this._stats.receivedRPS.map((r) => r.value)),
+      maxSentRPS: Math.max(...this._stats.sentRPS.map((s) => s.value)),
+      medianReceivedRPS: this._stats.receivedRPS.sort((a, b) => a.value - b.value)[
+        Math.floor(this._stats.receivedRPS.length / 2)
+      ].value,
+      medianSentRPS: this._stats.sentRPS.sort((a, b) => a.value - b.value)[Math.floor(this._stats.sentRPS.length / 2)]
+        .value,
+      meanReceivedRPS: this._stats.receivedRPS.reduce((sum, r) => sum + r.value, 0) / this._stats.receivedRPS.length,
+      meanSentRPS: this._stats.sentRPS.reduce((sum, s) => sum + s.value, 0) / this._stats.sentRPS.length,
     };
   }
 
@@ -312,7 +327,6 @@ class MessageCounter {
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        invariant(this);
         const receivedRPS = ((this._stats.received - this._lastReceived) / this._intervalMs) * 1000;
         const sentRPS = ((this._stats.sent - this._lastSent) / this._intervalMs) * 1000;
         this._lastReceived = this._stats.received;
