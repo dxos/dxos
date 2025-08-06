@@ -91,7 +91,7 @@ export const parseResponse =
         const stack: StreamBlock[] = [];
 
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
-          log.info('block', { block });
+          log('block', { block });
           yield* onBlock(block);
           emit.single(block);
           blocks++;
@@ -119,7 +119,7 @@ export const parseResponse =
           }
         });
 
-        log.info('begin');
+        log('begin');
         yield* onBegin();
         yield* Stream.runForEach(
           input,
@@ -265,7 +265,7 @@ export const parseResponse =
 
         yield* flushText();
         yield* onEnd();
-        log.info('end', { blocks, parts, duration: Date.now() - start });
+        log('end', { blocks, parts, duration: Date.now() - start });
         emit.end();
       }),
     );

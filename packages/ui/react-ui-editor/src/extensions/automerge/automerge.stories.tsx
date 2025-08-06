@@ -41,7 +41,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
     () => ({
       initialValue: DocAccessor.getValue(source),
       extensions: [
-        createBasicExtensions({ placeholder: 'Type here...' }),
+        createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
       ],

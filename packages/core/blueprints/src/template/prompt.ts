@@ -10,10 +10,10 @@ import { invariant } from '@dxos/invariant';
 /**
  * Process Handlebars template.
  */
-export const createPrompt = <Options extends {}>(source: string, options: Options = {} as Options): string => {
+export const process = <Options extends {}>(source: string, options: Options = {} as Options): string => {
   invariant(source);
   let section = 0;
   handlebars.registerHelper('section', () => String(++section));
-  const template = handlebars.compile(source);
+  const template = handlebars.compile(source.trim());
   return template(defaultsDeep({}, options, { suggestions: true })).trim();
 };
