@@ -11,6 +11,7 @@ import {
   readDocument,
   readTasks,
   remoteServiceEndpoints,
+  research,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
@@ -102,6 +103,7 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
       contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
       contributes(Capabilities.Functions, [readDocument, updateDocument]),
       contributes(Capabilities.Functions, [readTasks, updateTasks]),
+      contributes(Capabilities.Functions, [research]),
     ],
   }),
   withTheme,

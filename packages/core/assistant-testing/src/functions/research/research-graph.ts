@@ -1,4 +1,4 @@
-import { Queue } from '@dxos/client/echo';
+import { Queue } from '@dxos/echo-db';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { Effect, Schema } from 'effect';

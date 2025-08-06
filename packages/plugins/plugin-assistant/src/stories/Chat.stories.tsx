@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
+import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -239,8 +239,9 @@ export const WithBoard = {
 export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
-    blueprints: [PLANNING_BLUEPRINT],
+    blueprints: [RESEARCH_BLUEPRINT],
     config: config.remote,
+    types: [...ResearchDataTypes, ResearchGraph],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
