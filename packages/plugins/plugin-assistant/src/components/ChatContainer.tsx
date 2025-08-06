@@ -52,10 +52,10 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
     <StackItem.Content classNames='container-max-width'>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
-        <div className='p-4'>
+        <div className='p-2'>
           <Chat.Prompt
             {...chatProps}
-            classNames='border border-subduedSeparator rounded-md'
+            classNames='border border-transparent rounded-md'
             preset={preset?.id}
             online={online}
             onChangeOnline={setOnline}

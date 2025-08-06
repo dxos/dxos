@@ -88,6 +88,7 @@ export class AiSession {
       // Generate system prompt.
       // TODO(budon): Dynamically fill variables.
       const system = yield* formatSystemPrompt(params);
+      console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);
@@ -203,12 +204,12 @@ const createToolkit = <Tools extends AiTool.Any>({
 // TODO(burdon): Move to AiPreprocessor.
 const formatSystemPrompt = ({
   system,
-  blueprints,
+  blueprints = [],
   objects = [],
 }: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
     const blueprintDefs = yield* pipe(
-      blueprints ?? [],
+      blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
       Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
       Effect.map(
@@ -220,7 +221,7 @@ const formatSystemPrompt = ({
           `,
         ),
       ),
-      Effect.map((blueprints) => (blueprints.length > 0 ? `## Blueprints:\n\n${blueprints}\n` : '')),
+      Effect.map(Array.reduce('\n## Blueprints:\n\n', String.concat)),
     );
 
     const objectDefs = yield* pipe(
@@ -233,8 +234,7 @@ const formatSystemPrompt = ({
           </object>
         `),
       ),
-      Effect.map(Array.reduce('', String.concat)),
-      Effect.map((context) => (context.length > 0 ? `## Context objects:\n\n${context}\n` : '')),
+      Effect.map(Array.reduce('\n## Context objects:\n\n', String.concat)),
     );
 
     return yield* pipe(

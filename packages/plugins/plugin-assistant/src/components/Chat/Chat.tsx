@@ -118,7 +118,12 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     return event.on((event) => {
       switch (event.type) {
         case 'toggle-debug': {
-          setDebug((debug) => !debug);
+          setDebug((current) => {
+            const debug = !current;
+            log.info('toggle-debug', { debug });
+            // log.config({ filter: debug ? 'assistant:debug' : 'info' });
+            return debug;
+          });
           break;
         }
 
@@ -270,9 +275,9 @@ const ChatPrompt = ({
   const extensions = useMemo<Extension[]>(() => {
     return [
       referencesProvider && references({ provider: referencesProvider }),
-      expandable &&
-        Prec.highest(
-          keymap.of([
+      Prec.highest(
+        keymap.of(
+          [
             {
               key: 'cmd-d',
               preventDefault: true,
@@ -281,7 +286,7 @@ const ChatPrompt = ({
                 return true;
               },
             },
-            {
+            expandable && {
               key: 'cmd-ArrowUp',
               preventDefault: true,
               run: () => {
@@ -289,7 +294,7 @@ const ChatPrompt = ({
                 return true;
               },
             },
-            {
+            expandable && {
               key: 'cmd-ArrowDown',
               preventDefault: true,
               run: () => {
@@ -297,8 +302,9 @@ const ChatPrompt = ({
                 return true;
               },
             },
-          ]),
+          ].filter(isNotFalsy),
         ),
+      ),
     ].filter(isNotFalsy);
   }, [event, expandable, referencesProvider]);
 
