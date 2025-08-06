@@ -84,8 +84,28 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      const promptMessages = yield* formatUserPrompt(params.prompt, params.history ?? []);
+      // Generate system prompt.
+      const system = yield* formatSystemPrompt(params);
+      console.log(system);
+
+      // Generate user prompt.
+      const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
+
+      // Build a combined toolkit from the blueprint tools and the provided toolkit.
+      const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
+        (params.blueprints ?? []).flatMap(({ tools }) => tools),
+      );
+      const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+        yield* ToolExecutionService.handlersFor(blueprintToolkit),
+      );
+      const toolkit = params.toolkit != null ? AiToolkit.merge(params.toolkit, blueprintToolkit) : blueprintToolkit;
+      const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
+        Effect.provide(blueprintToolkitHandler) as any,
+      ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+
+      const b = yield* createToolkit(params);
+      console.log(b);
 
       this._history = [...(params.history ?? [])];
       this._pending = [promptMessages];
@@ -93,54 +113,17 @@ export class AiSession {
       // Potential tool-use loop.
       do {
         log.info('request', {
+          prompt: promptMessages,
+          system: { snippet: [system.slice(0, 32), '...', system.slice(-32)].join(''), length: system.length },
           pending: this._pending.length,
           history: this._history.length,
+          objects: params.objects?.length ?? 0,
           tools: (Object.values(params.toolkit?.tools ?? {}) as AiTool.Any[]).map((tool: AiTool.Any) => tool.name),
+          // tools: Object.keys(blueprintToolkit.tools),
         });
 
-        // Build system prompt from blueprint templates.
-        // TODO(dmaretskyi): Loading Blueprint from the Database should be done at the higher level. We need a type for the resolved blueprint.
-        const blueprints = params.blueprints ?? [];
-        let system = yield* pipe(
-          blueprints,
-          Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-          Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
-          Effect.map(Array.map((template) => `\n\n<blueprint>${template.content}</blueprint>`)),
-          Effect.map(Array.reduce(params.system ?? '', String.concat)),
-        );
-
-        const context: string[] =
-          params.objects?.map(
-            (object) => trim`
-              <object>
-                <dxn>${Obj.getDXN(object)}</dxn>
-                <typename>${Obj.getTypename(object)}</typename>
-              </object>
-            `,
-          ) ?? [];
-        if (context.length) {
-          context.splice(0, 0, 'Context objects:');
-          system += '\n\n' + context.join('\n');
-        }
-
-        // TODO(burdon): Pass objects here? Should they be pre-processed?
+        // Generate the prompt and make request.
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
-
-        // Build a combined toolkit from the blueprint tools and the provided toolkit.
-        const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
-        const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> =
-          yield* blueprintToolkit.toContext(yield* ToolExecutionService.handlersFor(blueprintToolkit));
-        const toolkit = params.toolkit != null ? AiToolkit.merge(params.toolkit, blueprintToolkit) : blueprintToolkit;
-        const toolkitWithBlueprintHandlers = yield* toolkit.pipe(
-          Effect.provide(blueprintToolkitHandler) as any,
-        ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-
-        log.info('run', {
-          systemPrompt: [system.slice(0, 32), '...', system.slice(-32)].join(''),
-          length: system.length,
-          tools: Object.keys(blueprintToolkit.tools),
-        });
-
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
@@ -154,9 +137,11 @@ export class AiSession {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+
+        // TODO(burdon): Comment.
         yield* this.blockQueue.offer(Option.none());
 
-        // console.log(JSON.stringify(blocks, null, 2));
+        // TODO(burdon): Comment.
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -165,11 +150,13 @@ export class AiSession {
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
 
+        // TODO(burdon): Comment.
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
         }
 
+        // TODO(burdon): Comment.
         const toolResults = yield* callTools(toolCalls, toolkitWithBlueprintHandlers as any);
         const toolResultMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
@@ -180,6 +167,7 @@ export class AiSession {
         yield* this.messageQueue.offer(toolResultMessage);
       } while (true);
 
+      // TDOO(burdon): Comment required.
       yield* Queue.shutdown(this.eventQueue);
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.messageQueue);
@@ -202,8 +190,89 @@ export class AiSession {
   }
 }
 
+// Build a combined toolkit from the blueprint tools and the provided toolkit.
+const createToolkit = <Tools extends AiTool.Any>({
+  blueprints,
+  toolkit,
+}: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
+  Effect.gen(function* () {
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
+      (blueprints ?? []).flatMap(({ tools }) => tools),
+    );
+
+    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+      yield* ToolExecutionService.handlersFor(blueprintToolkit),
+    );
+
+    const tk = toolkit != null ? AiToolkit.merge(toolkit, blueprintToolkit) : blueprintToolkit;
+    return yield* tk.pipe(Effect.provide(blueprintToolkitHandler) as any) as Effect.Effect<
+      AiToolkit.ToHandler<any>,
+      never,
+      AiTool.ToHandler<Tools>
+    >;
+  });
+
+// Build a combined toolkit from the blueprint tools and the provided toolkit.
+// const createToolkit = <Tools extends AiTool.Any>({
+//   blueprints,
+//   toolkit,
+// }: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
+//   Effect.gen(function* () {
+//     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(
+//       (blueprints ?? []).flatMap(({ tools }) => tools),
+//     );
+
+//     return toolkit != null ? AiToolkit.merge(toolkit, blueprintToolkit) : blueprintToolkit;
+//   });
+
+/**
+ * Formats the system prompt.
+ */
 // TODO(burdon): Move to AiPreprocessor.
-const formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
+const formatSystemPrompt = ({
+  system,
+  blueprints,
+  objects = [],
+}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+  Effect.gen(function* () {
+    const b = yield* pipe(
+      blueprints ?? [],
+      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
+      Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
+      Effect.map(
+        Array.map(
+          (template) => trim`
+            <blueprint>
+              ${template.content}
+            </blueprint>
+          `,
+        ),
+      ),
+      Effect.map((blueprints) => (blueprints.length > 0 ? `## Blueprints:\n\n${blueprints}\n` : '')),
+    );
+
+    const context = yield* pipe(
+      objects,
+      Effect.forEach((object) =>
+        Effect.succeed(trim`
+          <object>
+            <dxn>${Obj.getDXN(object)}</dxn>
+            <typename>${Obj.getTypename(object)}</typename>
+          </object>
+        `),
+      ),
+      Effect.map(Array.reduce('', String.concat)),
+      Effect.map((context) => (context.length > 0 ? `## Context objects:\n\n${context}\n` : '')),
+    );
+
+    return yield* pipe(Effect.succeed([b, context]), Effect.map(Array.reduce(system ?? '', String.concat)));
+  });
+
+/**
+ * Formats the user prompt.
+ */
+// TODO(burdon): Move to AiPreprocessor.
+const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
     const prelude: ContentBlock.Any[] = [];
 
@@ -220,7 +289,7 @@ const formatUserPrompt = (prompt: string, history: DataType.Message[]) =>
         catch: AiAssistantError.wrap('Artifact diff resolution error'),
       });
 
-      log.info('vision', { artifactDiff, versions });
+      log.info('version', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);

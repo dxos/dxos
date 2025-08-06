@@ -36,7 +36,7 @@ export const ChatContainer = ({ chat }: ChatContainerProps) => {
     <StackItem.Content classNames='container-max-width'>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
-        <div className='pbe-4 pis-2 pie-2'>
+        <div className='p-4'>
           <Chat.Prompt
             {...chatProps}
             classNames='border border-subduedSeparator rounded-md'
