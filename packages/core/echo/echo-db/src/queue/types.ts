@@ -4,6 +4,7 @@
 
 import { Schema } from 'effect';
 
+// TODO(burdon): Can't import from dxos/echo.
 import type { Obj, Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';

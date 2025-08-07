@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer, type Schema } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
-import { type Filter, type Live, Obj, type Query, type Ref, type Type } from '@dxos/echo';
+import { type Filter, type Live, type Obj, type Query, type Ref, type Relation } from '@dxos/echo';
 import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
-import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
@@ -33,45 +32,58 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     return Layer.succeed(DatabaseService, DatabaseService.make(db));
   };
 
+  static resolve: (dxn: DXN) => Effect.Effect<Obj.Any | Relation.Any, Error, DatabaseService> = Effect.fn(
+    function* (dxn) {
+      const { db } = yield* DatabaseService;
+      return yield* Effect.tryPromise({
+        try: () =>
+          db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(dxn) as Promise<
+            Obj.Any | Relation.Any
+          >,
+        catch: (error) => error as Error,
+      });
+    },
+  );
+
   /**
    * Resolves an object by its DXN.
    */
   // TODO(burdon): Provide error types.
-  static resolve: {
-    // Only DXN (returns unknown)
-    (dxn: DXN): Effect.Effect<unknown, Error, DatabaseService>;
-    // DXN with schema (returns typed object, optional)
-    <S extends Type.Obj.Any>(dxn: DXN, schema: S): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService>;
-    // DXN with schema and required flag (returns typed object, required when true)
-    // TODO(burdon): Remove this variant and provide a different pattern?
-    <S extends Type.Obj.Any>(
-      dxn: DXN,
-      schema: S,
-      required: boolean,
-    ): Effect.Effect<Schema.Schema.Type<S>, Error, DatabaseService>;
-  } = <S extends Type.Obj.Any>(
-    dxn: DXN,
-    schema?: S,
-    required?: boolean,
-  ): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService> =>
-    Effect.gen(function* () {
-      const { db } = yield* DatabaseService;
-      return yield* Effect.tryPromise({
-        try: async () => {
-          const object = await db.graph
-            .createRefResolver({
-              context: {
-                space: db.spaceId,
-              },
-            })
-            .resolve(dxn);
-          invariant(!required || object != null, 'Object not found.');
-          invariant(!required || !schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
-          return object as Schema.Schema.Type<S>;
-        },
-        catch: (error) => error as Error,
-      });
-    });
+  // static resolve: {
+  //   // Only DXN (returns unknown)
+  //   (dxn: DXN): Effect.Effect<unknown, Error, DatabaseService>;
+  //   // DXN with schema (returns typed object, optional)
+  //   <S extends Type.Obj.Any>(dxn: DXN, schema: S): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService>;
+  //   // DXN with schema and required flag (returns typed object, required when true)
+  //   // TODO(burdon): Remove this variant and provide a different pattern?
+  //   <S extends Type.Obj.Any>(
+  //     dxn: DXN,
+  //     schema: S,
+  //     required: boolean,
+  //   ): Effect.Effect<Schema.Schema.Type<S>, Error, DatabaseService>;
+  // } = <S extends Type.Obj.Any>(
+  //   dxn: DXN,
+  //   schema?: S,
+  //   required?: boolean,
+  // ): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService> =>
+  //   Effect.gen(function* () {
+  //     const { db } = yield* DatabaseService;
+  //     return yield* Effect.tryPromise({
+  //       try: async () => {
+  //         const object = await db.graph
+  //           .createRefResolver({
+  //             context: {
+  //               space: db.spaceId,
+  //             },
+  //           })
+  //           .resolve(dxn);
+  //         invariant(!required || object != null, 'Object not found.');
+  //         invariant(!required || !schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
+  //         return object as Schema.Schema.Type<S>;
+  //       },
+  //       catch: (error) => error as Error,
+  //     });
+  //   });
 
   /**
    * Loads an object reference.
