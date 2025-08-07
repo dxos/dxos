@@ -36,13 +36,14 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Resolves an object by its DXN.
    */
+  // TODO(burdon): Provide error types.
   static resolve: {
     // Only DXN (returns unknown)
     (dxn: DXN): Effect.Effect<unknown, Error, DatabaseService>;
     // DXN with schema (returns typed object, optional)
     <S extends Type.Obj.Any>(dxn: DXN, schema: S): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService>;
     // DXN with schema and required flag (returns typed object, required when true)
-    // TODO(burdon): Remove.
+    // TODO(burdon): Remove this variant and provide a different pattern?
     <S extends Type.Obj.Any>(
       dxn: DXN,
       schema: S,
