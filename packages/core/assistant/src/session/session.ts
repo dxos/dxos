@@ -141,9 +141,8 @@ export class AiSession {
           break;
         }
 
-        // TODO(burdon): Comment.
         // TODO(burdon): Error handling.
-        const toolResults = yield* callTools(toolCalls, toolkitWithHandlers as any);
+        const toolResults = yield* callTools(toolkitWithHandlers as any, toolCalls); // TODO(burdon): Remove cast?
         const toolResultMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },

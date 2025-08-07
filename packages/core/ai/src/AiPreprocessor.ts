@@ -6,6 +6,7 @@ import { AiInput } from '@effect/ai';
 import { Array, Effect, Predicate, pipe } from 'effect';
 
 import { getSnapshot } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
@@ -139,6 +140,7 @@ const convertAssistantMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<AiInput.AssistantMessagePart | undefined, AiInputPreprocessingError, never> = Effect.fnUntraced(
   function* (block) {
+    log.info('parse', { block });
     switch (block._tag) {
       case 'text':
         return new AiInput.TextPart({
@@ -194,9 +196,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<proposal>${block.text}</proposal>`,
         });
-      case 'toolList':
+      case 'toolkit':
         return new AiInput.TextPart({
-          text: '<tool-list/>',
+          text: '<toolkit/>',
         });
       case 'json':
         return new AiInput.TextPart({

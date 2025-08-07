@@ -27,7 +27,7 @@ export default defineFunction({
   handler: Effect.fn(function* ({ data: { id } }) {
     log.info('play', { id });
     try {
-      throw new Error(Date.now());
+      throw new Error(Date.now().toString());
     } catch (err) {
       console.log('NOT AN ERROR; JUST LOGGING STACK', err);
     }

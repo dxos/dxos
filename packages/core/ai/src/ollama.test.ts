@@ -96,7 +96,7 @@ describe('ollama', () => {
             break;
           }
 
-          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolCalls, toolkit);
+          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolkit, toolCalls);
           history.push(
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),

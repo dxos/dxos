@@ -193,7 +193,7 @@ describe('parser', () => {
 
         expect(result).toEqual([
           {
-            _tag: 'toolList',
+            _tag: 'toolkit',
           },
         ] satisfies ContentBlock.Any[]);
       }),
@@ -246,7 +246,7 @@ describe('parser', () => {
             text: 'Hello, world!',
           },
           {
-            _tag: 'toolList',
+            _tag: 'toolkit',
           },
           {
             _tag: 'suggest',
