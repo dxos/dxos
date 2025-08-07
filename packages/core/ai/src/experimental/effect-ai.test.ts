@@ -17,7 +17,7 @@ import * as AiService from '../AiService';
 import { AiServiceTestingPreset, CalculatorToolkit, calculatorLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
-describe.only('effect AI client', () => {
+describe('effect AI client', () => {
   it.effect(
     'streaming',
     Effect.fn(
