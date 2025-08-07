@@ -205,6 +205,7 @@ export class Hypergraph {
           return undefined;
         }
       },
+
       resolve: async (dxn) => {
         const obj = await this._resolveAsync(dxn, context);
         if (obj) {
@@ -389,6 +390,7 @@ export class Hypergraph {
     if (!queue) {
       return undefined;
     }
+
     const [obj] = await queue.getObjectsById([objectId]);
     return obj ?? undefined;
   }
