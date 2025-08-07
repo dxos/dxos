@@ -423,7 +423,7 @@ export class PluginManager {
         try: async () => {
           const start = performance.now();
           try {
-            log.info('loading module', { module: mod.id });
+            log('loading module', { module: mod.id });
             let activationResult = await mod.activate(this.context);
             if (typeof activationResult === 'function') {
               activationResult = await activationResult();
@@ -444,7 +444,7 @@ export class PluginManager {
                 module: mod.id,
               },
             });
-            log.info('loaded module', { module: mod.id, elapsed: performance.now() - start });
+            log('loaded module', { module: mod.id, elapsed: performance.now() - start });
           }
         },
         catch: (error) => error as Error,
