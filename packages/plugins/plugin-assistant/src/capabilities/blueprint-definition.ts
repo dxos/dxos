@@ -19,7 +19,11 @@ export default () => {
         key: 'dxos.org/blueprint/assistant',
         name: 'Assistant',
         instructions: templates.system,
-        tools: functions.map((tool) => ToolId.make(tool.name)),
+        tools: [
+          ...functions.map((tool) => ToolId.make(tool.name)),
+          // TODO(wittjosiah): Factor out.
+          ToolId.make('show'),
+        ],
       }),
     ),
     contributes(Capabilities.Functions, functions),
