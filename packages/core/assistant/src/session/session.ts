@@ -48,17 +48,17 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  * Could be personal or shared.
  */
 export class AiSession {
-  // TODO(burdon): Review this.
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
+  /** Complete messages fired during the session, both from the model and from the user. */
+  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
   /** Blocks streaming from the model during the session. */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
 
-  /** Complete messages fired during the session, both from the model and from the user. */
-  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
-
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
+
+  /** Prevents concurrent execution of session. */
+  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   /** Pending messages (incl. the current user request). */
   private _pending: DataType.Message[] = [];
@@ -114,6 +114,8 @@ export class AiSession {
           system,
           toolkit,
           // TODO(burdon): Despite this flag, the model still calls tools.
+          //  Flag is only used in generateText (not streamText); patch and submit bug.
+          //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
@@ -124,7 +126,6 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
-        // TODO(burdon): Comment.
         yield* this.blockQueue.offer(Option.none());
 
         // Create response message.
@@ -154,10 +155,10 @@ export class AiSession {
         yield* this.messageQueue.offer(toolResultsMessage);
       } while (true);
 
-      // The queues shutting down signals to stream consumers that the session has completed and no more messages are coming.
-      yield* Queue.shutdown(this.eventQueue);
-      yield* Queue.shutdown(this.blockQueue);
+      // Signal to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.messageQueue);
+      yield* Queue.shutdown(this.blockQueue);
+      yield* Queue.shutdown(this.eventQueue);
 
       log.info('done', { pending: this._pending.length });
       return this._pending;
