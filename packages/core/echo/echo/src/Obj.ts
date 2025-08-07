@@ -15,22 +15,21 @@ import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Type from './Type';
 
-/** @internal */
-// NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
-// TODO(burdon): Rename to avoid confusion with BaseObject?
-interface ObjBase extends Type.OfKind<EchoSchema.EntityKind.Object> {
-  readonly id: EchoSchema.ObjectId;
-}
+/**
+ * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
+ * @internal
+ */
+interface BaseObj extends EchoSchema.HasId, Type.OfKind<EchoSchema.EntityKind.Object> {}
 
 /**
  * Object type with specific properties.
  */
-export type Obj<Props> = ObjBase & Props;
+export type Obj<Props> = BaseObj & Props;
 
 /**
  * Base type for all ECHO objects.
  */
-export interface Any extends ObjBase {}
+export interface Any extends BaseObj {}
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
@@ -159,6 +158,7 @@ export type JSON = EchoSchema.ObjectJSON;
  *
  * The same algorithm is used when calling the standard `JSON.stringify(obj)` function.
  */
+// TODO(burdon): Base util type for Obj/Relation?
 export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON(obj);
 
 /**

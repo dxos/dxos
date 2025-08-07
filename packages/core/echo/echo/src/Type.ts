@@ -80,14 +80,17 @@ export namespace Obj {
    * NOTE: This is not an instance type.
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
-  // TODO(burdon): This erases the ECHO type info.
-  export type Any = Schema.Schema.AnyNoContext;
+  // TODO(burdon): This erases the ECHO type info (e.g., id, typename).
+  // export type Any = Schema.Schema.AnyNoContext;
+  export type Type<T extends EchoSchema.HasId> = Schema.Schema<T, any, never>;
+  export type Any = Type<any>;
 }
 
 //
 // Expando
 //
 
+// TODO(burdon): We're using Expando in many places as a base type.
 export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
   [key: string]: any;
 }

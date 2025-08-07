@@ -14,22 +14,24 @@ import { assumeType } from '@dxos/util';
 import type * as Obj from './Obj';
 import type * as Type from './Type';
 
-// NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
-interface RelationBase<Source, Target>
-  extends Type.Relation.Endpoints<Source, Target>,
-    Type.OfKind<EchoSchema.EntityKind.Relation> {
-  readonly id: EchoSchema.ObjectId;
-}
+/**
+ * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
+ * @internal
+ */
+interface BaseRelation<Source, Target>
+  extends EchoSchema.HasId,
+    Type.Relation.Endpoints<Source, Target>,
+    Type.OfKind<EchoSchema.EntityKind.Relation> {}
 
 /**
  * Relation type with specific properties.
  */
-export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = RelationBase<Source, Target> & Props;
+export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = BaseRelation<Source, Target> & Props;
 
 /**
  * Base type for all ECHO relations.
  */
-export interface Any extends RelationBase<Obj.Any, Obj.Any> {}
+export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
 
 // TODO(dmaretskyi): Has to be `unique symbol`.
 export const Source: unique symbol = EchoSchema.RelationSourceId as any;

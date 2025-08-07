@@ -4,15 +4,14 @@
 
 import { Schema } from 'effect';
 
-// TODO(burdon): Can't import from dxos/echo.
-import type { Obj, Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
+import { type AnyEchoObject } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
  * Client-side view onto an EDGE queue.
  */
-export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> {
+export interface Queue<T extends AnyEchoObject = AnyEchoObject> {
   readonly dxn: DXN;
   readonly isLoading: boolean;
   readonly error: Error | null;
@@ -42,7 +41,7 @@ export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    * Queries objects by id.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ids: ObjectId[]): Promise<(T | null)[]>;
+  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
 
   /**
    * Refreshes the queue from the server.

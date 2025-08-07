@@ -25,7 +25,7 @@ export default defineFunction({
   handler: Effect.fn(function* ({ data: { id } }) {
     log.info('play', { id });
 
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game, true);
+    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game);
 
     // Create game and make move.
     const chess = new ChessJS();

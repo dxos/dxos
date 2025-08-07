@@ -129,7 +129,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     return decodedObjects as T[];
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
       if (!this._querying) {
@@ -141,7 +141,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         }
       }
     }
-    return ids.map((id) => this._objectCache.get(id) ?? null);
+    return ids.map((id) => this._objectCache.get(id));
   }
 
   /**

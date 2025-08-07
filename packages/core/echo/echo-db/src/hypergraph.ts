@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import type { Ref } from '@dxos/echo';
+import { type Obj, type Ref, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
   type AnyEchoObject,
@@ -36,6 +36,11 @@ import {
   normalizeQuery,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
+
+{
+  const a: Obj.Any | Relation.Any = null as any;
+  const b: AnyEchoObject = null as any;
+}
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -251,8 +256,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: AnyLiveObject<any>) => void,
-  ): AnyLiveObject<any> | undefined {
+    onResolve?: (obj: AnyLiveObject<BaseObject>) => void,
+  ): AnyLiveObject<BaseObject> | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
@@ -277,8 +282,8 @@ export class Hypergraph {
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
-        objectId,
         spaceId,
+        objectId,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
@@ -357,7 +362,10 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<AnyEchoObject | undefined> {
+  private async _resolveDatabaseObjectAsync(
+    spaceId: SpaceId,
+    objectId: ObjectId,
+  ): Promise<Obj.Any | Relation.Any | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -392,7 +400,7 @@ export class Hypergraph {
     }
 
     const [obj] = await queue.getObjectsById([objectId]);
-    return obj ?? undefined;
+    return obj;
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
