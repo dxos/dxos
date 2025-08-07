@@ -44,8 +44,8 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "exa-js": "^1.5.12",
-    "@effect/ai": "0.23.0"
+    "@effect/ai": "0.23.0",
+    "exa-js": "^1.5.12"
   },
   "devDependencies": {
     "@effect/ai-anthropic": "0.13.0",

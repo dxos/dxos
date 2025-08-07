@@ -18,6 +18,7 @@ import {
   defineModule,
   definePlugin,
 } from '../core';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out (use consistently in plugin framework?)
 export type Provider<C, R> = (context: C) => R;
@@ -87,6 +88,7 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
 
     // Fire events.
     useEffect(() => {
+      log.info('fireEvents');
       const timeout = setTimeout(async () => {
         await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
       });
