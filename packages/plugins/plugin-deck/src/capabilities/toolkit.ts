@@ -6,16 +6,15 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId } from '@dxos/assistant';
+
+import { DeckCapabilities } from './capabilities';
 
 class DeckToolkit extends AiToolkit.make(
   AiTool.make('show', {
-    description:
-      'Show an item as a companion to an existing plank. This will make the item appear alongside the primary content. When supplying IDs, they must be fully qualified like space:object.',
+    description: 'Show an item in the application.',
     parameters: {
-      // TODO(wittjosiah): Currently the chat is calling this with a dxn consistently.
-      id: Schema.String.annotations({
-        description: 'The ID of the item to show.',
-      }),
+      id: ArtifactId,
     },
     success: Schema.Any,
     failure: Schema.Never,
@@ -25,11 +24,21 @@ class DeckToolkit extends AiToolkit.make(
     DeckToolkit.toLayer({
       show: ({ id }) =>
         Effect.gen(function* () {
+          const dxn = ArtifactId.toDXN(id);
+
+          // TODO(wittjosiah): Support other variants.
+          const echoDxn = dxn.asEchoDXN();
+          if (!echoDxn) {
+            throw new Error(`Invalid artifact ID: ${id}`);
+          }
+          const state = context.getCapability(DeckCapabilities.DeckState);
+          const spaceId = echoDxn.spaceId ?? state.activeDeck;
+
           // TODO(wittjosiah): Get capabilities via layers.
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(
             createIntent(LayoutAction.Open, {
-              subject: [id],
+              subject: [`${spaceId}:${echoDxn.echoId}`],
               part: 'main',
             }),
           );
