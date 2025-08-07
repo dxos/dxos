@@ -184,7 +184,6 @@ export const SpacePlugin = ({
         ),
       ],
     }),
-    // TODO(dmaretskyi): Fix this before merging.
     defineModule({
       id: `${meta.id}/module/schema-defs`,
       activatesOn: ClientEvents.ClientReady,
