@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array, Duration, Effect, Fiber, HashSet, Match, pipe } from 'effect';
+import { Array, Duration, Effect, Fiber, HashSet, Match, Ref, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -52,6 +52,7 @@ export class PluginManager {
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
+  private readonly _activating = Effect.runSync(Ref.make<string[]>([]));
 
   constructor({
     pluginLoader,
@@ -74,8 +75,8 @@ export class PluginManager {
       enabled,
       modules: [],
       active: [],
-      pendingReset: [],
       eventsFired: [],
+      pendingReset: [],
     });
     plugins.forEach((plugin) => this._addPlugin(plugin));
     core.forEach((id) => this.enable(id));
@@ -347,19 +348,25 @@ export class PluginManager {
     return Effect.gen(this, function* () {
       const key = typeof event === 'string' ? event : eventKey(event);
       log('activating', { key });
+      yield* Ref.update(this._activating, (activating) => Array.append(activating, key));
       const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
       if (pendingIndex !== -1) {
         this._state.pendingReset.splice(pendingIndex, 1);
       }
 
+      const activating = yield* this._activating;
       const modules = this._getInactiveModulesByEvent(key).filter((module) => {
         const allOf = isAllOf(module.activatesOn);
         if (!allOf) {
           return true;
         }
 
+        // Check to see if all of the events in the `allOf` have been fired.
+        // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
         const events = module.activatesOn.events.filter((event) => eventKey(event) !== key);
-        return events.every((event) => this._state.eventsFired.includes(eventKey(event)));
+        return events.every(
+          (event) => this._state.eventsFired.includes(eventKey(event)) || activating.includes(eventKey(event)),
+        );
       });
       if (modules.length === 0) {
         log('no modules to activate', { key });
@@ -412,6 +419,8 @@ export class PluginManager {
         Array.map((event) => this._activate(event)),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
+
+      yield* Ref.update(this._activating, (activating) => Array.filter(activating, (event) => event !== key));
 
       if (!this._state.eventsFired.includes(key)) {
         this._state.eventsFired.push(key);
