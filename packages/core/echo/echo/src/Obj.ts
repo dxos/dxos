@@ -15,7 +15,6 @@ import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import type * as Type from './Type';
 
-/** @internal */
 // NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
 // TODO(burdon): Rename to avoid confusion with BaseObject?
 interface ObjBase extends Type.OfKind<EchoSchema.EntityKind.Object> {
