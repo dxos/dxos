@@ -42,7 +42,7 @@
     "expect": "^27.0.2",
     "mocha": "^10.6.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "typescript": "^5.7.2"
