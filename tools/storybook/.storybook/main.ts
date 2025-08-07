@@ -11,6 +11,7 @@ import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
+import importSource from '@dxos/vitest-plugin-import-source';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
@@ -89,6 +90,7 @@ export const createConfig = ({
       resolve: {
         alias: {
           'tiktoken/lite': '.storybook/stub.mjs',
+          'node:util': '@dxos/node-std/util',
         },
       },
       build: {
@@ -185,7 +187,3 @@ if (isTrue(process.env.DX_DEBUG)) {
 }
 
 export default config;
-function importSource(arg0: { exclude: string[]; }): any {
-  throw new Error('Function not implemented.');
-}
-

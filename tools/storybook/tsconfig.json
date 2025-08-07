@@ -27,6 +27,9 @@
     },
     {
       "path": "../vite-plugin-icons"
+    },
+    {
+      "path": "../vitest-plugin-import-source"
     }
   ]
 }
