@@ -77,6 +77,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
 
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
+  focusDraft?: () => void;
 };
 
 export type TableMainProps = {
@@ -141,8 +142,28 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             dxGrid.requestUpdate();
           }
         },
+        focusDraft: () => {
+          requestAnimationFrame(() => {
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            dxGrid.refocus();
+          });
+        },
       };
     }, [presentation, dxGrid]);
+
+    const handleSaveDraftRow = useCallback(
+      (rowIndex = 0) => {
+        if (model && dxGrid) {
+          const didCommitSuccessfully = model.commitDraftRow(rowIndex);
+          if (didCommitSuccessfully) {
+            requestAnimationFrame(() => {
+              dxGrid.scrollToEndRow();
+            });
+          }
+        }
+      },
+      [model, dxGrid],
+    );
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
@@ -193,14 +214,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               break;
             }
             case 'saveDraftRow': {
-              if (model) {
-                const didCommitSuccessfully = model.commitDraftRow(data.rowIndex);
-                if (dxGrid && didCommitSuccessfully) {
-                  requestAnimationFrame(() => {
-                    dxGrid.scrollToEndRow();
-                  });
-                }
-              }
+              handleSaveDraftRow();
               break;
             }
           }
@@ -241,32 +255,23 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     );
 
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
-      (increment, delta) => {
-        if (dxGrid) {
-          dxGrid.refocus(increment, delta);
-        }
-      },
-      [dxGrid],
-    );
-
-    const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
-      (cell) => {
-        if (!model?.features.dataEditable) {
-          return;
-        }
-
-        // TODO(burdon): Insert row only if bottom row isn't completely blank already.
-        if (model && cell.row === model.getRowCount() - 1) {
-          model.insertRow();
-          if (dxGrid) {
-            requestAnimationFrame(() => {
-              dxGrid?.scrollToRow(cell.row + 1);
-              dxGrid?.refocus('row', 1);
-            });
+      (increment, delta, cell) => {
+        if (dxGrid && model) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
+            if (draftRowCount < 1) {
+              model.insertRow();
+            }
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+          } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
+            handleSaveDraftRow(cell.row);
+            model.insertRow();
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+          } else {
+            dxGrid.refocus(increment, delta);
           }
         }
       },
-      [model, dxGrid],
+      [dxGrid, model],
     );
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
@@ -383,7 +388,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           model={model}
           modals={modals}
           schema={schema}
-          onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
           onSave={handleSave}
