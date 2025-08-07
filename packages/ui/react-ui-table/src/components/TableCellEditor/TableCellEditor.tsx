@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type DxGrid, type DxGridPosition } from '@dxos/lit-grid';
+import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
@@ -48,7 +48,7 @@ export type TableCellEditorProps = {
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
   onEnter?: (cell: DxGridPosition) => void;
-  onFocus?: DxGrid['refocus'];
+  onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
@@ -225,7 +225,7 @@ export const TableCellEditor = ({
           onSave?.();
           onEnter?.(cell);
           if (event && onFocus) {
-            onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+            onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
           }
         } else {
           setValidationError(result.error);

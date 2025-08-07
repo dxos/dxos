@@ -152,20 +152,13 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     }, [presentation, dxGrid]);
 
     const handleSaveDraftRow = useCallback(
-      (rowIndex = 0, insertAgain = false) => {
+      (rowIndex = 0) => {
         if (model && dxGrid) {
           const didCommitSuccessfully = model.commitDraftRow(rowIndex);
           if (didCommitSuccessfully) {
-            if (insertAgain) {
-              model.insertRow();
-              requestAnimationFrame(() => {
-                dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
-              });
-            } else {
-              requestAnimationFrame(() => {
-                dxGrid.scrollToEndRow();
-              });
-            }
+            requestAnimationFrame(() => {
+              dxGrid.scrollToEndRow();
+            });
           }
         }
       },
@@ -262,34 +255,23 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     );
 
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
-      (increment, delta) => {
-        if (dxGrid) {
-          dxGrid.refocus(increment, delta);
-        }
-      },
-      [dxGrid],
-    );
-
-    const handleEnter = useCallback<NonNullable<TableCellEditorProps['onEnter']>>(
-      (cell) => {
-        if (!model?.features.dataEditable) {
-          return;
-        }
-
-        if (model && dxGrid) {
-          if (cell.plane === 'grid' && cell.row >= model.getRowCount() - 1) {
+      (increment, delta, cell) => {
+        if (dxGrid && model) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
             if (draftRowCount < 1) {
               model.insertRow();
             }
-            requestAnimationFrame(() => {
-              dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
-            });
-          } else if (cell.plane === 'frozenRowsEnd') {
-            handleSaveDraftRow(cell.row, true);
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+          } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
+            handleSaveDraftRow(cell.row);
+            model.insertRow();
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+          } else {
+            dxGrid.refocus(increment, delta);
           }
         }
       },
-      [model, dxGrid, draftRowCount],
+      [dxGrid, model],
     );
 
     const handleKeyDown = useCallback<NonNullable<GridContentProps['onKeyDown']>>(
@@ -406,7 +388,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           model={model}
           modals={modals}
           schema={schema}
-          onEnter={handleEnter}
           onFocus={handleFocus}
           onQuery={handleQuery}
           onSave={handleSave}
