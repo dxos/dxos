@@ -142,15 +142,16 @@ export class AiSession {
           break;
         }
 
-        // TODO(burdon): Error handling.
-        const toolResults = yield* callTools(toolkit, toolCalls); // TODO(burdon): Remove cast?
-        const toolResultMessage = Obj.make(DataType.Message, {
+        // TODO(burdon): Error handling?
+        const toolResults = yield* callTools(toolkit, toolCalls);
+        const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
           blocks: toolResults,
         });
-        this._pending.push(toolResultMessage);
-        yield* this.messageQueue.offer(toolResultMessage);
+
+        this._pending.push(toolResultsMessage);
+        yield* this.messageQueue.offer(toolResultsMessage);
       } while (true);
 
       // The queues shutting down signals to stream consumers that the session has completed and no more messages are coming.

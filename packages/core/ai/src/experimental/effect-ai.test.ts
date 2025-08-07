@@ -2,26 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel, type AiToolkit } from '@effect/ai';
+import { AiLanguageModel } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
 import * as AiService from '../AiService';
 import { AiServiceTestingPreset, CalculatorToolkit, calculatorLayer } from '../testing';
-import { callTool, getToolCalls } from '../tools';
+import { callTools, getToolCalls } from '../tools';
 
-describe('effect AI client', () => {
+describe.only('effect AI client', () => {
   it.effect(
     'streaming',
     Effect.fn(
       function* ({ expect: _ }) {
+        const toolkit = yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer));
+
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -33,9 +35,10 @@ describe('effect AI client', () => {
 
         do {
           const prompt = yield* preprocessAiInput(history);
+
           const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
+            toolkit,
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
@@ -48,19 +51,14 @@ describe('effect AI client', () => {
           history.push(message);
           log.info('message', { message });
 
-          const toolkit = CalculatorToolkit;
-          const toolkitWithHandlers = Effect.isEffect(toolkit)
-            ? yield* toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
-            : (toolkit as unknown as AiToolkit.ToHandler<any>);
-
           const toolCalls = getToolCalls(message);
           if (toolCalls.length === 0) {
             break;
           }
 
-          const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-            callTool(toolkitWithHandlers, toolCall),
-          );
+          log.info('toolCalls', { toolCalls });
+          // TODO(burdon): Throws here!!!
+          const toolResults = yield* callTools(toolkit, toolCalls);
 
           history.push(
             Obj.make(DataType.Message, {
