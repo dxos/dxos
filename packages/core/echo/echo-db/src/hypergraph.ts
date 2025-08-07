@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Obj, type Ref, type Relation } from '@dxos/echo';
+import { type Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
   type AnyEchoObject,
@@ -36,11 +36,6 @@ import {
   normalizeQuery,
 } from './query';
 import type { Queue, QueueFactory } from './queue';
-
-{
-  const a: Obj.Any | Relation.Any = null as any;
-  const b: AnyEchoObject = null as any;
-}
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -307,7 +302,7 @@ export class Hypergraph {
         case DXN.kind.ECHO: {
           if (!dxn.isLocalObjectId()) {
             status = 'error';
-            throw new Error('Cross-space references are not supported');
+            throw new Error('Cross-space references are not yet supported');
           }
           const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
 
@@ -362,10 +357,7 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveDatabaseObjectAsync(
-    spaceId: SpaceId,
-    objectId: ObjectId,
-  ): Promise<Obj.Any | Relation.Any | undefined> {
+  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<AnyEchoObject | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;

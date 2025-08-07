@@ -17,7 +17,6 @@ import type * as Type from './Type';
 
 /**
  * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
- * @internal
  */
 interface BaseObj extends EchoSchema.HasId, Type.OfKind<EchoSchema.EntityKind.Object> {}
 

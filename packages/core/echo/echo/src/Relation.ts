@@ -16,7 +16,6 @@ import type * as Type from './Type';
 
 /**
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
- * @internal
  */
 interface BaseRelation<Source, Target>
   extends EchoSchema.HasId,
