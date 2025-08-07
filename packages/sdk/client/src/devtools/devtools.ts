@@ -383,7 +383,7 @@ const reset = async () => {
 };
 
 const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
-  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const url = URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: contentType }));
   const element = document.createElement('a');
   element.setAttribute('href', url);
   element.setAttribute('download', filename);

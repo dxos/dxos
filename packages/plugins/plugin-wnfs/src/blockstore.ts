@@ -126,7 +126,7 @@ export class MixedBlockstore extends BaseBlockstore {
     if (this.#apiHost) {
       await fetch(this.url(this.#apiHost, key), {
         method: 'POST',
-        body: val,
+        body: val as Uint8Array<ArrayBuffer>,
       });
     }
   }
@@ -138,7 +138,7 @@ export class MixedBlockstore extends BaseBlockstore {
         headers: {
           'Content-Type': 'application/vnd.ipld.car',
         },
-        body: car,
+        body: car as Uint8Array<ArrayBuffer>,
       });
     }
   }
