@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, AiToolkit } from '@effect/ai';
 import { Layer } from 'effect';
 import { useMemo } from 'react';
-import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
@@ -43,13 +43,19 @@ export type UseChatServicesProps = {
 export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
   const aiServiceLayer =
     useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
-  const functions = useCapabilities(Capabilities.Functions).flat();
+  const functions = useCapabilities(Capabilities.Functions);
+  const toolkits = useCapabilities(Capabilities.Toolkit);
+  const handlers = useCapabilities(Capabilities.ToolkitHandler);
 
   return useMemo(() => {
+    const allFunctions = functions.flat();
+    // TODO(wittjosiah): Don't cast.
+    const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+    const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
     return Layer.mergeAll(
       aiServiceLayer,
-      makeToolResolverFromFunctions(functions),
-      makeToolExecutionServiceFromFunctions(functions),
+      makeToolResolverFromFunctions(allFunctions, toolkit),
+      makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
 
       CredentialsService.configuredLayer([]),
       space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
@@ -61,5 +67,5 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
       Layer.provideMerge(LocalFunctionExecutionService.layer),
       Layer.provideMerge(RemoteFunctionExecutionService.mockLayer),
     );
-  }, [space, useDeepCompareMemoize(functions.map((f) => f.name))]);
+  }, [space, functions, toolkits, handlers]);
 };

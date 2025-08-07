@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool } from '@effect/ai';
+import { AiTool, type AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
@@ -11,9 +11,15 @@ import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
+  toolkit: AiToolkit.Any,
 ): Layer.Layer<ToolResolverService> => {
   return Layer.succeed(ToolResolverService, {
     resolve: Effect.fn('resolveTool')(function* (id) {
+      const tool = toolkit.tools[id];
+      if (tool) {
+        return tool;
+      }
+
       const fn = functions.find((f) => f.name === id);
       if (!fn) {
         return yield* Effect.fail(new AiToolNotFoundError(id));
@@ -26,15 +32,25 @@ export const makeToolResolverFromFunctions = (
 
 export const makeToolExecutionServiceFromFunctions = (
   functions: FunctionDefinition<any, any>[],
+  toolkit: AiToolkit.AiToolkit<AiTool.Any>,
+  // TODO(wittjosiah): Evaluates to `Layer.Layer<never, never, never>`.
+  handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.Any>, never, never>,
 ): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
+      const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
+
       const localFunctionExecutionService = yield* LocalFunctionExecutionService;
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
             return Effect.fn('toolFunctionHandler')(function* (input: any) {
+              if (toolkitHandler.tools.find((t: AiTool.Any) => t.name === tool.name)) {
+                // TODO(wittjosiah): Everything is `never` here.
+                return yield* (toolkitHandler.handle as any)(tool.name, input);
+              }
+
               const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
               const fnDef = functions.find((f) => f.name === functionName);
               if (!fnDef) {
@@ -47,7 +63,7 @@ export const makeToolExecutionServiceFromFunctions = (
             });
           };
 
-          return toolkit.of(Record.map(toolkit.tools, (tool, name) => makeHandler(tool)) as any) as any;
+          return toolkit.of(Record.map(toolkit.tools, (tool, _name) => makeHandler(tool)) as any) as any;
         },
       };
     }),
