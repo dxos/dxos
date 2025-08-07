@@ -7,9 +7,9 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 
-import { analysis, list, load } from '../functions';
+import { analysis, load } from '../functions';
 
-const functions = [analysis, list, load];
+const functions = [analysis, load];
 
 export default () => {
   return [
