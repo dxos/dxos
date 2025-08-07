@@ -1,6 +1,10 @@
-import { type Plugin } from 'vite';
-import { ResolverFactory } from 'oxc-resolver';
+//
+// Copyright 2025 DXOS.org
+//
+
 import Minimatch from 'minimatch';
+import { ResolverFactory } from 'oxc-resolver';
+import { type Plugin } from 'vite';
 
 // TODO(dmaretskyi): Rename to vite-plugin-import-source
 

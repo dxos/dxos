@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Remote } from '@dxos/client';
+import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 
 export const setupConfig = async () => {
   const sources = [await Storage(), Envs(), Local(), Defaults()];

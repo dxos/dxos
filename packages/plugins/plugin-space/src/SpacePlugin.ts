@@ -27,7 +27,6 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
-  SchemaDefs,
   SchemaTools,
   SpaceCapabilities,
   SpaceSettings,
