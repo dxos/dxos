@@ -31,8 +31,6 @@ describe('effect AI client', () => {
           }),
         );
 
-        const toolkit = CalculatorToolkit;
-
         do {
           const prompt = yield* preprocessAiInput(history);
           const blocks = yield* AiLanguageModel.streamText({
@@ -41,25 +39,29 @@ describe('effect AI client', () => {
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
+
           const message = Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'assistant' },
             blocks,
           });
-          log.info('message', { message });
           history.push(message);
+          log.info('message', { message });
 
-          const actualToolkit = Effect.isEffect(toolkit)
+          const toolkit = CalculatorToolkit;
+          const toolkitWithHandlers = Effect.isEffect(toolkit)
             ? yield* toolkit as unknown as Effect.Effect<AiToolkit.ToHandler<any>>
             : (toolkit as unknown as AiToolkit.ToHandler<any>);
+
           const toolCalls = getToolCalls(message);
           if (toolCalls.length === 0) {
             break;
           }
 
           const toolResults: ContentBlock.ToolResult[] = yield* Effect.forEach(toolCalls, (toolCall) =>
-            callTool(actualToolkit, toolCall),
+            callTool(toolkitWithHandlers, toolCall),
           );
+
           history.push(
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),

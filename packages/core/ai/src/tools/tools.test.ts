@@ -13,7 +13,7 @@ import { ToolExecutionService } from './tool-execution-service';
 import { ToolResolverService } from './tool-resolver-service';
 
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
-  resolve: (id: ToolId) =>
+  resolve: (_id: ToolId) =>
     Effect.succeed(
       AiTool.make('Calculator', {
         description: 'Basic calculator tool',
@@ -73,7 +73,6 @@ describe('ToolResolverService', () => {
         );
 
         const toolkit = AiToolkit.merge(dynamicToolkit, UserToolkit);
-
         const results = Effect.gen(function* () {
           return {
             sum: yield* callTool(toolkit, 'Calculator' as any, { input: '1 + 1' }),
