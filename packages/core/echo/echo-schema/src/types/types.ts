@@ -6,7 +6,7 @@ import { Schema, SchemaAST } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
@@ -26,7 +26,7 @@ export type BaseObject = Record<string, any>;
  * Marker interface for object with an `id`.
  */
 export interface HasId {
-  readonly id: string;
+  readonly id: ObjectId;
 }
 
 // TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
@@ -168,9 +168,6 @@ export type HasTypename = {};
 
 /**
  * Canonical type for all ECHO objects.
- * @deprecated Use `AnyEchoObject` instead.
  */
-export interface BaseEchoObject extends HasId, HasTypename {}
-
-// TODO(burdon): Reconcile with Type.Obj.Any.
-export interface AnyEchoObject extends BaseEchoObject {}
+// TODO(burdon): Reconcile with Obj.Any, Relation.Any.
+export interface AnyEchoObject extends HasId, HasTypename {}

@@ -3,7 +3,7 @@
 //
 
 import {
-  type BaseEchoObject,
+  type AnyEchoObject,
   type BaseObject,
   EntityKind,
   EntityKindId,
@@ -19,7 +19,7 @@ import type { AnyLiveObject } from './echo-handler';
 /**
  * @deprecated Use {@link @dxos/echo#Relation.Any} instead.
  */
-export type AnyLiveRelation<T extends BaseObject> = Live<T> & BaseEchoObject & RelationSourceTargetRefs;
+export type AnyLiveRelation<T extends BaseObject> = Live<T> & AnyEchoObject & RelationSourceTargetRefs;
 
 /**
  * @deprecated Use {@link @dxos/echo#Relation.isRelation} instead.

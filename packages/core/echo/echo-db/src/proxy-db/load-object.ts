@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import type { BaseEchoObject } from '@dxos/echo-schema';
+import type { AnyEchoObject } from '@dxos/echo-schema';
 
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 
@@ -11,7 +11,7 @@ import { type AnyLiveObject, getObjectCore } from '../echo-handler';
  * @param obj
  */
 // TODO(burdon): Rename/review SDK.
-export const loadObject = <T extends BaseEchoObject>(obj: T): T => {
+export const loadObject = <T extends AnyEchoObject>(obj: T): T => {
   return getObjectCore(obj).getDecoded(['data']) as any;
 };
 

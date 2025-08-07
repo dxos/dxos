@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import type { Ref } from '@dxos/echo';
+import { type Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
   type AnyEchoObject,
@@ -251,8 +251,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: AnyLiveObject<any>) => void,
-  ): AnyLiveObject<any> | undefined {
+    onResolve?: (obj: AnyLiveObject<BaseObject>) => void,
+  ): AnyLiveObject<BaseObject> | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
@@ -277,8 +277,8 @@ export class Hypergraph {
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
-        objectId,
         spaceId,
+        objectId,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
@@ -302,7 +302,7 @@ export class Hypergraph {
         case DXN.kind.ECHO: {
           if (!dxn.isLocalObjectId()) {
             status = 'error';
-            throw new Error('Cross-space references are not supported');
+            throw new Error('Cross-space references are not yet supported');
           }
           const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
 
@@ -392,7 +392,7 @@ export class Hypergraph {
     }
 
     const [obj] = await queue.getObjectsById([objectId]);
-    return obj ?? undefined;
+    return obj;
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider): void {

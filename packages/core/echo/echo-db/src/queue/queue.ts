@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, type Ref, type Relation } from '@dxos/echo';
+import { Obj, type Ref } from '@dxos/echo';
 import { type AnyEchoObject, type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
@@ -17,7 +17,7 @@ const TRACE_QUEUE_LOAD = false;
 /**
  * Client-side view onto an EDGE queue.
  */
-export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
+export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
@@ -126,10 +126,11 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         return decoded;
       }),
     );
+
     return decodedObjects as T[];
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
       if (!this._querying) {
@@ -141,7 +142,8 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         }
       }
     }
-    return ids.map((id) => this._objectCache.get(id) ?? null);
+
+    return ids.map((id) => this._objectCache.get(id));
   }
 
   /**

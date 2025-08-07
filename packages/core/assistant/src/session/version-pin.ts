@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import { type BaseEchoObject, ObjectId } from '@dxos/echo-schema';
+import { type AnyEchoObject, ObjectId } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(dmaretskyi): Extract.
@@ -27,11 +27,11 @@ export interface VersionPin extends Schema.Schema.Type<typeof VersionPinSchema> 
 
 export const VersionPin: typeof VersionPinSchema & {
   DISPOSITION: 'version-pin';
-  fromObject: (object: BaseEchoObject) => VersionPin;
+  fromObject: (object: AnyEchoObject) => VersionPin;
   createBlock: (pin: VersionPin) => ContentBlock.Any;
 } = class extends VersionPinSchema {
   static readonly DISPOSITION = 'version-pin';
-  static fromObject(object: BaseEchoObject): VersionPin {
+  static fromObject(object: AnyEchoObject): VersionPin {
     return VersionPin.make({
       objectId: object.id,
       version: getVersion(object),
