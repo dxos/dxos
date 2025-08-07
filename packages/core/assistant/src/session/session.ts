@@ -124,7 +124,10 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
-        // TODO(burdon): Comment.
+        // Signal to stream consumers that message blocks are complete.
+        // Allows for coordination between the block and message queues
+        //   to prevent the streaming blocks from being rendered twice when the message is produced.
+        // TODO(wittjosiah): The block queue should probably be drained at this point in the case that there is no consumer.
         yield* this.blockQueue.offer(Option.none());
 
         // TODO(burdon): Comment.
@@ -138,6 +141,7 @@ export class AiSession {
 
         // TODO(burdon): Comment.
         const toolCalls = getToolCalls(response);
+        console.log('toolCalls', toolCalls);
         if (toolCalls.length === 0) {
           break;
         }
@@ -154,7 +158,7 @@ export class AiSession {
         yield* this.messageQueue.offer(toolResultMessage);
       } while (true);
 
-      // The queues shutting down signals to stream consumers that the session has completed and no more messages are coming.
+      // Signal to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.eventQueue);
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.messageQueue);

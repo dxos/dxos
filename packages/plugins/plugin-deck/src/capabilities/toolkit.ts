@@ -7,6 +7,7 @@ import { Effect, Schema } from 'effect';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/assistant';
+import { type SpaceId } from '@dxos/keys';
 
 import { DeckCapabilities } from './capabilities';
 
@@ -24,21 +25,20 @@ class DeckToolkit extends AiToolkit.make(
     DeckToolkit.toLayer({
       show: ({ id }) =>
         Effect.gen(function* () {
-          const dxn = ArtifactId.toDXN(id);
+          const state = context.getCapability(DeckCapabilities.DeckState);
+          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId);
 
           // TODO(wittjosiah): Support other variants.
           const echoDxn = dxn.asEchoDXN();
           if (!echoDxn) {
             throw new Error(`Invalid artifact ID: ${id}`);
           }
-          const state = context.getCapability(DeckCapabilities.DeckState);
-          const spaceId = echoDxn.spaceId ?? state.activeDeck;
 
           // TODO(wittjosiah): Get capabilities via layers.
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(
             createIntent(LayoutAction.Open, {
-              subject: [`${spaceId}:${echoDxn.echoId}`],
+              subject: [`${echoDxn.spaceId!}:${echoDxn.echoId}`],
               part: 'main',
             }),
           );

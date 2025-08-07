@@ -7,9 +7,9 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 
-import { analysis, load } from '../functions';
+import { analysis, list, load } from '../functions';
 
-const functions = [analysis, load];
+const functions = [analysis, list, load];
 
 export default () => {
   return [
@@ -22,6 +22,7 @@ export default () => {
         tools: [
           ...functions.map((tool) => ToolId.make(tool.name)),
           // TODO(wittjosiah): Factor out.
+          ToolId.make('list-schemas'),
           ToolId.make('show'),
         ],
       }),
