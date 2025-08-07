@@ -2856,9 +2856,6 @@ importers:
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
         version: 2.3.0-alpha.0
-      '@automerge/automerge-repo-bundles':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -15050,9 +15047,6 @@ packages:
 
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
-
-  '@automerge/automerge-repo-bundles@2.3.0-alpha.0':
-    resolution: {integrity: sha512-HcpMpr3lB+Sf2N1P0ETA8ZxGjTOt3n+SxaMGzF9tJXuNOkPR3BsnsB/IgY49X5G5JLYkx+ALmLlI3TnfPRKQWg==}
 
   '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
     resolution: {integrity: sha512-xXYKQyCLpZ5pORRhBDXoWMxR42+S1e6bFrJDVz/BeBvQbyl04k9CtyI7k1XkNfm/WBoWCW8FEJzJ9m7r26CyEQ==}
@@ -33394,13 +33388,6 @@ snapshots:
       '@babel/runtime': 7.27.1
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
-
-  '@automerge/automerge-repo-bundles@2.3.0-alpha.0':
-    dependencies:
-      '@automerge/automerge': 3.1.1
-      '@automerge/automerge-repo': 2.3.0-alpha.0
-    transitivePeerDependencies:
-      - supports-color
 
   '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
     dependencies:
