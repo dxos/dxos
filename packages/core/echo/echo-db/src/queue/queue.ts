@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, type Ref } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
+import { Obj, type Ref, type Relation } from '@dxos/echo';
+import { type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -17,7 +17,7 @@ const TRACE_QUEUE_LOAD = false;
 /**
  * Client-side view onto an EDGE queue.
  */
-export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue<T> {
+export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
 
   private readonly _subspaceTag: string;
@@ -190,7 +190,7 @@ export class QueueImpl<T extends AnyEchoObject = AnyEchoObject> implements Queue
   }
 }
 
-const objectSetChanged = (before: AnyEchoObject[], after: AnyEchoObject[]) => {
+const objectSetChanged = (before: (Obj.Any | Relation.Any)[], after: (Obj.Any | Relation.Any)[]) => {
   if (before.length !== after.length) {
     return true;
   }
