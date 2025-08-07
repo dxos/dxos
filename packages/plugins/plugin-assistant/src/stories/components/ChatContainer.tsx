@@ -55,7 +55,6 @@ export const ChatContainer = ({ space }: ComponentProps) => {
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
       <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-        {/* <Toolbar.Button>sss</Toolbar.Button> */}
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton
           disabled
@@ -69,7 +68,7 @@ export const ChatContainer = ({ space }: ComponentProps) => {
       <div className='p-4'>
         <Chat.Prompt
           {...chatProps}
-          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
+          classNames='border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           preset={preset?.id}
           online={online}
           onChangeOnline={setOnline}

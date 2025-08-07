@@ -44,6 +44,7 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  * ```
  */
 export class DXN {
+  // TODO(burdon): Rename to DXN (i.e., DXN.DXN).
   // TODO(dmaretskyi): Should this be a transformation into the DXN type?
   static Schema = Schema.NonEmptyString.pipe(
     Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),

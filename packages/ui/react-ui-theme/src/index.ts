@@ -5,7 +5,7 @@
 import { type TailwindConfig, tailwindConfig } from './config';
 
 export * from './styles';
-export type * from './types';
+export * from './types';
 export * from './util';
 
 export { userDefaultTokenSet, hues } from './config/tokens';

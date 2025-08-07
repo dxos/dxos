@@ -67,12 +67,14 @@ export default async (context: PluginContext) => {
           return;
         }
 
-        const node = graph.getNode(active[0]).pipe(Option.getOrNull);
-        if (!node && active[0].length === FQ_ID_LENGTH) {
+        const id = active[0];
+        const node = graph.getNode(id).pipe(Option.getOrNull);
+        if (!node && id.length === FQ_ID_LENGTH) {
+          void graph.initialize(id);
           const timeout = setTimeout(async () => {
-            const node = graph.getNode(active[0]).pipe(Option.getOrNull);
+            const node = graph.getNode(id).pipe(Option.getOrNull);
             if (!node) {
-              await dispatch(createIntent(SpaceAction.WaitForObject, { id: active[0] }));
+              await dispatch(createIntent(SpaceAction.WaitForObject, { id }));
             }
           }, WAIT_FOR_OBJECT_TIMEOUT);
 

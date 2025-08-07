@@ -9,7 +9,7 @@ import { FetchHttpClient } from '@effect/platform';
 import { Config, Layer, ManagedRuntime } from 'effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { AiService, AiServiceRouter, structuredOutputParser } from '@dxos/ai';
+import { type AiService, AiServiceRouter } from '@dxos/ai';
 import { EXA_API_KEY, tapHttpErrors } from '@dxos/ai/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
@@ -34,7 +34,7 @@ const AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
 );
 
 describe.skip('Research', () => {
-  let runtime: ManagedRuntime.ManagedRuntime<AiService, any>;
+  let runtime: ManagedRuntime.ManagedRuntime<AiService.AiService, any>;
   let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let executor: FunctionExecutor;
@@ -49,7 +49,6 @@ describe.skip('Research', () => {
 
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: await runtime.runPromise(AiService),
         credentials: new ConfiguredCredentialsService([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
         database: { db },
         tracing: TracingService.console,
@@ -82,11 +81,11 @@ describe('misc', () => {
     // log.info('schema', { schema });
   });
 
-  test('extract schema json schema', () => {
-    const schema = createExtractionSchema(DataTypes);
-    const _parser = structuredOutputParser(schema);
-    // log.info('schema', { json: parser.tool.parameters });
-  });
+  // test('extract schema json schema', () => {
+  // const schema = createExtractionSchema(DataTypes);
+  // const _parser = structuredOutputParser(schema);
+  // log.info('schema', { json: parser.tool.parameters });
+  // });
 
   test('getSanitizedSchemaName', () => {
     const _names = DataTypes.map(getSanitizedSchemaName);

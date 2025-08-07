@@ -17,7 +17,7 @@ export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...et
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout }, ...etc) =>
   mx(
-    'dx-dialog__content modal-surface density-coarse @container dx-focus-ring',
+    '@container dx-dialog__content dx-focus-ring modal-surface density-coarse',
     !inOverlayLayout && 'fixed z-50 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
     ...etc,
   );

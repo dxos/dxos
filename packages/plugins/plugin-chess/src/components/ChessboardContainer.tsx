@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { getSpace } from '@dxos/react-client/echo';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { type Chess } from '../types';
 
 import { Chessboard } from './Chessboard';
+import { ChessboardArticle } from './ChessboardArticle';
 
 export type ChessboardContainerProps = {
   game: Chess.Game;
@@ -36,19 +36,7 @@ export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) =>
     }
 
     default: {
-      return (
-        <StackItem.Content classNames='bs-full is-full overflow-hidden'>
-          <Chessboard.Root game={game}>
-            <div role='none' className='grid grid-rows-[5rem_1fr_5rem]'>
-              <div />
-              <Chessboard.Content>
-                <Chessboard.Board />
-              </Chessboard.Content>
-              <Chessboard.Players />
-            </div>
-          </Chessboard.Root>
-        </StackItem.Content>
-      );
+      return <ChessboardArticle game={game} />;
     }
   }
 };

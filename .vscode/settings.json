@@ -24,6 +24,7 @@
     "Orama",
     "protobuf",
     "testutils",
+    "thure",
     "typenames",
     "wittjosiah"
   ],
@@ -63,9 +64,328 @@
   ],
   "search.useParentIgnoreFiles": true,
   "search.useGlobalIgnoreFiles": false,
-  "rust-analyzer.linkedProjects": [
-    "packages/apps/composer-app/src-tauri/Cargo.toml"
-  ],
+  "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
   // Doesn't work in a big monorepo.
-  "typescript.updateImportsOnPaste.enabled": false
+  "typescript.updateImportsOnPaste.enabled": false,
+  "hediet.vscode-drawio.customColorSchemes": [
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Neutral"
+      },
+      {
+        "fill": "#E1E4E6",
+        "font": "#000000",
+        "stroke": "#C0C3C5",
+        "title": "1 Neutral"
+      },
+      {
+        "fill": "#C0C3C5",
+        "font": "#000000",
+        "stroke": "#9B9EA2",
+        "title": "2 Neutral"
+      },
+      {
+        "fill": "#9B9EA2",
+        "font": "#000000",
+        "stroke": "#7B8185",
+        "title": "3 Neutral"
+      },
+      {
+        "fill": "#7B8185",
+        "font": "#FFFFFF",
+        "stroke": "#5D6266",
+        "title": "4 Neutral"
+      },
+      {
+        "fill": "#5D6266",
+        "font": "#FFFFFF",
+        "stroke": "#393C3E",
+        "title": "5 Neutral"
+      },
+      {
+        "fill": "#393C3E",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Neutral"
+      },
+      {
+        "fill": "#1E1F20",
+        "font": "#FFFFFF",
+        "stroke": "#000000",
+        "title": "7 Neutral"
+      }
+    ],
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Green"
+      },
+      {
+        "fill": "#DBF5EB",
+        "font": "#000000",
+        "stroke": "#B6EAD5",
+        "title": "1 Green"
+      },
+      {
+        "fill": "#B6EAD5",
+        "font": "#000000",
+        "stroke": "#7CD7AF",
+        "title": "2 Green"
+      },
+      {
+        "fill": "#7CD7AF",
+        "font": "#000000",
+        "stroke": "#4DA677",
+        "title": "3 Green"
+      },
+      {
+        "fill": "#4DA677",
+        "font": "#FFFFFF",
+        "stroke": "#337352",
+        "title": "4 Green"
+      },
+      {
+        "fill": "#337352",
+        "font": "#FFFFFF",
+        "stroke": "#214D37",
+        "title": "5 Green"
+      },
+      {
+        "fill": "#214D37",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Green"
+      }
+    ],
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Neutral"
+      },
+      {
+        "fill": "#E3F3FE",
+        "font": "#000000",
+        "stroke": "#C0E4FC",
+        "title": "1 Blue"
+      },
+      {
+        "fill": "#C0E4FC",
+        "font": "#000000",
+        "stroke": "#8DCDFA",
+        "title": "2 Blue"
+      },
+      {
+        "fill": "#8DCDFA",
+        "font": "#000000",
+        "stroke": "#569ACD",
+        "title": "3 Blue"
+      },
+      {
+        "fill": "#569ACD",
+        "font": "#FFFFFF",
+        "stroke": "#326288",
+        "title": "4 Blue"
+      },
+      {
+        "fill": "#326288",
+        "font": "#FFFFFF",
+        "stroke": "#193D5A",
+        "title": "5 Blue"
+      },
+      {
+        "fill": "#193D5A",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Blue"
+      }
+    ],
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Neutral"
+      },
+      {
+        "fill": "#EEE8FA",
+        "font": "#000000",
+        "stroke": "#CEC0F4",
+        "title": "1 Purple"
+      },
+      {
+        "fill": "#CEC0F4",
+        "font": "#000000",
+        "stroke": "#AB92ED",
+        "title": "2 Purple"
+      },
+      {
+        "fill": "#AB92ED",
+        "font": "#000000",
+        "stroke": "#8166C7",
+        "title": "3 Purple"
+      },
+      {
+        "fill": "#8166C7",
+        "font": "#FFFFFF",
+        "stroke": "#513B88",
+        "title": "4 Purple"
+      },
+      {
+        "fill": "#513B88",
+        "font": "#FFFFFF",
+        "stroke": "#37295F",
+        "title": "5 Purple"
+      },
+      {
+        "fill": "#37295F",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Purple"
+      }
+    ],
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Neutral"
+      },
+      {
+        "fill": "#F9E9EF",
+        "font": "#000000",
+        "stroke": "#E8A7C0",
+        "title": "1 Red"
+      },
+      {
+        "fill": "#E8A7C0",
+        "font": "#000000",
+        "stroke": "#DD759B",
+        "title": "2 Red"
+      },
+      {
+        "fill": "#DD759B",
+        "font": "#000000",
+        "stroke": "#B94A71",
+        "title": "3 Red"
+      },
+      {
+        "fill": "#B94A71",
+        "font": "#FFFFFF",
+        "stroke": "#8A2F4E",
+        "title": "4 Red"
+      },
+      {
+        "fill": "#8A2F4E",
+        "font": "#FFFFFF",
+        "stroke": "#60162D",
+        "title": "5 Red"
+      },
+      {
+        "fill": "#60162D",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Red"
+      }
+    ],
+    [
+      {
+        "fill": "#F7F7F7",
+        "font": "#000000",
+        "stroke": "#E1E4E6",
+        "title": "0 Neutral"
+      },
+      {
+        "fill": "#FAE7E2",
+        "font": "#000000",
+        "stroke": "#F0A390",
+        "title": "1 Orange"
+      },
+      {
+        "fill": "#F0A390",
+        "font": "#000000",
+        "stroke": "#EB785E",
+        "title": "2 Orange"
+      },
+      {
+        "fill": "#EB785E",
+        "font": "#000000",
+        "stroke": "#CA5F45",
+        "title": "3 Orange"
+      },
+      {
+        "fill": "#CA5F45",
+        "font": "#FFFFFF",
+        "stroke": "#9D3C26",
+        "title": "4 Orange"
+      },
+      {
+        "fill": "#9D3C26",
+        "font": "#FFFFFF",
+        "stroke": "#6B2210",
+        "title": "5 Orange"
+      },
+      {
+        "fill": "#6B2210",
+        "font": "#FFFFFF",
+        "stroke": "#1E1F20",
+        "title": "6 Orange"
+      }
+    ]
+  ],
+  "hediet.vscode-drawio.defaultFonts": ["Montserrat", "Space Grotesk"],
+  "hediet.vscode-drawio.presetColors": [
+    // Netural
+    "F7F7F7",
+    "E1E4E6",
+    "C0C3C5",
+    "9B9EA2",
+    "7B8185",
+    "5D6266",
+    "393C3E",
+    "1E1F20",
+    // Green
+    "DBF5EB",
+    "B6EAD5",
+    "7CD7AF",
+    "4DA677",
+    "337352",
+    "214D37",
+    // Blue
+    "E3F3FE",
+    "C0E4FC",
+    "8DCDFA",
+    "569ACD",
+    "326288",
+    "193D5A",
+    // Purple
+    "EEE8FA",
+    "CEC0F4",
+    "AB92ED",
+    "8166C7",
+    "513B88",
+    "37295F",
+    // Red
+    "F9E9EF",
+    "E8A7C0",
+    "DD759B",
+    "B94A71",
+    "8A2F4E",
+    "60162D",
+    // Orange
+    "FAE7E2",
+    "F0A390",
+    "EB785E",
+    "CA5F45",
+    "9D3C26",
+    "6B2210"
+  ],
+  "hediet.vscode-drawio.resizeImages": null,
+  "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }]
 }

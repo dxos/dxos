@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { Result, useRxValue } from '@effect-rx/rx-react';
@@ -9,7 +10,7 @@ import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
@@ -117,7 +118,12 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     return event.on((event) => {
       switch (event.type) {
         case 'toggle-debug': {
-          setDebug((debug) => !debug);
+          setDebug((current) => {
+            const debug = !current;
+            log.info('toggle-debug', { debug });
+            // log.config({ filter: debug ? 'assistant:debug' : 'info' });
+            return debug;
+          });
           break;
         }
 
@@ -170,7 +176,7 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, processor, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
 
   const scrollerRef = useRef<ScrollController>(null);
@@ -197,7 +203,6 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
-      tools={processor?.tools}
       onEvent={(ev) => event.emit(ev)}
     />
   );
@@ -266,13 +271,13 @@ const ChatPrompt = ({
   } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.
-  const contextProvider = useReferencesProvider(space);
+  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      contextProvider && references({ provider: contextProvider }),
-      expandable &&
-        Prec.highest(
-          keymap.of([
+      referencesProvider && references({ provider: referencesProvider }),
+      Prec.highest(
+        keymap.of(
+          [
             {
               key: 'cmd-d',
               preventDefault: true,
@@ -281,7 +286,7 @@ const ChatPrompt = ({
                 return true;
               },
             },
-            {
+            expandable && {
               key: 'cmd-ArrowUp',
               preventDefault: true,
               run: () => {
@@ -289,7 +294,7 @@ const ChatPrompt = ({
                 return true;
               },
             },
-            {
+            expandable && {
               key: 'cmd-ArrowDown',
               preventDefault: true,
               run: () => {
@@ -297,10 +302,11 @@ const ChatPrompt = ({
                 return true;
               },
             },
-          ]),
+          ].filter(isNotFalsy),
         ),
+      ),
     ].filter(isNotFalsy);
-  }, [event, expandable, contextProvider]);
+  }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
@@ -319,9 +325,9 @@ const ChatPrompt = ({
     [event],
   );
 
-  // TODO(burdon): Update context.
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((ids) => {
-    log.info('update', { ids });
+  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
+    log.info('update', { dxns });
+    void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
   return (

@@ -43,7 +43,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
       moveToEndOfLine: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly' }),
+        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),

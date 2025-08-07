@@ -8,7 +8,9 @@ import { type ChatPromptProps } from '../components';
 
 import { type AiServicePreset, AiServicePresets } from './presets';
 
-export type UsePresets = { preset: AiServicePreset | undefined } & Pick<ChatPromptProps, 'presets' | 'onChangePreset'>;
+export type UsePresets = {
+  preset: AiServicePreset | undefined;
+} & Pick<ChatPromptProps, 'presets' | 'onChangePreset'>;
 
 export const usePresets = (online: boolean): UsePresets => {
   // TODO(burdon): Memo preset for provider.

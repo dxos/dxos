@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { type LLMModel } from '@dxos/ai';
+import { type ModelName } from '@dxos/ai';
 
 const ModelProviders = ['dxos-local', 'dxos-remote', 'lm-studio'] as const;
 
@@ -14,11 +14,11 @@ type ModelProvider = Schema.Schema.Type<typeof ModelProvider>;
 export type AiServicePreset = {
   id: string;
   provider: ModelProvider;
-  model: LLMModel;
+  model: ModelName;
   label?: string;
 };
 
-const createModelLabel = (model: LLMModel) => {
+const createModelLabel = (model: ModelName) => {
   const parts = model.split('/');
   return parts[parts.length - 1];
 };
@@ -27,11 +27,11 @@ const createModelLabel = (model: LLMModel) => {
 export const AiServicePresets: AiServicePreset[] = [
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-3-5-haiku-20241022' as const,
+    model: '@anthropic/claude-opus-4-0' as const,
   },
   {
     provider: 'dxos-remote' as const,
-    model: '@anthropic/claude-opus-4-0' as const,
+    model: '@anthropic/claude-3-5-haiku-20241022' as const,
   },
   {
     provider: 'lm-studio' as const,

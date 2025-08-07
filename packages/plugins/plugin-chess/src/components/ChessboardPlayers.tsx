@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
@@ -15,9 +15,9 @@ import { type Chess } from '../types';
 
 import { type ExtendedChessModel } from './Chessboard';
 
-export type ChessboardPlayersProps = ThemedClassName<{}>;
+export type ChessboardPlayersProps = ThemedClassName<PropsWithChildren>;
 
-export const ChessboardPlayers = ({ classNames }: ChessboardPlayersProps) => {
+export const ChessboardPlayers = ({ classNames, children }: ChessboardPlayersProps) => {
   const { model } = useGameboardContext<ExtendedChessModel>(ChessboardPlayers.displayName);
   const members = useMembers(getSpace(model.object)?.key);
   const players: Chess.Game['players'] = model.object.players;
@@ -26,7 +26,7 @@ export const ChessboardPlayers = ({ classNames }: ChessboardPlayersProps) => {
   }
 
   return (
-    <div role='none' className={mx('grid grid-cols-2 gap-8', classNames)}>
+    <div role='none' className={mx('grid grid-cols-[1fr_min-content_1fr] pis-2 pie-2 overflow-hidden', classNames)}>
       <div role='none' className='flex flex-row-reverse items-center gap-2'>
         <PlayerSelect
           side='white'
@@ -35,6 +35,7 @@ export const ChessboardPlayers = ({ classNames }: ChessboardPlayersProps) => {
           members={members}
         />
       </div>
+      <div className='flex flex-row justify-center items-center'>{children}</div>
       <div role='none' className='flex flex-row items-center gap-2'>
         <PlayerSelect
           side='black'

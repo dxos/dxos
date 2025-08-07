@@ -15,7 +15,6 @@ import {
   LayoutIntentResolver,
   ReactRoot,
   ReactSurface,
-  Tools,
   UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
@@ -73,11 +72,11 @@ export const DeckPlugin = () =>
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
-    defineModule({
-      id: `${meta.id}/module/tools`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: Tools,
-    }),
+    // defineModule({
+    //   id: `${meta.id}/module/tools`,
+    //   activatesOn: Events.SetupArtifactDefinition,
+    //   activate: Tools,
+    // }),
     defineModule({
       id: `${meta.id}/module/url`,
       activatesOn: allOf(Events.DispatcherReady, DeckEvents.StateReady),
