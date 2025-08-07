@@ -29,7 +29,6 @@ export const Game = Schema.Struct({
     description: 'Portable Game Notation.',
   }),
 }).pipe(
-  Schema.partial,
   Type.Obj({
     typename: 'dxos.org/type/Chess',
     version: '0.2.0',

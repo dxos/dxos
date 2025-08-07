@@ -36,12 +36,23 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Resolves an object by its DXN.
    */
-  // TODO(burdon): Multiple signatures depending on args.
-  static resolve = <S extends Type.Obj.Any>(
+  static resolve: {
+    // Only DXN (returns unknown)
+    (dxn: DXN): Effect.Effect<unknown, Error, DatabaseService>;
+    // DXN with schema (returns typed object, optional)
+    <S extends Type.Obj.Any>(dxn: DXN, schema: S): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService>;
+    // DXN with schema and required flag (returns typed object, required when true)
+    // TODO(burdon): Remove.
+    <S extends Type.Obj.Any>(
+      dxn: DXN,
+      schema: S,
+      required: boolean,
+    ): Effect.Effect<Schema.Schema.Type<S>, Error, DatabaseService>;
+  } = <S extends Type.Obj.Any>(
     dxn: DXN,
     schema?: S,
     required?: boolean,
-  ): Effect.Effect<Schema.Schema.Type<S>, Error, DatabaseService> =>
+  ): Effect.Effect<Schema.Schema.Type<S> | null, Error, DatabaseService> =>
     Effect.gen(function* () {
       const { db } = yield* DatabaseService;
       return yield* Effect.tryPromise({
