@@ -98,7 +98,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     async (spaceKey: PublicKey) => {
       const space = spaces.find((space) => space.key.equals(spaceKey))!;
       const archive = await space.internal.export();
-      download(new Blob([archive.contents]), archive.filename);
+      download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
   );
