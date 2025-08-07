@@ -207,8 +207,11 @@ const convertAssistantMessagePart: (
       case 'toolResult':
       case 'image':
       case 'file':
+        // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
       default:
+        // Ignore spurious tags.
+        log.info('ignoring spurious tag', { tag: block._tag });
         return undefined;
     }
   },
@@ -238,5 +241,6 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
       prevChunk.push(item);
     }
   }
+
   return result;
 };
