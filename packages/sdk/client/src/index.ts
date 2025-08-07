@@ -42,5 +42,3 @@ export * from './client';
 export * from './services';
 export * from './util';
 export * from './version';
-
-console.log('hello!');

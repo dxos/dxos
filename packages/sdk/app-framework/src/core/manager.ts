@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array, Duration, Effect, Fiber, Match, pipe } from 'effect';
+import { Array, Duration, Effect, Fiber, HashSet, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -371,24 +371,29 @@ export class PluginManager {
 
       log('activating modules', { key, modules: modules.map((module) => module.id) });
       this.activation.emit({ event: key, state: 'activating' });
-      yield* Effect.all(
-        modules.flatMap((module) => module.activatesBefore ?? []).map((event) => this._activate(event)),
-        {
-          concurrency: 'unbounded',
-        },
+
+      // Fire activatesBefore events.
+      yield* pipe(
+        modules,
+        Array.flatMap((module) => module.activatesBefore ?? []),
+        HashSet.fromIterable,
+        HashSet.toValues,
+        Array.map((event) => this._activate(event)),
+        Effect.allWith({ concurrency: 'unbounded' }),
       );
 
       // Concurrently triggers loading of lazy capabilities.
-      const getCapabilities = yield* Effect.all(
-        modules.map((mod) => this._loadModule(mod)),
-        { concurrency: 'unbounded' },
-      ).pipe(
+      const getCapabilities = yield* pipe(
+        modules,
+        Array.map((mod) => this._loadModule(mod)),
+        Effect.allWith({ concurrency: 'unbounded' }),
         Effect.catchAll((error) => {
           this.activation.emit({ event: key, state: 'error', error });
           return Effect.fail(error);
         }),
       );
 
+      // Contribute the capabilities from the activated modules.
       yield* pipe(
         modules,
         Array.zip(getCapabilities),
@@ -398,11 +403,14 @@ export class PluginManager {
         Effect.all,
       );
 
-      yield* Effect.all(
-        modules.flatMap((module) => module.activatesAfter ?? []).map((event) => this._activate(event)),
-        {
-          concurrency: 'unbounded',
-        },
+      // Fire activatesAfter events.
+      yield* pipe(
+        modules,
+        Array.flatMap((module) => module.activatesAfter ?? []),
+        HashSet.fromIterable,
+        HashSet.toValues,
+        Array.map((event) => this._activate(event)),
+        Effect.allWith({ concurrency: 'unbounded' }),
       );
 
       if (!this._state.eventsFired.includes(key)) {
@@ -445,12 +453,12 @@ export class PluginManager {
       },
       catch: (error) => error as Error,
     }).pipe(
+      Effect.withSpan('PluginManager._loadModule'),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
           Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: mod.id }))),
         ),
       ),
-      Effect.withSpan('PluginManager._loadModule'),
     );
 
   private _contributeCapabilities(module: PluginModule, capabilities: AnyCapability[]): Effect.Effect<void, Error> {
