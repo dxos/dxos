@@ -174,7 +174,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
             challenge: new Uint8Array(),
             rp: { id: location.hostname, name: appName },
             user: {
-              id: lookupKey.asUint8Array(),
+              id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
               name: identity.did,
               displayName: identity.profile?.displayName ?? '',
             },
