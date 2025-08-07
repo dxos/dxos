@@ -8,6 +8,7 @@ tasks:
       - ^:build
     inputs:
       - /tsconfig.base.json
+      - /package.json
       - tsconfig.json
       - '@group(production)'
     outputs:

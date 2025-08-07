@@ -8,6 +8,7 @@ tasks:
       - ^:compile
     inputs:
       - /vitest.base.config.ts
+      - /package.json
       - vitest.config.ts
       - '@group(sources)'
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.

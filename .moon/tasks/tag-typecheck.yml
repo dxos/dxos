@@ -7,6 +7,7 @@ tasks:
       - ^:compile
     inputs:
       - /tsconfig.base.json
+      - /package.json
       - tsconfig.json
       - '@group(sources)'
     options:
