@@ -94,7 +94,8 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const handleInsertRow = useCallback(() => {
     model?.insertRow();
-  }, [model]);
+    tableRef.current?.focusDraft?.();
+  }, [model, tableRef.current]);
 
   const handleSave = useCallback(() => {
     model?.saveView();

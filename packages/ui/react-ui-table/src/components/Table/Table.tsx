@@ -77,6 +77,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
 
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
+  focusDraft?: () => void;
 };
 
 export type TableMainProps = {
@@ -140,6 +141,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             dxGrid.updateCells(true);
             dxGrid.requestUpdate();
           }
+        },
+        focusDraft: () => {
+          requestAnimationFrame(() => {
+            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            dxGrid.refocus();
+          });
         },
       };
     }, [presentation, dxGrid]);
