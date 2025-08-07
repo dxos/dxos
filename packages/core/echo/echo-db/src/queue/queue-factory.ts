@@ -18,6 +18,10 @@ export interface QueueAPI {
   create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
     subspaceTag?: QueueSubspaceTag;
   }): Queue<T>;
+  get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T>;
+  create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
+    subspaceTag?: QueueSubspaceTag;
+  }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
