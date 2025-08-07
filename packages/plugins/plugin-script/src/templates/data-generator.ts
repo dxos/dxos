@@ -12,11 +12,15 @@ export default defineFunction({
     documentAmount: S.optional(S.Number),
     textSize: S.optional(S.Number),
     mutationAmount: S.optional(S.Number),
+    waitAfterCreation: S.optional(S.Number),
   }),
 
   outputSchema: S.Struct({}),
 
-  handler: async ({ data: { documentAmount = 1, textSize = 10, mutationAmount = 0 }, context: { space } }: any) => {
+  handler: async ({
+    data: { documentAmount = 1, textSize = 10, mutationAmount = 0, waitAfterCreation = 10_000 },
+    context: { space },
+  }: any) => {
     await space.db.graph.schemaRegistry.addSchema([Expando]);
     const result: Record<string, any> = {};
     const objects: Expando[] = [];
@@ -42,7 +46,7 @@ export default defineFunction({
 
     // Flush and wait for data to propagate.
     await space.db.flush();
-    await new Promise((resolve) => setTimeout(resolve, 10_000));
+    await new Promise((resolve) => setTimeout(resolve, waitAfterCreation));
     return { createdObjects: objects.length };
   },
 });

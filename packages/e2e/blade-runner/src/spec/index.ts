@@ -3,7 +3,8 @@
 //
 
 export * from './automerge';
-export * from './edge';
+export * from './edge-sync';
+export * from './edge-ws';
 export * from './empty';
 export * from './query';
 export * from './replication';

@@ -105,7 +105,15 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
 
   const schedulerEnv = new SchedulerEnvImpl(options, testParams);
   await schedulerEnv.open();
-  const result = await plan.run(schedulerEnv, testParams);
+  let result: any;
+  try {
+    result = await plan.run(schedulerEnv, testParams);
+  } catch (err) {
+    log.error('error running plan', err);
+    await schedulerEnv.close();
+    process.exit(1);
+  }
+
   const replicants = schedulerEnv.getReplicantsSummary();
 
   log.info('simulation complete', {

@@ -6,12 +6,14 @@ import { Schema } from 'effect';
 
 import { SpaceId } from '@dxos/keys';
 
-// TODO(burdon): Rename EdgerRouterEndpoint?
+// TODO(burdon): Rename EdgerRouterEndpoint.
+// If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
   FEED_REPLICATOR = 'feed-replicator',
   SWARM = 'swarm',
   SIGNAL = 'signal',
+  STATUS = 'status',
 }
 
 export type EdgeHttpSuccess<T> = {
