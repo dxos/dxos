@@ -55,7 +55,8 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     return () => clearTimeout(timeout);
   }, [client, space, schema]);
 
-  const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
+  const model = useTableModel<TableRow>({ space, view, schema: jsonSchema, rows: [], features });
+
   useEffect(() => {
     if (!model || !space) {
       return;

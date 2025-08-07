@@ -20,7 +20,6 @@ import { Filter } from '@dxos/echo';
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 // TODO(wittjosiah): Remove dependency on react-client.
-import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -332,19 +331,18 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
       async ({ field, props }, text) => {
         if (model && props.referenceSchema && field.referencePath) {
-          const space = getSpace(model.view);
-          invariant(space);
+          invariant(model.space);
 
           let schema;
           if (client) {
             schema = client.graph.schemaRegistry.getSchema(props.referenceSchema);
           }
           if (!schema) {
-            schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
+            schema = model.space.db.schemaRegistry.getSchema(props.referenceSchema);
           }
 
           if (schema) {
-            const { objects } = await space.db.query(Filter.type(schema)).run();
+            const { objects } = await model.space.db.query(Filter.type(schema)).run();
             const options = objects
               .map((obj) => {
                 const value = getValue(obj, field.referencePath!);

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -17,6 +17,7 @@ import { TableModel, type TableModelProps, type TableRow, type TableRowAction } 
 
 export type UseTableModelParams<T extends TableRow = TableRow> = {
   view?: DataType.View;
+  space?: Space;
   schema?: JsonSchemaType;
   projection?: ProjectionModel;
   rows?: Live<T>[];
@@ -30,6 +31,7 @@ export type UseTableModelParams<T extends TableRow = TableRow> = {
 
 export const useTableModel = <T extends TableRow = TableRow>({
   view,
+  space,
   schema,
   projection,
   rows,
@@ -44,7 +46,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
 
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
-    if (!view || !schema) {
+    if (!view || !schema || !space) {
       return;
     }
 
@@ -52,6 +54,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
     const t = setTimeout(async () => {
       model = new TableModel<T>({
         view,
+        space,
         schema,
         projection,
         features,
