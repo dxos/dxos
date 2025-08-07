@@ -4,7 +4,7 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array, Duration, Effect, Either, Fiber, Match, pipe } from 'effect';
+import { Array, Duration, Effect, Fiber, Match, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -382,16 +382,20 @@ export class PluginManager {
       const getCapabilities = yield* Effect.all(
         modules.map((mod) => this._loadModule(mod)),
         { concurrency: 'unbounded' },
+      ).pipe(
+        Effect.catchAll((error) => {
+          this.activation.emit({ event: key, state: 'error', error });
+          return Effect.fail(error);
+        }),
       );
 
-      const result = yield* pipe(
+      yield* pipe(
         modules,
         Array.zip(getCapabilities),
         Array.map(([module, capabilities]) => this._contributeCapabilities(module, capabilities)),
         // TODO(wittjosiah): This currently can't be run in parallel.
         //   Running this with concurrency causes races with `allOf` activation events.
         Effect.all,
-        Effect.either,
       );
 
       yield* Effect.all(
@@ -400,11 +404,6 @@ export class PluginManager {
           concurrency: 'unbounded',
         },
       );
-
-      if (Either.isLeft(result)) {
-        this.activation.emit({ event: key, state: 'error', error: result.left });
-        yield* Effect.fail(result.left);
-      }
 
       if (!this._state.eventsFired.includes(key)) {
         this._state.eventsFired.push(key);
@@ -418,37 +417,33 @@ export class PluginManager {
   }
 
   private _loadModule = (mod: PluginModule): Effect.Effect<AnyCapability[], Error> =>
-    Effect.gen(this, function* () {
-      return yield* Effect.tryPromise({
-        try: async () => {
-          const start = performance.now();
-          try {
-            log('loading module', { module: mod.id });
-            let activationResult = await mod.activate(this.context);
-            if (typeof activationResult === 'function') {
-              activationResult = await activationResult();
-            }
-            if (Array.isArray(activationResult)) {
-              return activationResult;
-            } else {
-              return [activationResult];
-            }
-          } catch (error) {
-            log.error('failed to load module', { module: mod.id, error });
-            throw error;
-          } finally {
-            performance.measure('activate-module', {
-              start,
-              end: performance.now(),
-              detail: {
-                module: mod.id,
-              },
-            });
-            log('loaded module', { module: mod.id, elapsed: performance.now() - start });
+    Effect.tryPromise({
+      try: async () => {
+        const start = performance.now();
+        let failed = false;
+        try {
+          log('loading module', { module: mod.id });
+          // TODO(wittjosiah): Support activation with an effect.
+          let activationResult = await mod.activate(this.context);
+          if (typeof activationResult === 'function') {
+            activationResult = await activationResult();
           }
-        },
-        catch: (error) => error as Error,
-      });
+          return Array.isArray(activationResult) ? activationResult : [activationResult];
+        } catch (error) {
+          failed = true;
+          throw error;
+        } finally {
+          performance.measure('activate-module', {
+            start,
+            end: performance.now(),
+            detail: {
+              module: mod.id,
+            },
+          });
+          log('loaded module', { module: mod.id, elapsed: performance.now() - start, failed });
+        }
+      },
+      catch: (error) => error as Error,
     }).pipe(
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
