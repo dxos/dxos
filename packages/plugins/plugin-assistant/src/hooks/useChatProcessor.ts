@@ -4,18 +4,16 @@
 
 import { RegistryContext } from '@effect-rx/rx-react';
 import { type Layer } from 'effect';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useMemo } from 'react';
 
-import { type ExecutableTool } from '@dxos/ai';
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
-import { Filter, type Queue, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
+import { type Queue, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../hooks';
-import { createToolsFromService } from '../tools';
-import { type Assistant, ServiceType } from '../types';
+import { type Assistant } from '../types';
 
 export type UseChatProcessorProps = {
   space?: Space;
@@ -39,17 +37,6 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const registry = useContext(RegistryContext);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-
-  // Services.
-  const remoteServices = useQuery(space, Filter.type(ServiceType));
-  const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
-  useEffect(() => {
-    log('creating service tools...');
-    queueMicrotask(async () => {
-      const tools = await Promise.all(remoteServices.map((service) => createToolsFromService(service)));
-      setServiceTools(tools.flat());
-    });
-  }, [remoteServices]);
 
   // Tools and context.
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
