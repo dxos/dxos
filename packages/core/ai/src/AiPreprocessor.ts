@@ -228,6 +228,7 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
       result.push([item]);
       continue;
     }
+
     const prevChunk = result.at(-1)!;
     const prev = prevChunk.at(-1)!;
     const makeSplit = predicate(prev, item);
