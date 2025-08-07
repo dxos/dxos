@@ -10,7 +10,7 @@
   "type": "module",
   "imports": {
     "#hypercore-crypto": {
-      "workerd": "./lib/hypercore-crypto-stub.mjs",
+      "workerd": "./vendor/hypercore-crypto-stub.mjs",
       "default": "hypercore-crypto"
     },
     "#subtle": {
