@@ -211,7 +211,7 @@ const convertAssistantMessagePart: (
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
       default:
         // Ignore spurious tags.
-        log.info('ignoring spurious tag', { tag: block._tag });
+        log.info('ignoring spurious tag', { block });
         return undefined;
     }
   },

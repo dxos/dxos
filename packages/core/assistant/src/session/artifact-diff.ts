@@ -15,6 +15,7 @@ import { type ObjectId } from '@dxos/echo-schema';
  *
  * Can be optionally provided to the session run call.
  */
+// TODO(burdon): Move.
 // TODO(dmaretskyi): Convert to Context.Reference
 export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
   ArtifactDiffResolver,

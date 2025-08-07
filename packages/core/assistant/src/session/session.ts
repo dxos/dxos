@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
-import { Chunk, Effect, Option, Queue, type Schema, Stream } from 'effect';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
+import { Chunk, type Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
-  type ToolExecutionService,
-  type ToolResolverService,
+  ToolExecutionService,
+  ToolResolverService,
   callTools,
   getToolCalls,
 } from '@dxos/ai';
@@ -20,11 +20,11 @@ import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
+import { isNotFalsy } from '@dxos/util';
 
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
-import { createToolkit } from './toolkit';
 
 export type AiSessionOptions = {};
 
@@ -82,7 +82,7 @@ export class AiSession {
   > =>
     Effect.gen(this, function* () {
       // Create toolkit.
-      const toolkitWithHandlers = yield* createToolkit(params);
+      const toolkit: AiToolkit.ToHandler<Tools> = yield* createToolkit(params);
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables.
@@ -104,7 +104,7 @@ export class AiSession {
           pending: this._pending.length,
           history: this._history.length,
           objects: params.objects?.length ?? 0,
-          toolkit: Object.values(toolkitWithHandlers.tools).map((tool: AiTool.Any) => tool.name),
+          toolkit: Object.values(toolkit.tools).map((tool: AiTool.Any) => tool.name),
         });
 
         // Generate the prompt and make request.
@@ -112,7 +112,7 @@ export class AiSession {
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
-          toolkit: toolkitWithHandlers,
+          toolkit,
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
@@ -126,7 +126,7 @@ export class AiSession {
         // TODO(burdon): Comment.
         yield* this.blockQueue.offer(Option.none());
 
-        // TODO(burdon): Comment.
+        // Create response message.
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -135,14 +135,14 @@ export class AiSession {
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
 
-        // TODO(burdon): Comment.
+        // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
         }
 
         // TODO(burdon): Error handling.
-        const toolResults = yield* callTools(toolkitWithHandlers as any, toolCalls); // TODO(burdon): Remove cast?
+        const toolResults = yield* callTools(toolkit, toolCalls); // TODO(burdon): Remove cast?
         const toolResultMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
@@ -175,3 +175,21 @@ export class AiSession {
     // return parser.getResult(result);
   }
 }
+
+/**
+ * Build a combined toolkit from the blueprint tools and the provided toolkit.
+ */
+const createToolkit = <Tools extends AiTool.Any>({
+  toolkit,
+  blueprints = [],
+}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
+  Effect.gen(function* () {
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
+    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+      ToolExecutionService.handlersFor(blueprintToolkit),
+    );
+
+    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
+      Effect.provide(blueprintToolkitHandler),
+    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+  });

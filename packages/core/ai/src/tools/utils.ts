@@ -13,13 +13,12 @@ export const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[]
 };
 
 export const callTools: <Tools extends AiTool.Any>(
-  toolkit: AiToolkit.AiToolkit<Tools>,
+  toolkit: AiToolkit.ToHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
 ) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('callTools')(
   function* (toolkit, toolCalls) {
-    log.info('callTools');
-    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-    return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkitWithHandlers, toolCall));
+    log.info('callTools', { count: toolCalls.length });
+    return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
   },
 );
 
