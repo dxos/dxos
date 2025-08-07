@@ -27,6 +27,7 @@ import {
   IntentResolver,
   ReactRoot,
   ReactSurface,
+  SchemaDefs,
   SchemaTools,
   SpaceCapabilities,
   SpaceSettings,
@@ -183,13 +184,12 @@ export const SpacePlugin = ({
         ),
       ],
     }),
-    // TODO(dmaretskyi): Fix this before merging.
-    // defineModule({
-    //   id: `${meta.id}/module/schema-defs`,
-    //   activatesOn: ClientEvents.ClientReady,
-    //   activatesBefore: [ClientEvents.SetupSchema],
-    //   activate: SchemaDefs,
-    // }),
+    defineModule({
+      id: `${meta.id}/module/schema-defs`,
+      activatesOn: ClientEvents.ClientReady,
+      activatesBefore: [ClientEvents.SetupSchema],
+      activate: SchemaDefs,
+    }),
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
