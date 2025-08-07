@@ -57,7 +57,6 @@ describe.only('effect AI client', () => {
           }
 
           log.info('toolCalls', { toolCalls });
-          // TODO(burdon): Throws here!!!
           const toolResults = yield* callTools(toolkit, toolCalls);
 
           history.push(
