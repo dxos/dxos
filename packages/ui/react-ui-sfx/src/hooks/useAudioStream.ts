@@ -75,7 +75,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
         return undefined;
       }
 
-      analyserRef.current?.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
+      analyserRef.current?.getByteFrequencyData(dataArrayRef.current);
       return dataArrayRef.current;
     },
 
@@ -84,7 +84,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
         return 0;
       }
 
-      analyserRef.current.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
+      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
       // TODO(burdon): Use https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant
       const average = dataArrayRef.current.reduce((a, b) => a + b) / dataArrayRef.current.length;
       const amplitude = average / 255; // Normalize to 0-1.

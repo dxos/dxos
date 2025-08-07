@@ -44,7 +44,7 @@ const Test = () => {
           challenge: new TextEncoder().encode(challenge),
           rp: { id: location.hostname, name: 'Test' },
           user: {
-            id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
+            id: lookupKey.asUint8Array(),
             name: identity.did,
             displayName: identity.profile?.displayName ?? '',
           },
