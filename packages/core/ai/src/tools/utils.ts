@@ -12,11 +12,22 @@ export const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[]
   return message.blocks.filter((block) => block._tag === 'toolCall');
 };
 
+export const callTools: <Tools extends AiTool.Any>(
+  toolCalls: ContentBlock.ToolCall[],
+  toolkit: AiToolkit.AiToolkit<Tools>,
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('callTools')(
+  function* (toolCalls, toolkit) {
+    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
+    return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkitWithHandlers, toolCall));
+  },
+);
+
 export const callTool: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.ToHandler<Tools>,
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
+    log.info('callTool', { toolCall: JSON.stringify(toolCall) });
     return yield* toolkit.handle(toolCall.name as any, toolCall.input as any).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
@@ -41,18 +52,5 @@ export const callTool: <Tools extends AiTool.Any>(
         ),
       ),
     );
-  },
-);
-
-export const callTools: <Tools extends AiTool.Any>(
-  toolCalls: ContentBlock.ToolCall[],
-  toolkit: AiToolkit.AiToolkit<Tools>,
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
-  function* (toolCalls, toolkit) {
-    const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-    return yield* Effect.forEach(toolCalls, (toolCall) => {
-      log.info('callTool', { toolCall: JSON.stringify(toolCall) });
-      return callTool(toolkitWithHandlers, toolCall);
-    });
   },
 );

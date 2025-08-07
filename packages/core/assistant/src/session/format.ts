@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
-import { Array, type Context, Effect, Option, String, pipe } from 'effect';
+import { Array, Effect, Option, String, pipe } from 'effect';
 
-import { ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
@@ -13,30 +11,12 @@ import { type ObjectId } from '@dxos/echo-schema';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
 import { type SessionRunParams } from './session';
-
-/**
- * Build a combined toolkit from the blueprint tools and the provided toolkit.
- */
-export const createToolkit = <Tools extends AiTool.Any>({
-  blueprints = [],
-  toolkit,
-}: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
-  Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
-    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-      ToolExecutionService.handlersFor(blueprintToolkit),
-    );
-
-    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
-      Effect.provide(blueprintToolkitHandler),
-    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-  });
 
 /**
  * Formats the system prompt.
@@ -128,7 +108,7 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams
     });
   });
 
-export const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
+const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
   const artifactIds = new Map<ObjectId, ObjectVersion>();
   for (const message of messages) {
     for (const block of message.blocks) {
@@ -141,7 +121,7 @@ export const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId
   return artifactIds;
 };
 
-export const createArtifactUpdateBlock = (
+const createArtifactUpdateBlock = (
   artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
 ): ContentBlock.Any => {
   return {

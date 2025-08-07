@@ -13,14 +13,16 @@ import { Chess } from '../types';
 
 export default defineFunction({
   name: 'dxos.org/function/chess/play',
-  description: 'Calculates and plays the next move in the chess game.',
+  description: 'Calculates and plays the next move in the given chess game.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
       description: 'The ID of the chess object.',
     }),
   }),
   outputSchema: Schema.Struct({
-    move: Schema.optional(Schema.String),
+    move: Schema.optional(Schema.String).annotations({
+      description: 'The move that was played.',
+    }),
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
     log.info('play', { id });
@@ -30,7 +32,8 @@ export default defineFunction({
     const chess = new ChessJS();
     chess.loadPgn(object.pgn);
     const moves = chess.moves();
-    const move = moves[moves.length - 1];
+    const move = moves[Math.floor(Math.random() * moves.length)];
+    log.info('move', { move });
     chess.move(move);
 
     // Update the game state.
