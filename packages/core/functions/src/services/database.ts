@@ -4,7 +4,7 @@
 
 import { Context, Effect, Layer, type Schema } from 'effect';
 
-import { type Filter, type Live, Obj, type Query, type Ref, type Type } from '@dxos/echo';
+import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
 import type { EchoDatabase, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +38,9 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
    * Resolves an object by its DXN.
    */
   static resolve: {
-    (dxn: DXN): Effect.Effect<unknown, never, DatabaseService>;
+    // No type check.
+    (dxn: DXN): Effect.Effect<Obj.Any | Relation.Any, never, DatabaseService>;
+    // Check matches schema.
     <S extends Type.Obj.Any | Type.Relation.Any>(
       dxn: DXN,
       schema: S,
@@ -58,11 +60,12 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
           })
           .resolve(dxn),
       );
+
       if (!object) {
         return yield* Effect.fail(new ObjectNotFoundError({ dxn }));
       }
       invariant(!schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
-      return object as Schema.Schema.Type<S>;
+      return object as any;
     })) as any;
 
   /**

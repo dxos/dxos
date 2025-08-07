@@ -4,14 +4,14 @@
 
 import { Schema } from 'effect';
 
+import { type Obj, type Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
-import { type AnyEchoObject } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
  * Client-side view onto an EDGE queue.
  */
-export interface Queue<T extends AnyEchoObject = AnyEchoObject> {
+export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> {
   readonly dxn: DXN;
   readonly isLoading: boolean;
   readonly error: Error | null;

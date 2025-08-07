@@ -3,7 +3,7 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
-import { Chunk, Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
+import { Chunk, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
@@ -18,13 +18,12 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { trim } from '@dxos/util';
 
-import { AiAssistantError } from '../errors';
+import { type AiAssistantError } from '../errors';
+
+import { createToolkit, formatSystemPrompt, formatUserPrompt } from './util';
 
 export type AiSessionOptions = {};
 
@@ -81,7 +80,16 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      const promptMessages = yield* formatUserPrompt(params.prompt, params.history ?? []);
+      // Create toolkit.
+      const toolkitWithHandlers = yield* createToolkit(params);
+
+      // Generate system prompt.
+      // TODO(budon): Dynamically resolve template variables.
+      const system = yield* formatSystemPrompt(params, {});
+      console.log(system);
+
+      // Generate user prompt.
+      const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
 
       this._history = [...(params.history ?? [])];
@@ -166,104 +174,4 @@ export class AiSession {
     // });
     // return parser.getResult(result);
   }
-}
-
-/**
- * Formats the user prompt.
- */
-// TODO(burdon): Move to AiPreprocessor.
-// TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
-  Effect.gen(function* () {
-    const prelude: ContentBlock.Any[] = [];
-
-    // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
-    const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
-    if (Option.isSome(artifactDiffResolver)) {
-      const versions = gatherObjectVersions(history);
-      const artifactDiff = yield* Effect.tryPromise({
-        try: () =>
-          artifactDiffResolver.value.resolve(
-            [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
-          ),
-        catch: AiAssistantError.wrap('Artifact diff resolution error'),
-      });
-
-      log.info('version', { artifactDiff, versions });
-      for (const [id, { version }] of [...artifactDiff.entries()]) {
-        if (ObjectVersion.equals(version, versions.get(id)!)) {
-          artifactDiff.delete(id);
-          continue;
-        }
-
-        prelude.push({ _tag: 'anchor', objectId: id, version });
-      }
-
-      if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
-      }
-    }
-
-    return Obj.make(DataType.Message, {
-      created: new Date().toISOString(),
-      sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
-    });
-  });
-
-const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
-  const artifactIds = new Map<ObjectId, ObjectVersion>();
-  for (const message of messages) {
-    for (const block of message.blocks) {
-      if (block._tag === 'anchor') {
-        artifactIds.set(block.objectId, block.version as ObjectVersion);
-      }
-    }
-  }
-
-  return artifactIds;
-};
-
-const createArtifactUpdateBlock = (
-  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
-): ContentBlock.Any => {
-  return {
-    _tag: 'text',
-    // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
-    text: trim`
-      The following artifacts have been updated since the last message:
-      ${[...artifactDiff.entries()]
-        .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
-        .join('\n')}
-    `,
-  };
-};
-
-/**
- * Resolves artifact ids to their versions.
- * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
- * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
- * a diff is inserted into the conversation.
- *
- * Can be optionally provided to the session run call.
- */
-// TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
-  ArtifactDiffResolver,
-  ArtifactDiffResolver.Service
->() {}
-
-export namespace ArtifactDiffResolver {
-  export type Service = {
-    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
-      Map<
-        ObjectId,
-        {
-          version: ObjectVersion;
-          diff?: string;
-        }
-      >
-    >;
-  };
 }

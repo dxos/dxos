@@ -29,9 +29,8 @@ export interface HasId {
   readonly id: ObjectId;
 }
 
-// TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
-// TODO(dmaretskyi): Remove -- this type effectively disables type safety due to `any`.
-export type WithId = BaseObject & HasId;
+// TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
+export type WithId<T extends BaseObject = BaseObject> = T & HasId;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 

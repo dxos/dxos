@@ -15,12 +15,12 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type AnyEchoObject,
   type BaseObject,
   DeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
+  type HasId,
   MetaId,
   type ObjectJSON,
   type ObjectMeta,
@@ -905,7 +905,7 @@ interface DecodedValueAtPath {
 
 /** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
 // TODO(burdon): Any shouldn't be generic (use namespace).
-export type AnyLiveObject<T extends BaseObject = any> = Live<T> & AnyEchoObject;
+export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.

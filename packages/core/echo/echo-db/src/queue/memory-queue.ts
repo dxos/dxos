@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AnyEchoObject, ObjectId } from '@dxos/echo-schema';
+import { type Obj, type Relation } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-export type MemoryQueueOptions<T extends AnyEchoObject> = {
+export type MemoryQueueOptions<T extends Obj.Any | Relation.Any> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -20,8 +21,13 @@ export type MemoryQueueOptions<T extends AnyEchoObject> = {
  * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends AnyEchoObject> implements Queue<T> {
-  static make<T extends AnyEchoObject>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
+export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
+  static make<T extends Obj.Any | Relation.Any>({
+    spaceId,
+    queueId,
+    dxn,
+    objects,
+  }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
       dxn = new DXN(DXN.kind.QUEUE, [spaceId ?? SpaceId.random(), queueId ?? ObjectId.random()]);
     } else {
