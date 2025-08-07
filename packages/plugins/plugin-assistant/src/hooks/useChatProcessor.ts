@@ -38,18 +38,6 @@ export const useChatProcessor = ({
   const registry = useContext(RegistryContext);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  // TODO(wittjosiah): Remove?
-  // Services.
-  // const remoteServices = useQuery(space, Filter.type(ServiceType));
-  // const [serviceTools, setServiceTools] = useState<ExecutableTool[]>([]);
-  // useEffect(() => {
-  //   log('creating service tools...');
-  //   queueMicrotask(async () => {
-  //     const tools = await Promise.all(remoteServices.map((service) => createToolsFromService(service)));
-  //     setServiceTools(tools.flat());
-  //   });
-  // }, [remoteServices]);
-
   // Tools and context.
   const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
   const extensions = useMemo(() => ({ space, dispatch, pivotId: chatId }), [dispatch, space, chatId]);
