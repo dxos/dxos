@@ -5,7 +5,7 @@ tasks:
     deps:
       - esbuild-plugins:compile
       - node-std:compile
-      - vitest-plugin-import-source:compile
+      - vite-plugin-import-source:compile
       - ^:compile
     inputs:
       - /vitest.base.config.ts

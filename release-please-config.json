@@ -994,7 +994,7 @@
         },
         {
           "type": "json",
-          "path": "tools/vitest-plugin-import-source/package.json",
+          "path": "tools/vite-plugin-import-source/package.json",
           "jsonpath": "$.version"
         },
         {

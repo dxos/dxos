@@ -31,7 +31,7 @@
       "path": "../../../tools/vite-plugin-icons"
     },
     {
-      "path": "../../../tools/vitest-plugin-import-source"
+      "path": "../../../tools/vite-plugin-import-source"
     },
     {
       "path": "../../common/context"
