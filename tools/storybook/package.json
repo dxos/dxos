@@ -18,7 +18,7 @@
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
-    "@dxos/vitest-plugin-import-source": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
     "@storybook/addon-docs": "^9.1.1",
     "@storybook/addon-links": "^9.1.1",
     "@storybook/addon-themes": "^9.1.1",

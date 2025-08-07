@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/vitest-plugin-import-source",
+  "name": "@dxos/vite-plugin-import-source",
   "version": "0.1.0",
   "private": true,
   "description": "Vite plugin that resolves npm package imports to their source files.",

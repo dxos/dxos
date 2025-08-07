@@ -11,7 +11,7 @@ import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
-import PluginImportSource from '@dxos/vitest-plugin-import-source';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -181,4 +181,4 @@ function nodeStdPlugin(): Plugin {
       },
     },
   };
-};
+}

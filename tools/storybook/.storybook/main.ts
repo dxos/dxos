@@ -11,7 +11,7 @@ import inspect from 'vite-plugin-inspect';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
-import importSource from '@dxos/vitest-plugin-import-source';
+import importSource from '@dxos/vite-plugin-import-source';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';

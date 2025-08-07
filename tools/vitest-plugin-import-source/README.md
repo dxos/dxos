@@ -1,4 +1,4 @@
-# @dxos/vitest-plugin-import-source
+# @dxos/vite-plugin-import-source
 
 A Vite plugin that resolves npm package imports to their source files using conditional exports.
 
@@ -10,16 +10,16 @@ This plugin intercepts module resolution for npm packages and attempts to resolv
 
 ```typescript
 import { defineConfig } from 'vitest/config';
-import PluginImportSource from '@dxos/vitest-plugin-import-source';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 export default defineConfig({
   plugins: [
     PluginImportSource({
       include: ['**'],
       exclude: ['**/node_modules/**'],
-      verbose: false
-    })
-  ]
+      verbose: false,
+    }),
+  ],
 });
 ```
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import importSource from '@dxos/vitest-plugin-import-source';
+import importSource from '@dxos/vite-plugin-import-source';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
