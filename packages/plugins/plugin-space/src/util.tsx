@@ -424,19 +424,21 @@ export const createStaticSchemaActions = ({
 export const createObjectNode = ({
   space,
   object,
+  disposition,
   droppable = true,
   navigable = false,
   resolve,
 }: {
   space: Space;
   object: Obj.Any;
+  disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = Obj.getTypename(object);
   if (!type) {
-    return undefined;
+    return null;
   }
 
   const metadata = resolve(type);
@@ -465,6 +467,7 @@ export const createObjectNode = ({
     properties: {
       label,
       icon: metadata.icon ?? 'ph--placeholder--regular',
+      disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,

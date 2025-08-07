@@ -2,28 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Array, Chunk, Context, Effect, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
+import { Chunk, Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
-  ToolExecutionService,
-  ToolResolverService,
+  type ToolExecutionService,
+  type ToolResolverService,
   callTools,
   getToolCalls,
 } from '@dxos/ai';
-import { type Blueprint, Template } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo-schema';
-import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import { AiAssistantError } from '../errors';
 
@@ -82,16 +81,7 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
-      // Create toolkit.
-      const toolkitWithHandlers = yield* createToolkit(params);
-
-      // Generate system prompt.
-      // TODO(budon): Dynamically fill variables.
-      const system = yield* formatSystemPrompt(params);
-      console.log(system); // TODO(burdon): Externalize.
-
-      // Generate user prompt.
-      const promptMessages = yield* formatUserPrompt(params);
+      const promptMessages = yield* formatUserPrompt(params.prompt, params.history ?? []);
       yield* this.messageQueue.offer(promptMessages);
 
       this._history = [...(params.history ?? [])];
@@ -178,77 +168,11 @@ export class AiSession {
   }
 }
 
-// TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info).
-
-/**
- * Build a combined toolkit from the blueprint tools and the provided toolkit.
- */
-const createToolkit = <Tools extends AiTool.Any>({
-  blueprints = [],
-  toolkit,
-}: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
-  Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
-    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-      ToolExecutionService.handlersFor(blueprintToolkit),
-    );
-
-    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
-      Effect.provide(blueprintToolkitHandler),
-    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-  });
-
-/**
- * Formats the system prompt.
- */
-// TODO(burdon): Move to AiPreprocessor.
-const formatSystemPrompt = ({
-  system,
-  blueprints = [],
-  objects = [],
-}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
-  Effect.gen(function* () {
-    // TOOD(burdon): Should process templates.
-    const blueprintDefs = yield* pipe(
-      blueprints,
-      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
-      Effect.map(
-        Array.map(
-          (template) => trim`
-            <blueprint>
-              ${Template.process(template.content)}
-            </blueprint>
-          `,
-        ),
-      ),
-      // Effect.tap((templates) => log.info('templates', { templates })),
-      Effect.map(Array.reduce('\n\n## Blueprints:\n\n', String.concat)),
-    );
-
-    const objectDefs = yield* pipe(
-      objects,
-      Effect.forEach((object) =>
-        Effect.succeed(trim`
-          <object>
-            <dxn>${Obj.getDXN(object)}</dxn>
-            <typename>${Obj.getTypename(object)}</typename>
-          </object>
-        `),
-      ),
-      Effect.map(Array.reduce('\n## Context objects:\n\n', String.concat)),
-    );
-
-    return yield* pipe(
-      Effect.succeed([blueprintDefs, objectDefs]),
-      Effect.map(Array.reduce(system ?? '', String.concat)),
-    );
-  });
-
 /**
  * Formats the user prompt.
  */
 // TODO(burdon): Move to AiPreprocessor.
+// TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
 const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
     const prelude: ContentBlock.Any[] = [];
