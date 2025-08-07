@@ -113,6 +113,7 @@ export class AiSession {
           prompt,
           system,
           toolkit,
+          // TODO(burdon): Despite this flag, the model still calls tools.
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
