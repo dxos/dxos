@@ -5,7 +5,6 @@
 import { Effect, Schema } from 'effect';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
@@ -13,7 +12,6 @@ export default defineFunction({
   name: 'dxos.org/function/markdown/read',
   description: 'Read markdown document.',
   inputSchema: Schema.Struct({
-    // TODO(dmaretskyi): Imagine if this could be an ECHO ref. (*_*)
     id: ArtifactId.annotations({
       description: 'The ID of the document to read.',
     }),
@@ -22,11 +20,7 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
-      throw new Error('Document not found.');
-    }
-
+    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
     const { content } = yield* DatabaseService.load(doc.content);
     return { content };
   }),
