@@ -242,7 +242,7 @@ export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     blueprints: [RESEARCH_BLUEPRINT],
-    config: config.remote,
+    config: config.persistent,
     types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),

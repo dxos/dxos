@@ -30,11 +30,30 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
 import type { DataType } from '@dxos/schema';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out.
 export const config = {
   remote: new Config({
     runtime: {
+      services: {
+        ai: {
+          // TODO(burdon): Normalize props ('url'?)
+          server: remoteServiceEndpoints.ai,
+        },
+        edge: {
+          url: remoteServiceEndpoints.edge,
+        },
+      },
+    },
+  }),
+  persistent: new Config({
+    runtime: {
+      client: {
+        storage: {
+          persistent: true,
+        },
+      },
       services: {
         ai: {
           // TODO(burdon): Normalize props ('url'?)
@@ -78,6 +97,11 @@ export const getDecorators = ({
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async ({ client }) => {
+          log.info('onClientInitialized');
+          if (!!client.halo.identity.get()) {
+            return;
+          }
+
           await client.halo.createIdentity();
           await client.spaces.waitUntilReady();
 
@@ -99,6 +123,7 @@ export const getDecorators = ({
             const obj = space.db.add(Obj.clone(blueprint));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
+          await space.db.flush({ indexes: true });
 
           await onInit?.({ space, chat, binder });
         },

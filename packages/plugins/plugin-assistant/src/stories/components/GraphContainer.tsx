@@ -5,7 +5,7 @@
 import { Match } from 'effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { Toolbar } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -15,12 +15,17 @@ import { type Expression, QueryParser, createFilter } from '../../parser';
 import { useFlush, useMatcherExtension } from '../hooks';
 
 import { type ComponentProps } from './types';
+import { useQuery } from '@dxos/react-client/echo';
+import { ResearchGraph } from '@dxos/assistant-testing';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
   const [ast, setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
 
-  const model = useGraphModel(space);
+  const [researchGraph] = useQuery(space, Query.type(ResearchGraph));
+  const queue = researchGraph?.queue.target;
+
+  const model = useGraphModel(space, undefined, undefined, queue);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
