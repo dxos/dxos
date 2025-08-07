@@ -80,6 +80,7 @@ export namespace Obj {
    * NOTE: This is not an instance type.
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
+  // TODO(burdon): This erases the ECHO type info.
   export type Any = Schema.Schema.AnyNoContext;
 }
 

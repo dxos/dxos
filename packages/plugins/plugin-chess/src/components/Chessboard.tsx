@@ -36,6 +36,7 @@ type ChessboardRootProps = PropsWithChildren<{
 const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
   useEffect(() => {
+    console.log('###', game.pgn);
     model.initialize(game.pgn);
   }, [game.pgn]);
 

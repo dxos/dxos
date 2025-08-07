@@ -88,7 +88,7 @@ export class AiSession {
       // Generate system prompt.
       // TODO(budon): Dynamically fill variables.
       const system = yield* formatSystemPrompt(params);
-      console.log(system);
+      console.log(system); // TODO(burdon): Externalize.
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);

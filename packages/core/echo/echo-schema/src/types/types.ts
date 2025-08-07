@@ -172,5 +172,5 @@ export type HasTypename = {};
  */
 export interface BaseEchoObject extends HasId, HasTypename {}
 
-// TODO(burdon): Reconcile with Type.Any.
+// TODO(burdon): Reconcile with Type.Obj.Any.
 export interface AnyEchoObject extends BaseEchoObject {}

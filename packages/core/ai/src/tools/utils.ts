@@ -5,6 +5,7 @@
 import { type AiError, type AiTool, type AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
+import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 
 export const getToolCalls = (message: DataType.Message): ContentBlock.ToolCall[] => {
@@ -49,7 +50,9 @@ export const callTools: <Tools extends AiTool.Any>(
 ) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.ToHandler<Tools>> = Effect.fn('runTools')(
   function* (toolCalls, toolkit) {
     const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-
-    return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkitWithHandlers, toolCall));
+    return yield* Effect.forEach(toolCalls, (toolCall) => {
+      log.info('callTool', { toolCall: JSON.stringify(toolCall) });
+      return callTool(toolkitWithHandlers, toolCall);
+    });
   },
 );
