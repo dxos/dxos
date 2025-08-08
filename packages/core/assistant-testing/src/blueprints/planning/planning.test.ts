@@ -120,7 +120,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readTasks, updateTasks], testToolkit),
-          makeToolExecutionServiceFromFunctions([readTasks, updateTasks], testToolkit, testToolkit.toLayer({})),
+          makeToolExecutionServiceFromFunctions([readTasks, updateTasks], testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),

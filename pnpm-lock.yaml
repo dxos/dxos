@@ -37059,7 +37059,7 @@ snapshots:
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
       '@emnapi/core': 1.4.5
-      '@emnapi/runtime': 1.4.5
+      '@emnapi/runtime': 1.4.3
       '@tybys/wasm-util': 0.10.0
     optional: true
 

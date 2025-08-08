@@ -33,8 +33,7 @@ export const makeToolResolverFromFunctions = (
 export const makeToolExecutionServiceFromFunctions = (
   functions: FunctionDefinition<any, any>[],
   toolkit: AiToolkit.AiToolkit<AiTool.Any>,
-  // TODO(wittjosiah): Evaluates to `Layer.Layer<never, never, never>`.
-  handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.Any>, never, never>,
+  handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>,
 ): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   return Layer.effect(
     ToolExecutionService,

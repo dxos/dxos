@@ -18,6 +18,7 @@ import {
   IntentResolver,
   ReactSurface,
   Settings,
+  Toolkit,
 } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
@@ -134,5 +135,11 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/blueprint`,
       activatesOn: Events.SetupArtifactDefinition,
       activate: BlueprintDefinition,
+    }),
+    defineModule({
+      id: `${meta.id}/module/toolkit`,
+      // TODO(wittjosiah): Use a different event.
+      activatesOn: Events.Startup,
+      activate: Toolkit,
     }),
   ]);
