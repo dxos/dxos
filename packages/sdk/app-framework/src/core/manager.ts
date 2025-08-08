@@ -52,6 +52,7 @@ export class PluginManager {
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
+  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();

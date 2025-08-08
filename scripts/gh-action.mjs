@@ -85,6 +85,11 @@ const argv = yargs(process.argv.slice(2))
     type: 'boolean',
     default: false,
     description: 'Verify mode: exit 0 if all OK, 1 if errors, 2 if pending workflows',
+  })
+  .option('porcelain', {
+    type: 'boolean',
+    default: false,
+    description: 'Fail if git has uncommitted or unpushed changes',
   }).argv;
 
 const command = argv._[0];
@@ -168,11 +173,17 @@ async function verifyWorkflows() {
   // Check for uncommitted changes
   if (hasUncommittedChanges()) {
     console.log(chalk.yellow('⚠️  Warning: You have uncommitted changes in your repository'));
+    if (argv.porcelain) {
+      process.exit(1);
+    }
   }
 
   // Check for unpushed changes
   if (hasUnpushedChanges()) {
     console.log(chalk.yellow('⚠️  Warning: You have unpushed commits in your repository'));
+    if (argv.porcelain) {
+      process.exit(1);
+    }
   }
 
   if (argv.watch) {

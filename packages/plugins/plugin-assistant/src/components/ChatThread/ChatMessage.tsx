@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type Space } from '@dxos/react-client/echo';
+import type { DXN } from '@dxos/keys';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
@@ -132,55 +134,35 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['text' as const]: ({ block }) => {
     invariant(block._tag === 'text');
-    return <MarkdownViewer content={block.text} />;
-  },
+    // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
+    const title = block.disposition ? titles[block.disposition] : undefined;
+    if (!title) {
+      return <MarkdownViewer content={block.text} />;
+    }
 
-  //
-  // Suggest
-  //
-  ['suggest' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
-    invariant(block._tag === 'suggest');
-    return (
-      <IconButton
-        icon='ph--lightning--regular'
-        label={block.text}
-        title={t('button suggest')}
-        onClick={() => onEvent?.({ type: 'submit', text: block.text })}
-      />
-    );
-  },
+    // TOOD(burdon): Store last time user opened/closed COT.
+    // Autoclose when streaming ends.
+    // useEffect(() => {
+    //   if (block.disposition === 'cot' && !block.pending) {
+    //     setOpen(false);
+    //   }
+    // }, [block.disposition, block.pending]);
 
-  //
-  // Select
-  //
-  ['select' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
-    invariant(block._tag === 'select');
     return (
-      <div className='flex flex-wrap gap-1'>
-        {block.options.map((option, idx) => (
-          <Button
-            classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
-            key={idx}
-            onClick={() => onEvent?.({ type: 'submit', text: option })}
-            title={t('button select option')}
-          >
-            {option}
-          </Button>
-        ))}
-      </div>
-    );
-  },
-
-  //
-  // Toolkit
-  //
-  ['toolkit' as const]: ({ block }) => {
-    invariant(block._tag === 'toolkit');
-    return (
-      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
-        <Toolbox classNames={marginClasses} />
+      <ToggleContainer
+        // open={open}
+        defaultOpen={systemDispositions.includes(block.disposition ?? '') && block.pending}
+        title={title}
+        icon={
+          block.pending ? (
+            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
+          ) : undefined
+        }
+      >
+        <MarkdownViewer
+          content={block.text}
+          classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
+        />
       </ToggleContainer>
     );
   },
@@ -235,7 +217,19 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   },
 };
 
-const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+// TODO(burdon): Translations.
+const titles: Record<string, string> = {
+  ['cot' as const]: 'Chain of thought',
+  ['artifact' as const]: 'Artifact',
+  ['tool_use' as const]: 'Tool request',
+  ['tool_result' as const]: 'Tool result',
+  ['tool_list' as const]: 'Tools',
+  ['artifact-update' as const]: 'Artifact(s) changed',
+};
+
+const systemDispositions: string[] = ['cot', 'artifact-update'];
+
+const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {
     return null;
   }
@@ -251,4 +245,8 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
+};
+
+const preprocessTextContent = (content: string) => {
+  return content.replaceAll(/@(dxn:[a-zA-Z0-p:@]+)/g, (_, dxn) => `<${dxn}>`);
 };

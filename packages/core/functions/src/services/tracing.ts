@@ -36,7 +36,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   /**
    * Emit the current human-readable execution status.
    */
-  static emitStatus: (data: Obj.MakeProps<typeof AgentStatus>) => Effect.Effect<unknown, never, void> =
+  static emitStatus: (data: Obj.MakeProps<typeof AgentStatus>) => Effect.Effect<void, never, TracingService> =
     Effect.fnUntraced(function* (data) {
       const tracing = yield* TracingService;
       tracing.write(Obj.make(AgentStatus, data));

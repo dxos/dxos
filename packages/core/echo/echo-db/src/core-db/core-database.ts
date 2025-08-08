@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
+import { type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import {
@@ -940,7 +940,7 @@ export type SpaceDocumentHeads = {
   /**
    * DocumentId => Heads.
    */
-  heads: Record<string, string[]>;
+  heads: Record<DocumentId, Heads>;
 };
 
 export type GetObjectCoreByIdOptions = {

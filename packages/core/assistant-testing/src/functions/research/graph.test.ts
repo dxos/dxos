@@ -9,12 +9,11 @@ import { Config, Effect, Layer, pipe } from 'effect';
 
 import { AiService, AiServiceRouter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { tapHttpErrors } from '@dxos/ai/testing';
+import { AiSession } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-
-import { AiSession } from '../session';
 
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
