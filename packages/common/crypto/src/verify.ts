@@ -18,7 +18,9 @@ export const verifySignature = async (
   let publicKey!: CryptoKey;
 
   try {
-    publicKey = await subtleCrypto.importKey('raw', key.asUint8Array(), algorithm, true, ['verify']);
+    publicKey = await subtleCrypto.importKey('raw', key.asUint8Array() as Uint8Array<ArrayBuffer>, algorithm, true, [
+      'verify',
+    ]);
   } catch {
     return false;
   }
@@ -29,7 +31,7 @@ export const verifySignature = async (
       hash: 'SHA-256',
     },
     publicKey,
-    signature,
-    message,
+    signature as Uint8Array<ArrayBuffer>,
+    message as Uint8Array<ArrayBuffer>,
   );
 };
