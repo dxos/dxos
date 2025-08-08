@@ -10,7 +10,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 // TODO(burdon): Factor out to space plugin.
 export default defineFunction({
   name: 'dxos.org/function/assistant/list',
-  description: 'Lists the objects of the given type.',
+  description:
+    'Lists the objects of the given type. Check the list-schemas tool for available types before calling this function.',
   inputSchema: Schema.Struct({
     typename: Schema.String.annotations({
       description: 'The typename of the objects to list.',
@@ -27,7 +28,7 @@ export default defineFunction({
   handler: Effect.fn(function* ({ data: { typename } }) {
     const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.typename(typename)));
     const results = objects.map((object) => ({
-      dxn: Obj.getDXN(object.dxn).toString(),
+      dxn: Obj.getDXN(object).toString(),
       label: Obj.getLabel(object),
     }));
 
