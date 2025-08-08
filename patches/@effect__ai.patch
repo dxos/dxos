@@ -1,0 +1,32 @@
+diff --git a/dist/esm/AiLanguageModel.js b/dist/esm/AiLanguageModel.js
+index c9f6fe506768ff9ac931b8bd2f73ebdda78eab8a..dbedf82804b1414a81af559187b4898978946a31 100644
+--- a/dist/esm/AiLanguageModel.js
++++ b/dist/esm/AiLanguageModel.js
+@@ -21,7 +21,7 @@ const constDisableValidation = {
+  * @since 1.0.0
+  * @category Context
+  */
+-export class AiLanguageModel extends /*#__PURE__*/_Context.Tag("@effect/ai/AiLanguageModel")() {}
++export class AiLanguageModel extends /*#__PURE__*/_Context.Tag("@effect/ai/AiLanguageModel")() { }
+ const ALPHANUMS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+ const DefaultToolCallIdGenerator = {
+   generateId: /*#__PURE__*/Effect.fnUntraced(function* () {
+@@ -36,7 +36,7 @@ const DefaultToolCallIdGenerator = {
+  * @since 1.0.0
+  * @category Context
+  */
+-export class CurrentToolCallIdGenerator extends /*#__PURE__*/_Context.Tag("@effect/ai/CurrentToolCallIdGenerator")() {}
++export class CurrentToolCallIdGenerator extends /*#__PURE__*/_Context.Tag("@effect/ai/CurrentToolCallIdGenerator")() { }
+ const constEmptyMap = /*#__PURE__*/new Map();
+ /**
+  * @since 1.0.0
+@@ -130,6 +130,9 @@ export const make = /*#__PURE__*/Effect.fnUntraced(function* (opts) {
+     for (const tool of actualToolkit.tools) {
+       modelOptions.tools.push(convertTool(tool));
+     }
++    if (options.disableToolCallResolution) {
++      return [opts.streamText(modelOptions), modelOptions];
++    }
+     return [opts.streamText(modelOptions).pipe(Stream.mapEffect(response => resolveParts({
+       response,
+       toolkit: actualToolkit,
