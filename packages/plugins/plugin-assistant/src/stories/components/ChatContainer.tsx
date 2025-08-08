@@ -18,19 +18,18 @@ import { meta } from '../../meta';
 import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
+import { useQuery } from '@dxos/react-client/echo';
 
 export const ChatContainer = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
   const [chat, setChat] = useState<Assistant.Chat>();
   useEffect(() => {
-    const results = space?.db.query(Filter.type(Assistant.Chat)).runSync();
-    if (results?.length) {
-      setChat(results[0].object);
-    }
-  }, [space]);
+    setChat((currentChat) => currentChat ?? chats[0]);
+  }, [chat, chats]);
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space });
@@ -48,12 +47,8 @@ export const ChatContainer = ({ space }: ComponentProps) => {
 
   const handleBranchChat = useCallback(() => {}, [space]);
 
-  if (!chat || !processor) {
-    return null;
-  }
-
   return (
-    <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
+    <>
       <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
         <Toolbar.IconButton
@@ -64,16 +59,20 @@ export const ChatContainer = ({ space }: ComponentProps) => {
           onClick={handleBranchChat}
         />
       </Toolbar.Root>
-      <Chat.Thread />
-      <div className='p-4'>
-        <Chat.Prompt
-          {...chatProps}
-          classNames='border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-          preset={preset?.id}
-          online={online}
-          onChangeOnline={setOnline}
-        />
-      </div>
-    </Chat.Root>
+      {!chat || !processor ? null : (
+        <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
+          <Chat.Thread />
+          <div className='p-4'>
+            <Chat.Prompt
+              {...chatProps}
+              classNames='border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
+              preset={preset?.id}
+              online={online}
+              onChangeOnline={setOnline}
+            />
+          </div>
+        </Chat.Root>
+      )}
+    </>
   );
 };
