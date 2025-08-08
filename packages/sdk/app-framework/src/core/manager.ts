@@ -52,6 +52,7 @@ export class PluginManager {
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
   private readonly _capabilities = new Map<string, AnyCapability[]>();
+  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
@@ -451,32 +452,42 @@ export class PluginManager {
     });
   }
 
+  // Memoized with _moduleMemoMap
   private _loadModule = (mod: PluginModule): Effect.Effect<AnyCapability[], Error> =>
     Effect.tryPromise({
       try: async () => {
-        const start = performance.now();
-        let failed = false;
-        try {
-          log('loading module', { module: mod.id });
-          // TODO(wittjosiah): Support activation with an effect.
-          let activationResult = await mod.activate(this.context);
-          if (typeof activationResult === 'function') {
-            activationResult = await activationResult();
-          }
-          return Array.isArray(activationResult) ? activationResult : [activationResult];
-        } catch (error) {
-          failed = true;
-          throw error;
-        } finally {
-          performance.measure('activate-module', {
-            start,
-            end: performance.now(),
-            detail: {
-              module: mod.id,
-            },
-          });
-          log('loaded module', { module: mod.id, elapsed: performance.now() - start, failed });
+        const entry = this._moduleMemoMap.get(mod.id);
+        if (entry) {
+          return entry;
         }
+
+        const promise = (async () => {
+          const start = performance.now();
+          let failed = false;
+          try {
+            log('loading module', { module: mod.id });
+            // TODO(wittjosiah): Support activation with an effect.
+            let activationResult = await mod.activate(this.context);
+            if (typeof activationResult === 'function') {
+              activationResult = await activationResult();
+            }
+            return Array.isArray(activationResult) ? activationResult : [activationResult];
+          } catch (error) {
+            failed = true;
+            throw error;
+          } finally {
+            performance.measure('activate-module', {
+              start,
+              end: performance.now(),
+              detail: {
+                module: mod.id,
+              },
+            });
+            log('loaded module', { module: mod.id, elapsed: performance.now() - start, failed });
+          }
+        })();
+        this._moduleMemoMap.set(mod.id, promise);
+        return promise;
       },
       catch: (error) => error as Error,
     }).pipe(
@@ -518,6 +529,7 @@ export class PluginManager {
     return Effect.gen(this, function* () {
       const id = module.id;
       log('deactivating', { id });
+      this._moduleMemoMap.delete(id);
 
       const capabilities = this._capabilities.get(id);
       if (capabilities) {

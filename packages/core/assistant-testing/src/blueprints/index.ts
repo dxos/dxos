@@ -4,3 +4,4 @@
 
 export { default as DESIGN_BLUEPRINT } from './design';
 export { default as PLANNING_BLUEPRINT } from './planning';
+export { default as RESEARCH_BLUEPRINT } from './research';

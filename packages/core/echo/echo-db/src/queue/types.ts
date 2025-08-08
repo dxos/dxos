@@ -8,6 +8,8 @@ import { type Obj, type Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
+// TODO(dmaretskyi): Move the interface into @dxos/echo package.
+
 /**
  * Client-side view onto an EDGE queue.
  */
