@@ -18,7 +18,11 @@ type CreateTableProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
 export const createTable = async ({
   sizes,
   ...props
-}: CreateTableProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View }> => {
+}: CreateTableProps): Promise<{
+  jsonSchema: JsonSchemaType;
+  view: DataType.View;
+  schema: ReturnType<typeof toEffectSchema>;
+}> => {
   const table = Obj.make(TableView, { sizes: {} });
   const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: table });
 
@@ -45,5 +49,5 @@ export const createTable = async ({
     )(property.type);
   }
 
-  return { jsonSchema, view };
+  return { jsonSchema, schema, view };
 };

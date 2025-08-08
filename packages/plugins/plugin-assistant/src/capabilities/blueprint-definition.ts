@@ -7,9 +7,10 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 
-import { analysis, load } from '../functions';
+import { analysis, list, load } from '../functions';
 
-const functions = [analysis, load];
+const functions = [analysis, list, load];
+const tools: string[] = ['get-schemas', 'create-record', 'open-item'];
 
 export default () => {
   return [
@@ -19,11 +20,7 @@ export default () => {
         key: 'dxos.org/blueprint/assistant',
         name: 'Assistant',
         instructions: templates.system,
-        tools: [
-          ...functions.map((tool) => ToolId.make(tool.name)),
-          // TODO(wittjosiah): Factor out.
-          ToolId.make('show'),
-        ],
+        tools: [...functions.map((tool) => ToolId.make(tool.name)), ...tools.map((tool) => ToolId.make(tool))],
       }),
     ),
     contributes(Capabilities.Functions, functions),

@@ -114,3 +114,9 @@ export const defineFunction = <T, O>({
     handler,
   };
 };
+
+export namespace FunctionDefinition {
+  export type Any = FunctionDefinition<any, any>;
+  export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
+  export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
+}

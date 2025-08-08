@@ -231,10 +231,6 @@ export class RepoProxy extends Resource {
     this._pendingUpdateIds.clear();
 
     try {
-      await this._dataService.updateSubscription(
-        { subscriptionId: this._subscriptionId, addIds, removeIds },
-        { timeout: RPC_TIMEOUT },
-      );
       const updates: DocumentUpdate[] = [];
       const addMutations = (documentIds: DocumentId[], isNew?: boolean) => {
         for (const documentId of documentIds) {
@@ -246,9 +242,9 @@ export class RepoProxy extends Resource {
           }
         }
       };
-
       addMutations(createIds, true);
       addMutations(updateIds);
+
       if (updates.length > 0) {
         await this._dataService.update({ subscriptionId: this._subscriptionId, updates }, { timeout: RPC_TIMEOUT });
         if (this._lifecycleState === LifecycleState.CLOSED) {
@@ -258,6 +254,12 @@ export class RepoProxy extends Resource {
           this._handles[documentId]._confirmSync();
         }
       }
+
+      await this._dataService.updateSubscription(
+        { subscriptionId: this._subscriptionId, addIds, removeIds },
+        { timeout: RPC_TIMEOUT },
+      );
+
       this._emitSaveStateEvent();
     } catch (err) {
       // Restore the state of pending updates if the RPC call failed.

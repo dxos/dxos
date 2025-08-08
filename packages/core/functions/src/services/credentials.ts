@@ -4,6 +4,11 @@
 
 import { Context, Effect, Layer } from 'effect';
 
+import { Query } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
+import { DatabaseService } from './database';
+
 type CredentialQuery = {
   service?: string;
 };
@@ -32,14 +37,43 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
     getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
   }
 >() {
-  static configuredLayer = (credentials: ServiceCredential[]) =>
-    Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
-
   static getCredential = (query: CredentialQuery): Effect.Effect<ServiceCredential, never, CredentialsService> =>
     Effect.gen(function* () {
       const credentials = yield* CredentialsService;
       return yield* Effect.promise(() => credentials.getCredential(query));
     });
+
+  static configuredLayer = (credentials: ServiceCredential[]) =>
+    Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
+
+  static layerFromDatabase = () =>
+    Layer.effect(
+      CredentialsService,
+      Effect.gen(function* () {
+        const dbService = yield* DatabaseService;
+        const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
+          const { objects: accessTokens } = await dbService.db.query(Query.type(DataType.AccessToken)).run();
+          return accessTokens
+            .filter((accessToken) => accessToken.source === query.service)
+            .map((accessToken) => ({
+              service: accessToken.source,
+              apiKey: accessToken.token,
+            }));
+        };
+        return {
+          getCredential: async (query) => {
+            const credentials = await queryCredentials(query);
+            if (credentials.length === 0) {
+              throw new Error(`Credential not found for service: ${query.service}`);
+            }
+            return credentials[0];
+          },
+          queryCredentials: async (query) => {
+            return queryCredentials(query);
+          },
+        };
+      }),
+    );
 }
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<CredentialsService> {

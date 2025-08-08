@@ -376,6 +376,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleSave = useCallback(() => {
       dxGrid?.updateCells(true);
+      dxGrid?.requestUpdate();
     }, [dxGrid]);
 
     if (!model || !modals) {

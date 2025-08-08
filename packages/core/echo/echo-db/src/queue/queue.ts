@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Obj, type Ref, type Relation } from '@dxos/echo';
 import { type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -19,6 +21,44 @@ const TRACE_QUEUE_LOAD = false;
  */
 export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
+
+  private readonly _refreshTask = new DeferredTask(Context.default(), async () => {
+    const thisRefreshId = ++this._refreshId;
+    let changed = false;
+    try {
+      TRACE_QUEUE_LOAD &&
+        log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
+      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      const decodedObjects = await Promise.all(
+        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+      );
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      for (const obj of decodedObjects) {
+        this._objectCache.set(obj.id, obj as T);
+      }
+
+      changed = objectSetChanged(this._objects, decodedObjects);
+
+      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
+      this._objects = decodedObjects as T[];
+    } catch (err) {
+      log.catch(err);
+      this._error = err as Error;
+    } finally {
+      this._isLoading = false;
+      if (changed) {
+        this._signal.notifyWrite();
+      }
+    }
+  });
 
   private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
@@ -152,41 +192,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    */
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
   async refresh(): Promise<void> {
-    const thisRefreshId = ++this._refreshId;
-    let changed = false;
-    try {
-      TRACE_QUEUE_LOAD &&
-        log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
-      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-
-      const decodedObjects = await Promise.all(
-        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
-      );
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-
-      for (const obj of decodedObjects) {
-        this._objectCache.set(obj.id, obj as T);
-      }
-
-      changed = objectSetChanged(this._objects, decodedObjects);
-
-      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
-      this._objects = decodedObjects as T[];
-    } catch (err) {
-      log.catch(err);
-      this._error = err as Error;
-    } finally {
-      this._isLoading = false;
-      if (changed) {
-        this._signal.notifyWrite();
-      }
-    }
+    await this._refreshTask.runBlocking();
   }
 }
 

@@ -22,6 +22,12 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   static layer = Layer.succeed(LocalFunctionExecutionService, {
     invokeFunction: (fnDef, input) => invokeFunction(fnDef, input),
   });
+
+  static invokeFunction: <F extends FunctionDefinition.Any>(
+    fnDef: F,
+    input: FunctionDefinition.Input<F>,
+  ) => Effect.Effect<FunctionDefinition.Output<F>, never, Services | LocalFunctionExecutionService> =
+    Effect.serviceFunctionEffect(LocalFunctionExecutionService, (_) => _.invokeFunction as any);
 }
 
 const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect.Effect<unknown, never, Services> =>

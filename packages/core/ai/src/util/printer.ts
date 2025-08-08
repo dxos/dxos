@@ -14,16 +14,19 @@ export type Logger = (...data: any[]) => void;
 export type ConsolePrinterOptions = {
   logger?: Logger;
   mode?: Mode;
+  tag?: string;
 };
 
 export class ConsolePrinter {
   logger: Logger;
   mode: Mode;
+  tag?: string;
 
   // eslint-disable-next-line no-console
-  constructor({ logger = console.log, mode = 'text' }: ConsolePrinterOptions = {}) {
+  constructor({ logger = console.log, mode = 'text', tag }: ConsolePrinterOptions = {}) {
     this.logger = logger;
     this.mode = mode;
+    this.tag = tag;
   }
 
   private log(...data: any[]) {
@@ -31,9 +34,10 @@ export class ConsolePrinter {
   }
 
   printMessage = (message: DataType.Message) => {
+    const prefix = this.tag ? `[${this.tag}] ` : '';
     switch (this.mode) {
       case 'text': {
-        this.log(`${message.sender.role?.toUpperCase()}\n`);
+        this.log(`${prefix}${message.sender.role?.toUpperCase()}\n`);
         for (const content of message.blocks) {
           this.printContentBlock(content);
         }
@@ -41,35 +45,41 @@ export class ConsolePrinter {
       }
 
       case 'json': {
-        this.log(JSON.stringify(message, null, 2));
+        this.log(`${prefix}${JSON.stringify(message, null, 2)}`);
         break;
       }
     }
   };
 
   printContentBlock = (content: ContentBlock.Any) => {
+    const prefix = this.tag ? `[${this.tag}] ` : '';
     switch (this.mode) {
       case 'text': {
         switch (content._tag) {
           case 'text':
-            this.log(`${content.disposition ? `[${content.disposition}] ` : ''}${content.text}`);
+            this.log(`${prefix}${content.disposition ? `[${content.disposition}] ` : ''}${content.text}`);
             break;
           case 'reasoning':
             this.log(
-              `💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
+              `${prefix}💭 [Reasoning] ${content.reasoningText ?? (content.redactedText ? 'REDACTED' : '')} ${
                 content.signature ? ' [signed]' : ''
               }`,
             );
             break;
           case 'toolCall':
-            this.log(`⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
+            this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
             break;
           case 'toolResult': {
-            this.log(`⚙️ [Tool Result] ${content.name} ${inspect(content.result, { depth: null, colors: true })}`);
+            this.log(
+              `${prefix}⚙️ [Tool Result] ${content.name} ${inspect(content.result, { depth: null, colors: true })}`,
+            );
             break;
           }
+          case 'reference':
+            this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
+            break;
           default: {
-            this.log(`[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
+            this.log(`${prefix}[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
             break;
           }
         }
@@ -77,7 +87,7 @@ export class ConsolePrinter {
       }
 
       case 'json': {
-        this.log(JSON.stringify(content, null, 2));
+        this.log(`${prefix}${JSON.stringify(content, null, 2)}`);
         break;
       }
     }

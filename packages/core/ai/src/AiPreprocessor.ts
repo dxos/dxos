@@ -46,8 +46,8 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                // TODO(dmaretskyi): Fix getSnapshot typing.
-                                result: getSnapshot(block.result as any),
+                                // TODO(dmaretskyi): Fix getSnapshot typing ..or use Obj.toJSON (if that works).
+                                result: block.error ?? getSnapshot(block.result as any),
                               }),
                           ),
                         });
@@ -140,7 +140,7 @@ const convertAssistantMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<AiInput.AssistantMessagePart | undefined, AiInputPreprocessingError, never> = Effect.fnUntraced(
   function* (block) {
-    log.info('parse', { block });
+    log('parse', { block });
     switch (block._tag) {
       case 'text':
         return new AiInput.TextPart({
@@ -211,7 +211,7 @@ const convertAssistantMessagePart: (
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
       default:
         // Ignore spurious tags.
-        log.info('ignoring spurious tag', { block });
+        log.warn('ignoring spurious tag', { block });
         return undefined;
     }
   },
