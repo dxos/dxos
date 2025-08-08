@@ -4,8 +4,8 @@
 
 import { Context, Effect, Layer } from 'effect';
 
-import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 import type { Obj, Relation } from '@dxos/echo';
+import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
 import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
 /**

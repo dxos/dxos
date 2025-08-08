@@ -1,7 +1,12 @@
-import { Queue } from '@dxos/echo-db';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { DatabaseService, QueueService } from '@dxos/functions';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
+
+import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
+import { DatabaseService, QueueService } from '@dxos/functions';
 
 /**
  * Container for a set of ephemeral research results.

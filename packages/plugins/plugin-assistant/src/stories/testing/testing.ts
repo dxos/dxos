@@ -18,6 +18,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
@@ -25,12 +26,11 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { Config } from '@dxos/react-client';
+import type { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
-import type { DataType } from '@dxos/schema';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -98,7 +98,7 @@ export const getDecorators = ({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async ({ client }) => {
           log.info('onClientInitialized');
-          if (!!client.halo.identity.get()) {
+          if (client.halo.identity.get()) {
             return;
           }
 

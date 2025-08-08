@@ -6,9 +6,8 @@ import { AiToolkit } from '@effect/ai';
 import { Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { ContextQueueService, DatabaseService, defineFunction, TracingService } from '@dxos/functions';
-
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 
 import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';

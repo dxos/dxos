@@ -3,10 +3,11 @@
 //
 
 import { Context, Effect, Layer } from 'effect';
-import { DatabaseService } from './database';
-import { todo } from '@dxos/debug';
+
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
+
+import { DatabaseService } from './database';
 
 type CredentialQuery = {
   service?: string;

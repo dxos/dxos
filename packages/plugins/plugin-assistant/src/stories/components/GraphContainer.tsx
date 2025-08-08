@@ -5,8 +5,10 @@
 import { Match } from 'effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ResearchGraph } from '@dxos/assistant-testing';
 import { Filter, Query } from '@dxos/echo';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -15,8 +17,6 @@ import { type Expression, QueryParser, createFilter } from '../../parser';
 import { useFlush, useMatcherExtension } from '../hooks';
 
 import { type ComponentProps } from './types';
-import { useQuery } from '@dxos/react-client/echo';
-import { ResearchGraph } from '@dxos/assistant-testing';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
   const [ast, setAst] = useState<Expression | undefined>();

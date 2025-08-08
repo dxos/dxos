@@ -159,7 +159,7 @@ export class AiSession {
   > =>
     Effect.gen(this, function* () {
       const observer = params.observer ?? GenerationObserver.noop();
-      
+
       // Create toolkit.
       const toolkitWithHandlers = yield* createToolkit(params);
 

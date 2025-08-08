@@ -2,35 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { AiService } from '@dxos/ai';
+import { structuredOutputParser } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   LocalFunctionExecutionService,
-  QueueService,
   RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 
-import { inspect } from 'node:util';
-
-import { structuredOutputParser } from '@dxos/ai';
-import { Type } from '@dxos/echo';
-
-import { TestHelpers } from '@dxos/effect';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
+import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { queryResearchGraph, ResearchGraph } from './research-graph';
 
 const MOCK_SEARCH = false;
 

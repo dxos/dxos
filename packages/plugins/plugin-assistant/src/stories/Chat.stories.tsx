@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
+import { EXA_API_KEY } from '@dxos/ai/testing';
 import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Obj, Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
@@ -17,6 +18,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
@@ -31,8 +33,6 @@ import {
   TasksContainer,
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
-import { DataType } from '@dxos/schema';
-import { EXA_API_KEY } from '@dxos/ai/testing';
 
 const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
   const space = useSpace();

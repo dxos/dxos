@@ -5,7 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
 
-import { Obj, Relation } from '@dxos/echo';
+import { type Obj, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
@@ -27,7 +27,7 @@ import {
 } from '@dxos/echo-schema';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
-import { DXN, QueueSubspaceTags } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable } from '@dxos/util';
 

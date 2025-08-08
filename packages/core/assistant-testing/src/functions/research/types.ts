@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { DataType } from '@dxos/schema';
 
 /**

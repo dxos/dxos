@@ -9,13 +9,14 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
+  type ContextBinding,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
-  type ContextBinding,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
@@ -26,7 +27,6 @@ import { trim } from '@dxos/util';
 import { readDocument, updateDocument } from '../../functions';
 import { testToolkit } from '../testing';
 
-import { TestHelpers } from '@dxos/effect';
 import blueprint from './design';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
