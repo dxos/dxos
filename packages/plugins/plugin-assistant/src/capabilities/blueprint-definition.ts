@@ -22,7 +22,7 @@ export default () => {
         tools: [
           ...functions.map((tool) => ToolId.make(tool.name)),
           // TODO(wittjosiah): Factor out.
-          ToolId.make('list-schemas'),
+          ToolId.make('get-schemas'),
           ToolId.make('show'),
         ],
       }),

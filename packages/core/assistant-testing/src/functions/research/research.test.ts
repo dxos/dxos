@@ -44,7 +44,7 @@ const MOCK_SEARCH = false;
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research], testToolkit),
-  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({})),
+  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(

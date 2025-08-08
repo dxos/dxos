@@ -235,7 +235,7 @@ export class AiSession {
         yield* observer.onMessage(toolResultsMessage);
       } while (true);
 
-      // Signal to stream consumers that the session has completed and no more messages are coming.
+      // Signals to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.messageQueue);
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.eventQueue);

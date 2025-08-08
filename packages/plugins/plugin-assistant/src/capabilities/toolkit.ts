@@ -13,8 +13,8 @@ import { SpaceCapabilities, getActiveSpace } from '@dxos/plugin-space';
 import { DataType } from '@dxos/schema';
 
 class SchemaToolkit extends AiToolkit.make(
-  AiTool.make('list-schemas', {
-    description: 'List the available schemas.',
+  AiTool.make('get-schemas', {
+    description: 'Retrieves the available schemas.',
     parameters: {
       // TODO(wittjosiah): Remove this once parameter-less tools are fixed.
       limit: Schema.Number,
@@ -26,7 +26,7 @@ class SchemaToolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     SchemaToolkit.toLayer({
-      'list-schemas': () => {
+      'get-schemas': () => {
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;
         return Effect.gen(function* () {
