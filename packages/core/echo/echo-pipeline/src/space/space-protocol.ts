@@ -118,7 +118,10 @@ export class SpaceProtocol {
     this.blobSync = new BlobSync({ blobStore });
 
     // TODO(burdon): Async race condition? Move to start?
-    this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
+    this._topic = subtleCrypto
+      .digest('SHA-256', topic.asBuffer() as ArrayBufferView<ArrayBuffer>)
+      .then(discoveryKey)
+      .then(PublicKey.from);
 
     this._disableP2pReplication = disableP2pReplication ?? false;
   }

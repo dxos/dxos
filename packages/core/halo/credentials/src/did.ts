@@ -18,7 +18,7 @@ export const createDidFromIdentityKey = async (identityKey: PublicKey): Promise<
     return cachedValue;
   }
 
-  const digest = await subtleCrypto.digest('SHA-256', identityKey.asUint8Array());
+  const digest = await subtleCrypto.digest('SHA-256', identityKey.asUint8Array() as Uint8Array<ArrayBuffer>);
 
   const bytes = new Uint8Array(digest).slice(0, IdentityDid.byteLength);
   const identityDid = IdentityDid.encode(bytes);
