@@ -23,7 +23,7 @@ export const useGraphModel = (
     }
 
     // TODO(burdon): Does this need to be a dependency?
-    if (!model) {
+    if (!model || model.queue !== queue) {
       const model = new SpaceGraphModel().setFilter(filter).setOptions(options);
       void model.open(space, queue);
       setModel(model);

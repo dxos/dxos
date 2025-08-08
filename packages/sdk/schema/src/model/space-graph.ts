@@ -69,6 +69,10 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return this._objects ?? [];
   }
 
+  get queue(): Queue | undefined {
+    return this._queue;
+  }
+
   isOpen() {
     return this._space !== undefined;
   }
@@ -92,7 +96,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   async open(space: Space, queue?: Queue): Promise<this> {
-    log('open');
+    log.info('open', { space, queue });
     if (this.isOpen()) {
       await this.close();
     }
@@ -154,13 +158,21 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     );
 
     if (this._queue) {
-      this._queueSubscription = effect(() => {
+      const clearEffect = effect(() => {
         const items = this._queue?.objects;
         if (items) {
           this._queueItems = [...items];
         }
         this.invalidate();
       });
+      const pollingTask = setInterval(() => {
+        this._queue?.refresh();
+      }, 1000);
+
+      this._queueSubscription = () => {
+        clearEffect();
+        clearInterval(pollingTask);
+      };
     }
   }
 
