@@ -73,9 +73,3 @@ export default defineConfig(async () => ({
     }),
   ],
 }));
-
-// TODO(dmaretskyi): Migrate to https://vitest.dev/guide/projects once it is stable.
-// eslint-disable-next-line no-console
-console.log({
-  proj: new URL('./tsconfig.paths.json', import.meta.url).pathname,
-});
