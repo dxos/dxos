@@ -27,21 +27,6 @@ import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
-    // TODO(mykola): Delete after space fragmentation flag is removed from AutomergeContext.
-    // Skipped because it is the only place where space fragmentation is disabled.
-    // And default behavior in prod is to have space fragmentation enabled.
-    test.skip('objects are created inline if space fragmentation is disabled', async () => {
-      const testBuilder = new EchoTestBuilder();
-      await openAndClose(testBuilder);
-      const { db } = await testBuilder.createDatabase();
-      const object = createTextObject();
-      db.add(object);
-      const docHandles = getDocHandles(db);
-      expect(docHandles.linkedDocHandles.length).to.eq(0);
-      const rootDoc = docHandles.spaceRootHandle.doc();
-      expect(rootDoc?.objects?.[object.id]).not.to.be.undefined;
-    });
-
     test('objects are created in separate docs', async () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
