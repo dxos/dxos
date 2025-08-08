@@ -55,7 +55,7 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
         <div className='p-2'>
           <Chat.Prompt
             {...chatProps}
-            classNames='border border-transparent rounded-md'
+            classNames='p-2 border border-transparent rounded-md'
             preset={preset?.id}
             online={online}
             onChangeOnline={setOnline}

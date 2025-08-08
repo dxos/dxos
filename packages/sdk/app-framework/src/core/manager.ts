@@ -494,7 +494,7 @@ export class PluginManager {
       Effect.withSpan('PluginManager._loadModule'),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
-          Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: mod.id }))),
+          Effect.andThen(Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: mod.id }))),
         ),
       ),
     );

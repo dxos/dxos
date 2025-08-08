@@ -56,7 +56,7 @@ export const useBlueprints = (
   const handleUpdate = useCallback<UpdateCallback>(
     (key: string, isActive: boolean) =>
       Effect.gen(function* () {
-        log.info('update', { key, isActive });
+        log('update', { key, isActive });
         const spaceBlueprint = Array.findFirst(spaceBlueprints, (blueprint) => blueprint.key === key);
         yield* Option.match(spaceBlueprint, {
           onNone: () =>

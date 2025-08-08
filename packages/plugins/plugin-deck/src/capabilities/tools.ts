@@ -34,8 +34,8 @@ export default () =>
     createTool(meta.id, {
       name: 'show',
       description: trim`
-        Show an item as a companion to an existing plank. This will make the item appear alongside the primary content.
-        When supplying IDs, they must be fully qualified like space:object.
+        Show an item as a companion to an existing plank. 
+        When supplying IDs, they must be fully qualified like this: space-key:object-id
       `,
       caption: 'Showing item...',
       // TODO(wittjosiah): Refactor Layout/Navigation/Deck actions so that they can be used directly.
