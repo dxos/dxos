@@ -39,6 +39,9 @@ export default defineFunction({
     objects: Schema.Array(Schema.Unknown).annotations({
       description: 'The structured objects created as a result of the research.',
     }),
+    note: Schema.optional(Schema.String).annotations({
+      description: 'A note from the research agent.',
+    }),
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch } }) {
@@ -51,7 +54,7 @@ export default defineFunction({
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
 
       const newObjects: DXN[] = [];
-      yield* new AiSession()
+      const result = yield* new AiSession()
         .run({
           prompt: query,
           history: [],
@@ -70,6 +73,9 @@ export default defineFunction({
           ),
         );
 
+      const lastBlock = result.at(-1)?.blocks.at(-1);
+      const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
+
       const newObjectsData = yield* Effect.forEach(newObjects, DatabaseService.resolve);
 
       return {
@@ -78,6 +84,7 @@ export default defineFunction({
           '@dxn': newObjects[idx].toString(),
           ...Obj.toJSON(obj),
         })),
+        note,
       };
     },
     Effect.provide(

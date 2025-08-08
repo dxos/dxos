@@ -110,7 +110,7 @@ describe('Research', { timeout: 600_000 }, () => {
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         yield* conversation.run({
-          prompt: 'Research notion founders',
+          prompt: `Research notion founders.`,
           observer,
         });
       },

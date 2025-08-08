@@ -10,6 +10,8 @@ import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
 import { type StreamBlock, StreamTransform } from './parser';
+import { DXN } from '@dxos/keys';
+import { Ref } from '@dxos/echo';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -30,6 +32,10 @@ enum ModelTags {
 
   STATUS = 'status',
   ARTIFACT = 'artifact',
+  /**
+   * Block reference to an object.
+   */
+  OBJECT = 'object',
   SUGGEST = 'suggest',
   PROPOSAL = 'proposal',
   SELECT = 'select',
@@ -338,9 +344,13 @@ const makeContentBlock = (
           } satisfies ContentBlock.Status;
         }
 
+        case ModelTags.OBJECT: {
+          return parseObjectBlock(block);
+        }
+
         case ModelTags.ARTIFACT: {
           log.warn('artifact tags not implemented', { block });
-          break;
+          return undefined;
         }
 
         case ModelTags.SUGGEST: {
@@ -386,4 +396,53 @@ const makeContentBlock = (
       return undefined;
     }
   }
+};
+
+const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {
+  if (block.type !== 'tag') {
+    return undefined;
+  }
+
+  // <object dxn="..." />
+  if (typeof block.attributes?.dxn === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.attributes.dxn)),
+      };
+    } catch {}
+  }
+
+  // <object id="..." />
+  if (typeof block.attributes?.id === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.fromLocalObjectId(block.attributes.id)),
+      };
+    } catch {}
+  }
+
+  // <object>dxn:...</object>
+  if (block.content.length === 1 && block.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.content[0].content)),
+      };
+    } catch {}
+  }
+
+  // <object><dxn>...</dxn></object>
+  const dxnTag = block.content.find((content) => content.type === 'tag' && content.tag === 'dxn');
+  if (dxnTag && dxnTag.type === 'tag' && dxnTag.content.length === 1 && dxnTag.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(dxnTag.content[0].content)),
+      };
+    } catch {}
+  }
+
+  return undefined;
 };

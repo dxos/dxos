@@ -75,6 +75,9 @@ export class ConsolePrinter {
             );
             break;
           }
+          case 'reference':
+            this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
+            break;
           default: {
             this.log(`${prefix}[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
             break;
