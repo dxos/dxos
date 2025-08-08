@@ -17,15 +17,6 @@ import { isNonNullable } from '@dxos/util';
 
 export type UpdateCallback = (key: string, active: boolean) => void;
 
-/**
- * Provide a registry of blueprints from plugins.
- */
-// TODO(burdon): Reconcile with public registry.
-export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
-  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
-};
-
 export type UseBlueprints = {
   blueprints: Blueprint.Blueprint[];
   active: string[];
@@ -83,4 +74,13 @@ export const useBlueprints = (
   );
 
   return { blueprints, active, onUpdate: handleUpdate };
+};
+
+/**
+ * Provide a registry of blueprints from plugins.
+ */
+// TODO(burdon): Reconcile with public registry.
+export const useBlueprintRegistry = () => {
+  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
