@@ -97,7 +97,7 @@ export const getDecorators = ({ types = [], plugins = [], blueprints = [], onIni
       ...plugins,
     ],
     capabilities: [
-      // TOOD(burdon): Factor out capability definitions.
+      // TOOD(burdon): Factor out to testing plugins.
       contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
       contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
       contributes(Capabilities.Functions, [readDocument, updateDocument]),

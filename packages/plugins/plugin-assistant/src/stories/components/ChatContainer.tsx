@@ -68,7 +68,7 @@ export const ChatContainer = ({ space }: ComponentProps) => {
       <div className='p-4'>
         <Chat.Prompt
           {...chatProps}
-          classNames='border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
+          classNames='p-2 border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
           preset={preset?.id}
           online={online}
           onChangeOnline={setOnline}
