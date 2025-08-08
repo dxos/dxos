@@ -157,6 +157,9 @@ async function main() {
       console.log(chalk.green('No linting issues to fix.'));
     }
   } catch (error) {
+    if ('stdout' in error) {
+      delete error.stdout;
+    }
     console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error);
     process.exit(1);
   }
@@ -178,6 +181,9 @@ async function main() {
     await $`moon run :test --no-bail -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
+    if ('stdout' in error) {
+      delete error.stdout;
+    }
     console.error(chalk.red('Build or tests failed:'), error);
     process.exit(1);
   }
