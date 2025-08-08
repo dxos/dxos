@@ -110,5 +110,5 @@ const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
   const table = Obj.make(TableView, { sizes: {} });
   const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema, presentation: table });
-  return new TableModel({ view, schema: schema.jsonSchema, ...props });
+  return new TableModel({ view, schema: schema.jsonSchema, ...props } as TableModelProps);
 };
