@@ -95,8 +95,8 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       >
         <Icon
           icon='ph--spinner--bold'
-          data-visible={activity ? 'show' : 'hide'}
           classNames='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
+          data-visible={activity ? 'show' : 'hide'}
         />
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}

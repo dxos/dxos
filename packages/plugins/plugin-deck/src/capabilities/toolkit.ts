@@ -31,7 +31,7 @@ class DeckToolkit extends AiToolkit.make(
           // TODO(wittjosiah): Support other variants.
           const echoDxn = dxn.asEchoDXN();
           if (!echoDxn) {
-            throw new Error(`Invalid artifact ID: ${id}`);
+            throw new Error(`Invalid object ID: ${id}`);
           }
 
           // TODO(wittjosiah): Get capabilities via layers.

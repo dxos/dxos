@@ -11,7 +11,7 @@ import { analysis, list, load } from '../functions';
 
 const functions = [analysis, list, load];
 const tools: string[] = [
-  // 'get-schemas',
+  'get-schemas',
   // 'show'
 ];
 

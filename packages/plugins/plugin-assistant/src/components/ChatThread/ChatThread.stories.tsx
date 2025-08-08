@@ -27,6 +27,8 @@ const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): Da
   });
 };
 
+// TODO(burdon): References.
+
 const TEST_MESSAGES: DataType.Message[] = [
   createMessage('user', [
     {
