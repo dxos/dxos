@@ -11,7 +11,8 @@ import { assumeType } from '@dxos/util';
 
 import { LabelAnnotation } from '../ast';
 
-import { type InternalObjectProps, SchemaId } from './model';
+import { type InternalObjectProps, SchemaId, SelfDXNId } from './model';
+import { log } from '@dxos/log';
 
 //
 // Accessors based on model.
@@ -26,7 +27,10 @@ export const getObjectDXN = (object: any): DXN | undefined => {
   assertArgument(typeof object === 'object' && object != null, 'expected object');
   assumeType<InternalObjectProps>(object);
 
-  // TODO(dmaretskyi): Use SelfDXNId.
+  if (object[SelfDXNId]) {
+    invariant(object[SelfDXNId] instanceof DXN, 'Invalid object model: invalid self dxn');
+    return object[SelfDXNId];
+  }
 
   if (!ObjectId.isValid(object.id)) {
     throw new TypeError('Object id is not valid.');
