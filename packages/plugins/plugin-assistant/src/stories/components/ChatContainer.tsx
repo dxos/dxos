@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { Chat } from '../../components';
@@ -18,7 +19,6 @@ import { meta } from '../../meta';
 import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
-import { useQuery } from '@dxos/react-client/echo';
 
 export const ChatContainer = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);

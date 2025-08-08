@@ -34,7 +34,7 @@ import {
   SpaceQuerySource,
   normalizeQuery,
 } from './query';
-import type { Queue, QueueFactory, QueueImpl } from './queue';
+import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
 

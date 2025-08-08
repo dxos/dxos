@@ -5,13 +5,13 @@
 import { type AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
+import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
 import { type StreamBlock, StreamTransform } from './parser';
-import { DXN } from '@dxos/keys';
-import { Ref } from '@dxos/echo';
 
 /**
  * Tags that are used by the model to indicate the type of content.

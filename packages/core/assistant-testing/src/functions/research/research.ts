@@ -7,7 +7,9 @@ import { Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import type { DXN } from '@dxos/keys';
 
 import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
@@ -15,8 +17,6 @@ import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGra
 import PROMPT from './instructions-research.tpl?raw';
 import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import type { DXN } from '@dxos/keys';
-import { Obj } from '@dxos/echo';
 
 /**
  * Exec external service and return the results as a Subgraph.

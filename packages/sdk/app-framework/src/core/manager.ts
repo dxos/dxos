@@ -13,7 +13,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type AnyCapability, PluginContext } from './capabilities';
 import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
-import { PluginModule, type Plugin } from './plugin';
+import { type Plugin, type PluginModule } from './plugin';
 
 // TODO(wittjosiah): Factor out?
 const isPromise = (value: unknown): value is Promise<unknown> => {
@@ -51,13 +51,10 @@ export class PluginManager {
   // TODO(wittjosiah): Replace with Rx.
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
-  private readonly _capabilities = new Map<string, AnyCapability[]>();;
-  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>()
-;
-  private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]))
-;
-  private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]))
-;
+  private readonly _capabilities = new Map<string, AnyCapability[]>();
+  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();
+  private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
+  private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
 
   constructor({
     pluginLoader,

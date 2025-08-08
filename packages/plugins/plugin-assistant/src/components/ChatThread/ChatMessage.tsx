@@ -6,8 +6,10 @@ import React, { type FC, Fragment, type PropsWithChildren, useMemo, useSyncExter
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useSpace, type Space } from '@dxos/react-client/echo';
+import type { DXN } from '@dxos/keys';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
@@ -24,8 +26,6 @@ import { type ChatEvent } from '../Chat';
 import { ToolboxContainer } from '../Toolbox';
 
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
-import type { DXN } from '@dxos/keys';
-import { Obj, Ref } from '@dxos/echo';
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;

@@ -5,11 +5,11 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import { DXN } from '@dxos/keys';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { omit } from '@dxos/util';
-import { DXN } from '@dxos/keys';
 
 // TODO(burdon): Benchmark vs. codemirror, which would be more consistent.
 

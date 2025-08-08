@@ -3,7 +3,7 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Chunk, Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
+import { Chunk, type Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,

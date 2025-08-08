@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Obj, type Ref, type Relation } from '@dxos/echo';
 import { type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -11,8 +13,6 @@ import { log } from '@dxos/log';
 
 import type { QueueService } from './queue-service';
 import type { Queue } from './types';
-import { DeferredTask } from '@dxos/async';
-import { Context } from '@dxos/context';
 
 const TRACE_QUEUE_LOAD = false;
 

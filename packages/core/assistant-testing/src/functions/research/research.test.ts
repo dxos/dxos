@@ -7,8 +7,16 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService, structuredOutputParser } from '@dxos/ai';
+import { AiService, ConsolePrinter, structuredOutputParser } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
+import {
+  AiConversation,
+  type ContextBinding,
+  GenerationObserver,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
+import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import {
@@ -23,22 +31,13 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 
-import {
-  AiConversation,
-  GenerationObserver,
-  makeToolExecutionServiceFromFunctions,
-  makeToolResolverFromFunctions,
-  type ContextBinding,
-} from '@dxos/assistant';
-import { Markdown } from '@dxos/echo-schema';
-import { trim } from '@dxos/util';
 import { RESEARCH_BLUEPRINT } from '../../blueprints';
+import { testToolkit } from '../../blueprints/testing';
+
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { Blueprint } from '@dxos/blueprints';
-import { testToolkit } from '../../blueprints/testing';
 
 const MOCK_SEARCH = false;
 
