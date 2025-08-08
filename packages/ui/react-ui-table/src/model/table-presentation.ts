@@ -68,6 +68,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
       case 'frozenRowsEnd':
         cells = this.getDraftRowCells(range);
         break;
+      case 'fixedEndStart':
+        cells = this.getDraftSelectCells(range);
+        break;
       case 'fixedEndEnd':
         cells = this.getDraftActionCells(range);
         break;
@@ -279,6 +282,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
     for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
       const draftRow = draftRows[row];
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+        const cellIndex = toPlaneCellIndex({ col, row });
         const field = fields[col];
         if (!field) {
           continue;
@@ -287,7 +291,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
         this.createDataCell(cells, draftRow.data, field, col, row);
 
         if (this.model.hasDraftRowValidationError(row, field.path)) {
-          const cellIndex = toPlaneCellIndex({ col, row });
           const cellValue = cells[cellIndex];
           if (cellValue) {
             const existingClasses = cellValue.className || '';
@@ -295,6 +298,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
             cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
           }
         }
+
+        cells[cellIndex].className += ' !bg-toolbarSurface';
       }
     }
 
@@ -409,6 +414,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
         readonly: true,
         accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+        className: '!bg-toolbarSurface',
+      };
+    }
+
+    return cells;
+  }
+
+  private getDraftSelectCells(range: DxGridPlaneRange): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const draftRows = this.model.draftRows.value;
+
+    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+      cells[toPlaneCellIndex({ col: 0, row })] = {
+        value: '',
+        readonly: true,
+        className: '!bg-toolbarSurface',
       };
     }
 

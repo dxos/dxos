@@ -130,6 +130,7 @@ const saveDraftRowButton = {
       disabled,
       data: {
         'data-row-index': rowIndex.toString(),
+        'data-variant': 'primary',
       },
       testId: 'table-save-draft-row-button',
     });

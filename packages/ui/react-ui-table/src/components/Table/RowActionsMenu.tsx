@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
@@ -38,7 +38,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                 model.handleRowAction(action.id, state.rowIndex);
               }}
             >
-              {t(action.translationKey)}
+              {toLocalizedString(action.label, t)}
             </DropdownMenu.Item>
           ))}
         </DropdownMenu.Viewport>

@@ -4,10 +4,12 @@
 
 import { ToolId } from '@dxos/ai';
 import { Capabilities, contributes } from '@dxos/app-framework';
+import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { trim } from '@dxos/util';
 
-import { context } from '../functions';
+import { analysis, load } from '../functions';
+
+const functions = [analysis, load];
 
 export default () => {
   return [
@@ -16,15 +18,14 @@ export default () => {
       Blueprint.make({
         key: 'dxos.org/blueprint/assistant',
         name: 'Assistant',
-        instructions: {
-          // TODO(burdon): This should be the system prompt for the assistant?
-          source: trim`          
-            You are a helpful assistant.
-          `,
-        },
-        tools: [ToolId.make(context.name)],
+        instructions: templates.system,
+        tools: [
+          ...functions.map((tool) => ToolId.make(tool.name)),
+          // TODO(wittjosiah): Factor out.
+          ToolId.make('show'),
+        ],
       }),
     ),
-    contributes(Capabilities.Functions, [context]),
+    contributes(Capabilities.Functions, functions),
   ];
 };

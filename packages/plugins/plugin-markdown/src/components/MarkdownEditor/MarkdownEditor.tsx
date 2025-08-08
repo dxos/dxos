@@ -185,6 +185,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             readOnly: viewMode === 'readonly',
             placeholder: t('editor placeholder'),
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
+            search: true,
           }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),

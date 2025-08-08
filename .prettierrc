@@ -3,5 +3,8 @@
   "jsxSingleQuote": true,
   "trailingComma": "all",
   "printWidth": 120,
-  "plugins": ["prettier-plugin-packagejson"]
+  "plugins": ["prettier-plugin-packagejson"],
+  "files.associations": {
+    "*.tpl": "html"
+  }
 }

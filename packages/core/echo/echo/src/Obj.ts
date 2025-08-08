@@ -90,7 +90,7 @@ export const instanceOf: {
 export const getSchema = EchoSchema.getSchema;
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getDXN = (obj: Any): DXN => {
+export const getDXN = (obj: Any | Relation.Any): DXN => {
   assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
   const dxn = EchoSchema.getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
@@ -108,7 +108,7 @@ export const getTypeDXN = EchoSchema.getType;
  * @returns The typename of the object's type.
  * @example `example.com/type/Contact`
  */
-export const getTypename = (obj: Any): string | undefined => {
+export const getTypename = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema == null) {
     // Try to extract typename from DXN.
@@ -119,28 +119,28 @@ export const getTypename = (obj: Any): string | undefined => {
 };
 
 // TODO(dmaretskyi): Allow returning undefined.
-export const getMeta = (obj: Any): EchoSchema.ObjectMeta => {
+export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
   const meta = EchoSchema.getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta;
 };
 
 // TODO(dmaretskyi): Default to `false`.
-export const isDeleted = (obj: Any): boolean => {
+export const isDeleted = (obj: Any | Relation.Any): boolean => {
   const deleted = EchoSchema.isDeleted(obj);
   invariant(typeof deleted === 'boolean', 'Invalid object.');
   return deleted;
 };
 
 // TODO(burdon): Rename "label"
-export const getLabel = (obj: Any): string | undefined => {
+export const getLabel = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
     return EchoSchema.getLabel(schema, obj);
   }
 };
 
-export const setLabel = (obj: Any, label: string) => {
+export const setLabel = (obj: Any | Relation.Any, label: string) => {
   const schema = getSchema(obj);
   if (schema != null) {
     EchoSchema.setLabel(schema, obj, label);

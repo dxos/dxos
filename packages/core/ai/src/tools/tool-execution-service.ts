@@ -7,6 +7,10 @@ import { Context, Effect, Layer, Record } from 'effect';
 
 import { AiToolNotFoundError } from '../errors';
 
+/**
+ *
+ */
+// TODO(burdon): Comment.
 export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
   ToolExecutionService,
   {

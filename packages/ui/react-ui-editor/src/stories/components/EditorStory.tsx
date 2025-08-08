@@ -112,7 +112,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
         initialValue: text,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
+          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
           editorGutter,

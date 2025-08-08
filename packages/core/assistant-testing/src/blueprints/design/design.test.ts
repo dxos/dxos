@@ -24,6 +24,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readDocument, updateDocument } from '../../functions';
+import { testToolkit } from '../testing';
 
 import { TestHelpers } from '@dxos/effect';
 import blueprint from './design';
@@ -77,8 +78,8 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readDocument, updateDocument]),
-          makeToolExecutionServiceFromFunctions([readDocument, updateDocument]),
+          makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
+          makeToolExecutionServiceFromFunctions([readDocument, updateDocument], testToolkit, testToolkit.toLayer({})),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
