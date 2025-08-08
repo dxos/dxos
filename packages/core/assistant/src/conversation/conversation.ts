@@ -19,15 +19,21 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
-import { AiSession } from '../session';
+import { AiSession, type GenerationObserver } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
   system?: string;
-  session?: AiSession;
   toolkit?: AiToolkit.AiToolkit<Tools>;
+
+  observer?: GenerationObserver;
+
+  /**
+   * @deprecated Remove
+   */
+  session?: AiSession;
 }
 
 export type AiConversationOptions = {
@@ -107,6 +113,7 @@ export class AiConversation {
         prompt: params.prompt,
         system: params.system,
         history,
+        observer: params.observer,
         objects,
         blueprints,
         toolkit: params.toolkit,

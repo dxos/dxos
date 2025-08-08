@@ -3,13 +3,14 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Chunk, type Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
+import { Chunk, type Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
+  type ConsolePrinter,
   ToolExecutionService,
   ToolResolverService,
   callTools,
@@ -28,12 +29,76 @@ import { formatSystemPrompt, formatUserPrompt } from './format';
 
 export type AiSessionOptions = {};
 
+/**
+ * Live observer of the generation process.
+ */
+export interface GenerationObserver {
+  /**
+   * Unparsed content block parts from the model.
+   */
+  onPart: (part: AiResponse.Part) => Effect.Effect<void>;
+
+  /**
+   * Parsed content blocks from the model.
+   * NOTE: Use block.pending to determine if the block was completed.
+   * For each block this will be called 0..n times with a pending block and then once with the final state of the block.
+   *
+   * Example:
+   *  1. { pending: true, text: "Hello"}
+   *  2. { pending: true, text: "Hello, I am a"}
+   *  3. { pending: false, text: "Hello, I am a helpful assistant!"}
+   */
+  onBlock: (block: ContentBlock.Any) => Effect.Effect<void>;
+
+  /**
+   * Complete messages fired during the session, both from the model and from the user.
+   * This message will contain all message blocks emitted through the `onBlock` callback.
+   */
+  onMessage: (message: DataType.Message) => Effect.Effect<void>;
+}
+
+export const GenerationObserver = Object.freeze({
+  make: ({
+    onPart = Function.constant(Effect.void),
+    onBlock = Function.constant(Effect.void),
+    onMessage = Function.constant(Effect.void),
+  }: Partial<GenerationObserver> = {}): GenerationObserver => ({
+    onPart,
+    onBlock,
+    onMessage,
+  }),
+
+  noop: () => GenerationObserver.make(),
+
+  /**
+   * Debug printer to be used in unit-tests and browser devtools.
+   */
+  fromPrinter: (printer: ConsolePrinter) =>
+    GenerationObserver.make({
+      onBlock: (block) =>
+        Effect.sync(() => {
+          if (block.pending) {
+            return; // Only prints full blocks (better for unit-tests and browser devtools).
+          }
+          printer.printContentBlock(block);
+        }),
+      onMessage: (message) =>
+        Effect.sync(() => {
+          if (message.sender.role === 'assistant') {
+            return; // Skip assistant messages since they are printed in the `onBlock` callback.
+          }
+          printer.printMessage(message);
+        }),
+    }),
+});
+
 export type SessionRunParams<Tools extends AiTool.Any> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[]; // TODO(burdon): Meta only (typename and id -- write to binder).
   blueprints?: Blueprint.Blueprint[];
+  observer?: GenerationObserver;
   toolkit?: AiToolkit.AiToolkit<Tools>;
 };
 
@@ -51,7 +116,12 @@ export class AiSession {
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
-  /** Blocks streaming from the model during the session. */
+  // TODO(dmaretskyi): Remove the queues and convert everything to observer.
+
+  /**
+   * Blocks streaming from the model during the session.
+   * @deprecated Use `observer.onBlock` instead.
+   */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
 
   /** Unparsed events from the underlying generation stream. */
@@ -81,24 +151,27 @@ export class AiSession {
     AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
+      const observer = params.observer ?? GenerationObserver.noop();
+
       // Create toolkit.
       const toolkit: AiToolkit.ToHandler<Tools> = yield* createToolkit(params);
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables.
       const system = yield* formatSystemPrompt(params);
-      console.log(system);
+      // console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
+      yield* observer.onMessage(promptMessages);
 
       this._history = [...(params.history ?? [])];
       this._pending = [promptMessages];
 
       // Potential tool-use loop.
       do {
-        log.info('request', {
+        log('request', {
           prompt: promptMessages,
           system: { snippet: [system.slice(0, 32), '...', system.slice(-32)].join(''), length: system.length },
           pending: this._pending.length,
@@ -119,8 +192,9 @@ export class AiSession {
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
-            onBlock: (block) => this.blockQueue.offer(Option.some(block)),
-            onPart: (part) => this.eventQueue.offer(part),
+            onBlock: (block) =>
+              Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], { discard: true }),
+            onPart: (part) => Effect.all([this.eventQueue.offer(part), observer.onPart(part)], { discard: true }),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
@@ -140,6 +214,7 @@ export class AiSession {
         });
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
+        yield* observer.onMessage(response);
 
         // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
@@ -157,6 +232,7 @@ export class AiSession {
 
         this._pending.push(toolResultsMessage);
         yield* this.messageQueue.offer(toolResultsMessage);
+        yield* observer.onMessage(toolResultsMessage);
       } while (true);
 
       // Signal to stream consumers that the session has completed and no more messages are coming.
@@ -164,7 +240,7 @@ export class AiSession {
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.eventQueue);
 
-      log.info('done', { pending: this._pending.length });
+      log('done', { pending: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 

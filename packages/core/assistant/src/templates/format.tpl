@@ -29,6 +29,15 @@ Before responding, explain your reasoning and include your detailed chain-of-tho
 The <cot> tag should be the first thing in your response.
 {{/if}}
 
+## Block references
+
+You can reply with a block reference to an object you have a DXN for.
+<example>
+
+  <object><dxn>dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M</dxn></object>
+
+  <object><dxn>dxn:echo:@:01K24XPK464FSCKVQJAB2H662M</dxn></object>
+</example>
 ### Suggestions
 
 Each suggestion must in the form of a proposed action enclosed in a <suggest> tag.

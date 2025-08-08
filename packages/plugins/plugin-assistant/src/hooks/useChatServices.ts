@@ -56,16 +56,18 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
       aiServiceLayer,
       makeToolResolverFromFunctions(allFunctions, toolkit),
       makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
-
-      CredentialsService.configuredLayer([]),
-      space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
-      space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
-
+      CredentialsService.layerFromDatabase(),
       ComputeEventLogger.layerFromTracing,
     ).pipe(
-      Layer.provideMerge(TracingService.layerNoop),
-      Layer.provideMerge(LocalFunctionExecutionService.layer),
-      Layer.provideMerge(RemoteFunctionExecutionService.mockLayer),
+      Layer.provideMerge(
+        Layer.mergeAll(
+          space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
+          space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
+          TracingService.layerNoop,
+          LocalFunctionExecutionService.layer,
+          RemoteFunctionExecutionService.mockLayer,
+        ),
+      ),
     );
   }, [space, functions, toolkits, handlers]);
 };
