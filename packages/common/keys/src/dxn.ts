@@ -283,6 +283,13 @@ export class DXN {
       objectId: objectId as string | undefined,
     };
   }
+
+  /**
+   * Produces a new DXN with the given parts appended.
+   */
+  extend(parts: string[]): DXN {
+    return new DXN(this.#kind, [...this.#parts, ...parts]);
+  }
 }
 
 // TODO(dmaretskyi): Fluent API:

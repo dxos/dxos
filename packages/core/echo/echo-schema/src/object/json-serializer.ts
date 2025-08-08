@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, type ObjectMeta, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, ObjectId, type SpaceId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import { EntityKind } from '../ast';
@@ -31,6 +31,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  SelfDXNId,
   TypeId,
   assertObjectModelShape,
 } from './model';
@@ -59,7 +60,7 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
  */
 export const objectFromJSON = async (
   jsonData: unknown,
-  { refResolver }: { refResolver?: RefResolver } = {},
+  { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
 ): Promise<AnyEchoObject> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'expect object');
@@ -113,6 +114,10 @@ export const objectFromJSON = async (
     invariant(Array.isArray(meta.keys));
 
     defineHiddenProperty(obj, MetaId, meta);
+  }
+
+  if (dxn) {
+    defineHiddenProperty(obj, SelfDXNId, dxn);
   }
 
   assertObjectModelShape(obj);

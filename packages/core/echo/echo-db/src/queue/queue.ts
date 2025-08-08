@@ -5,10 +5,16 @@
 import { DeferredTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, type Ref, type Relation } from '@dxos/echo';
-import { type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
+import {
+  type HasId,
+  SelfDXNId,
+  assertObjectModelShape,
+  defineHiddenProperty,
+  setRefResolverOnData,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
-import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { QueueService } from './queue-service';
@@ -35,7 +41,9 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
       }
 
       const decodedObjects = await Promise.all(
-        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
+        objects.map((obj) =>
+          Obj.fromJSON(obj, { refResolver: this._refResolver, space: this._spaceId, queue: this._queueId }),
+        ),
       );
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -117,6 +125,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
+      defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
     }
 
     // Optimistic update.
@@ -161,7 +170,10 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
     const decodedObjects = await Promise.all(
       objects.map(async (obj) => {
-        const decoded = await Obj.fromJSON(obj, { refResolver: this._refResolver });
+        const decoded = await Obj.fromJSON(obj, {
+          refResolver: this._refResolver,
+          dxn: this._dxn.extend([(obj as any).id]),
+        });
         this._objectCache.set(decoded.id, decoded as T);
         return decoded;
       }),
