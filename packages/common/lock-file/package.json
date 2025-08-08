@@ -26,10 +26,10 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "fs-ext": "^2.1.1"
+    "fs-ext": "^2.0.0"
   },
   "devDependencies": {
-    "@types/fs-ext": "^2.0.3"
+    "@types/fs-ext": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"
