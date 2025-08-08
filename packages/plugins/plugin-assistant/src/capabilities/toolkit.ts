@@ -90,7 +90,7 @@ class SchemaToolkit extends AiToolkit.make(
           const object = Obj.make(schema, data);
           yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space!, hidden: true }));
           return object;
-        }).pipe(Effect.provide(service));
+        }).pipe(Effect.provide(service), Effect.orDie);
       },
     });
 }
