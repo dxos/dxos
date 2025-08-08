@@ -186,6 +186,10 @@ const typedJsonSerializer = function (this: any) {
     [ATTR_TYPE]: typename.toString(),
   };
 
+  if (this[SelfDXNId]) {
+    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
+  }
+
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
     invariant(sourceDXN instanceof DXN);
