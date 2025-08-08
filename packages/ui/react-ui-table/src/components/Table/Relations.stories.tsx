@@ -48,10 +48,15 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     }
 
     const timeout = setTimeout(async () => {
-      const { jsonSchema, view } = await createTable({ client, space, typename: Type.getTypename(schema) });
+      const {
+        jsonSchema,
+        schema: effectSchema,
+        view,
+      } = await createTable({ client, space, typename: Type.getTypename(schema) });
       setJsonSchema(jsonSchema);
       setView(view);
       space.db.add(view);
+      await space.db.schemaRegistry.register([effectSchema]);
     });
     return () => clearTimeout(timeout);
   }, [client, space, schema]);
