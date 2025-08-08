@@ -7,10 +7,9 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService } from '@dxos/ai';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { structuredOutputParser } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
@@ -34,8 +33,8 @@ const MOCK_SEARCH = false;
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  makeToolResolverFromFunctions([]),
-  makeToolExecutionServiceFromFunctions([]),
+  ToolResolverService.layerEmpty,
+  ToolExecutionService.layerEmpty,
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
