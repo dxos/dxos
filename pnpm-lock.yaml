@@ -1691,11 +1691,11 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       fs-ext:
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0
     devDependencies:
       '@types/fs-ext':
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0
 
   packages/common/log:
