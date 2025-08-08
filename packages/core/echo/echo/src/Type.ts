@@ -81,9 +81,7 @@ export namespace Obj {
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
   // TODO(burdon): This erases the ECHO type info (e.g., id, typename).
-  // export type Any = Schema.Schema.AnyNoContext;
-  export type Type<T extends EchoSchema.HasId> = Schema.Schema<T, any, never>;
-  export type Any = Type<any>;
+  export type Any = Schema.Schema.AnyNoContext;
 }
 
 //
