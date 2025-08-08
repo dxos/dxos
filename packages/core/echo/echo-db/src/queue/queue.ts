@@ -42,7 +42,10 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
 
       const decodedObjects = await Promise.all(
         objects.map((obj) =>
-          Obj.fromJSON(obj, { refResolver: this._refResolver, space: this._spaceId, queue: this._queueId }),
+          Obj.fromJSON(obj, {
+            refResolver: this._refResolver,
+            dxn: this._dxn.extend([(obj as any).id]),
+          }),
         ),
       );
       if (thisRefreshId !== this._refreshId) {
