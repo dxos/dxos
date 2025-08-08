@@ -19,7 +19,8 @@ export const ObjectLink = ({ dxn }: { dxn: DXN }) => {
       title={title}
       className={mx(
         'inline-flex items-center max-w-[16rem] px-2 py-0.5 overflow-hidden',
-        'border border-separator rounded-full whitespace-nowrap text-ellipsis text-primary-500 hover:text-primary-500 hover:border-primary-500',
+        // TODO(burdon): Use style for tags.
+        'border border-separator rounded whitespace-nowrap text-ellipsis text-primary-500 hover:text-primary-500 hover:border-primary-500',
       )}
       target='_blank'
       rel='noopener noreferrer'

@@ -10,6 +10,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { analysis, list, load } from '../functions';
 
 const functions = [analysis, list, load];
+const tools = ['get-schemas', 'show'];
 
 export default () => {
   return [
@@ -19,12 +20,7 @@ export default () => {
         key: 'dxos.org/blueprint/assistant',
         name: 'Assistant',
         instructions: templates.system,
-        tools: [
-          ...functions.map((tool) => ToolId.make(tool.name)),
-          // TODO(wittjosiah): Factor out.
-          ToolId.make('get-schemas'),
-          ToolId.make('show'),
-        ],
+        tools: [...functions.map((tool) => ToolId.make(tool.name)), ...tools.map((tool) => ToolId.make(tool))],
       }),
     ),
     contributes(Capabilities.Functions, functions),
