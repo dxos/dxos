@@ -35,6 +35,7 @@ export const translations = [
         'column action delete': 'Delete Column',
         'delete row label': 'Delete row',
         'new column button label': 'Create column',
+        'open record label': 'Open record',
       },
     },
   },

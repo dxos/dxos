@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type AnyEchoObject, type BaseObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
+import { type BaseObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -79,13 +79,13 @@ export interface EchoDatabase {
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends AnyEchoObject>(obj: T): void;
+  remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.

@@ -83,7 +83,7 @@ const defaultBasicOptions: BasicExtensionsOptions = {
   history: true,
   keymap: 'standard',
   lineWrapping: true,
-  search: true,
+  search: false,
 } as const;
 
 const keymaps: { [key: string]: readonly KeyBinding[] } = {

@@ -84,13 +84,13 @@ export const ChatMessage = ({ classNames, debug, space, message, processor, tool
         );
       })}
       <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
-        <IconButton
+        {/* <IconButton
           classNames='animate-[fadeIn_0.5s]'
           icon='ph--trash--regular'
           iconOnly
           label={t('button delete message')}
           onClick={() => onEvent?.({ type: 'delete', id: message.id })}
-        />
+        /> */}
       </div>
     </>
   );

@@ -66,7 +66,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     Effect.fn(
       function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
-
         const response = yield* session.run({
           prompt: 'Hello world!',
           history: [],
@@ -93,7 +92,6 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
           history: [],
           toolkit: TestToolkit,
         });
-
         log.info('response', { response });
       },
       Effect.provide(
@@ -112,11 +110,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
   // TODO(dmaretskyi): Revive test.
   /*
   it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
-    
-    //   overrides: { model: 'llama3.1:8b' },
-    
+    // overrides: { model: 'llama3.1:8b' },
     const session = new AiSession({ operationModel: 'configured' });
-
     const objects = new Set<string>();
 
     // Define calendar artifact.

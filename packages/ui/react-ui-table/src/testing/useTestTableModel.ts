@@ -93,7 +93,8 @@ export const useTestTableModel = () => {
 
   const handleInsertRow = useCallback(() => {
     model?.insertRow();
-  }, [model]);
+    tableRef.current?.focusDraft?.();
+  }, [model, tableRef.current]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();
