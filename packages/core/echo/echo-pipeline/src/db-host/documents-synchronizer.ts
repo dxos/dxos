@@ -88,18 +88,13 @@ export class DocumentsSynchronizer extends Resource {
 
   async update(updates: DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation, isNew } of updates) {
-      if (isNew) {
-        const doc = this._params.repo.import<DatabaseDirectory>(mutation, { docId: documentId as DocumentId });
-        this._startSync(doc);
-      } else {
-        this._writeMutation(documentId as DocumentId, mutation);
-      }
+      this._writeMutation(documentId as DocumentId, mutation, isNew);
     }
     // TODO(mykola): This should not be required.
     await this._params.repo.flush(updates.map(({ documentId }) => documentId as DocumentId));
   }
 
-  private _startSync(doc: DocHandle<DatabaseDirectory>): void {
+  private _startSync(doc: DocHandle<DatabaseDirectory>) {
     if (this._syncStates.has(doc.documentId)) {
       log('Document already being synced', { documentId: doc.documentId });
       return;
@@ -108,6 +103,7 @@ export class DocumentsSynchronizer extends Resource {
     const syncState: DocSyncState = { handle: doc };
     this._subscribeForChanges(syncState);
     this._syncStates.set(doc.documentId, syncState);
+    return syncState;
   }
 
   _subscribeForChanges(syncState: DocSyncState): void {
@@ -156,19 +152,25 @@ export class DocumentsSynchronizer extends Resource {
     return mutation;
   }
 
-  private _writeMutation(documentId: DocumentId, mutation: Uint8Array): void {
+  private _writeMutation(documentId: DocumentId, mutation: Uint8Array, isNew?: boolean): void {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return;
     }
-    const syncState = this._syncStates.get(documentId);
-    invariant(syncState, 'Sync state for document not found');
-    syncState.handle.update((doc) => {
-      const headsBefore = A.getHeads(doc);
-      const newDoc = A.loadIncremental(doc, mutation);
-      if (A.equals(headsBefore, syncState.lastSentHead)) {
-        syncState.lastSentHead = A.getHeads(newDoc);
+    if (isNew) {
+      const newHandle = this._params.repo.import<DatabaseDirectory>(mutation, { docId: documentId });
+      const syncState = this._startSync(newHandle);
+      syncState!.lastSentHead = A.getHeads(newHandle.doc());
+    } else {
+      const syncState = this._syncStates.get(documentId);
+      invariant(syncState, 'Sync state for document not found');
+      const headsBefore = A.getHeads(syncState.handle.doc());
+      // This will update corresponding handle in the repo.
+      this._params.repo.import(mutation, { docId: documentId });
+
+      if (A.equals(headsBefore, syncState!.lastSentHead)) {
+        // No new mutations were discovered on network, so we do not need to send updates from worker to client.
+        syncState!.lastSentHead = A.getHeads(syncState.handle.doc());
       }
-      return newDoc;
-    });
+    }
   }
 }
