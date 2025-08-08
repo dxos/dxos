@@ -14,7 +14,7 @@ import {
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { QueueService } from './queue-service';

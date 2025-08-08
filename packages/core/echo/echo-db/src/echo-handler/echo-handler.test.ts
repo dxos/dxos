@@ -38,7 +38,6 @@ import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
-import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 

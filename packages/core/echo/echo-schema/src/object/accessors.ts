@@ -12,7 +12,6 @@ import { assumeType } from '@dxos/util';
 import { LabelAnnotation } from '../ast';
 
 import { type InternalObjectProps, SchemaId, SelfDXNId } from './model';
-import { log } from '@dxos/log';
 
 //
 // Accessors based on model.

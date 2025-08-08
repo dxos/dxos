@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 import type * as LiveObject from '@dxos/live-object';
 import { live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';

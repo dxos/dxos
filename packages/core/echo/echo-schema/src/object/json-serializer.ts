@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, type ObjectMeta, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import { EntityKind } from '../ast';
