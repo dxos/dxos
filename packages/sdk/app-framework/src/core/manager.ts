@@ -51,9 +51,13 @@ export class PluginManager {
   // TODO(wittjosiah): Replace with Rx.
   private readonly _state: Live<PluginManagerState>;
   private readonly _pluginLoader: PluginManagerOptions['pluginLoader'];
-  private readonly _capabilities = new Map<string, AnyCapability[]>();
-  private readonly _activating = Effect.runSync(Ref.make<string[]>([]));
-  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>();
+  private readonly _capabilities = new Map<string, AnyCapability[]>();;
+  private readonly _moduleMemoMap = new Map<PluginModule['id'], Promise<AnyCapability[]>>()
+;
+  private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]))
+;
+  private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]))
+;
 
   constructor({
     pluginLoader,
@@ -345,17 +349,21 @@ export class PluginManager {
    * @internal
    */
   // TODO(wittjosiah): Improve error typing.
-  _activate(event: ActivationEvent | string): Effect.Effect<boolean, Error> {
+  _activate(
+    event: ActivationEvent | string,
+    params?: { before?: string; after?: string },
+  ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const key = typeof event === 'string' ? event : eventKey(event);
-      log('activating', { key });
-      yield* Ref.update(this._activating, (activating) => Array.append(activating, key));
+      log('activating', { key, ...params });
+      yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
       const pendingIndex = this._state.pendingReset.findIndex((event) => event === key);
       if (pendingIndex !== -1) {
         this._state.pendingReset.splice(pendingIndex, 1);
       }
 
-      const activating = yield* this._activating;
+      const activatingEvents = yield* this._activatingEvents;
+      const activatingModules = yield* this._activatingModules;
       const modules = this._getInactiveModulesByEvent(key).filter((module) => {
         const allOf = isAllOf(module.activatesOn);
         if (!allOf) {
@@ -365,10 +373,18 @@ export class PluginManager {
         // Check to see if all of the events in the `allOf` have been fired.
         // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
         const events = module.activatesOn.events.filter((event) => eventKey(event) !== key);
-        return events.every(
-          (event) => this._state.eventsFired.includes(eventKey(event)) || activating.includes(eventKey(event)),
+        return (
+          events.every(
+            (event) => this._state.eventsFired.includes(eventKey(event)) || activatingEvents.includes(eventKey(event)),
+          ) && !activatingModules.includes(module.id)
         );
       });
+      yield* Ref.update(this._activatingModules, (activating) =>
+        Array.appendAll(
+          activating,
+          modules.map((module) => module.id),
+        ),
+      );
       if (modules.length === 0) {
         log('no modules to activate', { key });
         if (!this._state.eventsFired.includes(key)) {
@@ -386,7 +402,8 @@ export class PluginManager {
         Array.flatMap((module) => module.activatesBefore ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
-        Array.map((event) => this._activate(event)),
+        Array.filter((event) => !activatingEvents.includes(eventKey(event))),
+        Array.map((event) => this._activate(event, { before: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
 
@@ -417,11 +434,15 @@ export class PluginManager {
         Array.flatMap((module) => module.activatesAfter ?? []),
         HashSet.fromIterable,
         HashSet.toValues,
-        Array.map((event) => this._activate(event)),
+        Array.filter((event) => !activatingEvents.includes(eventKey(event))),
+        Array.map((event) => this._activate(event, { after: key })),
         Effect.allWith({ concurrency: 'unbounded' }),
       );
 
-      yield* Ref.update(this._activating, (activating) => Array.filter(activating, (event) => event !== key));
+      yield* Ref.update(this._activatingEvents, (activating) => Array.filter(activating, (event) => event !== key));
+      yield* Ref.update(this._activatingModules, (activating) =>
+        Array.filter(activating, (module) => !modules.map((module) => module.id).includes(module)),
+      );
 
       if (!this._state.eventsFired.includes(key)) {
         this._state.eventsFired.push(key);

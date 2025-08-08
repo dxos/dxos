@@ -184,16 +184,16 @@ describe('parser', () => {
     );
 
     it.effect(
-      'tool list',
+      'toolkit',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream(['<tool-list/>'].flatMap(splitByWord).map(text))
+        const result = yield* makeInputStream(['<toolkit/>'].flatMap(splitByWord).map(text))
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
 
         expect(result).toEqual([
           {
-            _tag: 'toolList',
+            _tag: 'toolkit',
           },
         ] satisfies ContentBlock.Any[]);
       }),
@@ -225,7 +225,7 @@ describe('parser', () => {
           [
             '<status>I am thinking...</status>',
             'Hello, world!',
-            '<tool-list/>',
+            '<toolkit/>',
             '<suggest>Yes</suggest>',
             '<select><option>Yes</option><option>No</option></select>',
           ]
@@ -246,7 +246,7 @@ describe('parser', () => {
             text: 'Hello, world!',
           },
           {
-            _tag: 'toolList',
+            _tag: 'toolkit',
           },
           {
             _tag: 'suggest',

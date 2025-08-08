@@ -4,6 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   ChessModel,
@@ -36,7 +37,8 @@ type ChessboardRootProps = PropsWithChildren<{
 const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
   useEffect(() => {
-    model.initialize(game.pgn);
+    model.update(game.pgn);
+    log('update', { pgn: game.pgn });
   }, [game.pgn]);
 
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(

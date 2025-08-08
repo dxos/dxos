@@ -34,7 +34,13 @@ import {
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
 
-const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<ComponentProps>[])[] }) => {
+const DefaultStory = ({
+  debug = true,
+  components,
+}: {
+  debug?: boolean;
+  components: (FC<ComponentProps> | FC<ComponentProps>[])[];
+}) => {
   const space = useSpace();
   if (!space) {
     return null;
@@ -54,13 +60,13 @@ const DefaultStory = ({ components }: { components: (FC<ComponentProps> | FC<Com
           >
             {Component.map((Component, index) => (
               <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
-                <Component space={space} />
+                <Component space={space} debug={debug} />
               </div>
             ))}
           </div>
         ) : (
           <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
-            <Component space={space} />
+            <Component space={space} debug={debug} />
           </div>
         ),
       )}
@@ -234,6 +240,7 @@ export const WithBoard = {
     },
   }),
   args: {
+    debug: true,
     components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;

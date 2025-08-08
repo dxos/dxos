@@ -39,7 +39,7 @@ enum ModelTags {
   SUGGEST = 'suggest',
   PROPOSAL = 'proposal',
   SELECT = 'select',
-  TOOL_LIST = 'tool-list',
+  TOOLKIT = 'toolkit',
 }
 
 export interface ParseResponseOptions {
@@ -386,10 +386,10 @@ const makeContentBlock = (
           } satisfies ContentBlock.Select;
         }
 
-        case ModelTags.TOOL_LIST: {
+        case ModelTags.TOOLKIT: {
           return {
-            _tag: 'toolList',
-          } satisfies ContentBlock.ToolList;
+            _tag: 'toolkit',
+          } satisfies ContentBlock.Toolkit;
         }
       }
 
