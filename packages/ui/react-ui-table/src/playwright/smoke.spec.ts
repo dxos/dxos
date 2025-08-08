@@ -186,7 +186,7 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test.only('relations work as expected', async ({ browser, browserName }) => {
+  test('relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
 
@@ -211,8 +211,14 @@ test.describe('Table', () => {
     await page.keyboard.press('Enter');
     await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
 
-    // Type 'Blo'
-    await page.keyboard.type('Blo');
+    // Type the first few letters of an org name.
+    const orgName =
+      (await page
+        .locator('dx-grid')
+        .nth(0)
+        .locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content')
+        .textContent()) ?? 'never';
+    await page.keyboard.type(orgName?.substring(0, 4));
 
     // Assert that there is an element with aria-selected on the page
     await expect(page.locator('[role="option"][aria-selected]')).toBeVisible();
@@ -220,8 +226,8 @@ test.describe('Table', () => {
     // Type the enter key
     await page.keyboard.press('Enter');
 
-    // Assert that the cell element has the text "Block - Rau"
-    await expect(targetCell).toHaveText('Block - Rau');
+    // Assert that the cell element has the org name
+    await expect(targetCell).toHaveText(orgName);
 
     await page.close();
   });
