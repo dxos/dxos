@@ -20,7 +20,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
-import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
@@ -73,7 +73,6 @@ const defaultFeatures: TableFeatures = {
 export type TableModelProps<T extends TableRow = TableRow> = {
   view: DataType.View;
   schema: JsonSchemaType;
-  space: Space;
   projection?: ProjectionModel;
   features?: Partial<TableFeatures>;
   sorting?: FieldSortType[];
@@ -91,7 +90,6 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 
 export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _view: DataType.View;
-  private readonly _space: Space;
   private readonly _projection: ProjectionModel;
   private _table?: TableView;
 
@@ -120,7 +118,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   constructor({
     view,
     schema,
-    space,
     projection,
     features = {},
     sorting = [],
@@ -136,7 +133,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }: TableModelProps<T>) {
     super();
     this._view = view;
-    this._space = space;
     this._projection = projection ?? new ProjectionModel(schema, view.projection);
 
     // TODO(ZaymonFC): Use our more robust config merging module?
@@ -177,10 +173,6 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public get view(): DataType.View {
     return this._view;
-  }
-
-  public get space(): Space {
-    return this._space;
   }
 
   public get table(): TableView {

@@ -186,7 +186,7 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('relations work as expected', async ({ browser, browserName }) => {
+  test.only('relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
 

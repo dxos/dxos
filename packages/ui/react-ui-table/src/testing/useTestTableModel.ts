@@ -80,7 +80,6 @@ export const useTestTableModel = () => {
 
   const model = useTableModel({
     view,
-    space,
     schema: jsonSchema,
     projection,
     features,
