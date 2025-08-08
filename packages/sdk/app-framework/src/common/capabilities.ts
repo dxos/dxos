@@ -169,8 +169,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  // TODO(wittjosiah): Evaluates to `Layer.Layer<never, never, never>`.
-  export const ToolkitHandler = defineCapability<Layer.Layer<AiTool.ToHandler<AiTool.Any>, never, never>>(
+  export const ToolkitHandler = defineCapability<Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>>(
     'dxos.org/app-framework/capability/ai-toolkit-handler',
   );
 
