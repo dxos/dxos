@@ -3,7 +3,7 @@
 //
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Array, Chunk, Context, Effect, Option, Queue, type Schema, Stream, String, pipe } from 'effect';
+import { Chunk, type Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
@@ -15,17 +15,16 @@ import {
   callTools,
   getToolCalls,
 } from '@dxos/ai';
-import { type Blueprint, Template } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
-import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy, trim } from '@dxos/util';
+import { isNotFalsy } from '@dxos/util';
 
-import { AiAssistantError } from '../errors';
+import { type AiAssistantError } from '../errors';
+
+import { formatSystemPrompt, formatUserPrompt } from './format';
 
 export type AiSessionOptions = {};
 
@@ -49,17 +48,17 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  * Could be personal or shared.
  */
 export class AiSession {
-  // TODO(burdon): Review this.
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
+  /** Complete messages fired during the session, both from the model and from the user. */
+  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
   /** Blocks streaming from the model during the session. */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
 
-  /** Complete messages fired during the session, both from the model and from the user. */
-  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
-
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
+
+  /** Prevents concurrent execution of session. */
+  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   /** Pending messages (incl. the current user request). */
   private _pending: DataType.Message[] = [];
@@ -83,10 +82,10 @@ export class AiSession {
   > =>
     Effect.gen(this, function* () {
       // Create toolkit.
-      const toolkitWithHandlers = yield* createToolkit(params);
+      const toolkit: AiToolkit.ToHandler<Tools> = yield* createToolkit(params);
 
       // Generate system prompt.
-      // TODO(budon): Dynamically fill variables.
+      // TODO(budon): Dynamically resolve template variables.
       const system = yield* formatSystemPrompt(params);
       console.log(system);
 
@@ -105,7 +104,7 @@ export class AiSession {
           pending: this._pending.length,
           history: this._history.length,
           objects: params.objects?.length ?? 0,
-          toolkit: Object.values(toolkitWithHandlers.tools).map((tool: AiTool.Any) => tool.name),
+          toolkit: Object.values(toolkit.tools).map((tool: AiTool.Any) => tool.name),
         });
 
         // Generate the prompt and make request.
@@ -113,7 +112,10 @@ export class AiSession {
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
-          toolkit: toolkitWithHandlers,
+          toolkit,
+          // TODO(burdon): Despite this flag, the model still calls tools.
+          //  Flag is only used in generateText (not streamText); patch and submit bug.
+          //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
@@ -130,7 +132,7 @@ export class AiSession {
         // TODO(wittjosiah): The block queue should probably be drained at this point in the case that there is no consumer.
         yield* this.blockQueue.offer(Option.none());
 
-        // TODO(burdon): Comment.
+        // Create response message.
         const response = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
@@ -139,28 +141,28 @@ export class AiSession {
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
 
-        // TODO(burdon): Comment.
+        // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
         }
 
-        // TODO(burdon): Comment.
-        // TODO(burdon): Error handling.
-        const toolResults = yield* callTools(toolCalls, toolkitWithHandlers as any);
-        const toolResultMessage = Obj.make(DataType.Message, {
+        // TODO(burdon): Error handling?
+        const toolResults = yield* callTools(toolkit, toolCalls);
+        const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
           blocks: toolResults,
         });
-        this._pending.push(toolResultMessage);
-        yield* this.messageQueue.offer(toolResultMessage);
+
+        this._pending.push(toolResultsMessage);
+        yield* this.messageQueue.offer(toolResultsMessage);
       } while (true);
 
       // Signal to stream consumers that the session has completed and no more messages are coming.
-      yield* Queue.shutdown(this.eventQueue);
-      yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.messageQueue);
+      yield* Queue.shutdown(this.blockQueue);
+      yield* Queue.shutdown(this.eventQueue);
 
       log.info('done', { pending: this._pending.length });
       return this._pending;
@@ -181,15 +183,13 @@ export class AiSession {
   }
 }
 
-// TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info).
-
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
 const createToolkit = <Tools extends AiTool.Any>({
-  blueprints = [],
   toolkit,
-}: Pick<SessionRunParams<Tools>, 'blueprints' | 'toolkit'>) =>
+  blueprints = [],
+}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
@@ -200,149 +200,3 @@ const createToolkit = <Tools extends AiTool.Any>({
       Effect.provide(blueprintToolkitHandler),
     ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
   });
-
-/**
- * Formats the system prompt.
- */
-// TODO(burdon): Move to AiPreprocessor.
-const formatSystemPrompt = ({
-  system,
-  blueprints = [],
-  objects = [],
-}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
-  Effect.gen(function* () {
-    // TOOD(burdon): Should process templates.
-    const blueprintDefs = yield* pipe(
-      blueprints,
-      Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
-      Effect.map(
-        Array.map(
-          (template) => trim`
-            <blueprint>
-              ${Template.process(template.content)}
-            </blueprint>
-          `,
-        ),
-      ),
-      // Effect.tap((templates) => log.info('templates', { templates })),
-      Effect.map(Array.reduce('\n\n## Blueprints:\n\n', String.concat)),
-    );
-
-    const objectDefs = yield* pipe(
-      objects,
-      Effect.forEach((object) =>
-        Effect.succeed(trim`
-          <object>
-            <dxn>${Obj.getDXN(object)}</dxn>
-            <typename>${Obj.getTypename(object)}</typename>
-          </object>
-        `),
-      ),
-      Effect.map(Array.reduce('\n## Context objects:\n\n', String.concat)),
-    );
-
-    return yield* pipe(
-      Effect.succeed([blueprintDefs, objectDefs]),
-      Effect.map(Array.reduce(system ?? '', String.concat)),
-    );
-  });
-
-/**
- * Formats the user prompt.
- */
-// TODO(burdon): Move to AiPreprocessor.
-const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
-  Effect.gen(function* () {
-    const prelude: ContentBlock.Any[] = [];
-
-    // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
-    const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
-    if (Option.isSome(artifactDiffResolver)) {
-      const versions = gatherObjectVersions(history);
-
-      const artifactDiff = yield* Effect.tryPromise({
-        try: () =>
-          artifactDiffResolver.value.resolve(
-            [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
-          ),
-        catch: AiAssistantError.wrap('Artifact diff resolution error'),
-      });
-
-      log.info('version', { artifactDiff, versions });
-      for (const [id, { version }] of [...artifactDiff.entries()]) {
-        if (ObjectVersion.equals(version, versions.get(id)!)) {
-          artifactDiff.delete(id);
-          continue;
-        }
-
-        prelude.push({ _tag: 'anchor', objectId: id, version });
-      }
-      if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
-      }
-    }
-
-    return Obj.make(DataType.Message, {
-      created: new Date().toISOString(),
-      sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
-    });
-  });
-
-const gatherObjectVersions = (messages: DataType.Message[]): Map<ObjectId, ObjectVersion> => {
-  const artifactIds = new Map<ObjectId, ObjectVersion>();
-  for (const message of messages) {
-    for (const block of message.blocks) {
-      if (block._tag === 'anchor') {
-        artifactIds.set(block.objectId, block.version as ObjectVersion);
-      }
-    }
-  }
-
-  return artifactIds;
-};
-
-const createArtifactUpdateBlock = (
-  artifactDiff: Map<ObjectId, { version: ObjectVersion; diff?: string }>,
-): ContentBlock.Any => {
-  return {
-    _tag: 'text',
-    // TODO(dmaretskyi): Does this need to be a special content-block?
-    disposition: 'artifact-update',
-    text: `
-      The following artifacts have been updated since the last message:
-      ${[...artifactDiff.entries()]
-        .map(([id, { diff }]) => `<changed-artifact id="${id}">${diff ? `\n${diff}` : ''}</changed-artifact>`)
-        .join('\n')}
-    `,
-  };
-};
-
-/**
- * Resolves artifact ids to their versions.
- * Used to give the model a sense of the changes to the artifacts made by users during the conversation.
- * The artifacts versions are pinned in the history, and whenever the artifact changes in-between assistant's steps,
- * a diff is inserted into the conversation.
- *
- * Can be optionally provided to the session run call.
- */
-// TODO(dmaretskyi): Convert to Context.Reference
-export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
-  ArtifactDiffResolver,
-  ArtifactDiffResolver.Service
->() {}
-
-export namespace ArtifactDiffResolver {
-  export type Service = {
-    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
-      Map<
-        ObjectId,
-        {
-          version: ObjectVersion;
-          diff?: string;
-        }
-      >
-    >;
-  };
-}

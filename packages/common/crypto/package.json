@@ -10,8 +10,13 @@
   "type": "module",
   "imports": {
     "#hypercore-crypto": {
-      "workerd": "./hypercore-crypto-stub.mjs",
+      "workerd": "./vendor/hypercore-crypto-stub.mjs",
       "default": "hypercore-crypto"
+    },
+    "#subtle": {
+      "types": "./vendor/subtle.d.ts",
+      "node": "./vendor/subtle-node.mjs",
+      "browser": "./vendor/subtle-browser.mjs"
     }
   },
   "exports": {
@@ -22,9 +27,6 @@
       "node": "./dist/lib/node-esm/index.mjs"
     }
   },
-  "browser": {
-    "./src/subtle.ts": "./src/browser/subtle.ts"
-  },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {}
@@ -32,7 +34,7 @@
   "files": [
     "dist",
     "src",
-    "./hypercore-crypto-stub.mjs"
+    "vendor"
   ],
   "dependencies": {
     "@dxos/invariant": "workspace:*",

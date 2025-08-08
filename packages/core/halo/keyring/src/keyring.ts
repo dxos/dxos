@@ -40,7 +40,7 @@ export class Keyring implements Signer {
           hash: 'SHA-256',
         },
         keyPair.privateKey,
-        message,
+        message as Uint8Array<ArrayBuffer>,
       ),
     );
   }
@@ -79,7 +79,7 @@ export class Keyring implements Signer {
       const keyPair: CryptoKeyPair = {
         publicKey: await subtleCrypto.importKey(
           'raw',
-          record.publicKey,
+          record.publicKey as Uint8Array<ArrayBuffer>,
           {
             name: 'ECDSA',
             namedCurve: 'P-256',
@@ -89,7 +89,7 @@ export class Keyring implements Signer {
         ),
         privateKey: await subtleCrypto.importKey(
           'pkcs8',
-          record.privateKey,
+          record.privateKey as Uint8Array<ArrayBuffer>,
           {
             name: 'ECDSA',
             namedCurve: 'P-256',

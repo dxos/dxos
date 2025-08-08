@@ -5,10 +5,9 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import type { Ref } from '@dxos/echo';
+import { type Obj, type Ref, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
-  type AnyEchoObject,
   type BaseObject,
   type BaseSchema,
   ImmutableSchema,
@@ -205,6 +204,7 @@ export class Hypergraph {
           return undefined;
         }
       },
+
       resolve: async (dxn) => {
         const obj = await this._resolveAsync(dxn, context);
         if (obj) {
@@ -250,8 +250,8 @@ export class Hypergraph {
   private _resolveSync(
     dxn: DXN,
     context: RefResolutionContext,
-    onResolve?: (obj: AnyLiveObject<any>) => void,
-  ): AnyLiveObject<any> | undefined {
+    onResolve?: (obj: AnyLiveObject<BaseObject>) => void,
+  ): AnyLiveObject<BaseObject> | undefined {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
@@ -276,8 +276,8 @@ export class Hypergraph {
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
-        objectId,
         spaceId,
+        objectId,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
@@ -293,7 +293,10 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveAsync(dxn: DXN, context: RefResolutionContext): Promise<AnyEchoObject | Queue | undefined> {
+  private async _resolveAsync(
+    dxn: DXN,
+    context: RefResolutionContext,
+  ): Promise<Obj.Any | Relation.Any | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
@@ -301,7 +304,7 @@ export class Hypergraph {
         case DXN.kind.ECHO: {
           if (!dxn.isLocalObjectId()) {
             status = 'error';
-            throw new Error('Cross-space references are not supported');
+            throw new Error('Cross-space references are not yet supported');
           }
           const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
 
@@ -356,7 +359,10 @@ export class Hypergraph {
     }
   }
 
-  private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<AnyEchoObject | undefined> {
+  private async _resolveDatabaseObjectAsync(
+    spaceId: SpaceId,
+    objectId: ObjectId,
+  ): Promise<Obj.Any | Relation.Any | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -380,7 +386,7 @@ export class Hypergraph {
     subspaceTag: QueueSubspaceTag,
     queueId: ObjectId,
     objectId: ObjectId,
-  ): Promise<AnyEchoObject | undefined> {
+  ): Promise<Obj.Any | Relation.Any | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
@@ -389,8 +395,9 @@ export class Hypergraph {
     if (!queue) {
       return undefined;
     }
+
     const [obj] = await queue.getObjectsById([objectId]);
-    return obj ?? undefined;
+    return obj;
   }
 
   registerQuerySourceProvider(provider: QuerySourceProvider): void {

@@ -351,7 +351,7 @@ describe('preprocessor', () => {
           { _tag: 'suggest', text: 'Try this approach' },
           { _tag: 'select', options: ['Option A', 'Option B'] },
           { _tag: 'proposal', text: 'I propose we do this' },
-          { _tag: 'toolList' },
+          { _tag: 'toolkit' },
           { _tag: 'json', data: '{"key": "value"}' },
         ],
       });
@@ -382,7 +382,7 @@ describe('preprocessor', () => {
       );
       expect(assistantMessage.parts[4]).toEqual(
         new AiInput.TextPart({
-          text: '<tool-list/>',
+          text: '<toolkit/>',
         }),
       );
       expect(assistantMessage.parts[5]).toEqual(
