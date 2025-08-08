@@ -10,7 +10,10 @@ import { Blueprint } from '@dxos/blueprints';
 import { analysis, list, load } from '../functions';
 
 const functions = [analysis, list, load];
-const tools = ['get-schemas', 'show'];
+const tools: string[] = [
+  // 'get-schemas',
+  // 'show'
+];
 
 export default () => {
   return [
