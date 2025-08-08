@@ -1703,11 +1703,11 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       fs-ext:
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0
     devDependencies:
       '@types/fs-ext':
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0
 
   packages/common/log:
@@ -2373,9 +2373,6 @@ importers:
       chalk:
         specifier: ^4.1.0
         version: 4.1.2
-      exa-js:
-        specifier: ^1.5.12
-        version: 1.7.0(encoding@0.1.13)
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -2419,6 +2416,12 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo/echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
@@ -2449,10 +2452,13 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-    devDependencies:
       '@effect/ai':
         specifier: 0.23.0
         version: 0.23.0(patch_hash=65c980ba5958c51c6bdde52a27f018f7e3478f8648899e28958017ff598421cd)(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0)
+      exa-js:
+        specifier: ^1.5.12
+        version: 1.7.0(encoding@0.1.13)
+    devDependencies:
       '@effect/ai-anthropic':
         specifier: 0.13.0
         version: 0.13.0(@effect/ai@0.23.0(patch_hash=65c980ba5958c51c6bdde52a27f018f7e3478f8648899e28958017ff598421cd)(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(@effect/rpc@0.66.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0))(effect@3.17.0))(@effect/experimental@0.53.0(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)(ioredis@5.3.2))(@effect/platform@0.89.0(effect@3.17.0))(effect@3.17.0)
@@ -2732,8 +2738,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2866,8 +2872,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4865,14 +4871,14 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10737,8 +10743,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10927,8 +10933,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11187,8 +11193,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -12722,6 +12728,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -12945,11 +12954,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.0.8
-        version: 2.0.8
+        specifier: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -15085,17 +15094,17 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
-    resolution: {integrity: sha512-2pvxSaKfS1Lg8QqRlT/+vDmB/mKBxPewFKBdaa1+zTb4SQ87Akmw2qvYsVB2Aw8kZk5W43GkEIrIwsvuoG6l4Q==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
+    resolution: {integrity: sha512-xXYKQyCLpZ5pORRhBDXoWMxR42+S1e6bFrJDVz/BeBvQbyl04k9CtyI7k1XkNfm/WBoWCW8FEJzJ9m7r26CyEQ==}
 
-  '@automerge/automerge-repo-network-websocket@2.0.8':
-    resolution: {integrity: sha512-Q42Oo4TDvCK8V9c8U020lGw8QR/j9iKB9dWENptxzcmVB3jAtLz5wGzT41kpBsJU0ArDTC3xM6SWGBwTahMIog==}
+  '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
+    resolution: {integrity: sha512-DxMaq0ESNZ2mH/H9bWN+rOpYFsndHxed855nlTlyF0j1ZeRpRI8zGgPr2j9TZ+zaWEFRgh448baTlyJ0pc0Vhw==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
-    resolution: {integrity: sha512-35YPDes5GMtV4fmw9+JcfXflT21tBXoUSMcFIbw1yUzwAzajpdRnVhf4JmOv+w7An+9bT84L3Bj5JueN5feffA==}
+  '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
+    resolution: {integrity: sha512-ul7OBBF1HEGyo+emN6DyCMa7UULo4BC2sx2AXGFzSA/wGToaOpFIEadZ0am2xNwZFHQqBUYdZH2hdoHSIXEzvA==}
 
-  '@automerge/automerge-repo@2.0.8':
-    resolution: {integrity: sha512-DP+irpMjbymPWuKVsR6eopLiSEvq/1JlL8IRIBhTsI8RPTKNco3j4+rjTPtKF3UG/EsZydXi541QmRMYEe/A7w==}
+  '@automerge/automerge-repo@2.3.0-alpha.0':
+    resolution: {integrity: sha512-yiO0j7w0ggtYfxVRYA1F8FYuN51Efmyk1RvfrECaFH7yI2wJ7vLwsIAN7a/vyI5SqB0PBx1UZt7IS9kw8h7YYA==}
 
   '@automerge/automerge@3.1.1':
     resolution: {integrity: sha512-x7tZiMBLk4/SKYimVEVl1/wPntT9buGvLOWCey9ZcH8JUsB0dgm49C0S7Ojzgvflcs2hc/YjiXRPcFeFkinIgw==}
@@ -33443,15 +33452,15 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.0.8':
+  '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.0.8
+      '@automerge/automerge-repo': 2.3.0-alpha.0
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.0.8':
+  '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.0.8
+      '@automerge/automerge-repo': 2.3.0-alpha.0
       cbor-x: 1.5.4
       debug: 4.4.1
       eventemitter3: 5.0.1
@@ -33462,13 +33471,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.0.8':
+  '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.0.8
+      '@automerge/automerge-repo': 2.3.0-alpha.0
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.0.8':
+  '@automerge/automerge-repo@2.3.0-alpha.0':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1

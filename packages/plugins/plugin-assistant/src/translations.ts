@@ -72,6 +72,10 @@ export const translations = [
         'button save': 'Save',
         'button run': 'Run',
 
+        'calling tool label': 'Calling tool...',
+        'calling label': 'Calling',
+        'error label': 'Error',
+
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
         'context objects placeholder': 'Add to context...',

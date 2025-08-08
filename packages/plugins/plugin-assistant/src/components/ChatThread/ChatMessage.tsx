@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
-import { type Space, useSpace } from '@dxos/react-client/echo';
+import { DXN } from '@dxos/keys';
+import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
@@ -20,11 +19,11 @@ import { mx } from '@dxos/react-ui-theme';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
 import { Toolbox } from '../Toolbox';
 
+import { ObjectLink } from './Link';
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 
 const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
@@ -35,23 +34,12 @@ export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
   message: DataType.Message;
-  // TODO(burdon): Move to context.
-  processor?: AiChatProcessor;
   tools?: Tool[];
   onEvent?: (event: ChatEvent) => void;
   onDelete?: () => void;
 }>;
 
-export const ChatMessage = ({
-  classNames,
-  debug,
-  space,
-  message,
-  processor,
-  tools,
-  onEvent,
-  onDelete,
-}: ChatMessageProps) => {
+export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent, onDelete }: ChatMessageProps) => {
   const { t } = useTranslation(meta.id);
   const {
     sender: { role },
@@ -89,7 +77,7 @@ export const ChatMessage = ({
         return (
           <Fragment key={idx}>
             <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <Component space={space} processor={processor} block={block} onEvent={onEvent} />
+              <Component space={space} block={block} onEvent={onEvent} />
             </MessageItem>
             {debug && (
               <div className={mx('flex justify-end text-subdued', marginClasses)}>
@@ -118,8 +106,6 @@ export const ChatMessage = ({
 type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
-  /** @deprecated Replace with context */
-  processor?: AiChatProcessor;
   onEvent?: (event: ChatEvent) => void;
 };
 
@@ -134,35 +120,82 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['text' as const]: ({ block }) => {
     invariant(block._tag === 'text');
-    // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
-    const title = block.disposition ? titles[block.disposition] : undefined;
-    if (!title) {
-      return <MarkdownViewer content={block.text} />;
-    }
-
-    // TOOD(burdon): Store last time user opened/closed COT.
-    // Autoclose when streaming ends.
-    // useEffect(() => {
-    //   if (block.disposition === 'cot' && !block.pending) {
-    //     setOpen(false);
-    //   }
-    // }, [block.disposition, block.pending]);
-
     return (
-      <ToggleContainer
-        // open={open}
-        defaultOpen={systemDispositions.includes(block.disposition ?? '') && block.pending}
-        title={title}
-        icon={
-          block.pending ? (
-            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
-          ) : undefined
-        }
-      >
-        <MarkdownViewer
-          content={block.text}
-          classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
-        />
+      <MarkdownViewer
+        content={preprocessTextContent(block.text)}
+        components={{
+          a: ({ children, href, ...props }) => {
+            if (children.length === 1 && typeof children[0] === 'string' && children[0].startsWith('dxn')) {
+              try {
+                const dxn = DXN.parse(children[0]);
+                return <ObjectLink dxn={dxn} />;
+              } catch {}
+            }
+
+            // TODO(burdon): Can we revert to the default handler?
+            return (
+              <a
+                href={href}
+                className='text-primary-500 hover:text-primary-500' // TODO(burdon): Token.
+                target='_blank'
+                rel='noopener noreferrer'
+                {...props}
+              >
+                {children}
+              </a>
+            );
+          },
+        }}
+      />
+    );
+  },
+
+  //
+  // Suggest
+  //
+  ['suggest' as const]: ({ block, onEvent }) => {
+    const { t } = useTranslation(meta.id);
+    invariant(block._tag === 'suggest');
+    return (
+      <IconButton
+        icon='ph--lightning--regular'
+        label={block.text}
+        title={t('button suggest')}
+        onClick={() => onEvent?.({ type: 'submit', text: block.text })}
+      />
+    );
+  },
+
+  //
+  // Select
+  //
+  ['select' as const]: ({ block, onEvent }) => {
+    const { t } = useTranslation(meta.id);
+    invariant(block._tag === 'select');
+    return (
+      <div className='flex flex-wrap gap-1'>
+        {block.options.map((option, idx) => (
+          <Button
+            classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
+            key={idx}
+            onClick={() => onEvent?.({ type: 'submit', text: option })}
+            title={t('button select option')}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
+    );
+  },
+
+  //
+  // Toolkit
+  //
+  ['toolkit' as const]: ({ block }) => {
+    invariant(block._tag === 'toolkit');
+    return (
+      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
+        <Toolbox classNames={marginClasses} />
       </ToggleContainer>
     );
   },
@@ -217,19 +250,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   },
 };
 
-// TODO(burdon): Translations.
-const titles: Record<string, string> = {
-  ['cot' as const]: 'Chain of thought',
-  ['artifact' as const]: 'Artifact',
-  ['tool_use' as const]: 'Tool request',
-  ['tool_result' as const]: 'Tool result',
-  ['tool_list' as const]: 'Tools',
-  ['artifact-update' as const]: 'Artifact(s) changed',
-};
-
-const systemDispositions: string[] = ['cot', 'artifact-update'];
-
-const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+/**
+ * Wrapper for each message.
+ */
+const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {
     return null;
   }

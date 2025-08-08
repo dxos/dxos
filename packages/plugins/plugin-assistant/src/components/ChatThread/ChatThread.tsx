@@ -20,7 +20,7 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     collapse?: boolean;
-  } & Pick<ChatMessageProps, 'debug' | 'space' | 'processor' | 'tools' | 'onEvent'>
+  } & Pick<ChatMessageProps, 'debug' | 'space' | 'tools' | 'onEvent'>
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
