@@ -8,6 +8,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
+  RESEARCH_BLUEPRINT,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
@@ -135,9 +136,10 @@ export const getDecorators = ({
       ...plugins,
     ],
     capabilities: [
-      // TOOD(burdon): Factor out capability definitions.
+      // TOOD(burdon): Factor out to testing plugins.
       contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
       contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+      contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
       contributes(Capabilities.Functions, [readDocument, updateDocument]),
       contributes(Capabilities.Functions, [readTasks, updateTasks]),
       contributes(Capabilities.Functions, [research]),

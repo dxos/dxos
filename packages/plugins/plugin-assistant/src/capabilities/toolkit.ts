@@ -16,7 +16,9 @@ import { trim } from '@dxos/util';
 
 class SchemaToolkit extends AiToolkit.make(
   AiTool.make('get-schemas', {
-    description: 'Retrieves the available schemas.',
+    description: trim`
+      Retrieves schemas definitions.
+    `,
     parameters: {
       // TODO(wittjosiah): Remove this once parameter-less tools are fixed.
       limit: Schema.Number,
@@ -41,6 +43,7 @@ class SchemaToolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     SchemaToolkit.toLayer({
+      //
       'get-schemas': () => {
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;
@@ -72,6 +75,8 @@ class SchemaToolkit extends AiToolkit.make(
           return schemas.map((schema) => schema.typename);
         }).pipe(Effect.provide(service));
       },
+
+      //
       'create-record': ({ typename, data }) => {
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;

@@ -5,12 +5,13 @@
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus, type Tool } from '@dxos/ai';
-import { log } from '@dxos/log';
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
 import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
+
+import { meta } from '../../meta';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -20,21 +21,22 @@ const getToolName = (tool: Tool) => {
   return tool.namespace && tool.function ? `${tool.namespace}:${tool.function}` : tool.name.split('_').pop();
 };
 
-const getToolCaption = (tool: Tool | undefined, status: AgentStatus | undefined) => {
-  if (!tool) {
-    return 'Calling tool...';
-  }
-
-  return status?.message ?? tool.caption ?? `Calling ${getToolName(tool)}...`;
-};
-
 export type ToolBlockProps = ThemedClassName<{
   message: DataType.Message;
   tools?: Tool[];
 }>;
 
 export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) => {
+  const { t } = useTranslation(meta.id);
   const { blocks = [] } = message;
+
+  const getToolCaption = (tool?: Tool, status?: AgentStatus) => {
+    if (!tool) {
+      return t('calling tool label');
+    }
+
+    return status?.message ?? tool.caption ?? [t('calling label') + getToolName(tool)].join(' ');
+  };
 
   let request: { tool: Tool | undefined; block: any } | undefined;
   const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -49,19 +51,21 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
 
           request = { tool: tools?.find((tool) => tool.name === block.name), block };
           return {
-            title: getToolCaption(request.tool, undefined), // block.status), // TODO(burdon): Get status?
+            title: getToolCaption(request.tool, request.block.status),
             block,
           };
         }
 
         case 'toolResult': {
-          if (!request) {
-            log.warn('unexpected message', { block });
-            return { title: 'Error', block };
+          if (!request || block.error) {
+            return {
+              title: t('error label'),
+              block,
+            };
           }
 
           return {
-            title: `${getToolCaption(request.tool, undefined)} (Success)`,
+            title: getToolCaption(request.tool, request.block.status),
             block,
           };
         }
@@ -69,7 +73,7 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
         default: {
           request = undefined;
           return {
-            title: 'Error',
+            title: t('error label'),
             block,
           };
         }

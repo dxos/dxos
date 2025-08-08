@@ -4,7 +4,10 @@
   "trailingComma": "all",
   "printWidth": 120,
   "plugins": ["prettier-plugin-packagejson"],
-  "files.associations": {
-    "*.tpl": "html"
-  }
+  "overrides": [
+    {
+      "files": "*.tpl",
+      "options": { "parser": "none" }
+    }
+  ]
 }
