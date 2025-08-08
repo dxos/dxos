@@ -218,7 +218,7 @@ test.describe('Table', () => {
         .nth(0)
         .locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content')
         .textContent()) ?? 'never';
-    await page.keyboard.type(orgName?.substring(0, 4));
+    await page.keyboard.type(orgName?.substring(0, 4), { delay: 500 });
 
     // Assert that there is an element with aria-selected on the page
     await expect(page.locator('[role="option"][aria-selected]')).toBeVisible();
