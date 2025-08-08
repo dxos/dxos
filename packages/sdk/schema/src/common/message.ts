@@ -103,6 +103,18 @@ export namespace ContentBlock {
      */
     result: Schema.Unknown,
 
+    // TODO(dmaretskyi): Use discriminated union.
+    // result: Schema.Union(
+    //   Schema.TaggedStruct('success', {
+    //     result: Schema.Unknown,
+    //   }),
+    //   Schema.TaggedStruct('error', {
+    //     error: Schema.Unknown,
+    //   }),
+    // ),
+
+    error: Schema.optional(Schema.String),
+
     ...Base.fields,
   }).pipe(Schema.mutable);
   export interface ToolResult extends Schema.Schema.Type<typeof ToolResult> {}

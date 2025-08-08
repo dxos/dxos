@@ -46,8 +46,8 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                // TODO(dmaretskyi): Fix getSnapshot typing.
-                                result: getSnapshot(block.result as any),
+                                // TODO(dmaretskyi): Fix getSnapshot typing ..or use Obj.toJSON (if that works).
+                                result: block.error ?? getSnapshot(block.result as any),
                               }),
                           ),
                         });
