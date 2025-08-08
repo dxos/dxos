@@ -6,8 +6,11 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { Filter, Type } from '@dxos/echo';
+import { DatabaseService } from '@dxos/functions';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceCapabilities, getActiveSpace } from '@dxos/plugin-space';
+import { DataType } from '@dxos/schema';
 
 class SchemaToolkit extends AiToolkit.make(
   AiTool.make('list-schemas', {
@@ -23,11 +26,22 @@ class SchemaToolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     SchemaToolkit.toLayer({
-      'list-schemas': Effect.fn(function* ({ limit }) {
-        const forms = context.getCapabilities(SpaceCapabilities.ObjectForm);
-        const schemas = forms.map((form) => Type.getTypename(form.objectSchema));
-        return schemas;
-      }),
+      'list-schemas': () => {
+        const space = getActiveSpace(context);
+        const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;
+        return Effect.gen(function* () {
+          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm);
+          const allowed = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
+          const schemas = [...forms.map((form) => form.objectSchema), ...allowed].map((schema) =>
+            Type.getTypename(schema),
+          );
+          if (space) {
+            const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
+            schemas.push(...objects.map((object) => object.typename));
+          }
+          return schemas;
+        }).pipe(Effect.provide(service));
+      },
     });
 }
 
