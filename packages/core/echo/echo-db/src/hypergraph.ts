@@ -35,7 +35,7 @@ import {
   SpaceQuerySource,
   normalizeQuery,
 } from './query';
-import type { Queue, QueueFactory } from './queue';
+import type { Queue, QueueFactory, QueueImpl } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
 
@@ -191,6 +191,19 @@ export class Hypergraph {
         if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
           const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
           return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+        } else if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId !== undefined) {
+          const { spaceId, subspaceTag, queueId, objectId } = dxn.asQueueDXN()!;
+          const queue = this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+          const object = queue?.objects.find((obj) => obj.id === objectId);
+          if (object) {
+            return middleware(object);
+          } else if (queue && load && onLoad) {
+            queue.refresh().then(
+              () => onLoad(),
+              (err) => log.catch(err),
+            );
+            return undefined;
+          }
         }
 
         if (dxn.kind !== DXN.kind.ECHO) {
