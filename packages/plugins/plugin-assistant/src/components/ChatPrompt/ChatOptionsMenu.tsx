@@ -15,6 +15,7 @@ export type ChatOptionsMenuProps = {
   onChange?: (key: string, active: boolean) => void;
 };
 
+// TODO(burdon): Refactor this as a Dialog (and move the object selector here also).
 export const ChatOptionsMenu = ({ blueprints, active, onChange }: ChatOptionsMenuProps) => {
   const { t } = useTranslation(meta.id);
   const blueprintOptions = useMemo(
@@ -31,7 +32,7 @@ export const ChatOptionsMenu = ({ blueprints, active, onChange }: ChatOptionsMen
         <DropdownMenu.Content side='left'>
           <DropdownMenu.Viewport>
             {blueprintOptions?.map((option) => (
-              <DropdownMenu.Item key={option.key}>
+              <DropdownMenu.CheckboxItem key={option.key}>
                 <Input.Root>
                   <Input.Checkbox
                     checked={!!active?.includes(option.key)}
@@ -41,7 +42,7 @@ export const ChatOptionsMenu = ({ blueprints, active, onChange }: ChatOptionsMen
                   {/* TODO(burdon): Clicking on label doesn't toggle checkbox. */}
                   <Input.Label classNames='m-0'>{option.label}</Input.Label>
                 </Input.Root>
-              </DropdownMenu.Item>
+              </DropdownMenu.CheckboxItem>
             ))}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
