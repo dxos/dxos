@@ -13,7 +13,10 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 class SchemaToolkit extends AiToolkit.make(
   AiTool.make('list-schemas', {
     description: 'List the available schemas.',
-    parameters: {},
+    parameters: {
+      // TODO(wittjosiah): Remove this once parameter-less tools are fixed.
+      limit: Schema.Number,
+    },
     success: Schema.Struct({
       schemas: Schema.Array(Schema.String.annotations({ description: 'The typename of the schema.' })),
     }),
@@ -22,13 +25,12 @@ class SchemaToolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     SchemaToolkit.toLayer({
-      'list-schemas': () =>
-        Effect.gen(function* () {
-          log.info('list-schemas');
-          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm);
-          const schemas = forms.map((form) => Type.getTypename(form.objectSchema));
-          return { schemas };
-        }),
+      'list-schemas': Effect.fn(function* ({ limit }) {
+        const forms = context.getCapabilities(SpaceCapabilities.ObjectForm);
+        const schemas = forms.map((form) => Type.getTypename(form.objectSchema));
+        log.info('list-schemas', { schemas });
+        return { schemas };
+      }),
     });
 }
 

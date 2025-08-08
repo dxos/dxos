@@ -141,7 +141,6 @@ export class AiSession {
 
         // TODO(burdon): Comment.
         const toolCalls = getToolCalls(response);
-        console.log('toolCalls', toolCalls);
         if (toolCalls.length === 0) {
           break;
         }
