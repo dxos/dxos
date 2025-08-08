@@ -11,21 +11,19 @@ import { analysis, load } from '../functions';
 
 const functions = [analysis, load];
 
-export default () => {
-  return [
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/assistant',
-        name: 'Assistant',
-        instructions: templates.system,
-        tools: [
-          ...functions.map((tool) => ToolId.make(tool.name)),
-          // TODO(wittjosiah): Factor out.
-          ToolId.make('show'),
-        ],
-      }),
-    ),
-    contributes(Capabilities.Functions, functions),
-  ];
-};
+export default () => [
+  contributes(
+    Capabilities.BlueprintDefinition,
+    Blueprint.make({
+      key: 'dxos.org/blueprint/assistant',
+      name: 'Assistant',
+      instructions: templates.system,
+      tools: [
+        ...functions.map((tool) => ToolId.make(tool.name)),
+        // TODO(wittjosiah): Factor out.
+        ToolId.make('show'),
+      ],
+    }),
+  ),
+  contributes(Capabilities.Functions, functions),
+];

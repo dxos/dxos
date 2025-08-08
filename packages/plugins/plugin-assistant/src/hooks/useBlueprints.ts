@@ -23,6 +23,7 @@ export type UpdateCallback = (key: string, active: boolean) => void;
 // TODO(burdon): Reconcile with public registry.
 export const useBlueprintRegistry = () => {
   const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  console.log('blueprints', blueprints);
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 

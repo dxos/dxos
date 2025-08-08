@@ -13,7 +13,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type AnyCapability, PluginContext } from './capabilities';
 import { type ActivationEvent, eventKey, getEvents, isAllOf } from './events';
-import { PluginModule, type Plugin } from './plugin';
+import { type Plugin, type PluginModule } from './plugin';
 
 // TODO(wittjosiah): Factor out?
 const isPromise = (value: unknown): value is Promise<unknown> => {
@@ -476,7 +476,7 @@ export class PluginManager {
       Effect.withSpan('PluginManager._loadModule'),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
-          Effect.andThen(Effect.sync(() => log.warn(`Module is taking a long time to activate`, { module: mod.id }))),
+          Effect.andThen(Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: mod.id }))),
         ),
       ),
     );
