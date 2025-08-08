@@ -7,23 +7,26 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 
-import { analysis, load } from '../functions';
+import { analysis, list, load } from '../functions';
 
-const functions = [analysis, load];
+const functions = [analysis, list, load];
 
-export default () => [
-  contributes(
-    Capabilities.BlueprintDefinition,
-    Blueprint.make({
-      key: 'dxos.org/blueprint/assistant',
-      name: 'Assistant',
-      instructions: templates.system,
-      tools: [
-        ...functions.map((tool) => ToolId.make(tool.name)),
-        // TODO(wittjosiah): Factor out.
-        // ToolId.make('show'),
-      ],
-    }),
-  ),
-  contributes(Capabilities.Functions, functions),
-];
+export default () => {
+  return [
+    contributes(
+      Capabilities.BlueprintDefinition,
+      Blueprint.make({
+        key: 'dxos.org/blueprint/assistant',
+        name: 'Assistant',
+        instructions: templates.system,
+        tools: [
+          ...functions.map((tool) => ToolId.make(tool.name)),
+          // TODO(wittjosiah): Factor out.
+          ToolId.make('get-schemas'),
+          ToolId.make('show'),
+        ],
+      }),
+    ),
+    contributes(Capabilities.Functions, functions),
+  ];
+};

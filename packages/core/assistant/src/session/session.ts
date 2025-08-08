@@ -201,6 +201,10 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        // Signal to stream consumers that message blocks are complete.
+        // Allows for coordination between the block and message queues
+        //   to prevent the streaming blocks from being rendered twice when the message is produced.
+        // TODO(wittjosiah): The block queue should probably be drained at this point in the case that there is no consumer.
         yield* this.blockQueue.offer(Option.none());
 
         // Create response message.
@@ -232,7 +236,7 @@ export class AiSession {
         yield* observer.onMessage(toolResultsMessage);
       } while (true);
 
-      // Signal to stream consumers that the session has completed and no more messages are coming.
+      // Signals to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.messageQueue);
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.eventQueue);
