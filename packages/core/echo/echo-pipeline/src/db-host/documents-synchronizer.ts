@@ -5,8 +5,8 @@
 import { next as A, type Heads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId, type Repo } from '@automerge/automerge-repo';
 
-import { UpdateScheduler } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { UpdateScheduler, sleep } from '@dxos/async';
+import { LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,6 +24,9 @@ interface DocSyncState {
   lastSentHead?: Heads;
   clearSubscriptions?: () => void;
 }
+
+const WRAP_AROUND_RETRY_LIMIT = 3;
+const WRAP_AROUND_RETRY_INITIAL_DELAY = 100; // [ms]
 
 /**
  * Manages a connection and replication between worker's Automerge Repo and the client's Repo.
@@ -45,8 +48,12 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  addDocuments(documentIds: DocumentId[], retryCounter = 0): void {
-    if (retryCounter > 3) {
+  addDocuments(
+    documentIds: DocumentId[],
+    retryCounter = 0,
+    wrapAroundRetryDelay = WRAP_AROUND_RETRY_INITIAL_DELAY,
+  ): void {
+    if (retryCounter > WRAP_AROUND_RETRY_LIMIT) {
       log.warn('Failed to load document, retry limit reached', { documentIds });
       return;
     }
@@ -62,7 +69,9 @@ export class DocumentsSynchronizer extends Resource {
         })
         .catch((error) => {
           log.warn('Failed to load document, wraparound', { documentId, error });
-          this.addDocuments([documentId], retryCounter + 1);
+          void cancelWithContext(this._ctx, sleep(wrapAroundRetryDelay)).then(() =>
+            this.addDocuments([documentId], retryCounter + 1, wrapAroundRetryDelay * 2),
+          );
         });
     }
   }
