@@ -246,10 +246,10 @@ export namespace ContentBlock {
    * Model printing info about the list of available tools.
    */
   // TODO(burdon): Rename Toolkit.
-  export const ToolList = Schema.TaggedStruct('toolList', {
+  export const Toolkit = Schema.TaggedStruct('toolkit', {
     ...Base.fields,
   }).pipe(Schema.mutable);
-  export interface ToolList extends Schema.Schema.Type<typeof ToolList> {}
+  export interface Toolkit extends Schema.Schema.Type<typeof Toolkit> {}
 
   /**
    * JSON
@@ -276,7 +276,7 @@ export namespace ContentBlock {
     Suggest,
     Text,
     ToolCall,
-    ToolList,
+    Toolkit,
     ToolResult,
     Transcript,
   );
@@ -347,8 +347,14 @@ export const MessageV1ToV2 = defineObjectMigration({
       created: from.timestamp,
       sender: from.sender,
       blocks: [
-        { _tag: 'text' as const, text: from.text },
-        ...(from.parts ?? []).map((part) => ({ _tag: 'reference' as const, reference: part })),
+        {
+          _tag: 'text' as const,
+          text: from.text,
+        },
+        ...(from.parts ?? []).map((part) => ({
+          _tag: 'reference' as const,
+          reference: part,
+        })),
       ],
       properties: {
         ...from.properties,

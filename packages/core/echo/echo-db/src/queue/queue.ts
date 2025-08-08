@@ -3,7 +3,7 @@
 //
 
 import { Obj, type Ref, type Relation } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
+import { type HasId, assertObjectModelShape, setRefResolverOnData } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -126,10 +126,11 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         return decoded;
       }),
     );
+
     return decodedObjects as T[];
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
       if (!this._querying) {
@@ -141,7 +142,8 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         }
       }
     }
-    return ids.map((id) => this._objectCache.get(id) ?? null);
+
+    return ids.map((id) => this._objectCache.get(id));
   }
 
   /**
@@ -188,7 +190,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   }
 }
 
-const objectSetChanged = (before: AnyEchoObject[], after: AnyEchoObject[]) => {
+const objectSetChanged = (before: (Obj.Any | Relation.Any)[], after: (Obj.Any | Relation.Any)[]) => {
   if (before.length !== after.length) {
     return true;
   }
