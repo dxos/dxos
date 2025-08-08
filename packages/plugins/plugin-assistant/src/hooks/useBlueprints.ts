@@ -26,6 +26,12 @@ export const useBlueprintRegistry = () => {
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
+export type UseBlueprints = {
+  blueprints: Blueprint.Blueprint[];
+  active: string[];
+  onUpdate: UpdateCallback;
+};
+
 /**
  * Get collection of active blueprints based on the context.
  */
@@ -33,7 +39,7 @@ export const useBlueprints = (
   space: Space,
   binder: AiContextBinder,
   blueprintRegistry?: Blueprint.Registry,
-): { blueprints: Blueprint.Blueprint[]; active: string[]; onUpdate: UpdateCallback } => {
+): UseBlueprints => {
   const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
   const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);
   const [active, setActive] = useState<string[]>([]);
