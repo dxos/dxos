@@ -70,9 +70,10 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'eslint-plugin-storybook':
     case 'eslint-plugin-prefer-arrow-functions': {
-      packageJson.dependencies['@typescript-eslint/types'] = '8.36.0';
-      packageJson.dependencies['@typescript-eslint/utils'] = '8.36.0';
+      packageJson.dependencies['@typescript-eslint/types'] = '8.39.0';
+      packageJson.dependencies['@typescript-eslint/utils'] = '8.39.0';
       break;
     }
 
@@ -138,9 +139,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // @dxos/devtools-extension
-    case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '^5.0.0';
+    case 'vite-plugin-glslify': {
+      packageJson.peerDependencies['vite'] = '^7.0.0';
       break;
     }
 
@@ -167,11 +167,6 @@ function readPackage(packageJson, context) {
     // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
     case 'typedoc': {
       packageJson.peerDependencies['typescript'] = '^5.0.0';
-      break;
-    }
-
-    case 'vite-plugin-fonts': {
-      packageJson.peerDependencies['vite'] = '^5.0.0';
       break;
     }
 
