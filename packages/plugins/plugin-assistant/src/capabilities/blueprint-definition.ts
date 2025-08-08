@@ -21,7 +21,7 @@ export default () => [
       tools: [
         ...functions.map((tool) => ToolId.make(tool.name)),
         // TODO(wittjosiah): Factor out.
-        ToolId.make('show'),
+        // ToolId.make('show'),
       ],
     }),
   ),

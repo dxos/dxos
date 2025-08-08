@@ -8,7 +8,7 @@ import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -21,9 +21,13 @@ import { safeParseJson } from '@dxos/util';
 import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
-import { ToolboxContainer } from '../Toolbox';
+import { Toolbox } from '../Toolbox';
 
 import { Json, ToolBlock, isToolMessage } from './ToolBlock';
+
+const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
+const marginClasses = 'pie-4 pis-4';
+const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
@@ -33,21 +37,31 @@ export type ChatMessageProps = ThemedClassName<{
   processor?: AiChatProcessor;
   tools?: Tool[];
   onEvent?: (event: ChatEvent) => void;
+  onDelete?: () => void;
 }>;
 
-export const ChatMessage = ({ classNames, debug, space, message, processor, tools, onEvent }: ChatMessageProps) => {
+export const ChatMessage = ({
+  classNames,
+  debug,
+  space,
+  message,
+  processor,
+  tools,
+  onEvent,
+  onDelete,
+}: ChatMessageProps) => {
   const { t } = useTranslation(meta.id);
   const {
     sender: { role },
     blocks,
   } = message;
 
-  // TODO(burdon): Restructure types to make check unnecessary.
+  // TODO(burdon): Consolidate tools upstream?
   if (isToolMessage(message)) {
     return (
-      <MessageContainer classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
+      <MessageItem classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
         <ToolBlock classNames={panelClasses} message={message} tools={tools} />
-      </MessageContainer>
+      </MessageItem>
     );
   }
 
@@ -65,16 +79,16 @@ export const ChatMessage = ({ classNames, debug, space, message, processor, tool
           return null;
         }
 
-        const Component: BlockComponent = components[block._tag] ?? components.default!;
+        const Component: ContentBlockComponent = components[block._tag] ?? components.default!;
         if (!Component) {
           return null;
         }
 
         return (
           <Fragment key={idx}>
-            <MessageContainer classNames={classNames} user={block._tag === 'text' && role === 'user'}>
+            <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
               <Component space={space} processor={processor} block={block} onEvent={onEvent} />
-            </MessageContainer>
+            </MessageItem>
             {debug && (
               <div className={mx('flex justify-end text-subdued', marginClasses)}>
                 <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
@@ -83,20 +97,23 @@ export const ChatMessage = ({ classNames, debug, space, message, processor, tool
           </Fragment>
         );
       })}
-      <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
-        {/* <IconButton
-          classNames='animate-[fadeIn_0.5s]'
-          icon='ph--trash--regular'
-          iconOnly
-          label={t('button delete message')}
-          onClick={() => onEvent?.({ type: 'delete', id: message.id })}
-        /> */}
-      </div>
+
+      {onDelete && (
+        <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
+          <IconButton
+            classNames='animate-[fadeIn_0.5s]'
+            icon='ph--trash--regular'
+            iconOnly
+            label={t('button delete message')}
+            onClick={() => onDelete()}
+          />
+        </div>
+      )}
     </>
   );
 };
 
-type BlockComponentProps = {
+type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
   /** @deprecated Replace with context */
@@ -104,43 +121,66 @@ type BlockComponentProps = {
   onEvent?: (event: ChatEvent) => void;
 };
 
-type BlockComponent = FC<BlockComponentProps>;
+type ContentBlockComponent = FC<ContentBlockProps>;
 
-const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComponent>> = {
+/**
+ * Components for rendering content blocks.
+ */
+const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBlockComponent>> = {
   //
   // Text
   //
   ['text' as const]: ({ block }) => {
     invariant(block._tag === 'text');
-    // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
-    const title = block.disposition ? titles[block.disposition] : undefined;
-    if (!title) {
-      return <MarkdownViewer content={block.text} />;
-    }
+    return <MarkdownViewer content={block.text} />;
+  },
 
-    // TOOD(burdon): Store last time user opened/closed COT.
-    // Autoclose when streaming ends.
-    // useEffect(() => {
-    //   if (block.disposition === 'cot' && !block.pending) {
-    //     setOpen(false);
-    //   }
-    // }, [block.disposition, block.pending]);
-
+  //
+  // Suggest
+  //
+  ['suggest' as const]: ({ block, onEvent }) => {
+    const { t } = useTranslation(meta.id);
+    invariant(block._tag === 'suggest');
     return (
-      <ToggleContainer
-        // open={open}
-        defaultOpen={systemDispositions.includes(block.disposition ?? '') && block.pending}
-        title={title}
-        icon={
-          block.pending ? (
-            <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
-          ) : undefined
-        }
-      >
-        <MarkdownViewer
-          content={block.text}
-          classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
-        />
+      <IconButton
+        icon='ph--lightning--regular'
+        label={block.text}
+        title={t('button suggest')}
+        onClick={() => onEvent?.({ type: 'submit', text: block.text })}
+      />
+    );
+  },
+
+  //
+  // Select
+  //
+  ['select' as const]: ({ block, onEvent }) => {
+    const { t } = useTranslation(meta.id);
+    invariant(block._tag === 'select');
+    return (
+      <div className='flex flex-wrap gap-1'>
+        {block.options.map((option, idx) => (
+          <Button
+            classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
+            key={idx}
+            onClick={() => onEvent?.({ type: 'submit', text: option })}
+            title={t('button select option')}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
+    );
+  },
+
+  //
+  // Toolkit
+  //
+  ['toolkit' as const]: ({ block }) => {
+    invariant(block._tag === 'toolkit');
+    return (
+      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
+        <Toolbox classNames={marginClasses} />
       </ToggleContainer>
     );
   },
@@ -148,42 +188,11 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
   //
   // JSON
   //
-  ['json' as const]: ({ space, processor, block, onEvent }) => {
+  ['json' as const]: ({ block, onEvent }) => {
     invariant(block._tag === 'json');
 
+    // TODO(burdon): Disposition is deprecated.
     switch (block.disposition) {
-      case 'tool_list': {
-        return (
-          <ToggleContainer title={titles[block.disposition]} defaultOpen={true}>
-            <ToolboxContainer space={space} processor={processor} classNames='pbe-2' />
-          </ToggleContainer>
-        );
-      }
-
-      case 'suggest': {
-        const { text = '' }: { text: string } = safeParseJson(block.data ?? '{}') ?? ({} as any);
-        return (
-          <IconButton icon='ph--lightning--regular' label={text} onClick={() => onEvent?.({ type: 'submit', text })} />
-        );
-      }
-
-      case 'select': {
-        const { options = [] }: { options: string[] } = safeParseJson(block.data ?? '{}') ?? ({} as any);
-        return (
-          <div className='flex flex-wrap gap-1'>
-            {options.map((text, idx) => (
-              <Button
-                classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
-                key={idx}
-                onClick={() => onEvent?.({ type: 'submit', text })}
-              >
-                {text}
-              </Button>
-            ))}
-          </div>
-        );
-      }
-
       case 'graph': {
         return (
           <div className='flex flex-wrap gap-1'>
@@ -205,9 +214,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
       }
 
       default: {
-        const title = block.disposition ? titles[block.disposition] : undefined;
         return (
-          <ToggleContainer title={title ?? 'JSON'}>
+          <ToggleContainer title={block.disposition ?? block._tag}>
             <Json data={safeParseJson(block.data ?? block)} />
           </ToggleContainer>
         );
@@ -216,41 +224,18 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
   },
 
   //
-  // Default
+  // Fallback
   //
   default: ({ block }) => {
-    let title = titles[block._tag];
-    if (block._tag === 'toolCall') {
-      title = `Tool [${block.name}]`; // TODO(burdon): Get label from tool.
-    } else {
-      title = block._tag;
-    }
-
     return (
-      <ToggleContainer title={title ?? 'JSON'}>
+      <ToggleContainer title={block._tag}>
         <Json data={block} />
       </ToggleContainer>
     );
   },
 };
 
-// TODO(burdon): Translations.
-const titles: Record<string, string> = {
-  ['cot' as const]: 'Chain of thought',
-  ['artifact' as const]: 'Artifact',
-  ['tool_use' as const]: 'Tool request',
-  ['tool_result' as const]: 'Tool result',
-  ['tool_list' as const]: 'Tools',
-  ['artifact-update' as const]: 'Artifact(s) changed',
-};
-
-const systemDispositions: string[] = ['cot', 'artifact-update'];
-
-const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
-const marginClasses = 'pie-4 pis-4';
-const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
-
-const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
+const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {
     return null;
   }

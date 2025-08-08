@@ -32,7 +32,46 @@ const TEST_MESSAGES: DataType.Message[] = [
     {
       _tag: 'text',
       text: faker.lorem.sentence(5),
-    } satisfies ContentBlock.Text,
+    },
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'text',
+      text: faker.lorem.paragraphs(1),
+    },
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'suggest',
+      text: 'Search...',
+    },
+    {
+      _tag: 'suggest',
+      text: faker.lorem.paragraphs(1),
+    },
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'text',
+      text: 'Select an option:',
+    },
+    {
+      _tag: 'select',
+      options: ['Option 1', 'Option 2', 'Option 3'],
+    },
+  ]),
+
+  createMessage('assistant', [
+    {
+      _tag: 'text',
+      text: faker.lorem.paragraphs(1),
+    },
+    {
+      _tag: 'toolkit',
+    },
   ]),
 
   createMessage('assistant', [
@@ -54,7 +93,7 @@ const TEST_MESSAGES: DataType.Message[] = [
       toolCallId: '1234',
       name: 'search',
       input: {},
-    } satisfies ContentBlock.ToolCall,
+    },
   ]),
 
   createMessage('user', [
@@ -63,7 +102,7 @@ const TEST_MESSAGES: DataType.Message[] = [
       toolCallId: '1234',
       name: 'search',
       result: 'This is a tool result.',
-    } satisfies ContentBlock.ToolResult,
+    },
   ]),
 
   createMessage('assistant', [
@@ -72,7 +111,7 @@ const TEST_MESSAGES: DataType.Message[] = [
       toolCallId: '4567',
       name: 'create',
       input: {},
-    } satisfies ContentBlock.ToolCall,
+    },
   ]),
 
   createMessage('user', [
@@ -81,27 +120,14 @@ const TEST_MESSAGES: DataType.Message[] = [
       toolCallId: '4567',
       name: 'create',
       result: 'This is a tool result.',
-    } satisfies ContentBlock.ToolResult,
+    },
   ]),
 
   createMessage('assistant', [
     {
       _tag: 'text',
       text: faker.lorem.paragraphs(1),
-    } satisfies ContentBlock.Text,
-  ]),
-
-  createMessage('assistant', [
-    {
-      _tag: 'json',
-      disposition: 'suggest',
-      data: JSON.stringify({ text: 'Search...' }),
     },
-    {
-      _tag: 'json',
-      disposition: 'suggest',
-      data: JSON.stringify({ text: faker.lorem.paragraphs(1) }),
-    } satisfies ContentBlock.Json,
   ]),
 ];
 
@@ -121,6 +147,7 @@ type Story = StoryObj<typeof meta>;
 export const Default = {
   args: {
     messages: TEST_MESSAGES,
+    onEvent: (event) => console.log(event),
   },
 } satisfies Story;
 
@@ -139,6 +166,6 @@ export const Incremental = {
       return () => clearInterval(interval);
     }, []);
 
-    return <ChatThread messages={messages} collapse />;
+    return <ChatThread messages={messages} collapse onEvent={(event) => console.log(event)} />;
   },
 } satisfies Story;

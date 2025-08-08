@@ -66,6 +66,9 @@ export const translations = [
 
         'no tools': 'No tools are configured.',
 
+        'button suggest': 'Assistant suggestion',
+        'button select option': 'Select option',
+
         'button save': 'Save',
         'button run': 'Run',
 

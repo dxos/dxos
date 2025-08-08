@@ -44,7 +44,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
       <ScrollContainer ref={forwardedRef} classNames={classNames} fade>
         <div
           role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-4 pbe-4')}
+          className={mx('flex flex-col gap-2', filteredMessages.length > 0 && 'pbs-4 pbe-4')}
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
