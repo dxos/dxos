@@ -177,6 +177,7 @@ export class AiSession {
           pending: this._pending.length,
           history: this._history.length,
           objects: params.objects?.length ?? 0,
+          blueprints: params.blueprints?.length ?? 0,
           toolkit: Object.values(toolkit.tools).map((tool: AiTool.Any) => tool.name),
         });
 
