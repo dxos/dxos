@@ -82,7 +82,7 @@ export default defineFunction({
     },
     Effect.provide(
       Layer.mergeAll(
-        AiService.model('@anthropic/claude-opus-4-0'),
+        AiService.model('@anthropic/claude-sonnet-4-0'),
         ToolResolverService.layerEmpty,
         ToolExecutionService.layerEmpty,
       ),

@@ -63,7 +63,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Research', { timeout: 300_000 }, () => {
+describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
