@@ -5,7 +5,6 @@
 import { Effect, Schema } from 'effect';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
@@ -21,10 +20,7 @@ export default defineFunction({
     content: Schema.String,
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
-      throw new Error('Document not found.');
-    }
+    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
 
     // Return content with line numbers prefixed.
     const { content } = yield* DatabaseService.load(doc.content);

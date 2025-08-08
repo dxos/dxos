@@ -35,7 +35,7 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStory
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={() => model.initialize()}>Reset</Button>
+        <Button onClick={() => model.update()}>Reset</Button>
         <Button onClick={() => model.makeRandomMove()}>Move</Button>
         <div className='grow'></div>
         <Button

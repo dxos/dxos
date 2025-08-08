@@ -18,6 +18,7 @@ import { getObjectCore, isEchoObject } from './echo-handler';
  * Returns the edit history of an ECHO object.
  * NOTE: This is the history of the automerge document containing the echo object.
  */
+// TODO(burdon): Also Relation?
 export const getEditHistory = (object: Obj.Any): State<any>[] => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
 
@@ -30,7 +31,8 @@ export const getEditHistory = (object: Obj.Any): State<any>[] => {
 /**
  * @returns Raw object data at the given version.
  */
-// TODO(dmaretskyi): Hyderate the object
+// TODO(burdon): Also Relation?
+// TODO(dmaretskyi): Hydrate the object
 export const checkoutVersion = (object: Obj.Any, version: Heads): unknown => {
   assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
   assertArgument(Array.isArray(version), 'expected automerge heads array');

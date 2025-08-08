@@ -3,14 +3,14 @@
 //
 
 import { type Obj, type Relation } from '@dxos/echo';
-import { type BaseEchoObject, type HasId, ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { DXN, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
-export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
+export type MemoryQueueOptions<T extends Obj.Any | Relation.Any> = {
   spaceId?: SpaceId;
   queueId?: string;
   dxn?: DXN;
@@ -21,8 +21,8 @@ export type MemoryQueueOptions<T extends BaseEchoObject = BaseEchoObject> = {
  * In-memory queue.
  * @deprecated Use the actual queue with a mock service.
  */
-export class MemoryQueue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
-  static make<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>({
+export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
+  static make<T extends Obj.Any | Relation.Any>({
     spaceId,
     queueId,
     dxn,
@@ -84,13 +84,13 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.A
     return this._objects;
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
-    return ids.map((id) => this._objects.find((object) => (object as HasId).id === id) ?? null);
+  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
+    return ids.map((id) => this._objects.find((object) => object.id === id));
   }
 
   async delete(ids: ObjectId[]): Promise<void> {
     // TODO(dmaretskyi): Restrict types.
-    this._objects = this._objects.filter((object) => !ids.includes((object as HasId).id));
+    this._objects = this._objects.filter((object) => !ids.includes(object.id));
     this._signal.notifyWrite();
   }
 
