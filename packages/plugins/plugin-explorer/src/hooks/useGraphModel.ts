@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type Filter, type Space } from '@dxos/client/echo';
+import { type Filter, type Queue, type Space } from '@dxos/client/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
@@ -12,6 +12,7 @@ export const useGraphModel = (
   space: Space | undefined,
   filter?: Filter.Any | undefined,
   options?: SpaceGraphModelOptions,
+  queue?: Queue,
 ): SpaceGraphModel | undefined => {
   const [model, setModel] = useState<SpaceGraphModel | undefined>(undefined);
   useEffect(() => {
@@ -22,14 +23,14 @@ export const useGraphModel = (
     }
 
     // TODO(burdon): Does this need to be a dependency?
-    if (!model) {
+    if (!model || model.queue !== queue) {
       const model = new SpaceGraphModel().setFilter(filter).setOptions(options);
-      void model.open(space);
+      void model.open(space, queue);
       setModel(model);
     } else {
       model.setFilter(filter).setOptions(options);
     }
-  }, [space, filter, options]);
+  }, [space, filter, options, queue]);
 
   return model;
 };

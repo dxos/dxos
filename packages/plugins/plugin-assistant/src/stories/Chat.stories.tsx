@@ -7,8 +7,9 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
-import { Ref } from '@dxos/echo';
+import { EXA_API_KEY } from '@dxos/ai/testing';
+import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Obj, Ref } from '@dxos/echo';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -17,6 +18,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useSpace } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
@@ -246,8 +248,10 @@ export const WithBoard = {
 export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
-    blueprints: [PLANNING_BLUEPRINT],
-    config: config.remote,
+    blueprints: [RESEARCH_BLUEPRINT],
+    config: config.persistent,
+    types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],

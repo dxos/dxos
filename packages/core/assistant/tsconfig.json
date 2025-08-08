@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
+    "../assistant-testing/src/functions/testing",
     "bin",
     "src",
     "src/**/*.json"

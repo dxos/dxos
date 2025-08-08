@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { Surface } from '@dxos/app-framework';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type Space } from '@dxos/react-client/echo';
+import type { DXN } from '@dxos/keys';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
@@ -112,10 +114,11 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
   //
   ['text' as const]: ({ block }) => {
     invariant(block._tag === 'text');
+
     // const [open, setOpen] = useState(block.disposition === 'cot' && block.pending);
     const title = block.disposition ? titles[block.disposition] : undefined;
     if (!title) {
-      return <MarkdownViewer content={block.text} />;
+      return <MarkdownViewer DxnLink={DXNLink} content={preprocessTextContent(block.text)} />;
     }
 
     // TOOD(burdon): Store last time user opened/closed COT.
@@ -138,7 +141,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', BlockComp
         }
       >
         <MarkdownViewer
-          content={block.text}
+          DxnLink={DXNLink}
+          content={preprocessTextContent(block.text)}
           classNames={['pbe-2', systemDispositions.includes(block.disposition ?? '') && 'text-sm text-subdued']}
         />
       </ToggleContainer>
@@ -250,6 +254,51 @@ const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
 const marginClasses = 'pie-4 pis-4';
 const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
 
+// TODO(dmaretskyi): Extract.
+const useResolvedRef = <T,>(ref: Ref.Ref<T>): T | undefined => {
+  const space = useSpace();
+  const { subscribe, getSnapshot } = useMemo(() => {
+    const resolver = space?.db.graph.createRefResolver({});
+    let currentCallback: (() => void) | undefined = undefined;
+
+    return {
+      subscribe: (cb: () => void) => {
+        currentCallback = cb;
+        return () => {
+          if (currentCallback === cb) {
+            currentCallback = undefined;
+          }
+        };
+      },
+      getSnapshot: () =>
+        resolver?.resolveSync(ref.dxn, true, () => {
+          currentCallback?.();
+        }) as T | undefined,
+    };
+  }, [space, ref.dxn.toString()]);
+  return useSyncExternalStore<T | undefined>(subscribe, getSnapshot);
+};
+
+const DXNLink = ({ dxn }: { dxn: DXN }) => {
+  const object = useResolvedRef(Ref.fromDXN(dxn));
+  const title = Obj.getLabel(object) ?? object?.id ?? dxn.toString();
+
+  return (
+    <a
+      href={dxn.toString()}
+      title={title}
+      className={mx(
+        'inline-flex items-center max-w-[16rem] px-2 py-0.5 border border-separator rounded-full whitespace-nowrap overflow-hidden text-ellipsis text-primary-500 hover:text-primary-500 hover:border-primary-500',
+      )}
+      target='_blank'
+      rel='noopener noreferrer'
+    >
+      <span className='truncate'>{title}</span>
+    </a>
+  );
+  // }
+};
+
 const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsWithChildren<{ user?: boolean }>>) => {
   if (!children) {
     return null;
@@ -266,4 +315,8 @@ const MessageContainer = ({ classNames, children, user }: ThemedClassName<PropsW
 
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
+};
+
+const preprocessTextContent = (content: string) => {
+  return content.replaceAll(/@(dxn:[a-zA-Z0-p:@]+)/g, (_, dxn) => `<${dxn}>`);
 };
