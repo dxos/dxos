@@ -117,6 +117,7 @@ export const getDecorators = ({
           }
           await space.db.flush({ indexes: true });
 
+          // TODO(burdon): Get blueprints from capabilities. Reconcile with useBlueprints.
           // Clone blueprints and bind to conversation.
           const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           const binder = new AiContextBinder(await chat.queue.load());
