@@ -391,5 +391,6 @@
   "storyExplorer.storybookConfigDir": "tools/storybook/.storybook",
   "storyExplorer.preview.mode": "canvas",
   "storyExplorer.server.external.url": "http://localhost:9009",
-  "storyExplorer.server.internal.enabled": false
+  "storyExplorer.server.internal.enabled": false,
+  "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx"
 }
