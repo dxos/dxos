@@ -44,7 +44,7 @@ describe('queues', (ctx) => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
-    queue.append([
+    await queue.append([
       Obj.make(Testing.Contact, {
         name: 'john',
       }),
