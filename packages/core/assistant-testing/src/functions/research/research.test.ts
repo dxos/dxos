@@ -91,7 +91,7 @@ describe('Research', { timeout: 600_000 }, () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'research blueprint',
     Effect.fn(
       function* ({ expect }) {

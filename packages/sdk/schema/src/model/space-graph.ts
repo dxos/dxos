@@ -166,7 +166,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
         this.invalidate();
       });
       const pollingTask = setInterval(() => {
-        this._queue?.refresh();
+        void this._queue?.refresh();
       }, 1000);
 
       this._queueSubscription = () => {
