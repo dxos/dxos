@@ -112,7 +112,6 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const model = useTableModel({
     view,
-    space,
     schema: jsonSchema,
     features,
     rows: filteredObjects,

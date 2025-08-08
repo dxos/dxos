@@ -51,7 +51,6 @@ export const TableCard = ({ role, view }: TableCardProps) => {
 
   const model = useTableModel({
     view,
-    space,
     schema: jsonSchema,
     features,
     rows: filteredObjects,
