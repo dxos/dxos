@@ -15,6 +15,8 @@ import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGra
 import PROMPT from './instructions-research.tpl?raw';
 import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import type { DXN } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -34,7 +36,9 @@ export default defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    result: Schema.Unknown,
+    objects: Schema.Array(Schema.Unknown).annotations({
+      description: 'The structured objects created as a result of the research.',
+    }),
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch } }) {
@@ -46,32 +50,39 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
 
-      const result = yield* new AiSession()
+      const newObjects: DXN[] = [];
+      yield* new AiSession()
         .run({
           prompt: query,
           history: [],
           system: PROMPT,
           toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
         })
         .pipe(
           Effect.provide(
             Layer.mergeAll(
               mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
               LocalSearchHandler,
-              makeGraphWriterHandler(GraphWriterToolkit),
+              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjects.push(...dxns) }),
               ContextQueueService.layer(researchQueue),
             ),
           ),
         );
 
+      const newObjectsData = yield* Effect.forEach(newObjects, DatabaseService.resolve);
+
       return {
-        result,
+        objects: newObjectsData.map((obj, idx) => ({
+          // TODO(dmaretskyi): Remove when `Obj.getDXN` returns the absolute DXN.
+          '@dxn': newObjects[idx].toString(),
+          ...Obj.toJSON(obj),
+        })),
       };
     },
     Effect.provide(
       Layer.mergeAll(
-        AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+        AiService.model('@anthropic/claude-opus-4-0'),
         ToolResolverService.layerEmpty,
         ToolExecutionService.layerEmpty,
       ),

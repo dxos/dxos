@@ -7,40 +7,54 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { structuredOutputParser } from '@dxos/ai';
+import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService, structuredOutputParser } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   LocalFunctionExecutionService,
+  QueueService,
   RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 
+import {
+  AiConversation,
+  GenerationObserver,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+  type ContextBinding,
+} from '@dxos/assistant';
+import { Markdown } from '@dxos/echo-schema';
+import { trim } from '@dxos/util';
+import { RESEARCH_BLUEPRINT } from '../../blueprints';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import { Blueprint } from '@dxos/blueprints';
+import { testToolkit } from '../../blueprints/testing';
 
 const MOCK_SEARCH = false;
 
 const TestLayer = Layer.mergeAll(
-  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
-  ToolResolverService.layerEmpty,
-  ToolExecutionService.layerEmpty,
+  AiService.model('@anthropic/claude-opus-4-0'),
+  makeToolResolverFromFunctions([research], testToolkit),
+  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({})),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
-      TestDatabaseLayer({ indexing: { vector: true }, types: [...ResearchDataTypes, ResearchGraph] }),
+      TestDatabaseLayer({
+        indexing: { vector: true },
+        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
+      }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
@@ -51,7 +65,7 @@ const TestLayer = Layer.mergeAll(
 
 describe('Research', { timeout: 300_000 }, () => {
   it.effect(
-    'should generate a research report',
+    'call a function to generate a research report',
     Effect.fnUntraced(
       function* ({ expect }) {
         yield* DatabaseService.add(
@@ -72,6 +86,33 @@ describe('Research', { timeout: 300_000 }, () => {
           Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
         );
         console.log(inspect(data, { depth: null, colors: true }));
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.taggedTest('llm'),
+    ),
+  );
+
+  it.effect.only(
+    'research blueprint',
+    Effect.fn(
+      function* ({ expect }) {
+        yield* DatabaseService.add(
+          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
+        );
+        yield* DatabaseService.flush({ indexes: true });
+
+        const conversation = new AiConversation({
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
+        });
+        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+
+        const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
+        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
+
+        yield* conversation.run({
+          prompt: 'Research notion founders',
+          observer,
+        });
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),

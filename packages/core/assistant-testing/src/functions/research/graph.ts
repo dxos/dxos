@@ -156,7 +156,10 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
   );
 };
 
-export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWriterToolkit>) => {
+export const makeGraphWriterHandler = (
+  toolkit: ReturnType<typeof makeGraphWriterToolkit>,
+  { onAppend }: { onAppend?: (object: DXN[]) => void } = {},
+) => {
   const { schema } = Context.get(
     toolkit.tools.graph_writer.annotations as Context.Context<GraphWriterSchema>,
     GraphWriterSchema,
@@ -170,6 +173,7 @@ export const makeGraphWriterHandler = (toolkit: ReturnType<typeof makeGraphWrite
 
       // TODO(dmaretskyi): Obj.getDXN should work here, but currently the objects are not aware of their location.
       const dxns = data.map((obj) => new DXN(DXN.kind.QUEUE, [...contextQueue.contextQueue.dxn.parts, obj.id]));
+      onAppend?.(dxns);
 
       return dxns;
     }),

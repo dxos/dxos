@@ -166,7 +166,7 @@ export class AiSession {
       // Generate system prompt.
       // TODO(budon): Dynamically fill variables.
       const system = yield* formatSystemPrompt(params);
-      console.log(system);
+      // console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);
@@ -178,7 +178,7 @@ export class AiSession {
 
       // Potential tool-use loop.
       do {
-        log.info('request', {
+        log('request', {
           prompt: promptMessages,
           system: { snippet: [system.slice(0, 32), '...', system.slice(-32)].join(''), length: system.length },
           pending: this._pending.length,
@@ -241,7 +241,7 @@ export class AiSession {
       yield* Queue.shutdown(this.blockQueue);
       yield* Queue.shutdown(this.messageQueue);
 
-      log.info('done', { pending: this._pending.length });
+      log('done', { pending: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
