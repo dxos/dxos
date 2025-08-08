@@ -8,7 +8,7 @@ import { effect } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -800,5 +800,11 @@ describe('Reactive Object with ECHO database', () => {
     const obj = live({ queue: Ref.fromDXN(dxn) });
     const dbObj = db.add(obj);
     expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());
+  });
+
+  test('Obj.getDXN returns full DXN', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
   });
 });

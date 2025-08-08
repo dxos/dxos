@@ -52,8 +52,10 @@ export const DEFAULT_FORMATTER: Formatter = (
   let instance;
   if (scope) {
     const prototype = Object.getPrototypeOf(scope);
-    const id = getPrototypeSpecificInstanceId(scope);
-    instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    if (prototype !== null) {
+      const id = getPrototypeSpecificInstanceId(scope);
+      instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    }
   }
 
   const formattedTimestamp = config.options?.formatter?.timestamp ? new Date().toISOString() : undefined;

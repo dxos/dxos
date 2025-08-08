@@ -12,6 +12,7 @@ import Inspect from 'vite-plugin-inspect';
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+import react from '@vitejs/plugin-react-swc';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -66,7 +67,49 @@ const createNodeConfig = (cwd: string) =>
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [PluginImportSource(), process.env.VITE_INSPECT ? Inspect() : undefined],
+    plugins: [
+      PluginImportSource(),
+
+      process.env.VITE_INSPECT ? Inspect() : undefined,
+
+      // We don't care about react but we want the SWC transforers.
+      react({
+        tsDecorators: true,
+        plugins: [
+          [
+            '@dxos/swc-log-plugin',
+            {
+              to_transform: [
+                {
+                  name: 'log',
+                  package: '@dxos/log',
+                  param_index: 2,
+                  include_args: false,
+                  include_call_site: true,
+                  include_scope: true,
+                },
+                {
+                  name: 'invariant',
+                  package: '@dxos/invariant',
+                  param_index: 2,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: true,
+                },
+                {
+                  name: 'Context',
+                  package: '@dxos/context',
+                  param_index: 1,
+                  include_args: false,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+              ],
+            },
+          ],
+        ],
+      }),
+    ],
   });
 
 const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>

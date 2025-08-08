@@ -33,7 +33,7 @@ export const gatherLogInfoFromScope = (scope: any): Record<string, any> => {
   const res: Record<string, any> = {};
 
   const prototype = Object.getPrototypeOf(scope);
-  const infoProps = prototype[logInfoProperties] ?? [];
+  const infoProps = (typeof prototype === 'object' && prototype !== null ? prototype[logInfoProperties] : []) ?? [];
   for (const prop of infoProps) {
     try {
       res[prop] = typeof scope[prop] === 'function' ? scope[prop]() : scope[prop];
