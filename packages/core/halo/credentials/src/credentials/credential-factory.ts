@@ -77,7 +77,7 @@ export const createCredential = async ({
     credential.proof!.chain = chain;
   }
 
-  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload));
+  credential.id = PublicKey.from(await subtleCrypto.digest('SHA-256', signedPayload as Uint8Array<ArrayBuffer>));
 
   return credential;
 };

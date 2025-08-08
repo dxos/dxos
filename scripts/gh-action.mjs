@@ -135,9 +135,46 @@ async function checkResults() {
 }
 
 /**
+ * Check for uncommitted changes in the repository.
+ */
+function hasUncommittedChanges() {
+  try {
+    const status = execSync('git status --porcelain', { encoding: 'utf8', cwd: REPO_ROOT });
+    return status.trim().length > 0;
+  } catch (error) {
+    console.warn(chalk.yellow('Warning: Could not check git status'));
+    return false;
+  }
+}
+
+/**
+ * Check for unpushed changes in the repository.
+ */
+function hasUnpushedChanges() {
+  try {
+    const currentBranch = getCurrentBranch();
+    const unpushed = execSync(`git log origin/${currentBranch}..HEAD --oneline`, { encoding: 'utf8', cwd: REPO_ROOT });
+    return unpushed.trim().length > 0;
+  } catch (error) {
+    // If remote branch doesn't exist or other error, assume no unpushed changes
+    return false;
+  }
+}
+
+/**
  * Verify workflows and exit with appropriate code.
  */
 async function verifyWorkflows() {
+  // Check for uncommitted changes
+  if (hasUncommittedChanges()) {
+    console.log(chalk.yellow('⚠️  Warning: You have uncommitted changes in your repository'));
+  }
+
+  // Check for unpushed changes
+  if (hasUnpushedChanges()) {
+    console.log(chalk.yellow('⚠️  Warning: You have unpushed commits in your repository'));
+  }
+
   if (argv.watch) {
     // Watch mode: wait for workflows to complete
     while (true) {
