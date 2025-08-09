@@ -154,10 +154,7 @@ export class AiSession {
       const observer = params.observer ?? GenerationObserver.noop();
 
       // Create toolkit.
-      console.log(1);
-      // AI_TOOL_NOT_FOUND: show
       const toolkit: AiToolkit.ToHandler<Tools> = yield* createToolkit(params);
-      console.log(2);
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables.
@@ -271,7 +268,6 @@ const createToolkit = <Tools extends AiTool.Any>({
   blueprints = [],
 }: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
   Effect.gen(function* () {
-    console.log(3, blueprints);
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),

@@ -4,13 +4,13 @@
 
 import React, { useMemo, useSyncExternalStore } from 'react';
 
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 
-export const ObjectLink = ({ dxn }: { dxn: DXN }) => {
-  const object = useResolvedRef(Ref.fromDXN(dxn));
+export const ObjectLink = ({ space, dxn }: { space: Space; dxn: DXN }) => {
+  const object = useResolvedRef(space, Ref.fromDXN(dxn));
   const title = Obj.getLabel(object) ?? object?.id ?? dxn.toString();
 
   return (
@@ -31,10 +31,9 @@ export const ObjectLink = ({ dxn }: { dxn: DXN }) => {
 };
 
 // TODO(burdon): Factor out.
-const useResolvedRef = <T,>(ref: Ref.Ref<T>): T | undefined => {
-  const space = useSpace();
+const useResolvedRef = <T,>(space: Space, ref: Ref.Ref<T>): T | undefined => {
   const { subscribe, getSnapshot } = useMemo(() => {
-    const resolver = space?.db.graph.createRefResolver({});
+    const resolver = space.db.graph.createRefResolver({});
     let currentCallback: (() => void) | undefined = undefined;
 
     return {

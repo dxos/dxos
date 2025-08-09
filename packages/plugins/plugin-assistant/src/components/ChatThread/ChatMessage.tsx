@@ -118,17 +118,17 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Text
   //
-  ['text' as const]: ({ block }) => {
+  ['text' as const]: ({ space, block }) => {
     invariant(block._tag === 'text');
     return (
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ children, href, ...props }) => {
-            if (children.length === 1 && typeof children[0] === 'string' && children[0].startsWith('dxn')) {
+          a: ({ node: { properties }, children, href, ...props }) => {
+            if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
-                const dxn = DXN.parse(children[0]);
-                return <ObjectLink dxn={dxn} />;
+                const dxn = DXN.parse(properties.href);
+                return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
             }
 
