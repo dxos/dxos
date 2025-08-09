@@ -113,10 +113,10 @@ export class AiConversation {
         prompt: params.prompt,
         system: params.system,
         history,
-        observer: params.observer,
         objects,
         blueprints,
         toolkit: params.toolkit,
+        observer: params.observer,
       });
 
       log.info('result', { messages: messages, duration: Date.now() - start });

@@ -190,7 +190,6 @@ export class QueryExecutor extends Resource {
       );
 
     if (TRACE_QUERY_EXECUTION) {
-      // eslint-disable-next-line no-console
       console.log(ExecutionTrace.format(trace));
     }
 
@@ -384,7 +383,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     if (workingSet.length === 6) {
-      log.info('FilterDeletedStep', { step, workingSet });
+      log('filter deleted step', { step, workingSet });
     }
 
     const expected = step.mode === 'only-deleted';
@@ -429,7 +428,7 @@ export class QueryExecutor extends Resource {
                         }
                       : null;
                   } catch {
-                    log.warn('Invalid reference', { ref: ref['/'] });
+                    log.warn('invalid reference', { ref: ref['/'] });
                     return null;
                   }
                 });
@@ -492,7 +491,7 @@ export class QueryExecutor extends Resource {
                     spaceId: item.spaceId,
                   };
                 } catch {
-                  log.warn('Invalid reference', { ref: ref['/'] });
+                  log.warn('invalid reference', { ref: ref['/'] });
                   return null;
                 }
               })

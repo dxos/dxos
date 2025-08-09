@@ -267,7 +267,7 @@ const ChatPrompt = ({
   const {
     blueprints,
     active: activeBlueprints,
-    update: handleUpdateBlueprints,
+    onUpdate: handleUpdateBlueprints,
   } = useBlueprints(space, processor.context, processor.blueprintRegistry);
 
   // TODO(burdon): Reconcile with object tags.

@@ -13,7 +13,7 @@ import { Chess } from '../types';
 
 export default defineFunction({
   name: 'dxos.org/function/chess/play',
-  description: 'Calculates and plays the next move in the given chess game.',
+  description: 'Uses the chess engine to play the next move in the given game.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
       description: 'The ID of the chess object.',
@@ -23,9 +23,11 @@ export default defineFunction({
     move: Schema.optional(Schema.String).annotations({
       description: 'The move that was played.',
     }),
+    pgn: Schema.String.annotations({
+      description: 'The PGN of the game after the move was played.',
+    }),
   }),
   handler: Effect.fn(function* ({ data: { id } }) {
-    log.info('play', { id });
     const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game);
 
     // Create game and make move.
@@ -38,6 +40,6 @@ export default defineFunction({
 
     // Update the game state.
     object.pgn = chess.pgn();
-    return { move };
+    return { move, pgn: chess.pgn() };
   }),
 });

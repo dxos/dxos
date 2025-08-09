@@ -41,7 +41,7 @@ export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
   blueprintRegistry?: Blueprint.Registry;
-  registry?: Registry.Registry;
+  observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
 } & Pick<AiConversationRunParams<any>, 'system'>;
 
@@ -61,7 +61,9 @@ export class AiChatProcessor {
    */
   // TODO(wittjosiah): Error should come from the message stream.
   readonly error = Rx.make<Option.Option<Error>>(Option.none());
-  private readonly _registry = this._options.registry ?? Registry.make();
+
+  /** Rx registry. */
+  private readonly _observableRegistry = this._options.observableRegistry ?? Registry.make();
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
@@ -170,14 +172,14 @@ export class AiChatProcessor {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     const session = new AiSession();
-    this._registry.set(this._session, Option.some(session));
+    this._observableRegistry.set(this._session, Option.some(session));
 
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
-      Option.match(this._registry.get(this._session), {
+      Option.match(this._observableRegistry.get(this._session), {
         onSome: (s) => {
           if (s === session) {
-            this._registry.set(this._session, Option.none());
+            this._observableRegistry.set(this._session, Option.none());
           }
         },
         onNone: () => {},
@@ -208,12 +210,12 @@ export class AiChatProcessor {
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
-        this._registry.set(
+        this._observableRegistry.set(
           this.error,
           Option.some(new AiServiceOverloadedError('AI service overloaded', { cause: err })),
         );
       } else {
-        this._registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+        this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
       }
     }
   }

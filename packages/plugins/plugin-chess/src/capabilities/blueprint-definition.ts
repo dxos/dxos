@@ -7,9 +7,9 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { play } from '../functions';
+import { move, play } from '../functions';
 
-const functions = [play];
+const functions = [move, play];
 
 export default () => {
   return [

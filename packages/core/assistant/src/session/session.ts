@@ -98,8 +98,8 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
   history?: DataType.Message[];
   objects?: Obj.Any[]; // TODO(burdon): Meta only (typename and id -- write to binder).
   blueprints?: Blueprint.Blueprint[];
-  observer?: GenerationObserver;
   toolkit?: AiToolkit.AiToolkit<Tools>;
+  observer?: GenerationObserver;
 };
 
 /**
@@ -154,12 +154,15 @@ export class AiSession {
       const observer = params.observer ?? GenerationObserver.noop();
 
       // Create toolkit.
+      console.log(1);
+      // AI_TOOL_NOT_FOUND: show
       const toolkit: AiToolkit.ToHandler<Tools> = yield* createToolkit(params);
+      console.log(2);
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables.
       const system = yield* formatSystemPrompt(params);
-      // console.log(system);
+      console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);
@@ -171,7 +174,7 @@ export class AiSession {
 
       // Potential tool-use loop.
       do {
-        log('request', {
+        log.info('request', {
           prompt: promptMessages,
           system: { snippet: [system.slice(0, 32), '...', system.slice(-32)].join(''), length: system.length },
           pending: this._pending.length,
@@ -223,7 +226,7 @@ export class AiSession {
           break;
         }
 
-        // TODO(burdon): Error handling?
+        // TODO(burdon): Report errors to user; with proposed actions.
         const toolResults = yield* callTools(toolkit, toolCalls);
         const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
@@ -268,6 +271,7 @@ const createToolkit = <Tools extends AiTool.Any>({
   blueprints = [],
 }: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
   Effect.gen(function* () {
+    console.log(3, blueprints);
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),

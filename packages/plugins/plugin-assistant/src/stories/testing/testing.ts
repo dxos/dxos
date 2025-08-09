@@ -98,7 +98,8 @@ export const getDecorators = ({
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async ({ client }) => {
-          log.info('onClientInitialized');
+          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
           }
@@ -117,6 +118,7 @@ export const getDecorators = ({
           }
           await space.db.flush({ indexes: true });
 
+          // TODO(burdon): Get blueprints from capabilities. Reconcile with useBlueprints.
           // Clone blueprints and bind to conversation.
           const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           const binder = new AiContextBinder(await chat.queue.load());

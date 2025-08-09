@@ -35,7 +35,7 @@ export const useChatProcessor = ({
   blueprintRegistry,
   settings,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
-  const registry = useContext(RegistryContext);
+  const observableRegistry = useContext(RegistryContext);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   // Tools and context.
@@ -66,7 +66,7 @@ export const useChatProcessor = ({
     return new AiChatProcessor(services, conversation, {
       extensions,
       blueprintRegistry,
-      registry,
+      observableRegistry,
       model: preset?.model,
     });
   }, [services, conversation, blueprintRegistry, extensions, preset]);
