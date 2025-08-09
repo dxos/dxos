@@ -98,7 +98,8 @@ export const getDecorators = ({
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async ({ client }) => {
-          log.info('onClientInitialized');
+          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
           }

@@ -96,7 +96,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   async open(space: Space, queue?: Queue): Promise<this> {
-    log.info('open', { space, queue });
+    log('open', { space, queue });
     if (this.isOpen()) {
       await this.close();
     }
