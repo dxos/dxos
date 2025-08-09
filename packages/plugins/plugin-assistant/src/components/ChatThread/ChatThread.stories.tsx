@@ -86,18 +86,19 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
     ]);
   }),
 
-  Effect.gen(function* () {
-    const { queue, space } = yield* TestQueue;
-    const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
-        },
-      ]),
-    ]);
-  }),
+  // TODO(burdon): This throws.
+  // Effect.gen(function* () {
+  //   const { queue, space } = yield* TestQueue;
+  //   const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+  //   return queue.append([
+  //     createMessage('assistant', [
+  //       {
+  //         _tag: 'text',
+  //         text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
+  //       },
+  //     ]),
+  //   ]);
+  // }),
 
   Effect.gen(function* () {
     const { queue } = yield* TestQueue;
@@ -112,12 +113,6 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
           text: faker.lorem.paragraphs(1),
         },
       ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
       createMessage('assistant', [
         {
           _tag: 'text',
