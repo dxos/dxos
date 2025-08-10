@@ -5,7 +5,7 @@
 import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
-import { Surface } from '@dxos/app-framework';
+import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
@@ -77,7 +77,9 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
         return (
           <Fragment key={idx}>
             <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <Component space={space} block={block} onEvent={onEvent} />
+              <ErrorBoundary data={block}>
+                <Component space={space} block={block} onEvent={onEvent} />
+              </ErrorBoundary>
             </MessageItem>
             {debug && (
               <div className={mx('flex justify-end text-subdued', marginClasses)}>

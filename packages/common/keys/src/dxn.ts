@@ -307,8 +307,7 @@ export declare namespace DXN {
 
   export type EchoDXN = {
     spaceId?: SpaceId;
-    // TODO(burdon): Rename objectId.
-    echoId: string; // TODO(dmaretskyi): ObjectId.
+    echoId: string; // TODO(dmaretskyi): Rename to `objectId` and use `ObjectId` for the type.
   };
 
   export type QueueDXN = {

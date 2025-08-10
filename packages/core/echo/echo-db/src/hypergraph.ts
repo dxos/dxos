@@ -268,12 +268,10 @@ export class Hypergraph {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
-    const dxnData = dxn.asEchoDXN()!;
-    const spaceId = dxnData.spaceId ?? context.space;
-    const objectId = dxnData.echoId;
 
+    const { spaceId = context.space, echoId: objectId } = dxn.asEchoDXN()!;
     if (spaceId === undefined) {
-      throw new Error('Unable to determine space to resolve the reference from');
+      throw new Error(`Unable to determine the Space to resolve the reference: ${dxn.toString()}`);
     }
 
     const db = this._databases.get(spaceId);

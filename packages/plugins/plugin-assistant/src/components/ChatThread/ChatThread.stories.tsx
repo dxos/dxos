@@ -86,19 +86,18 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
     ]);
   }),
 
-  // TODO(burdon): This throws.
-  // Effect.gen(function* () {
-  //   const { queue, space } = yield* TestQueue;
-  //   const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-  //   return queue.append([
-  //     createMessage('assistant', [
-  //       {
-  //         _tag: 'text',
-  //         text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
-  //       },
-  //     ]),
-  //   ]);
-  // }),
+  Effect.gen(function* () {
+    const { queue, space } = yield* TestQueue;
+    const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+    return queue.append([
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
+        },
+      ]),
+    ]);
+  }),
 
   Effect.gen(function* () {
     const { queue } = yield* TestQueue;
