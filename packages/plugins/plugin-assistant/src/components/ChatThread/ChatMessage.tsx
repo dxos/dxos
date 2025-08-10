@@ -7,7 +7,7 @@ import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
@@ -274,6 +274,5 @@ const ToggleContainer = (props: ToggleContainerProps) => {
 };
 
 // TODO(burdon): Move to parser.
-const preprocessTextContent = (content: string) => {
-  return content.replaceAll(/@(dxn:[a-zA-Z0-p:@]+)/g, (_, dxn) => `<${dxn}>`);
-};
+const preprocessTextContent = (content: string) =>
+  content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);

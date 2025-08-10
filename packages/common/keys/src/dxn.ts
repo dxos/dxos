@@ -19,6 +19,8 @@ import { SpaceId } from './space-id';
 // TODO(dmaretskyi): "@" is a separator character in the URI spec.
 export const LOCAL_SPACE_TAG = '@';
 
+export const DXN_ECHO_REGEXP = /@(dxn:[a-zA-Z0-p:@]+)/;
+
 // TODO(burdon): Namespace for.
 export const QueueSubspaceTags = Object.freeze({
   DATA: 'data',

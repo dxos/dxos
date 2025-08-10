@@ -119,7 +119,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
       createMessage('assistant', [
         {
           _tag: 'text',
-          text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
+          text: `This is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
         },
       ]),
     ]);
