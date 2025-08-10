@@ -271,6 +271,7 @@ const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
 };
 
+// TODO(burdon): Move to parser.
 const preprocessTextContent = (content: string) => {
   return content.replaceAll(/@(dxn:[a-zA-Z0-p:@]+)/g, (_, dxn) => `<${dxn}>`);
 };
