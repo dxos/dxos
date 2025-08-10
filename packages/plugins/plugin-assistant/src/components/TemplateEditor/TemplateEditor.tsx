@@ -60,6 +60,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
 
         // https://github.com/xiechao/lang-handlebars
         new LanguageSupport(handlebarsLanguage, syntaxHighlighting(handlebarsHighlightStyle)),
+        // createMarkdownExtensions({}),
       ].filter(isNotFalsy),
     };
   }, [themeMode, template.source?.target]);

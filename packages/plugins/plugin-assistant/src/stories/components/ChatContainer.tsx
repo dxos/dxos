@@ -20,7 +20,7 @@ import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
 
-export const ChatContainer = ({ space }: ComponentProps) => {
+export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
@@ -58,6 +58,8 @@ export const ChatContainer = ({ space }: ComponentProps) => {
           label={t('button branch thread')}
           onClick={handleBranchChat}
         />
+        <div className='flex-1' />
+        <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={() => onEvent?.('reset')} />
       </Toolbar.Root>
       {!chat || !processor ? null : (
         <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
