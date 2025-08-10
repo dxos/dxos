@@ -28,7 +28,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 >() {
   static notAvailable = Layer.succeed(QueueService, {
     queues: {
-      get(dxn) {
+      get(_dxn) {
         throw new Error('Queues not available');
       },
       create() {

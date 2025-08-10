@@ -15,10 +15,10 @@ import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { PreviewProvider, useRefPopover } from '../components';
 import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
-import { str } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -133,7 +133,7 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
           <Card.Toolbar classNames='is-min p-[--dx-cardSpacingInline]'>
             {(link.suggest && (
               <>
-                <Card.ToolbarIconButton label='Discard' icon={'ph--x--regular'} onClick={handleDelete} />
+                <Card.ToolbarIconButton label='Discard' icon='ph--x--regular' onClick={handleDelete} />
                 {target && (
                   <Card.ToolbarIconButton
                     classNames='bg-successSurface text-successSurfaceText'
@@ -201,22 +201,20 @@ export const Default = {
       <PreviewProvider onLookup={handlePreviewLookup}>
         <EditorStory
           ref={handleViewRef}
-          text={str(
-            '# Preview',
-            '',
-            'This project is part of the [DXOS][dxn:queue:data:123] SDK.',
-            '',
-            '![DXOS][?dxn:queue:data:123]',
-            '',
-            'It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].',
-            '',
-            '## Deep dive',
-            '',
-            '![ECHO][dxn:queue:data:echo]',
-            '',
-            '',
-            '',
-          )}
+          text={trim`
+            # Preview
+
+            This project is part of the [DXOS][dxn:queue:data:123] SDK.
+
+            ![DXOS][?dxn:queue:data:123]
+
+            It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
+
+            ## Deep dive
+
+            ![ECHO][dxn:queue:data:echo]
+
+          `}
           extensions={extensions}
         />
         <PreviewCard />
