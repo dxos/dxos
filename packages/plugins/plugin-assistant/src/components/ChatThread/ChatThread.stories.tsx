@@ -87,19 +87,6 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue, space } = yield* TestQueue;
-    const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
-        },
-      ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
     const { queue } = yield* TestQueue;
     return queue.append([
       createMessage('assistant', [
@@ -120,6 +107,19 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
         {
           _tag: 'select',
           options: ['Option 1', 'Option 2', 'Option 3'],
+        },
+      ]),
+    ]);
+  }),
+
+  Effect.gen(function* () {
+    const { queue, space } = yield* TestQueue;
+    const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+    return queue.append([
+      createMessage('assistant', [
+        {
+          _tag: 'text',
+          text: `this is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
         },
       ]),
     ]);
