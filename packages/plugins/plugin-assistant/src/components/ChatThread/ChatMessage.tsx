@@ -5,9 +5,9 @@
 import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
-import { Surface } from '@dxos/app-framework';
+import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
@@ -77,7 +77,9 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
         return (
           <Fragment key={idx}>
             <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <Component space={space} block={block} onEvent={onEvent} />
+              <ErrorBoundary data={block}>
+                <Component space={space} block={block} onEvent={onEvent} />
+              </ErrorBoundary>
             </MessageItem>
             {debug && (
               <div className={mx('flex justify-end text-subdued', marginClasses)}>
@@ -118,17 +120,17 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Text
   //
-  ['text' as const]: ({ block }) => {
+  ['text' as const]: ({ space, block }) => {
     invariant(block._tag === 'text');
     return (
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ children, href, ...props }) => {
-            if (children.length === 1 && typeof children[0] === 'string' && children[0].startsWith('dxn')) {
+          a: ({ node: { properties }, children, href, ...props }) => {
+            if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
-                const dxn = DXN.parse(children[0]);
-                return <ObjectLink dxn={dxn} />;
+                const dxn = DXN.parse(properties.href);
+                return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
             }
 
@@ -271,6 +273,6 @@ const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
 };
 
-const preprocessTextContent = (content: string) => {
-  return content.replaceAll(/@(dxn:[a-zA-Z0-p:@]+)/g, (_, dxn) => `<${dxn}>`);
-};
+// TODO(burdon): Move to parser.
+const preprocessTextContent = (content: string) =>
+  content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);

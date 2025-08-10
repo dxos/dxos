@@ -10,7 +10,11 @@ import { Blueprint } from '@dxos/blueprints';
 import { analysis, list, load } from '../functions';
 
 const functions = [analysis, list, load];
-const tools: string[] = ['get-schemas', 'create-record', 'open-item'];
+const tools: string[] = [
+  'get-schemas',
+  'create-record',
+  // 'open-item'
+];
 
 export default () => {
   return [

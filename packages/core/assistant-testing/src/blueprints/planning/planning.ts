@@ -18,7 +18,8 @@ const instructions = trim`
 
   ## Document Format
   You will receive task lists with line numbers prefixed like:
-  \`\`\`
+  
+  ${'```'}
   1. - [ ] First main task
   2.   - [ ] Subtask 1: Research phase
   3.     - [x] Literature review
@@ -27,7 +28,7 @@ const instructions = trim`
   6.     - [ ] Setup infrastructure
   7.     - [ ] Write core functionality
   8. - [ ] Another main task
-  \`\`\`
+  ${'```'}
 
   ## Task Hierarchy
   - 0 spaces: Top-level tasks

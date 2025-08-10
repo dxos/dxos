@@ -17,13 +17,10 @@ import { isNonNullable } from '@dxos/util';
 
 export type UpdateCallback = (key: string, active: boolean) => void;
 
-/**
- * Provide a registry of blueprints from plugins.
- */
-// TODO(burdon): Reconcile with public registry.
-export const useBlueprintRegistry = () => {
-  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
-  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
+export type UseBlueprints = {
+  blueprints: Blueprint.Blueprint[];
+  active: string[];
+  onUpdate: UpdateCallback;
 };
 
 /**
@@ -31,9 +28,9 @@ export const useBlueprintRegistry = () => {
  */
 export const useBlueprints = (
   space: Space,
-  context: AiContextBinder,
+  binder: AiContextBinder,
   blueprintRegistry?: Blueprint.Registry,
-): { blueprints: Blueprint.Blueprint[]; active: string[]; update: UpdateCallback } => {
+): UseBlueprints => {
   const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
   const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);
   const [active, setActive] = useState<string[]>([]);
@@ -44,38 +41,46 @@ export const useBlueprints = (
     setBlueprints([...(registry ?? []), ...spaceBlueprints].toSorted((a, b) => a.key.localeCompare(b.key)));
 
     return effect(() => {
-      const refs = [...(context.blueprints.value ?? [])];
+      const refs = [...(binder.blueprints.value ?? [])];
       const t = setTimeout(async () => {
         const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
         setActive(blueprints.map((blueprint) => blueprint.key));
       });
       return () => clearTimeout(t);
     });
-  }, [context, blueprintRegistry, spaceBlueprints]);
+  }, [binder, blueprintRegistry, spaceBlueprints]);
 
   const handleUpdate = useCallback<UpdateCallback>(
     (key: string, isActive: boolean) =>
       Effect.gen(function* () {
         log('update', { key, isActive });
-        const spaceBlueprint = Array.findFirst(spaceBlueprints, (blueprint) => blueprint.key === key);
-        yield* Option.match(spaceBlueprint, {
+        const blueprint = Array.findFirst(spaceBlueprints, (blueprint) => blueprint.key === key);
+        yield* Option.match(blueprint, {
           onNone: () =>
             pipe(
               Option.fromNullable(blueprintRegistry),
               Option.flatMap((registry) => Option.fromNullable(registry.getByKey(key))),
-              // TODO(dmaretskyi): This should be done by Obj.clone.
-              Option.map(({ id: _id, ...data }) => space.db.add(Obj.make(Blueprint.Blueprint, data))),
-              Option.map((obj) => Effect.tryPromise(() => context.bind({ blueprints: [Ref.make(obj)] }))),
+              Option.map((blueprint) => space.db.add(Obj.clone(blueprint))),
+              Option.map((obj) => Effect.tryPromise(() => binder.bind({ blueprints: [Ref.make(obj)] }))),
               Option.getOrElse(() => Effect.succeed(undefined)),
             ),
           onSome: (blueprint) => {
             const method = isActive ? 'bind' : 'unbind';
-            return Effect.tryPromise(() => context[method]({ blueprints: [Ref.make(blueprint)] }));
+            return Effect.tryPromise(() => binder[method]({ blueprints: [Ref.make(blueprint)] }));
           },
         });
       }).pipe(Effect.runPromise),
-    [space, context, active, blueprintRegistry],
+    [space, binder, active, blueprintRegistry],
   );
 
-  return { blueprints, active, update: handleUpdate };
+  return { blueprints, active, onUpdate: handleUpdate };
+};
+
+/**
+ * Provide a registry of blueprints from plugins.
+ */
+// TODO(burdon): Reconcile with public registry.
+export const useBlueprintRegistry = () => {
+  const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
+  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
