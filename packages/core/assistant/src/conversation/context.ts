@@ -56,8 +56,6 @@ export class Bindings {
  * Manages bindings of blueprints and objects to a conversation.
  */
 export class AiContextBinder {
-  constructor(private readonly _queue: Queue) {}
-
   /**
    * Reactive query of all bindings.
    */
@@ -69,6 +67,8 @@ export class AiContextBinder {
   ]);
 
   readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
+
+  constructor(private readonly _queue: Queue) {}
 
   /**
    * Asynchronous query of all bindings.

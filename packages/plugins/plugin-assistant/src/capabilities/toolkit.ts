@@ -46,7 +46,7 @@ class SchemaToolkit extends AiToolkit.make(
       //
       'get-schemas': () => {
         const space = getActiveSpace(context);
-        const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;
+        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
         return Effect.gen(function* () {
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
             typename: Type.getTypename(form.objectSchema),
@@ -79,7 +79,7 @@ class SchemaToolkit extends AiToolkit.make(
       //
       'create-record': ({ typename, data }) => {
         const space = getActiveSpace(context);
-        const service = space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable;
+        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
         console.log('create-record', { typename, data, space });
         return Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

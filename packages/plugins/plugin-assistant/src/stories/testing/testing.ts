@@ -27,7 +27,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { Config } from '@dxos/react-client';
-import type { DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
@@ -87,7 +87,7 @@ export const getDecorators = ({
   ...props
 }: DecoratorsProps) => [
   withPluginManager({
-    fireEvents: [Events.SetupArtifactDefinition],
+    fireEvents: [Events.SetupArtifactDefinition], // TODO(burdon): Remove/change.
     plugins: [
       // System plugins.
       AttentionPlugin(),
@@ -116,18 +116,22 @@ export const getDecorators = ({
           for (const accessToken of accessTokens) {
             space.db.add(Obj.clone(accessToken));
           }
-          await space.db.flush({ indexes: true });
+
+          const chat = space.db.add(
+            Obj.make(Assistant.Chat, {
+              queue: Ref.fromDXN(space.queues.create().dxn),
+            }),
+          );
 
           // TODO(burdon): Get blueprints from capabilities. Reconcile with useBlueprints.
           // Clone blueprints and bind to conversation.
-          const chat = space.db.add(Obj.make(Assistant.Chat, { queue: Ref.fromDXN(space.queues.create().dxn) }));
           const binder = new AiContextBinder(await chat.queue.load());
           for (const blueprint of blueprints) {
             const obj = space.db.add(Obj.clone(blueprint));
             await binder.bind({ blueprints: [Ref.make(obj)] });
           }
-          await space.db.flush({ indexes: true });
 
+          await space.db.flush({ indexes: true });
           await onInit?.({ space, chat, binder });
         },
         ...props,
