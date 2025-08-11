@@ -12,3 +12,4 @@ export * from './useChatServices';
 export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
+export * from './useResolveRef';

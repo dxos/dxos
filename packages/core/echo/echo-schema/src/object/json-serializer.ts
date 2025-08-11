@@ -31,6 +31,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  SelfDXNId,
   TypeId,
   assertObjectModelShape,
 } from './model';
@@ -59,7 +60,7 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
  */
 export const objectFromJSON = async (
   jsonData: unknown,
-  { refResolver }: { refResolver?: RefResolver } = {},
+  { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
 ): Promise<AnyEchoObject> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'expect object');
@@ -113,6 +114,10 @@ export const objectFromJSON = async (
     invariant(Array.isArray(meta.keys));
 
     defineHiddenProperty(obj, MetaId, meta);
+  }
+
+  if (dxn) {
+    defineHiddenProperty(obj, SelfDXNId, dxn);
   }
 
   assertObjectModelShape(obj);
@@ -180,6 +185,10 @@ const typedJsonSerializer = function (this: any) {
     id,
     [ATTR_TYPE]: typename.toString(),
   };
+
+  if (this[SelfDXNId]) {
+    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
+  }
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];

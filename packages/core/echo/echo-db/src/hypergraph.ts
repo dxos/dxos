@@ -190,6 +190,19 @@ export class Hypergraph {
         if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
           const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
           return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+        } else if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId !== undefined) {
+          const { spaceId, subspaceTag, queueId, objectId } = dxn.asQueueDXN()!;
+          const queue = this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
+          const object = queue?.objects.find((obj) => obj.id === objectId);
+          if (object) {
+            return middleware(object);
+          } else if (queue && load && onLoad) {
+            queue.refresh().then(
+              () => onLoad(),
+              (err) => log.catch(err),
+            );
+            return undefined;
+          }
         }
 
         if (dxn.kind !== DXN.kind.ECHO) {
@@ -255,12 +268,10 @@ export class Hypergraph {
     if (!dxn.asEchoDXN()) {
       throw new Error('Unsupported DXN kind');
     }
-    const dxnData = dxn.asEchoDXN()!;
-    const spaceId = dxnData.spaceId ?? context.space;
-    const objectId = dxnData.echoId;
 
+    const { spaceId = context.space, echoId: objectId } = dxn.asEchoDXN()!;
     if (spaceId === undefined) {
-      throw new Error('Unable to determine space to resolve the reference from');
+      throw new Error(`Unable to determine the Space to resolve the reference: ${dxn.toString()}`);
     }
 
     const db = this._databases.get(spaceId);
@@ -302,7 +313,7 @@ export class Hypergraph {
     try {
       switch (dxn.kind) {
         case DXN.kind.ECHO: {
-          if (!dxn.isLocalObjectId()) {
+          if (!dxn.isLocalObjectId() && dxn.asEchoDXN()?.spaceId !== context.space) {
             status = 'error';
             throw new Error('Cross-space references are not yet supported');
           }

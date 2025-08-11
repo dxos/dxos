@@ -7,9 +7,9 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { play } from '../functions';
+import { move, play } from '../functions';
 
-const functions = [play];
+const functions = [move, play];
 
 export default () => {
   return [
@@ -21,6 +21,9 @@ export default () => {
         instructions: Template.make({
           source: trim`
             You are an expert chess player.
+            You could suggest a good next move or offer to play a move.
+            But don't actually make a move unless you are asked to.
+            To analyze a game you can retrieve the "pgn" property from the context object.
           `,
         }),
         tools: functions.map((tool) => ToolId.make(tool.name)),

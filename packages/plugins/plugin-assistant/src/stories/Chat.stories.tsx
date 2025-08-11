@@ -5,10 +5,12 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC } from 'react';
+import React, { type FC, useCallback } from 'react';
 
-import { PLANNING_BLUEPRINT } from '@dxos/assistant-testing';
-import { Ref } from '@dxos/echo';
+import { EXA_API_KEY } from '@dxos/ai/testing';
+import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Obj, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -16,7 +18,9 @@ import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
+import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
@@ -39,7 +43,21 @@ const DefaultStory = ({
   debug?: boolean;
   components: (FC<ComponentProps> | FC<ComponentProps>[])[];
 }) => {
+  const client = useClient();
   const space = useSpace();
+
+  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
+    log.info('event', { event });
+    switch (event) {
+      case 'reset': {
+        void client?.reset().then(() => {
+          document.location.reload();
+        });
+        break;
+      }
+    }
+  }, []);
+
   if (!space) {
     return null;
   }
@@ -58,13 +76,13 @@ const DefaultStory = ({
           >
             {Component.map((Component, index) => (
               <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
-                <Component space={space} debug={debug} />
+                <Component space={space} debug={debug} onEvent={handleEvent} />
               </div>
             ))}
           </div>
         ) : (
           <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
-            <Component space={space} debug={debug} />
+            <Component space={space} debug={debug} onEvent={handleEvent} />
           </div>
         ),
       )}
@@ -246,8 +264,10 @@ export const WithBoard = {
 export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
-    blueprints: [PLANNING_BLUEPRINT],
-    config: config.remote,
+    blueprints: [RESEARCH_BLUEPRINT],
+    config: config.persistent,
+    types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],

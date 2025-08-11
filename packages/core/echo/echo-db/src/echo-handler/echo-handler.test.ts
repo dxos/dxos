@@ -8,7 +8,7 @@ import { effect } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -24,7 +24,7 @@ import {
 import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
@@ -374,8 +374,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: Obj.getDXN(alice as any).toString(),
-      [ATTR_RELATION_TARGET]: Obj.getDXN(bob as any).toString(),
+      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(alice.id).toString(),
+      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(bob.id).toString(),
     });
   });
 
@@ -800,5 +800,11 @@ describe('Reactive Object with ECHO database', () => {
     const obj = live({ queue: Ref.fromDXN(dxn) });
     const dbObj = db.add(obj);
     expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());
+  });
+
+  test('Obj.getDXN returns full DXN', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
   });
 });
