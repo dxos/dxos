@@ -87,7 +87,7 @@ jobs:
         # TODO(wittjosiah): Test across all LTS versions of node.
         #  Currently fails on 22 and 24.
         # node-version: ['20.12.1', '22', '24']
-        node-version: ['20.12.1']
+        node-version: ['20.12.1', '24']
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
