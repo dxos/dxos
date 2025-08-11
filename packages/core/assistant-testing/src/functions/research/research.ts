@@ -3,7 +3,7 @@
 //
 
 import { AiToolkit } from '@effect/ai';
-import { Effect, Layer, Schema } from 'effect';
+import { Array, Effect, Layer, Schema } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
@@ -53,7 +53,7 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
 
-      const newObjects: DXN[] = [];
+      const newObjectDXNs: DXN[] = [];
       const result = yield* new AiSession()
         .run({
           prompt: query,
@@ -67,7 +67,7 @@ export default defineFunction({
             Layer.mergeAll(
               mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
               LocalSearchHandler,
-              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjects.push(...dxns) }),
+              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
               ContextQueueService.layer(researchQueue),
             ),
           ),
@@ -76,14 +76,12 @@ export default defineFunction({
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
 
-      const newObjectsData = yield* Effect.forEach(newObjects, DatabaseService.resolve);
+      const objects = yield* Effect.forEach(newObjectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
+        Effect.map(Array.map((obj) => Obj.toJSON(obj))),
+      );
 
       return {
-        objects: newObjectsData.map((obj, idx) => ({
-          // TODO(dmaretskyi): Remove when `Obj.getDXN` returns the absolute DXN.
-          '@dxn': newObjects[idx].toString(),
-          ...Obj.toJSON(obj),
-        })),
+        objects,
         note,
       };
     },

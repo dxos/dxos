@@ -39,6 +39,20 @@ describe('queues', (ctx) => {
     expect(await obj.queue.load()).toBeDefined();
   });
 
+  test('Obj.getDXN on queue objects returns absolute dxn', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queue = queues.create();
+    await queue.append([
+      Obj.make(Testing.Contact, {
+        name: 'john',
+      }),
+    ]);
+    const obj = queue.objects[0];
+    expect(Obj.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
+  });
+
   test('create and resolve an object from a queue', async () => {
     await using peer = await builder.createPeer({ types: [Testing.Contact] });
     const spaceId = SpaceId.random();
