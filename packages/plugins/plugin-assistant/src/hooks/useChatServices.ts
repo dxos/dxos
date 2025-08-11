@@ -41,8 +41,7 @@ export type UseChatServicesProps = {
  * Construct service layer.
  */
 export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
-  const aiServiceLayer =
-    useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
+  const serviceLayer = useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
   const functions = useCapabilities(Capabilities.Functions);
   const toolkits = useCapabilities(Capabilities.Toolkit);
   const handlers = useCapabilities(Capabilities.ToolkitHandler);
@@ -53,7 +52,7 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
     const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
     const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
     return Layer.mergeAll(
-      aiServiceLayer,
+      serviceLayer,
       makeToolResolverFromFunctions(allFunctions, toolkit),
       makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
       CredentialsService.layerFromDatabase(),

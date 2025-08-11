@@ -13,7 +13,7 @@ import { type DXN } from '@dxos/keys';
 
 import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
-// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
+// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
 import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
@@ -48,11 +48,9 @@ export default defineFunction({
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
       yield* DatabaseService.flush({ indexes: true });
-
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
-
       const newObjectDXNs: DXN[] = [];
       const result = yield* new AiSession()
         .run({
@@ -75,14 +73,13 @@ export default defineFunction({
 
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
-
       const objects = yield* Effect.forEach(newObjectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 
       return {
-        objects,
         note,
+        objects,
       };
     },
     Effect.provide(
