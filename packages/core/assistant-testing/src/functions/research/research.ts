@@ -9,7 +9,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import type { DXN } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 
 import { ExaToolkit } from './exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';

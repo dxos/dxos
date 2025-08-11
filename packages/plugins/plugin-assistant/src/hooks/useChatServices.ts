@@ -61,8 +61,8 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
     ).pipe(
       Layer.provideMerge(
         Layer.mergeAll(
-          space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
-          space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
+          space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
+          space ? QueueService.layer(space.queues) : QueueService.notAvailable,
           TracingService.layerNoop,
           LocalFunctionExecutionService.layer,
           RemoteFunctionExecutionService.mockLayer,

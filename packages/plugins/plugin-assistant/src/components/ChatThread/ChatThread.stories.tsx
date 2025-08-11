@@ -5,11 +5,11 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Context, Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type Queue, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
+import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -40,7 +40,7 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
         }
 
         return queue;
-      }).pipe(Effect.provide(Context.make(TestQueue, TestQueue.make({ space, queue })))),
+      }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
     );
   }, [space, queue]);
 
@@ -61,21 +61,9 @@ const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): Da
   });
 };
 
-export class TestQueue extends Context.Tag('@dxos/test/TestQueue')<
-  TestQueue,
-  {
-    space: Space;
-    queue: Queue<DataType.Message>;
-  }
->() {
-  static make = (props: { space: Space; queue: Queue<DataType.Message> }): Context.Tag.Service<TestQueue> => {
-    return props;
-  };
-}
-
-const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
+const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService>[] = [
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('user', [
@@ -89,7 +77,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -117,11 +105,12 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue, space } = yield* TestQueue;
-    const obj1 = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    const obj2 = space.db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    const obj3 = space.db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    const obj4 = space.db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* DatabaseService;
+    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+    const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
+    const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
+    const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -144,7 +133,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -161,7 +150,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -192,7 +181,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -224,7 +213,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
+    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
