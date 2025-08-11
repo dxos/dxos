@@ -119,7 +119,9 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
   Effect.gen(function* () {
     const { queue, space } = yield* TestQueue;
     const obj1 = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    const obj2 = space.db.add(Obj.make(DataType.Person, { fullName: 'Test User' }));
+    const obj2 = space.db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
+    const obj3 = space.db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
+    const obj4 = space.db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -128,11 +130,14 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
             _tag: 'text',
             text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
           },
-          // Inline card.
-          {
-            _tag: 'text',
-            text: renderObjectLink(obj2),
-          },
+          // Inline cards.
+          ...[obj2, obj3, obj4].map(
+            (obj) =>
+              ({
+                _tag: 'text',
+                text: renderObjectLink(obj),
+              }) satisfies ContentBlock.Text,
+          ),
         ]),
       ]),
     );
