@@ -271,6 +271,7 @@ export class PluginManager {
   private _addPlugin(plugin: Plugin): void {
     untracked(() => {
       log('add plugin', { id: plugin.meta.id });
+      // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
       if (!this._state.plugins.includes(plugin)) {
         this._state.plugins.push(plugin);
       }
@@ -290,6 +291,7 @@ export class PluginManager {
   private _addModule(module: PluginModule): void {
     untracked(() => {
       log('add module', { id: module.id });
+      // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
       if (!this._state.modules.includes(module)) {
         this._state.modules.push(module);
       }
