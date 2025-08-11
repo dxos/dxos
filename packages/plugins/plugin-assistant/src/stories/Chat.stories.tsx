@@ -210,13 +210,11 @@ export const WithTrip = {
               # Itinerary
 
               ## Day 1
-
               - Visit the Sagrada Familia
               - Visit the Park Güell
               - Visit the Casa Batlló
 
               ## Day 2
-
               - Visit the Eiffel Tower
               - Visit the Louvre
               - Visit the Musée d'Orsay
