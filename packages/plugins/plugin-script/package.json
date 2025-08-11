@@ -105,7 +105,7 @@
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",
     "prettier": "^3.6.2",
-    "react-syntax-highlighter": "^15.5.0",
+    "react-syntax-highlighter": "^15.6.1",
     "typescript": "^5.9.2"
   },
   "devDependencies": {

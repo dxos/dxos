@@ -83,7 +83,7 @@
     "react-json-tree": "^0.18.0",
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0",
-    "react-syntax-highlighter": "^15.5.0",
+    "react-syntax-highlighter": "^15.6.1",
     "react-vis": "^1.11.12",
     "use-resize-observer": "^9.1.0",
     "ws": "^8.14.2"
