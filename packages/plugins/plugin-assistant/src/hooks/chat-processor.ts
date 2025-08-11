@@ -63,7 +63,7 @@ export class AiChatProcessor {
   readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
   /** Rx registry. */
-  private readonly _observableRegistry = this._options.observableRegistry ?? Registry.make();
+  private readonly _observableRegistry: Registry.Registry;
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
@@ -147,6 +147,8 @@ export class AiChatProcessor {
     private readonly _conversation: AiConversation,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
+    // Initialize registries and defaults before using in other logic.
+    this._observableRegistry = this._options.observableRegistry ?? Registry.make();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
