@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "vite": "7.1.1"
+    "vite": "5.4.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
