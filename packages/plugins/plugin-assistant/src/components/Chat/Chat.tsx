@@ -2,68 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, Prec } from '@codemirror/state';
-import { keymap } from '@codemirror/view';
 import { Result, useRxValue } from '@effect-rx/rx-react';
-import { createContext } from '@radix-ui/react-context';
-import { Array, Option } from 'effect';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Array } from 'effect';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
-import { meta } from '../../meta';
-import { type Assistant } from '../../types';
-import {
-  ChatActions,
-  type ChatActionsProps,
-  ChatOptionsMenu,
-  ChatPresets,
-  type ChatPresetsProps,
-  ChatReferences,
-  type ChatReferencesProps,
-  ChatStatusIndicator,
-} from '../ChatPrompt';
+import { type ChatEvent } from '../../types';
+import { ChatContextProvider, type ChatContextValue, useChatContext } from '../ChatContext';
+import { ChatPrompt, type ChatPromptProps } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
-
-import { type ChatEvent } from './events';
-
-// TODO(burdon): Factor out.
-const Endcap = ({ children }: PropsWithChildren) => {
-  return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
-  );
-};
-
-//
-// Context
-// NOTE: The context should not be exported. It is only used internally.
-// Components outside of this Radix-style group shuld define their own APIs.
-//
-
-// TODO(burdon): Inject via effect layer.
-type ChatContextValue = {
-  debug?: boolean;
-  event: Event<ChatEvent>;
-  space: Space;
-  chat: Assistant.Chat;
-  processor: AiChatProcessor;
-  messages: DataType.Message[];
-};
-
-// NOTE: Do not export.
-const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
 // Root
@@ -209,184 +165,6 @@ const ChatThread = (props: ChatThreadProps) => {
 };
 
 ChatThread.displayName = 'Chat.Thread';
-
-//
-// Prompt
-//
-
-type ChatPromptProps = ThemedClassName<
-  Pick<ChatEditorProps, 'placeholder'> &
-    Omit<ChatPresetsProps, 'onChange'> & {
-      expandable?: boolean;
-      online?: boolean;
-      onChangeOnline?: (online: boolean) => void;
-      onChangePreset?: ChatPresetsProps['onChange'];
-    }
->;
-
-const ChatPrompt = ({
-  classNames,
-  placeholder,
-  expandable,
-  online,
-  presets,
-  preset,
-  onChangePreset,
-  onChangeOnline,
-}: ChatPromptProps) => {
-  const { t } = useTranslation(meta.id);
-  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
-  const streaming = useRxValue(processor.streaming);
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
-
-  const [active, setActive] = useState(false);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'record-start':
-          setActive(true);
-          break;
-        case 'record-stop':
-          setActive(false);
-          break;
-      }
-    });
-  }, [event]);
-
-  const editorRef = useRef<ChatEditorController>(null);
-
-  // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const { recording } = useVoiceInput({
-    active,
-    onUpdate: (text) => {
-      editorRef.current?.setText(text);
-      editorRef.current?.focus();
-    },
-  });
-
-  const { active: activeBlueprints, onUpdate: handleUpdateBlueprints } = useBlueprints(
-    space,
-    processor.context,
-    processor.blueprintRegistry,
-  );
-
-  // TODO(burdon): Reconcile with object tags.
-  const referencesProvider = useReferencesProvider(space);
-  const extensions = useMemo<Extension[]>(() => {
-    return [
-      referencesProvider && references({ provider: referencesProvider }),
-      Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'cmd-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
-              },
-            },
-            expandable && {
-              key: 'cmd-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'thread-open' });
-                return true;
-              },
-            },
-            expandable && {
-              key: 'cmd-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'thread-close' });
-                return true;
-              },
-            },
-          ].filter(isNotFalsy),
-        ),
-      ),
-    ].filter(isNotFalsy);
-  }, [event, expandable, referencesProvider]);
-
-  const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
-    (text) => {
-      if (!streaming) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
-    },
-    [streaming, event],
-  );
-
-  const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
-
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
-    log.info('update', { dxns });
-    void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
-  }, []);
-
-  return (
-    <div
-      className={mx(
-        'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
-        classNames,
-      )}
-    >
-      <Endcap>
-        <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
-      </Endcap>
-
-      <ChatEditor
-        ref={editorRef}
-        autoFocus
-        lineWrapping
-        classNames='col-span-2 pis-1 pbs-2'
-        placeholder={placeholder ?? t('prompt placeholder')}
-        extensions={extensions}
-        onSubmit={handleSubmit}
-      />
-
-      <div />
-      <ChatReferences
-        classNames='col-span-2 flex pis-1 items-center'
-        space={space}
-        context={processor.context}
-        onUpdate={handleUpdateReferences}
-      />
-
-      <ChatOptionsMenu
-        registry={processor.blueprintRegistry}
-        active={activeBlueprints}
-        onChange={handleUpdateBlueprints}
-      />
-
-      <ChatActions
-        classNames='col-span-2'
-        microphone={true}
-        recording={recording}
-        processing={streaming}
-        onEvent={handleEvent}
-      >
-        <>
-          <div className='grow' />
-          {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
-          {online !== undefined && (
-            <Input.Root>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-            </Input.Root>
-          )}
-        </>
-      </ChatActions>
-    </div>
-  );
-};
-
-ChatPrompt.displayName = 'Chat.Prompt';
 
 //
 // Chat

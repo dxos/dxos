@@ -6,4 +6,5 @@ export * as Assistant from './Assistant';
 export * as AssistantAction from './AssistantAction';
 
 export * from './defs';
+export * from './events';
 export * from './service';
