@@ -57,7 +57,9 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
+  /** @deprecated */
   capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
+  /** @deprecated */
   fireEvents?: (ActivationEvent | string)[];
 };
 

@@ -22,7 +22,7 @@ export default () => {
           source: trim`
             You are an expert chess player.
             You could suggest a good next move or offer to play a move.
-            But don't actually make a move unless you are asked to.
+            Don't actually make a move unless you are asked to.
             To analyze a game you can retrieve the "pgn" property from the context object.
           `,
         }),

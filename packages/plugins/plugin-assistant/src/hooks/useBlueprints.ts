@@ -12,47 +12,45 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { useQuery } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
 export type UpdateCallback = (key: string, active: boolean) => void;
 
 export type UseBlueprints = {
-  blueprints: Blueprint.Blueprint[];
-  active: string[];
+  active: Set<string>;
   onUpdate: UpdateCallback;
 };
 
 /**
  * Get collection of active blueprints based on the context.
  */
+// TODO(burdon): Error prone. Racy.
 export const useBlueprints = (
   space: Space,
   binder: AiContextBinder,
   blueprintRegistry?: Blueprint.Registry,
 ): UseBlueprints => {
-  const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
-  const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);
-  const [active, setActive] = useState<string[]>([]);
+  const [active, setActive] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const existing = new Set(spaceBlueprints.map((blueprint) => blueprint.key));
-    const registry = blueprintRegistry?.query().filter((blueprint) => !existing.has(blueprint.key));
-    setBlueprints([...(registry ?? []), ...spaceBlueprints].toSorted((a, b) => a.key.localeCompare(b.key)));
-
     return effect(() => {
       const refs = [...(binder.blueprints.value ?? [])];
       const t = setTimeout(async () => {
         const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
-        setActive(blueprints.map((blueprint) => blueprint.key));
+        setActive(new Set(blueprints.map((blueprint) => blueprint.key)));
       });
       return () => clearTimeout(t);
     });
-  }, [binder, blueprintRegistry, spaceBlueprints]);
+  }, [binder, blueprintRegistry]);
 
   const handleUpdate = useCallback<UpdateCallback>(
-    (key: string, isActive: boolean) =>
-      Effect.gen(function* () {
+    async (key: string, isActive: boolean) => {
+      if (!space) {
+        return;
+      }
+
+      const { objects: spaceBlueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+      void Effect.gen(function* () {
         log('update', { key, isActive });
         const blueprint = Array.findFirst(spaceBlueprints, (blueprint) => blueprint.key === key);
         yield* Option.match(blueprint, {
@@ -69,11 +67,12 @@ export const useBlueprints = (
             return Effect.tryPromise(() => binder[method]({ blueprints: [Ref.make(blueprint)] }));
           },
         });
-      }).pipe(Effect.runPromise),
-    [space, binder, active, blueprintRegistry],
+      }).pipe(Effect.runPromise);
+    },
+    [space, binder, blueprintRegistry],
   );
 
-  return { blueprints, active, onUpdate: handleUpdate };
+  return { active, onUpdate: handleUpdate };
 };
 
 /**
