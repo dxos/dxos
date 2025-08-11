@@ -1,11 +1,15 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2018", // With esnext I get "src/feed-wrapper.ts(25,48): error TS2729: Property '_hypercore' is used before its initialization."
-
-    "types": ["@dxos/typings", "node"]
+    "target": "es2018",
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../core/halo/keyring"

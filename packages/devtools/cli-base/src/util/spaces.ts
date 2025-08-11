@@ -14,10 +14,10 @@ import { SpaceTimeoutError } from '../errors';
 import { maybeTruncateKey } from './keys';
 import { type TableOptions, table } from './table';
 
+const asyncImport = new Function('module', 'return import(module)');
+
 export const selectSpace = async (spaces: Space[]) => {
-  // TODO(burdon): https://esbuild.github.io/content-types/#direct-eval
-  // eslint-disable-next-line no-eval
-  const inquirer = (await eval('import("inquirer")')).default;
+  const inquirer = (await asyncImport('inquirer')).default;
   const { key } = await inquirer.prompt([
     {
       name: 'key',
