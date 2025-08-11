@@ -11,7 +11,7 @@ tasks:
     deps:
       - glsl
   glsl:
-    command: pnpm run glsl
+    command: pnpm run --silent glsl
     inputs:
       - src/shaders/glsl/*.*
     outputs:
