@@ -132,6 +132,7 @@
     "nyc": "^15.1.0",
     "oxc-resolver": "^11.6.0",
     "pkg-up": "^3.1.0",
+    "playwright": "1.54.1",
     "prettier": "^3.6.2",
     "prettier-plugin-packagejson": "^2.5.19",
     "raf": "^3.4.1",

@@ -16,28 +16,9 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 
+import { content, iconsDir, staticDir, stories } from './paths';
+
 const isTrue = (str?: string) => str === 'true' || str === '1';
-
-const baseDir = resolve(__dirname, '../');
-const rootDir = resolve(baseDir, '../../');
-const staticDir = resolve(baseDir, './static');
-const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
-
-export const packages = resolve(rootDir, 'packages');
-export const storyFiles = '*.{mdx,stories.tsx}';
-export const contentFiles = '*.{ts,tsx,js,jsx,css}';
-export const modules = [
-  'apps/*/src/**',
-  'common/*/src/**',
-  'devtools/*/src/**',
-  'experimental/*/src/**',
-  'plugins/*/src/**',
-  'sdk/*/src/**',
-  'ui/*/src/**',
-];
-
-export const stories = modules.map((dir) => join(packages, dir, storyFiles));
-export const content = modules.map((dir) => join(packages, dir, contentFiles));
 
 if (isTrue(process.env.DX_DEBUG)) {
   console.log(JSON.stringify({ stories, content }, null, 2));

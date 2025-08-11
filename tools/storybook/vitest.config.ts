@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { join } from 'node:path';
-import { defineConfig, mergeConfig } from 'vitest/config';
-import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-
-// TODO(burdon): Factor out common components.
-import { baseConfig } from '../../vitest.storybook.config';
+import storybookTest from '@storybook/addon-vitest/vitest-plugin';
+import { mergeConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
+import { baseConfig } from '../../vitest.base.config';
 
 export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
+  baseConfig({ cwd: __dirname, env: 'chromium' }),
+  // @ts-ignore
   defineConfig({
     plugins: [
       // https://storybook.js.org/docs/writing-tests/in-ci
@@ -25,27 +24,25 @@ export default mergeConfig(
       }),
     ],
     test: {
-      setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // moon run storybook:test-ci
-          test: {
-            name: 'ci',
-            environment: 'node',
+      projects: [{
+        test: {
+          name: 'storybook',
+          // Enable browser mode
+          browser: {
+            enabled: true,
+            // Make sure to install Playwright
+            provider: 'playwright',
+            headless: true,
+            instances: [{ browser: 'chromium' }],
           },
+          setupFiles: ['./.storybook/vitest.setup.ts'],
         },
-        {
-          test: {
-            // moon run storybook:test-ci -- --project=browser
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
-              instances: [{ browser: 'chromium' }],
-            },
-          },
-        },
-      ],
+        plugins: [
+          // @ts-ignore
+          storybookTest({
+            tags: { include: ['test'] },
+          }),
+        ],
+      }],
     },
-  }),
-);
+  }));
