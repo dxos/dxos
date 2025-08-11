@@ -18,7 +18,6 @@ import { isNonNullable } from '@dxos/util';
 export type UpdateCallback = (key: string, active: boolean) => void;
 
 export type UseBlueprints = {
-  blueprints: Blueprint.Blueprint[];
   active: string[];
   onUpdate: UpdateCallback;
 };
@@ -32,14 +31,9 @@ export const useBlueprints = (
   blueprintRegistry?: Blueprint.Registry,
 ): UseBlueprints => {
   const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
-  const [blueprints, setBlueprints] = useState<Blueprint.Blueprint[]>([]);
   const [active, setActive] = useState<string[]>([]);
 
   useEffect(() => {
-    const existing = new Set(spaceBlueprints.map((blueprint) => blueprint.key));
-    const registry = blueprintRegistry?.query().filter((blueprint) => !existing.has(blueprint.key));
-    setBlueprints([...(registry ?? []), ...spaceBlueprints].toSorted((a, b) => a.key.localeCompare(b.key)));
-
     return effect(() => {
       const refs = [...(binder.blueprints.value ?? [])];
       const t = setTimeout(async () => {
@@ -73,7 +67,7 @@ export const useBlueprints = (
     [space, binder, active, blueprintRegistry],
   );
 
-  return { blueprints, active, onUpdate: handleUpdate };
+  return { active, onUpdate: handleUpdate };
 };
 
 /**

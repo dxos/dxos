@@ -10,17 +10,17 @@ import { DropdownMenu, IconButton, Input, useTranslation } from '@dxos/react-ui'
 import { meta } from '../../meta';
 
 export type ChatOptionsMenuProps = {
-  blueprints?: Blueprint.Blueprint[];
+  registry?: Blueprint.Registry;
   active?: string[];
   onChange?: (key: string, active: boolean) => void;
 };
 
 // TODO(burdon): Refactor this as a Dialog (and move the object selector here also).
-export const ChatOptionsMenu = ({ blueprints, active, onChange }: ChatOptionsMenuProps) => {
+export const ChatOptionsMenu = ({ registry, active, onChange }: ChatOptionsMenuProps) => {
   const { t } = useTranslation(meta.id);
   const blueprintOptions = useMemo(
-    () => blueprints?.map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
-    [blueprints],
+    () => registry?.query().map((blueprint) => ({ key: blueprint.key, label: blueprint.name })),
+    [registry],
   );
 
   return (

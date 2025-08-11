@@ -97,87 +97,77 @@ export const useStats = (): [Stats, () => void] => {
   ]);
 
   // Quick metrics.
-  useAsyncEffect(
-    async (isMounted) => {
-      const begin = performance.now();
+  useAsyncEffect(async () => {
+    const begin = performance.now();
 
-      // TODO(burdon): Reconcile with diagnostics.
-      const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
-        .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
-        .map((handle: any) => handle.doc())
-        .filter(Boolean);
+    // TODO(burdon): Reconcile with diagnostics.
+    const objects = TRACE_PROCESSOR.findResourcesByClassName('RepoProxy')
+      .flatMap((r) => Object.values(r.instance.deref()?.handles ?? {}))
+      .map((handle: any) => handle.doc())
+      .filter(Boolean);
 
-      const database: DatabaseInfo = {
-        spaces: client.spaces.get().length,
-        objects: objects.length,
-        documents: 0,
-        documentsToReconcile: 0,
-      };
+    const database: DatabaseInfo = {
+      spaces: client.spaces.get().length,
+      objects: objects.length,
+      documents: 0,
+      documentsToReconcile: 0,
+    };
 
-      if ('measureUserAgentSpecificMemory' in window.performance) {
-        // TODO(burdon): Breakdown.
-        // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
-        // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
-      }
-      const memory: MemoryInfo = (window.performance as any).memory;
-      if (memory && typeof memory === 'object' && 'usedJSHeapSize' in memory) {
-        memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
-      }
+    if ('measureUserAgentSpecificMemory' in window.performance) {
+      // TODO(burdon): Breakdown.
+      // https://developer.mozilla.org/en-US/docs/Web/API/Performance/measureUserAgentSpecificMemory
+      // const { bytes } = (await (window.performance as any).measureUserAgentSpecificMemory()) as { bytes: number };
+    }
+    const memory: MemoryInfo = (window.performance as any).memory;
+    if (memory && typeof memory === 'object' && 'usedJSHeapSize' in memory) {
+      memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
+    }
 
-      log('collected stats', { elapsed: performance.now() - begin });
-      if (isMounted()) {
-        setStats((stats) =>
-          Object.assign({}, stats, {
-            performanceEntries,
-            diagnostics: TRACE_PROCESSOR.getDiagnostics(),
-            memory,
-            database,
-          }),
-        );
-      }
-    },
-    [update],
-  );
+    log('collected stats', { elapsed: performance.now() - begin });
+    setStats((stats) =>
+      Object.assign({}, stats, {
+        performanceEntries,
+        diagnostics: TRACE_PROCESSOR.getDiagnostics(),
+        memory,
+        database,
+      }),
+    );
+  }, [update]);
 
   // Slower metrics.
-  useAsyncEffect(
-    async (isMounted) => {
-      const begin = performance.now();
+  useAsyncEffect(async () => {
+    const begin = performance.now();
 
-      // client.experimental.graph;
-      // TODO(burdon): This is very expensive (do separately).
-      const diagnostics = await client.diagnostics();
+    // client.experimental.graph;
+    // TODO(burdon): This is very expensive (do separately).
+    const diagnostics = await client.diagnostics();
 
-      // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
-      const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
-      const queries: QueryInfo[] = Object.values(resources)
-        .filter((res) => res.className === 'QueryState')
-        .map((res) => {
-          return res.info as QueryInfo;
-        });
+    // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
+    const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
+    const queries: QueryInfo[] = Object.values(resources)
+      .filter((res) => res.className === 'QueryState')
+      .map((res) => {
+        return res.info as QueryInfo;
+      });
 
-      const syncStates = await Promise.all(
-        client.spaces
-          .get()
-          .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-          .map((space) => space.db.coreDatabase.getSyncState()),
-      );
-      const documentsToReconcile = syncStates
-        .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
-        .reduce((acc, x) => acc + x, 0);
+    const syncStates = await Promise.all(
+      client.spaces
+        .get()
+        .filter((space) => space.state.get() === SpaceState.SPACE_READY)
+        .map((space) => space.db.coreDatabase.getSyncState()),
+    );
+    const documentsToReconcile = syncStates
+      .flatMap((s) => s.peers?.map((p) => p.differentDocuments + p.missingOnLocal + p.missingOnRemote) ?? [])
+      .reduce((acc, x) => acc + x, 0);
 
-      log('collected stats', { elapsed: performance.now() - begin });
-      if (isMounted()) {
-        setStats((stats) =>
-          Object.assign({}, stats, {
-            queries,
-            database: Object.assign({}, stats.database, { documentsToReconcile }),
-          }),
-        );
-      }
-    },
-    [update],
-  );
+    log('collected stats', { elapsed: performance.now() - begin });
+    setStats((stats) =>
+      Object.assign({}, stats, {
+        queries,
+        database: Object.assign({}, stats.database, { documentsToReconcile }),
+      }),
+    );
+  }, [update]);
 
   useEffect(() => {
     const stream = client.services.services.NetworkService!.queryStatus();

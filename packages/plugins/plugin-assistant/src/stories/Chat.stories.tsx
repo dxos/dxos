@@ -8,8 +8,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Obj, Ref } from '@dxos/echo';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { AiContextBinder } from '@dxos/assistant';
+import { RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -19,12 +21,14 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useClient } from '@dxos/react-client';
-import { useSpace } from '@dxos/react-client/echo';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../translations';
+import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
@@ -39,12 +43,34 @@ import { addTestData, config, getDecorators, testTypes } from './testing';
 const DefaultStory = ({
   debug = true,
   components,
+  blueprints = [],
 }: {
   debug?: boolean;
   components: (FC<ComponentProps> | FC<ComponentProps>[])[];
+  blueprints?: string[];
 }) => {
   const client = useClient();
   const space = useSpace();
+
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  useAsyncEffect(async () => {
+    const chat = chats[0];
+    if (!space || !chats) {
+      return;
+    }
+
+    // Add blueprints to context.
+    const binder = new AiContextBinder(await chat.queue.load());
+    for (const key of blueprints) {
+      const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
+      if (blueprint) {
+        const obj = space.db.add(Obj.clone(blueprint));
+        await binder.bind({ blueprints: [Ref.make(obj)] });
+        console.log('bind', { key });
+      }
+    }
+  }, [space, chats, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
@@ -127,7 +153,6 @@ export const WithDocument = {
           name: 'Document',
           content: trim`
             # Hello, world!
-
             This is a test.
           `,
         }),
@@ -143,7 +168,6 @@ export const WithDocument = {
 export const WithBlueprints = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [PLANNING_BLUEPRINT],
     config: config.remote,
     onInit: async ({ binder, space }) => {
       const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
@@ -173,6 +197,7 @@ export const WithChess = {
   }),
   args: {
     components: [ChatContainer, SurfaceContainer],
+    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/chess'],
   },
 } satisfies Story;
 
@@ -264,13 +289,13 @@ export const WithBoard = {
 export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
-    blueprints: [RESEARCH_BLUEPRINT],
     config: config.persistent,
     types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 } satisfies Story;
 
