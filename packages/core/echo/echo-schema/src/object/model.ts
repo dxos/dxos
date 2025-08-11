@@ -25,12 +25,12 @@ export const EntityKindId = Symbol('@dxos/echo/EntityKind');
 /**
  * DXN to the object itself.
  */
-export const SelfDXNId = Symbol('@dxos/echo/Self');
+export const SelfDXNId = Symbol('@dxos/echo/DXN');
 
 /**
  * Property name for self DXN when object is serialized to JSON.
  */
-export const ATTR_SELF_DXN = '@self';
+export const ATTR_SELF_DXN = '@dxn';
 
 /**
  * DXN to the object type.
