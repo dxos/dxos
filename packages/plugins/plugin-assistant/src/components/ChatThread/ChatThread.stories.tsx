@@ -24,7 +24,7 @@ faker.seed(1);
 
 const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: number }) => {
   const space = useSpace();
-  const queueDxn = useMemo(() => space?.queues.create<DataType.Message>().dxn, [space]);
+  const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<DataType.Message>(queueDxn);
   useEffect(() => {
     if (!space || !queue) {
@@ -39,7 +39,7 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
         }
 
         return queue;
-      }).pipe(Effect.provide(Context.make(TestQueue, TestQueue.make(space, queue)))),
+      }).pipe(Effect.provide(Context.make(TestQueue, TestQueue.make({ space, queue })))),
     );
   }, [space, queue]);
 
@@ -47,7 +47,9 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
     return null;
   }
 
-  return <ChatThread {...props} space={space} messages={queue?.objects ?? []} />;
+  return (
+    <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+  );
 };
 
 const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
@@ -65,11 +67,8 @@ export class TestQueue extends Context.Tag('@dxos/test/TestQueue')<
     queue: Queue<DataType.Message>;
   }
 >() {
-  static make = (space: Space, queue: Queue<DataType.Message>): Context.Tag.Service<TestQueue> => {
-    return {
-      space,
-      queue,
-    };
+  static make = (props: { space: Space; queue: Queue<DataType.Message> }): Context.Tag.Service<TestQueue> => {
+    return props;
   };
 }
 
@@ -152,59 +151,49 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
             .join('\n'),
         },
         {
+          _tag: 'toolCall',
+          toolCallId: '1234',
+          name: 'search',
+          input: {},
+        },
+      ]),
+      createMessage('user', [
+        {
+          _tag: 'toolResult',
+          toolCallId: '1234',
+          name: 'search',
+          result: 'This is a tool result.',
+        },
+      ]),
+    ]);
+  }),
+
+  Effect.gen(function* () {
+    const { queue } = yield* TestQueue;
+    return queue.append([
+      createMessage('assistant', [
+        {
+          _tag: 'toolCall',
+          toolCallId: '4567',
+          name: 'create',
+          input: {},
+        },
+      ]),
+      createMessage('user', [
+        {
+          _tag: 'toolResult',
+          toolCallId: '4567',
+          name: 'create',
+          result: 'This is a tool result.',
+        },
+      ]),
+      createMessage('assistant', [
+        {
           _tag: 'text',
-          text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
+          text: Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
             .map(() => faker.lorem.paragraphs())
             .join('\n\n'),
         },
-        {
-          _tag: 'toolCall',
-          toolCallId: '1234',
-          name: 'search',
-          input: {},
-        },
-      ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('user', [
-        {
-          _tag: 'toolResult',
-          toolCallId: '1234',
-          name: 'search',
-          result: 'This is a tool result.',
-        },
-      ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'toolCall',
-          toolCallId: '4567',
-          name: 'create',
-          input: {},
-        },
-      ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('user', [
-        {
-          _tag: 'toolResult',
-          toolCallId: '4567',
-          name: 'create',
-          result: 'This is a tool result.',
-        },
       ]),
     ]);
   }),
@@ -215,7 +204,7 @@ const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
       createMessage('assistant', [
         {
           _tag: 'text',
-          text: faker.lorem.paragraphs(1),
+          text: faker.lorem.paragraphs(2),
         },
       ]),
     ]);
@@ -245,8 +234,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {
+export const Default = {} satisfies Story;
+
+export const Delayed = {
   args: {
-    onEvent: (event) => console.log(event),
+    delay: 1_000,
   },
 } satisfies Story;
