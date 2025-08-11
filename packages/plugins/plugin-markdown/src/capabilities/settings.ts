@@ -6,10 +6,10 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { type MarkdownSettingsProps, MarkdownSettingsSchema } from '../types';
+import { Markdown } from '../types';
 
 export default () => {
-  const settings = live<MarkdownSettingsProps>({
+  const settings = live<Markdown.Settings>({
     defaultViewMode: 'preview',
     toolbar: true,
     numberedHeadings: true,
@@ -19,7 +19,7 @@ export default () => {
 
   return contributes(Capabilities.Settings, {
     prefix: meta.id,
-    schema: MarkdownSettingsSchema,
+    schema: Markdown.Settings,
     value: settings,
   });
 };

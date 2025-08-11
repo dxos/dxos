@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { type PeerSyncState, type SpaceSyncStateMap, type Space } from '@dxos/client/echo';
+import { type PeerSyncState, type Space, type SpaceSyncStateMap } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';

@@ -5,7 +5,7 @@
 import React, { type FC, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ThreadCapabilities } from '../../capabilities';

@@ -8,8 +8,9 @@ import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import { contributes } from '@dxos/app-framework';
 import { initializeBundler } from '@dxos/functions/bundler';
 
-import { ScriptCapabilities } from './capabilities';
 import { Compiler } from '../compiler';
+
+import { ScriptCapabilities } from './capabilities';
 
 export default async () => {
   const compiler = new Compiler();

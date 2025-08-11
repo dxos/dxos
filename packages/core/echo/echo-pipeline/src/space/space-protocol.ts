@@ -9,8 +9,8 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
-  type SwarmNetworkManager,
   type SwarmConnection,
+  type SwarmNetworkManager,
   type WireProtocol,
   type WireProtocolParams,
   type WireProtocolProvider,
@@ -20,7 +20,7 @@ import { type MuxerStats, Teleport } from '@dxos/teleport';
 import { type BlobStore, BlobSync } from '@dxos/teleport-extension-object-sync';
 import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
 import { trace } from '@dxos/tracing';
-import { CallbackCollection, ComplexMap, type AsyncCallback } from '@dxos/util';
+import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
 
@@ -118,7 +118,10 @@ export class SpaceProtocol {
     this.blobSync = new BlobSync({ blobStore });
 
     // TODO(burdon): Async race condition? Move to start?
-    this._topic = subtleCrypto.digest('SHA-256', topic.asBuffer()).then(discoveryKey).then(PublicKey.from);
+    this._topic = subtleCrypto
+      .digest('SHA-256', topic.asBuffer() as ArrayBufferView<ArrayBuffer>)
+      .then(discoveryKey)
+      .then(PublicKey.from);
 
     this._disableP2pReplication = disableP2pReplication ?? false;
   }

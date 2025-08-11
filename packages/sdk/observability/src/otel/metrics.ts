@@ -9,7 +9,7 @@ import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
-import { TRACE_PROCESSOR, type MetricData } from '@dxos/tracing';
+import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions, setDiagLogger } from './otel';
 

@@ -9,9 +9,10 @@ import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { setDeep } from '@dxos/util';
 
-import { TLDrawStoreAdapter } from './adapter';
 import { type DiagramType, TLDRAW_SCHEMA } from '../types';
 import { getDeep } from '../util';
+
+import { TLDrawStoreAdapter } from './adapter';
 
 export const useStoreAdapter = (object?: DiagramType) => {
   const [adapter] = useState(new TLDrawStoreAdapter());

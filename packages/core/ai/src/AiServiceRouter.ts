@@ -5,11 +5,12 @@
 import { type AiLanguageModel } from '@effect/ai';
 import { AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import { type HttpClient } from '@effect/platform';
 import { Context, Effect, Layer, Option } from 'effect';
 
-import { AiService } from './deprecated/service';
+import { AiService } from './AiService';
 import { AiModelNotAvailableError } from './errors';
-import { type LLMModel as ModelName } from './types';
+import { type ModelName as ModelName } from './model';
 
 // TODO(burdon): Determine canoncical naming and resolution of different models by provider.
 //  Consider: Base model (e.g., claude-opus-4-0), Provider (e.g., anhtropic), Registry (cloudflare), Runtime (dxos-remote).
@@ -18,7 +19,7 @@ import { type LLMModel as ModelName } from './types';
 //  https://developers.cloudflare.com/workers-ai/models/llama-3.2-3b-instruct   => cloudflare.com/llama-3.2-3b-instruct
 //  https://ollama.com/library/llama3.2                                         => ollama.com/llama3.2
 
-export class AiModelResolver extends Context.Tag('AiModelResolver')<
+export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
   AiModelResolver,
   {
     readonly model: (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
@@ -106,6 +107,30 @@ export const LMStudioResolver = AiModelResolver.fromModelMap(
   ),
 );
 
+export const OllamaResolver = ({
+  host = 'http://localhost:11434',
+  transformClient,
+}: {
+  readonly host?: string;
+  readonly transformClient?: (client: HttpClient.HttpClient) => HttpClient.HttpClient;
+} = {}) =>
+  AiModelResolver.fromModelMap(
+    Effect.gen(function* () {
+      return {
+        'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest' as any),
+        'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b' as any),
+        '@google/gemma-3-12b': yield* OpenAiLanguageModel.model('gemma3:12b' as any),
+      };
+    }).pipe(
+      Effect.provide(
+        OpenAiClient.layer({
+          apiUrl: host + '/v1',
+          transformClient,
+        }),
+      ),
+    ),
+  );
+
 export const OpenAiResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
     return {
@@ -118,6 +143,9 @@ export const OpenAiResolver = AiModelResolver.fromModelMap(
   }),
 );
 
+/**
+ * @deprecated This is a preset and we should not use it directly.
+ */
 export const AiServiceRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(AnthropicResolver),
   Layer.provide(LMStudioResolver),

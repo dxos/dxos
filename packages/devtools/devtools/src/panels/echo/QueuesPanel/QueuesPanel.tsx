@@ -15,7 +15,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { PanelContainer, Searchbar } from '../../../components';
 // import { DataSpaceSelector } from '../../../containers';
 // import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
@@ -67,7 +66,7 @@ export const QueuesPanel = () => {
       }
     >
       {/* TODO(burdon): Convert to MasterDetailTable. */}
-      <div className={mx('flex grow flex-col divide-y divide-separator overflow-hidden', styles.border)}>
+      <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
         <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
         <div className={mx('flex overflow-auto', 'h-1/2')}>
           {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}

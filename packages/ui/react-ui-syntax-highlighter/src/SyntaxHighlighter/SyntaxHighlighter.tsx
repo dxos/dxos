@@ -9,7 +9,7 @@ import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'rea
 // eslint-disable-next-line no-restricted-imports
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/light-async';
 // eslint-disable-next-line no-restricted-imports
-import { github as light, a11yDark as dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { a11yDark as dark, github as light } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

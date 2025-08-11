@@ -2,11 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
-import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
+import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 
 import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';

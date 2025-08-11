@@ -5,19 +5,20 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
-  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type FC,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardRoot, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
+
+import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 

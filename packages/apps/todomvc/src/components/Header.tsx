@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ForwardedRef, forwardRef, type KeyboardEventHandler } from 'react';
+import React, { type ForwardedRef, type KeyboardEventHandler, forwardRef } from 'react';
 
 export const Header = forwardRef(
   ({ onKeyDown }: { onKeyDown?: KeyboardEventHandler<HTMLInputElement> }, inputRef: ForwardedRef<HTMLInputElement>) => (

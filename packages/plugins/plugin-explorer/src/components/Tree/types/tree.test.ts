@@ -8,8 +8,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { DataType } from '@dxos/schema';
 
-import { type Tree } from './tree';
 import { createTree } from '../testing';
+
+import { type Tree } from './tree';
 
 faker.seed(0);
 

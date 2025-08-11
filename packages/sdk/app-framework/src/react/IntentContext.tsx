@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context, createContext, useContext, type Provider, useEffect } from 'react';
+import { type Context, type Provider, createContext, useContext, useEffect } from 'react';
 
 import { raise } from '@dxos/debug';
 import { pick } from '@dxos/util';
 
-import { usePluginManager } from './PluginManagerProvider';
 import { Capabilities } from '../common';
 import { type AnyIntentResolver, type IntentContext } from '../plugin-intent';
+
+import { usePluginManager } from './PluginManagerProvider';
 
 const IntentContext: Context<IntentContext | undefined> = createContext<IntentContext | undefined>(undefined);
 

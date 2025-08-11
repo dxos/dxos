@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCapability } from './useCapabilities';
 import { Capabilities } from '../common';
+
+import { useCapability } from './useCapabilities';
 
 export const useIntentDispatcher = () => useCapability(Capabilities.IntentDispatcher);
 

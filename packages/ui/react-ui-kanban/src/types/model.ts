@@ -14,8 +14,9 @@ import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { KanbanView } from './schema';
 import { computeArrangement } from '../util';
+
+import { KanbanView } from './schema';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
 export const UNCATEGORIZED_ATTRIBUTES = {

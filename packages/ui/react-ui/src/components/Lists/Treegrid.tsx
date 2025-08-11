@@ -3,11 +3,11 @@
 //
 
 import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } from 'react';
+import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

@@ -24,10 +24,22 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-help"
+    },
+    {
+      "path": "../plugin-navtree"
     }
   ]
 }

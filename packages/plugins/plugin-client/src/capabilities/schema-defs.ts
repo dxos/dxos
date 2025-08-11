@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
 
 import { ClientCapabilities } from './capabilities';

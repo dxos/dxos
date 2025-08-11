@@ -19,11 +19,12 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { image } from './image';
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
+
+import { image } from './image';
 
 faker.seed(1);
 const initialValue = faker.lorem.paragraphs(100);

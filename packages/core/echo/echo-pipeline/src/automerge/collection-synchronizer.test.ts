@@ -3,11 +3,11 @@
 //
 
 import type { PeerId } from '@automerge/automerge-repo';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
-import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
+import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async () => {

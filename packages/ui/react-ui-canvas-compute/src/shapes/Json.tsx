@@ -10,9 +10,10 @@ import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-e
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
-import { createFunctionAnchors, getHeight, Box } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { Box, createFunctionAnchors, getHeight } from './common';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 //
 // Data

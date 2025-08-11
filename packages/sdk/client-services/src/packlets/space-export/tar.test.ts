@@ -3,7 +3,7 @@
 //
 
 import { Archive } from '@obsidize/tar-browserify';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('tar', () => {
   it('should create a tar archive', async () => {

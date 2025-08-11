@@ -3,9 +3,10 @@
 //
 
 import { rmSync } from 'node:fs';
-import { afterEach, onTestFinished, describe, expect, test } from 'vitest';
 
-import { asyncTimeout, latch, Trigger } from '@dxos/async';
+import { afterEach, describe, expect, onTestFinished, test } from 'vitest';
+
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';

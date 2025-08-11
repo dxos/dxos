@@ -8,16 +8,16 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  createMarkdownExtensions,
-  createBasicExtensions,
-  createDataExtensions,
-  createThemeExtensions,
-  deleteItem,
-  outliner,
-  useTextEditor,
   RefDropdownMenu,
   type UseTextEditorProps,
+  createBasicExtensions,
+  createDataExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  deleteItem,
   hashtag,
+  outliner,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -49,7 +49,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
         initialValue: text.content,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
-          createBasicExtensions({ readOnly: false }),
+          createBasicExtensions({ readOnly: false, search: true }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { getValue, FormatEnum, TypeEnum, type SortDirectionType, type FieldSortType } from '@dxos/echo-schema';
+import { type FieldSortType, FormatEnum, type SortDirectionType, TypeEnum, getValue } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type { PropertyType, FieldType, DataType, ProjectionModel } from '@dxos/schema';
+import type { DataType, FieldType, ProjectionModel, PropertyType } from '@dxos/schema';
 
 import { type TableRow } from './table-model';
 

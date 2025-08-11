@@ -13,7 +13,7 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-c
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
-import { TreeType, Tree as TreeModel } from './types';
+import { Tree as TreeModel, TreeType } from './types';
 
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.

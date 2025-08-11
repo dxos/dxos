@@ -3,7 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import React, { useCallback, useEffect, useMemo, useRef, type UIEvent, Fragment } from 'react';
+import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import {
   Capabilities,
@@ -15,8 +15,17 @@ import {
 } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
-import { Stack, StackContext, DEFAULT_HORIZONTAL_SIZE } from '@dxos/react-ui-stack';
+import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions } from '@dxos/react-ui-theme';
+
+import { DeckCapabilities } from '../../capabilities';
+import { useBreakpoints, useHoistStatusbar } from '../../hooks';
+import { DECK_PLUGIN } from '../../meta';
+import { type DeckSettingsProps, getMode } from '../../types';
+import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
+import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
+import { Plank } from '../Plank';
+import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ActiveNode } from './ActiveNode';
 import { ContentEmpty } from './ContentEmpty';
@@ -25,14 +34,6 @@ import { PopoverContent, PopoverRoot } from './Popover';
 import { StatusBar } from './StatusBar';
 import { Toast } from './Toast';
 import { Topbar } from './Topbar';
-import { DeckCapabilities } from '../../capabilities';
-import { useBreakpoints, useHoistStatusbar } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
-import { type DeckSettingsProps, getMode } from '../../types';
-import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
-import { Plank } from '../Plank';
-import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
-import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
 
 export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;

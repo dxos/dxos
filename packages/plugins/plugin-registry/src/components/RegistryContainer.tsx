@@ -6,10 +6,10 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   Capabilities,
-  createIntent,
   LayoutAction,
   type Plugin,
   SettingsAction,
+  createIntent,
   useCapability,
   useIntentDispatcher,
   usePluginManager,

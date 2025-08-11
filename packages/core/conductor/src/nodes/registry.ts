@@ -5,10 +5,9 @@
 import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
-import { defineTool, type Tool, ToolTypes } from '@dxos/ai';
 import { Filter, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { getTypename, isInstanceOf, ObjectId, toEffectSchema } from '@dxos/echo-schema';
+import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo-schema';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -16,35 +15,34 @@ import { live } from '@dxos/live-object';
 import { DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-import { executeFunction, resolveFunctionPath } from './function';
-import { gptNode } from './gpt';
-import { inputNode, NODE_INPUT, NODE_OUTPUT, outputNode } from './system';
-import { templateNode } from './template/node';
-import {
-  AppendInput,
-  ConstantOutput,
-  DatabaseOutput,
-  JsonTransformInput,
-  QueueInput,
-  QueueOutput,
-  ReducerInput,
-  ReducerOutput,
-  TextToImageOutput,
-} from './types';
 import {
   AnyInput,
   AnyOutput,
   DEFAULT_INPUT,
   DEFAULT_OUTPUT,
   DefaultInput,
-  defineComputeNode,
   type Executable,
   NotExecuted,
-  synchronizedComputeFunction,
   ValueBag,
   VoidInput,
   VoidOutput,
+  defineComputeNode,
+  synchronizedComputeFunction,
 } from '../types';
+
+import { executeFunction, resolveFunctionPath } from './function';
+import { gptNode } from './gpt';
+import { NODE_INPUT, NODE_OUTPUT, inputNode, outputNode } from './system';
+import { templateNode } from './template/node';
+import {
+  AppendInput,
+  ConstantOutput,
+  JsonTransformInput,
+  QueueInput,
+  QueueOutput,
+  ReducerInput,
+  ReducerOutput,
+} from './types';
 
 /**
  * To prototype a new compute node, first add a new type and a dummy definition (e.g., VoidInput, VoidOutput).
@@ -398,7 +396,7 @@ export const registry: Record<NodeType, Executable> = {
   // TODO(burdon): Rename 'echo' (since we may have other dbs).
   ['database' as const]: defineComputeNode({
     input: VoidInput,
-    output: DatabaseOutput,
+    output: VoidOutput, // TODO(burdon): Fix.
     exec: synchronizedComputeFunction(() =>
       Effect.gen(function* () {
         throw new Error('Not implemented');
@@ -408,16 +406,20 @@ export const registry: Record<NodeType, Executable> = {
 
   ['text-to-image' as const]: defineComputeNode({
     input: VoidInput,
-    output: TextToImageOutput,
-    exec: synchronizedComputeFunction(() => Effect.succeed({ [DEFAULT_OUTPUT]: [textToImageTool] })),
+    output: VoidOutput, // TODO(burdon): Fix.
+    exec: synchronizedComputeFunction(() =>
+      Effect.gen(function* () {
+        throw new Error('Not implemented');
+      }),
+    ),
   }),
 };
 
-const textToImageTool: Tool = defineTool('testing', {
-  name: 'text-to-image',
-  type: ToolTypes.TextToImage,
-  options: {
-    // TODO(burdon): Testing.
-    // model: '@testing/kitten-in-bubble',
-  },
-});
+// const textToImageTool: Tool = defineTool('testing', {
+//   name: 'text-to-image',
+//   type: ToolTypes.TextToImage,
+//   options: {
+//     // TODO(burdon): Testing.
+//     // model: '@testing/kitten-in-bubble',
+//   },
+// });

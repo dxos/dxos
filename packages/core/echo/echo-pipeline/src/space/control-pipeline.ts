@@ -5,11 +5,11 @@
 import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
-  SpaceStateMachine,
-  type SpaceState,
-  type MemberInfo,
-  type FeedInfo,
   type DelegateInvitationCredential,
+  type FeedInfo,
+  type MemberInfo,
+  type SpaceState,
+  SpaceStateMachine,
 } from '@dxos/credentials';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';

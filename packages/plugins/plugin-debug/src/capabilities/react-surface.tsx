@@ -7,14 +7,14 @@ import React, { useCallback } from 'react';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
   chain,
   contributes,
   createIntent,
   createSurface,
-  LayoutAction,
   useCapability,
   useIntentDispatcher,
-  type PluginContext,
 } from '@dxos/app-framework';
 import {
   AutomergePanel,
@@ -50,7 +50,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ScriptAction } from '@dxos/plugin-script/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { SpaceState, isSpace, type Space, parseId } from '@dxos/react-client/echo';
+import { type Space, SpaceState, isSpace, parseId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 

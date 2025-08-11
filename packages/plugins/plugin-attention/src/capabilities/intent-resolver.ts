@@ -4,11 +4,12 @@
 
 import { Match } from 'effect';
 
-import { Capabilities, contributes, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { type Selection } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities } from './capabilities';
 import { AttentionAction } from '../types';
+
+import { AttentionCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

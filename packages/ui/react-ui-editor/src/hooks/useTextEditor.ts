@@ -4,7 +4,7 @@
 
 import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup, type TabsterTypes } from '@fluentui/react-tabster';
+import { type TabsterTypes, useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
   type KeyboardEventHandler,
@@ -17,9 +17,9 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
+import { type MaybeProvider, getProviderValue, isNotFalsy } from '@dxos/util';
 
-import { type EditorSelection, documentId, createEditorStateTransaction, editorInputMode } from '../extensions';
+import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
 
 let instanceCount = 0;

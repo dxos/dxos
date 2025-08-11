@@ -5,8 +5,8 @@
 import { next as am } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 
-import { asyncReturn, Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { type Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';

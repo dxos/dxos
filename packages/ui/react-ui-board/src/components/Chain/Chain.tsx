@@ -5,14 +5,14 @@
 import './styles.css';
 
 import {
-  Background as NativeBackground,
   BackgroundVariant,
+  type Edge,
+  Background as NativeBackground,
+  type Node,
   ReactFlow,
   type ReactFlowProps,
-  type Node,
-  type Edge,
-  useNodesState,
   useEdgesState,
+  useNodesState,
 } from '@xyflow/react';
 import React, { type PropsWithChildren } from 'react';
 

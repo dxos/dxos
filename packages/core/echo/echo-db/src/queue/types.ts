@@ -4,9 +4,11 @@
 
 import { Schema } from 'effect';
 
-import type { Obj, Relation } from '@dxos/echo';
-import { EntityKind, TypeAnnotationId, type TypeAnnotation } from '@dxos/echo-schema';
+import { type Obj, type Relation } from '@dxos/echo';
+import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
+
+// TODO(dmaretskyi): Move the interface into @dxos/echo package.
 
 /**
  * Client-side view onto an EDGE queue.
@@ -41,7 +43,7 @@ export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    * Queries objects by id.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ids: ObjectId[]): Promise<(T | null)[]>;
+  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
 
   /**
    * Refreshes the queue from the server.

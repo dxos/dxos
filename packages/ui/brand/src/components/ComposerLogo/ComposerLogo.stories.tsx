@@ -8,12 +8,13 @@ import '@fontsource/k2d/100-italic.css';
 
 import React, { useRef, useState } from 'react';
 
-import { Icon, Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 import { DXOS } from '../../icons';
+
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 
 // import ident from '../../../assets/sounds/ident-1.mp3';
 

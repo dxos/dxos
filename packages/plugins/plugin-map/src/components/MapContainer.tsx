@@ -6,32 +6,34 @@ import { isNotNullable } from 'effect/Predicate';
 import React, { useEffect, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
-import { useQuery, getSpace, useSchema, Filter } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
-import { type MapMarker, type MapCanvasProps } from '@dxos/react-ui-geo';
+import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
+import { type Map } from '../types';
+
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
-import { type MapView } from '../types';
+import { type GeoControlProps } from './types';
 
 export type MapControlType = 'globe' | 'map';
 
-export type MapContainerProps = { role?: string; type?: MapControlType; view?: DataType.View } & Pick<
-  MapCanvasProps,
-  'zoom' | 'center' | 'onChange'
->;
-
-// TODO(burdon): Error: Map container is already initialized.
+export type MapContainerProps = {
+  role?: string;
+  type?: MapControlType;
+  view?: DataType.View;
+} & GeoControlProps &
+  Pick<MapRootProps, 'onChange'>;
 
 export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
-  const [markers, setMarkers] = useState<MapMarker[]>([]);
+  const [markers, setMarkers] = useState<GeoMarker[]>([]);
   const client = useClient();
   const space = getSpace(view);
-  const map = view?.presentation.target as MapView | undefined;
+  const map = view?.presentation.target as Map.Map | undefined;
 
   const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
@@ -41,8 +43,12 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
       return;
     }
 
-    const newMarkers: MapMarker[] = (objects ?? [])
+    const newMarkers: GeoMarker[] = (objects ?? [])
       .map((row) => {
+        if (!map.locationFieldId) {
+          return undefined;
+        }
+
         const geopoint = row[map.locationFieldId];
         if (!geopoint) {
           return undefined;
@@ -68,7 +74,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
   const selected = useSelected(view?.query.typename, 'multi');
 
   return (
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
       )}

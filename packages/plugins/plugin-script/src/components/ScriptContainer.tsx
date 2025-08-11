@@ -10,10 +10,11 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ScriptToolbar } from './ScriptToolbar';
-import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 import { useDeployState, useToolbarState } from '../hooks';
 import { type ScriptSettingsProps } from '../types';
+
+import { ScriptToolbar } from './ScriptToolbar';
+import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
 export type ScriptEditorProps = {
   role: string;

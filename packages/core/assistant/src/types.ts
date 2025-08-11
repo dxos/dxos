@@ -6,21 +6,26 @@ import { Schema } from 'effect';
 
 import { type ObjectId } from '@dxos/echo-schema';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
+import { trim } from '@dxos/util';
 
+/**
+ * @deprecated
+ */
 export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 
 /**
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  */
+// TODO(burdon): Rename ObjectReference?
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
 } = class extends Schema.String.annotations({
-  description: `
-  The ID of the referenced object. Formats accepted:
-  - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
-  - space ID, object ID tuple (spaceID:objectID)
-  - Only object ID that is assumed to be in the current space (XXXXX)
+  description: trim`
+    The ID of the referenced object. Formats accepted:
+    - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
+    - space ID, object ID tuple (spaceID:objectID)
+    - Only object ID that is assumed to be in the current space (XXXXX)
   `,
   examples: ['dxn:echo:@:XXXXX', '@dxn:echo:@:XXXXX', 'spaceID:objectID', 'XXXXX'],
 }) {

@@ -2,22 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { SpaceState, type Space } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Button, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import {
-  Form,
-  type InputComponent,
   ControlItem,
   ControlItemInput,
-  ControlSection,
   ControlPage,
+  ControlSection,
+  Form,
+  type InputComponent,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';

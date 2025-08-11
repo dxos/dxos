@@ -8,20 +8,21 @@ import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation 
 import { useAttention } from '@dxos/react-ui-attention';
 import { mx, textBlockWidth, toolbarLayout } from '@dxos/react-ui-theme';
 
-import { actionLabel, ActionLabel } from './ActionLabel';
-import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
 import { translationKey } from '../translations';
 import {
   type MenuAction,
-  type MenuItem,
-  isMenuGroup,
-  isSeparator,
-  type MenuItemGroup,
   type MenuActionProperties,
+  type MenuItem,
+  type MenuItemGroup,
   type MenuMultipleSelectActionGroup,
   type MenuSingleSelectActionGroup,
+  isMenuGroup,
+  isSeparator,
 } from '../types';
+
+import { ActionLabel, actionLabel } from './ActionLabel';
+import { DropdownMenu } from './DropdownMenu';
+import { type MenuScopedProps, useMenu, useMenuItems } from './MenuContext';
 
 export type ToolbarMenuDropdownMenuActionGroup = Omit<MenuActionProperties, 'variant' | 'icon'> & {
   variant: 'dropdownMenu';

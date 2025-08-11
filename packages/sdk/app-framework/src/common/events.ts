@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from './capabilities';
 import { defineEvent } from '../core';
+
+import { Capabilities } from './capabilities';
 
 export namespace Events {
   /**

@@ -6,10 +6,11 @@ import React from 'react';
 
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
-import { HelpCapabilities } from './capabilities';
 import { WelcomeTour } from '../components';
 import { HELP_PLUGIN } from '../meta';
 import { type Step } from '../types';
+
+import { HelpCapabilities } from './capabilities';
 
 export default (steps: Step[]) =>
   contributes(Capabilities.ReactRoot, {

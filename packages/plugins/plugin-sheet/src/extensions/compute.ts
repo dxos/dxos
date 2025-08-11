@@ -16,11 +16,11 @@ import { Decoration, EditorView, ViewPlugin, WidgetType } from '@codemirror/view
 
 import { type CleanupFn, debounce } from '@dxos/async';
 import {
-  createSheetName,
   type CellAddress,
   type CellScalarValue,
   type ComputeGraph,
   type ComputeNode,
+  createSheetName,
 } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
 import { documentId, singleValueFacet } from '@dxos/react-ui-editor';

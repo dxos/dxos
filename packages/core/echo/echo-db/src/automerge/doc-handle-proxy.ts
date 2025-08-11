@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Doc } from '@automerge/automerge';
-import { stringifyAutomergeUrl, type DocHandleOptions, type DocumentId } from '@automerge/automerge-repo';
+import { type DocHandleOptions, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';

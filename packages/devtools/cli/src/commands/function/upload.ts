@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
 import fs from 'node:fs';
 import { basename } from 'node:path';
 import path from 'path';
 
+import { Args, Flags } from '@oclif/core';
+
 import { asyncTimeout } from '@dxos/async';
-import { type PublicKey, type Client } from '@dxos/client';
+import { type Client, type PublicKey } from '@dxos/client';
 import { type AnyLiveObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
@@ -166,7 +167,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
         this.log(`Updated source of ${script.id}`);
       }
     } else {
-      const sourceObj = space.db.add(Obj.make(DataType.Text, { content: scriptFileContent }));
+      const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
       const obj = space.db.add(
         Obj.make(ScriptType, { name: this.flags.name ?? scriptFileName, source: Ref.make(sourceObj) }),
       );

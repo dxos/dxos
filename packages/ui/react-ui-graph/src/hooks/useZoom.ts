@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { select, zoom, type ZoomBehavior, zoomIdentity, type ZoomTransform } from 'd3';
+import { type ZoomBehavior, type ZoomTransform, select, zoom, zoomIdentity } from 'd3';
 import defaultsDeep from 'lodash.defaultsdeep';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { StartOptions, ProcessInfo } from '../../daemon';
+import type { ProcessInfo, StartOptions } from '../../daemon';
 
 export type RunnerStartOptions = {
   profile: string;

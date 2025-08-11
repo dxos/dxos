@@ -2,22 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Fix.
+// ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import { beforeAll, describe, test } from 'vitest';
 
 import { AiService, MixedStreamParser } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { defineFunction, FunctionExecutor, ServiceContainer } from '@dxos/functions';
+import { FunctionExecutor, ServiceContainer, defineFunction } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
-
-const REMOTE_AI = true;
 
 const summarizationFn = defineFunction({
   description: 'Summarize a document',
@@ -27,7 +25,7 @@ const summarizationFn = defineFunction({
   }),
   outputSchema: DataType.Text,
   handler: async ({ data: { document, transcript }, context }) => {
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',
@@ -78,9 +76,8 @@ const summarizationFn = defineFunction({
         ],
       }),
     );
-    return Obj.make(DataType.Text, {
-      content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
-    });
+
+    return DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
   },
 });
 
@@ -93,7 +90,7 @@ const refinementFn = defineFunction({
     summary: DataType.Text,
   }),
   handler: async ({ data: { summaries }, context }) => {
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const result = await new MixedStreamParser().parse(
       await ai.client.execStream({
         model: '@anthropic/claude-3-5-haiku-20241022',
@@ -135,9 +132,7 @@ const refinementFn = defineFunction({
       }),
     );
     return {
-      summary: Obj.make(DataType.Text, {
-        content: pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')),
-      }),
+      summary: DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
     };
   },
 });
@@ -166,9 +161,7 @@ describe.skip('Summarization', () => {
   test('keeps transcript outline', { timeout: 1000_000 }, async () => {
     const { transcriptMessages } = createTestData();
 
-    const summary = Obj.make(DataType.Text, {
-      content: '',
-    });
+    const summary = DataType.makeText();
 
     const summaries = [];
 
@@ -179,11 +172,9 @@ describe.skip('Summarization', () => {
         transcript: blocks,
       });
       summary.content = result.content;
-      summaries.push(Obj.make(DataType.Text, { content: result.content }));
+      summaries.push(DataType.makeText(result.content));
 
       console.log(blocks.at(-1));
-      console.log();
-      console.log('--------------------------------');
       console.log();
       console.log(summary.content);
       console.log();
@@ -194,11 +185,9 @@ describe.skip('Summarization', () => {
           summaries: history,
         });
         summary.content = result.summary.content;
-        summaries.push(Obj.make(DataType.Text, { content: result.summary.content }));
+        summaries.push(DataType.makeText(result.summary.content));
 
         console.log('REFINED');
-        console.log();
-        console.log('--------------------------------');
         console.log();
         console.log(summary.content);
         console.log();

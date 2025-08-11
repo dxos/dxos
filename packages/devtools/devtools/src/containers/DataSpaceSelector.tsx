@@ -6,7 +6,7 @@ import * as localForage from 'localforage';
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { useSpaces, type Space, SpaceId } from '@dxos/react-client/echo';
+import { type Space, SpaceId, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Select } from '@dxos/react-ui';
 

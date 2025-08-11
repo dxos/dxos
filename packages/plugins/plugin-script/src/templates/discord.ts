@@ -3,7 +3,7 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, DXN, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { DXN, EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { FetchHttpClient } from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
 import {
@@ -13,7 +13,7 @@ import {
   // @ts-ignore
 } from 'https://esm.sh/dfx@0.113.0?deps=effect@3.14.21&bundle=false';
 // @ts-ignore
-import { Effect, Config, Redacted, Ref } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Config, Effect, Redacted, Ref } from 'https://esm.sh/effect@3.14.21?bundle=false';
 
 const MessageSchema = S.Struct({
   id: ObjectId,

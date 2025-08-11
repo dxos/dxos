@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { levels, parseFilter } from '@dxos/log';

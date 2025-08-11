@@ -5,7 +5,6 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, type Message, ToolId, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -14,8 +13,9 @@ import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type GptInput, gptNode } from './node';
 import { ValueBag } from '../../types';
+
+import { type GptInput, gptNode } from './node';
 
 const ENABLE_LOGGING = true;
 
@@ -85,47 +85,49 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(typeof output.text).toBe('string');
         expect(output.text.length).toBeGreaterThan(10);
 
-        const conversationMessages = yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects());
+        const conversationMessages = yield* Effect.promise(() =>
+          queues.get<DataType.Message>(conversation.dxn).queryObjects(),
+        );
         log.info('conversationMessages', { conversationMessages });
-        expect(conversationMessages.at(-1)?.role).toEqual('assistant');
+        expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
       }),
       60_000,
     );
   });
 
-  it.skip(
-    'ollama image gen',
-    Effect.fn(function* (ctx) {
-      const _textToImageTool = defineTool('testing', {
-        name: 'text-to-image',
-        type: ToolTypes.TextToImage,
-        options: {
-          model: '@testing/kitten-in-bubble',
-        },
-      });
+  // it.skip(
+  //   'ollama image gen',
+  //   Effect.fn(function* (ctx) {
+  //     const _textToImageTool = defineTool('testing', {
+  //       name: 'text-to-image',
+  //       type: ToolTypes.TextToImage,
+  //       options: {
+  //         model: '@testing/kitten-in-bubble',
+  //       },
+  //     });
 
-      const input: GptInput = {
-        prompt: 'A beautiful sunset over a calm ocean',
-        tools: [ToolId.make('testing/text-to-image')],
-      };
-      const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
-        Effect.flatMap(ValueBag.unwrap),
-        Effect.provide(
-          createTestServices({
-            ai: {
-              provider: 'ollama',
-            },
-            logging: {
-              enabled: ENABLE_LOGGING,
-            },
-          }).createLayer(),
-        ),
-        Effect.scoped,
-      );
-      log.info('output', { output });
-      log.info('artifact', { artifact: output.artifact });
-      expect(output.artifact).toBeDefined();
-    }),
-    60_000,
-  );
+  //     const input: GptInput = {
+  //       prompt: 'A beautiful sunset over a calm ocean',
+  //       tools: [ToolId.make('testing/text-to-image')],
+  //     };
+  //     const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
+  //       Effect.flatMap(ValueBag.unwrap),
+  //       Effect.provide(
+  //         createTestServices({
+  //           ai: {
+  //             provider: 'ollama',
+  //           },
+  //           logging: {
+  //             enabled: ENABLE_LOGGING,
+  //           },
+  //         }).createLayer(),
+  //       ),
+  //       Effect.scoped,
+  //     );
+  //     log.info('output', { output });
+  //     log.info('artifact', { artifact: output.artifact });
+  //     expect(output.artifact).toBeDefined();
+  //   }),
+  //   60_000,
+  // );
 });

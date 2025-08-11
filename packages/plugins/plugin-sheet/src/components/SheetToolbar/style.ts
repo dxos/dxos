@@ -5,11 +5,11 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
-import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
 import { SHEET_PLUGIN } from '../../meta';
 import { type SheetModel } from '../../model';
-import { rangeFromIndex, rangeToIndex, type StyleKey, type StyleValue } from '../../types';
+import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;

@@ -4,7 +4,8 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { onTestFinished, describe, expect, test } from 'vitest';
+
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 import { WatchDog } from './watchdog';

@@ -2,11 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
-import { ArtifactId } from '@dxos/assistant';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -26,68 +23,68 @@ describe.skip('Sequence', () => {
       .step('Write a pitch deck for the product')
       .build();
 
-    const tools = new ToolRegistry([]);
-    const machine = todo() as any;
+    // const tools = new ToolRegistry([]);
+    // const machine = todo() as any;
     // setConsolePrinter(machine, true);
     // await machine.runToCompletion({ aiClient });
   });
 
-  test('email bot', { timeout: 60_000 }, async () => {
-    const replyTool = createTool('email', {
-      name: 'reply',
-      description: 'Reply to the email',
-      schema: Schema.Struct({
-        toEmail: ArtifactId,
-        subject: Schema.String.annotations({
-          description: 'The subject of the reply',
-        }),
-        body: Schema.String.annotations({
-          description: 'The body of the reply',
-        }),
-      }),
-      execute: async (params) => {
-        console.log('reply', params);
-        return ToolResult.Success('Sent!');
-      },
-    });
+  // test('email bot', { timeout: 60_000 }, async () => {
+  //   const replyTool = createTool('email', {
+  //     name: 'reply',
+  //     description: 'Reply to the email',
+  //     schema: Schema.Struct({
+  //       toEmail: ArtifactId,
+  //       subject: Schema.String.annotations({
+  //         description: 'The subject of the reply',
+  //       }),
+  //       body: Schema.String.annotations({
+  //         description: 'The body of the reply',
+  //       }),
+  //     }),
+  //     execute: async (params) => {
+  //       console.log('reply', params);
+  //       return ToolResult.Success('Sent!');
+  //     },
+  //   });
 
-    const labelTool = createTool('email', {
-      name: 'label',
-      description: 'Apply a label to the email',
-      schema: Schema.Struct({
-        toEmail: ArtifactId,
-        label: Schema.String.annotations({
-          description: 'The label to apply to the email',
-        }),
-      }),
-      execute: async (params) => {
-        return ToolResult.Success('Labeled!');
-      },
-    });
+  //   const labelTool = createTool('email', {
+  //     name: 'label',
+  //     description: 'Apply a label to the email',
+  //     schema: Schema.Struct({
+  //       toEmail: ArtifactId,
+  //       label: Schema.String.annotations({
+  //         description: 'The label to apply to the email',
+  //       }),
+  //     }),
+  //     execute: async (params) => {
+  //       return ToolResult.Success('Labeled!');
+  //     },
+  //   });
 
-    const sequence = SequenceBuilder.create()
-      .step(
-        'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
-      )
-      .step('If the email is spam, label it as spam and do not respond.', {
-        tools: [ToolId.make(labelTool.id)],
-      })
-      .step(
-        'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
-        {
-          tools: [ToolId.make(replyTool.id)],
-        },
-      )
-      .step('If the email is a question, respond with a short answer and ask for more information.', {
-        tools: [ToolId.make(replyTool.id)],
-      })
-      .build();
+  //   const sequence = SequenceBuilder.create()
+  //     .step(
+  //       'Determine if the email is introduction, question, or spam. Bail if email does not fit into one of these categories.',
+  //     )
+  //     .step('If the email is spam, label it as spam and do not respond.', {
+  //       tools: [ToolId.make(labelTool.id)],
+  //     })
+  //     .step(
+  //       'If the email is an introduction, respond with a short introduction of yourself and ask for more information.',
+  //       {
+  //         tools: [ToolId.make(replyTool.id)],
+  //       },
+  //     )
+  //     .step('If the email is a question, respond with a short answer and ask for more information.', {
+  //       tools: [ToolId.make(replyTool.id)],
+  //     })
+  //     .build();
 
-    const tools = new ToolRegistry([replyTool, labelTool]);
-    const machine = todo() as any;
-    // setConsolePrinter(machine);
-    // await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
-  });
+  //   const tools = new ToolRegistry([replyTool, labelTool]);
+  //   const machine = todo() as any;
+  //   // setConsolePrinter(machine);
+  //   // await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
+  // });
 
   test.only('research', { timeout: 120_000 }, async () => {
     const builder = await new EchoTestBuilder().open();
@@ -130,12 +127,11 @@ describe.skip('Sequence', () => {
       })
       .build();
 
-    const tools = new ToolRegistry([
-      //
-      // exa,
-      // localSearch,
-      // graphWriter,
-    ]);
+    // const tools = new ToolRegistry([
+    // exa,
+    // localSearch,
+    // graphWriter,
+    // ]);
     const machine = todo() as any;
     // setConsolePrinter(machine, true);
     // await machine.runToCompletion({ aiClient, input: org1 });

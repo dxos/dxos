@@ -4,21 +4,14 @@
 
 import { Schema } from 'effect';
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import {
-  AppGraphBuilder,
-  ArtifactDefinition,
-  Compiler,
-  IntentResolver,
-  ReactSurface,
-  ScriptSettings,
-} from './capabilities';
+import { AppGraphBuilder, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
@@ -83,10 +76,5 @@ export const ScriptPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
     }),
   ]);

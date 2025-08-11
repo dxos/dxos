@@ -5,17 +5,17 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Obj, Ref, Type, type Key } from '@dxos/echo';
+import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { useQueue, type Space } from '@dxos/react-client/echo';
+import { type Space, useQueue } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 

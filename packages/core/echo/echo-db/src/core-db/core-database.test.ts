@@ -7,8 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Filter } from '@dxos/echo';
-import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, getType, ObjectId, Ref } from '@dxos/echo-schema';
+import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { Expando, ObjectId, Ref, getType } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -17,30 +17,16 @@ import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { type CoreDatabase } from './core-database';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
-import { getObjectCore, type AnyLiveObject } from '../echo-handler';
+import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
 import { EchoTestBuilder } from '../testing';
 
+import { type CoreDatabase } from './core-database';
+
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
-    // TODO(mykola): Delete after space fragmentation flag is removed from AutomergeContext.
-    // Skipped because it is the only place where space fragmentation is disabled.
-    // And default behavior in prod is to have space fragmentation enabled.
-    test.skip('objects are created inline if space fragmentation is disabled', async () => {
-      const testBuilder = new EchoTestBuilder();
-      await openAndClose(testBuilder);
-      const { db } = await testBuilder.createDatabase();
-      const object = createTextObject();
-      db.add(object);
-      const docHandles = getDocHandles(db);
-      expect(docHandles.linkedDocHandles.length).to.eq(0);
-      const rootDoc = docHandles.spaceRootHandle.doc();
-      expect(rootDoc?.objects?.[object.id]).not.to.be.undefined;
-    });
-
     test('objects are created in separate docs', async () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);

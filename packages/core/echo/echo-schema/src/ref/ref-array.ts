@@ -5,8 +5,9 @@
 import { type ObjectId } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
-import { Ref } from './ref';
 import { type AnyEchoObject } from '../types';
+
+import { Ref } from './ref';
 
 /**
  * Helper functions for working with arrays of refs.

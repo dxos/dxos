@@ -6,7 +6,9 @@ import { type GeoPath, type GeoPermissibleObjects, geoGraticule } from 'd3';
 import { feature, mesh } from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { type LatLng, geoLine, geoPoint } from './path';
+import { type LatLngLiteral } from '../types';
+
+import { geoLine, geoPoint } from './path';
 
 export type Styles = Record<string, any>;
 
@@ -25,8 +27,8 @@ export type Style =
 export type StyleSet = Partial<Record<Style, Styles>>;
 
 export type Features = {
-  points?: LatLng[];
-  lines?: { source: LatLng; target: LatLng }[];
+  points?: LatLngLiteral[];
+  lines?: { source: LatLngLiteral; target: LatLngLiteral }[];
 };
 
 export type Layer = {

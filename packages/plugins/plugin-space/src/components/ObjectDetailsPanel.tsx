@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { getSpace, Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';

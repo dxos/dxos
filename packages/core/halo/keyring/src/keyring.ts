@@ -4,13 +4,13 @@
 
 import { Event, synchronized } from '@dxos/async';
 import { type ProtoCodec } from '@dxos/codec-protobuf';
-import { subtleCrypto, type Signer } from '@dxos/crypto';
+import { type Signer, subtleCrypto } from '@dxos/crypto';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols/proto';
 import { type KeyRecord } from '@dxos/protocols/proto/dxos/halo/keyring';
-import { createStorage, type Directory, StorageType } from '@dxos/random-access-storage';
+import { type Directory, StorageType, createStorage } from '@dxos/random-access-storage';
 import { ComplexMap, arrayToBuffer } from '@dxos/util';
 
 const KeyRecord: ProtoCodec<KeyRecord> = schema.getCodecForType('dxos.halo.keyring.KeyRecord');
@@ -40,7 +40,7 @@ export class Keyring implements Signer {
           hash: 'SHA-256',
         },
         keyPair.privateKey,
-        message,
+        message as Uint8Array<ArrayBuffer>,
       ),
     );
   }
@@ -79,7 +79,7 @@ export class Keyring implements Signer {
       const keyPair: CryptoKeyPair = {
         publicKey: await subtleCrypto.importKey(
           'raw',
-          record.publicKey,
+          record.publicKey as Uint8Array<ArrayBuffer>,
           {
             name: 'ECDSA',
             namedCurve: 'P-256',
@@ -89,7 +89,7 @@ export class Keyring implements Signer {
         ),
         privateKey: await subtleCrypto.importKey(
           'pkcs8',
-          record.privateKey,
+          record.privateKey as Uint8Array<ArrayBuffer>,
           {
             name: 'ECDSA',
             namedCurve: 'P-256',

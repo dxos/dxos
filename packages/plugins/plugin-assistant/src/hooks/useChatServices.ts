@@ -2,38 +2,36 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, AiToolkit } from '@effect/ai';
 import { Layer } from 'effect';
 import { useMemo } from 'react';
-import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
-import { type AiService, type ToolExecutionService, ToolRegistry, type ToolResolverService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import {
-  ConfiguredCredentialsService,
+  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  EventLogger,
-  FunctionCallService,
+  LocalFunctionExecutionService,
   QueueService,
+  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 
-export * from '@dxos/assistant';
+import { AssistantCapabilities } from '../capabilities';
 
 // TODO(burdon): Deconstruct into separate layers?
-export type ChatServices =
-  | AiService
+export type AiChatServices =
+  | AiService.AiService
   | CredentialsService
   | DatabaseService
   | QueueService
-  | FunctionCallService
+  | RemoteFunctionExecutionService
   | ToolResolverService
   | ToolExecutionService
-  | TracingService
-  | EventLogger;
+  | TracingService;
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -42,50 +40,34 @@ export type UseChatServicesProps = {
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<ChatServices> | undefined => {
-  const toolRegistry = useToolRegistry();
-  // TODO(dmaretskyi): We can provide the plugin registry as a layer and then build the entire layer stack from there. We need to think how plugin reactivity affect our layer structure.
-  const toolResolver = useToolResolver();
-  const toolExecutionService = useToolExecutionService();
+export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
+  const aiServiceLayer =
+    useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
+  const functions = useCapabilities(Capabilities.Functions);
+  const toolkits = useCapabilities(Capabilities.Toolkit);
+  const handlers = useCapabilities(Capabilities.ToolkitHandler);
 
   return useMemo(() => {
+    const allFunctions = functions.flat();
+    // TODO(wittjosiah): Don't cast.
+    const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+    const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
     return Layer.mergeAll(
-      AiServiceTestingPreset('edge-remote').pipe(Layer.orDie), // TODO(burdon): Error management?
-      Layer.succeed(CredentialsService, new ConfiguredCredentialsService()),
-      space ? Layer.succeed(DatabaseService, DatabaseService.make(space.db)) : DatabaseService.notAvailable,
-      space ? Layer.succeed(QueueService, QueueService.make(space.queues)) : QueueService.notAvailable,
-      Layer.succeed(FunctionCallService, FunctionCallService.mock()),
-      Layer.succeed(TracingService, TracingService.noop),
-      Layer.succeed(EventLogger, EventLogger.noop),
-      toolResolver,
-      toolExecutionService,
+      aiServiceLayer,
+      makeToolResolverFromFunctions(allFunctions, toolkit),
+      makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
+      CredentialsService.layerFromDatabase(),
+      ComputeEventLogger.layerFromTracing,
+    ).pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
+          space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
+          TracingService.layerNoop,
+          LocalFunctionExecutionService.layer,
+          RemoteFunctionExecutionService.mockLayer,
+        ),
+      ),
     );
-  }, [space, toolRegistry, toolResolver]);
-};
-
-const useToolResolver = (): Layer.Layer<ToolResolverService> => {
-  const functions = useCapabilities(Capabilities.Functions).flat();
-  return useMemo(() => makeToolResolverFromFunctions(functions), [useDeepCompareMemoize(functions.map((f) => f.name))]);
-};
-
-const useToolExecutionService = (): Layer.Layer<ToolExecutionService> => {
-  const functions = useCapabilities(Capabilities.Functions).flat();
-  return useMemo(
-    () => makeToolExecutionServiceFromFunctions(functions),
-    [useDeepCompareMemoize(functions.map((f) => f.name))],
-  );
-};
-
-// TODO(burdon): Factor out.
-const useToolRegistry = (): ToolRegistry => {
-  const tools = useCapabilities(Capabilities.Tools).flat();
-  return useMemo(() => {
-    const toolRegistry = new ToolRegistry([]);
-    for (const tool of tools) {
-      if (!toolRegistry.has(tool)) {
-        toolRegistry.register(tool);
-      }
-    }
-    return toolRegistry;
-  }, [useDeepCompareMemoize(tools)]);
+  }, [space, functions, toolkits, handlers]);
 };

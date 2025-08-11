@@ -5,8 +5,8 @@
 import { buf } from '@dxos/protocols/buf';
 import {
   type ActivitySchema,
-  UserStateSchema,
   type UserState as UserStateProto,
+  UserStateSchema,
 } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 
 /**

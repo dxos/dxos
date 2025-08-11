@@ -5,12 +5,13 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+
+import { DECK_PLUGIN } from '../meta';
 
 import { DeckCapabilities } from './capabilities';
-import { DECK_PLUGIN } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(

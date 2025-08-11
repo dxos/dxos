@@ -19,89 +19,76 @@ import { PostalAddress } from './postal-address';
  * Based on fields from Apple Contacts.
  */
 const PersonSchema = Schema.Struct({
-  fullName: Schema.optional(
-    Schema.String.pipe(Schema.annotations({ title: 'Full Name' }), GeneratorAnnotation.set(['person.fullName', 1])),
+  fullName: Schema.String.pipe(
+    Schema.annotations({ title: 'Full Name' }),
+    GeneratorAnnotation.set({
+      generator: 'person.fullName',
+      probability: 1,
+    }),
+    Schema.optional,
   ),
-  preferredName: Schema.optional(Schema.String.annotations({ title: 'Preferred Name' })),
-  nickname: Schema.optional(Schema.String.annotations({ title: 'Nickname' })),
+  preferredName: Schema.String.pipe(Schema.annotations({ title: 'Preferred Name' }), Schema.optional),
+  nickname: Schema.String.pipe(Schema.annotations({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
+  image: Schema.String.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   // TODO(burdon): Use reference links.
-  organization: Schema.optional(
-    Type.Ref(Organization).pipe(PropertyMeta('referenceProperty', 'name')).annotations({ title: 'Organization' }),
+  organization: Type.Ref(Organization).pipe(
+    PropertyMeta('referenceProperty', 'name'),
+    Schema.annotations({ title: 'Organization' }),
+    Schema.optional,
   ),
-  jobTitle: Schema.optional(Schema.String.annotations({ title: 'Job Title' })),
-  department: Schema.optional(Schema.String.annotations({ title: 'Department' })),
-  notes: Schema.optional(Schema.String.annotations({ title: 'Notes' })),
+  jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
+  department: Schema.String.pipe(Schema.annotations({ title: 'Department' }), Schema.optional),
+  notes: Schema.String.pipe(Schema.annotations({ title: 'Notes' }), Schema.optional),
   // TODO(burdon): Change to array of `handles`.
-  emails: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          label: Schema.optional(Schema.String),
-          value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
-        }),
-      ),
-    ),
-  ),
+  emails: Schema.Array(
+    Schema.Struct({
+      label: Schema.optional(Schema.String),
+      value: Format.Email.pipe(GeneratorAnnotation.set('internet.email')),
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
   // TODO(burdon): Identities? (socials, DIDs, etc.)
   // TODO(burdon): Add annotations.
   // TODO(burdon): Record or array (for CRDT)?
-  identities: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          label: Schema.optional(Schema.String),
-          value: Schema.String,
-        }),
-      ),
-    ),
-  ),
-  phoneNumbers: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          label: Schema.optional(Schema.String),
-          // TODO(wittjosiah): Format.Phone.
-          value: Schema.String,
-        }),
-      ),
-    ),
-  ),
-  addresses: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          label: Schema.optional(Schema.String),
-          value: PostalAddress,
-        }),
-      ),
-    ),
-  ),
-  urls: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          label: Schema.optional(Schema.String),
-          value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
-        }),
-      ),
-    ),
-  ),
+  identities: Schema.Array(
+    Schema.Struct({
+      label: Schema.optional(Schema.String),
+      value: Schema.String,
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
+  phoneNumbers: Schema.Array(
+    Schema.Struct({
+      label: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Format.Phone.
+      value: Schema.String,
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
+  addresses: Schema.Array(
+    Schema.Struct({
+      label: Schema.optional(Schema.String),
+      value: PostalAddress,
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
+  urls: Schema.Array(
+    Schema.Struct({
+      label: Schema.optional(Schema.String),
+      value: Format.URL.pipe(GeneratorAnnotation.set('internet.url')),
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
   // TODO(burdon): Support date or create String type for ISO Date.
-  birthday: Schema.optional(Schema.mutable(Schema.String.annotations({ title: 'Birthday' }))),
-  // TODO(burdon): Move to base object?
-  fields: Schema.optional(
-    Schema.mutable(
-      Schema.Array(
-        Schema.Struct({
-          category: Schema.optional(Schema.String),
-          label: Schema.String,
-          value: Schema.String,
-        }),
-      ),
-    ),
+  birthday: Schema.String.pipe(
+    Schema.annotations({ title: 'Birthday' }),
+    GeneratorAnnotation.set('date.iso8601'),
+    Schema.optional,
   ),
+  // TODO(burdon): Move to base object?
+  fields: Schema.Array(
+    Schema.Struct({
+      category: Schema.optional(Schema.String),
+      label: Schema.String,
+      value: Schema.String,
+    }),
+  ).pipe(Schema.mutable, Schema.optional),
 });
 
 export const Person = PersonSchema.pipe(

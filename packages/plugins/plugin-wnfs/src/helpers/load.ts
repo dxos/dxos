@@ -5,12 +5,13 @@
 import type { Blockstore } from 'interface-blockstore';
 import { CID } from 'multiformats';
 import * as Uint8Arrays from 'uint8arrays';
-import { AccessKey, PrivateForest, PrivateDirectory, PrivateNode } from 'wnfs';
+import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 
 import { type Space } from '@dxos/react-client/echo';
 
-import { Rng, store } from './common';
 import { type WnfsCapabilities } from '../capabilities';
+
+import { Rng, store } from './common';
 
 //
 // LOAD

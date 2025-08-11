@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { MapView } from './types';
+import { Map } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [MapView.typename]: {
+      [Map.Map.typename]: {
         'typename label': 'Map',
         'typename label_zero': 'Maps',
         'typename label_one': 'Map',

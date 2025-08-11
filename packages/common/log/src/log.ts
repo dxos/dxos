@@ -6,7 +6,7 @@ import { type LogConfig, LogLevel, type LogOptions } from './config';
 import { type LogContext, type LogProcessor } from './context';
 import { createFunctionLogDecorator, createMethodLogDecorator } from './decorators';
 import { type CallMetadata } from './meta';
-import { getConfig, DEFAULT_PROCESSORS } from './options';
+import { DEFAULT_PROCESSORS, getConfig } from './options';
 
 /**
  * Logging function.

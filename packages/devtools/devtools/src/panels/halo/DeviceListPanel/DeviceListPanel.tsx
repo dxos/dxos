@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
-import { useDevices, Device, DeviceKind, DeviceType } from '@dxos/react-client/halo';
+import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';

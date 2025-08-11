@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { Icon, Avatar, Button } from '@dxos/react-ui';
+import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
@@ -46,24 +46,26 @@ export const ContactCard = ({
           )}
         </Card.Chrome>
       )}
-      <dl
-        className={mx(
-          cardText,
-          'grid gap-2 grid-cols-[min-content_1fr] [&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0',
-        )}
-      >
-        {emails?.length &&
-          emails.map(({ label, value }) => (
-            <Fragment key={value}>
-              <dt>
-                <Icon icon='ph--at--regular' size={5} />
-              </dt>
-              <dd key={value} className='break-words'>
-                {value}
-              </dd>
-            </Fragment>
-          ))}
-      </dl>
+      {emails?.length && (
+        <dl
+          className={mx(
+            cardText,
+            'grid gap-2 grid-cols-[min-content_1fr] [&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0',
+          )}
+        >
+          {emails?.length &&
+            emails.map(({ label, value }) => (
+              <Fragment key={value}>
+                <dt>
+                  <Icon icon='ph--at--regular' size={5} />
+                </dt>
+                <dd key={value} className='break-words'>
+                  {value}
+                </dd>
+              </Fragment>
+            ))}
+        </dl>
+      )}
       {children}
     </Card.SurfaceRoot>
   );

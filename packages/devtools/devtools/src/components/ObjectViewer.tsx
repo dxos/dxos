@@ -6,7 +6,7 @@ import React, { type ComponentType } from 'react';
 
 import { DXN } from '@dxos/keys';
 import { Clipboard, Input } from '@dxos/react-ui';
-import { createElement, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 export type ObjectViewerProps = {
   object: any;

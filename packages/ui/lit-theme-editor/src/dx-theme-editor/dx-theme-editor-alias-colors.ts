@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type TokenSet, type AliasLayer } from '@ch-ui/tokens';
+import { type AliasLayer, type TokenSet } from '@ch-ui/tokens';
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';

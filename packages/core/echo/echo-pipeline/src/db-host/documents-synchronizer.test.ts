@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@automerge/automerge-repo';
+import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';

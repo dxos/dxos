@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { type Key, Obj, Ref } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo-schema';
 
-import { TranscriptionAction, TranscriptType } from '../types';
+import { TranscriptType, TranscriptionAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [

@@ -23,17 +23,18 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { seedTestData, Testing } from '@dxos/schema/testing';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { MessageNormalizer, getActorId } from '../../segments-normalization';
+import { TestItem } from '../../testing';
+import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { renderMarkdown } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
-import { getActorId, MessageNormalizer } from '../../segments-normalization';
-import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
-import { renderMarkdown } from '../Transcript';
 
 const AudioFile = ({
   detectSpeaking,
@@ -187,7 +188,7 @@ const meta: Meta<typeof AudioFile> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

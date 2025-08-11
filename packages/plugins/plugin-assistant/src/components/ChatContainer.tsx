@@ -2,40 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
-import { type AssociatedArtifact } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type MaybePromise } from '@dxos/util';
 
-import { Chat } from './Chat';
-import { useChatProcessor, useChatServices } from '../hooks';
+import {
+  type AiChatProcessor,
+  useBlueprintRegistry,
+  useChatProcessor,
+  useChatServices,
+  useOnline,
+  usePresets,
+} from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
+import { Chat } from './Chat';
+
 export type ChatContainerProps = {
-  role: string;
   chat: Assistant.Chat;
-  artifact?: AssociatedArtifact;
+  role?: string;
+  onProcessorReady?: (processor: AiChatProcessor) => MaybePromise<void>;
 };
 
-export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
+export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
-  const processor = useChatProcessor({ chat, services, settings });
-  if (!processor) {
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
+  const blueprintRegistry = useBlueprintRegistry();
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
+
+  useEffect(() => {
+    if (processor && onProcessorReady) {
+      const timeout = setTimeout(() => onProcessorReady(processor));
+      return () => clearTimeout(timeout);
+    }
+  }, [processor, onProcessorReady]);
+
+  if (!chat || !processor) {
     return null;
   }
 
-  // TODO(burdon): Add attention attributes.
   return (
     <StackItem.Content classNames='container-max-width'>
-      <Chat.Root chat={chat} processor={processor} artifact={artifact}>
+      <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
-        <div className='pbe-4 pis-2 pie-2'>
-          <Chat.Prompt classNames='border border-subduedSeparator rounded-md' />
+        <div className='p-2'>
+          <Chat.Prompt
+            {...chatProps}
+            classNames='p-2 border border-transparent rounded-md'
+            preset={preset?.id}
+            online={online}
+            onChangeOnline={setOnline}
+          />
         </div>
       </Chat.Root>
     </StackItem.Content>

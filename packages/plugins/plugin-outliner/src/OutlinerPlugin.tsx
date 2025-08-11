@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, definePlugin, contributes, Capabilities, Events, defineModule } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { JournalEntryType, JournalType, OutlinerAction, OutlineType } from './types';
+import { JournalEntryType, JournalType, OutlineType, OutlinerAction } from './types';
 
 export const OutlinerPlugin = () =>
   definePlugin(meta, [

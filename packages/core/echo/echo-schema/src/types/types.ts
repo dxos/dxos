@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SchemaAST, Schema } from 'effect';
+import { Schema, SchemaAST } from 'effect';
 
 import { Reference } from '@dxos/echo-protocol';
-import { splitJsonPath, type JsonPath } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { type JsonPath, splitJsonPath } from '@dxos/effect';
+import { DXN, type ObjectId } from '@dxos/keys';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { getSchemaDXN } from '../ast';
-import { getType, getTypename, type ObjectMeta, type EntityKindId } from '../object';
+import { type EntityKindId, type ObjectMeta, getType, getTypename } from '../object';
 import { ATTR_META } from '../object/model';
 
 /**
@@ -26,12 +26,11 @@ export type BaseObject = Record<string, any>;
  * Marker interface for object with an `id`.
  */
 export interface HasId {
-  readonly id: string;
+  readonly id: ObjectId;
 }
 
-// TODO(burdon): Reconcile with AnyLiveObject. This type is used in some places (e.g. Ref) to mean LiveObject? Do we need branded types?
-// TODO(dmaretskyi): Remove -- this type effectively disables type safety due to `any`.
-export type WithId = BaseObject & HasId;
+// TODO(dmaretskyi): Remove; this type effectively disables type safety due to `any`.
+export type WithId<T extends BaseObject = BaseObject> = T & HasId;
 
 export type ExcludeId<T extends BaseObject> = Omit<T, 'id'>;
 
@@ -168,9 +167,6 @@ export type HasTypename = {};
 
 /**
  * Canonical type for all ECHO objects.
- * @deprecated Use `AnyEchoObject` instead.
  */
-export interface BaseEchoObject extends HasId, HasTypename {}
-
-// TODO(burdon): Reconcile with Type.Any.
-export interface AnyEchoObject extends BaseEchoObject {}
+// TODO(burdon): Reconcile with Obj.Any, Relation.Any.
+export interface AnyEchoObject extends HasId, HasTypename {}

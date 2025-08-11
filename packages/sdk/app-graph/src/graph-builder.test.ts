@@ -6,10 +6,10 @@ import { Registry, Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 
 import { ROOT_ID } from './graph';
-import { createExtension, GraphBuilder } from './graph-builder';
+import { GraphBuilder, createExtension } from './graph-builder';
 import { type Node } from './node';
 
 const exampleId = (id: number) => `dx:test:${id}`;
@@ -17,6 +17,63 @@ const EXAMPLE_ID = exampleId(1);
 const EXAMPLE_TYPE = 'dxos.org/type/example';
 
 describe('GraphBuilder', () => {
+  describe('resolver', () => {
+    test('works', async () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const graph = builder.graph;
+
+      {
+        const node = graph.getNode(EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node).to.be.null;
+      }
+
+      builder.addExtension(
+        createExtension({
+          id: 'resolver',
+          resolver: () => {
+            console.log('resolver');
+            return Rx.make({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: 1 });
+          },
+        }),
+      );
+      await graph.initialize(EXAMPLE_ID);
+
+      {
+        const node = graph.getNode(EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node?.id).to.equal(EXAMPLE_ID);
+        expect(node?.type).to.equal(EXAMPLE_TYPE);
+        expect(node?.data).to.equal(1);
+      }
+    });
+
+    test('updates', async () => {
+      const registry = Registry.make();
+      const builder = new GraphBuilder({ registry });
+      const name = Rx.make('default');
+      builder.addExtension(
+        createExtension({
+          id: 'resolver',
+          resolver: () => Rx.make((get) => ({ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(name) })),
+        }),
+      );
+      const graph = builder.graph;
+      await graph.initialize(EXAMPLE_ID);
+
+      {
+        const node = graph.getNode(EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('default');
+      }
+
+      registry.set(name, 'updated');
+
+      {
+        const node = graph.getNode(EXAMPLE_ID).pipe(Option.getOrNull);
+        expect(node?.data).to.equal('updated');
+      }
+    });
+  });
+
   describe('connector', () => {
     test('works', () => {
       const registry = Registry.make();

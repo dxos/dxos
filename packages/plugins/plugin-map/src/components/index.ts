@@ -8,5 +8,6 @@ export { type MapContainerProps, type MapControlType } from './MapContainer';
 
 export * from './Globe';
 export * from './Map';
+export * from './MapViewEditor';
 
 export const MapContainer = lazy(() => import('./MapContainer'));

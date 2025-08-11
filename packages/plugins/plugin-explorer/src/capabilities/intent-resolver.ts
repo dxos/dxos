@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { ExplorerAction, ViewType } from '../types';

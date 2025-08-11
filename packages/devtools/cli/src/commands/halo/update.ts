@@ -6,7 +6,7 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
-import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
+import { IDENTITY_WAIT_TIMEOUT, IdentityWaitTimeoutError } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';
 

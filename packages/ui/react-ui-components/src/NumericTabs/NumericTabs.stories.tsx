@@ -4,14 +4,15 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { NumericTabs } from './NumericTabs';
 import { ToggleContainer } from '../ToggleContainer';
+
+import { NumericTabs } from './NumericTabs';
 
 const content = Array.from({ length: 15 }, (_, i) => ({
   title: faker.lorem.paragraph(),

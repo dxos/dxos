@@ -6,15 +6,15 @@ import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  clientServiceBundle,
   ClientServicesProviderResource,
+  clientServiceBundle,
 } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostParams } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { createIceProvider, type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
+import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 

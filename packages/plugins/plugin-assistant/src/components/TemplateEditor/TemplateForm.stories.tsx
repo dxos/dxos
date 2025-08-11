@@ -13,8 +13,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { TemplateForm } from './TemplateForm';
 import { translations } from '../../translations';
+
+import { TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
   You are a machine that is an expert chess player.
@@ -30,7 +31,13 @@ const DefaultStory = () => {
   const client = useClient();
   const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Blueprint.make({ name: 'Test', instructions: { source: TEMPLATE } }));
+    return space.db.add(
+      Blueprint.make({
+        key: 'example.com/blueprint/test',
+        name: 'Test',
+        instructions: Template.make({ source: TEMPLATE }),
+      }),
+    );
   });
 
   return (

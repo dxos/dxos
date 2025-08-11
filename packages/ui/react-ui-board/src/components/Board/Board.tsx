@@ -7,6 +7,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { createContext } from '@radix-ui/react-context';
 import React, {
+  type ComponentPropsWithoutRef,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -15,18 +16,19 @@ import React, {
   useMemo,
   useRef,
   useState,
-  type ComponentPropsWithoutRef,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, Toolbar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { BoardCell, type BoardCellProps } from './BoardCell';
-import { type BoardGeometry as BoardGrid, type Rect, getCenter, getBoardBounds, getBoardRect } from './geometry';
-import { type BoardLayout, type Size, type Position } from './types';
 import { translationKey } from '../../translations';
+
+import { BoardCell, type BoardCellProps } from './BoardCell';
+import { defaultGrid, defaultLayout } from './defs';
+import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';
+import { type BoardLayout, type Position, type Size } from './types';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
 // TODO(burdon): Center when has focus; key nav.
@@ -36,9 +38,6 @@ import { translationKey } from '../../translations';
 // TODO(burdon): Prevent browser nav when scrolling to edge.
 // TODO(burdon): Does scrollbar thin work?
 // TODO(burdon): Drag edges to resize.
-
-const defaultLayout: BoardLayout = { size: { width: 7, height: 5 }, cells: {} };
-const defaultGrid: BoardGrid = { size: { width: 300, height: 300 }, gap: 16, overScroll: 0 };
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -54,7 +53,7 @@ interface BoardController {
 type BoardContextValue = {
   readonly: boolean;
   layout: BoardLayout;
-  grid: BoardGrid;
+  grid: BoardGeometry;
   bounds: Size;
   center: Position;
   zoom: boolean;
@@ -333,35 +332,34 @@ const BoardDropTarget = ({ position, rect, onClick }: BoardDropTargetProps) => {
 // Controls
 //
 
-type BoardControlsProps = ThemedClassName;
+type BoardToolbarProps = ThemedClassName;
 
-// TODO(burdon): Create variant that can be housed outside of provider?
-const BoardControls = ({ classNames }: BoardControlsProps) => {
+const BoardToolbar = ({ classNames }: BoardToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { readonly, zoom, controller, onAdd } = useBoardContext(BoardControls.displayName);
+  const { readonly, zoom, controller, onAdd } = useBoardContext(BoardToolbar.displayName);
 
   return (
     <Toolbar.Root classNames={classNames}>
-      <IconButton
+      <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
         label={t('button center')}
         onClick={() => controller.center()}
       />
-      <IconButton
+      <Toolbar.IconButton
         icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
         iconOnly
         label={t('button zoom')}
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
-        <IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
+        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
       )}
     </Toolbar.Root>
   );
 };
 
-BoardControls.displayName = 'Board.Controls';
+BoardToolbar.displayName = 'Board.Controls';
 
 //
 // Board
@@ -373,7 +371,7 @@ export const Board = {
   Viewport: BoardViewport,
   Content: BoardContent,
   Backdrop: BoardBackdrop,
-  Controls: BoardControls,
+  Toolbar: BoardToolbar,
   Cell: BoardCell,
 };
 
@@ -383,7 +381,7 @@ export type {
   BoardViewportProps,
   BoardContentProps,
   BoardBackdropProps,
-  BoardControlsProps,
+  BoardToolbarProps,
   BoardCellProps,
   BoardController,
 };

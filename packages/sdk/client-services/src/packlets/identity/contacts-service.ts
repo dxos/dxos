@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { scheduleTask, UpdateScheduler, SubscriptionList } from '@dxos/async';
+import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { type MemberInfo } from '@dxos/credentials';
 import { type SpaceManager } from '@dxos/echo-pipeline';
@@ -10,8 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { type Contact, type ContactBook, type ContactsService } from '@dxos/protocols/proto/dxos/client/services';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
-import { type IdentityManager } from './identity-manager';
 import { type DataSpaceManager } from '../spaces';
+
+import { type IdentityManager } from './identity-manager';
 
 export class ContactsServiceImpl implements ContactsService {
   constructor(

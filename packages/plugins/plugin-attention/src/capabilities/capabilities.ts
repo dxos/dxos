@@ -3,7 +3,7 @@
 //
 
 import { defineCapability } from '@dxos/app-framework';
-import { type SelectionManager, type AttentionManager } from '@dxos/react-ui-attention';
+import { type AttentionManager, type SelectionManager } from '@dxos/react-ui-attention';
 
 import { ATTENTION_PLUGIN } from '../meta';
 

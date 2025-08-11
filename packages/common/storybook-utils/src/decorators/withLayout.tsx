@@ -4,7 +4,7 @@
 
 import { type Decorator } from '@storybook/react';
 import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type PropsWithChildren, type JSX, type FC } from 'react';
+import React, { type FC, type JSX, type PropsWithChildren } from 'react';
 
 import { type Density, DensityProvider, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';

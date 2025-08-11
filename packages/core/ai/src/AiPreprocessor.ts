@@ -3,9 +3,10 @@
 //
 
 import { AiInput } from '@effect/ai';
-import { Array, Effect, pipe, Predicate } from 'effect';
+import { Array, Effect, Predicate, pipe } from 'effect';
 
 import { getSnapshot } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
@@ -45,8 +46,8 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                // TODO(dmaretskyi): Fix getSnapshot typing.
-                                result: getSnapshot(block.result as any),
+                                // TODO(dmaretskyi): Fix getSnapshot typing ..or use Obj.toJSON (if that works).
+                                result: block.error ?? getSnapshot(block.result as any),
                               }),
                           ),
                         });
@@ -63,6 +64,7 @@ export const preprocessAiInput: (
                   }),
                 ),
               );
+
             case 'assistant':
               return [
                 new AiInput.AssistantMessage({
@@ -73,6 +75,7 @@ export const preprocessAiInput: (
                   ),
                 }),
               ];
+
             default:
               return [];
           }
@@ -137,6 +140,7 @@ const convertAssistantMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<AiInput.AssistantMessagePart | undefined, AiInputPreprocessingError, never> = Effect.fnUntraced(
   function* (block) {
+    log('parse', { block });
     switch (block._tag) {
       case 'text':
         return new AiInput.TextPart({
@@ -192,9 +196,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<proposal>${block.text}</proposal>`,
         });
-      case 'toolList':
+      case 'toolkit':
         return new AiInput.TextPart({
-          text: '<tool-list/>',
+          text: '<toolkit/>',
         });
       case 'json':
         return new AiInput.TextPart({
@@ -203,8 +207,11 @@ const convertAssistantMessagePart: (
       case 'toolResult':
       case 'image':
       case 'file':
+        // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
       default:
+        // Ignore spurious tags.
+        log.warn('ignoring spurious tag', { block });
         return undefined;
     }
   },
@@ -224,6 +231,7 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
       result.push([item]);
       continue;
     }
+
     const prevChunk = result.at(-1)!;
     const prev = prevChunk.at(-1)!;
     const makeSplit = predicate(prev, item);
@@ -233,5 +241,6 @@ const splitBy = <T>(arr: T[], predicate: (left: T, right: T) => boolean): T[][] 
       prevChunk.push(item);
     }
   }
+
   return result;
 };

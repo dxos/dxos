@@ -4,11 +4,11 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
-import { useDeckCompanions, getCompanionId } from '../../hooks';
+import { getCompanionId, useDeckCompanions } from '../../hooks';
 import { DECK_PLUGIN } from '../../meta';
 
 export const ToggleSidebarButton = ({

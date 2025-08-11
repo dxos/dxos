@@ -5,9 +5,8 @@
 import { Schema } from 'effect';
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, type AnyCapability } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/blueprints';
-import { Type, type Obj } from '@dxos/echo';
+import { type AnyCapability, Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { type Obj, Type } from '@dxos/echo';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
@@ -41,21 +40,21 @@ export const capabilities: AnyCapability[] = [
   //
   // Image
   //
-  contributes(
-    Capabilities.ArtifactDefinition,
-    defineArtifact({
-      id: 'artifact:dxos.org/plugin/image',
-      name: 'Image',
-      instructions: `
-        - When presenting an image, you must use an artifact.
-        - Nest the <image> tag inside the <artifact> tag.
-        - Image tags are always self-closing and must contain an id attribute.
-          (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
-      `,
-      schema: Schema.Struct({}), // TODO(burdon): Add schema.
-      tools: [],
-    }),
-  ),
+  // contributes(
+  //   Capabilities.ArtifactDefinition,
+  //   defineArtifact({
+  //     id: 'artifact:dxos.org/plugin/image',
+  //     name: 'Image',
+  //     instructions: `
+  //       - When presenting an image, you must use an artifact.
+  //       - Nest the <image> tag inside the <artifact> tag.
+  //       - Image tags are always self-closing and must contain an id attribute.
+  //         (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
+  //     `,
+  //     schema: Schema.Struct({}), // TODO(burdon): Add schema.
+  //     tools: [],
+  //   }),
+  // ),
   contributes(
     Capabilities.ReactSurface,
     createSurface({

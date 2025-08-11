@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 
 import { type ScriptType } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, useTranslation, type ThemedClassName } from '@dxos/react-ui';
-import { createGapSeparator, MenuProvider, rxFromSignal, ToolbarMenu, useMenuActions } from '@dxos/react-ui-menu';
+import { ElevationProvider, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { MenuProvider, ToolbarMenu, createGapSeparator, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,

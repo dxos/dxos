@@ -21,7 +21,7 @@ import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
-import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
+import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
 import { CalendarType, InboxAction, MailboxType } from '../types';

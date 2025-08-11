@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Capabilities, contributes, createSurface, Plugin, usePluginManager } from '@dxos/app-framework';
+import { Capabilities, Plugin, contributes, createSurface, usePluginManager } from '@dxos/app-framework';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { PluginDetail, RegistryContainer } from '../components';

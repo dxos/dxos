@@ -8,8 +8,9 @@ import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { Callout } from './Message';
 import { withTheme } from '../../testing';
+
+import { Callout } from './Message';
 
 type StoryProps = {
   valence: MessageValence;

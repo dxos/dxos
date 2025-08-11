@@ -5,6 +5,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

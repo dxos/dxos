@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useMemo, useCallback, type FC } from 'react';
+import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
@@ -14,13 +14,14 @@ import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
 
-import { ExceptionPanel } from './ExceptionPanel';
-import { LogPanel } from './LogPanel';
-import { RawDataPanel } from './RawDataPanel';
-import { useScriptNameResolver, useInvocationSpans } from './hooks';
-import { formatDuration } from './utils';
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
+
+import { ExceptionPanel } from './ExceptionPanel';
+import { useInvocationSpans, useScriptNameResolver } from './hooks';
+import { LogPanel } from './LogPanel';
+import { RawDataPanel } from './RawDataPanel';
+import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   space?: Space;

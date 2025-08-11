@@ -1,16 +1,17 @@
 //
 // Copyright 2022 DXOS.org
 //
-import yaml from 'js-yaml';
 import { existsSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import yaml from 'js-yaml';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
 import type { Config } from '@dxos/client';
 import { log } from '@dxos/log';
 
-import { Observability, type Mode } from '../observability';
+import { type Mode, Observability } from '../observability';
 
 /**
  * Print observability banner once per installation.

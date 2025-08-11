@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Fix.
+// ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { ToolRegistry, AiService } from '@dxos/ai';
+import { AiService, ToolRegistry } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
-import { defineFunction, type FunctionDefinition } from '@dxos/functions';
+import { type FunctionDefinition, defineFunction } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import PROMPT from './instructions.tpl?raw';
 import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
-import { insertReferences, ReferencedQuotes } from '../quotes';
+import { ReferencedQuotes, insertReferences } from '../quotes';
+
+import PROMPT from './instructions.tpl?raw';
 
 export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   description: 'Extract entities from the transcript message and add them to the message.',
@@ -22,7 +23,7 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
   outputSchema: ExtractionOutput,
   handler: async ({ data: { message, objects }, context }) => {
     const startTime = performance.now();
-    const ai = context.getService(AiService);
+    const ai = context.getService(AiService.AiService);
     const session = new AiSession({ operationModel: 'configured' });
     const result = await session.runStructured(ReferencedQuotes, {
       generationOptions: {

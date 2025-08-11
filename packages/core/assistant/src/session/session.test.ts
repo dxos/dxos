@@ -52,7 +52,7 @@ const toolkitLayer = TestToolkit.toLayer({
         const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
         log.info('calculate', { sanitizedInput });
 
-        // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
         return Function(`"use strict"; return (${sanitizedInput})`)();
       })();
 
@@ -64,9 +64,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
   it.effect(
     'no tools',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
-
         const response = yield* session.run({
           prompt: 'Hello world!',
           history: [],
@@ -83,12 +82,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'calculator',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
-
         const response = yield* session.run({
           prompt: 'What is 10 + 20?',
           history: [],
@@ -112,11 +110,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
   // TODO(dmaretskyi): Revive test.
   /*
   it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
-    
-    //   overrides: { model: 'llama3.1:8b' },
-    
+    // overrides: { model: 'llama3.1:8b' },
     const session = new AiSession({ operationModel: 'configured' });
-
     const objects = new Set<string>();
 
     // Define calendar artifact.
@@ -235,7 +230,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
 });
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
-// eslint-disable-next-line no-unused-vars
+
 const _CALENDAR_EVENTS: CalendarEvent[] = [
   Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',

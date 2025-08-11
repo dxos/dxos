@@ -9,24 +9,41 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { Obj } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
-import { getSpace, isSpace, type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { DataType } from '@dxos/schema';
 
+import { MapContainer, MapViewEditor } from '../components';
+import { meta } from '../meta';
+import { LocationAnnotationId, Map } from '../types';
+
 import { MapCapabilities } from './capabilities';
-import { MapContainer } from '../components';
-import { MapViewEditor } from '../components/MapViewEditor';
-import { MAP_PLUGIN } from '../meta';
-import { LocationAnnotationId, MapView } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${MAP_PLUGIN}/map`,
+      id: `${meta.id}/surface/map`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
+      component: ({ role }) => {
+        const state = useCapability(MapCapabilities.MutableState);
+        const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
+        const [zoom, setZoom] = useState(14);
+
+        const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
+          setCenter(center);
+          setZoom(zoom);
+        }, []);
+
+        return <MapContainer role={role} type={state.type} center={center} zoom={zoom} onChange={handleChange} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/surface/map-view`,
       role: ['article', 'section'],
       filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(MapView, data.subject.presentation),
+        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
@@ -59,15 +76,16 @@ export default () =>
     //   },
     // }),
     createSurface({
-      id: `${MAP_PLUGIN}/object-settings`,
+      id: `${meta.id}/surface/object-settings`,
       role: 'object-settings',
       position: 'hoist',
       filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(MapView, data.subject.presentation.target),
+        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data }) => <MapViewEditor view={data.subject} />,
     }),
     createSurface({
-      id: `${MAP_PLUGIN}/create-initial-schema-form-[property-of-interest]`,
+      // TODO(burdon): Why this title?
+      id: `${meta.id}/surface/create-initial-schema-form-[property-of-interest]`,
       role: 'form-input',
       filter: (
         data,

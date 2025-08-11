@@ -4,7 +4,7 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, latch, sleep, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -13,21 +13,21 @@ import { Filter } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { getSpace, SpaceState } from '../echo';
+import { SpaceState, getSpace } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import {
-  createInitializedClientsWithContext,
-  testSpaceAutomerge,
-  waitForSpace,
   type CreateInitializedClientsOptions,
   DocumentType,
   TestBuilder,
   TextV0Type,
+  createInitializedClientsWithContext,
+  testSpaceAutomerge,
+  waitForSpace,
 } from '../testing';
 
 describe('Spaces', () => {

@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterAll, onTestFinished, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
-import { Expando, type AnyLiveObject, type Live } from '@dxos/client/echo';
+import { type AnyLiveObject, Expando, type Live } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { Filter, Query, type QueryResult } from '@dxos/echo-db';
 import { TestSchemaType, createSpaceObjectGenerator } from '@dxos/echo-generator';

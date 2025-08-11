@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { forwardRef, useMemo, useEffect, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
@@ -20,11 +20,12 @@ import {
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
   RefPopover,
+  type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
-  createElement,
   coreSlashCommands,
   createBasicExtensions,
+  createElement,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
@@ -34,26 +35,25 @@ import {
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
+  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
   useTextEditor,
-  useCommandMenu,
-  type UseCommandMenuOptions,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNotFalsy, isNonNullable } from '@dxos/util';
+import { isNonNullable, isNotFalsy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
-import { MARKDOWN_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type MarkdownPluginState } from '../../types';
 
 export type MarkdownEditorProps = {
   id: string;
   role?: string;
+  toolbar?: boolean;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
   slashCommandGroups?: CommandMenuGroup[];
-  toolbar?: boolean;
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
   viewMode?: EditorViewMode;
@@ -147,7 +147,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(MARKDOWN_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const toolbarState = useEditorToolbarState({ viewMode });
     const formattingObserver = useFormattingState(toolbarState);
@@ -185,6 +185,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             readOnly: viewMode === 'readonly',
             placeholder: t('editor placeholder'),
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
+            search: true,
           }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),

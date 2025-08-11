@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { acceptInvitation } from '@dxos/cli-base';
 import { type Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';

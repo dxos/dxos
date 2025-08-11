@@ -2,38 +2,40 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Component, type FC, type PropsWithChildren } from 'react';
+import React, { Component, type FC, type JSX, type PropsWithChildren, type ReactNode } from 'react';
 
-type Props = PropsWithChildren<{ data?: any; fallback: FC<{ data?: any; error: Error; reset: () => void }> }>;
-type State = { error: Error | undefined };
+type State = {
+  error: Error | undefined;
+};
+
+export type ErrorBoundaryProps = PropsWithChildren<{
+  data?: any;
+  fallback?: FC<{ data?: any; error: Error }>;
+}>;
 
 /**
  * Surface error boundary.
- *
  * For basic usage prefer providing a fallback component to `Surface`.
  *
- * For more information on error boundaries, see:
- * https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
+ * Ref: https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
  */
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { error: undefined };
-  }
-
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   static getDerivedStateFromError(error: Error): { error: Error } {
     return { error };
   }
 
-  override componentDidUpdate(prevProps: Props): void {
+  override state = { error: undefined };
+
+  override componentDidUpdate(prevProps: ErrorBoundaryProps): void {
     if (prevProps.data !== this.props.data) {
       this.resetError();
     }
   }
 
-  override render(): string | number | boolean | React.JSX.Element | Iterable<React.ReactNode> | null | undefined {
+  override render(): string | number | boolean | JSX.Element | Iterable<ReactNode> | null | undefined {
     if (this.state.error) {
-      return <this.props.fallback data={this.props.data} error={this.state.error} reset={this.resetError} />;
+      const Fallback = this.props.fallback ?? DefaultFallback;
+      return <Fallback data={this.props.data} error={this.state.error} />;
     }
 
     return this.props.children;
@@ -43,3 +45,10 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ error: undefined });
   }
 }
+
+const DefaultFallback: NonNullable<ErrorBoundaryProps['fallback']> = ({ data, error }) => (
+  <div className='flex flex-col gap-2 overflow-hidden border border-red-500 rounded-sm'>
+    <pre className='whitespace-pre-wrap font-sm text-xs p-2'>ERROR: {error.message}</pre>
+    <pre className='whitespace-pre-wrap font-sm text-xs p-2 text-subdued'>{JSON.stringify(data, null, 2)}</pre>
+  </div>
+);

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { RESOURCE_LOCK_TIMEOUT } from '@dxos/client-protocol';
 import { log, logInfo } from '@dxos/log';
 

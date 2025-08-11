@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Obj, Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
 import { filterObjectsSync } from './sync';

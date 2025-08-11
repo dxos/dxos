@@ -2,23 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe, Schema } from 'effect';
-import { inspect } from 'node:util';
-import { beforeAll, describe, test } from 'vitest';
+// ISSUE(burdon): deprecated types: createTool -> defineFunction (artifact defs, plugins, blueprints), AiTool.make
+// @ts-nocheck
 
-import { createTool, ToolRegistry, ToolResult, ToolId } from '@dxos/ai';
+import { inspect } from 'node:util';
+
+import { Effect, Schema, pipe } from 'effect';
+import { afterAll, beforeAll, describe, test } from 'vitest';
+
+import { ToolId, ToolRegistry, ToolResult, createTool } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AiSession, researchFn } from '@dxos/assistant';
 import {
+  ComputeGraphModel,
   DEFAULT_INPUT,
+  type GptOutput,
   NODE_INPUT,
   NODE_OUTPUT,
-  ComputeGraphModel,
-  type GptOutput,
   ValueBag,
   computeGraphToGraphViz,
 } from '@dxos/conductor';
-import { compileSequence, SequenceParser } from '@dxos/conductor';
+import { SequenceParser, compileSequence } from '@dxos/conductor';
 import { TestRuntime } from '@dxos/conductor/testing';
 import { Obj } from '@dxos/echo';
 import { type EchoDatabase, type QueueFactory } from '@dxos/echo-db';
@@ -76,6 +80,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     });
   });
 
+  afterAll(async () => {
+    await builder.close();
+  });
+
   test('compute graph', { timeout: 120_000 }, async () => {
     // TODO(dmaretskyi): Can we type graph inputs/outputs?
     // TODO(dmaretskyi): Store in ECHO.
@@ -124,7 +132,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
 
     // const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
     // setConsolePrinter(machine, true);
-    // const { client } = serviceContainer.getService(AiService);
+    // const { client } = serviceContainer.getService(AiService.AiService);
     // await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });
   });

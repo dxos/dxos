@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 
 import { Client } from '../client';
-import { syncItemsAutomerge, TestBuilder } from '../testing';
+import { TestBuilder, syncItemsAutomerge } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.

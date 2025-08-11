@@ -5,12 +5,12 @@
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
   type RefObject,
   forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 
 import { addEventListener } from '@dxos/async';

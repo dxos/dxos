@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Pipeline, pipeline, env } from '@xenova/transformers';
-import { useState, useRef, useEffect } from 'react';
+import { type Pipeline, env, pipeline } from '@xenova/transformers';
+import { useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

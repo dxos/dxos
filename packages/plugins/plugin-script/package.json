@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
     },
     "./templates": {
+      "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
       "browser": "./dist/lib/browser/templates/index.mjs",
       "node": "./dist/lib/node-esm/templates/index.mjs"
@@ -103,7 +106,7 @@
     "esbuild-wasm": "^0.16.14",
     "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -111,13 +114,13 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.89.0",
+    "@effect/platform": "0.90.0",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.17.0",
+    "effect": "3.17.6",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.1"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

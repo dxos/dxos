@@ -5,7 +5,7 @@
 import { type Locator, type Page } from '@playwright/test';
 
 import { DxGridManager } from '@dxos/lit-grid/testing';
-import { type DxGridPosition, type DxGridAxis } from '@dxos/react-ui-grid';
+import { type DxGridAxis, type DxGridPosition } from '@dxos/react-ui-grid';
 
 /**
  * Test helper for managing dx-grid interactions and assertions in Playwright tests.

@@ -2,8 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
 import { readFile } from 'fs/promises';
+
+import { Flags } from '@oclif/core';
 
 import { ProfileArchiveEntryType } from '@dxos/protocols';
 import { arrayToBuffer } from '@dxos/util';

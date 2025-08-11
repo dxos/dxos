@@ -3,7 +3,7 @@
 //
 
 import type { Extension } from '@codemirror/state';
-import { dropCursor, EditorView } from '@codemirror/view';
+import { EditorView, dropCursor } from '@codemirror/view';
 
 export type DNDOptions = { onDrop?: (view: EditorView, event: { files: FileList }) => void };
 

@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { useCallback } from 'react';
 
-import { usePluginManager, isSurfaceAvailable, Surface } from '@dxos/app-framework';
+import { Surface, isSurfaceAvailable, usePluginManager } from '@dxos/app-framework';
 import { type InputProps } from '@dxos/react-ui-form';
 
 // TODO(ZaymonFC): Move this if you find yourself needing it elsewhere.

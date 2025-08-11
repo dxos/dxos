@@ -11,9 +11,9 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { DocAccessor, createDocAccessor, useQuery, useSpace, type Space, Query } from '@dxos/react-client/echo';
-import { useIdentity, type Identity } from '@dxos/react-client/halo';
-import { ClientRepeater, type ClientRepeatedComponentProps } from '@dxos/react-client/testing';
+import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace } from '@dxos/react-client/echo';
+import { type Identity, useIdentity } from '@dxos/react-client/halo';
+import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -41,7 +41,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
     () => ({
       initialValue: DocAccessor.getValue(source),
       extensions: [
-        createBasicExtensions({ placeholder: 'Type here...' }),
+        createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
