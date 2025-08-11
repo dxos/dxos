@@ -34,7 +34,7 @@
     "@dxos/random": "workspace:*",
     "@types/binary-parser": "^1.5.1",
     "@types/js-yaml": "^4.0.5",
-    "@types/uniq": "^0.0.27",
+    "@types/uniq": "^0.0.32",
     "js-yaml": "^4.1.0",
     "uniq": "^1.0.1"
   },

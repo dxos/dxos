@@ -1299,8 +1299,8 @@ importers:
         specifier: ^4.0.5
         version: 4.0.9
       '@types/uniq':
-        specifier: ^0.0.27
-        version: 0.0.27
+        specifier: ^0.0.32
+        version: 0.0.32
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -22079,8 +22079,8 @@ packages:
   '@types/ua-parser-js@0.7.39':
     resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
 
-  '@types/uniq@0.0.27':
-    resolution: {integrity: sha512-frhneF50xyiZj11bWVtjf1F+UpxkRjw4aFgp0VNxsZ6jIIVcVXRNTOab/yw/yy5wERfKFbmNFrwQVztQUG98Gg==}
+  '@types/uniq@0.0.32':
+    resolution: {integrity: sha512-fPeVvNQA6aetuZyk9K7gjJsQBIBWR6k5DV5Dru8FYLpsFoRSRolYfUv59QvV4PaYTRaU0aBW2CuKFpYU0MQBAA==}
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -41810,7 +41810,7 @@ snapshots:
 
   '@types/ua-parser-js@0.7.39': {}
 
-  '@types/uniq@0.0.27': {}
+  '@types/uniq@0.0.32': {}
 
   '@types/unist@2.0.11': {}
 
