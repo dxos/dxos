@@ -210,13 +210,11 @@ export const WithTrip = {
               # Itinerary
 
               ## Day 1
-
               - Visit the Sagrada Familia
               - Visit the Park Güell
               - Visit the Casa Batlló
 
               ## Day 2
-
               - Visit the Eiffel Tower
               - Visit the Louvre
               - Visit the Musée d'Orsay
@@ -232,7 +230,9 @@ export const WithTrip = {
             content: trim`
               # Barcelona
 
-              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
+              It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
+              The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
             `,
           }),
         );
