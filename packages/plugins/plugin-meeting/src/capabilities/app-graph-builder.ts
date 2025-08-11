@@ -5,10 +5,10 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, chain, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
 import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
@@ -16,9 +16,10 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ChannelType } from '@dxos/plugin-thread/types';
 import { Query, type QueryResult, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 
-import { MeetingCapabilities } from './capabilities';
 import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
+
+import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

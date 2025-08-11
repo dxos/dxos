@@ -6,10 +6,10 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
-  QueryAgentStatusResponse,
-  EdgeStatus,
-  type QueryEdgeStatusResponse,
   type EdgeAgentService,
+  EdgeStatus,
+  QueryAgentStatusResponse,
+  type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type EdgeAgentManager } from './edge-agent-manager';

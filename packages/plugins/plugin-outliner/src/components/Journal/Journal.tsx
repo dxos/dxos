@@ -6,17 +6,17 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { OUTLINER_PLUGIN } from '../../meta';
 import {
-  createJournalEntry,
-  getJournalEntries,
-  getDateString,
-  parseDateString,
-  type JournalType,
   type JournalEntryType,
+  type JournalType,
+  createJournalEntry,
+  getDateString,
+  getJournalEntries,
+  parseDateString,
 } from '../../types';
 import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
 

@@ -8,8 +8,9 @@ import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { ChannelType, ThreadType } from './schema';
 import { THREAD_PLUGIN } from '../meta';
+
+import { ChannelType, ThreadType } from './schema';
 
 export namespace ThreadAction {
   const THREAD_ACTION = `${THREAD_PLUGIN}/action`;

@@ -5,11 +5,13 @@
 //
 
 import { spawnSync } from 'node:child_process';
-import { readdir, stat, rm } from 'node:fs/promises';
-import { join, resolve, dirname } from 'node:path';
+import { readdir, rm, stat } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+
 import ts from 'typescript';
 
-const VERBOSE = false;
+const VERBOSE = false,
+  USE_TSGO = false;
 
 const main = async () => {
   // Find and parse tsconfig.json.
@@ -80,7 +82,7 @@ const main = async () => {
 
   // Run tsc after cleaning.
   VERBOSE && console.log('Running tsc...');
-  const tsc = spawnSync('tsc', [], { stdio: 'inherit' });
+  const tsc = spawnSync(USE_TSGO ? 'tsgo' : 'tsc', [], { stdio: 'inherit' });
   VERBOSE && console.log(`tsc exited with status ${tsc.status}`);
   process.exit(tsc.status ?? 1);
 };

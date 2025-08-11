@@ -6,11 +6,11 @@ import React, {
   Children,
   type PropsWithChildren,
   forwardRef,
-  useState,
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
+  useState,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';

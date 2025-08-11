@@ -7,7 +7,7 @@ import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
 import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Config, Console, Effect, Layer, pipe, Schedule, Schema, Stream } from 'effect';
+import { Chunk, Config, Console, Effect, Layer, Schedule, Schema, Stream, pipe } from 'effect';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect';
@@ -169,7 +169,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const chat = yield* AiChat.empty;
         const toolkit = yield* TestToolkit;
 
@@ -201,7 +201,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect.only(
     'with parser',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const system = trim`
           Before you answer I want you to emit your current status (what are you doing?) inside <status></status> XML tags.
           After your answer emit the suggestions for follow-up user prompts inside <suggest></suggest> XML tags.
@@ -220,7 +220,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
         do {
           // disableToolCallResolution
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseGptStream());
+          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = AiInput.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));

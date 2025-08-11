@@ -8,7 +8,7 @@ import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hi
 import { createContext } from '@radix-ui/react-context';
 import React, { type ReactNode, useCallback, useEffect, useState } from 'react';
 
-import { idle, type ItemDragState, type ListItemRecord } from './ListItem';
+import { type ItemDragState, type ListItemRecord, idle } from './ListItem';
 
 type ListContext<T extends ListItemRecord> = {
   // TODO(burdon): Rename drag state.

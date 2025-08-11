@@ -9,10 +9,11 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { Filter, Query } from './dsl';
 import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
+
+import { Filter, Query } from './dsl';
 
 //
 // Example schema

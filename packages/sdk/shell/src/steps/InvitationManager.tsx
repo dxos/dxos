@@ -10,9 +10,10 @@ import { Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { type StepProps } from './StepProps';
-import { Actions, Action, AuthCode, Emoji, Label, Viewport, type ViewportViewProps, Centered } from '../components';
+import { Action, Actions, AuthCode, Centered, Emoji, Label, Viewport, type ViewportViewProps } from '../components';
 import { invitationStatusValue } from '../util';
+
+import { type StepProps } from './StepProps';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {

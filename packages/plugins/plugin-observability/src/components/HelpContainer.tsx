@@ -5,11 +5,12 @@
 import { pipe } from 'effect';
 import React, { useCallback } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 
-import { FeedbackForm } from './FeedbackForm';
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction, type UserFeedback } from '../types';
+
+import { FeedbackForm } from './FeedbackForm';
 
 export const HelpContainer = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();

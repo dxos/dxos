@@ -4,9 +4,10 @@
 // Based upon @tailwindcss/vite, fetched on 9 April 2024 from <https://github.com/tailwindlabs/tailwindcss/blob/next/packages/%40tailwindcss-vite/package.json>
 //
 
-import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import fs from 'fs';
 import { join, resolve } from 'path';
+
+import { type BundleParams, makeSprite, scanString } from '@ch-ui/icons';
 import picomatch from 'picomatch';
 import type { Plugin, ViteDevServer } from 'vite';
 

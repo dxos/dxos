@@ -7,7 +7,7 @@ import { formatDistance } from 'date-fns';
 
 import { type ProcessInfo } from '@dxos/agent';
 
-import { table, type TableFlags } from './table';
+import { type TableFlags, table } from './table';
 
 export const printAgents = (daemons: ProcessInfo[], flags: TableFlags = {}) => {
   ux.stdout(

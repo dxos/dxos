@@ -5,22 +5,22 @@
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
-  Children,
   type CSSProperties,
+  Children,
   type ComponentPropsWithRef,
   forwardRef,
-  useState,
-  useMemo,
   useCallback,
   useEffect,
+  useMemo,
+  useState,
 } from 'react';
 
-import { type ThemedClassName, ListItem } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
-import { StackContext } from '../StackContext';
 import { type StackContextValue } from '../defs';
+import { StackContext } from '../StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
 export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';

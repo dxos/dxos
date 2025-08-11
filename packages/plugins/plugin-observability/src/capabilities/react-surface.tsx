@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { contributes, Capabilities, createSurface } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../components';

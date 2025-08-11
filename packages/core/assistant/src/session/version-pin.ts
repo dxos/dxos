@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import { ObjectId, type BaseEchoObject } from '@dxos/echo-schema';
+import { type AnyEchoObject, ObjectId } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(dmaretskyi): Extract.
@@ -15,7 +15,7 @@ const ObjectVersionSchema = Schema.Unknown as Schema.Schema<ObjectVersion>;
 const VersionPinSchema = Schema.Struct({
   // TODO(dmaretskyi): Use Ref when those support encoding.
   objectId: ObjectId,
-  // TODO(dmaretskyi): Could be opaque
+  // TODO(dmaretskyi): Could be opaque.
   version: ObjectVersionSchema,
 });
 
@@ -27,11 +27,11 @@ export interface VersionPin extends Schema.Schema.Type<typeof VersionPinSchema> 
 
 export const VersionPin: typeof VersionPinSchema & {
   DISPOSITION: 'version-pin';
-  fromObject: (object: BaseEchoObject) => VersionPin;
+  fromObject: (object: AnyEchoObject) => VersionPin;
   createBlock: (pin: VersionPin) => ContentBlock.Any;
 } = class extends VersionPinSchema {
   static readonly DISPOSITION = 'version-pin';
-  static fromObject(object: BaseEchoObject): VersionPin {
+  static fromObject(object: AnyEchoObject): VersionPin {
     return VersionPin.make({
       objectId: object.id,
       version: getVersion(object),

@@ -15,7 +15,7 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { mermaid } from './mermaid';
 

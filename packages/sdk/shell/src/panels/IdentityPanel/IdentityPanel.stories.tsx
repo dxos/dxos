@@ -13,12 +13,13 @@ import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { IdentityPanelImpl } from './IdentityPanel';
-import type { IdentityPanelImplProps } from './IdentityPanelProps';
-import { IdentityActionChooserImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { translations } from '../../translations';
+
+import { IdentityPanelImpl } from './IdentityPanel';
+import type { IdentityPanelImplProps } from './IdentityPanelProps';
+import { IdentityActionChooserImpl } from './steps';
 
 faker.seed(1234);
 

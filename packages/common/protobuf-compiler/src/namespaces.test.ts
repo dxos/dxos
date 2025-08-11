@@ -2,9 +2,10 @@
 // Copyright 2020 DXOS.org
 //
 
+import { join, resolve } from 'path';
+
 import expect from 'expect';
 import { it as test } from 'mocha';
-import { resolve, join } from 'path';
 import pb from 'protobufjs';
 
 import { preconfigureProtobufjs } from './configure';

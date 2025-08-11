@@ -29,10 +29,10 @@ import {
   surfaceShape,
   switchShape,
   templateShape,
-  threadShape,
-  textToImageShape,
-  triggerShape,
   textShape,
+  textToImageShape,
+  threadShape,
+  triggerShape,
 } from './shapes';
 
 /**

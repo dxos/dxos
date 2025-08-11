@@ -3,27 +3,27 @@
 //
 
 import {
-  type AlertDialogProps as AlertDialogRootPrimitiveProps,
-  Root as AlertDialogRootPrimitive,
-  AlertDialogTrigger as AlertDialogTriggerPrimitive,
-  type AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
-  AlertDialogPortal as AlertDialogPortalPrimitive,
-  type AlertDialogPortalProps as AlertDialogPortalPrimitiveProps,
-  AlertDialogOverlay as AlertDialogOverlayPrimitive,
-  type AlertDialogOverlayProps as AlertDialogOverlayPrimitiveProps,
-  AlertDialogTitle as AlertDialogTitlePrimitive,
-  type AlertDialogTitleProps as AlertDialogTitlePrimitiveProps,
-  AlertDialogDescription as AlertDialogDescriptionPrimitive,
-  type AlertDialogDescriptionProps as AlertDialogDescriptionPrimitiveProps,
   AlertDialogAction as AlertDialogActionPrimitive,
   type AlertDialogActionProps as AlertDialogActionPrimitiveProps,
   AlertDialogCancel as AlertDialogCancelPrimitive,
   type AlertDialogCancelProps as AlertDialogCancelPrimitiveProps,
   AlertDialogContent as AlertDialogContentPrimitive,
   type AlertDialogContentProps as AlertDialogContentPrimitiveProps,
+  AlertDialogDescription as AlertDialogDescriptionPrimitive,
+  type AlertDialogDescriptionProps as AlertDialogDescriptionPrimitiveProps,
+  AlertDialogOverlay as AlertDialogOverlayPrimitive,
+  type AlertDialogOverlayProps as AlertDialogOverlayPrimitiveProps,
+  AlertDialogPortal as AlertDialogPortalPrimitive,
+  type AlertDialogPortalProps as AlertDialogPortalPrimitiveProps,
+  Root as AlertDialogRootPrimitive,
+  type AlertDialogProps as AlertDialogRootPrimitiveProps,
+  AlertDialogTitle as AlertDialogTitlePrimitive,
+  type AlertDialogTitleProps as AlertDialogTitlePrimitiveProps,
+  AlertDialogTrigger as AlertDialogTriggerPrimitive,
+  type AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
 } from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, type ForwardRefExoticComponent, type FunctionComponent } from 'react';
+import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

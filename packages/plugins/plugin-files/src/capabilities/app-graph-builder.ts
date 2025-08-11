@@ -5,13 +5,14 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext, createIntent, chain, LayoutAction } from '@dxos/app-framework';
-import { createExtension, ROOT_ID, rxFromSignal } from '@dxos/plugin-graph';
+import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 
-import { FileCapabilities } from './capabilities';
 import { FILES_PLUGIN } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
+
+import { FileCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
-import { useNode, useActions } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Icon,
   IconButton,
   type IconButtonProps,
-  type ThemedClassName,
   Toolbar as NativeToolbar,
+  type ThemedClassName,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';

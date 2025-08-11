@@ -6,11 +6,12 @@ import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { createGeneratorIntent, createPluginId, Number } from './generator';
 import { Capabilities } from '../../common';
 import { contributes } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useCapabilities, useIntentDispatcher, usePluginManager } from '../../react';
+
+import { Number, createGeneratorIntent, createPluginId } from './generator';
 
 export const Toolbar = () => {
   const manager = usePluginManager();

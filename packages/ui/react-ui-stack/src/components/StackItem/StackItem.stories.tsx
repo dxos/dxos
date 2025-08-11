@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Icon, DropdownMenu } from '@dxos/react-ui';
+import { DropdownMenu, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { StackItem } from './StackItem';

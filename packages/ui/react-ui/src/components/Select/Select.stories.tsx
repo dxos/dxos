@@ -9,8 +9,9 @@ import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Select } from './Select';
 import { withSurfaceVariantsLayout, withTheme } from '../../testing';
+
+import { Select } from './Select';
 
 faker.seed(1234);
 

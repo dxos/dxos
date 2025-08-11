@@ -4,16 +4,17 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../translations';
 
 import { RecoveryCodeDialog, type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
-import { translations } from '../translations';
 
 const DefaultStory = () => {
   const client = useClient();

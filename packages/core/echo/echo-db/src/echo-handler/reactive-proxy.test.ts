@@ -8,9 +8,10 @@ import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 
-import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
+
+import { reactiveProxyTests } from './reactive-proxy.blueprint-test';
 
 // NOTE: These are tests for @dxos/echo-schema but they live here currently because the tests are shared.
 //  echo-schema cannot export the test sequence because @dxos/test is not published.

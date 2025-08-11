@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type PeerInfo, type Message } from '@dxos/messaging';
+import { type Message, type PeerInfo } from '@dxos/messaging';
 import { TimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';

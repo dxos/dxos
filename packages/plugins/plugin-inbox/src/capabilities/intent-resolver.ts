@@ -8,12 +8,12 @@
 import { pipe } from 'effect';
 
 import {
-  contributes,
   Capabilities,
-  createResolver,
   type PluginContext,
-  createIntent,
   chain,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 // import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
@@ -30,8 +30,9 @@ import { TableAction } from '@dxos/plugin-table/types';
 import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
-import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
+
+import { InboxCapabilities } from './capabilities';
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
@@ -177,7 +178,7 @@ export default (context: PluginContext) =>
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
 
         // const serviceContainer = new ServiceContainer().setServices({
-        //   ai: AiService.make(aiClient.value),
+        //   ai: AiService.AiService.make(aiClient.value),
         //   database: DatabaseService.make(space.db),
         //   queues: QueueService.make(space.queues, undefined),
         //   // eventLogger: consoleLogger,

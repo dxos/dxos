@@ -5,8 +5,8 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
 import { OBSERVABILITY_PLUGIN } from '../meta';
 

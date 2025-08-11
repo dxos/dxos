@@ -6,8 +6,9 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Tree, TreeItem } from './Tree';
 import { withTheme } from '../../testing';
+
+import { Tree, TreeItem } from './Tree';
 
 type StorybookTreeProps = {
   data: any;

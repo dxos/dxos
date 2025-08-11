@@ -8,8 +8,9 @@ import { Keyboard } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Key } from './Key';
 import { HELP_PLUGIN } from '../../meta';
+
+import { Key } from './Key';
 
 export const ShortcutsList = () => {
   const { t } = useTranslation(HELP_PLUGIN);

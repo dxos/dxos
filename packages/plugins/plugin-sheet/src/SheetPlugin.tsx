@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AnchorSort, Markdown, ReactSurface, IntentResolver, ComputeGraphRegistry } from './capabilities';
+import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';

@@ -10,7 +10,7 @@ import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
 import { type FieldType } from '@dxos/schema';
 
-import { type TableModel, type ModalController } from '../../model';
+import { type ModalController, type TableModel } from '../../model';
 
 type ColumnSettingsProps = {
   registry?: SchemaRegistry;

@@ -4,35 +4,37 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
 import {
-  FormatEnum,
   EchoObject,
-  GeneratorAnnotation,
   FormatAnnotation,
+  FormatEnum,
+  GeneratorAnnotation,
+  LabelAnnotation,
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { live, type Space } from '@dxos/react-client/echo';
+import { type Space, live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getSchemaFromPropertyDefinitions, DataType } from '@dxos/schema';
+import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Table } from './Table';
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
 import { TableView } from '../../types';
 import { createTable } from '../../util';
 import { TableToolbar } from '../TableToolbar';
+
+import { Table } from './Table';
 
 const TestSchema = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
@@ -58,7 +60,10 @@ const TestSchema = Schema.Struct({
   parent: Schema.optional(Schema.suspend((): Type.Ref<TestSchema> => Type.Ref(TestSchema))).annotations({
     title: 'Parent',
   }),
-}).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+}).pipe(
+  Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  LabelAnnotation.set(['name']),
+);
 interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
 const StoryViewEditor = ({

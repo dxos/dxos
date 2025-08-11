@@ -9,12 +9,12 @@ import React, { type KeyboardEvent } from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import {
+  type ThemeExtensionsOptions,
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
   preventNewline,
   useTextEditor,
-  type ThemeExtensionsOptions,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 

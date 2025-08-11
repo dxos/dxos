@@ -11,11 +11,11 @@ import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
-  createGapSeparator,
-  createMenuAction,
   type MenuAction,
   MenuProvider,
   ToolbarMenu,
+  createGapSeparator,
+  createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import { rxFromSignal } from '@dxos/react-ui-menu';

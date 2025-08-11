@@ -4,7 +4,7 @@
 
 import { getHeads } from '@automerge/automerge';
 import type { DocumentId, Heads } from '@automerge/automerge-repo';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { IndexMetadataStore } from '@dxos/indexing';
 import type { LevelDB } from '@dxos/kv-store';
@@ -12,8 +12,9 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
-import { AutomergeHost } from './automerge-host';
 import { TestReplicationNetwork } from '../testing';
+
+import { AutomergeHost } from './automerge-host';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {

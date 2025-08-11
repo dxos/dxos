@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { build } from 'esbuild';
 import { writeFile } from 'node:fs/promises';
+
+import { build } from 'esbuild';
 import { describe, test } from 'vitest';
 
 // Checks that packages can be used in different environments.
@@ -28,6 +29,7 @@ describe('build tests', () => {
         //       ...or local file paths: ../../ui/react-ui-table/dist/lib/browser/types/index.mjs
         /sodium-native/,
         /protobufjs/,
+        /@xenova\+transformers/,
       ],
     });
   });

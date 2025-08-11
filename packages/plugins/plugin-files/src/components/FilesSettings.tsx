@@ -9,7 +9,7 @@ import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { FILES_PLUGIN } from '../meta';
-import { type FilesState, LocalFilesAction, type FilesSettingsProps } from '../types';
+import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
 
 export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
   const { t } = useTranslation(FILES_PLUGIN);

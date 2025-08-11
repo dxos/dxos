@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { inspect as inspectFn, InspectOptionsStylized } from 'node:util';
+import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
-import { inspectCustom, type CustomInspectFunction } from '@dxos/debug';
+import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
+
+import { type AnyEchoObject } from '../types';
 
 import { ATTR_META, ATTR_TYPE, MetaId } from './model';
 import { getType } from './typename';
-import { type BaseEchoObject } from '../types';
 
 /*
  * @internal
@@ -28,8 +29,8 @@ export const attachedTypedObjectInspector = (obj: any) => {
 };
 
 // NOTE: KEEP as function.
-const typedObjectInspectFunction: CustomInspectFunction<BaseEchoObject> = function (
-  this: BaseEchoObject,
+const typedObjectInspectFunction: CustomInspectFunction<AnyEchoObject> = function (
+  this: AnyEchoObject,
   depth: number,
   options: InspectOptionsStylized,
   inspect: typeof inspectFn,

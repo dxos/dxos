@@ -7,12 +7,12 @@ import '@dxos/lit-ui/dx-avatar.pcss';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, type PropsWithChildren } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
 import {
-  type AvatarVariant,
-  type AvatarStatus,
   type AvatarAnimation,
+  type AvatarStatus,
+  type AvatarVariant,
   type DxAvatar as NaturalDxAvatar,
 } from '@dxos/lit-ui';
 import { DxAvatar } from '@dxos/lit-ui/react';

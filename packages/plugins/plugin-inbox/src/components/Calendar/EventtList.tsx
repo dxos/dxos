@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-ui';
-import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, ghostHover, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
 import { styles } from '../styles';

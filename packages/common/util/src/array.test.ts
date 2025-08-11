@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { diff, intersection, distinctBy, partition } from './array';
+import { diff, distinctBy, intersection, partition } from './array';
 
 describe('diff', () => {
   test('returns the difference between two sets', () => {

@@ -4,7 +4,7 @@
 
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { HighlightStyle } from '@codemirror/language';
-import { tags, styleTags, Tag } from '@lezer/highlight';
+import { Tag, styleTags, tags } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
 import { fontBody, theme } from '../../styles';

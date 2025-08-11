@@ -10,21 +10,25 @@
   "type": "module",
   "exports": {
     "./bundler": {
+      "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
       "node": "./dist/lib/node-esm/bundler/index.mjs"
     },
     "./edge": {
+      "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -55,6 +59,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
@@ -71,11 +76,11 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.89.0",
+    "@effect/platform": "0.90.2",
     "@preact/signals-core": "^1.9.0",
     "cron": "^3.1.6",
     "cron-schedule": "^5.0.4",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",

@@ -10,11 +10,12 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type SchemaProperty } from '@dxos/schema';
 
+import { type FormOptions } from '../../hooks';
+
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
-import { type InputProps, type InputComponent } from './Input';
-import { type FormOptions } from '../../hooks';
+import { type InputComponent, type InputProps } from './Input';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -99,7 +100,7 @@ export const Form = <T extends BaseObject>({
           readonly={readonly}
           schema={schema}
         />
-        {(onCancel || onSave) && !autoSave && (
+        {(onCancel || onSave) && !autoSave && !readonly && (
           <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={outerSpacing} />
         )}
       </div>

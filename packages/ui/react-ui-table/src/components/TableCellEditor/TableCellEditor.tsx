@@ -8,29 +8,29 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type DxGrid } from '@dxos/lit-grid';
+import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
+  type EditorBlurHandler,
+  type EditorKeyEvent,
+  type EditorKeyOrBlurHandler,
+  GridCellEditor,
+  type GridCellEditorProps,
+  type GridScopedProps,
   cellQuery,
   editorKeys,
   parseCellIndex,
   useGridContext,
-  type DxGridPlanePosition,
-  type EditorKeyEvent,
-  type EditorKeyOrBlurHandler,
-  type EditorBlurHandler,
-  GridCellEditor,
-  type GridCellEditorProps,
-  type GridScopedProps,
 } from '@dxos/react-ui-grid';
-import { tagPicker, createLinks } from '@dxos/react-ui-tag-picker';
+import { createLinks, tagPicker } from '@dxos/react-ui-tag-picker';
 import { type FieldProjection } from '@dxos/schema';
 
+import { type ModalController, type TableModel } from '../../model';
+
 import { CellValidationMessage } from './CellValidationMessage';
-import { FormCellEditor } from './FormCellEditor';
 import { completion } from './extension';
-import { type TableModel, type ModalController } from '../../model';
+import { FormCellEditor } from './FormCellEditor';
 
 const newValue = Symbol.for('newValue');
 
@@ -47,8 +47,8 @@ export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
-  onEnter?: (cell: DxGridPlanePosition) => void;
-  onFocus?: DxGrid['refocus'];
+  onEnter?: (cell: DxGridPosition) => void;
+  onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
 };
@@ -121,8 +121,8 @@ export const TableCellEditor = ({
   const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
-  const [_validationError, setValidationError] = useState<string | null>(null);
-  const [_validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
   const fieldProjection = useMemo<FieldProjection | undefined>(() => {
     if (!model || !editing) {
@@ -225,7 +225,7 @@ export const TableCellEditor = ({
           onSave?.();
           onEnter?.(cell);
           if (event && onFocus) {
-            onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
+            onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
           }
         } else {
           setValidationError(result.error);
@@ -395,11 +395,7 @@ export const TableCellEditor = ({
 
   return (
     <>
-      <CellValidationMessage
-        validationError={_validationError}
-        variant={_validationVariant}
-        __gridScope={__gridScope}
-      />
+      <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
       <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );

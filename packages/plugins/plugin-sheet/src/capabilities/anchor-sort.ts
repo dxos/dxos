@@ -6,7 +6,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { getTarget } from '@dxos/react-client/echo';
 
-import { compareIndexPositions, SheetType } from '../types';
+import { SheetType, compareIndexPositions } from '../types';
 
 export default () =>
   contributes(Capabilities.AnchorSort, {

@@ -14,7 +14,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
 
 import { ROOT_ID } from './graph';
-import { createExtension, GraphBuilder, rxFromSignal } from './graph-builder';
+import { GraphBuilder, createExtension, rxFromSignal } from './graph-builder';
 import { rxFromQuery } from './testing';
 
 registerSignalsRuntime();

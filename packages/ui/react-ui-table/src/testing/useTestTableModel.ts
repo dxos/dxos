@@ -13,7 +13,7 @@ import { useClientProvider } from '@dxos/react-client/testing';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
 import { type TableController } from '../components';
-import { useTableModel, useAddRow } from '../hooks';
+import { useAddRow, useTableModel } from '../hooks';
 import { TablePresentation } from '../model';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
@@ -93,7 +93,8 @@ export const useTestTableModel = () => {
 
   const handleInsertRow = useCallback(() => {
     model?.insertRow();
-  }, [model]);
+    tableRef.current?.focusDraft?.();
+  }, [model, tableRef.current]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();

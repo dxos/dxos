@@ -6,7 +6,7 @@ import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import { Match } from 'effect';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import { DatabaseDirectory, isEncodedReference, ObjectStructure, type QueryAST } from '@dxos/echo-protocol';
+import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -15,12 +15,13 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import type { QueryPlan } from './plan';
-import { QueryPlanner } from './query-planner';
 import type { AutomergeHost } from '../automerge';
 import { createIdFromSpaceKey } from '../common';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject } from '../filter';
+
+import type { QueryPlan } from './plan';
+import { QueryPlanner } from './query-planner';
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -189,7 +190,6 @@ export class QueryExecutor extends Resource {
       );
 
     if (TRACE_QUERY_EXECUTION) {
-      // eslint-disable-next-line no-console
       console.log(ExecutionTrace.format(trace));
     }
 
@@ -383,7 +383,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     if (workingSet.length === 6) {
-      log.info('FilterDeletedStep', { step, workingSet });
+      log('filter deleted step', { step, workingSet });
     }
 
     const expected = step.mode === 'only-deleted';
@@ -428,7 +428,7 @@ export class QueryExecutor extends Resource {
                         }
                       : null;
                   } catch {
-                    log.warn('Invalid reference', { ref: ref['/'] });
+                    log.warn('invalid reference', { ref: ref['/'] });
                     return null;
                   }
                 });
@@ -491,7 +491,7 @@ export class QueryExecutor extends Resource {
                     spaceId: item.spaceId,
                   };
                 } catch {
-                  log.warn('Invalid reference', { ref: ref['/'] });
+                  log.warn('invalid reference', { ref: ref['/'] });
                   return null;
                 }
               })

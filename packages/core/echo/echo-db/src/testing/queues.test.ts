@@ -6,12 +6,13 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Relation } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
-import { getSchema, Ref } from '@dxos/echo-schema';
+import { Ref, getSchema } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 
-import { EchoTestBuilder } from './echo-test-builder';
 import type { Queue } from '../queue';
+
+import { EchoTestBuilder } from './echo-test-builder';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;
@@ -36,6 +37,20 @@ describe('queues', (ctx) => {
     expect(obj.queue.target).toBeDefined();
     expect(obj.queue.target!.dxn).toBeInstanceOf(DXN);
     expect(await obj.queue.load()).toBeDefined();
+  });
+
+  test('Obj.getDXN on queue objects returns absolute dxn', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queue = queues.create();
+    await queue.append([
+      Obj.make(Testing.Contact, {
+        name: 'john',
+      }),
+    ]);
+    const obj = queue.objects[0];
+    expect(Obj.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
   });
 
   test('create and resolve an object from a queue', async () => {

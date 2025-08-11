@@ -16,13 +16,14 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { autocomplete, type AutocompleteOptions } from './autocomplete';
-import { references as referencesExtension, type ReferencesOptions } from './references';
+import { type AutocompleteOptions, autocomplete } from './autocomplete';
+import { type ReferencesOptions, references as referencesExtension } from './references';
 
 // TODO(burdon): Handle object references.
 
 export interface ChatEditorController {
   focus(): void;
+  getText(): string;
   setText(text: string): void;
 }
 
@@ -66,6 +67,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         focus: () => {
           view?.focus();
         },
+        getText: () => view?.state.doc.toString() ?? '',
         setText: (text: string) => {
           view?.dispatch({
             changes: {

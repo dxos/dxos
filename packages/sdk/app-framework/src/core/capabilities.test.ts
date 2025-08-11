@@ -6,7 +6,7 @@ import { Registry } from '@effect-rx/rx-react';
 import { Effect } from 'effect';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
-import { defineCapability, PluginContext } from './capabilities';
+import { PluginContext, defineCapability } from './capabilities';
 
 const defaultOptions = {
   activate: () => Effect.succeed(false),

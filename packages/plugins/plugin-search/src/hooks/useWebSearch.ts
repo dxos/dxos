@@ -5,7 +5,6 @@
 import { useState } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,6 +13,7 @@ import { Testing } from '@dxos/schema/testing';
 
 import { search } from '../search';
 import { type SearchResult } from '../types';
+
 import { getStringProperty } from './sync';
 
 export const useWebSearch = ({ query, context }: { query?: string; context?: string }) => {
@@ -28,7 +28,6 @@ export const useWebSearch = ({ query, context }: { query?: string; context?: str
         query,
         context,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService: todo(),
         exaApiKey: EXA_API_KEY,
       });
 

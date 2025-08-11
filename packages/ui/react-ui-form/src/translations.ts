@@ -25,6 +25,7 @@ export const translations = [
         'field limit reached': 'Maximum number of fields reached',
         'boolean input true value': 'Yes',
         'boolean input false value': 'No',
+        'delete field label': 'Delete field',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',
@@ -72,8 +73,8 @@ export const translations = [
         'select option add': 'Add option',
 
         // System schema message.
-        'system schema title': 'System Schema',
-        'system schema description': 'This is a system schema and cannot be modified.',
+        'system schema title': 'System record type',
+        'system schema description': 'This is a system record type and cannot be modified.',
       },
     },
   },

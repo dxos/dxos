@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within, fn } from 'storybook/test';
 
-import { Button, ButtonGroup, type ButtonProps } from './Button';
 import { withSurfaceVariantsLayout, withTheme } from '../../testing';
 import { Icon } from '../Icon';
+
+import { Button, ButtonGroup, type ButtonProps } from './Button';
 
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (

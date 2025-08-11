@@ -11,46 +11,55 @@
   "type": "module",
   "exports": {
     "./devtools": {
+      "source": "./src/devtools/index.ts",
       "types": "./dist/types/src/devtools/index.d.ts",
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "node": "./dist/lib/node-esm/devtools/index.mjs"
     },
     "./echo": {
+      "source": "./src/echo/index.ts",
       "types": "./dist/types/src/echo/index.d.ts",
       "browser": "./dist/lib/browser/echo/index.mjs",
       "node": "./dist/lib/node-esm/echo/index.mjs"
     },
     "./halo": {
+      "source": "./src/halo/index.ts",
       "types": "./dist/types/src/halo/index.d.ts",
       "browser": "./dist/lib/browser/halo/index.mjs",
       "node": "./dist/lib/node-esm/halo/index.mjs"
     },
     "./edge": {
+      "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./invitations": {
+      "source": "./src/invitations/index.ts",
       "types": "./dist/types/src/invitations/index.d.ts",
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "node": "./dist/lib/node-esm/invitations/index.mjs"
     },
     "./mesh": {
+      "source": "./src/mesh/index.ts",
       "types": "./dist/types/src/mesh/index.d.ts",
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "node": "./dist/lib/node-esm/mesh/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./worker": {
+      "source": "./src/worker/index.ts",
       "types": "./dist/types/src/worker/index.d.ts",
       "browser": "./dist/lib/browser/worker/index.mjs",
       "node": "./dist/lib/node-esm/worker/index.mjs"
@@ -93,8 +102,8 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "3.0.0",
-    "@automerge/automerge-repo": "2.0.8",
+    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge-repo": "2.3.0-alpha.0",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -128,14 +137,14 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "jwt-decode": "^4.0.0",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0",
     "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
-    "@automerge/automerge": "3.0.0",
+    "@automerge/automerge": "3.1.1",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

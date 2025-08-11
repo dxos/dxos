@@ -10,17 +10,20 @@
   "type": "module",
   "imports": {
     "#hyperformula": {
+      "source": "hyperformula",
       "types": "hyperformula",
       "default": "./dist/vendor/hyperformula.mjs"
     }
   },
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -55,7 +58,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "hyperformula": "^2.7.1",
     "lodash.defaultsdeep": "^4.6.1"
   },

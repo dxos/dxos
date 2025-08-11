@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Text, Box } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import {
-  parsePackageId,
   type LockfileResult,
   type PackageId,
   type PackageName,
   type PackagePath,
   type VersionId,
+  parsePackageId,
 } from '../lockfile';
 import { ellipsis } from '../util';
 

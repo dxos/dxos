@@ -10,16 +10,18 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { TemplateEditor } from './TemplateEditor';
 import { meta } from '../../meta';
 
+import { TemplateEditor } from './TemplateEditor';
+
 export type TemplateFormProps = {
+  id: string;
   template: Template.Template;
   schema?: Schema.Schema<any, any, any>;
   commandEditable?: boolean;
 };
 
-export const TemplateForm = ({ template, commandEditable = true }: TemplateFormProps) => {
+export const TemplateForm = ({ id, template, commandEditable = true }: TemplateFormProps) => {
   const { t } = useTranslation(meta.id);
   usePromptInputs(template);
 
@@ -41,7 +43,7 @@ export const TemplateForm = ({ template, commandEditable = true }: TemplateFormP
         </div>
       )} */}
 
-      <TemplateEditor template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
+      <TemplateEditor id={id} template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>

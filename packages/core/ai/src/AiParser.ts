@@ -5,11 +5,13 @@
 import { type AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
+import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
-import { StreamTransform, type StreamBlock } from './parser';
+import { type StreamBlock, StreamTransform } from './parser';
 
 /**
  * Tags that are used by the model to indicate the type of content.
@@ -30,15 +32,19 @@ enum ModelTags {
 
   STATUS = 'status',
   ARTIFACT = 'artifact',
+  /**
+   * Block reference to an object.
+   */
+  OBJECT = 'object',
   SUGGEST = 'suggest',
   PROPOSAL = 'proposal',
   SELECT = 'select',
-  TOOL_LIST = 'tool-list',
+  TOOLKIT = 'toolkit',
 }
 
-export interface ParseGptStreamOptions {
+export interface ParseResponseOptions {
   /**
-   * Whether to parse reasoning tags: <cot> <think>
+   * Whether to parse reasoning tags: <cot> and <think>.
    */
   parseReasoningTags?: boolean;
 
@@ -65,23 +71,24 @@ export interface ParseGptStreamOptions {
 }
 
 /**
- * Parses the part stream into a set of complete message blocks.
- * Each block emitted is final.
- *
- * Callbacks can be provided to watch for incomplete blocks.
+ * Transforms the AiResponse stream into a stream of complete ContentBlock messages.
+ * Partial blocks are emitted to support streaming to the UI.
  */
-export const parseGptStream =
+export const parseResponse =
   ({
     parseReasoningTags = false,
     onBegin = Function.constant(Effect.void),
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
-  }: ParseGptStreamOptions = {}) =>
+  }: ParseResponseOptions = {}) =>
   <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
+        const start = Date.now();
+        let blocks = 0;
+        let parts = 0;
 
         /**
          * Current partial block used to accumulate content.
@@ -90,8 +97,10 @@ export const parseGptStream =
         const stack: StreamBlock[] = [];
 
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+          log('block', { block });
           yield* onBlock(block);
           emit.single(block);
+          blocks++;
         });
 
         const emitStreamBlock = Effect.fnUntraced(function* (block: StreamBlock) {
@@ -116,13 +125,13 @@ export const parseGptStream =
           }
         });
 
+        log('begin');
         yield* onBegin();
-
         yield* Stream.runForEach(
           input,
           Effect.fnUntraced(function* (response) {
             for (const part of response.parts) {
-              // log.info('part', { part });
+              log('part', { part });
               yield* onPart(part);
               switch (part._tag) {
                 case 'TextPart': {
@@ -207,7 +216,7 @@ export const parseGptStream =
                   break;
                 }
 
-                case 'ToolCallPart':
+                case 'ToolCallPart': {
                   yield* flushText();
                   yield* emitFullBlock({
                     _tag: 'toolCall',
@@ -216,6 +225,8 @@ export const parseGptStream =
                     input: part.params,
                   } satisfies ContentBlock.ToolCall);
                   break;
+                }
+
                 case 'ReasoningPart': {
                   yield* flushText();
                   const block: ContentBlock.Reasoning = {
@@ -228,30 +239,39 @@ export const parseGptStream =
                   yield* emitFullBlock(block);
                   break;
                 }
-                case 'RedactedReasoningPart':
+
+                case 'RedactedReasoningPart': {
                   yield* flushText();
                   yield* emitFullBlock({
                     _tag: 'reasoning',
                     redactedText: part.redactedText,
                   } satisfies ContentBlock.Reasoning);
                   break;
-                case 'MetadataPart':
+                }
+
+                case 'MetadataPart': {
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log('metadata', { metadata: part });
                   break;
-                case 'FinishPart':
+                }
+
+                case 'FinishPart': {
                   yield* flushText();
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log('finish', { finish: part });
                   break;
+                }
               }
             }
+
+            parts++;
           }),
         );
 
         yield* flushText();
         yield* onEnd();
+        log('end', { blocks, parts, duration: Date.now() - start });
         emit.end();
       }),
     );
@@ -261,7 +281,7 @@ export const parseGptStream =
  */
 const makeContentBlock = (
   block: StreamBlock,
-  { parseReasoningTags }: Pick<ParseGptStreamOptions, 'parseReasoningTags'>,
+  { parseReasoningTags }: Pick<ParseResponseOptions, 'parseReasoningTags'>,
 ): ContentBlock.Any | undefined => {
   switch (block.type) {
     //
@@ -324,9 +344,13 @@ const makeContentBlock = (
           } satisfies ContentBlock.Status;
         }
 
+        case ModelTags.OBJECT: {
+          return parseObjectBlock(block);
+        }
+
         case ModelTags.ARTIFACT: {
           log.warn('artifact tags not implemented', { block });
-          break;
+          return undefined;
         }
 
         case ModelTags.SUGGEST: {
@@ -362,14 +386,63 @@ const makeContentBlock = (
           } satisfies ContentBlock.Select;
         }
 
-        case ModelTags.TOOL_LIST: {
+        case ModelTags.TOOLKIT: {
           return {
-            _tag: 'toolList',
-          } satisfies ContentBlock.ToolList;
+            _tag: 'toolkit',
+          } satisfies ContentBlock.Toolkit;
         }
       }
 
       return undefined;
     }
   }
+};
+
+const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {
+  if (block.type !== 'tag') {
+    return undefined;
+  }
+
+  // <object dxn="..." />
+  if (typeof block.attributes?.dxn === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.attributes.dxn)),
+      };
+    } catch {}
+  }
+
+  // <object id="..." />
+  if (typeof block.attributes?.id === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.fromLocalObjectId(block.attributes.id)),
+      };
+    } catch {}
+  }
+
+  // <object>dxn:...</object>
+  if (block.content.length === 1 && block.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.content[0].content)),
+      };
+    } catch {}
+  }
+
+  // <object><dxn>...</dxn></object>
+  const dxnTag = block.content.find((content) => content.type === 'tag' && content.tag === 'dxn');
+  if (dxnTag && dxnTag.type === 'tag' && dxnTag.content.length === 1 && dxnTag.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(dxnTag.content[0].content)),
+      };
+    } catch {}
+  }
+
+  return undefined;
 };

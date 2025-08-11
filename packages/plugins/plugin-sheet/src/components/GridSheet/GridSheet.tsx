@@ -3,41 +3,42 @@
 //
 
 import React, {
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type WheelEvent,
   useCallback,
   useMemo,
   useRef,
   useState,
-  type FocusEvent,
-  type KeyboardEvent,
-  type WheelEvent,
-  type MouseEvent,
 } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { rangeToA1Notation, type CellRange } from '@dxos/compute';
+import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridCellIndex,
+  type DxGridElement,
+  type DxGridPosition,
+  type EditorBlurHandler,
+  type EditorKeyHandler,
+  Grid,
+  GridCellEditor,
+  type GridContentProps,
   closestCell,
   editorKeys,
   parseCellIndex,
-  Grid,
-  GridCellEditor,
-  type DxGridElement,
-  type DxGridPosition,
-  type DxGridCellIndex,
-  type EditorKeyHandler,
-  type EditorBlurHandler,
-  type GridContentProps,
 } from '@dxos/react-ui-grid';
 
-import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
+import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
 import { SHEET_PLUGIN } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
+
+import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 

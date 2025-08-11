@@ -5,8 +5,8 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { contributes, Capabilities, type PluginContext } from '@dxos/app-framework';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
 import { themeEditorId } from '../defs';
 import { THEME_EDITOR_PLUGIN } from '../meta';

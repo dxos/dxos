@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -36,7 +37,7 @@
     "@dxos/log": "workspace:*"
   },
   "devDependencies": {
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

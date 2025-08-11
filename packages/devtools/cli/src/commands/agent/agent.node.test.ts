@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+
+import yaml from 'js-yaml';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
@@ -75,7 +76,7 @@ describe('agent', () => {
     {
       log.info('Starting first test profile agent.');
       await runCommand(`agent start --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
-      log.info('Creating halo identity.');
+      log.info('creating halo identity.');
       await runCommand(`halo create ${haloName} --profile=${host} --config=${HOST_CONFIG_PATH}`, __dirname);
     }
 

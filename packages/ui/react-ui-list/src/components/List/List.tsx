@@ -3,11 +3,9 @@
 //
 
 import {
-  IconButton,
-  type IconButtonProps,
   ListItem,
-  ListItemDeleteButton,
   ListItemButton,
+  ListItemDeleteButton,
   ListItemDragHandle,
   ListItemDragPreview,
   type ListItemProps,
@@ -38,9 +36,8 @@ export const List = {
   ItemDeleteButton: ListItemDeleteButton,
   ItemButton: ListItemButton,
   ItemTitle: ListItemTitle,
-  IconButton,
 };
 
 type ListItem = ListItemRecord;
 
-export type { ListRootProps, ListItemProps, IconButtonProps, ListItem, ListItemRecord };
+export type { ListRootProps, ListItemProps, ListItem, ListItemRecord };

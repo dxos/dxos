@@ -4,16 +4,18 @@
 
 import { exec } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { unlink, writeFile, mkdir, readFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import util from 'node:util';
+
 import pkgUp from 'pkg-up';
 
 import { raise } from '@dxos/debug';
 
-import { type Runner, type RunnerStartOptions } from './runner';
 import { type ProcessInfo } from '../../daemon';
+
+import { type Runner, type RunnerStartOptions } from './runner';
 
 const PLIST_TEMPLATE_FILE = 'templates/org.dxos.agent.plist.template';
 const AGENT_PLIST_PREFIX = 'org.dxos.agent';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, flow, type Option } from 'effect';
+import { Context, Effect, type Option, flow } from 'effect';
 
 import { ServiceNotAvailableError } from '../errors';
 
@@ -12,7 +12,10 @@ export namespace ServiceRegistry {
   }
 }
 
-export class ServiceRegistry extends Context.Tag('ServiceRegistry')<ServiceRegistry, ServiceRegistry.Service>() {
+export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistry')<
+  ServiceRegistry,
+  ServiceRegistry.Service
+>() {
   /**
    * Resolves the service from the registry.
    * @param tag Service tag to resolve.

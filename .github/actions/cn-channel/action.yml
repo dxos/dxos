@@ -1,0 +1,15 @@
+name: Crab Nebula Channel
+description: Compute the channel for a Crab Nebula release
+
+outputs:
+  channel:
+    description: 'Crab Nebula channel'
+    value: ${{ steps.release-channel.outputs.channel }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: release-channel
+      # Replace all slashes with dashes.
+      run: echo "channel=$(echo "${{ github.ref_name }}" | sed 's|/|-|g')" >> $GITHUB_OUTPUT
+      shell: bash

@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { createTestData } from '@dxos/schema/testing';
 
@@ -16,7 +15,6 @@ describe.skip('Email Processing', () => {
     for (const email of emails) {
       const result = await processEmail({
         email,
-        aiClient: todo(),
         context: {
           labels,
           contacts: Object.values(contacts),

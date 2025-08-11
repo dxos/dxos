@@ -3,9 +3,9 @@
 //
 
 import { SchemaAST } from 'effect';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { getObjectTemplateInputSchema, applyObjectTemplate } from './json';
+import { applyObjectTemplate, getObjectTemplateInputSchema } from './json';
 
 describe('json template', () => {
   describe('getObjectTemplateInputSchema', () => {

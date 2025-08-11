@@ -2,39 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import {
   type FieldSortType,
   FormatEnum,
+  type JsonProp,
+  type JsonSchemaType,
+  getSchema,
+  getSnapshot,
   getValue,
   setValue,
-  type JsonProp,
-  getSnapshot,
-  getSchema,
   toEffectSchema,
-  type JsonSchemaType,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
-  type DxGridPlaneRange,
   type DxGridPlanePosition,
+  type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type DataType, ProjectionModel, type PropertyType, validateSchema, type ValidationError } from '@dxos/schema';
+import { type DataType, ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
-import { type SelectionMode, SelectionModel } from './selection-model';
-import { TableSorting } from './table-sorting';
 import { TableView } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
+
+import { type SelectionMode, SelectionModel } from './selection-model';
+import { TableSorting } from './table-sorting';
 
 // Domain types for cell classification
 export type TableCellType = 'standard' | 'draft' | 'header';
@@ -53,7 +55,7 @@ export type TableRow = Record<JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  translationKey: string;
+  label: Label;
 };
 
 export type TableFeatures = {
@@ -497,6 +499,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       setValue(snapshot, field.path, transformedValue);
 
       const validationErrors = this.validateDraftRowData(snapshot);
+      // TODO(thure): These errors sometimes result in a useless message like “is missing” (what is missing?)
       if (validationErrors.length > 0) {
         const error = validationErrors.find((err) => err.path === field.path);
         if (error) {

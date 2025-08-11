@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
+import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Key, Obj } from '@dxos/echo';
 import {
   InvocationOutcome,
   InvocationTraceEndEvent,
+  type InvocationTraceEvent,
   InvocationTraceEventType,
   InvocationTraceStartEvent,
   TraceEvent,
-  type InvocationTraceEvent,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';

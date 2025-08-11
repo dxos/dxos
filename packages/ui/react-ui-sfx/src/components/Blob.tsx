@@ -4,7 +4,7 @@
 // https://github.com/DavidHDev/react-bits/blob/main/LICENSE.md
 //
 
-import { Renderer, Program, Mesh, Triangle, Transform, Vec3, Camera } from 'ogl';
+import { Camera, Mesh, Program, Renderer, Transform, Triangle, Vec3 } from 'ogl';
 import React, { useEffect, useRef } from 'react';
 
 export type BlobProps = {

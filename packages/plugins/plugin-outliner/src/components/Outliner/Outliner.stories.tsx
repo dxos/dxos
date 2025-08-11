@@ -7,15 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Outliner } from './Outliner';
 import { translations } from '../../translations';
 import { OutlineType } from '../../types';
+
+import { Outliner } from './Outliner';
 
 // TODO(burdon): Can we create a storybook for the Outliner without the database?
 
@@ -45,6 +45,6 @@ type Story = StoryObj<typeof Outliner>;
 
 export const Default: Story = {
   args: {
-    text: Obj.make(DataType.Text, { content: '- [x] Initial content' }),
+    text: DataType.makeText('- [x] Initial content'),
   },
 };

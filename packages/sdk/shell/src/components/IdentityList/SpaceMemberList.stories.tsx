@@ -8,8 +8,9 @@ import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { SpaceMemberListImpl } from './SpaceMemberList';
 import { alice } from '../../testing/fixtures';
+
+import { SpaceMemberListImpl } from './SpaceMemberList';
 
 export default {
   title: 'sdk/shell/SpaceMemberList',

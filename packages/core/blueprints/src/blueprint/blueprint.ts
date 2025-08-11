@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 
 import { Template } from '../template';
@@ -43,7 +43,7 @@ export const Blueprint = Schema.Struct({
    * Instructions that guide the AI assistant's behavior and responses.
    * These are system prompts or guidelines that the AI should follow.
    */
-  instructions: Type.Ref(Template).annotations({
+  instructions: Template.annotations({
     description: "Instructions that guide the AI assistant's behavior and responses",
   }),
 
@@ -68,3 +68,9 @@ export const Blueprint = Schema.Struct({
  * TypeScript type for Blueprint.
  */
 export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
+
+/**
+ * Create a new Blueprint.
+ */
+export const make = ({ tools = [], ...props }: Pick<Blueprint, 'key' | 'name' | 'instructions'> & Partial<Blueprint>) =>
+  Obj.make(Blueprint, { tools, ...props });

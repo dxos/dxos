@@ -7,7 +7,7 @@ import '@dxos-theme';
 import React, { useState } from 'react';
 
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
-import { withTheme, withSurfaceVariantsLayout } from '../testing';
+import { withSurfaceVariantsLayout, withTheme } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);

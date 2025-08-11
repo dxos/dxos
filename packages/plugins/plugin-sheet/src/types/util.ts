@@ -3,12 +3,12 @@
 //
 
 import {
-  addressFromA1Notation,
-  addressToA1Notation,
-  isFormula,
   type CellAddress,
   type CellRange,
   type CompleteCellRange,
+  addressFromA1Notation,
+  addressToA1Notation,
+  isFormula,
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
 import { Obj } from '@dxos/echo';

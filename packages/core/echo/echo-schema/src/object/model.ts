@@ -9,8 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type ObjectMeta } from './meta';
 import { EntityKind } from '../ast';
+
+import { type ObjectMeta } from './meta';
 
 //
 // Defines the internal model of the echo object.
@@ -24,12 +25,12 @@ export const EntityKindId = Symbol('@dxos/echo/EntityKind');
 /**
  * DXN to the object itself.
  */
-export const SelfDXNId = Symbol('@dxos/echo/Self');
+export const SelfDXNId = Symbol('@dxos/echo/DXN');
 
 /**
  * Property name for self DXN when object is serialized to JSON.
  */
-export const ATTR_SELF_DXN = '@self';
+export const ATTR_SELF_DXN = '@dxn';
 
 /**
  * DXN to the object type.

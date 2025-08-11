@@ -10,8 +10,9 @@ import React from 'react';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 import { translations } from '../../translations';
+
+import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 
 const Story = (args: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientProvider();

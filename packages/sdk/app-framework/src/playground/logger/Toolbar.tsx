@@ -6,11 +6,12 @@ import React, { useCallback } from 'react';
 
 import { Button } from '@dxos/react-ui';
 
-import { Log } from './schema';
 import { Capabilities, createSurface } from '../../common';
 import { contributes } from '../../core';
 import { createIntent } from '../../plugin-intent';
 import { useIntentDispatcher } from '../../react';
+
+import { Log } from './schema';
 
 export const Logger = () => {
   const { dispatchPromise } = useIntentDispatcher();

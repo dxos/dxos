@@ -11,6 +11,18 @@ export default mergeConfig(
   baseConfig({ cwd: __dirname, env: 'chromium' }),
   // @ts-ignore
   defineConfig({
+    plugins: [
+      // https://storybook.js.org/docs/writing-tests/in-ci
+      // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
+      storybookTest({
+        configDir: join(__dirname, '.storybook'),
+        storybookScript: 'moon run storybook:serve',
+        tags: {
+          include: ['test'],
+          exclude: ['experimental'],
+        },
+      }),
+    ],
     test: {
       projects: [{
         test: {

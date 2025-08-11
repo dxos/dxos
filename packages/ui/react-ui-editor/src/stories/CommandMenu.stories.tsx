@@ -11,10 +11,9 @@ import React, { useCallback, useRef } from 'react';
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { createObjectFactory, Testing, type ValueGenerator } from '@dxos/schema/testing';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorStory, names } from './components';
 import {
   CommandMenu,
   type CommandMenuGroup,
@@ -26,9 +25,11 @@ import {
   insertAtLineStart,
   linkSlashCommands,
 } from '../components';
-import { useCommandMenu, type UseCommandMenuOptions } from '../extensions';
+import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
 import { str } from '../testing';
 import { createElement } from '../util';
+
+import { EditorStory, names } from './components';
 
 const generator: ValueGenerator = faker as any;
 

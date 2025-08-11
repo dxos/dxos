@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { flow, Option, pipe, Schema, SchemaAST } from 'effect';
+import { Option, Schema, SchemaAST, flow, pipe } from 'effect';
 
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -28,7 +28,8 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  */
 export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 
-// TODO(burdon): Create Format type.
+// TODO(burdon): Create echo-schema Format types.
+// TODO(burdon): Reconcile with "short" DXN.
 export const Typename = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
 export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 
@@ -156,8 +157,13 @@ export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/Field
  */
 export const GeneratorAnnotationId = Symbol.for('@dxos/schema/annotation/Generator');
 
-/** [path, probability] */
-export type GeneratorAnnotationValue = string | [string, number];
+export type GeneratorAnnotationValue =
+  | string
+  | {
+      generator: string;
+      args?: any[];
+      probability?: number;
+    };
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
 

@@ -4,8 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { Ref, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -42,25 +41,13 @@ export type Input = Schema.Schema.Type<typeof Input>;
  * Template type.
  */
 export const Template = Schema.Struct({
-  name: Schema.optional(Schema.String),
   source: Type.Ref(DataType.Text).annotations({ description: 'Handlebars template source' }),
   inputs: Schema.optional(Schema.mutable(Schema.Array(Input))),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Template',
-    version: '0.1.0',
-  }),
-  LabelAnnotation.set(['name']),
-);
+}).pipe(Schema.mutable);
 
 export interface Template extends Schema.Schema.Type<typeof Template> {}
 
-/**
- * Creates a template.
- */
-export const make = ({ source = '', ...props }: Partial<Omit<Template, 'source'> & { source: string }>) => {
-  return Obj.make(Template, {
-    source: Ref.make(Obj.make(DataType.Text, { content: source })),
-    ...props,
-  });
-};
+export const make = ({ source, inputs = [] }: { source: string; inputs?: Input[] }): Template => ({
+  source: Ref.make(DataType.makeText(source)),
+  inputs,
+});

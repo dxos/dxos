@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { build, type Plugin } from 'esbuild';
+import { type Plugin, build } from 'esbuild';
 
 export const esmOutputToCjs = (): Plugin => ({
   name: 'esmOutputToCjs',

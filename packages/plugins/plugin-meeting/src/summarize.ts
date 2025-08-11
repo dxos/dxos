@@ -2,12 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DEFAULT_EDGE_MODEL, type AiServiceClient, MixedStreamParser } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import { type AiError } from '@effect/ai';
+import { Effect, Layer } from 'effect';
+
+import {
+  type AiInputPreprocessingError,
+  type AiModelNotAvailableError,
+  AiService,
+  type AiToolNotFoundError,
+  ToolExecutionService,
+  ToolResolverService,
+} from '@dxos/ai';
+import { type AiAssistantError, AiSession } from '@dxos/assistant';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
-import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { type MeetingType } from './types';
@@ -21,28 +31,32 @@ export const getMeetingContent = async (meeting: MeetingType, resolve: (typename
   return content;
 };
 
-export const summarizeTranscript = async (ai: AiServiceClient, content: string): Promise<string> => {
-  log.info('summarizing meeting', { contentLength: content.length });
+export const summarizeTranscript: (content: string) => Effect.Effect<
+  string,
+  // TODO(dmaretskyi): There should be a clear re-export for all AI-related errors.
+  AiAssistantError | AiInputPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
+  AiService.AiService
+> = Effect.fn('summarizeTranscript')(
+  function* (content) {
+    log.info('summarizing meeting', { contentLength: content.length });
 
-  const parser = new MixedStreamParser();
-  const output = await parser.parse(
-    await ai.execStream({
-      model: DEFAULT_EDGE_MODEL,
-      systemPrompt: SUMMARIZE_PROMPT,
-      history: [
-        Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'user' },
-          blocks: [{ _tag: 'text', text: content }],
-        }),
-      ],
-    }),
-  );
+    const output = yield* new AiSession().run({
+      system: SUMMARIZE_PROMPT,
+      prompt: content,
+    });
 
-  log.info('transcript summary', { output });
-  invariant(output[0].blocks[0]._tag === 'text', 'Expected text content');
-  return output[0].blocks[0].text;
-};
+    log.info('transcript summary', { output });
+    invariant(output[0].blocks[0]._tag === 'text', 'Expected text content');
+    return output[0].blocks[0].text;
+  },
+  Effect.provide(
+    Layer.mergeAll(
+      AiService.model('@anthropic/claude-3-5-haiku-latest'),
+      ToolResolverService.layerEmpty,
+      ToolExecutionService.layerEmpty,
+    ),
+  ),
+);
 
 // TODO(dmaretskyi): Add example to set consistent structure for the summary.
 const SUMMARIZE_PROMPT = trim`

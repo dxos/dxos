@@ -6,9 +6,11 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type DataType } from '@dxos/schema';
 
-import { type Message } from './message';
-import { type Tool, ToolResult, type ToolExecutionContext, type ExecutableTool } from './tool';
+import { type ExecutableTool, type Tool, type ToolExecutionContext, ToolResult } from './tool';
+
+// TODO(burdon): REMOVE!!!
 
 const createToolName = (name: string) => {
   return name.replace(/[^\w-]/g, '_');
@@ -136,13 +138,8 @@ export const structuredOutputParser = <TSchema extends Schema.Schema.AnyNoContex
 
   return {
     tool,
-    getResult: (messages: Message[]): Schema.Schema.Type<TSchema> => {
-      const result = messages
-        .findLast((message) => message.role === 'assistant')
-        ?.content.filter((content) => content.type === 'tool_use')
-        .find((content) => content.name === tool.name)?.input as any;
-
-      return Schema.decodeUnknownSync(schema)(result);
+    getResult: (messages: DataType.Message[]): Schema.Schema.Type<TSchema> => {
+      return Schema.decodeUnknownSync(schema)(messages);
     },
   };
 };

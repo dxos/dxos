@@ -9,10 +9,11 @@ import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { FilePreview } from './FilePreview';
 import { WnfsCapabilities } from '../capabilities';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
 import { type FileType } from '../types';
+
+import { FilePreview } from './FilePreview';
 
 export type FileContainerProps = {
   role: string;

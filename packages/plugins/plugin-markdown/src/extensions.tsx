@@ -7,27 +7,32 @@ import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react
 import { createRoot } from 'react-dom/client';
 
 import {
-  createIntent,
   LayoutAction,
   type PromiseIntentDispatcher,
+  createIntent,
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounceAndThrottle } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace, type QueryResult } from '@dxos/react-client/echo';
+import { type QueryResult, createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
   type AutocompleteResult,
+  Cursor,
   type EditorStateStore,
+  EditorView,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
-  createDataExtensions,
+  type PreviewOptions,
+  type RenderCallback,
   autocomplete,
+  createDataExtensions,
   decorateMarkdown,
+  documentId,
   folding,
   formattingKeymap,
   linkTooltip,
@@ -35,27 +40,22 @@ import {
   preview,
   selectionState,
   typewriter,
-  type RenderCallback,
-  EditorView,
-  documentId,
-  Cursor,
-  type PreviewOptions,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type Markdown } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: DocumentType;
+  document?: Markdown.Document;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<DocumentType>;
-  settings: MarkdownSettingsProps;
+  query?: QueryResult<Markdown.Document>;
+  settings: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;

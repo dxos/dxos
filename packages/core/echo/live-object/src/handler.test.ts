@@ -3,6 +3,7 @@
 //
 
 import { inspect } from 'node:util';
+
 import { describe, expect, test } from 'vitest';
 
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';

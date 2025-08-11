@@ -4,12 +4,12 @@
 
 import { BaseError } from '@dxos/errors';
 
-import type { LLMModel } from './types';
+import { type ModelName } from './model';
 
 export class AiInputPreprocessingError extends BaseError.extend('AI_INPUT_PREPROCESSING_ERROR') {}
 
 export class AiModelNotAvailableError extends BaseError.extend('AI_MODEL_NOT_AVAILABLE') {
-  constructor(model: LLMModel) {
+  constructor(model: ModelName) {
     super(`AI Model not available: ${model}`);
   }
 }

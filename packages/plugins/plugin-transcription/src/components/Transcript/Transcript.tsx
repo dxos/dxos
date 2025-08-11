@@ -21,9 +21,10 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { transcript } from './transcript-extension';
 import { type SerializationModel } from '../../model';
 import { type TranscriptType } from '../../types';
+
+import { transcript } from './transcript-extension';
 
 export const renderMarkdown =
   (identities: Identity[]) =>
@@ -74,7 +75,7 @@ export const Transcript = ({
   const { parentRef } = useTextEditor(() => {
     return {
       extensions: [
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),

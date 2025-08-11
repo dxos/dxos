@@ -22,7 +22,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { ObjectViewer, PanelContainer, Placeholder, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
-import { styles } from '../../../styles';
 
 const textFilter = (text?: string) => {
   if (!text) {
@@ -140,7 +139,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
         </Toolbar.Root>
       }
     >
-      <div className={mx('bs-full grid grid-cols-[4fr_3fr]', 'overflow-hidden', styles.border)}>
+      <div className='bs-full grid grid-cols-[4fr_3fr] overflow-hidden'>
         <div className='flex flex-col w-full overflow-hidden'>
           <DynamicTable
             properties={dataProperties}

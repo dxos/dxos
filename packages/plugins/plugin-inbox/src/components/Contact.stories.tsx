@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
-import { createIntent, IntentPlugin, LayoutAction, SettingsPlugin, useIntentDispatcher } from '@dxos/app-framework';
+import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -128,7 +128,7 @@ const meta: Meta = {
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

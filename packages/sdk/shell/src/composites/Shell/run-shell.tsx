@@ -11,9 +11,10 @@ import { Button, Clipboard, Dialog, ThemeProvider, Tooltip, useTranslation } fro
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
+import { translations } from '../../translations';
+
 import { Shell } from './Shell';
 import { ShellRuntimeImpl } from './shell-runtime';
-import { translations } from '../../translations';
 
 export const runShell = async (config: Config = new Config()) => {
   // If runtime fails to open then the shell will not be openable.

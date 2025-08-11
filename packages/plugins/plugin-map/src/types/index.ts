@@ -1,6 +1,8 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-export * from './map';
+export * as Map from './Map';
+export * as MapAction from './MapAction';
+
 export * from './types';

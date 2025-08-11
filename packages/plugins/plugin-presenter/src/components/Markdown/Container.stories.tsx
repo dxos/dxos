@@ -9,9 +9,10 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { createSlide } from '../../testing';
+
 import { Container } from './Container';
 import { Slide, type SlideProps } from './Slide';
-import { createSlide } from '../../testing';
 
 const DefaultStory = ({ content = '' }: SlideProps) => {
   return (

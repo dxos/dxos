@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test, expect } from '@playwright/test';
 import { platform } from 'node:os';
 
+import { expect, test } from '@playwright/test';
+
 import { AppManager } from './app-manager';
+import { INITIAL_OBJECT_COUNT } from './constants';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -15,7 +17,7 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   await guest.joinSpace();
   await guest.shell.acceptSpaceInvitation(invitationCode);
   await guest.shell.authenticate(authCode);
-  await host.navigateToObject(3);
+  await host.navigateToObject(INITIAL_OBJECT_COUNT);
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -64,10 +66,10 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(4);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(3);
+    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
 
     {
       // Update to use plank locator
@@ -95,10 +97,10 @@ test.describe('Collaboration tests', () => {
 
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(4);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(3);
+    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
 
     // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
@@ -148,10 +150,10 @@ test.describe('Collaboration tests', () => {
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(4);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(3);
+    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
 
     // Get guest's markdown planks and find the locator for the shared document
     const guestPlank = guest.deck.plank();
@@ -208,10 +210,10 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
     await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(4);
+    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     // TODO(wittjosiah): Sometimes navigation fails without a delay.
     await guest.page.waitForTimeout(1_000);
-    await guest.navigateToObject(3);
+    await guest.navigateToObject(INITIAL_OBJECT_COUNT);
 
     const guestPlank = guest.deck.plank();
     const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestPlank.locator);

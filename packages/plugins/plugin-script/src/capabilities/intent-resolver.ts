@@ -5,7 +5,7 @@
 import { Octokit } from '@octokit/core';
 import { Predicate } from 'effect';
 
-import { contributes, Capabilities, createResolver, createIntent, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
@@ -47,10 +47,7 @@ export default () =>
 
         return {
           data: {
-            object: Obj.make(ScriptType, {
-              name,
-              source: Ref.make(Obj.make(DataType.Text, { content })),
-            }),
+            object: Obj.make(ScriptType, { name, source: Ref.make(DataType.makeText(content)) }),
           },
         };
       },

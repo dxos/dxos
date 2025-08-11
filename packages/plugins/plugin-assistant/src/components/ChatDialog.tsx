@@ -4,15 +4,16 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useCapability, Capabilities } from '@dxos/app-framework';
+import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
 
-import { Chat, type ChatRootProps } from './Chat';
-import { useChatProcessor, useChatServices } from '../hooks';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+
+import { Chat, type ChatRootProps } from './Chat';
 
 export type ChatDialogProps = {
   chat?: Assistant.Chat;
@@ -24,7 +25,10 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
   const services = useChatServices({ space });
-  const processor = useChatProcessor({ chat, services, settings });
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
+  const blueprintRegistry = useBlueprintRegistry();
+  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -54,7 +58,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
           <Chat.Thread />
         </NativeChatDialog.Content>
         <NativeChatDialog.Footer>
-          <Chat.Prompt expandable />
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onChangeOnline={setOnline} expandable />
         </NativeChatDialog.Footer>
       </NativeChatDialog.Root>
     </Chat.Root>

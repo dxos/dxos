@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -48,7 +48,7 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
   const extensions = useMemo(() => {
     if (space) {
       return [
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),

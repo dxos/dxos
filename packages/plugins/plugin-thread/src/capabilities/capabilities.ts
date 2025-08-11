@@ -5,9 +5,9 @@
 import { defineCapability } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
-import { type CallState, type MediaState, type CallManager } from '../calls';
+import { type CallManager, type CallState, type MediaState } from '../calls';
 import { THREAD_PLUGIN } from '../meta';
-import { type ViewState, type ThreadState, type ChannelType } from '../types';
+import { type ChannelType, type ThreadState, type ViewState } from '../types';
 
 export namespace ThreadCapabilities {
   export const CallManager = defineCapability<CallManager>(`${THREAD_PLUGIN}/capability/call-manager`);

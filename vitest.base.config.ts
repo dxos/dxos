@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
 import { defineConfig, type ViteUserConfig } from 'vitest/config';
@@ -13,6 +13,8 @@ import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
 // NOTE(thure): the `storybook:test-ci` task fails (“ ✘ [ERROR] … resolved to an ESM file”) if this imports from `@dxos/node-std/_/config` regardless of how that entrypoint is configured.
 import { MODULES } from './packages/common/node-std/dist/lib/node-esm/_/config.mjs';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
+import react from '@vitejs/plugin-react-swc';
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
@@ -68,7 +70,49 @@ const createNodeConfig = (cwd: string) =>
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
+    plugins: [
+      PluginImportSource(),
+
+      process.env.VITE_INSPECT ? Inspect() : undefined,
+
+      // We don't care about react but we want the SWC transforers.
+      react({
+        tsDecorators: true,
+        plugins: [
+          [
+            '@dxos/swc-log-plugin',
+            {
+              to_transform: [
+                {
+                  name: 'log',
+                  package: '@dxos/log',
+                  param_index: 2,
+                  include_args: false,
+                  include_call_site: true,
+                  include_scope: true,
+                },
+                {
+                  name: 'invariant',
+                  package: '@dxos/invariant',
+                  param_index: 2,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: true,
+                },
+                {
+                  name: 'Context',
+                  package: '@dxos/context',
+                  param_index: 1,
+                  include_args: false,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+              ],
+            },
+          ],
+        ],
+      }),
+    ],
   });
 
 const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
@@ -82,6 +126,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       include: ['buffer/'],
       esbuildOptions: {
         plugins: [
+          // TODO(burdon): esbuild version mismatch.
           FixGracefulFsPlugin(),
           // TODO(wittjosiah): Compute nodeStd from package.json
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
@@ -105,7 +150,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 9999999 : 5000,
+      testTimeout: isDebug ? 3600_000 : 5000,
       inspect: isDebug,
       isolate: false,
       poolOptions: {

@@ -7,7 +7,7 @@ import './main.css';
 import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
 import { Config, Defaults } from '@dxos/react-client';

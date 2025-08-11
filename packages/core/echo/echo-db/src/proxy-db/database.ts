@@ -5,9 +5,9 @@
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { LifecycleState, Resource, type Context } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { assertObjectModelShape, type AnyEchoObject, type BaseObject, type HasId } from '@dxos/echo-schema';
+import { type BaseObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -17,8 +17,6 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { EchoSchemaRegistry } from './echo-schema-registry';
-import type { ObjectMigration } from './object-migration';
 import type { SaveStateChangedEvent } from '../automerge';
 import {
   CoreDatabase,
@@ -28,16 +26,19 @@ import {
   type ObjectPlacement,
 } from '../core-db';
 import {
+  type AnyLiveObject,
   EchoReactiveHandler,
   type ProxyTarget,
-  type AnyLiveObject,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
+import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
+
+import { EchoSchemaRegistry } from './echo-schema-registry';
+import type { ObjectMigration } from './object-migration';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -78,13 +79,13 @@ export interface EchoDatabase {
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends AnyEchoObject>(obj: T): void;
+  remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.

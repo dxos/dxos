@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../../meta';

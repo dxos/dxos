@@ -7,10 +7,11 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 
-import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
 import { createRtcTransportFactory } from '../transport';
 import { chooseInitiatorPeer } from '../transport/webrtc/utils';
+
+import { Connection } from './connection';
 
 describe('Connection', () => {
   test('responder opens after initiator', async () => {

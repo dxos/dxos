@@ -7,7 +7,7 @@ import NativeForceGraph from 'force-graph';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
+import { type SearchResult, filterObjectsSync } from '@dxos/plugin-search';
 import { type SpaceGraphModel } from '@dxos/schema';
 
 import { GraphAdapter } from './adapter';

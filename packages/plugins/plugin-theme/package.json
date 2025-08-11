@@ -10,10 +10,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./meta": {
+      "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
       "browser": "./dist/lib/browser/meta.mjs"
     }
@@ -37,7 +39,7 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "3.17.0"
+    "effect": "3.17.7"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -47,7 +49,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.1"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -3,15 +3,15 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe, Record } from 'effect';
+import { Option, Record, pipe } from 'effect';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { isNonNullable, type MakeOptional } from '@dxos/util';
+import { type MakeOptional, isNonNullable } from '@dxos/util';
 
-import { type NodeArg, type Node, type Relation, type Action, type ActionGroup } from './node';
+import { type Action, type ActionGroup, type Node, type NodeArg, type Relation } from './node';
 
 const graphSymbol = Symbol('graph');
 type DeepWriteable<T> = { -readonly [K in keyof T]: T[K] extends object ? DeepWriteable<T[K]> : T[K] };
@@ -59,8 +59,7 @@ export type GraphParams = {
   nodes?: MakeOptional<Node, 'data' | 'cacheable'>[];
   edges?: Record<string, Edges>;
   onExpand?: Graph['_onExpand'];
-  // TODO(wittjosiah): On initialize to restore state from cache.
-  // onInitialize?: Graph['_onInitialize'];
+  onInitialize?: Graph['_onInitialize'];
   onRemoveNode?: Graph['_onRemoveNode'];
 };
 
@@ -166,7 +165,7 @@ export interface ExpandableGraph extends ReadableGraph {
    *
    * Fires the `onInitialize` callback to provide initial data for a node.
    */
-  // initialize(id: string): Promise<void>;
+  initialize(id: string): Promise<void>;
 
   /**
    * Expand a node in the graph.
@@ -230,7 +229,7 @@ export class Graph implements WritableGraph {
   readonly onNodeChanged = new Event<{ id: string; node: Option.Option<Node> }>();
 
   private readonly _onExpand?: (id: string, relation: Relation) => void;
-  // private readonly _onInitialize?: (id: string) => Promise<void>;
+  private readonly _onInitialize?: (id: string) => Promise<void>;
   private readonly _onRemoveNode?: (id: string) => void;
 
   private readonly _registry: Registry.Registry;
@@ -309,8 +308,9 @@ export class Graph implements WritableGraph {
     }).pipe(Rx.withLabel(`graph:json:${id}`));
   });
 
-  constructor({ registry, nodes, edges, onExpand, onRemoveNode }: GraphParams = {}) {
+  constructor({ registry, nodes, edges, onInitialize, onExpand, onRemoveNode }: GraphParams = {}) {
     this._registry = registry ?? Registry.make();
+    this._onInitialize = onInitialize;
     this._onExpand = onExpand;
     this._onRemoveNode = onRemoveNode;
 
@@ -379,15 +379,14 @@ export class Graph implements WritableGraph {
     return this._registry.get(this.edges(id));
   }
 
-  // TODO(wittjosiah): On initialize to restore state from cache.
-  // async initialize(id: string) {
-  //   const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
-  //   log('initialize', { id, initialized });
-  //   if (!initialized) {
-  //     await this._onInitialize?.(id);
-  //     Record.set(this._initialized, id, true);
-  //   }
-  // }
+  async initialize(id: string) {
+    const initialized = Record.get(this._initialized, id).pipe(Option.getOrElse(() => false));
+    log('initialize', { id, initialized });
+    if (!initialized) {
+      await this._onInitialize?.(id);
+      Record.set(this._initialized, id, true);
+    }
+  }
 
   expand(id: string, relation: Relation = 'outbound'): void {
     const key = `${id}$${relation}`;

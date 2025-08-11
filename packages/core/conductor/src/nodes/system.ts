@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { defineComputeNode, VoidInput, VoidOutput } from '../types';
+import { VoidInput, VoidOutput, defineComputeNode } from '../types';
 
 export const NODE_INPUT = 'dxn:node:input';
 export const NODE_OUTPUT = 'dxn:node:output';

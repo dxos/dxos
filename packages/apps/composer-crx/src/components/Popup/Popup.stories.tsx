@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Popup } from './Popup';
 

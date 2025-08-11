@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import chalk from 'chalk';
 import { inspect } from 'node:util';
+
+import chalk from 'chalk';
 
 import { getPrototypeSpecificInstanceId, pickBy } from '@dxos/util';
 
-import { getRelativeFilename } from './common';
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
-import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
+
+import { getRelativeFilename } from './common';
 
 const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
   [LogLevel.TRACE]: 'gray',
@@ -50,8 +52,10 @@ export const DEFAULT_FORMATTER: Formatter = (
   let instance;
   if (scope) {
     const prototype = Object.getPrototypeOf(scope);
-    const id = getPrototypeSpecificInstanceId(scope);
-    instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    if (prototype !== null) {
+      const id = getPrototypeSpecificInstanceId(scope);
+      instance = chalk.magentaBright(`${prototype.constructor.name}#${id}`);
+    }
   }
 
   const formattedTimestamp = config.options?.formatter?.timestamp ? new Date().toISOString() : undefined;

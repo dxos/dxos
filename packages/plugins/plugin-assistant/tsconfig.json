@@ -163,6 +163,12 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-board"
+    },
+    {
       "path": "../plugin-chess"
     },
     {

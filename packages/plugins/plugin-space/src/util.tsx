@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import { pipe } from 'effect';
 
-import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -13,20 +13,20 @@ import { Migrations } from '@dxos/migrations';
 import {
   ACTION_GROUP_TYPE,
   ACTION_TYPE,
-  type ReadableGraph,
   type ActionData,
   type InvokeParams,
   type Node,
   type NodeArg,
+  type ReadableGraph,
   isGraphNode,
 } from '@dxos/plugin-graph';
-import { fullyQualifiedId, getSpace, type QueryResult, SpaceState, type Space, isSpace } from '@dxos/react-client/echo';
+import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
 import { DataType } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
-import { SpaceAction, SPACE_TYPE, type ObjectForm } from './types';
+import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
 
 export const SPACES = `${SPACE_PLUGIN}-spaces`;
 export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
@@ -424,19 +424,21 @@ export const createStaticSchemaActions = ({
 export const createObjectNode = ({
   space,
   object,
+  disposition,
   droppable = true,
   navigable = false,
   resolve,
 }: {
   space: Space;
   object: Obj.Any;
+  disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const type = Obj.getTypename(object);
   if (!type) {
-    return undefined;
+    return null;
   }
 
   const metadata = resolve(type);
@@ -450,7 +452,10 @@ export const createObjectNode = ({
           ? getViewGraphNodePartials({ view: object, resolve })
           : metadata.graphProps;
 
-  const label = Obj.getLabel(object) ||
+  // TODO(wittjosiah): Obj.getLabel isn't triggering reactivity in some cases.
+  //   e.g., create new collection with no name and rename it.
+  const label = (object as any).name ||
+    Obj.getLabel(object) ||
     // TODO(wittjosiah): Remove metadata labels.
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
@@ -462,6 +467,7 @@ export const createObjectNode = ({
     properties: {
       label,
       icon: metadata.icon ?? 'ph--placeholder--regular',
+      disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,

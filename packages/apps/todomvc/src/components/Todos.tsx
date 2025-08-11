@@ -2,18 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import React, { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
 import { Obj, Ref } from '@dxos/echo';
-import { SpaceState, type Space } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
+
+import { FILTER } from '../constants';
+import { Todo, TodoList } from '../types';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
-import { FILTER } from '../constants';
-import { TodoList, Todo } from '../types';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);

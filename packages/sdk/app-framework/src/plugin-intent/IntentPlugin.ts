@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { INTENT_PLUGIN } from './actions';
 import { Events } from '../common';
 import { defineModule, definePlugin, lazy } from '../core';
+
+import { INTENT_PLUGIN } from './actions';
 
 export const IntentPlugin = () =>
   definePlugin({ id: INTENT_PLUGIN, name: 'Intent' }, [

@@ -7,7 +7,11 @@ import { Context, Effect, Layer, Record } from 'effect';
 
 import { AiToolNotFoundError } from '../errors';
 
-export class ToolExecutionService extends Context.Tag('ToolExecutionService')<
+/**
+ *
+ */
+// TODO(burdon): Comment.
+export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
   ToolExecutionService,
   {
     readonly handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) => AiTool.ToHandler<Tools>;

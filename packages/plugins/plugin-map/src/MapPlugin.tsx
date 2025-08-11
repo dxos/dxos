@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, ArtifactDefinition, IntentResolver, ReactSurface, MapState } from './capabilities';
+import { AppGraphBuilder, IntentResolver, MapState, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MapView, MapAction, CreateMapSchema } from './types';
+import { Map, MapAction } from './types';
 
 export const MapPlugin = () =>
   definePlugin(meta, [
@@ -32,7 +32,7 @@ export const MapPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: MapView.typename,
+          id: Map.Map.typename,
           metadata: {
             icon: 'ph--compass--regular',
           },
@@ -45,8 +45,8 @@ export const MapPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: MapView,
-            formSchema: CreateMapSchema,
+            objectSchema: Map.Map,
+            formSchema: MapAction.CreateMap,
             hidden: true,
             getIntent: (props, options) => createIntent(MapAction.Create, { ...props, space: options.space }),
           }),
@@ -66,10 +66,5 @@ export const MapPlugin = () =>
       id: `${meta.id}/module/app-graph-builder`,
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
     }),
   ]);

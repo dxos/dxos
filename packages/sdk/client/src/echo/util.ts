@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 
 import { type Space } from '@dxos/client-protocol';
-import { type Type, Obj } from '@dxos/echo';
-import { type SpaceSyncState, type AnyLiveObject, getDatabaseFromObject } from '@dxos/echo-db';
+import { Obj, type Type } from '@dxos/echo';
+import { type AnyLiveObject, type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { isLiveObject, type Live } from '@dxos/live-object';
+import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 

@@ -5,17 +5,17 @@
 import { Effect, type Schema, SchemaAST } from 'effect';
 
 import { Obj, type Type } from '@dxos/echo';
-import { type EchoDatabase, type AnyLiveObject, Query, Filter } from '@dxos/echo-db';
+import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import {
-  getSchemaReference,
-  getTypename,
   type BaseObject,
   FormatEnum,
   GeneratorAnnotationId,
   type GeneratorAnnotationValue,
   type JsonSchemaType,
-  type TypedObject,
   Ref,
+  type TypedObject,
+  getSchemaReference,
+  getTypename,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -23,7 +23,7 @@ import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
-import { getSchemaProperties, type SchemaProperty } from '../properties';
+import { type SchemaProperty, getSchemaProperties } from '../properties';
 
 /**
  * Decouples from faker.
@@ -71,6 +71,7 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
   ): Type.Properties<Schema.Schema.Type<S>> => {
     return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
+      console.log('createProps', property.name, (obj as any)[property.name]);
       if ((obj as any)[property.name] === undefined) {
         (obj as any)[property.name] = createValue(generator, schema, property, force);
       }
@@ -96,13 +97,17 @@ const createValue = <T extends BaseObject>(
   // Generator value from annotation.
   const annotation = findAnnotation<GeneratorAnnotationValue>(property.ast, GeneratorAnnotationId);
   if (annotation) {
-    const [generatorName, probability] = typeof annotation === 'string' ? [annotation, 0.5] : annotation;
+    const {
+      generator: generatorName,
+      probability = 0.5,
+      args = [],
+    } = typeof annotation === 'string' ? { generator: annotation } : annotation;
     if (!property.optional || force || randomBoolean(probability)) {
-      const fn = getDeep<() => any>(generator, generatorName.split('.'));
+      const fn = getDeep<(...args: any[]) => any>(generator, generatorName.split('.'));
       if (!fn) {
         log.warn('unknown generator', { generatorName });
       } else {
-        return fn();
+        return fn(...args);
       }
     }
   }
