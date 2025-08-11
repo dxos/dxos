@@ -14,7 +14,8 @@ import { SpaceTimeoutError } from '../errors';
 import { maybeTruncateKey } from './keys';
 import { type TableOptions, table } from './table';
 
-const asyncImport = new Function('module', 'return import(module)');
+// Use a direct dynamic import to avoid implied eval via Function constructor.
+const asyncImport = (module: string) => import(module);
 
 export const selectSpace = async (spaces: Space[]) => {
   const inquirer = (await asyncImport('inquirer')).default;
