@@ -138,12 +138,21 @@ export type UploadFunctionResponseBody = {
 };
 
 export type CreateSpaceRequest = {
+  /**
+   * HEX encoded public key of the agent.
+   */
   agentKey: string;
 };
 
 export type CreateSpaceResponseBody = {
+  /**
+   * HEX encoded public key of the space.
+   */
   spaceKey: string;
-  spaceId: string; // TODO(burdon): Use SpaceId.
+  /**
+   * SpaceId.
+   */
+  spaceId: SpaceId;
   automergeRoot: string;
 };
 
@@ -219,4 +228,33 @@ export type EdgeStatus = {
     data: Record<SpaceId, { diagnostics?: any & { redFlags: string[] }; fetchError?: string }>;
     fetchError?: string;
   };
+};
+
+//
+// Space import/export.
+//
+
+/**
+ * DocumentId -> Encoded Document
+ */
+export type Bundle = Record<string, string>;
+
+export type ImportBundleRequest = {
+  bundle: Bundle;
+};
+
+export type ExportBundleRequest = {
+  /**
+   * DocumentId -> Heads (decoded).
+   */
+  docHeads: Record<string, string[]>;
+};
+
+export type ExportBundleResponse = {
+  bundle: Bundle;
+};
+
+export const DocumentCodec = {
+  encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
+  decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
 };
