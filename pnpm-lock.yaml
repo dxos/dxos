@@ -4054,7 +4054,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4112,7 +4112,7 @@ importers:
         version: 0.3.4
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
 
   packages/devtools/cli-base:
     dependencies:
@@ -4214,7 +4214,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4232,7 +4232,7 @@ importers:
         version: 1.3.6
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -4410,7 +4410,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1(undici@7.10.0)
+        version: 4.1.1(undici@7.11.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -4431,7 +4431,7 @@ importers:
         version: 18.2.0
       undici:
         specifier: '*'
-        version: 7.10.0
+        version: 7.11.0
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -32004,6 +32004,10 @@ packages:
     resolution: {integrity: sha512-u5otvFBOBZvmdjWLVW+5DAc9Nkq8f24g0O9oY7qw2JVIF1VocIFoyz9JFkuVOS2j41AufeO0xnlweJ2RLT8nGw==}
     engines: {node: '>=20.18.1'}
 
+  undici@7.11.0:
+    resolution: {integrity: sha512-heTSIac3iLhsmZhUCjyS3JQEkZELateufzZuBaVM5RHXdSBMb1LPMQf5x+FH7qjsZYDP0ttAc3nnVpUB+wYbOg==}
+    engines: {node: '>=20.18.1'}
+
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     resolution: {integrity: sha512-hRxmKz1iSVRmuFx/vBdPsx7rX4o7Cas9vdjDNeUeWpQTK2LzU3Xy3Jz0zbo7MJX0bpqo/LEFCA+GPwsbl6zKEQ==}
 
@@ -48338,7 +48342,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  kubo-rpc-client@4.1.1(undici@7.10.0):
+  kubo-rpc-client@4.1.1(undici@7.11.0):
     dependencies:
       '@ipld/dag-cbor': 9.1.0
       '@ipld/dag-json': 10.1.7
@@ -48366,7 +48370,7 @@ snapshots:
       merge-options: 3.0.4
       multiformats: 13.3.0
       nanoid: 5.0.7
-      native-fetch: 4.0.2(undici@7.10.0)
+      native-fetch: 4.0.2(undici@7.11.0)
       parse-duration: 1.0.2
       react-native-fetch-api: 3.0.0
       stream-to-it: 1.0.1
@@ -49924,9 +49928,9 @@ snapshots:
 
   napi-postinstall@0.3.2: {}
 
-  native-fetch@4.0.2(undici@7.10.0):
+  native-fetch@4.0.2(undici@7.11.0):
     dependencies:
-      undici: 7.10.0
+      undici: 7.11.0
 
   natural-compare@1.4.0: {}
 
@@ -54145,6 +54149,8 @@ snapshots:
   undici@6.13.0: {}
 
   undici@7.10.0: {}
+
+  undici@7.11.0: {}
 
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     dependencies:
