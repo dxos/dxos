@@ -2,20 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useSyncExternalStore } from 'react';
+import React from 'react';
 
+import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/react-ui-theme';
 
-export const ObjectLink = ({ dxn }: { dxn: DXN }) => {
-  const object = useResolvedRef(Ref.fromDXN(dxn));
+import { useResolvedRef } from '../../hooks';
+
+export type ObjectLinkProps = {
+  space: Space;
+  dxn: DXN;
+};
+
+// TODO(burdon): Factor out.
+export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
+  const object = useResolvedRef(space, Ref.fromDXN(dxn));
   const title = Obj.getLabel(object) ?? object?.id ?? dxn.toString();
 
   return (
     <a
-      href={dxn.toString()}
+      // href={dxn.toString()}
       title={title}
       className={mx(
         'inline-flex items-center max-w-[16rem] px-2 py-0.5 overflow-hidden',
@@ -28,30 +36,4 @@ export const ObjectLink = ({ dxn }: { dxn: DXN }) => {
       <span className='truncate'>{title}</span>
     </a>
   );
-};
-
-// TODO(burdon): Factor out.
-const useResolvedRef = <T,>(ref: Ref.Ref<T>): T | undefined => {
-  const space = useSpace();
-  const { subscribe, getSnapshot } = useMemo(() => {
-    const resolver = space?.db.graph.createRefResolver({});
-    let currentCallback: (() => void) | undefined = undefined;
-
-    return {
-      subscribe: (cb: () => void) => {
-        currentCallback = cb;
-        return () => {
-          if (currentCallback === cb) {
-            currentCallback = undefined;
-          }
-        };
-      },
-      getSnapshot: () =>
-        resolver?.resolveSync(ref.dxn, true, () => {
-          currentCallback?.();
-        }) as T | undefined,
-    };
-  }, [space, ref.dxn.toString()]);
-
-  return useSyncExternalStore<T | undefined>(subscribe, getSnapshot);
 };
