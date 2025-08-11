@@ -155,9 +155,9 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       ...plugins,
     ],
   }),
-  withTheme,
   withLayout({
     fullscreen: true,
     classNames: 'justify-center bg-deckSurface',
   }),
+  withTheme,
 ];

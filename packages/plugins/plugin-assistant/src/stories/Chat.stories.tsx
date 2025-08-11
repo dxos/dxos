@@ -21,8 +21,8 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useClient } from '@dxos/react-client';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { useSpace } from '@dxos/react-client/echo';
+import { useTimeout } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
@@ -52,25 +52,32 @@ const DefaultStory = ({
   const client = useClient();
   const space = useSpace();
 
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
   const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
-  useAsyncEffect(async () => {
-    const chat = chats[0];
-    if (!space || !chats) {
-      return;
-    }
-
-    // Add blueprints to context.
-    const binder = new AiContextBinder(await chat.queue.load());
-    for (const key of blueprints) {
-      const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
-      if (blueprint) {
-        const obj = space.db.add(Obj.clone(blueprint));
-        await binder.bind({ blueprints: [Ref.make(obj)] });
-        console.log('bind', { key });
+  useTimeout(
+    async () => {
+      if (!space) {
+        return;
       }
-    }
-  }, [space, chats, blueprints, blueprintsDefinitions]);
+      const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
+      const chat = chats[0];
+      if (!chat) {
+        return;
+      }
+
+      // Add blueprints to context.
+      // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
+      const binder = new AiContextBinder(await chat.queue.load());
+      for (const key of blueprints) {
+        const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
+        if (blueprint) {
+          const obj = space.db.add(Obj.clone(blueprint));
+          // await binder.bind({ blueprints: [Ref.make(obj)] });
+        }
+      }
+    },
+    2000,
+    [space, blueprints, blueprintsDefinitions],
+  );
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
@@ -119,7 +126,6 @@ const DefaultStory = ({
 const storybook = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
-  decorators: [],
   parameters: {
     translations,
     controls: { disable: true },
