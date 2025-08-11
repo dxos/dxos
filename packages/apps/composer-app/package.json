@@ -121,7 +121,7 @@
     "vite-plugin-pwa": "^1.0.2",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0",
-    "workbox-window": "^7.0.0"
+    "workbox-window": "^7.3.0"
   },
   "peerDependencies": {
     "@babel/core": ">=7.0.0 <8.0.0-0"
