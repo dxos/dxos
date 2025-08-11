@@ -144,6 +144,15 @@ export class DXN {
   }
 
   /**
+   * @example `dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6`
+   */
+  static fromSpaceAndObjectId(spaceId: SpaceId, objectId: ObjectId): DXN {
+    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
+    assertArgument(ObjectId.isValid(objectId), `Invalid object ID: ${objectId}`);
+    return new DXN(DXN.kind.ECHO, [spaceId, objectId]);
+  }
+
+  /**
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
   static fromLocalObjectId(id: string): DXN {
@@ -152,9 +161,9 @@ export class DXN {
   }
 
   static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
-    invariant(SpaceId.isValid(spaceId));
-    invariant(ObjectId.isValid(queueId));
-    invariant(!objectId || ObjectId.isValid(objectId));
+    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
+    assertArgument(ObjectId.isValid(queueId), `Invalid queue ID: ${queueId}`);
+    assertArgument(!objectId || ObjectId.isValid(objectId), `Invalid object ID: ${objectId}`);
 
     return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
@@ -163,8 +172,11 @@ export class DXN {
   #parts: string[];
 
   constructor(kind: string, parts: string[]) {
-    invariant(parts.length > 0);
-    invariant(parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1));
+    assertArgument(parts.length > 0, `Invalid DXN: ${parts}`);
+    assertArgument(
+      parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1),
+      `Invalid DXN: ${parts}`,
+    );
 
     // Per-type validation.
     switch (kind) {
@@ -272,6 +284,13 @@ export class DXN {
       queueId,
       objectId: objectId as string | undefined,
     };
+  }
+
+  /**
+   * Produces a new DXN with the given parts appended.
+   */
+  extend(parts: string[]): DXN {
+    return new DXN(this.#kind, [...this.#parts, ...parts]);
   }
 }
 

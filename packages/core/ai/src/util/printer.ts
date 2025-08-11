@@ -70,9 +70,13 @@ export class ConsolePrinter {
             this.log(`${prefix}⚙️ [Tool Use] ${content.name} ${inspect(content.input, { depth: null, colors: true })}`);
             break;
           case 'toolResult': {
-            this.log(
-              `${prefix}⚙️ [Tool Result] ${content.name} ${inspect(content.result, { depth: null, colors: true })}`,
-            );
+            if (content.error) {
+              this.log(`${prefix}⚠️ [Tool Error] ${content.name} ${content.error}`);
+            } else {
+              this.log(
+                `${prefix}⚙️ [Tool Result] ${content.name} ${inspect(content.result, { depth: null, colors: true })}`,
+              );
+            }
             break;
           }
           case 'reference':

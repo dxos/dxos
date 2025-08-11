@@ -34,6 +34,7 @@ import {
   SchemaId,
   SchemaMetaSymbol,
   SchemaValidator,
+  SelfDXNId,
   StoredSchema,
   TypeId,
   assertObjectModelShape,
@@ -158,6 +159,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       switch (prop) {
         case 'id': {
           return target[symbolInternals].core.id;
+        }
+        case SelfDXNId: {
+          if (target[symbolInternals].database) {
+            return new DXN(DXN.kind.ECHO, [target[symbolInternals].database.spaceId, target[symbolInternals].core.id]);
+          } else {
+            return DXN.fromLocalObjectId(target[symbolInternals].core.id);
+          }
         }
         case EntityKindId: {
           return target[symbolInternals].core.getKind();

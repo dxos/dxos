@@ -313,7 +313,7 @@ export class Hypergraph {
     try {
       switch (dxn.kind) {
         case DXN.kind.ECHO: {
-          if (!dxn.isLocalObjectId()) {
+          if (!dxn.isLocalObjectId() && dxn.asEchoDXN()?.spaceId !== context.space) {
             status = 'error';
             throw new Error('Cross-space references are not yet supported');
           }
