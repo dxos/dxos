@@ -98,7 +98,7 @@
     "cli-table3": "^0.6.5",
     "concurrently": "^9.2.0",
     "depcheck": "^1.4.7",
-    "effect": "3.17.6",
+    "effect": "3.17.7",
     "esbuild": "0.25.6",
     "esbuild-plugin-glsl": "^1.2.2",
     "esbuild-plugin-raw": "0.1.8",
@@ -215,8 +215,6 @@
       "react-dom": "~18.2.0"
     },
     "patchedDependencies": {
-      "@effect/ai": "patches/@effect__ai.patch",
-      "@effect/ai-openai": "patches/@effect__ai-openai.patch",
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch"
