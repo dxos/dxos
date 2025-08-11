@@ -122,7 +122,7 @@ Defines attributes and encoding placed on objects.
 |                     | Optional                | Runtime prop                           | Runtime type           | JSON prop                   | JSON type  | Description                    |
 | ------------------- | ----------------------- | -------------------------------------- | ---------------------- | --------------------------- | ---------- | ------------------------------ |
 | Id                  | No                      | `id`                                   | `ObjectID` ULID string | `id`                        | string     | Unique object ID               |
-| Self DXN            | Yes                     | `Symbol(@dxos/echo/Self)`              | `DXN`                  | `@self`                     | string     | DXN to the object itself       |
+| Self DXN            | Yes                     | `Symbol(@dxos/echo/DXN)`               | `DXN`                  | `@dxn`                      | string     | DXN to the object itself       |
 | Type                | No                      | `Symbol(@dxos/echo/Type)`              | `DXN`                  | `@type`                     | string     | DXN to the object type         |
 | Schema              | Yes                     | `Symbol(@dxos/echo/Schema)`            | Effect-Schema          | -                           |            | Reference to the object schema |
 | Tombstone marker    | Yes                     | `Symbol(@dxos/echo/Deleted)`           | `boolean`              | `@deleted`                  | boolean    | Deletion marker                |

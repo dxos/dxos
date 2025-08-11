@@ -21,9 +21,7 @@ const MAX_NUM_FEEDS = 3;
 
 class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
-  readonly feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
-  });
+  readonly feedStore: FeedStore<any>;
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
@@ -32,6 +30,9 @@ class TestAgent {
     readonly keyring: Keyring,
     readonly peer: Teleport,
   ) {
+    this.feedStore = new FeedStore({
+      factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
+    });
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 

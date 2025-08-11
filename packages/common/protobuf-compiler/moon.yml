@@ -10,7 +10,7 @@ tasks:
     inputs:
       - bin/main.js
   prebuild:
-    command: pnpm run prebuild
+    command: pnpm run --silent prebuild
     deps:
       - ^:build
     inputs:
@@ -18,7 +18,7 @@ tasks:
     outputs:
       - test/proto/gen/
   test:
-    command: pnpm run test
+    command: pnpm run --silent test
     deps:
       - prebuild
       - ^:compile

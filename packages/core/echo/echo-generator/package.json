@@ -35,7 +35,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.17.0"
+    "effect": "3.17.7"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*"

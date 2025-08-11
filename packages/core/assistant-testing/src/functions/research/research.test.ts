@@ -39,7 +39,7 @@ import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
-const MOCK_SEARCH = false;
+const MOCK_SEARCH = true;
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -73,7 +73,7 @@ describe('Research', { timeout: 600_000 }, () => {
         yield* DatabaseService.flush({ indexes: true });
 
         const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
-          query: 'Who are the founders of Notion?',
+          query: 'Who are the founders of Notion? Do one web query max.',
           mockSearch: MOCK_SEARCH,
         });
 

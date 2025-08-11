@@ -165,8 +165,11 @@ export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON
  * References and schemas will be resolvable if the `refResolver` is provided.
  *
  * The function need to be async to support resolving the schema as well as the relation endpoints.
+ *
+ * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
+ * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver }) => Promise<Any> =
+export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   EchoSchema.objectFromJSON as any;
 
 export type CloneOptions = {
