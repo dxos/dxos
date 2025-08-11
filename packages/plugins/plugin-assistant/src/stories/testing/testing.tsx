@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Events, IntentPlugin, type Plugin, SettingsPlugin, contributes } from '@dxos/app-framework';
+import {
+  Capabilities,
+  Events,
+  IntentPlugin,
+  type Plugin,
+  SettingsPlugin,
+  contributes,
+  defineModule,
+  definePlugin,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder } from '@dxos/assistant';
 import {
@@ -57,7 +66,6 @@ export const config = {
       },
       services: {
         ai: {
-          // TODO(burdon): Normalize props ('url'?)
           server: remoteServiceEndpoints.ai,
         },
         edge: {
@@ -70,7 +78,6 @@ export const config = {
 
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
-  blueprints?: Blueprint.Blueprint[];
   accessTokens?: DataType.AccessToken[];
   onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
@@ -78,16 +85,8 @@ type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpac
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({
-  types = [],
-  plugins = [],
-  blueprints = [],
-  accessTokens = [],
-  onInit,
-  ...props
-}: DecoratorsProps) => [
+export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onInit, ...props }: DecoratorsProps) => [
   withPluginManager({
-    fireEvents: [Events.SetupArtifactDefinition], // TODO(burdon): Remove/change.
     plugins: [
       // System plugins.
       AttentionPlugin(),
@@ -113,23 +112,19 @@ export const getDecorators = ({
           // TODO(burdon): onSpacesReady is never called.
           await space.waitUntilReady();
 
+          // Add tokens.
           for (const accessToken of accessTokens) {
             space.db.add(Obj.clone(accessToken));
           }
 
+          // Create chat and queue.
           const chat = space.db.add(
             Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
 
-          // TODO(burdon): Get blueprints from capabilities. Reconcile with useBlueprints.
-          // Clone blueprints and bind to conversation.
           const binder = new AiContextBinder(await chat.queue.load());
-          for (const blueprint of blueprints) {
-            const obj = space.db.add(Obj.clone(blueprint));
-            await binder.bind({ blueprints: [Ref.make(obj)] });
-          }
 
           await space.db.flush({ indexes: true });
           await onInit?.({ space, chat, binder });
@@ -139,21 +134,30 @@ export const getDecorators = ({
 
       // User plugins.
       AssistantPlugin(),
+
+      // Custom.
+      definePlugin({ id: 'example.com/plugin/testing', name: 'Testing' }, [
+        defineModule({
+          id: 'example.com/plugin/testing/module/testing',
+          activatesOn: Events.SetupArtifactDefinition,
+          activate: () => [
+            contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+            contributes(Capabilities.Functions, [readDocument, updateDocument]),
+            contributes(Capabilities.Functions, [readTasks, updateTasks]),
+            contributes(Capabilities.Functions, [research]),
+          ],
+        }),
+      ]),
+
+      // Test-specific.
       ...plugins,
     ],
-    capabilities: [
-      // TOOD(burdon): Factor out to testing plugins.
-      contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-      contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-      contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-      contributes(Capabilities.Functions, [readDocument, updateDocument]),
-      contributes(Capabilities.Functions, [readTasks, updateTasks]),
-      contributes(Capabilities.Functions, [research]),
-    ],
   }),
-  withTheme,
   withLayout({
     fullscreen: true,
-    classNames: 'bg-deckSurface justify-center',
+    classNames: 'justify-center bg-deckSurface',
   }),
+  withTheme,
 ];
