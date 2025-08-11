@@ -23,7 +23,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
      * The queue that is used to store the context of the current research.
      * @deprecated Use `ContextQueueService` instead.
      */
-    readonly contextQueue: Queue | undefined;
+    readonly queue: Queue | undefined;
   }
 >() {
   static notAvailable = Layer.succeed(QueueService, {
@@ -35,18 +35,18 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
         throw new Error('Queues not available');
       },
     },
-    contextQueue: undefined,
+    queue: undefined,
   });
 
-  static make = (queues: QueueFactory, contextQueue?: Queue): Context.Tag.Service<QueueService> => {
+  static make = (queues: QueueFactory, queue?: Queue): Context.Tag.Service<QueueService> => {
     return {
       queues,
-      contextQueue,
+      queue,
     };
   };
 
-  static makeLayer = (queues: QueueFactory, contextQueue?: Queue): Layer.Layer<QueueService> =>
-    Layer.succeed(QueueService, QueueService.make(queues, contextQueue));
+  static layer = (queues: QueueFactory, queue?: Queue): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues, queue));
 
   /**
    * Gets a queue by its DXN.
@@ -70,8 +70,8 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
   ContextQueueService,
   {
-    readonly contextQueue: Queue;
+    readonly queue: Queue;
   }
 >() {
-  static layer = (contextQueue: Queue) => Layer.succeed(ContextQueueService, { contextQueue });
+  static layer = (queue: Queue) => Layer.succeed(ContextQueueService, { queue });
 }

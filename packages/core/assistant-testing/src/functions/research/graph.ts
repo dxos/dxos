@@ -29,7 +29,7 @@ import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { deepMapValues, isNonNullable } from '@dxos/util';
+import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
 // TODO(burdon): Unify with the graph schema.
 export const Subgraph = Schema.Struct({
@@ -116,18 +116,18 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
     const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
-    const contextQueue = yield* Effect.serviceOption(ContextQueueService);
-    if (Option.isSome(contextQueue)) {
-      const queueObjects = yield* Effect.promise(() => contextQueue.value.contextQueue.queryObjects());
+    const option = yield* Effect.serviceOption(ContextQueueService);
+    if (Option.isSome(option)) {
+      const queueObjects = yield* Effect.promise(() => option.value.queue.queryObjects());
       // TODO(dmaretskyi): Text search on the queue.
       results.push(...queueObjects);
     }
 
-    return `
+    return trim`
       <local_context>
         ${JSON.stringify(results, null, 2)}
       </local_context>
-      `;
+    `;
   }),
 });
 
@@ -136,7 +136,9 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
  */
 class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')<
   GraphWriterSchema,
-  { schema: Schema.Schema.AnyNoContext[] }
+  {
+    schema: Schema.Schema.AnyNoContext[];
+  }
 >() {}
 
 /**
@@ -167,12 +169,12 @@ export const makeGraphWriterHandler = (
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
       const { db } = yield* DatabaseService;
-      const contextQueue = yield* ContextQueueService;
-      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, contextQueue.contextQueue));
-      yield* Effect.promise(() => contextQueue.contextQueue.append(data as Obj.Any[]));
+      const { queue } = yield* ContextQueueService;
+      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
+      yield* Effect.promise(() => queue.append(data as Obj.Any[]));
 
       // TODO(dmaretskyi): Obj.getDXN should work here, but currently the objects are not aware of their location.
-      const dxns = data.map((obj) => new DXN(DXN.kind.QUEUE, [...contextQueue.contextQueue.dxn.parts, obj.id]));
+      const dxns = data.map((obj) => new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, obj.id]));
       onAppend?.(dxns);
 
       return dxns;
