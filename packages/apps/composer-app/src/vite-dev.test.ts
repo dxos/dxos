@@ -6,10 +6,11 @@ import type { AddressInfo } from 'node:net';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { createServer, type InlineConfig } from 'vite';
-import { expect, test } from 'vitest';
-// @ts-ignore: types for jsdom may not be installed in this package
 import { JSDOM } from 'jsdom';
+import { type InlineConfig, createServer } from 'vite';
+import { expect, test } from 'vitest';
+
+// @ts-ignore: types for jsdom may not be installed in this package
 import { log } from '@dxos/log';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
