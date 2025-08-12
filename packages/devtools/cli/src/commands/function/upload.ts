@@ -14,13 +14,14 @@ import { type AnyLiveObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
-import { bundleScript, findFunctionByDeploymentId } from '../../util';
+import { findFunctionByDeploymentId } from '../../util';
 
 // TODO: move to cli-composer
 
@@ -86,7 +87,8 @@ export default class Upload extends BaseCommand<typeof Upload> {
       this.error(`Error reading file ${this.args.file}: ${err.message}`);
     }
 
-    const bundleResult = await bundleScript(scriptFileContent);
+    const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
+    const bundleResult = await bundler.bundle({ path: this.args.file });
     if (bundleResult.error || !bundleResult.bundle) {
       this.error(`Error bundling script ${this.args.file}: ${bundleResult.error?.message ?? 'empty output'}`);
     }

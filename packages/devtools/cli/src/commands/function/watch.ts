@@ -9,10 +9,10 @@ import { Args, Flags } from '@oclif/core';
 import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
+import { Bundler } from '@dxos/functions/bundler';
 import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
-import { bundleScript } from '../../util';
 import { findFunctionByDeploymentId } from '../../util/function/lookup';
 
 const LOCAL_FUNCTIONS_RUNTIME_URL = 'http://127.0.0.1:3123';
@@ -47,8 +47,8 @@ export default class Watch extends BaseCommand<typeof Watch> {
           return;
         }
 
-        const source = fs.readFileSync(this.args.file, 'utf-8');
-        const bundleResult = await bundleScript(source);
+        const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
+        const bundleResult = await bundler.bundle({ path: this.args.file });
         if (!bundleResult.bundle) {
           this._logWithTime('Source bundling failed, waiting for new changes...');
           return;
@@ -57,6 +57,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
         const updateResult = await this._uploadSource(bundleResult.bundle);
         if (updateResult.success) {
           if (scriptContent) {
+            const source = fs.readFileSync(this.args.file, 'utf-8');
             scriptContent.content = source;
           }
           this._logWithTime('Worker source updated');
