@@ -20,7 +20,9 @@ describe('format', () => {
   let db: EchoDatabase;
   beforeAll(async () => {
     const builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [DataType.Text, DataType.Organization, Blueprint.Blueprint] }));
+    ({ db } = await builder.createDatabase({
+      types: [DataType.Text, DataType.Organization, Blueprint.Blueprint],
+    }));
   });
 
   it.effect(
