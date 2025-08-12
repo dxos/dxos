@@ -2,15 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  Event,
-  PersistentLifecycle,
-  Trigger,
-  TriggerState,
-  scheduleMicroTask,
-  scheduleTaskInterval,
-} from '@dxos/async';
-import { type Context, type Lifecycle, Resource } from '@dxos/context';
+import { Event, PersistentLifecycle, Trigger, TriggerState, scheduleMicroTask } from '@dxos/async';
+import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
@@ -67,7 +60,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _baseHttpUrl: string;
   private _currentConnection?: EdgeWsConnection = undefined;
   private _ready = new Trigger();
-  private _messageCounter = new MessageCounter(this._ctx);
 
   constructor(
     private _identity: EdgeIdentity,
@@ -236,8 +228,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   private _notifyMessageReceived(message: Message): void {
-    this._messageCounter.incrementReceived();
-
     for (const listener of this._messageListeners) {
       try {
         listener(message);
@@ -268,7 +258,6 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    this._messageCounter.incrementSent();
     this._currentConnection.send(message);
   }
 
@@ -292,63 +281,3 @@ const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string
   const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
   return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
 };
-
-class MessageCounter {
-  private _stats = {
-    received: 0,
-    sent: 0,
-    receivedRPS: [] as { timestamp: number; value: number }[],
-    sentRPS: [] as { timestamp: number; value: number }[],
-  };
-
-  private _lastReceived = 0;
-  private _lastSent = 0;
-
-  public getStats() {
-    return {
-      received: this._stats.received,
-      sent: this._stats.sent,
-      maxReceivedRPS: Math.max(...this._stats.receivedRPS.map((r) => r.value)),
-      maxSentRPS: Math.max(...this._stats.sentRPS.map((s) => s.value)),
-      medianReceivedRPS: this._stats.receivedRPS.sort((a, b) => a.value - b.value)[
-        Math.floor(this._stats.receivedRPS.length / 2)
-      ].value,
-      medianSentRPS: this._stats.sentRPS.sort((a, b) => a.value - b.value)[Math.floor(this._stats.sentRPS.length / 2)]
-        .value,
-      meanReceivedRPS: this._stats.receivedRPS.reduce((sum, r) => sum + r.value, 0) / this._stats.receivedRPS.length,
-      meanSentRPS: this._stats.sentRPS.reduce((sum, s) => sum + s.value, 0) / this._stats.sentRPS.length,
-    };
-  }
-
-  constructor(
-    private _ctx: Context,
-    private _intervalMs: number = 1000,
-  ) {
-    scheduleTaskInterval(
-      this._ctx,
-      async () => {
-        const receivedRPS = ((this._stats.received - this._lastReceived) / this._intervalMs) * 1000;
-        const sentRPS = ((this._stats.sent - this._lastSent) / this._intervalMs) * 1000;
-        this._lastReceived = this._stats.received;
-        this._lastSent = this._stats.sent;
-
-        if (receivedRPS > 0 || sentRPS > 0) {
-          this._stats.receivedRPS.push({ timestamp: Date.now(), value: receivedRPS });
-          this._stats.sentRPS.push({ timestamp: Date.now(), value: sentRPS });
-          log.trace('dxos.message.stats', {
-            stats: JSON.stringify(this.getStats()),
-          });
-        }
-      },
-      this._intervalMs,
-    );
-  }
-
-  public incrementReceived() {
-    this._stats.received++;
-  }
-
-  public incrementSent() {
-    this._stats.sent++;
-  }
-}
