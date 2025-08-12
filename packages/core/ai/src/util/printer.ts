@@ -11,19 +11,19 @@ type Mode = 'text' | 'json';
 // TODO(burdon): Provide structured logger.
 export type Logger = (...data: any[]) => void;
 
-export type ConsolePrinterOptions = {
+export type DebugConsolePrinterOptions = {
   logger?: Logger;
   mode?: Mode;
   tag?: string;
 };
 
-export class ConsolePrinter {
+export class DebugConsolePrinter {
   logger: Logger;
   mode: Mode;
   tag?: string;
 
   // eslint-disable-next-line no-console
-  constructor({ logger = console.log, mode = 'text', tag }: ConsolePrinterOptions = {}) {
+  constructor({ logger = console.log, mode = 'text', tag }: DebugConsolePrinterOptions = {}) {
     this.logger = logger;
     this.mode = mode;
     this.tag = tag;

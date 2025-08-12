@@ -25,7 +25,7 @@ describe.skip('Sequence', () => {
 
     // const tools = new ToolRegistry([]);
     // const machine = todo() as any;
-    // setConsolePrinter(machine, true);
+    // setDebugConsolePrinter(machine, true);
     // await machine.runToCompletion({ aiClient });
   });
 
@@ -82,7 +82,7 @@ describe.skip('Sequence', () => {
 
   //   const tools = new ToolRegistry([replyTool, labelTool]);
   //   const machine = todo() as any;
-  //   // setConsolePrinter(machine);
+  //   // setDebugConsolePrinter(machine);
   //   // await machine.runToCompletion({ aiClient, input: TEST_EMAILS[0] });
   // });
 
@@ -133,7 +133,7 @@ describe.skip('Sequence', () => {
     // graphWriter,
     // ]);
     const machine = todo() as any;
-    // setConsolePrinter(machine, true);
+    // setDebugConsolePrinter(machine, true);
     // await machine.runToCompletion({ aiClient, input: org1 });
   });
 });

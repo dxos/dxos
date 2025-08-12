@@ -5,7 +5,7 @@
 import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, DebugConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
@@ -57,7 +57,7 @@ export default defineFunction({
         history: [],
         system: PROMPT,
         toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
-        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
+        observer: GenerationObserver.fromPrinter(new DebugConsolePrinter({ tag: 'research' })),
       }).pipe(
         Effect.provide(
           Layer.mergeAll(

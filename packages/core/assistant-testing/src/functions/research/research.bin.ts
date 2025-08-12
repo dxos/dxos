@@ -6,7 +6,7 @@
 
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, DebugConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -64,7 +64,7 @@ const main = Effect.fn(function* () {
   const conversation = new AiConversation({
     queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
   });
-  const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+  const observer = GenerationObserver.fromPrinter(new DebugConsolePrinter());
 
   const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
   yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));

@@ -131,7 +131,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
     await db.flush({ indexes: true });
 
     // const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
-    // setConsolePrinter(machine, true);
+    // setDebugConsolePrinter(machine, true);
     // const { client } = serviceContainer.getService(AiService.AiService);
     // await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });

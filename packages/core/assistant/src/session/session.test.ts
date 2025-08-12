@@ -198,7 +198,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     //   printStreamEvent(event);
     // });
 
-    const printer = new ConsolePrinter();
+    const printer = new DebugConsolePrinter();
     session.message.on((message) => printer.printMessage(message));
     session.userMessage.on((message) => printer.printMessage(message));
     session.block.on((block) => printer.printContentBlock(block));

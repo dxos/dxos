@@ -42,7 +42,7 @@ export class BufferedLogger implements Logger {
   }
 }
 
-// TODO(burdon): Reconcile with ConsolePrinter.
+// TODO(burdon): Reconcile with DebugConsolePrinter.
 export class SequenceLoggerAdapter implements SequenceLogger {
   constructor(private readonly logger: Logger = DEFAULT_LOGGER) {}
 

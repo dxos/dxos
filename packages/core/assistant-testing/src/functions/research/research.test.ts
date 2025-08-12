@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, structuredOutputParser } from '@dxos/ai';
+import { AiService, DebugConsolePrinter, structuredOutputParser } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -103,7 +103,7 @@ describe('Research', { timeout: 600_000 }, () => {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+        const observer = GenerationObserver.fromPrinter(new DebugConsolePrinter());
 
         const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));

@@ -10,7 +10,7 @@ import {
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
-  type ConsolePrinter,
+  type DebugConsolePrinter,
   ToolExecutionService,
   ToolResolverService,
   callTools,
@@ -73,7 +73,7 @@ export const GenerationObserver = Object.freeze({
   /**
    * Debug printer to be used in unit-tests and browser devtools.
    */
-  fromPrinter: (printer: ConsolePrinter) =>
+  fromPrinter: (printer: DebugConsolePrinter) =>
     GenerationObserver.make({
       onBlock: (block) =>
         Effect.sync(() => {

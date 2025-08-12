@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Option, Stream } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, DebugConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -40,7 +40,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         });
 
         const session = new AiSession();
-        const printer = new ConsolePrinter({ mode: 'json' });
+        const printer = new DebugConsolePrinter({ mode: 'json' });
         const messageQueue = session.messageQueue.pipe(
           Stream.fromQueue,
           Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
