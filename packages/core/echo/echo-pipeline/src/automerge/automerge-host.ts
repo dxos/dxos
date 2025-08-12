@@ -79,7 +79,7 @@ export const FIND_PARAMS = {
   allowableStates: ['ready', 'requesting'] satisfies HandleState[],
 };
 
-const BUNDLE_SIZE = 50;
+const BUNDLE_SIZE = 100;
 const BUNDLE_SYNC_CONCURRENCY = 2;
 const BUNDLE_SYNC_THRESHOLD = 50;
 
@@ -596,17 +596,32 @@ export class AutomergeHost extends Resource {
         return;
       }
 
+      log.info('HOST collection sync', {
+        collectionId,
+        peerId,
+        different,
+        missingOnLocal,
+        missingOnRemote,
+        localState,
+        remoteState,
+      });
       const toReplicateWithoutBatching = [...different];
       const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
-      if (bundleSyncEnabled && missingOnRemote.length > BUNDLE_SYNC_THRESHOLD) {
+      if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
+        log('pushing bundle', { amount: missingOnRemote.length });
         await this._pushInBundles(peerId, missingOnRemote);
       } else {
         toReplicateWithoutBatching.push(...missingOnRemote);
       }
-      if (bundleSyncEnabled && missingOnLocal.length > BUNDLE_SYNC_THRESHOLD) {
+      if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
+        log('pulling bundle', { amount: missingOnLocal.length });
         await this._pullInBundles(peerId, missingOnLocal);
       } else {
         toReplicateWithoutBatching.push(...missingOnLocal);
+      }
+
+      if (toReplicateWithoutBatching.length === 0) {
+        return;
       }
 
       log('replicating documents after collection sync', {
