@@ -19,8 +19,11 @@ import {
   type EdgeHttpResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
+  type ExportBundleRequest,
+  type ExportBundleResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
+  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -267,6 +270,30 @@ export class EdgeHttpClient {
     return this._call(new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
       ...args,
       body: input,
+      method: 'POST',
+    });
+  }
+
+  //
+  // Import/Export space.
+  //
+
+  public async importBundle(
+    spaceId: SpaceId, //
+    body: ImportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async exportBundle(
+    spaceId: SpaceId,
+    body: ExportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExportBundleResponse> {
+    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+      ...args,
+      body,
       method: 'POST',
     });
   }
