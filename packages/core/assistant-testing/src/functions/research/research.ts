@@ -52,24 +52,22 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
       const newObjectDXNs: DXN[] = [];
-      const result = yield* new AiSession()
-        .run({
-          prompt: query,
-          history: [],
-          system: PROMPT,
-          toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
-        })
-        .pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
-              LocalSearchHandler,
-              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
-              ContextQueueService.layer(researchQueue),
-            ),
+      const result = yield* AiSession.run({
+        prompt: query,
+        history: [],
+        system: PROMPT,
+        toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
+        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
+            LocalSearchHandler,
+            makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
+            ContextQueueService.layer(researchQueue),
           ),
-        );
+        ),
+      );
 
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;

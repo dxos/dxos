@@ -410,6 +410,9 @@ importers:
       vite:
         specifier: ^5.4.7
         version: 5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2)
+      vite-node:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@22.10.2)(terser@5.19.2)
       vite-plugin-devtools-json:
         specifier: ^0.4.1
         version: 0.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
