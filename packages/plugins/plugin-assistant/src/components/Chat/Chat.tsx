@@ -22,13 +22,13 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useBlueprintHandlers, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
-  ChatOptionsMenu,
+  ChatOptions,
   ChatPresets,
   type ChatPresetsProps,
   ChatReferences,
@@ -58,8 +58,8 @@ type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
-  processor: AiChatProcessor;
   messages: DataType.Message[];
+  processor: AiChatProcessor;
 };
 
 // NOTE: Do not export.
@@ -264,12 +264,6 @@ const ChatPrompt = ({
     },
   });
 
-  const { active: activeBlueprints, onUpdate: handleUpdateBlueprints } = useBlueprints(
-    space,
-    processor.context,
-    processor.blueprintRegistry,
-  );
-
   // TODO(burdon): Reconcile with object tags.
   const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
@@ -330,6 +324,12 @@ const ChatPrompt = ({
     void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
+  const { onUpdateBlueprint } = useBlueprintHandlers({
+    space,
+    context: processor.context,
+    blueprintRegistry: processor.blueprintRegistry,
+  });
+
   return (
     <div
       className={mx(
@@ -359,10 +359,10 @@ const ChatPrompt = ({
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatOptionsMenu
-        registry={processor.blueprintRegistry}
-        active={activeBlueprints}
-        onChange={handleUpdateBlueprints}
+      <ChatOptions
+        blueprintRegistry={processor.blueprintRegistry}
+        context={processor.context}
+        onUpdateBlueprint={onUpdateBlueprint}
       />
 
       <ChatActions

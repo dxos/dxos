@@ -6,7 +6,7 @@ export * from './chat-processor';
 export * from './errors';
 export * from './presets';
 
-export * from './useBlueprints';
+export * from './useBlueprintRegistry';
 export * from './useChatProcessor';
 export * from './useChatServices';
 export * from './useOnline';
