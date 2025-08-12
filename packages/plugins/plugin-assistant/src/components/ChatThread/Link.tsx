@@ -16,8 +16,6 @@ export type ObjectLinkProps = {
   dxn: DXN;
 };
 
-// TODO(thure): Have CM render `<dx-ref-tag ref="{dxn}">{title}</dx-ref-tag>, this is why we established this
-//   lower-level webcomponent. CM should not need to render react roots except to access the app framework’s `Surface`.
 export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
   const object = useResolvedRef(space, Ref.fromDXN(dxn));
   const title = Obj.getLabel(object) ?? object?.id ?? dxn.toString();

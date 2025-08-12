@@ -130,7 +130,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             (obj) =>
               ({
                 _tag: 'text',
-                text: renderObjectLink(obj),
+                text: renderObjectLink(obj, true),
               }) satisfies ContentBlock.Text,
           ),
         ]),
