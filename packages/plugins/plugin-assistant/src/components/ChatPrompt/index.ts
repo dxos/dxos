@@ -3,7 +3,7 @@
 //
 
 export * from './ChatActions';
-export * from './ChatOptionsMenu';
+export * from './ChatOptions';
 export * from './ChatPresets';
 export * from './ChatReferences';
 export * from './ChatStatusIndicator';
