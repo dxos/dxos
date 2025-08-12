@@ -130,6 +130,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
           a: ({ node: { properties }, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
+                // TODO(burdon): Check valid length (since serialized).
                 const dxn = DXN.parse(properties.href);
                 return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
