@@ -234,24 +234,41 @@ export type EdgeStatus = {
 // Space import/export.
 //
 
-/**
- * DocumentId -> Encoded Document
- */
-export type Bundle = Record<string, string>;
-
 export type ImportBundleRequest = {
-  bundle: Bundle;
+  bundle: {
+    /**
+     * DocumentId.
+     */
+    documentId: string;
+    /**
+     * Encoded mutation.
+     */
+    mutation: string;
+    /**
+     * Heads of the document.
+     */
+    heads: string[];
+  }[];
 };
 
 export type ExportBundleRequest = {
   /**
-   * DocumentId -> Heads (decoded).
+   * DocumentId -> Heads (decoded heads since which we want to export).
    */
   docHeads: Record<string, string[]>;
 };
 
 export type ExportBundleResponse = {
-  bundle: Bundle;
+  bundle: {
+    /**
+     * DocumentId.
+     */
+    documentId: string;
+    /**
+     * Encoded mutation.
+     */
+    mutation: string;
+  }[];
 };
 
 export const DocumentCodec = {
