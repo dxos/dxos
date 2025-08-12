@@ -24,13 +24,14 @@ export const Default: Story = {
   args: {
     branches: [{ name: 'main' }, { name: 'feature-a' }, { name: 'feature-b' }],
     commits: [
-      { id: 'c1', message: 'init', branch: 'main', parents: [] },
-      { id: 'c2', message: 'feat', branch: 'main', parents: ['c1'] },
-      { id: 'c3', message: 'feat A', branch: 'feature-a', parents: ['c2'] },
-      { id: 'c4', message: 'merge', branch: 'main', parents: ['c2', 'c3'] },
-      { id: 'c5', message: 'feat B', branch: 'feature-b', parents: ['c4'] },
-      { id: 'c6', message: 'increment', branch: 'feature-b', parents: ['c5'] },
-      { id: 'c7', message: 'increment', branch: 'main', parents: ['c4'] },
+      { id: 'c1', message: 'init', branch: 'main' },
+      { id: 'c2', message: 'increment', branch: 'main', parent: 'c1' },
+      { id: 'c3', message: 'feat A', branch: 'feature-a', parent: 'c2' },
+      { id: 'c4', message: 'merge', branch: 'main', parent: 'c2' },
+      { id: 'c5', message: 'feat B', branch: 'feature-b', parent: 'c4' },
+      { id: 'c6', message: 'increment', branch: 'feature-b', parent: 'c5' },
+      { id: 'c7', message: 'increment', branch: 'main', parent: 'c4' },
+      { id: 'c8', message: 'increment', branch: 'feature-a', parent: 'c3' },
     ],
   },
 };
