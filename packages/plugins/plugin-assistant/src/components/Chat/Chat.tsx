@@ -58,8 +58,8 @@ type ChatContextValue = {
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
-  processor: AiChatProcessor;
   messages: DataType.Message[];
+  processor: AiChatProcessor;
 };
 
 // NOTE: Do not export.
@@ -264,6 +264,7 @@ const ChatPrompt = ({
     },
   });
 
+  // TODO(burdon): Move into procesor/chat root context.
   const { active: activeBlueprints, onUpdate: handleUpdateBlueprints } = useBlueprints(
     space,
     processor.context,
