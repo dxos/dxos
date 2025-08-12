@@ -2,17 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import { cbor } from '@automerge/automerge-repo';
+import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
+import { type Bundle } from '@automerge/automerge-repo-bundles';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type AutomergeProtocolMessage, EdgeService, type PeerId } from '@dxos/protocols';
+import {
+  type AutomergeProtocolMessage,
+  DocumentCodec,
+  EdgeService,
+  type ExportBundleRequest,
+  type ImportBundleRequest,
+  type PeerId,
+} from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -40,11 +48,13 @@ const MAX_RESTART_DELAY = 5000;
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
+  edgeHttpClient: EdgeHttpClient;
   disableSharePolicy?: boolean;
 };
 
 export class EchoEdgeReplicator implements EchoReplicator {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
 
   private _ctx?: Context = undefined;
@@ -53,8 +63,9 @@ export class EchoEdgeReplicator implements EchoReplicator {
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
   private _sharePolicyEnabled = true;
 
-  constructor({ edgeConnection, disableSharePolicy }: EchoEdgeReplicatorParams) {
+  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeReplicatorParams) {
     this._edgeConnection = edgeConnection;
+    this._edgeHttpClient = edgeHttpClient;
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
@@ -128,6 +139,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
     let restartScheduled = false;
 
     const connection = new EdgeReplicatorConnection({
+      edgeHttpClient: this._edgeHttpClient,
       edgeConnection: this._edgeConnection,
       spaceId,
       context: this._context,
@@ -180,6 +192,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
 
 type EdgeReplicatorConnectionsParams = {
   edgeConnection: EdgeConnection;
+  edgeHttpClient: EdgeHttpClient;
   spaceId: SpaceId;
   context: EchoReplicatorContext;
   sharedPolicyEnabled: boolean;
@@ -193,6 +206,7 @@ const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _remotePeerId: string | null = null;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
@@ -214,6 +228,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   constructor({
     edgeConnection,
+    edgeHttpClient,
     spaceId,
     context,
     sharedPolicyEnabled,
@@ -223,6 +238,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }: EdgeReplicatorConnectionsParams) {
     super();
     this._edgeConnection = edgeConnection;
+    this._edgeHttpClient = edgeHttpClient;
     this._spaceId = spaceId;
     this._context = context;
     // Generate a unique peer id for every connection.
@@ -342,6 +358,27 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // Fix the peer id.
     payload.senderId = this._remotePeerId! as PeerId;
     this._processMessage(payload);
+  }
+
+  get bundleSyncEnabled(): boolean {
+    return true;
+  }
+
+  async pushBundle(bundle: Bundle) {
+    const request: ImportBundleRequest = {
+      bundle: Array.from(bundle.docs.entries()).map(([documentId, docBundle]) => ({
+        documentId,
+        mutation: DocumentCodec.encode(docBundle.data),
+        heads: docBundle.heads,
+      })),
+    };
+    await this._edgeHttpClient.importBundle(this._spaceId, request);
+  }
+
+  async pullBundle(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
+    const request: ExportBundleRequest = { docHeads };
+    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request);
+    return Object.fromEntries(response.bundle.map((doc) => [doc.documentId, DocumentCodec.decode(doc.mutation)]));
   }
 
   private _processMessage(message: AutomergeProtocolMessage): void {

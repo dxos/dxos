@@ -228,7 +228,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.pushBundle!(bundle);
   }
 
-  async pullBundle(peerId: PeerId, docHeads: Record<DocumentId, Heads[]>): Promise<Bundle> {
+  async pullBundle(peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');

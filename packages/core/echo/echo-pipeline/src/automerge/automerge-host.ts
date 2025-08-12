@@ -25,8 +25,9 @@ import {
   type StorageKey,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
+import { exportBundle } from '@automerge/automerge-repo-bundles';
 
-import { Event, asyncTimeout } from '@dxos/async';
+import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
@@ -37,7 +38,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { bufferToArray } from '@dxos/util';
+import { ComplexSet, bufferToArray } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -78,6 +79,10 @@ export const FIND_PARAMS = {
   allowableStates: ['ready', 'requesting'] satisfies HandleState[],
 };
 
+const BUNDLE_SIZE = 50;
+const BUNDLE_SYNC_CONCURRENCY = 2;
+const BUNDLE_SYNC_THRESHOLD = 50;
+
 /**
  * Abstracts over the AutomergeRepo.
  */
@@ -96,6 +101,14 @@ export class AutomergeHost extends Resource {
   private _repo!: Repo;
   private _storage!: StorageAdapterInterface & Lifecycle;
   private readonly _headsStore: HeadsStore;
+
+  private _syncTask: DeferredTask | undefined = undefined;
+  /**
+   * Cache of collections that would be synced on next sync task run.
+   */
+  private readonly _collectionsToSync = new ComplexSet<{ collectionId: string; peerId: PeerId }>(
+    ({ collectionId, peerId }) => `${collectionId}|${peerId}`,
+  );
 
   @trace.info()
   private _peerId!: PeerId;
@@ -180,6 +193,8 @@ export class AutomergeHost extends Resource {
       }
     });
 
+    this._syncTask = new DeferredTask(this._ctx, async () => this._handleCollectionSync());
+
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
@@ -191,6 +206,7 @@ export class AutomergeHost extends Resource {
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
+    this._syncTask = undefined;
   }
 
   /**
@@ -556,30 +572,106 @@ export class AutomergeHost extends Resource {
   }
 
   private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId): void {
-    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
-    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
+    this._collectionsToSync.add({ collectionId, peerId });
+    this._syncTask?.schedule();
+  }
 
-    if (!localState || !remoteState) {
+  private async _handleCollectionSync() {
+    const collectionToSync = Array.from(this._collectionsToSync.values());
+    if (collectionToSync.length === 0) {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
-    const toReplicate = [...missingOnLocal, ...missingOnRemote, ...different];
+    for (const { collectionId, peerId } of collectionToSync) {
+      const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
 
-    if (toReplicate.length === 0) {
-      return;
+      if (!localState || !remoteState) {
+        return;
+      }
+
+      const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
+
+      if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
+        return;
+      }
+
+      const toReplicateWithoutBatching = [...different];
+      const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
+      if (bundleSyncEnabled && missingOnRemote.length > BUNDLE_SYNC_THRESHOLD) {
+        await this._pushInBundles(peerId, missingOnRemote);
+      } else {
+        toReplicateWithoutBatching.push(...missingOnRemote);
+      }
+      if (bundleSyncEnabled && missingOnLocal.length > BUNDLE_SYNC_THRESHOLD) {
+        await this._pullInBundles(peerId, missingOnLocal);
+      } else {
+        toReplicateWithoutBatching.push(...missingOnLocal);
+      }
+
+      log('replicating documents after collection sync', {
+        collectionId,
+        peerId,
+        toReplicateWithoutBatching,
+        count: toReplicateWithoutBatching.length,
+      });
+
+      // Load the documents so they will start syncing.
+      for (const documentId of toReplicateWithoutBatching) {
+        this._repo.findWithProgress(documentId);
+      }
     }
+  }
 
-    log('replicating documents after collection sync', {
-      collectionId,
-      peerId,
-      toReplicate,
-      count: toReplicate.length,
-    });
+  private async _pushInBundles(peerId: PeerId, documentsToPush: DocumentId[]) {
+    // Split documents into bundles of BUNDLE_SIZE.
+    const bundles = splitIntoBundles(documentsToPush, BUNDLE_SIZE);
 
-    // Load the documents so they will start syncing.
-    for (const documentId of toReplicate) {
-      this._repo.findWithProgress(documentId);
+    // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
+    while (bundles.length > 0) {
+      const concurrentTasks: Promise<void>[] = [];
+      for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
+        const bundle = bundles.shift();
+        if (!bundle) {
+          break;
+        }
+        concurrentTasks.push(this._pushBundle(peerId, bundle));
+      }
+      await Promise.all(concurrentTasks);
+      concurrentTasks.length = 0;
+    }
+  }
+
+  private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    const handles = documentIds.map((documentId) => this._repo.handles[documentId]);
+    const bundle = exportBundle(this._repo, handles);
+    await this._echoNetworkAdapter.pushBundle(peerId, bundle);
+  }
+
+  private async _pullInBundles(peerId: PeerId, documentsToPull: DocumentId[]) {
+    // Split documents into bundles of BUNDLE_SIZE.
+    const bundles = splitIntoBundles(documentsToPull, BUNDLE_SIZE);
+
+    // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
+    while (bundles.length > 0) {
+      const concurrentTasks: Promise<void>[] = [];
+      for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
+        const bundle = bundles.shift();
+        if (!bundle) {
+          break;
+        }
+        concurrentTasks.push(this._pullBundle(peerId, bundle));
+      }
+      await Promise.all(concurrentTasks);
+      concurrentTasks.length = 0;
+    }
+  }
+
+  private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
+    const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
+    for (const [documentId, data] of Object.entries(bundle)) {
+      this._repo.import(data, { docId: documentId as DocumentId });
     }
   }
 
@@ -660,4 +752,12 @@ export type PeerSyncState = {
    * Total number of documents on the remote peer.
    */
   remoteDocumentCount: number;
+};
+
+const splitIntoBundles = <T>(items: T[], bundleSize: number): T[][] => {
+  const bundles: T[][] = [];
+  for (let i = 0; i < items.length; i += bundleSize) {
+    bundles.push(items.slice(i, i + bundleSize));
+  }
+  return bundles;
 };
