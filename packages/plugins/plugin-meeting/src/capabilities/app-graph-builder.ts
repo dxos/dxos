@@ -20,6 +20,7 @@ import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
+import { log } from '@dxos/log';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -150,10 +151,11 @@ export default (context: PluginContext) =>
     createExtension({
       id: `${MEETING_PLUGIN}/call-thread`,
       connector: (node) => {
-        return Rx.make((get) => {
-          return pipe(
+        return Rx.make((get) =>
+          pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((node) => node.data),
+            Option.filter(Obj.instanceOf(ChannelType)),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));
@@ -183,8 +185,8 @@ export default (context: PluginContext) =>
               ];
             }),
             Option.getOrElse(() => []),
-          );
-        });
+          ),
+        );
       },
     }),
 
@@ -269,7 +271,9 @@ export default (context: PluginContext) =>
                       transcriptionEnabled,
                     });
 
-                    if (transcriptionEnabled) {
+                    if (!transcriptionEnabled) {
+                      log.warn('transcription disabled');
+                    } else {
                       const primary = fullyQualifiedId(channel);
                       const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
                       await dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion }));

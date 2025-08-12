@@ -22,6 +22,7 @@ import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, type MeetingSettingsProps, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
@@ -55,9 +56,9 @@ export default (context: PluginContext) => {
       // }
 
       // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      // state.transcriptionManager = await context
-      //   .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-      //   .open();
+      state.transcriptionManager = await context
+        .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+        .open();
     },
     onLeave: async () => {
       await state.transcriptionManager?.close();
