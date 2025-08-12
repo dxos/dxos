@@ -4,6 +4,7 @@
     "emitDeclarationOnly": false,
     "outDir": "dist",
     "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "types": [
       "@dxos/typings",
       "node"
