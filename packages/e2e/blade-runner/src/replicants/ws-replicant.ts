@@ -4,14 +4,14 @@
 
 import { Schema } from 'effect';
 
-import { latch, Trigger } from '@dxos/async';
+import { Trigger, latch } from '@dxos/async';
 import { TypedObject } from '@dxos/echo-schema';
 import {
-  createEphemeralEdgeIdentity,
   EdgeClient,
-  protocol,
-  SwarmRequest_Action,
   SwarmRequestSchema,
+  SwarmRequest_Action,
+  createEphemeralEdgeIdentity,
+  protocol,
 } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
