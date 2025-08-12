@@ -14,6 +14,7 @@ import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import importSource from '@dxos/vite-plugin-import-source';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
@@ -29,7 +30,7 @@ export const modules = [
   'apps/*/src/**',
   'common/*/src/**',
   'devtools/*/src/**',
-  // 'experimental/*/src/**',
+  'experimental/*/src/**',
   'plugins/*/src/**',
   'sdk/*/src/**',
   'ui/*/src/**',
@@ -89,6 +90,7 @@ export const createConfig = ({
       resolve: {
         alias: {
           'tiktoken/lite': '.storybook/stub.mjs',
+          'node:util': '@dxos/node-std/util',
         },
       },
       build: {
@@ -117,6 +119,21 @@ export const createConfig = ({
         //
         // NOTE: Order matters.
         //
+
+        importSource({
+          exclude: [
+            '**/node_modules/**',
+            '**/common/random-access-storage/**',
+            '**/common/lock-file/**',
+            '**/mesh/network-manager/**',
+            '**/mesh/teleport/**',
+            '**/sdk/config/**',
+            '**/sdk/client-services/**',
+            '**/sdk/observability/**',
+            // TODO(dmaretskyi): Decorators break in lit.
+            '**/ui/lit-*/**',
+          ],
+        }),
 
         // https://www.npmjs.com/package/vite-plugin-wasm
         wasm(),

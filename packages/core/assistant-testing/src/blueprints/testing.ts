@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import { type AiConversation, type AiConversationRunOptions } from '@dxos/assistant';
+import { type AiConversation, type AiConversationRunParams } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiConversationRunOptions<any>, 'prompt' | 'systemPrompt'> & {
+export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 
@@ -32,3 +33,6 @@ export const runSteps = Effect.fn(function* ({
     }
   }
 });
+
+// TODO(wittjosiah): Don't cast.
+export const testToolkit = AiToolkit.make() as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;

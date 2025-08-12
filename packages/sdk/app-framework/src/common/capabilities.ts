@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import { type Registry } from '@effect-rx/rx-react';
-import { type Schema } from 'effect';
+import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type ExecutableTool } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
-import { type ArtifactDefinition, type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
 import { type FunctionDefinition } from '@dxos/functions';
 import { type RootSettingsStore } from '@dxos/local-storage';
@@ -156,14 +157,20 @@ export namespace Capabilities {
 
   /**
    * @category Capability
+   * @deprecated
    */
   export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
 
   /**
    * @category Capability
    */
-  export const ArtifactDefinition = defineCapability<ArtifactDefinition>(
-    'dxos.org/app-framework/capability/artifact-definition',
+  export const Toolkit = defineCapability<AiToolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
+
+  /**
+   * @category Capability
+   */
+  export const ToolkitHandler = defineCapability<Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>>(
+    'dxos.org/app-framework/capability/ai-toolkit-handler',
   );
 
   /**

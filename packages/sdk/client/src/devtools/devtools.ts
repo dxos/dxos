@@ -8,14 +8,16 @@ import { cbor } from '@automerge/automerge-repo';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { Filter, SpaceState, getMeta } from '../echo';
+import { SpaceState, getMeta } from '../echo';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -62,6 +64,12 @@ export interface DevtoolsHook {
   joinTables: any;
 
   // Globals/
+  DXN: typeof DXN;
+  Type: typeof Type;
+  Obj: typeof Obj;
+  Relation: typeof Relation;
+  Ref: typeof Ref;
+  Query: typeof Query;
   Filter: typeof Filter;
 
   getMeta: typeof getMeta;
@@ -151,6 +159,12 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     joinTables,
 
     // Globals.
+    DXN,
+    Type,
+    Obj,
+    Ref,
+    Relation,
+    Query,
     Filter,
     getMeta,
   };
@@ -383,7 +397,7 @@ const reset = async () => {
 };
 
 const downloadFile = (data: string | Uint8Array, contentType: string, filename: string) => {
-  const url = URL.createObjectURL(new Blob([data], { type: contentType }));
+  const url = URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: contentType }));
   const element = document.createElement('a');
   element.setAttribute('href', url);
   element.setAttribute('download', filename);

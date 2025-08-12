@@ -5,7 +5,9 @@
 import { type AiResponse } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
+import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
@@ -30,10 +32,14 @@ enum ModelTags {
 
   STATUS = 'status',
   ARTIFACT = 'artifact',
+  /**
+   * Block reference to an object.
+   */
+  OBJECT = 'object',
   SUGGEST = 'suggest',
   PROPOSAL = 'proposal',
   SELECT = 'select',
-  TOOL_LIST = 'tool-list',
+  TOOLKIT = 'toolkit',
 }
 
 export interface ParseResponseOptions {
@@ -91,7 +97,7 @@ export const parseResponse =
         const stack: StreamBlock[] = [];
 
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
-          log.info('block', { block });
+          log('block', { block });
           yield* onBlock(block);
           emit.single(block);
           blocks++;
@@ -119,7 +125,7 @@ export const parseResponse =
           }
         });
 
-        log.info('begin');
+        log('begin');
         yield* onBegin();
         yield* Stream.runForEach(
           input,
@@ -265,7 +271,7 @@ export const parseResponse =
 
         yield* flushText();
         yield* onEnd();
-        log.info('end', { blocks, parts, duration: Date.now() - start });
+        log('end', { blocks, parts, duration: Date.now() - start });
         emit.end();
       }),
     );
@@ -338,9 +344,13 @@ const makeContentBlock = (
           } satisfies ContentBlock.Status;
         }
 
+        case ModelTags.OBJECT: {
+          return parseObjectBlock(block);
+        }
+
         case ModelTags.ARTIFACT: {
           log.warn('artifact tags not implemented', { block });
-          break;
+          return undefined;
         }
 
         case ModelTags.SUGGEST: {
@@ -376,14 +386,63 @@ const makeContentBlock = (
           } satisfies ContentBlock.Select;
         }
 
-        case ModelTags.TOOL_LIST: {
+        case ModelTags.TOOLKIT: {
           return {
-            _tag: 'toolList',
-          } satisfies ContentBlock.ToolList;
+            _tag: 'toolkit',
+          } satisfies ContentBlock.Toolkit;
         }
       }
 
       return undefined;
     }
   }
+};
+
+const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefined => {
+  if (block.type !== 'tag') {
+    return undefined;
+  }
+
+  // <object dxn="..." />
+  if (typeof block.attributes?.dxn === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.attributes.dxn)),
+      };
+    } catch {}
+  }
+
+  // <object id="..." />
+  if (typeof block.attributes?.id === 'string') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.fromLocalObjectId(block.attributes.id)),
+      };
+    } catch {}
+  }
+
+  // <object>dxn:...</object>
+  if (block.content.length === 1 && block.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(block.content[0].content)),
+      };
+    } catch {}
+  }
+
+  // <object><dxn>...</dxn></object>
+  const dxnTag = block.content.find((content) => content.type === 'tag' && content.tag === 'dxn');
+  if (dxnTag && dxnTag.type === 'tag' && dxnTag.content.length === 1 && dxnTag.content[0].type === 'text') {
+    try {
+      return {
+        _tag: 'reference',
+        reference: Ref.fromDXN(DXN.parse(dxnTag.content[0].content)),
+      };
+    } catch {}
+  }
+
+  return undefined;
 };

@@ -15,7 +15,7 @@ import {
   LayoutIntentResolver,
   ReactRoot,
   ReactSurface,
-  Tools,
+  Toolkit,
   UrlHandler,
 } from './capabilities';
 import { DeckEvents } from './events';
@@ -73,10 +73,16 @@ export const DeckPlugin = () =>
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
+    // defineModule({
+    //   id: `${meta.id}/module/tools`,
+    //   activatesOn: Events.SetupArtifactDefinition,
+    //   activate: Tools,
+    // }),
     defineModule({
-      id: `${meta.id}/module/tools`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: Tools,
+      id: `${meta.id}/module/toolkit`,
+      // TODO(wittjosiah): Shouldn't use the startup event.
+      activatesOn: Events.Startup,
+      activate: Toolkit,
     }),
     defineModule({
       id: `${meta.id}/module/url`,

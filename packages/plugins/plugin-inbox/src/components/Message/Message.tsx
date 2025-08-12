@@ -48,7 +48,7 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
   const extensions = useMemo(() => {
     if (space) {
       return [
-        createBasicExtensions({ readOnly: true, lineWrapping: true }),
+        createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),

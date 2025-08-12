@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import tailwindContainers from '@tailwindcss/container-queries';
+import tailwindcssContainerQueries from '@tailwindcss/container-queries';
 import tailwindcssForms from '@tailwindcss/forms';
 import merge from 'lodash.merge';
 import tailwindScrollbar from 'tailwind-scrollbar';
@@ -51,6 +51,8 @@ export const tailwindConfig = ({
         screens: {
           'pointer-fine': { raw: '(pointer: fine)' },
           'hover-hover': { raw: '(hover: hover)' },
+          md: '768px',
+          lg: '1024px',
         },
         fontSize: {
           // Base size 16px
@@ -224,7 +226,7 @@ export const tailwindConfig = ({
     tailwindcssLogical,
     tailwindcssForms,
     tailwindcssRadix(),
-    tailwindContainers,
+    tailwindcssContainerQueries,
     // https://adoxography.github.io/tailwind-scrollbar/utilities
     tailwindScrollbar,
   ],

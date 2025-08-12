@@ -421,13 +421,7 @@ describe('AutomergeRepo', () => {
 
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
-      const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId, FIND_PARAMS);
-        serverHandle.update((doc) => {
-          return A.loadIncremental(doc, blob);
-        });
-      };
-
+      const receiveByServer = (blob: Uint8Array, docId: DocumentId) => repo.import<any>(blob, { docId });
       let clientDoc = A.from<{ field?: string }>({});
       const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
@@ -435,7 +429,7 @@ describe('AutomergeRepo', () => {
 
       // Sync protocol.
       const sendDoc = async (doc: A.Doc<any>) => {
-        await receiveByServer(saveSince(doc, sentHeads), documentId);
+        receiveByServer(saveSince(doc, sentHeads), documentId);
         sentHeads = getHeads(doc);
       };
 
@@ -457,10 +451,9 @@ describe('AutomergeRepo', () => {
 
       const repo = new Repo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId, FIND_PARAMS);
-        serverHandle.update((doc) => {
-          return A.loadIncremental(doc, blob);
-        });
+        repo.import<any>(blob, { docId });
+        // TODO(mykola): This should not be required. Document is not persisted without it.
+        await repo.flush([docId]);
       };
 
       let clientDoc = A.from<{ field?: string }>({ field: 'foo' });

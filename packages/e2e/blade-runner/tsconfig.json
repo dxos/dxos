@@ -1,8 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/types",
-    "target": "esnext"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"

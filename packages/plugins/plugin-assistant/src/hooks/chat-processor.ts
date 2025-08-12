@@ -5,9 +5,15 @@
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Effect, type Layer, Option, Stream, pipe } from 'effect';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ExecutableTool, type GenerateRequest } from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type AiConversation, AiSession, ArtifactDiffResolver } from '@dxos/assistant';
+import {
+  type AiConversation,
+  type AiConversationRunParams,
+  AiSession,
+  ArtifactDiffResolver,
+  createSystemPrompt,
+} from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -32,16 +38,15 @@ export type AiRequestOptions = {
 };
 
 export type AiChatProcessorOptions = {
+  model?: ModelName;
+  modelRegistry?: ModelRegistry;
   blueprintRegistry?: Blueprint.Registry;
-  registry?: Registry.Registry;
-  tools?: readonly ExecutableTool[];
+  observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
-  // TODO(burdon): Remove systemPrompt -- should come from assistant blueprint?
-} & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+} & Pick<AiConversationRunParams<any>, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  systemPrompt: 'you are a helpful assistant',
 };
 
 /**
@@ -57,10 +62,8 @@ export class AiChatProcessor {
   // TODO(wittjosiah): Error should come from the message stream.
   readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
-  /** Tool implementations.*/
-  private _tools?: ExecutableTool[];
-
-  private readonly _registry = this._options.registry ?? Registry.make();
+  /** Rx registry. */
+  private readonly _observableRegistry: Registry.Registry;
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
@@ -144,30 +147,24 @@ export class AiChatProcessor {
     private readonly _conversation: AiConversation,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this._tools = [...(_options.tools ?? [])];
-  }
-
-  get conversation() {
-    return this._conversation;
+    // Initialize registries and defaults before using in other logic.
+    this._observableRegistry = this._options.observableRegistry ?? Registry.make();
+    if (this._options.model && !this._options.system) {
+      const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
+      this._options.system = createSystemPrompt(capabilities);
+    }
   }
 
   get context() {
     return this._conversation.context;
   }
 
+  get conversation() {
+    return this._conversation;
+  }
+
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
-  }
-
-  get tools() {
-    return this._tools;
-  }
-
-  /**
-   * @deprecated Replace with blueprints
-   */
-  setTools(tools: ExecutableTool[]): void {
-    this._tools = tools;
   }
 
   /**
@@ -177,48 +174,19 @@ export class AiChatProcessor {
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     const session = new AiSession();
-    this._registry.set(this._session, Option.some(session));
+    this._observableRegistry.set(this._session, Option.some(session));
 
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
-      Option.match(this._registry.get(this._session), {
+      Option.match(this._observableRegistry.get(this._session), {
         onSome: (s) => {
           if (s === session) {
-            this._registry.set(this._session, Option.none());
+            this._observableRegistry.set(this._session, Option.none());
           }
         },
         onNone: () => {},
       });
     });
-
-    // TODO(dmaretskyi): Handle tool status reports.
-    // session.toolStatusReport.on(({ message, status }) => {
-    //   const msg = this._pending.peek().find((m) => m.id === message.id);
-    //   const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-    //   if (!toolUse) {
-    //     return;
-    //   }
-
-    //   const block = msg?.content.find(
-    //     (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-    //   );
-    //   if (block) {
-    //     this._pending.value = this._pending.value.map((m) => {
-    //       if (m.id === message.id) {
-    //         return {
-    //           ...m,
-    //           content: m.content.map((block) =>
-    //             block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
-    //           ),
-    //         };
-    //       }
-
-    //       return m;
-    //     });
-    //   } else {
-    //     log.warn('no block for status report');
-    //   }
-    // });
 
     try {
       const messages = await runAndForwardErrors(
@@ -226,11 +194,9 @@ export class AiChatProcessor {
           .run({
             session,
             prompt: message,
-            // TODO(burdon): Construct from blueprints?
-            systemPrompt: this._options.systemPrompt,
+            system: this._options.system,
           })
           .pipe(
-            //
             Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
             // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
             Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
@@ -246,12 +212,12 @@ export class AiChatProcessor {
     } catch (err) {
       log.catch(err);
       if (err instanceof Error && err.message.includes('Overloaded')) {
-        this._registry.set(
+        this._observableRegistry.set(
           this.error,
           Option.some(new AiServiceOverloadedError('AI service overloaded', { cause: err })),
         );
       } else {
-        this._registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+        this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
       }
     }
   }
@@ -262,14 +228,7 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     log.info('cancelling...');
 
-    // TODO(dmaretskyi): Conversation should handle aborting.
-    Option.match(this._registry.get(this._session), {
-      onSome: (session) => {
-        session.abort();
-        this._registry.set(this._session, Option.none());
-      },
-      onNone: () => {},
-    });
+    // TODO(dmaretskyi): Abort using Fiber.interrupt.
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {
@@ -288,6 +247,7 @@ export class AiChatProcessor {
           if (!object) {
             return;
           }
+
           versions.set(artifact.id, {
             version: getVersion(object),
             diff: `Current state: ${JSON.stringify(object)}`,

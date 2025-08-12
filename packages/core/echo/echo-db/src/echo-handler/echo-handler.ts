@@ -15,12 +15,12 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type BaseEchoObject,
   type BaseObject,
   DeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
+  type HasId,
   MetaId,
   type ObjectJSON,
   type ObjectMeta,
@@ -34,6 +34,7 @@ import {
   SchemaId,
   SchemaMetaSymbol,
   SchemaValidator,
+  SelfDXNId,
   StoredSchema,
   TypeId,
   assertObjectModelShape,
@@ -158,6 +159,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       switch (prop) {
         case 'id': {
           return target[symbolInternals].core.id;
+        }
+        case SelfDXNId: {
+          if (target[symbolInternals].database) {
+            return new DXN(DXN.kind.ECHO, [target[symbolInternals].database.spaceId, target[symbolInternals].core.id]);
+          } else {
+            return DXN.fromLocalObjectId(target[symbolInternals].core.id);
+          }
         }
         case EntityKindId: {
           return target[symbolInternals].core.getKind();
@@ -905,7 +913,7 @@ interface DecodedValueAtPath {
 
 /** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
 // TODO(burdon): Any shouldn't be generic (use namespace).
-export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseEchoObject;
+export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.

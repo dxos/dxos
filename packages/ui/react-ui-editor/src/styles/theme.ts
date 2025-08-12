@@ -155,7 +155,7 @@ export const defaultTheme: ThemeStyles = {
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-baseSurface)',
+    background: 'var(--dx-modalSurface)',
   },
   '.cm-tooltip-below': {},
 
@@ -176,7 +176,8 @@ export const defaultTheme: ThemeStyles = {
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-hoverSurface)',
+    background: 'var(--dx-accentSurface)',
+    color: 'var(--dx-accentSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
@@ -232,7 +233,7 @@ export const defaultTheme: ThemeStyles = {
     outline: '1px solid transparent',
   },
   '.cm-panel input, .cm-panel button': {
-    backgroundColor: 'var(--dx-input)',
+    backgroundColor: 'var(--dx-inputSurface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
     outline: '1px solid var(--dx-neutralFocusIndicator)',

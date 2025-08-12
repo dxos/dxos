@@ -2,19 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer, Option, Stream } from 'effect';
+import { describe, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
+  type ContextBinding,
+  GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
@@ -23,47 +25,28 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readDocument, updateDocument } from '../../functions';
+import { testToolkit } from '../testing';
 
 import blueprint from './design';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { timeout: 120_000 }, () => {
+describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.effect(
     'design blueprint',
     Effect.fn(
-      function* () {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
+      function* ({ expect }) {
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const session = new AiSession();
-        const printer = new ConsolePrinter();
-        const messageQueue = session.messageQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
-        );
-        const blockQueue = session.blockQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((block) =>
-            Effect.sync(() =>
-              Option.match(block, {
-                onSome: (block) => printer.printContentBlock(block),
-                onNone: () => Effect.void,
-              }),
-            ),
-          ),
-        );
+        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
 
-        db.add(blueprint);
+        yield* DatabaseService.add(blueprint);
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-        const artifact = db.add(Markdown.makeDocument({ content: 'Hello, world!' }));
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
-        const run = conversation.run({
-          session,
+        yield* conversation.run({
           prompt: trim`
             Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
@@ -77,8 +60,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
 
             The store spec in ${Obj.getDXN(artifact)}
           `,
+          observer,
         });
-        yield* Effect.all([run, messageQueue, blockQueue]);
         log.info('spec', { doc: artifact });
         expect(artifact.content).not.toBe(prevContent);
         prevContent = artifact.content;
@@ -87,6 +70,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
           prompt: trim`
             I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
           `,
+          observer,
         });
         log.info('spec', { doc: artifact });
         expect(artifact.content).not.toBe(prevContent);
@@ -94,14 +78,19 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { time
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readDocument, updateDocument]),
-          makeToolExecutionServiceFromFunctions([readDocument, updateDocument]),
+          makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
+          makeToolExecutionServiceFromFunctions(
+            [readDocument, updateDocument],
+            testToolkit,
+            testToolkit.toLayer({}) as any,
+          ),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(LocalFunctionExecutionService.layer),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });

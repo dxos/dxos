@@ -4,12 +4,12 @@
 
 import { ToolId } from '@dxos/ai';
 import { Capabilities, contributes } from '@dxos/app-framework';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { load } from '../functions';
+import { move, play } from '../functions';
 
-// TODO(burdon): Get object from bindings.
+const functions = [move, play];
 
 export default () => {
   return [
@@ -18,15 +18,17 @@ export default () => {
       Blueprint.make({
         key: 'dxos.org/blueprint/chess',
         name: 'Chess',
-        instructions: {
+        instructions: Template.make({
           source: trim`
-          You are an expert chess player.
-          When a game is referenced load it using the load tool to get the PGN string.
-        `,
-        },
-        tools: [ToolId.make(load.name)],
+            You are an expert chess player.
+            You could suggest a good next move or offer to play a move.
+            Don't actually make a move unless you are asked to.
+            To analyze a game you can retrieve the "pgn" property from the context object.
+          `,
+        }),
+        tools: functions.map((tool) => ToolId.make(tool.name)),
       }),
     ),
-    contributes(Capabilities.Functions, [load]),
+    contributes(Capabilities.Functions, functions),
   ];
 };

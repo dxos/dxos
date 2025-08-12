@@ -97,7 +97,7 @@ export class BlobStore {
 
   @synchronized
   async set(data: Uint8Array): Promise<BlobMeta> {
-    const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data));
+    const id = new Uint8Array(await subtleCrypto.digest('SHA-256', data as Uint8Array<ArrayBuffer>));
     const bitfield = BitField.ones(data.length / DEFAULT_CHUNK_SIZE);
 
     const meta: BlobMeta = {

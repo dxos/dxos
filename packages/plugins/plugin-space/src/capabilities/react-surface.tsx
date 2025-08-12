@@ -54,6 +54,7 @@ import {
   POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
+  RecordMain,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
@@ -91,6 +92,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           {...rest}
         />
       ),
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/record-article`,
+      role: 'article',
+      position: 'fallback',
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      component: ({ data }) => <RecordMain record={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/collection-fallback`,

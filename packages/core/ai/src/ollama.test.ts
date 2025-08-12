@@ -24,7 +24,7 @@ describe('ollama', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -63,7 +63,7 @@ describe('ollama', () => {
   it.effect(
     'tools',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -96,7 +96,8 @@ describe('ollama', () => {
             break;
           }
 
-          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolCalls, toolkit);
+          const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
+          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolkitWithHandlers, toolCalls);
           history.push(
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),

@@ -22,6 +22,12 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   static layer = Layer.succeed(LocalFunctionExecutionService, {
     invokeFunction: (fnDef, input) => invokeFunction(fnDef, input),
   });
+
+  static invokeFunction: <F extends FunctionDefinition.Any>(
+    fnDef: F,
+    input: FunctionDefinition.Input<F>,
+  ) => Effect.Effect<FunctionDefinition.Output<F>, never, Services | LocalFunctionExecutionService> =
+    Effect.serviceFunctionEffect(LocalFunctionExecutionService, (_) => _.invokeFunction as any);
 }
 
 const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect.Effect<unknown, never, Services> =>
@@ -31,13 +37,10 @@ const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect
     (assertInput as any)(input);
 
     const context: FunctionContext = {
+      space: undefined,
       getService: () => todo(),
       getSpace: async (_spaceId: any) => {
         throw new Error('Not available. Use the database service instead.');
-      },
-      space: undefined,
-      get ai(): never {
-        throw new Error('Not available. Use the ai service instead.');
       },
     };
 

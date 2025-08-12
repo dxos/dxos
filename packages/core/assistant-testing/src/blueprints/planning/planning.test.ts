@@ -23,7 +23,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readTasks, updateTasks } from '../../functions';
-import { type TestStep, runSteps } from '../testing';
+import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
 
@@ -79,10 +79,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             prevContent = artifact.content;
           };
 
-        const systemPrompt = 'You are a helpful assistant.';
+        const system = 'You are a helpful assistant.';
         const steps: TestStep[] = [
           {
-            systemPrompt,
+            system,
             prompt: trim`
               I'm building a shelf.
               Maintain a shopping list here: ${Obj.getDXN(artifact)}
@@ -93,7 +93,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             }),
           },
           {
-            systemPrompt,
+            system,
             prompt: trim`
               I will need a board too.
             `,
@@ -102,7 +102,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
             }),
           },
           {
-            systemPrompt,
+            system,
             prompt: trim`
               Actually I'm going to use screws and a screwdriver.
             `,
@@ -119,8 +119,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readTasks, updateTasks]),
-          makeToolExecutionServiceFromFunctions([readTasks, updateTasks]),
+          makeToolResolverFromFunctions([readTasks, updateTasks], testToolkit),
+          makeToolExecutionServiceFromFunctions([readTasks, updateTasks], testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),

@@ -61,20 +61,19 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.23.0",
-    "@effect/ai-anthropic": "^0.13.0",
-    "@effect/platform": "^0.89.0",
-    "@effect/platform-node": "^0.92.0",
+    "@effect/ai": "0.25.2",
+    "@effect/ai-anthropic": "^0.15.1",
+    "@effect/platform": "^0.90.2",
+    "@effect/platform-node": "^0.95.0",
     "@preact/signals-core": "^1.9.0",
     "@xenova/transformers": "^2.17.2",
     "chalk": "^4.1.0",
-    "exa-js": "^1.5.12",
     "handlebars": "4.7.8",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

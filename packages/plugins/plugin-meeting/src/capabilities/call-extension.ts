@@ -4,7 +4,6 @@
 
 import { type Schema } from 'effect';
 
-import { type AiServiceClient } from '@dxos/ai';
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
@@ -14,6 +13,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { type ChannelType } from '@dxos/plugin-thread/types';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space, getSpace } from '@dxos/react-client/echo';
@@ -56,9 +56,9 @@ export default (context: PluginContext) => {
       // }
 
       // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      // state.transcriptionManager = await context
-      //   .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-      //   .open();
+      state.transcriptionManager = await context
+        .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+        .open();
     },
     onLeave: async () => {
       await state.transcriptionManager?.close();
@@ -83,12 +83,11 @@ export default (context: PluginContext) => {
 };
 
 type EntityExtractionEnricherFactoryOptions = {
-  aiClient: AiServiceClient;
   contextTypes: Schema.Schema.AnyNoContext[];
   space: Space;
 };
 
-const _createEntityExtractionEnricher = ({ aiClient, contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
+const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   const executor = new FunctionExecutor(new ServiceContainer());
 
   return async (message: DataType.Message) => {

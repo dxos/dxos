@@ -220,10 +220,12 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // The background color appearing in overscroll and between planks when Deck is enabled.
   deckSurface: { root: 'groupSurface' },
 
-  // Secondary aliases
+  // Secondary aliases.
   textInputSurface: { root: 'textInputSurfaceBase', group: 'textInputSurfaceGroup', modal: 'textInputSurfaceModal' },
   inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
   hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
+
+  // Borders and dividers.
   separator: { root: 'separatorBase', group: 'separatorGroup', modal: 'separatorModal' },
 
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
@@ -241,7 +243,7 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // Toolbars, table/sheet headers, etc.
   toolbarSurface: { root: 'groupSurface' },
 
-  // TODO: rename uses of this token to `focusSurface` and remove this alias.
+  // TODO(thure): rename uses of this token to `focusSurface` and remove this alias.
   attention: { root: 'focusSurface' },
 
   // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.

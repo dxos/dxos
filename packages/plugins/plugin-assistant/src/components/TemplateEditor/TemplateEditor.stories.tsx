@@ -38,7 +38,13 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
   const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Blueprint.make({ key: 'example.com/blueprint/test', name: 'Test', instructions: { source } }));
+    return space.db.add(
+      Blueprint.make({
+        key: 'example.com/blueprint/test',
+        name: 'Test',
+        instructions: Template.make({ source }),
+      }),
+    );
   });
 
   return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;

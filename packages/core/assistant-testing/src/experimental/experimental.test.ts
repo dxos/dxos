@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): deprecated types: createTool -> defineFunction (artifact defs, plugins, blueprints), AiTool.make
+// @ts-nocheck
+
 import { inspect } from 'node:util';
 
 import { Effect, Schema, pipe } from 'effect';
@@ -129,7 +132,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('experimental', () => {
 
     // const machine = new SequenceMachine(toolkit, RESEARCH_SEQUENCE);
     // setConsolePrinter(machine, true);
-    // const { client } = serviceContainer.getService(AiService);
+    // const { client } = serviceContainer.getService(AiService.AiService);
     // await machine.runToCompletion({ aiClient: client, input: [org] });
     log.info('researched', { objects: await researchQueue.queryObjects() });
   });

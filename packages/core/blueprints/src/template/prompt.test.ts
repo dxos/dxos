@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { createPrompt } from './prompt';
+import { process } from './prompt';
 
 const TEMPLATE = trim`
   You are a useful assistant.
@@ -33,7 +33,7 @@ const BLUEPRINTS = [
 
 describe('prompt', () => {
   test('should process template variables correctly', ({ expect }) => {
-    const prompt = createPrompt(TEMPLATE, {
+    const prompt = process(TEMPLATE, {
       blueprints: BLUEPRINTS,
       suggestions: true,
     });

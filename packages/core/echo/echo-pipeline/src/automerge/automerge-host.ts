@@ -515,6 +515,16 @@ export class AutomergeHost extends Resource {
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
     );
     this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
+
+    // Proactively push our updated local state to peers that are interested in this collection.
+    // This reduces reliance on the next periodic query and prevents replication stalls in fast paths
+    // where the remote queries before our local state is ready.
+    const interestedPeers = this._echoNetworkAdapter.getPeersInterestedInCollection(collectionId);
+    if (interestedPeers.length > 0) {
+      for (const peerId of interestedPeers) {
+        this._sendCollectionState(collectionId, peerId, { documents });
+      }
+    }
   }
 
   async clearLocalCollectionState(collectionId: string): Promise<void> {

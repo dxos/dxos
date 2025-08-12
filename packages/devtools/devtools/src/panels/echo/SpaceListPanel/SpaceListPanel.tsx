@@ -98,7 +98,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     async (spaceKey: PublicKey) => {
       const space = spaces.find((space) => space.key.equals(spaceKey))!;
       const archive = await space.internal.export();
-      download(new Blob([archive.contents]), archive.filename);
+      download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
   );
@@ -176,9 +176,9 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         rows={rows}
         features={features}
         rowActions={[
-          { id: 'toggleOpen', translationKey: 'toggle space open closed label' },
-          { id: 'backup', translationKey: 'download space backup label' },
-          { id: 'archive', translationKey: 'download space archive label' },
+          { id: 'toggleOpen', label: 'Toggle space open closed' },
+          { id: 'backup', label: 'Download space backup' },
+          { id: 'archive', label: 'Download space archive' },
         ]}
         onRowClick={handleRowClicked}
         onRowAction={handleRowAction}

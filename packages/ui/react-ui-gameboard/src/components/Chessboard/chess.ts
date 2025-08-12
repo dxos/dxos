@@ -82,7 +82,6 @@ const tryMove = (chess: ChessJS, move: Move): ChessJS | null => {
   const from = locationToPos(move.from);
   const to = locationToPos(move.to);
   try {
-    log('makeMove', { move });
     const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
     chess.move({ from, to, promotion }, { strict: false });
     return chess;
@@ -100,7 +99,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
   private readonly _pieces = signal<PieceMap<ChessPiece>>({});
 
   constructor(pgn?: string) {
-    this.initialize(pgn);
+    this.update(pgn);
   }
 
   get turn(): Player {
@@ -115,6 +114,18 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._chess;
   }
 
+  /**
+   * PGN with headers.
+   *
+   * [Event "?"]
+   * [Site "?"]
+   * [Date "2025.08.05"]
+   * [Round "?"]
+   * [White "?"]
+   * [Black "?"]
+   * [Result "*"]
+   */
+  // TODO(burdon): Update headers.
   get pgn(): string {
     return this._chess.pgn();
   }
@@ -123,13 +134,26 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._chess.fen();
   }
 
-  initialize(pgn?: string): void {
-    this._pieces.value = {};
+  update(pgn = ''): void {
+    const previous = this._chess.history();
     try {
-      this._chess.loadPgn(pgn ?? '');
+      this._chess.loadPgn(pgn);
+      // TODO(burdon): Get from TS.
+      // TODO(burdon): Update if not set.
+      this._chess.setHeader('Date', createDate());
+      this._chess.setHeader('Site', 'dxos.org');
+      // TODO(burdon): Update player keys.
+      // this._chess.setHeader('White', 'White');
+      // this._chess.setHeader('Black', 'Black');
     } catch {
       // Ignore.
     }
+
+    const current = this._chess.history();
+    if (!isValidNextMove(previous, current)) {
+      this._pieces.value = {};
+    }
+
     this._update();
   }
 
@@ -192,6 +216,20 @@ export class ChessModel implements GameboardModel<ChessPiece> {
   }
 }
 
+const isValidNextMove = (previous: string[], current: string[]) => {
+  if (current.length > previous.length + 1) {
+    return false;
+  }
+
+  for (let i = 0; i < previous.length; i++) {
+    if (previous[i] !== current[i]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 /**
  * Preserve the original piece objects (and IDs).
  */
@@ -231,3 +269,5 @@ export const mapPieces = <T extends PieceType>(before: PieceMap<T>, after: Piece
 
   return after;
 };
+
+const createDate = (date = new Date()) => date.toISOString().slice(0, 10).replace(/-/g, '.'); // e.g., "2025.08.05"
