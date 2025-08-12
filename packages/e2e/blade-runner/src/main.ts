@@ -20,16 +20,21 @@ import {
 } from './plan';
 import {
   AutomergeTestPlan,
-  EdgeReplication,
+  AutomergeTestPlan,
+  EdgeSync,
+  EdgeWs,
   EmptyTestPlan,
   QueryTestPlan,
+  QueryTestPlan,
+  ReplicationTestPlan,
   ReplicationTestPlan,
   StorageTestPlan,
   TransportTestPlan,
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
-  edge: () => new EdgeReplication(),
+  edgeSync: () => new EdgeSync(),
+  edgeWs: () => new EdgeWs(),
   automerge: () => new AutomergeTestPlan(),
   // signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
