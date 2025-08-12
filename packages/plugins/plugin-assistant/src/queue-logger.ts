@@ -62,7 +62,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
                 timestampMs: Date.now(),
@@ -80,7 +80,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
                 timestampMs: Date.now(),
@@ -98,7 +98,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
                 timestampMs: Date.now(),

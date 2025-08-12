@@ -295,6 +295,9 @@ export namespace ContentBlock {
 //  - Read receipts don't need to be added to schema until they being implemented.
 const MessageSchema = Schema.Struct({
   id: ObjectId,
+
+  parentMessage: Schema.optional(ObjectId),
+
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
