@@ -7,7 +7,7 @@ import React from 'react';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
-import { mx } from '@dxos/react-ui-theme';
+import { DxRefTag } from '@dxos/lit-ui/react';
 
 import { useResolvedRef } from '../../hooks';
 
@@ -16,24 +16,10 @@ export type ObjectLinkProps = {
   dxn: DXN;
 };
 
-// TODO(burdon): Factor out.
+// TODO(thure): Have CM render `<dx-ref-tag ref="{dxn}">{title}</dx-ref-tag>, this is why we established this
+//   lower-level webcomponent. CM should not need to render react roots except to access the app framework’s `Surface`.
 export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
   const object = useResolvedRef(space, Ref.fromDXN(dxn));
   const title = Obj.getLabel(object) ?? object?.id ?? dxn.toString();
-
-  return (
-    <a
-      // href={dxn.toString()}
-      title={title}
-      className={mx(
-        // TODO(burdon): Use style for tags.
-        'inline-flex items-center max-w-[16rem] px-1.5 overflow-hidden',
-        'border border-separator rounded whitespace-nowrap text-ellipsis text-primary-500 hover:text-primary-500 hover:border-primary-500 cursor-pointer',
-      )}
-      target='_blank'
-      rel='noopener noreferrer'
-    >
-      <span className='truncate'>{title}</span>
-    </a>
-  );
+  return <DxRefTag refid={dxn.toString()}>{title}</DxRefTag>;
 };
