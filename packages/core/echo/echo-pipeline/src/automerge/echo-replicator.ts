@@ -81,7 +81,8 @@ export interface ReplicatorConnection {
   /**
    * Pulls the batch of documents from the remote peer.
    */
-  pullBundle?(docHeads: Record<DocumentId, Heads[]>): Promise<Bundle>;
+  // TODO(mykola): Use automerge-repo-bundles Bundle type here.
+  pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseParams = {
