@@ -6,6 +6,7 @@ import React, { Fragment, useMemo } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { trim } from '@dxos/util';
 
 export type Commit = {
   id: string;
@@ -55,7 +56,11 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
     <div className={mx('flex flex-col w-full overflow-hidden', classNames)}>
       {commits.map((commit, index) => {
         return (
-          <div key={commit.id} className='group flex items-center gap-2' style={{ height: `${lineHeight}px` }}>
+          <div
+            key={commit.id}
+            className='group flex items-center gap-2 hover:bg-hoverSurface'
+            style={{ height: `${lineHeight}px` }}
+          >
             <svg width={branches.length * columnWidth} height={lineHeight}>
               {branches.map((branch, j) => {
                 const span = spans.get(branch.name);
@@ -66,13 +71,13 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
 
                 return (
                   <Fragment key={j}>
-                    {index !== 0 && span.start !== -1 && span.start < index && span.end >= index && (
+                    {index !== 0 && span.start !== -1 && span.start <= index && span.end >= index && (
                       <line
                         x1={j * columnWidth + columnWidth / 2}
                         y1={0}
                         x2={j * columnWidth + columnWidth / 2}
                         y2={lineHeight / 2}
-                        className={mx('stroke-1', color.stroke)}
+                        className={mx('stroke-2', color.stroke)}
                       />
                     )}
                     {span.end !== -1 && span.start <= index && span.end > index && (
@@ -81,13 +86,18 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
                         y1={lineHeight / 2}
                         x2={j * columnWidth + columnWidth / 2}
                         y2={lineHeight}
-                        className={mx('stroke-1', color.stroke)}
+                        className={mx('stroke-2', color.stroke)}
                       />
                     )}
-                    {span.start === index && span.parent !== undefined && span.parent !== -1 && (
+                    {span.start === index + 1 && span.parent !== undefined && span.parent !== -1 && (
                       <path
-                        d={`M ${0.5 + span.parent * columnWidth + columnWidth / 2} 2 L ${j * columnWidth + columnWidth / 4} 2 A ${lineHeight / 4} ${lineHeight / 4} 0 0 1 ${j * columnWidth + columnWidth / 2} ${2 + lineHeight / 4}`}
-                        className={mx('stroke-1', color.stroke)}
+                        d={trim`
+                          M ${0.5 + span.parent * columnWidth + columnWidth / 2} ${lineHeight / 2} 
+                          L ${j * columnWidth + columnWidth / 4} ${lineHeight / 2} 
+                          A ${lineHeight / 4} ${lineHeight / 4} 0 0 1 ${j * columnWidth + columnWidth / 2} ${(lineHeight * 3) / 4} 
+                          L ${j * columnWidth + columnWidth / 2} ${lineHeight}
+                        `}
+                        className={mx('stroke-2', color.stroke)}
                         fill='none'
                       />
                     )}
@@ -96,10 +106,24 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
                         cx={j * columnWidth + columnWidth / 2}
                         cy={lineHeight / 2}
                         r={nodeRadius}
-                        className={mx('stroke-2', color.stroke, color.hover)}
+                        className={mx('stroke-2 fill-red-500', color.stroke, color.hover)}
                       />
                     )}
                   </Fragment>
+                );
+              })}
+              {branches.map((branch, j) => {
+                const color = colors[j % colors.length];
+                return (
+                  branch.name === commit.branch && (
+                    <circle
+                      key={j}
+                      cx={j * columnWidth + columnWidth / 2}
+                      cy={lineHeight / 2}
+                      r={nodeRadius}
+                      className={mx('stroke-2', color.stroke, color.hover)}
+                    />
+                  )
                 );
               })}
             </svg>
@@ -120,7 +144,7 @@ const nodeRadius = 6;
 const colors = [
   { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
   { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
-  { stroke: 'stroke-green-500', hover: 'group-hover:fill-lime-500' },
+  { stroke: 'stroke-green-500', hover: 'group-hover:fill-green-500' },
   { stroke: 'stroke-emerald-500', hover: 'group-hover:fill-emerald-500' },
   { stroke: 'stroke-violet-500', hover: 'group-hover:fill-violet-500' },
   { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
