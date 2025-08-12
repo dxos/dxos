@@ -22,7 +22,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useBlueprints, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
@@ -264,13 +264,6 @@ const ChatPrompt = ({
     },
   });
 
-  // TODO(burdon): Move into procesor/chat root context.
-  const { active: activeBlueprints, onUpdate: handleUpdateBlueprints } = useBlueprints(
-    space,
-    processor.context,
-    processor.blueprintRegistry,
-  );
-
   // TODO(burdon): Reconcile with object tags.
   const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
@@ -360,11 +353,7 @@ const ChatPrompt = ({
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatOptionsMenu
-        registry={processor.blueprintRegistry}
-        active={activeBlueprints}
-        onChange={handleUpdateBlueprints}
-      />
+      <ChatOptionsMenu space={space} blueprintRegistry={processor.blueprintRegistry} context={processor.context} />
 
       <ChatActions
         classNames='col-span-2'

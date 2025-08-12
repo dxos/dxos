@@ -124,10 +124,9 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             }),
           );
 
-          const binder = new AiContextBinder(await chat.queue.load());
-
           await space.db.flush({ indexes: true });
-          await onInit?.({ space, chat, binder });
+          await onInit?.({ space, chat, binder: new AiContextBinder(await chat.queue.load()) });
+          await space.db.flush({ indexes: true });
         },
         ...props,
       }),
