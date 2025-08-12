@@ -1,5 +1,18 @@
 type: application
 language: typescript
 tags:
-  - typecheck
   - ts-test
+tasks:
+  build:
+    script: pnpm tsup && pnpm tsx scripts/copy-package-json.ts
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - /tsconfig.base.json
+      - tsconfig.json
+      - '@group(sources)'
+    outputs:
+      - dist/
+    options:
+      timeout: 60
