@@ -28,12 +28,13 @@ import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
-  ChatOptionsMenu,
+  ChatOptions,
   ChatPresets,
   type ChatPresetsProps,
   ChatReferences,
   type ChatReferencesProps,
   ChatStatusIndicator,
+  useContextHandlers,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
 
@@ -324,6 +325,12 @@ const ChatPrompt = ({
     void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
+  const { onUpdateBlueprint } = useContextHandlers({
+    space,
+    context: processor.context,
+    blueprintRegistry: processor.blueprintRegistry,
+  });
+
   return (
     <div
       className={mx(
@@ -353,7 +360,11 @@ const ChatPrompt = ({
         onUpdate={handleUpdateReferences}
       />
 
-      <ChatOptionsMenu space={space} blueprintRegistry={processor.blueprintRegistry} context={processor.context} />
+      <ChatOptions
+        blueprintRegistry={processor.blueprintRegistry}
+        context={processor.context}
+        onUpdateBlueprint={onUpdateBlueprint}
+      />
 
       <ChatActions
         classNames='col-span-2'
