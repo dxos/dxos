@@ -29,6 +29,8 @@ export type Span = {
 
 export type TimelineProps = ThemedClassName<{ branches: Branch[]; commits: Commit[] }>;
 
+// TODO(burdon): Reuse in toolCall messages.
+// TODO(burdon): Key up/down; selected.
 export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
   const spans = useMemo(() => {
     const spans = new Map<string, Span>();
@@ -40,10 +42,11 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
       const span = spans.get(commit.branch);
       if (span) {
         if (span.start === -1) {
-          span.start = index;
-          span.parent = branches.findIndex(
-            (branch) => branch.name === commits.find((c) => c.id === commit.parent)?.branch,
-          );
+          const parentIndex = commit.parent ? commits.findIndex((c) => c.id === commit.parent) : 0;
+          span.start = parentIndex;
+          span.parent = commit.parent
+            ? branches.findIndex((branch) => branch.name === commits[parentIndex].branch)
+            : undefined;
         }
         span.end = index;
       }
@@ -52,16 +55,18 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
     return spans;
   }, [commits, branches]);
 
+  console.log('spans', spans);
+
   return (
     <div className={mx('flex flex-col w-full overflow-hidden', classNames)}>
       {commits.map((commit, index) => {
         return (
           <div
             key={commit.id}
-            className='group flex items-center gap-2 hover:bg-hoverSurface'
+            className='group flex items-center gap-2 overflow-hidden hover:bg-hoverSurface'
             style={{ height: `${lineHeight}px` }}
           >
-            <svg width={branches.length * columnWidth} height={lineHeight}>
+            <svg width={branches.length * columnWidth} height={lineHeight} className='shrink-0'>
               {branches.map((branch, j) => {
                 const span = spans.get(branch.name);
                 const color = colors[j % colors.length];
@@ -71,7 +76,8 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
 
                 return (
                   <Fragment key={j}>
-                    {index !== 0 && span.start !== -1 && span.start <= index && span.end >= index && (
+                    {/* Upper */}
+                    {index !== 0 && span.start !== -1 && span.start < index && span.end >= index && (
                       <line
                         x1={j * columnWidth + columnWidth / 2}
                         y1={0}
@@ -80,7 +86,8 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
                         className={mx('stroke-2', color.stroke)}
                       />
                     )}
-                    {span.end !== -1 && span.start <= index && span.end > index && (
+                    {/* Lower */}
+                    {span.end !== -1 && (span.start < index || span.start === 0) && index < span.end && (
                       <line
                         x1={j * columnWidth + columnWidth / 2}
                         y1={lineHeight / 2}
@@ -89,7 +96,8 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
                         className={mx('stroke-2', color.stroke)}
                       />
                     )}
-                    {span.start === index + 1 && span.parent !== undefined && span.parent !== -1 && (
+                    {/* Arc to parent */}
+                    {span.start === index && span.parent !== undefined && span.parent !== -1 && (
                       <path
                         d={trim`
                           M ${0.5 + span.parent * columnWidth + columnWidth / 2} ${lineHeight / 2} 
@@ -145,9 +153,9 @@ const colors = [
   { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
   { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
   { stroke: 'stroke-green-500', hover: 'group-hover:fill-green-500' },
+  { stroke: 'stroke-fuchsia-500', hover: 'group-hover:fill-fuchsia-500' },
+  { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
   { stroke: 'stroke-emerald-500', hover: 'group-hover:fill-emerald-500' },
   { stroke: 'stroke-violet-500', hover: 'group-hover:fill-violet-500' },
-  { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
-  { stroke: 'stroke-indigo-500', hover: 'group-hover:fill-indigo-500' },
   { stroke: 'stroke-teal-500', hover: 'group-hover:fill-teal-500' },
 ];
