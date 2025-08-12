@@ -8,6 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
@@ -20,7 +21,6 @@ import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
-import { log } from '@dxos/log';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

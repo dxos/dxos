@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { type ChannelType } from '@dxos/plugin-thread/types';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space, getSpace } from '@dxos/react-client/echo';
@@ -22,7 +23,6 @@ import { MEETING_PLUGIN } from '../meta';
 import { MeetingAction, type MeetingSettingsProps, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 
 // TODO(wittjosiah): Factor out.
 // TODO(wittjosiah): Can we stop using protobuf for this?
