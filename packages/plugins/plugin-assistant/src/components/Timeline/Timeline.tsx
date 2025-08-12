@@ -55,8 +55,6 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
     return spans;
   }, [commits, branches]);
 
-  console.log('spans', spans);
-
   return (
     <div className={mx('flex flex-col w-full overflow-hidden', classNames)}>
       {commits.map((commit, index) => {
