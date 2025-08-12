@@ -22,7 +22,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useBlueprintHandlers, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
@@ -34,7 +34,6 @@ import {
   ChatReferences,
   type ChatReferencesProps,
   ChatStatusIndicator,
-  useContextHandlers,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
 
@@ -325,7 +324,7 @@ const ChatPrompt = ({
     void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
-  const { onUpdateBlueprint } = useContextHandlers({
+  const { onUpdateBlueprint } = useBlueprintHandlers({
     space,
     context: processor.context,
     blueprintRegistry: processor.blueprintRegistry,
