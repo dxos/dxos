@@ -62,6 +62,8 @@ const DefaultStory = ({
       return;
     }
 
+    // TODO(burdon): Active should be ephemeral state of AiProcessor; write on edit/prompt.
+
     // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
     // Add blueprints to context.
     // const binder = new AiContextBinder(await chat.queue.load());
@@ -148,7 +150,7 @@ export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
@@ -170,7 +172,7 @@ export const WithBlueprints = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -185,7 +187,7 @@ export const WithChess = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       const object = space.db.add(
         Chess.makeGame({
@@ -207,7 +209,7 @@ export const WithMap = {
     plugins: [MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Map.makeMap());
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -222,7 +224,7 @@ export const WithTrip = {
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       // TODO(burdon): Table.
       {
         const object = space.db.add(Map.makeMap({ name: 'Trip' }));
@@ -276,7 +278,7 @@ export const WithBoard = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Board.makeBoard());
       await binder.bind({ objects: [Ref.make(object)] });
     },
