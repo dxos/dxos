@@ -49,6 +49,7 @@ export namespace Events {
   /**
    * Fired to load any newly available artifacts definitions.
    */
+  // TODO(burdon): Rename.
   export const SetupArtifactDefinition = defineEvent('dxos.org/app-framework/event/setup-artifact-definition');
 
   //

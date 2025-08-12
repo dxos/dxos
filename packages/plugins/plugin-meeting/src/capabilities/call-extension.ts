@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { type ChannelType } from '@dxos/plugin-thread/types';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space, getSpace } from '@dxos/react-client/echo';
@@ -55,9 +56,9 @@ export default (context: PluginContext) => {
       // }
 
       // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      // state.transcriptionManager = await context
-      //   .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-      //   .open();
+      state.transcriptionManager = await context
+        .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+        .open();
     },
     onLeave: async () => {
       await state.transcriptionManager?.close();

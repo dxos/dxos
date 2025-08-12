@@ -58,7 +58,7 @@ export const TablePlugin = () =>
         ),
     }),
     defineModule({
-      id: `${meta.id}/module/on-space-created`,
+      id: `${meta.id}/module/on-schema-added`,
       activatesOn: SpaceEvents.SchemaAdded,
       activate: () =>
         contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema }) =>

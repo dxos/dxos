@@ -27,7 +27,6 @@ export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
   system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
-
   observer?: GenerationObserver;
 
   /**

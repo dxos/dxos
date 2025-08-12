@@ -30,7 +30,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     };
   };
 
-  static makeLayer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
+  static layer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
     return Layer.succeed(DatabaseService, DatabaseService.make(db));
   };
 

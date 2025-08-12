@@ -8,8 +8,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { PLANNING_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Obj, Ref } from '@dxos/echo';
+import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -20,11 +21,13 @@ import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../translations';
+import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
@@ -39,12 +42,39 @@ import { addTestData, config, getDecorators, testTypes } from './testing';
 const DefaultStory = ({
   debug = true,
   components,
+  blueprints = [],
 }: {
   debug?: boolean;
   components: (FC<ComponentProps> | FC<ComponentProps>[])[];
+  blueprints?: string[];
 }) => {
   const client = useClient();
   const space = useSpace();
+
+  const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+  useAsyncEffect(async () => {
+    if (!space) {
+      return;
+    }
+    const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
+    const chat = chats[0];
+    if (!chat) {
+      return;
+    }
+
+    // TODO(burdon): Active should be ephemeral state of AiProcessor; write on edit/prompt.
+
+    // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
+    // Add blueprints to context.
+    // const binder = new AiContextBinder(await chat.queue.load());
+    // for (const key of blueprints) {
+    //   const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
+    //   if (blueprint) {
+    //     const obj = space.db.add(Obj.clone(blueprint));
+    //     await binder.bind({ blueprints: [Ref.make(obj)] });
+    //   }
+    // }
+  }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
@@ -93,7 +123,6 @@ const DefaultStory = ({
 const storybook = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
-  decorators: [],
   parameters: {
     translations,
     controls: { disable: true },
@@ -121,13 +150,12 @@ export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
           content: trim`
             # Hello, world!
-
             This is a test.
           `,
         }),
@@ -143,9 +171,8 @@ export const WithDocument = {
 export const WithBlueprints = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
-    blueprints: [PLANNING_BLUEPRINT],
     config: config.remote,
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -160,7 +187,7 @@ export const WithChess = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       // TODO(burdon): Add player DID (for user and assistant).
       const object = space.db.add(
         Chess.makeGame({
@@ -173,6 +200,7 @@ export const WithChess = {
   }),
   args: {
     components: [ChatContainer, SurfaceContainer],
+    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/chess'],
   },
 } satisfies Story;
 
@@ -181,7 +209,7 @@ export const WithMap = {
     plugins: [MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Map.makeMap());
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -196,7 +224,7 @@ export const WithTrip = {
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       // TODO(burdon): Table.
       {
         const object = space.db.add(Map.makeMap({ name: 'Trip' }));
@@ -210,13 +238,11 @@ export const WithTrip = {
               # Itinerary
 
               ## Day 1
-
               - Visit the Sagrada Familia
               - Visit the Park Güell
               - Visit the Casa Batlló
 
               ## Day 2
-
               - Visit the Eiffel Tower
               - Visit the Louvre
               - Visit the Musée d'Orsay
@@ -232,7 +258,9 @@ export const WithTrip = {
             content: trim`
               # Barcelona
 
-              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
+              It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
+              The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
             `,
           }),
         );
@@ -250,7 +278,7 @@ export const WithBoard = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ binder, space }) => {
+    onInit: async ({ space, binder }) => {
       const object = space.db.add(Board.makeBoard());
       await binder.bind({ objects: [Ref.make(object)] });
     },
@@ -264,13 +292,13 @@ export const WithBoard = {
 export const WithResearch = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
-    blueprints: [RESEARCH_BLUEPRINT],
     config: config.persistent,
     types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
     components: [ChatContainer, [GraphContainer, BlueprintContainer]],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 } satisfies Story;
 

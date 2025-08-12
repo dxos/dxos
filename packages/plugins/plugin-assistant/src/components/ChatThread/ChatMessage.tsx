@@ -6,6 +6,7 @@ import React, { type FC, Fragment, type PropsWithChildren } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
@@ -272,6 +273,8 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
 };
+
+export const renderObjectLink = (obj: Obj.Any) => `[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
 // TODO(burdon): Move to parser.
 const preprocessTextContent = (content: string) =>
