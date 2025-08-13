@@ -16,7 +16,7 @@ export const list = Command.make('list', {}, () =>
     const client = yield* ClientService;
     const spaces = client.spaces.get();
     const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-    yield* Console.log(formattedSpaces);
+    yield* Effect.log(formattedSpaces);
   }),
 );
 

@@ -15,7 +15,7 @@ const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
 // TODO(wittjosiah): This is not yet foolproof.
 export const waitForSync = Effect.fn(function* (space: Space) {
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
-    yield* Console.log('Edge replication is disabled, enabling...');
+    yield* Effect.log('Edge replication is disabled, enabling...');
     yield* Effect.tryPromise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   }
 
@@ -23,7 +23,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const synced = yield* Effect.makeLatch();
   space.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
     const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-    Effect.runSync(Console.log('syncing', syncState));
+    Effect.runSync(Effect.log('syncing', syncState));
 
     if (
       syncState &&

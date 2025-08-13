@@ -166,7 +166,7 @@ const upload = Effect.fn(function* ({
     }),
   ).pipe(Effect.timeout(10_000));
   invariant(result.functionId, 'Upload failed.');
-  yield* Console.log('Uploaded function', {
+  yield* Effect.log('Uploaded function', {
     functionId: result.functionId,
     version: result.version,
   });
@@ -228,7 +228,7 @@ const upsertFunctionObject = Effect.fn(function* ({
   functionObject.name = name ?? functionObject.name;
   functionObject.version = uploadResult.version;
   setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
-  yield* Console.log('Upserted function object', functionObject.id);
+  yield* Effect.log('Upserted function object', functionObject.id);
   return functionObject;
 });
 
@@ -264,12 +264,12 @@ const upsertComposerScript = Effect.fn(function* ({
     const script = yield* Effect.tryPromise(() => functionObject.source!.load());
     const source = yield* Effect.tryPromise(() => script.source.load());
     source.content = scriptFileContent;
-    yield* Console.log('Updated composer script', script.id);
+    yield* Effect.log('Updated composer script', script.id);
   } else {
     const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
     const obj = space.db.add(Obj.make(ScriptType, { name: name ?? scriptFileName, source: Ref.make(sourceObj) }));
     functionObject.source = Ref.make(obj);
     yield* makeObjectNavigableInComposer(client, space, obj);
-    yield* Console.log('Created composer script', obj.id);
+    yield* Effect.log('Created composer script', obj.id);
   }
 });

@@ -21,6 +21,6 @@ export const query = Command.make('query', { rawSpaceId, typename }, ({ rawSpace
     const filter = typename?.length ? Filter.typename(typename) : Filter.nothing();
     // TODO(wittjosiah): Use DatabaseService?
     const { objects } = yield* Effect.tryPromise(() => space.db.query(filter).run());
-    yield* Console.log(JSON.stringify(objects, null, 2));
+    yield* Effect.log(JSON.stringify(objects, null, 2));
   }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.logError('Space not found'))),
 );

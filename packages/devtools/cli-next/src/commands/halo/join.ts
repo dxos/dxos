@@ -30,8 +30,8 @@ export const join = Command.make('join', { invitationCode }, ({ invitationCode: 
     yield* waitForState(invitation, Invitation.State.SUCCESS);
 
     const identity = client.halo.identity.get();
-    yield* Console.log('Identity key:', identity?.identityKey?.toHex());
-    yield* Console.log('Display name:', identity?.profile?.displayName);
+    yield* Effect.log('Identity key:', identity?.identityKey?.toHex());
+    yield* Effect.log('Display name:', identity?.profile?.displayName);
   }),
 );
 

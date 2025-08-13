@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { ClientService } from '../../services';
 
@@ -12,12 +12,12 @@ export const identity = Command.make('identity', {}, () =>
     const client = yield* ClientService;
     const identity = client.halo.identity.get();
     if (!identity) {
-      yield* Console.log('Identity not initialized.');
+      yield* Effect.log('Identity not initialized.');
     } else {
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       const { identityKey, profile } = identity;
-      yield* Console.log('Identity key:', identityKey.toHex());
-      yield* Console.log('Display name:', profile?.displayName);
+      yield* Effect.log('Identity key:', identityKey.toHex());
+      yield* Effect.log('Display name:', profile?.displayName);
     }
   }),
 );

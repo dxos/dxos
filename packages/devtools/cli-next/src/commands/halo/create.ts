@@ -23,7 +23,7 @@ export const create = Command.make('create', { displayName }, ({ displayName }) 
     const identity = yield* Effect.tryPromise(() =>
       client.halo.createIdentity({ displayName: Option.getOrUndefined(displayName) }),
     );
-    yield* Console.log('Identity key:', identity.identityKey.toHex());
-    yield* Console.log('Display name:', identity.profile?.displayName);
+    yield* Effect.log('Identity key:', identity.identityKey.toHex());
+    yield* Effect.log('Display name:', identity.profile?.displayName);
   }),
 );
