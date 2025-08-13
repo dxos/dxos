@@ -76,11 +76,13 @@ export const deploy = Command.make(
             Effect.gen(function* () {
               const space = client.spaces.get(spaceId);
               invariant(space, 'Space not found');
+              yield* Effect.tryPromise(() => space.waitUntilReady());
               const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
               const uploadResult = yield* upload({
                 ownerPublicKey: identity.identityKey,
                 bundledSource: bundledScript,
                 functionId: Option.getOrUndefined(functionId),
+                fnObject: existingFunctionObject,
                 name: Option.getOrUndefined(name),
                 version: Option.getOrUndefined(version),
               });
@@ -221,9 +223,7 @@ const upsertFunctionObject = Effect.fn(function* ({
       name: path.basename(file, path.extname(file)),
       version: uploadResult.version,
     });
-    yield* Console.log('Adding function object to space', functionObject);
     space.db.add(functionObject);
-    yield* Console.log('Function object added to space', functionObject);
   }
   functionObject.name = name ?? functionObject.name;
   functionObject.version = uploadResult.version;
