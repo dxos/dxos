@@ -4488,6 +4488,86 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
 
+  packages/devtools/cli-next:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@effect/cli':
+        specifier: 0.69.0
+        version: 0.69.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/printer-ansi@0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7))(@effect/printer@0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      '@effect/cluster':
+        specifier: 0.47.0
+        version: 0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      '@effect/platform':
+        specifier: 0.90.2
+        version: 0.90.2(effect@3.17.7)
+      '@effect/platform-node':
+        specifier: 0.95.0
+        version: 0.95.0(@effect/cluster@0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      '@effect/printer':
+        specifier: 0.45.0
+        version: 0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7)
+      '@effect/printer-ansi':
+        specifier: 0.45.0
+        version: 0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7)
+      '@effect/rpc':
+        specifier: 0.68.3
+        version: 0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+      '@effect/sql':
+        specifier: 0.44.1
+        version: 0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+      '@effect/typeclass':
+        specifier: 0.36.0
+        version: 0.36.0(effect@3.17.7)
+      '@effect/workflow':
+        specifier: 0.8.3
+        version: 0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      effect:
+        specifier: 3.17.7
+        version: 3.17.7
+    devDependencies:
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
+    publishDirectory: dist
+
   packages/devtools/devtools:
     dependencies:
       '@automerge/automerge':
@@ -4867,86 +4947,6 @@ importers:
       vite-plugin-wasm:
         specifier: ^3.3.0
         version: 3.4.1(vite@5.4.7(patch_hash=75f83b93ee159c0fbbaaf4f0fb6645f86af94d97cdc42da927784dc7f42707e1)(@types/node@22.10.2)(terser@5.19.2))
-
-  packages/devtools/effect-cli:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@effect/cli':
-        specifier: 0.69.0
-        version: 0.69.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/printer-ansi@0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7))(@effect/printer@0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
-      '@effect/cluster':
-        specifier: 0.47.0
-        version: 0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
-      '@effect/platform':
-        specifier: 0.90.2
-        version: 0.90.2(effect@3.17.7)
-      '@effect/platform-node':
-        specifier: 0.95.0
-        version: 0.95.0(@effect/cluster@0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
-      '@effect/printer':
-        specifier: 0.45.0
-        version: 0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7)
-      '@effect/printer-ansi':
-        specifier: 0.45.0
-        version: 0.45.0(@effect/typeclass@0.36.0(effect@3.17.7))(effect@3.17.7)
-      '@effect/rpc':
-        specifier: 0.68.3
-        version: 0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
-      '@effect/sql':
-        specifier: 0.44.1
-        version: 0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
-      '@effect/typeclass':
-        specifier: 0.36.0
-        version: 0.36.0(effect@3.17.7)
-      '@effect/workflow':
-        specifier: 0.8.3
-        version: 0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
-      effect:
-        specifier: 3.17.7
-        version: 3.17.7
-    devDependencies:
-      '@types/node':
-        specifier: 22.10.2
-        version: 22.10.2
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
-      vitest:
-        specifier: ^3.2.0
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jsdom@26.1.0)(terser@5.19.2)
-    publishDirectory: dist
 
   packages/e2e/blade-runner:
     dependencies:

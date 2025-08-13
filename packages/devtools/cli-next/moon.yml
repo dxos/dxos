@@ -4,6 +4,12 @@ tags:
   - ts-build
   - ts-test
 tasks:
+  build:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: replace
+    outputs: []
   compile:
     # TODO(wittjosiah): Maybe add bundleAll option to match what tsup would do?
     # Bundling the deps would allow the published package.json to not have dependencies.
@@ -16,4 +22,12 @@ tasks:
       mergeArgs: replace
       mergeOutputs: replace
     outputs:
-      - dist/
+      - dist/node-esm/
+  prebuild:
+    script: pnpm tsx ./scripts/copy-package-json.ts
+    inputs:
+      - scripts/copy-package-json.ts
+      - package.json
+      - moon.yml
+    outputs:
+      - dist/package.json

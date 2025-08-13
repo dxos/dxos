@@ -394,17 +394,17 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/cli-next/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/devtools/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/devtools/devtools-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/devtools/effect-cli/package.json",
           "jsonpath": "$.version"
         },
         {

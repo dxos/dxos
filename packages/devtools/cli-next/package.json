@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/effect-cli",
+  "name": "@dxos/cli-next",
   "version": "0.8.3",
-  "description": "DXOS Effect CLI",
+  "description": "Next-generation DXOS CLI",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
