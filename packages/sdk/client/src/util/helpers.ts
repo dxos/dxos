@@ -12,11 +12,11 @@ import { type Space } from '../echo';
 // TODO(burdon): Type check?
 // TOOD(burdon): Move to client class?
 // TODO(dmaretskyi): Align with `graph.createRefResolver` API.
-export const resolveRef = async <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
+export const resolveRef = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
   client: Client,
   dxn: DXN,
   defaultSpace?: Space,
-): Promise<T | undefined> => {
+): T | undefined => {
   const echoDxn = dxn?.asEchoDXN();
   if (echoDxn) {
     const space = echoDxn.spaceId ? client.spaces.get(echoDxn.spaceId) : defaultSpace;
