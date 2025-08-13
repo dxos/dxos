@@ -671,6 +671,63 @@ describe('AutomergeRepo', () => {
       await doc.whenReady();
       expect(doc.doc()).to.deep.eq(document.doc());
     });
+
+    test('document is passively replicated to connected peers', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+
+      const handle = peer1.repo.create();
+      handle.change((doc: any) => (doc.text = 'hello'));
+      await connectPeers(spaceKey, teleportBuilder, peer1, peer2);
+
+      await expect
+        .poll(async () => {
+          const doc = peer2.repo.handles[handle.documentId];
+          await doc.whenReady();
+          return doc.doc()!.text;
+        })
+        .toEqual('hello');
+    });
+
+    test('imported document is passively replicated to connected peers', async () => {
+      let blob: Uint8Array;
+      let documentId: DocumentId;
+      {
+        const repo = new Repo();
+        const handle = repo.create();
+        handle.change((doc: any) => (doc.text = 'hello'));
+        blob = A.save(handle.doc()!);
+        documentId = handle.documentId;
+      }
+
+      const [spaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      await connectPeers(spaceKey, teleportBuilder, peer1, peer2);
+
+      const handle = peer1.repo.import(blob, { docId: documentId });
+      await handle.whenReady();
+
+      await expect
+        .poll(
+          async () => {
+            const doc = peer2.repo.handles[handle.documentId];
+            await doc.whenReady();
+            return doc.doc()!.text;
+          },
+          { timeout: 1_000 },
+        )
+        .toEqual('hello');
+    });
   });
 
   const createLevelAdapter = async () => {
