@@ -5,12 +5,11 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
 
-import { type Obj, type Relation } from '@dxos/echo';
+import { Obj, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
-  type BaseObject,
   EntityKind,
   ObjectId,
   ReferenceAnnotationId,
@@ -173,8 +172,7 @@ export const makeGraphWriterHandler = (
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
       yield* Effect.promise(() => queue.append(data as Obj.Any[]));
 
-      // TODO(dmaretskyi): Obj.getDXN should work here, but currently the objects are not aware of their location.
-      const dxns = data.map((obj) => new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, obj.id]));
+      const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
 
       return dxns;
@@ -209,7 +207,7 @@ export const sanitizeObjects = async (
   data: Record<string, readonly unknown[]>,
   db: EchoDatabase,
   queue?: Queue,
-): Promise<BaseObject[]> => {
+): Promise<Obj.Any[]> => {
   const entries = types
     .map(
       (type) =>

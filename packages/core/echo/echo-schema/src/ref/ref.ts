@@ -341,6 +341,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async load(): Promise<T> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     const obj = await this.#resolver.resolve(this.#dxn);
     if (obj == null) {

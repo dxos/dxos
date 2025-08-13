@@ -37,6 +37,12 @@ export interface DevtoolsHook {
   feeds?: Accessor<FeedWrapper>;
   halo?: Halo;
 
+  /**
+   * Resolves the DXN.
+   * @param id - The DXN or DXN ID or object ID or text query.
+   */
+  get?(id: string | DXN): Promise<any>;
+
   openClientRpcServer: () => Promise<boolean>;
 
   openDevtoolsApp?: () => void;
@@ -185,6 +191,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
         ),
     });
     hook.halo = client.halo;
+
+    hook.get = async (dxn) => {
+      if (typeof dxn === 'string') {
+        dxn = DXN.parse(dxn);
+      }
+      return client.graph.createRefResolver({}).resolve(dxn);
+    };
 
     hook.openDevtoolsApp = async () => {
       const vault = client.config?.values.runtime?.client?.remoteSource ?? 'https://halo.dxos.org';

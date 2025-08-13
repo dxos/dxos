@@ -171,7 +171,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             _tag: 'toolCall',
             toolCallId: '1234',
             name: 'search',
-            input: {},
+            input: JSON.stringify({}),
           },
         ]),
         createMessage('user', [
@@ -195,7 +195,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             _tag: 'toolCall',
             toolCallId: '4567',
             name: 'create',
-            input: {},
+            input: JSON.stringify({}),
           },
         ]),
         createMessage('user', [

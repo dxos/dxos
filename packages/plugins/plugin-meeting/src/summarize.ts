@@ -15,6 +15,7 @@ import {
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { TranscriptType } from '@dxos/plugin-transcription/types';
@@ -54,6 +55,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
+      TracingService.layerNoop,
     ),
   ),
 );
