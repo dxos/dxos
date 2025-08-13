@@ -5481,6 +5481,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-searchlist
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../../ui/react-ui-sfx
@@ -5490,6 +5493,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/react-ui-tag-picker':
         specifier: workspace:*
         version: link:../../ui/react-ui-tag-picker

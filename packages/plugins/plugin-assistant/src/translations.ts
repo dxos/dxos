@@ -79,10 +79,12 @@ export const translations = [
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
         'context objects placeholder': 'Add to context...',
-        'button add blueprint': 'Configure blueprints',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',
+        'blueprints in context title': 'Blueprints',
+        'objects in context title': 'Documents',
+        'chat model title': 'Model',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',

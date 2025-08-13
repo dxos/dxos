@@ -360,6 +360,7 @@ const ChatPrompt = ({
       />
 
       <ChatOptions
+        space={space}
         blueprintRegistry={processor.blueprintRegistry}
         context={processor.context}
         onUpdateBlueprint={onUpdateBlueprint}
