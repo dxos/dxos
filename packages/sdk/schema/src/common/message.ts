@@ -297,6 +297,7 @@ const MessageSchema = Schema.Struct({
   id: ObjectId,
 
   parentMessage: Schema.optional(ObjectId),
+  // TODO(dmaretskyi): Consider adding a channelId too.
 
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
@@ -307,6 +308,8 @@ const MessageSchema = Schema.Struct({
     description: 'Contents of the message.',
     default: [],
   }),
+
+  // TODO(dmaretskyi): Add tool call ID here.
   properties: Schema.optional(
     Schema.mutable(
       Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({

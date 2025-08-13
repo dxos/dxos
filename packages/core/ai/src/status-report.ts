@@ -15,6 +15,8 @@ import { ObjectId } from '@dxos/keys';
  */
 export const AgentStatus = Schema.Struct({
   parentMessage: Schema.optional(ObjectId),
+  // TODO(dmaretskyi): Add tool call id
+  // toolCallId: Schema.optional(Schema.String),
 
   message: Schema.String,
 }).pipe(

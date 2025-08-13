@@ -30,6 +30,7 @@ export const LoggingContainer = ({ space }: ComponentProps) => {
   );
 };
 
+// TODO(dmaretskyi): Extract.
 function reduceTraceEvents(events: Obj.Any[]): { branches: Branch[]; commits: Commit[] } {
   const branchNames = new Set<string>();
   const commits: Commit[] = [];
