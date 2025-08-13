@@ -12,6 +12,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
+// TODO(wittjosiah): This is not yet foolproof.
 export const waitForSync = Effect.fn(function* (space: Space) {
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
     yield* Console.log('Edge replication is disabled, enabling...');
