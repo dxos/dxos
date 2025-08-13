@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { type PublicKey } from '@dxos/client';
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Console, Effect } from 'effect';
+import { Effect } from 'effect';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';

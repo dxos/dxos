@@ -3,7 +3,7 @@
 //
 
 import { Args, Command, Prompt } from '@effect/cli';
-import { Console, Effect, Match } from 'effect';
+import { Effect, Match } from 'effect';
 
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';

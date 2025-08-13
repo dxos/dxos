@@ -6,7 +6,7 @@ import path from 'node:path';
 
 import { Args, Command, Options } from '@effect/cli';
 import { FileSystem } from '@effect/platform';
-import { Console, Effect, Option } from 'effect';
+import { Effect, Option } from 'effect';
 
 import { type Client, type PublicKey } from '@dxos/client';
 import { type AnyLiveObject, Filter, type Space, SpaceId, getMeta } from '@dxos/client/echo';

@@ -3,7 +3,7 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Console, Effect, Option } from 'effect';
+import { Effect, Option } from 'effect';
 
 import { Filter, SpaceId } from '@dxos/client/echo';
 
