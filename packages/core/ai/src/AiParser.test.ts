@@ -87,7 +87,7 @@ describe('parser', () => {
             _tag: 'toolCall',
             toolCallId: '123',
             name: 'foo',
-            input: JSON.stringify({ bar: 'baz' },
+            input: JSON.stringify({ bar: 'baz' }),
           },
         ]);
       }),

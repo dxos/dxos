@@ -48,7 +48,7 @@ describe('preprocessor', () => {
             _tag: 'toolResult',
             toolCallId: 'call_1',
             name: 'calculator',
-            result: 'Result of tool 1',
+            result: JSON.stringify('Result of tool 1'),
           },
           {
             _tag: 'toolResult',
@@ -81,7 +81,7 @@ describe('preprocessor', () => {
         new AiInput.ToolCallResultPart({
           id: AiInput.ToolCallId.make('call_2'),
           name: 'calculator',
-          result: JSON.stringify('Result of tool 2'),
+          result: 'Result of tool 2',
         }),
       );
 
@@ -305,13 +305,13 @@ describe('preprocessor', () => {
             _tag: 'toolResult',
             toolCallId: 'call_1',
             name: 'calculator',
-            result: 'First result',
+            result: JSON.stringify('First result'),
           },
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
             name: 'search',
-            result: 'Second result',
+            result: JSON.stringify('Second result'),
           },
           {
             _tag: 'text',

@@ -45,7 +45,7 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                result: block.error ?? JSON.stringify(block.result),
+                                result: block.error ?? JSON.parse(block.result!),
                               }),
                           ),
                         });
