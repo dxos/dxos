@@ -10,7 +10,7 @@ import { Toolbar } from '@dxos/react-ui';
 
 import { Timeline, type Branch, type Commit } from '../../components';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Assistant } from '../../types';
 import { type ComponentProps } from './types';
@@ -52,7 +52,7 @@ function reduceTraceEvents(events: Obj.Any[]): { branches: Branch[]; commits: Co
       commits.push({
         id: event.id,
         branch: parent,
-        message: '❓' + (Obj.getLabel(event) ?? Obj.getTypename(event) ?? event.id),
+        message: '❓' + stringifyObject(event),
         parent,
       });
     }
@@ -111,7 +111,7 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           id,
           branch,
           parent: message.parentMessage,
-          message: '🔗' + (block.reference.dxn.asEchoDXN()?.echoId ?? block.reference.dxn.asQueueDXN()?.objectId ?? ''),
+          message: '🔗' + stringifyRef(block.reference),
         };
       default:
         return {
@@ -129,4 +129,15 @@ const ellipsisEnd = (str: string, length: number) => {
     return str.slice(0, length - 1) + '…';
   }
   return str;
+};
+
+const stringifyRef = (ref: Ref.Any) => {
+  if (ref.target) {
+    return stringifyObject(ref.target);
+  }
+  return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
+};
+
+const stringifyObject = (obj: Obj.Any) => {
+  return Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
 };
