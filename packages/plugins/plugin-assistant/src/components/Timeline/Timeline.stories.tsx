@@ -11,7 +11,7 @@ import { LogLevel } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Toolbar, useInterval } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type Branch, type Commit, IconType, Timeline } from './Timeline';
 
@@ -20,7 +20,13 @@ faker.seed(1);
 const meta: Meta<typeof Timeline> = {
   title: 'plugins/plugin-assistant/Timeline',
   component: Timeline,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [
+    withTheme,
+    withLayout({
+      Container: ColumnContainer,
+      fullscreen: true,
+    }),
+  ],
 };
 
 export default meta;
@@ -40,6 +46,18 @@ export const Default: Story = {
       { id: 'c7', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c6' },
       { id: 'c8', message: faker.lorem.paragraph(), branch: 'feature-c', parent: 'c6' },
       { id: 'c9', message: faker.lorem.paragraph(), branch: 'main', parent: 'c4' },
+    ],
+  },
+};
+
+export const Simple: Story = {
+  args: {
+    branches: [{ name: 'main' }, { name: 'feature-a' }],
+    commits: [
+      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c1' },
+      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c2' },
+      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parent: 'c1' },
     ],
   },
 };
@@ -135,7 +153,7 @@ export const Random: Story = {
           <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
           <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
         </Toolbar.Root>
-        <ScrollContainer ref={scrollerRef} classNames='border border-separator'>
+        <ScrollContainer ref={scrollerRef}>
           <Timeline branches={branches} commits={commits} />
         </ScrollContainer>
       </div>
