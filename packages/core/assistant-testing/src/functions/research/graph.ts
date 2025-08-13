@@ -10,6 +10,7 @@ import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
+  type BaseObject,
   EntityKind,
   ObjectId,
   ReferenceAnnotationId,

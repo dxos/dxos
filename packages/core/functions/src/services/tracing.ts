@@ -7,7 +7,7 @@ import { Context, Effect, Layer } from 'effect';
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
 /**
