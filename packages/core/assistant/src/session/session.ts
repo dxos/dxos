@@ -4,6 +4,7 @@
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
 import { Chunk, type Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
+import { ToolId } from '@dxos/ai';
 
 import {
   type AiInputPreprocessingError,
@@ -100,6 +101,7 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
   history?: DataType.Message[];
   objects?: Obj.Any[]; // TODO(burdon): Meta only (typename and id -- write to binder).
   blueprints?: Blueprint.Blueprint[];
+  toolIds?: ToolId[];
   toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
 };
@@ -285,9 +287,13 @@ export class AiSession {
 const createToolkit = <Tools extends AiTool.Any>({
   toolkit,
   blueprints = [],
-}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
+  toolIds = [],
+}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints' | 'toolIds'>) =>
   Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
+      ...blueprints.flatMap(({ tools }) => tools),
+      ...toolIds,
+    ]);
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
