@@ -22,9 +22,10 @@ import {
 } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
+import { exaFunction, exaMockFunction } from '../exa';
+
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
-import { exaFunction, exaMockFunction } from '../exa';
 import PROMPT from './instructions-research.tpl?raw';
 import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
