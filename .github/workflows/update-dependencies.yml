@@ -23,6 +23,10 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
       - name: Setup
         uses: ./.github/actions/setup
 
