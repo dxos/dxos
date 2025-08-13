@@ -12,8 +12,10 @@ const program = Effect.gen(function*() {
     version: json.version,
     type: json.type,
     description: json.description,
-    main: "bin.cjs",
-    bin: "bin.cjs",
+    main: "node_esm/bin.mjs",
+    bin: {
+      "dx": "node_esm/bin.mjs",
+    },
     engines: json.engines,
     dependencies: json.dependencies,
     peerDependencies: json.peerDependencies,

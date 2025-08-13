@@ -1,18 +1,19 @@
 type: application
 language: typescript
 tags:
+  - ts-build
   - ts-test
 tasks:
-  build:
-    script: pnpm tsup && pnpm tsx scripts/copy-package-json.ts
-    deps:
-      - ^:build
-      - ^:compile
-    inputs:
-      - /tsconfig.base.json
-      - tsconfig.json
-      - '@group(sources)'
+  compile:
+    # TODO(wittjosiah): Maybe add bundleAll option to match what tsup would do?
+    # Bundling the deps would allow the published package.json to not have dependencies.
+    args:
+      - '--entryPoint=src/bin.ts'
+      - '--platform=node'
+      - '--injectGlobals'
+      - '--outputPath=dist'
+    options:
+      mergeArgs: replace
+      mergeOutputs: replace
     outputs:
       - dist/
-    options:
-      timeout: 60

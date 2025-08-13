@@ -36,8 +36,6 @@ export {
 // TODO(burdon): Use "export *" and @internal to restrict exports.
 // TODO(wittjosiah): Should all api errors be exported here?
 
-// For some reason the * re-export from ./client gets removed by TSC. Looks like a compiler bug.
-export { type Client } from './client';
 export * from './client';
 export * from './services';
 export * from './util';

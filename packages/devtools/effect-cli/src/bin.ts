@@ -4,10 +4,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as NodeContext from '@effect/platform-node/NodeContext';
-import * as NodeRuntime from '@effect/platform-node/NodeRuntime';
-import * as Effect from 'effect/Effect';
+import { NodeContext, NodeRuntime } from '@effect/platform-node';
+import { Effect } from 'effect';
 
-import { run } from './Cli.js';
+import { run } from './commands';
+import { ClientService } from './services';
 
-run(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain({ disableErrorReporting: true }));
+run(process.argv).pipe(
+  Effect.provide(NodeContext.layer),
+  Effect.provide(ClientService.layer),
+  NodeRuntime.runMain({ disableErrorReporting: true }),
+);
