@@ -34,17 +34,17 @@ const version = Options.text('version').pipe(
   Options.withDescription('The version of the function to deploy'),
   Options.optional,
 );
-const composerScript = Options.boolean('composerScript').pipe(
-  Options.withDescription('Loads the script into composer.'),
+const spaceId = Options.text('spaceId').pipe(
+  Options.withDescription('Space key to create/update Script source in.'),
   Options.optional,
 );
 const functionId = Options.text('functionId').pipe(
   Options.withDescription('Existing UserFunction ID to update.'),
   Options.optional,
 );
-const spaceId = Options.text('spaceId').pipe(
-  Options.withDescription('Space key to create/update Script source in.'),
-  Options.optional,
+const composerScript = Options.boolean('composerScript').pipe(
+  Options.withDescription('Loads the script into composer.'),
+  Options.withDefault(false),
 );
 
 export const deploy = Command.make(
