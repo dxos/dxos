@@ -17,7 +17,7 @@ const displayName = Options.text('displayName').pipe(
 export const create = Command.make('create', { displayName }, ({ displayName }) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    // TODO(wittjosiah): How to surface this error to the user?
+    // TODO(wittjosiah): How to surface this error to the user cleanly?
     invariant(!client.halo.identity.get(), 'Identity already exists');
 
     const identity = yield* Effect.tryPromise(() =>

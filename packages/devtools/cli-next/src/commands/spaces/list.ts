@@ -23,6 +23,7 @@ export const list = Command.make('list', {}, () =>
 // TODO(wittjosiah): Factor out.
 const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
+// TODO(wittjosiah): Use @effect/printer.
 const formatSpace = Effect.fn(function* (space: Space, options = { verbose: false, truncateKeys: false }) {
   yield* Effect.tryPromise(() => space.waitUntilReady());
 

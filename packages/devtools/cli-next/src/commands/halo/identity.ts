@@ -12,6 +12,7 @@ export const identity = Command.make('identity', {}, () =>
     const client = yield* ClientService;
     const identity = client.halo.identity.get();
     if (!identity) {
+      // TODO(wittjosiah): Look into @effect/printer-ansi for colored output.
       yield* Effect.log('Identity not initialized.');
     } else {
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());

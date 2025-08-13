@@ -15,7 +15,7 @@ const invitationCode = Args.text({ name: 'invitationCode' }).pipe(Args.withDescr
 export const join = Command.make('join', { invitationCode }, ({ invitationCode: encoded }) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    // TODO(wittjosiah): How to surface this error to the user?
+    // TODO(wittjosiah): How to surface this error to the user cleanly?
     invariant(!client.halo.identity.get(), 'Identity already exists');
 
     if (encoded.startsWith('http') || encoded.startsWith('socket')) {
