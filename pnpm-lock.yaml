@@ -26,6 +26,9 @@ overrides:
 pnpmfileChecksum: sha256-I26ibQHzR4rDQrxFzxv3gV/eiaOj3gHH1boJmPZ5xig=
 
 patchedDependencies:
+  '@automerge/automerge-repo':
+    hash: cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030
+    path: patches/@automerge__automerge-repo.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2742,7 +2745,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2876,7 +2879,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4875,7 +4878,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@automerge/automerge-repo-network-websocket':
         specifier: 2.3.0-alpha.0
         version: 2.3.0-alpha.0
@@ -10750,7 +10753,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10940,7 +10943,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11200,7 +11203,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -12961,7 +12964,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 2.3.0-alpha.0
         version: 2.3.0-alpha.0
@@ -33516,13 +33519,13 @@ snapshots:
 
   '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
     transitivePeerDependencies:
       - supports-color
 
   '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       cbor-x: 1.5.4
       debug: 4.4.1
       eventemitter3: 5.0.1
@@ -33535,11 +33538,11 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.3.0-alpha.0':
+  '@automerge/automerge-repo@2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1
