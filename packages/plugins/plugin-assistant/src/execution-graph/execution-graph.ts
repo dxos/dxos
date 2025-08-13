@@ -8,7 +8,7 @@ import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import type { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
-import { type Branch, type Commit } from '../components';
+import { type Branch, type Commit, IconType } from '../components';
 
 /**
  * Models the execution graph based on a stream of events.
@@ -33,7 +33,8 @@ export class ExecutionGraph {
         this._commits.push({
           id: event.id,
           branch,
-          message: '⚡️' + event.message,
+          message: event.message,
+          icon: IconType.FLAG,
           parent:
             event.parentMessage && event.toolCallId ? getToolCallId(event.parentMessage, event.toolCallId) : undefined,
         });
@@ -91,50 +92,55 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           id: getToolCallId(message.id, block.toolCallId),
           branch,
           parent,
-          message: '🔨' + block.name,
+          icon: IconType.TOOL,
+          message: block.name,
         };
       case 'toolResult':
         return {
           id: getToolResultId(message.id, block.toolCallId),
           branch,
           parent,
-          message: block.error ? '❌ ' + block.error : '✅ ' + block.name,
+          icon: block.error ? IconType.X : IconType.CHECK,
+          message: block.error ? block.error : block.name,
         };
       case 'status':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
           parent,
-          message: '⚡️' + block.statusText,
+          message: block.statusText,
+          icon: IconType.FLAG,
         };
       case 'reasoning':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
           parent,
-          message: '💭' + (block.reasoningText ?? 'Thinking...'),
+          message: block.reasoningText ?? 'Thinking...',
+          icon: IconType.THINK,
         };
       case 'text':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
           parent,
-          message:
-            message.sender.role === 'user' ? `👤 ${ellipsisEnd(block.text, 64)}` : `🤖 ${ellipsisEnd(block.text, 64)}`,
+          icon: message.sender.role === 'user' ? IconType.USER : IconType.AGENT,
+          message: ellipsisEnd(block.text, 64),
         };
       case 'reference':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
           parent,
-          message: '🔗' + stringifyRef(block.reference),
+          icon: IconType.LINK,
+          message: stringifyRef(block.reference),
         };
       default:
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
           parent,
-          message: '❓' + block._tag,
+          message: block._tag,
         };
     }
   });
