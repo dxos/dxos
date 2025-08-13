@@ -120,4 +120,4 @@ export namespace TracingService {
 /**
  * Goes into {@link DataType.Message['properties']}
  */
-const MESSAGE_PROPERTY_TOOL_CALL_ID = 'toolCallId' as const;
+export const MESSAGE_PROPERTY_TOOL_CALL_ID = 'toolCallId' as const;
