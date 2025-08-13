@@ -21,10 +21,16 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/functions"
@@ -34,6 +40,9 @@
     },
     {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/schema"
     }
   ]
 }

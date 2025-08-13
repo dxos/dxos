@@ -13,5 +13,6 @@ import { ClientService } from './services';
 run(process.argv).pipe(
   Effect.provide(NodeContext.layer),
   Effect.provide(ClientService.layer),
+  Effect.scoped,
   NodeRuntime.runMain({ disableErrorReporting: true }),
 );

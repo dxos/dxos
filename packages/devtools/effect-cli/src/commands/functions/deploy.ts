@@ -2,17 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
+import path from 'node:path';
+
 import { Args, Command, Options } from '@effect/cli';
 import { FileSystem } from '@effect/platform';
 import { Console, Effect, Option } from 'effect';
 
-import { type PublicKey } from '@dxos/client';
-import { type FunctionType } from '@dxos/functions';
+import { type Client, type PublicKey } from '@dxos/client';
+import { type AnyLiveObject, Filter, type Space, SpaceId, getMeta } from '@dxos/client/echo';
+import { Obj, Ref } from '@dxos/echo';
+import {
+  FunctionType,
+  ScriptType,
+  getUserFunctionUrlInMetadata,
+  makeFunctionUrl,
+  setUserFunctionUrlInMetadata,
+} from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
+import { type UploadFunctionResponseBody } from '@dxos/protocols';
+import { DataType } from '@dxos/schema';
 
 import { ClientService } from '../../services';
+import { waitForSync } from '../../util';
 
 const file = Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy'));
 
@@ -29,15 +42,15 @@ const functionId = Options.text('functionId').pipe(
   Options.withDescription('Existing UserFunction ID to update.'),
   Options.optional,
 );
-const spaceKey = Options.text('spaceKey').pipe(
+const spaceId = Options.text('spaceId').pipe(
   Options.withDescription('Space key to create/update Script source in.'),
   Options.optional,
 );
 
 export const deploy = Command.make(
   'deploy',
-  { file, name, version, composerScript, functionId, spaceKey },
-  ({ file, name, version, composerScript, functionId, spaceKey }) =>
+  { file, name, version, composerScript, functionId, spaceId },
+  ({ file, name, version, composerScript, functionId, spaceId }) =>
     Effect.gen(function* () {
       const { scriptFileContent, bundledScript } = yield* loadScript(file);
 
@@ -46,15 +59,53 @@ export const deploy = Command.make(
       // TODO(wittjosiah): How to surface this error to the user?
       invariant(identity, 'Identity not available');
 
-      if (Option.isNone(spaceKey)) {
-        yield* upload({
-          ownerPublicKey: identity.identityKey,
-          bundledSource: bundledScript,
-          functionId: Option.getOrUndefined(functionId),
-          name: Option.getOrUndefined(name),
-          version: Option.getOrUndefined(version),
-        });
-      }
+      yield* spaceId.pipe(
+        // TODO(wittjosiah): Feedback about invalid space ID.
+        Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
+        Option.match({
+          onNone: () =>
+            upload({
+              ownerPublicKey: identity.identityKey,
+              bundledSource: bundledScript,
+              functionId: Option.getOrUndefined(functionId),
+              name: Option.getOrUndefined(name),
+              version: Option.getOrUndefined(version),
+            }),
+          onSome: (spaceId) =>
+            // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
+            Effect.gen(function* () {
+              const space = client.spaces.get(spaceId);
+              invariant(space, 'Space not found');
+              const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
+              const uploadResult = yield* upload({
+                ownerPublicKey: identity.identityKey,
+                bundledSource: bundledScript,
+                functionId: Option.getOrUndefined(functionId),
+                name: Option.getOrUndefined(name),
+                version: Option.getOrUndefined(version),
+              });
+              const functionObject = yield* upsertFunctionObject({
+                client,
+                space,
+                existingObject: existingFunctionObject,
+                uploadResult,
+                file,
+                name: Option.getOrUndefined(name),
+              });
+              if (composerScript) {
+                yield* upsertComposerScript({
+                  client,
+                  space,
+                  functionObject,
+                  scriptFileName: path.basename(file),
+                  scriptFileContent,
+                  name: Option.getOrUndefined(name),
+                });
+              }
+              yield* waitForSync(space);
+            }),
+        }),
+      );
     }),
 );
 
@@ -86,7 +137,6 @@ const bundleScript = Effect.fn(function* (path: string) {
   return { bundle: buildResult.bundle };
 });
 
-// TODO(wittjosiah): This is a mess, refactor.
 const upload = Effect.fn(function* ({
   ownerPublicKey,
   bundledSource,
@@ -128,3 +178,98 @@ const getNextVersion = (fnObject: FunctionType | undefined) => {
 
   return '0.0.1';
 };
+
+const findFunctionByDeploymentId = Effect.fn(function* (space: Space, functionId?: string) {
+  if (!functionId) {
+    return undefined;
+  }
+  const invocationUrl = makeFunctionUrl({ functionId });
+  // TODO(wittjosiah): Derive DatabaseService from ClientService.
+  const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(FunctionType)).run());
+  return functions.objects.find((fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl);
+});
+
+const loadFunctionObject = Effect.fn(function* (space: Space, functionId?: string) {
+  const functionObject = yield* findFunctionByDeploymentId(space, functionId);
+  if (!functionObject && functionId) {
+    throw new Error(`Function ECHO object not found for ${functionId}`);
+  }
+
+  return functionObject;
+});
+
+const upsertFunctionObject = Effect.fn(function* ({
+  client,
+  space,
+  existingObject,
+  uploadResult,
+  file,
+  name,
+}: {
+  client: Client;
+  space: Space;
+  existingObject: FunctionType | undefined;
+  uploadResult: UploadFunctionResponseBody;
+  file: string;
+  name?: string;
+}) {
+  client.addTypes([FunctionType]);
+
+  let functionObject = existingObject;
+  if (!functionObject) {
+    functionObject = Obj.make(FunctionType, {
+      name: path.basename(file, path.extname(file)),
+      version: uploadResult.version,
+    });
+    yield* Console.log('Adding function object to space', functionObject);
+    space.db.add(functionObject);
+    yield* Console.log('Function object added to space', functionObject);
+  }
+  functionObject.name = name ?? functionObject.name;
+  functionObject.version = uploadResult.version;
+  setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
+  yield* Console.log('Upserted function object', functionObject.id);
+  return functionObject;
+});
+
+const makeObjectNavigableInComposer = Effect.fn(function* (client: Client, space: Space, obj: AnyLiveObject<any>) {
+  const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<DataType.Collection> | undefined;
+  if (collectionRef) {
+    client.addTypes([DataType.Collection]);
+    const collection = yield* Effect.tryPromise(() => collectionRef.load());
+    if (collection) {
+      collection.objects.push(Ref.make(obj));
+    }
+  }
+});
+
+const upsertComposerScript = Effect.fn(function* ({
+  client,
+  space,
+  functionObject,
+  scriptFileName,
+  scriptFileContent,
+  name,
+}: {
+  client: Client;
+  space: Space;
+  functionObject: FunctionType;
+  scriptFileName: string;
+  scriptFileContent: string;
+  name?: string;
+}) {
+  client.addTypes([ScriptType, DataType.Text]);
+
+  if (functionObject.source) {
+    const script = yield* Effect.tryPromise(() => functionObject.source!.load());
+    const source = yield* Effect.tryPromise(() => script.source.load());
+    source.content = scriptFileContent;
+    yield* Console.log('Updated composer script', script.id);
+  } else {
+    const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
+    const obj = space.db.add(Obj.make(ScriptType, { name: name ?? scriptFileName, source: Ref.make(sourceObj) }));
+    functionObject.source = Ref.make(obj);
+    yield* makeObjectNavigableInComposer(client, space, obj);
+    yield* Console.log('Created composer script', obj.id);
+  }
+});

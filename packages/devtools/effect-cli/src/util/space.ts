@@ -5,14 +5,20 @@
 import { Console, Effect } from 'effect';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
+import { contextFromScope } from '@dxos/effect';
 import { EdgeService } from '@dxos/protocols';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
 export const waitForSync = Effect.fn(function* (space: Space) {
-  const ctx = new Context();
+  if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+    yield* Console.log('Edge replication is disabled, enabling...');
+    yield* Effect.tryPromise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+  }
+
+  const ctx = yield* contextFromScope();
   const synced = yield* Effect.makeLatch();
   space.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
     const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
@@ -28,5 +34,4 @@ export const waitForSync = Effect.fn(function* (space: Space) {
     }
   });
   yield* synced.await;
-  ctx.dispose();
 });
