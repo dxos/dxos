@@ -68,16 +68,16 @@ export class DXN {
    */
   static kind = Object.freeze({
     /**
-     * dxn:type:<type name>[:<version>]
+     * dxn:type:<type_name>[:<version>]
      */
     TYPE: 'type',
 
     /**
-     * dxn:echo:<space id>:<echo id>
-     * dxn:echo:@:<echo id>
+     * dxn:echo:<space_id>:<echo_id>
+     * dxn:echo:@:<echo_id>
      */
-    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE).
-    // TODO(burdon): Add separate Kind for space.
+    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE to update "echo").
+    // TODO(burdon): Add separate Kind for space?
     ECHO: 'echo',
 
     /**
