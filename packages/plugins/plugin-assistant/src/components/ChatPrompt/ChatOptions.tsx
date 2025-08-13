@@ -53,31 +53,31 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
             defaultActivePart='list'
             classNames='min-is-min is-[calc(100dvw-.5rem)] sm:is-max max-is-[--text-content]'
           >
-            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:p-cardSpacingChrome [&_[role="tabpanel"]]:overflow-y-auto'>
+            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"]]:overflow-y-auto'>
               <Tabs.Tabpanel value='blueprints'>
                 <SearchList.Root>
-                  <SearchList.Input placeholder={t('search placeholder')} />
-                  <SearchList.Content>
+                  <SearchList.Content classNames='plb-cardSpacingChrome'>
                     {blueprints.map((blueprint) => {
                       const isActive = activeBlueprints.has(blueprint.key);
                       return (
                         <SearchList.Item
+                          classNames='flex gap-2 items-center'
                           key={blueprint.key}
                           value={blueprint.key}
                           onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
                         >
+                          <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {blueprint.name}
-                          {isActive && <Icon icon='ph--check-circle--bold' classNames='text-success' size={4} />}
                         </SearchList.Item>
                       );
                     })}
                   </SearchList.Content>
+                  <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' />
                 </SearchList.Root>
               </Tabs.Tabpanel>
               <Tabs.Tabpanel value='objects'>
                 <SearchList.Root>
-                  <SearchList.Input placeholder={t('search placeholder')} />
-                  <SearchList.Content>
+                  <SearchList.Content classNames='plb-cardSpacingChrome'>
                     {(space?.db.query(Filter.everything()).runSync() ?? []).map(({ object }) => {
                       const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
                       const value = Obj.getDXN(object).toString();
@@ -88,6 +88,7 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                       );
                     })}
                   </SearchList.Content>
+                  <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' />
                 </SearchList.Root>
               </Tabs.Tabpanel>
               <Tabs.Tabpanel value='model'>
