@@ -56,6 +56,6 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           branch: bot/update-${{ matrix.packages.name }}
-          delete-branch: true
+          delete-brnach: true
           title: 'chore: Update ${{ matrix.packages.name }} dependencies'
           draft: false

@@ -121,6 +121,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           const chat = space.db.add(
             Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
+              traceQueue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
 

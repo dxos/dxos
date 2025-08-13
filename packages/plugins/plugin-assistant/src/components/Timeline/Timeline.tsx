@@ -35,9 +35,12 @@ export enum IconType {
   TIMER = 'ph--timer--regular',
 
   // Interactions.
-  USER = 'ph--person-simple-circle--regular',
+  USER = 'ph--user--regular',
   USER_INTERACTION = 'ph--user-sound--regular',
   AGENT = 'ph--robot--regular',
+  THINK = 'ph--brain--regular',
+  LINK = 'ph--link--regular',
+  TOOL = 'ph--wrench--regular',
 }
 
 const levelColors: Record<LogLevel, string> = {
