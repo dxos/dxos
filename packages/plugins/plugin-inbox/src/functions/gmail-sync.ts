@@ -28,6 +28,8 @@ export default defineFunction({
 
   handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
+      yield* Effect.log('running gmail sync', { mailboxId, userId, after, pageSize });
+
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
         catch: (e: any) => e,
