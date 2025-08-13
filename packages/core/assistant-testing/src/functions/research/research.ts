@@ -96,14 +96,14 @@ export default defineFunction({
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
+        // TODO(dmaretskyi): Extract those out.
         makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
         makeToolExecutionServiceFromFunctions(
           [exaFunction, exaMockFunction],
           AiToolkit.make() as any,
           Layer.empty as any,
         ),
-        LocalFunctionExecutionService.layer,
-      ),
+      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),
 });
