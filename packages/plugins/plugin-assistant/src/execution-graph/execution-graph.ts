@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Branch, type Commit } from '../components';
-
 import { AgentStatus } from '@dxos/ai';
 import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import type { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
+
+import { type Branch, type Commit } from '../components';
 
 /**
  * Models the execution graph based on a stream of events.
@@ -17,8 +17,6 @@ export class ExecutionGraph {
   // TODO(dmaretskyi): Evolve the internal state to support chats, functions, circuit workflows, etc.
   private _commits: Commit[] = [];
   private _branchNames = new Set<string>();
-
-  constructor() {}
 
   /**
    * Adds events to the graph.
