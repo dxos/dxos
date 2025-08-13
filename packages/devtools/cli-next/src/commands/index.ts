@@ -6,7 +6,7 @@ import { Command, Options } from '@effect/cli';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
-import { ConfigService } from '../services';
+import { ClientService, ConfigService } from '../services';
 
 import { fn } from './functions';
 import { halo } from './halo';
@@ -30,6 +30,8 @@ const config = Options.file('config', { exists: 'yes' }).pipe(
 
 const command = Command.make('dx', { config, profile }).pipe(
   Command.withSubcommands([halo, fn, spaces]),
+  // TODO(wittjosiah): Will there be commands that don't need the client? Push down to subcommands?
+  Command.provide(ClientService.layer),
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
 );
 
