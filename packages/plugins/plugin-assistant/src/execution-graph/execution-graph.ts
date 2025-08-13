@@ -8,7 +8,26 @@ import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import type { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
-import { type Branch, type Commit, IconType } from '../components';
+import type { Branch, Commit } from '../components';
+
+// TODO(dmaretskyi): Deduplicate. Importing from components causes an error.
+enum IconType {
+  // General status.
+  WARN = 'ph--warning-circle--regular',
+  CHECK = 'ph--check-circle--regular',
+  ROCKET = 'ph--rocket--regular',
+  X = 'ph--x-circle--regular',
+  FLAG = 'ph--flag--regular',
+  TIMER = 'ph--timer--regular',
+
+  // Interactions.
+  USER = 'ph--user--regular',
+  USER_INTERACTION = 'ph--user-sound--regular',
+  AGENT = 'ph--robot--regular',
+  THINK = 'ph--brain--regular',
+  LINK = 'ph--link--regular',
+  TOOL = 'ph--wrench--regular',
+}
 
 /**
  * Models the execution graph based on a stream of events.
