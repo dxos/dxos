@@ -21,6 +21,7 @@ import { TranscriptType } from '@dxos/plugin-transcription/types';
 import { trim } from '@dxos/util';
 
 import { type MeetingType } from './types';
+import { TracingService } from '@dxos/functions';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
@@ -54,6 +55,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
+      TracingService.layerNoop,
     ),
   ),
 );

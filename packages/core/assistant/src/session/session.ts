@@ -26,6 +26,7 @@ import { isNotFalsy } from '@dxos/util';
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
+import { TracingService } from '@dxos/functions';
 
 export type AiSessionOptions = {};
 
@@ -148,7 +149,11 @@ export class AiSession {
   ): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
-    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
       const observer = params.observer ?? GenerationObserver.noop();
@@ -165,6 +170,7 @@ export class AiSession {
       const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
       yield* observer.onMessage(promptMessages);
+      yield* TracingService.emitConverationMessage(promptMessages);
 
       this._history = [...(params.history ?? [])];
       this._pending = [promptMessages];
@@ -216,6 +222,7 @@ export class AiSession {
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
         yield* observer.onMessage(response);
+        yield* TracingService.emitConverationMessage(response);
 
         // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
@@ -234,6 +241,7 @@ export class AiSession {
         this._pending.push(toolResultsMessage);
         yield* this.messageQueue.offer(toolResultsMessage);
         yield* observer.onMessage(toolResultsMessage);
+        yield* TracingService.emitConverationMessage(toolResultsMessage);
       } while (true);
 
       // Signals to stream consumers that the session has completed and no more messages are coming.

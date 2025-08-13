@@ -14,7 +14,7 @@ import {
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService, type TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
@@ -86,7 +86,11 @@ export class AiConversation {
   }: AiConversationRunParams<Tools>): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
-    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());

@@ -34,7 +34,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           branch: bot/update-effect
-          delete-branch: true
+          delete-brnach: true
           title: 'chore: Update effect dependencies'
           draft: false
 # effect
