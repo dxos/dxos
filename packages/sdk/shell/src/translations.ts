@@ -132,6 +132,7 @@ export const translations = [
         'drag handle label': 'Drag to rearrange',
         'expand label': 'Expand',
         'collapse label': 'Collapse',
+        'add object to space label': 'Add to a space',
 
         // TODO(burdon): Factor out.
         'red label': 'Red',

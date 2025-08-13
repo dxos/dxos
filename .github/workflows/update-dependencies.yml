@@ -4,10 +4,28 @@ on:
   schedule:
     - cron: '0 4 * * *'
   workflow_dispatch:
+  push:
+    branches:
+      - dm/dep-updater-3
 
 jobs:
-  effect:
-    runs-on: ubuntu-latest
+  update:
+    strategy:
+      matrix:
+        packages:
+          - name: effect
+            spec: 'effect "@effect/*"'
+          - name: vite
+            spec: 'vite "@vite/*" "vitest*" vitest "vitest*"'
+          - name: typescript
+            spec: 'typescript'
+          - name: eslint
+            spec: 'eslint "@eslint/*" "@typescript-eslint/*"'
+          - name: react
+            spec: 'react "react-dom"'
+          - name: automerge
+            spec: '"@automerge/*"'
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
@@ -20,11 +38,15 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
       - name: Setup
         uses: ./.github/actions/setup
 
       - name: Update manifests
-        run: npx npm-check-updates --deep --upgrade effect "@effect/*"
+        run: npx npm-check-updates --deep --upgrade ${{ matrix.packages.spec }}
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -33,13 +55,7 @@ jobs:
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: bot/update-effect
+          branch: bot/update-${{ matrix.packages.name }}
           delete-brnach: true
-          title: 'chore: Update effect dependencies'
+          title: 'chore: Update ${{ matrix.packages.name }} dependencies'
           draft: false
-# effect
-# vite
-# typescript
-# eslint
-# react
-# automerge
