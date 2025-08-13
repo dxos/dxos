@@ -139,6 +139,7 @@ const bundleScript = Effect.fn(function* (path: string) {
   return { bundle: buildResult.bundle };
 });
 
+// TODO(wittjosiah): Align with plugin-script.
 const upload = Effect.fn(function* ({
   ownerPublicKey,
   bundledSource,
@@ -227,6 +228,9 @@ const upsertFunctionObject = Effect.fn(function* ({
   }
   functionObject.name = name ?? functionObject.name;
   functionObject.version = uploadResult.version;
+  functionObject.description = uploadResult.meta.description;
+  functionObject.inputSchema = uploadResult.meta.inputSchema;
+  functionObject.outputSchema = uploadResult.meta.outputSchema;
   setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
   yield* Effect.log('Upserted function object', functionObject.id);
   return functionObject;
