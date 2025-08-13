@@ -5,7 +5,6 @@
 import { AiInput } from '@effect/ai';
 import { Array, Effect, Predicate, pipe } from 'effect';
 
-import { getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
