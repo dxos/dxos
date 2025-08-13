@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, String, pipe } from 'effect';
+import { Array, Effect, Option, pipe } from 'effect';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -42,8 +42,9 @@ export const formatSystemPrompt = ({
           `,
         ),
       ),
-      // Effect.tap((templates) => log.info('templates', { templates })),
-      Effect.map(Array.reduce('\n\n## Blueprints:\n\n', String.concat)),
+      Effect.map((blueprints) =>
+        blueprints.length > 0 ? ['## Blueprints Definitions', ...blueprints].join('\n\n') : undefined,
+      ),
     );
 
     const objectDefs = yield* pipe(
@@ -56,12 +57,12 @@ export const formatSystemPrompt = ({
           </object>
         `),
       ),
-      Effect.map(Array.reduce('\n## Context objects:\n\n', String.concat)),
+      Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 
     return yield* pipe(
-      Effect.succeed([blueprintDefs, objectDefs]),
-      Effect.map(Array.reduce(system ?? '', String.concat)),
+      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.map((parts) => parts.join('\n\n')),
     );
   });
 

@@ -55,5 +55,6 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
     setStatus(hasErrors ? 'error' : 'success');
   }, [space, dispatch, client, scriptTemplates]);
 
+  // TODO(burdon): Return onCreateAndDeployScripts.
   return { handleCreateAndDeployScripts, status, error };
 };

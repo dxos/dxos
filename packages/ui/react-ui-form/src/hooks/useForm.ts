@@ -26,6 +26,8 @@ export type FormHandler<T extends BaseObject> = {
   changed: Record<JsonPath, boolean>;
   canSave: boolean;
   formIsValid: boolean;
+
+  // TODO(burdon): Return onSave.
   handleSave: () => void;
 
   //

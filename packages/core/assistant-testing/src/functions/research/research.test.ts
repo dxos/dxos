@@ -66,7 +66,7 @@ describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
         );
@@ -94,7 +94,7 @@ describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'research blueprint',
     Effect.fn(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
         );

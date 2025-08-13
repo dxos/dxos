@@ -15,5 +15,7 @@ export const process = <Options extends {}>(source: string, options: Options = {
   let section = 0;
   handlebars.registerHelper('section', () => String(++section));
   const template = handlebars.compile(source.trim());
-  return template(defaultsDeep({}, options, { suggestions: true })).trim();
+  return template(defaultsDeep({}, options, { suggestions: true }))
+    .trim()
+    .replace(/(\n\s*){3,}/g, '\n\n');
 };
