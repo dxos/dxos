@@ -26,7 +26,7 @@ type PromptOptions = {
  */
 export const createSystemPrompt = (options: PromptOptions) => Template.process<PromptOptions>(FORMAT, options);
 
-// Note: Hardcode objectId here to avoid top level random objectId generation in EDGE.
+// NOTE: We are forbidden from accessing randomness at model level in cloudflare, so we have to have pre-generated ids.
 export const templates = {
   // Editable system prompt.
   system: Template.make({ source: SYSTEM, id: '01K2J2FZWH39F55CS7B26GP1Q3' }),
