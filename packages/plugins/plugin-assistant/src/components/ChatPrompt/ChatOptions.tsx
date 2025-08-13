@@ -103,7 +103,7 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                   ))}
                 </ul>
               </Tabs.Tabpanel>
-              <Tabs.Tablist classNames='sm:overflow-x-hidden p-[--dx-cardSpacingChrome]'>
+              <Tabs.Tablist classNames='sm:overflow-x-hidden p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator'>
                 <Tabs.IconTab
                   value='blueprints'
                   icon='ph--blueprint--regular'
