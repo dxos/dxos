@@ -115,6 +115,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -209,6 +212,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-transcription"
