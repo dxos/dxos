@@ -1,5 +1,11 @@
-import { defineFunction } from '@dxos/functions';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
+
+import { defineFunction } from '@dxos/functions';
+
 import { SEARCH_RESULTS } from '../../testing';
 
 export default defineFunction({

@@ -6,14 +6,14 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 
 import { Timeline } from '../../components';
-
-import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
 import { useExecutionGraph } from '../../hooks';
 import { Assistant } from '../../types';
+
 import { type ComponentProps } from './types';
 
 export const LoggingContainer = ({ space }: ComponentProps) => {

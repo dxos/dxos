@@ -1,6 +1,11 @@
-import { CredentialsService, defineFunction } from '@dxos/functions';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
 import Exa from 'exa-js';
+
+import { CredentialsService, defineFunction } from '@dxos/functions';
 
 export default defineFunction({
   name: 'dxos.org/function/exa',

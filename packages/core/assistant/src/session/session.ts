@@ -4,8 +4,8 @@
 
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
 import { Chunk, type Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
-import { ToolId } from '@dxos/ai';
 
+import { type ToolId } from '@dxos/ai';
 import {
   type AiInputPreprocessingError,
   AiParser,
@@ -15,12 +15,12 @@ import {
   ToolExecutionService,
   ToolResolverService,
   callTool,
-  callTools,
   getToolCalls,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -28,7 +28,6 @@ import { isNotFalsy } from '@dxos/util';
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
-import { TracingService } from '@dxos/functions';
 
 export type AiSessionOptions = {};
 
