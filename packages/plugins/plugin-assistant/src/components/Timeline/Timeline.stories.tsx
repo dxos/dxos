@@ -5,18 +5,22 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useRef, useState } from 'react';
 
+import { LogLevel } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { Button, Toolbar, useInterval } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Timeline } from './Timeline';
+import { type Branch, type Commit, IconType, Timeline } from './Timeline';
 
 faker.seed(1);
 
 const meta: Meta<typeof Timeline> = {
   title: 'plugins/plugin-assistant/Timeline',
   component: Timeline,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ fullscreen: true })],
 };
 
 export default meta;
@@ -49,5 +53,92 @@ export const Linear: Story = {
       { id: 'c3', message: faker.lorem.paragraph(), branch: 'main', parent: 'c2' },
       { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parent: 'c3' },
     ],
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    branches: [],
+    commits: [],
+  },
+};
+
+export const Random: Story = {
+  render: () => {
+    const [branches, setBranches] = useState<Branch[]>([{ name: 'main' }]);
+    const [commits, setCommits] = useState<Commit[]>([
+      {
+        id: faker.string.uuid(),
+        branch: branches[0].name,
+        message: faker.lorem.paragraph(),
+      },
+    ]);
+    const lastCommit = useRef<string | undefined>(commits[0].id);
+    const lastBranch = useRef<string>(branches[0].name);
+
+    const [running, setRunning] = useState(true);
+    useInterval(
+      () => {
+        if (!running) {
+          return;
+        }
+
+        const p = Math.random();
+        if (p < 0.15 && branches.length < 6) {
+          const branch = { name: faker.lorem.word() } satisfies Branch;
+          setBranches((branches) => [...branches, branch]);
+          lastBranch.current = branch.name;
+        } else if (p < 0.4) {
+          const branch = branches[Math.floor(Math.random() * branches.length)];
+          lastBranch.current = branch.name;
+        }
+
+        const commit = {
+          id: faker.string.uuid(),
+          branch: lastBranch.current,
+          icon: faker.helpers.arrayElement([
+            IconType.WARN,
+            IconType.CHECK,
+            IconType.ROCKET,
+            IconType.X,
+            IconType.FLAG,
+            IconType.TIMER,
+            IconType.USER,
+            IconType.USER_INTERACTION,
+            IconType.AGENT,
+          ]),
+          level: faker.helpers.arrayElement([
+            LogLevel.TRACE,
+            LogLevel.DEBUG,
+            LogLevel.VERBOSE,
+            LogLevel.INFO,
+            LogLevel.WARN,
+            LogLevel.ERROR,
+          ]),
+          message: faker.lorem.paragraph(),
+          parent: lastCommit.current,
+        } satisfies Commit;
+        lastCommit.current = commit.id;
+        setCommits((commits) => [...commits, commit]);
+      },
+      500,
+      [running],
+    );
+
+    const scrollerRef = useRef<ScrollController>(null);
+
+    return (
+      <div className='flex flex-col is-full bs-full overflow-hidden'>
+        <Toolbar.Root>
+          <Button onClick={() => setRunning(true)}>Start</Button>
+          <Button onClick={() => setRunning(false)}>Stop</Button>
+          <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
+          <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
+        </Toolbar.Root>
+        <ScrollContainer ref={scrollerRef} classNames='border border-separator'>
+          <Timeline branches={branches} commits={commits} />
+        </ScrollContainer>
+      </div>
+    );
   },
 };
