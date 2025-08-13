@@ -43,7 +43,7 @@ function reduceTraceEvents(events: Obj.Any[]): { branches: Branch[]; commits: Co
       commits.push({
         id: event.id,
         branch: event.parentMessage ?? 'main',
-        message: event.message,
+        message: '⚡️' + event.message,
         parent: event.parentMessage,
       });
     } else {
@@ -52,7 +52,7 @@ function reduceTraceEvents(events: Obj.Any[]): { branches: Branch[]; commits: Co
       commits.push({
         id: event.id,
         branch: parent,
-        message: Obj.getLabel(event) ?? Obj.getTypename(event) ?? event.id,
+        message: '❓' + (Obj.getLabel(event) ?? Obj.getTypename(event) ?? event.id),
         parent,
       });
     }
@@ -75,28 +75,28 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           id,
           branch,
           parent: message.parentMessage,
-          message: '→ ' + block.name,
+          message: '🔨' + block.name,
         };
       case 'toolResult':
         return {
           id,
           branch,
           parent: message.parentMessage,
-          message: '← ' + block.name,
+          message: block.error ? '❌ ' + block.error : '✅ ' + block.name,
         };
       case 'status':
         return {
           id,
           branch,
           parent: message.parentMessage,
-          message: block.statusText,
+          message: '⚡️' + block.statusText,
         };
       case 'reasoning':
         return {
           id,
           branch,
           parent: message.parentMessage,
-          message: block.reasoningText ?? 'Thinking...',
+          message: '💭' + (block.reasoningText ?? 'Thinking...'),
         };
       case 'text':
         return {
@@ -104,14 +104,21 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           branch: message.parentMessage ?? 'main',
           parent: message.parentMessage,
           message:
-            message.sender.role === 'user' ? `[USER] ${ellipsisEnd(block.text, 32)}` : ellipsisEnd(block.text, 32),
+            message.sender.role === 'user' ? `👤 ${ellipsisEnd(block.text, 64)}` : `🤖 ${ellipsisEnd(block.text, 64)}`,
+        };
+      case 'reference':
+        return {
+          id,
+          branch,
+          parent: message.parentMessage,
+          message: '🔗' + (block.reference.dxn.asEchoDXN()?.echoId ?? block.reference.dxn.asQueueDXN()?.objectId ?? ''),
         };
       default:
         return {
           id,
           branch,
           parent: message.parentMessage,
-          message: block._tag,
+          message: '❓' + block._tag,
         };
     }
   });
