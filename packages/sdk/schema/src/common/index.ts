@@ -4,6 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 import * as EchoSchema$ from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo-schema';
 
 import * as View$ from '../view';
 
@@ -128,7 +129,8 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
-  export const makeText = (content = '') => Obj.make(Text, { content });
+  export const makeText = (content = '', id?: ObjectId) =>
+    id ? Obj.make(Text, { content, id }) : Obj.make(Text, { content });
 
   //
   // View
