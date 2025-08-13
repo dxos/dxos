@@ -54,7 +54,7 @@ const levelColors: Record<LogLevel, string> = {
 
 export type Commit = {
   id: string;
-  parent?: string;
+  parent?: string; // TODO(burdon): Possibly multiple.
   branch: string;
   icon?: string;
   level?: LogLevel;
@@ -70,7 +70,7 @@ export type Branch = {
 export type Span = {
   start: number;
   end: number;
-  parent?: number;
+  parentColumn?: number;
 };
 
 export type TimelineProps = ThemedClassName<{
@@ -94,7 +94,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
         if (span.start === -1) {
           const parentIndex = commit.parent ? commits.findIndex((c) => c.id === commit.parent) : 0;
           span.start = parentIndex;
-          span.parent = commit.parent
+          span.parentColumn = commit.parent
             ? branches.findIndex((branch) => branch.name === commits[parentIndex].branch)
             : undefined;
         }
@@ -136,20 +136,22 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                       />
                     )}
                     {/* Lower */}
-                    {span.end !== -1 && (span.start < index || span.start === 0) && index < span.end && (
-                      <line
-                        x1={j * columnWidth + columnWidth / 2}
-                        y1={lineHeight / 2}
-                        x2={j * columnWidth + columnWidth / 2}
-                        y2={lineHeight}
-                        className={mx(lineStyle, color.stroke)}
-                      />
-                    )}
-                    {/* Arc to parent */}
-                    {span.start === index && span.parent !== undefined && span.parent !== -1 && (
+                    {span.end !== -1 &&
+                      (span.start < index || (span.start === index && span.parentColumn === undefined)) &&
+                      index < span.end && (
+                        <line
+                          x1={j * columnWidth + columnWidth / 2}
+                          y1={lineHeight / 2}
+                          x2={j * columnWidth + columnWidth / 2}
+                          y2={lineHeight}
+                          className={mx(lineStyle, color.stroke)}
+                        />
+                      )}
+                    {/* Arc to parents */}
+                    {span.start === index && span.parentColumn !== undefined && span.parentColumn !== -1 && (
                       <path
                         d={trim`
-                          M ${0.5 + span.parent * columnWidth + columnWidth / 2} ${lineHeight / 2} 
+                          M ${0.5 + span.parentColumn * columnWidth + columnWidth / 2} ${lineHeight / 2} 
                           L ${j * columnWidth + columnWidth / 4} ${lineHeight / 2} 
                           A ${lineHeight / 4} ${lineHeight / 4} 0 0 1 ${j * columnWidth + columnWidth / 2} ${(lineHeight * 3) / 4} 
                           L ${j * columnWidth + columnWidth / 2} ${lineHeight}
@@ -191,7 +193,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                 )}
               </div>
             )}
-            <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
+            <div className='pie-3 text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
               {commit.message}
             </div>
           </div>
