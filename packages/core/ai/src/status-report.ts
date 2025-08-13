@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { EchoObject } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
+import { ObjectId } from '@dxos/keys';
 
 /**
  * AI agents self-reporting their current status.
@@ -13,9 +14,13 @@ import { EchoObject } from '@dxos/echo-schema';
  * LLMs are prompted to emit <status>Brewing tea</status> tokens during their execution to notify the client of their current status.
  */
 export const AgentStatus = Schema.Struct({
+  // See {@link TracingService.TraceContext}
+  parentMessage: Schema.optional(ObjectId),
+  toolCallId: Schema.optional(Schema.String),
+
   message: Schema.String,
 }).pipe(
-  EchoObject({
+  Type.Obj({
     typename: 'dxos.org/type/AgentStatus',
     version: '0.1.0',
   }),

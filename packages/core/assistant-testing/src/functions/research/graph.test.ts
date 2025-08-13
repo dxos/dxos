@@ -11,7 +11,7 @@ import { AiService, AiServiceRouter, ToolExecutionService, ToolResolverService }
 import { tapHttpErrors } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import { DatabaseService } from '@dxos/functions';
+import { DatabaseService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
@@ -32,6 +32,7 @@ const TestLayer = pipe(
     }),
   ),
   Layer.provide(FetchHttpClient.layer),
+  Layer.provideMerge(TracingService.layerNoop),
 );
 
 describe('graph', () => {

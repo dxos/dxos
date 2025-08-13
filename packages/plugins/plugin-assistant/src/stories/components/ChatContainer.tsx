@@ -32,7 +32,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   }, [chat, chats]);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
 
   const handleNewChat = useCallback(() => {

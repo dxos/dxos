@@ -21,6 +21,7 @@ import {
 } from '@dxos/functions';
 
 import { AssistantCapabilities } from '../capabilities';
+import type { Assistant } from '../types';
 
 // TODO(burdon): Deconstruct into separate layers?
 export type AiChatServices =
@@ -35,12 +36,13 @@ export type AiChatServices =
 
 export type UseChatServicesProps = {
   space?: Space;
+  chat?: Assistant.Chat;
 };
 
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
+export const useChatServices = ({ space, chat }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
   const serviceLayer = useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
   const functions = useCapabilities(Capabilities.Functions);
   const toolkits = useCapabilities(Capabilities.Toolkit);
@@ -62,11 +64,11 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
         Layer.mergeAll(
           space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
           space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-          TracingService.layerNoop,
+          chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
           LocalFunctionExecutionService.layer,
           RemoteFunctionExecutionService.mockLayer,
         ),
       ),
     );
-  }, [space, functions, toolkits, handlers]);
+  }, [space, functions, toolkits, handlers, chat?.traceQueue?.target]);
 };

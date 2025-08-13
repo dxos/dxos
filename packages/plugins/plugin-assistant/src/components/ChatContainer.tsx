@@ -31,7 +31,7 @@ export type ChatContainerProps = {
 export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
