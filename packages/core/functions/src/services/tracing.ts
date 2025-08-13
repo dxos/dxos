@@ -20,7 +20,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     /**
      * Gets the parent message ID.
      */
-    getParentMessage: () => ObjectId | undefined;
+    getTraceContext: () => TracingService.TraceContext;
 
     /**
      * Write an event to the tracing queue.
@@ -29,7 +29,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     write: (event: Obj.Any) => void;
   }
 >() {
-  static noop: Context.Tag.Service<TracingService> = { write: () => {}, getParentMessage: () => undefined };
+  static noop: Context.Tag.Service<TracingService> = { write: () => {}, getTraceContext: () => ({}) };
 
   static layerNoop = Layer.succeed(TracingService, TracingService.noop);
 
@@ -38,7 +38,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
       // eslint-disable-next-line no-console
       console.log(event);
     },
-    getParentMessage: () => undefined,
+    getTraceContext: () => ({}),
   };
 
   static layerConsole = Layer.succeed(TracingService, TracingService.console);
@@ -46,14 +46,15 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */
-  static layerSubframe = ({ parentMessage }: { parentMessage: ObjectId }) =>
+  static layerSubframe = (mapContext: (currentContext: TracingService.TraceContext) => TracingService.TraceContext) =>
     Layer.effect(
       TracingService,
       Effect.gen(function* () {
         const tracing = yield* TracingService;
+        const context = mapContext(tracing.getTraceContext());
         return {
           write: (event) => tracing.write(event),
-          getParentMessage: () => parentMessage,
+          getTraceContext: () => context,
         };
       }),
     );
@@ -65,7 +66,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         // TODO(dmaretskyi): Batching.
         return {
           write: (event) => queue.append([event]),
-          getParentMessage: () => undefined,
+          getTraceContext: () => ({}),
         };
       }),
     );
@@ -78,7 +79,8 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
       const tracing = yield* TracingService;
       tracing.write(
         Obj.make(AgentStatus, {
-          parentMessage: tracing.getParentMessage(),
+          parentMessage: tracing.getTraceContext().parentMessage,
+          toolCallId: tracing.getTraceContext().toolCallId,
           ...data,
         }),
       );
@@ -90,9 +92,32 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
     const tracing = yield* TracingService;
     tracing.write(
       Obj.make(DataType.Message, {
-        parentMessage: tracing.getParentMessage(),
+        parentMessage: tracing.getTraceContext().parentMessage,
         ...data,
+        properties: {
+          [MESSAGE_PROPERTY_TOOL_CALL_ID]: tracing.getTraceContext().toolCallId,
+          ...data.properties,
+        },
       }),
     );
   });
 }
+
+export namespace TracingService {
+  export interface TraceContext {
+    /**
+     * If this thread sprung from a tool call, this is the ID of the message containing the tool call.
+     */
+    parentMessage?: ObjectId;
+
+    /**
+     * If the current thread is a byproduct of a tool call, this is the ID of the tool call.
+     */
+    toolCallId?: string;
+  }
+}
+
+/**
+ * Goes into {@link DataType.Message['properties']}
+ */
+const MESSAGE_PROPERTY_TOOL_CALL_ID = 'toolCallId' as const;

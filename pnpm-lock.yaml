@@ -3025,9 +3025,6 @@ importers:
 
   packages/core/echo/echo-query:
     dependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std

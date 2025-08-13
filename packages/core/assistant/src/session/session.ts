@@ -13,6 +13,7 @@ import {
   type ConsolePrinter,
   ToolExecutionService,
   ToolResolverService,
+  callTool,
   callTools,
   getToolCalls,
 } from '@dxos/ai';
@@ -231,8 +232,16 @@ export class AiSession {
         }
 
         // TODO(burdon): Report errors to user; with proposed actions.
-        const toolResults = yield* callTools(toolkit, toolCalls).pipe(
-          Effect.provide(TracingService.layerSubframe({ parentMessage: response.id })),
+        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
+          callTool(toolkit, toolCall).pipe(
+            Effect.provide(
+              TracingService.layerSubframe((context) => ({
+                ...context,
+                parentMessage: response.id,
+                toolCallId: toolCall.toolCallId,
+              })),
+            ),
+          ),
         );
         const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
