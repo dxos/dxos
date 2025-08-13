@@ -9,6 +9,22 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
+const lineHeight = 24;
+const columnWidth = 24;
+const nodeRadius = 5;
+const lineStyle = 'stroke-1';
+
+const colors = [
+  { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
+  { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
+  { stroke: 'stroke-green-500', hover: 'group-hover:fill-green-500' },
+  { stroke: 'stroke-fuchsia-500', hover: 'group-hover:fill-fuchsia-500' },
+  { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
+  { stroke: 'stroke-emerald-500', hover: 'group-hover:fill-emerald-500' },
+  { stroke: 'stroke-violet-500', hover: 'group-hover:fill-violet-500' },
+  { stroke: 'stroke-teal-500', hover: 'group-hover:fill-teal-500' },
+];
+
 export enum IconType {
   // General status.
   WARN = 'ph--warning-circle--regular',
@@ -96,7 +112,8 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
             style={{ height: `${lineHeight}px` }}
           >
             <svg width={branches.length * columnWidth} height={lineHeight} className='shrink-0'>
-              {branches.map((branch, j) => {
+              {[...branches].reverse().map((branch, _j) => {
+                const j = branches.length - 1 - _j;
                 const span = spans.get(branch.name);
                 const color = colors[j % colors.length];
                 if (!span) {
@@ -112,7 +129,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                         y1={0}
                         x2={j * columnWidth + columnWidth / 2}
                         y2={lineHeight / 2}
-                        className={mx('stroke-2', color.stroke)}
+                        className={mx(lineStyle, color.stroke)}
                       />
                     )}
                     {/* Lower */}
@@ -122,7 +139,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                         y1={lineHeight / 2}
                         x2={j * columnWidth + columnWidth / 2}
                         y2={lineHeight}
-                        className={mx('stroke-2', color.stroke)}
+                        className={mx(lineStyle, color.stroke)}
                       />
                     )}
                     {/* Arc to parent */}
@@ -134,7 +151,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                           A ${lineHeight / 4} ${lineHeight / 4} 0 0 1 ${j * columnWidth + columnWidth / 2} ${(lineHeight * 3) / 4} 
                           L ${j * columnWidth + columnWidth / 2} ${lineHeight}
                         `}
-                        className={mx('stroke-2', color.stroke)}
+                        className={mx(lineStyle, color.stroke)}
                         fill='none'
                       />
                     )}
@@ -143,7 +160,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                         cx={j * columnWidth + columnWidth / 2}
                         cy={lineHeight / 2}
                         r={nodeRadius}
-                        className={mx('stroke-2 fill-red-500', color.stroke, color.hover)}
+                        className={mx(lineStyle, color.stroke, color.hover)}
                       />
                     )}
                   </Fragment>
@@ -158,14 +175,14 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
                       cx={j * columnWidth + columnWidth / 2}
                       cy={lineHeight / 2}
                       r={nodeRadius}
-                      className={mx('stroke-2', color.stroke, color.hover)}
+                      className={mx(lineStyle, color.stroke, color.hover)}
                     />
                   )
                 );
               })}
             </svg>
             {showIcon && (
-              <div className='w-4'>
+              <div className='flex shrink-0 w-6 justify-center'>
                 {commit.icon && (
                   <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
                 )}
@@ -180,18 +197,3 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
     </div>
   );
 };
-
-const lineHeight = 24;
-const columnWidth = 24;
-const nodeRadius = 6;
-
-const colors = [
-  { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
-  { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
-  { stroke: 'stroke-green-500', hover: 'group-hover:fill-green-500' },
-  { stroke: 'stroke-fuchsia-500', hover: 'group-hover:fill-fuchsia-500' },
-  { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
-  { stroke: 'stroke-emerald-500', hover: 'group-hover:fill-emerald-500' },
-  { stroke: 'stroke-violet-500', hover: 'group-hover:fill-violet-500' },
-  { stroke: 'stroke-teal-500', hover: 'group-hover:fill-teal-500' },
-];
