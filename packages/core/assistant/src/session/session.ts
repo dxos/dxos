@@ -231,7 +231,9 @@ export class AiSession {
         }
 
         // TODO(burdon): Report errors to user; with proposed actions.
-        const toolResults = yield* callTools(toolkit, toolCalls);
+        const toolResults = yield* callTools(toolkit, toolCalls).pipe(
+          Effect.provide(TracingService.layerSubframe({ parentMessage: response.id })),
+        );
         const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
