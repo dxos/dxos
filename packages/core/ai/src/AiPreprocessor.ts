@@ -46,8 +46,7 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                // TODO(dmaretskyi): Fix getSnapshot typing ..or use Obj.toJSON (if that works).
-                                result: block.error ?? getSnapshot(block.result as any),
+                                result: block.error ?? JSON.stringify(block.result),
                               }),
                           ),
                         });
@@ -165,8 +164,7 @@ const convertAssistantMessagePart: (
         return new AiInput.ToolCallPart({
           id: block.toolCallId,
           name: block.name,
-          // TODO(dmaretskyi): Fix getSnapshot typing.
-          params: getSnapshot(block.input as any),
+          params: JSON.parse(block.input),
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.

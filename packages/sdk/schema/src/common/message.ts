@@ -77,10 +77,11 @@ export namespace ContentBlock {
     name: Schema.String,
 
     /**
-     * Parsed input of the tool call.
+     * Unparsed input of the tool call.
+     * Anthropic models are known to emit empty strings for tools that have not parameters.
      */
     // TODO(dmaretskyi): We might need to be able to reprsent partial json.
-    input: Schema.Unknown,
+    input: Schema.String,
 
     ...Base.fields,
   }).pipe(Schema.mutable);
@@ -100,8 +101,10 @@ export namespace ContentBlock {
 
     /**
      * The result of the tool call.
+     * JSON encoding is preferred.
+     * Missing on error.
      */
-    result: Schema.Unknown,
+    result: Schema.optional(Schema.String),
 
     // TODO(dmaretskyi): Use discriminated union.
     // result: Schema.Union(

@@ -107,7 +107,7 @@ describe('preprocessor', () => {
             _tag: 'toolCall',
             toolCallId: 'call_1',
             name: 'calculator',
-            input: { operation: 'add', a: 2, b: 2 },
+            input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
           },
           {
             _tag: 'text',
@@ -404,7 +404,7 @@ describe('preprocessor', () => {
             _tag: 'toolCall',
             toolCallId: 'call_1',
             name: 'test',
-            input: {},
+            input: '{}',
           },
         ],
       });
