@@ -4,14 +4,41 @@
 
 import React, { Fragment, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { LogLevel } from '@dxos/log';
+import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
+
+export enum IconType {
+  // General status.
+  WARN = 'ph--warning-circle--regular',
+  CHECK = 'ph--check-circle--regular',
+  ROCKET = 'ph--rocket--regular',
+  X = 'ph--x-circle--regular',
+  FLAG = 'ph--flag--regular',
+  TIMER = 'ph--timer--regular',
+
+  // Interactions.
+  USER = 'ph--person-simple-circle--regular',
+  USER_INTERACTION = 'ph--user-sound--regular',
+  AGENT = 'ph--robot--regular',
+}
+
+const levelColors: Record<LogLevel, string> = {
+  [LogLevel.TRACE]: 'text-gray-500',
+  [LogLevel.DEBUG]: 'text-gray-500',
+  [LogLevel.VERBOSE]: 'text-gray-500',
+  [LogLevel.INFO]: 'text-green-500',
+  [LogLevel.WARN]: 'text-orange-500',
+  [LogLevel.ERROR]: 'text-red-500',
+};
 
 export type Commit = {
   id: string;
   parent?: string;
   branch: string;
+  icon?: string;
+  level?: LogLevel;
   message: string;
   timestamp?: Date;
   tags?: string[];
@@ -27,11 +54,15 @@ export type Span = {
   parent?: number;
 };
 
-export type TimelineProps = ThemedClassName<{ branches: Branch[]; commits: Commit[] }>;
+export type TimelineProps = ThemedClassName<{
+  branches: Branch[];
+  commits: Commit[];
+  showIcon?: boolean;
+}>;
 
 // TODO(burdon): Reuse in toolCall messages.
 // TODO(burdon): Key up/down; selected.
-export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
+export const Timeline = ({ classNames, branches, commits, showIcon = true }: TimelineProps) => {
   const spans = useMemo(() => {
     const spans = new Map<string, Span>();
     branches.forEach((branch) => {
@@ -56,12 +87,12 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
   }, [commits, branches]);
 
   return (
-    <div className={mx('flex flex-col w-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col is-full', classNames)}>
       {commits.map((commit, index) => {
         return (
           <div
             key={commit.id}
-            className='group flex items-center gap-2 overflow-hidden hover:bg-hoverSurface'
+            className='group flex shrink-0 items-center gap-2 overflow-hidden hover:bg-hoverSurface'
             style={{ height: `${lineHeight}px` }}
           >
             <svg width={branches.length * columnWidth} height={lineHeight} className='shrink-0'>
@@ -133,6 +164,13 @@ export const Timeline = ({ classNames, branches, commits }: TimelineProps) => {
                 );
               })}
             </svg>
+            {showIcon && (
+              <div className='w-4'>
+                {commit.icon && (
+                  <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
+                )}
+              </div>
+            )}
             <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
               {commit.message}
             </div>

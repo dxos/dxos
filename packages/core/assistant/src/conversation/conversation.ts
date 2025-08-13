@@ -40,9 +40,7 @@ export type AiConversationOptions = {
 };
 
 /**
- * Persistent conversation state.
- * Context + history + artifacts.
- * Backed by a Queue.
+ * Durable conversation state (initiated by users and agents) backed by a Queue.
  */
 export class AiConversation {
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
