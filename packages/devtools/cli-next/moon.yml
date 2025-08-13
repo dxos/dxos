@@ -25,6 +25,8 @@ tasks:
       - dist/node-esm/
   prebuild:
     script: pnpm tsx ./scripts/copy-package-json.ts
+    deps:
+      - compile
     inputs:
       - scripts/copy-package-json.ts
       - package.json
