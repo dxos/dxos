@@ -42,6 +42,12 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/schema"
     }
   ]

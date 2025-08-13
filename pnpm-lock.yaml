@@ -4496,6 +4496,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -4556,6 +4562,9 @@ importers:
       effect:
         specifier: 3.17.7
         version: 3.17.7
+      yaml:
+        specifier: ^2.5.0
+        version: 2.7.1
     devDependencies:
       '@types/node':
         specifier: 22.10.2
