@@ -3,7 +3,6 @@
 //
 
 import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
-import { type Bundle } from '@automerge/automerge-repo-bundles';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
@@ -364,12 +363,12 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     return true;
   }
 
-  async pushBundle(bundle: Bundle) {
+  async pushBundle(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const request: ImportBundleRequest = {
-      bundle: Array.from(bundle.docs.entries()).map(([documentId, docBundle]) => ({
+      bundle: bundle.map(({ documentId, data, heads }) => ({
         documentId,
-        mutation: DocumentCodec.encode(docBundle.data),
-        heads: docBundle.heads,
+        mutation: DocumentCodec.encode(data),
+        heads,
       })),
     };
     await this._edgeHttpClient.importBundle(this._spaceId, request);

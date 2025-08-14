@@ -4,7 +4,6 @@
 
 import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
-import { type Bundle } from '@automerge/automerge-repo-bundles';
 
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
@@ -76,7 +75,7 @@ export interface ReplicatorConnection {
   /**
    * Pushes the batch of documents to the remote peer.
    */
-  pushBundle?(bundle: Bundle): Promise<void>;
+  pushBundle?(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
 
   /**
    * Pulls the batch of documents from the remote peer.

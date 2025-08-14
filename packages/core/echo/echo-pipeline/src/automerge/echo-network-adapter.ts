@@ -10,7 +10,6 @@ import {
   type PeerId,
   type PeerMetadata,
 } from '@automerge/automerge-repo';
-import { type Bundle } from '@automerge/automerge-repo-bundles';
 
 import { Trigger, synchronized } from '@dxos/async';
 import { LifecycleState } from '@dxos/context';
@@ -220,7 +219,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.bundleSyncEnabled;
   }
 
-  async pushBundle(peerId: PeerId, bundle: Bundle) {
+  async pushBundle(peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');
