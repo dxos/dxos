@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import {
   useActiveBlueprints,
@@ -29,6 +30,34 @@ export type ChatOptionsProps = {
   presets?: { id: string; label: string }[];
   preset?: string;
   onPresetChange?: (id: string) => void;
+};
+
+const idleFilter = Filter.not(
+  Filter.or(Filter.type(Blueprint.Blueprint), Filter.type(Assistant.Chat), Filter.typename('dxos.org/type/Properties')),
+);
+
+const omitFromTypenameOptions = [Blueprint.Blueprint.typename, Assistant.Chat.typename, 'dxos.org/type/Properties'];
+
+const useTypenameOptions = (space?: Space) => {
+  const [schemas, setSchemas] = useState<string[]>([]);
+  useEffect(() => {
+    if (!space) {
+      return;
+    }
+
+    return space.db.schemaRegistry.query().subscribe(
+      (query) => {
+        setSchemas(
+          [...space.db.graph.schemaRegistry.schemas, ...query.results]
+            .map(Type.getTypename)
+            .filter((typename) => !omitFromTypenameOptions.includes(typename)),
+        );
+      },
+      { fire: true },
+    );
+  }, [space]);
+
+  return schemas;
 };
 
 /**
@@ -52,21 +81,15 @@ export const ChatOptions = ({
     blueprintRegistry,
   });
 
+  const [activeTypename, setActiveTypename] = useState<string>('idle');
+  const typenameOptions = useTypenameOptions(space);
+
   const activeReferences = useActiveReferences({ context });
   const { onUpdateReference } = useReferencesHandlers({
     space,
     context,
   });
-  const referenceOptions = useQuery(
-    space,
-    Filter.not(
-      Filter.or(
-        Filter.type(Blueprint.Blueprint),
-        Filter.type(Assistant.Chat),
-        Filter.typename('dxos.org/type/Properties'),
-      ),
-    ),
-  );
+  const referenceOptions = useQuery(space, activeTypename === 'idle' ? idleFilter : Filter.typename(activeTypename));
 
   return (
     <Popover.Root>
@@ -87,7 +110,7 @@ export const ChatOptions = ({
             defaultActivePart='list'
             classNames='min-is-min is-[calc(100dvw-.5rem)] sm:is-max max-is-[--text-content]'
           >
-            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:order-1'>
+            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
               <Tabs.Tabpanel value='blueprints'>
                 <SearchList.Root>
                   <SearchList.Content classNames='plb-cardSpacingChrome'>
@@ -111,25 +134,57 @@ export const ChatOptions = ({
               </Tabs.Tabpanel>
               <Tabs.Tabpanel value='objects'>
                 <SearchList.Root>
-                  <SearchList.Content classNames='plb-cardSpacingChrome'>
-                    {referenceOptions.map((object: any) => {
-                      const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-                      const value = Obj.getDXN(object).toString();
-                      const isActive = activeReferences.has(value);
-                      return (
-                        <SearchList.Item
-                          classNames='flex gap-2 items-center'
-                          key={value}
-                          value={label}
-                          onSelect={() => onUpdateReference?.(value, !isActive)}
-                        >
-                          <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-                          {label}
-                        </SearchList.Item>
-                      );
-                    })}
-                  </SearchList.Content>
-                  <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' />
+                  {referenceOptions.length ? (
+                    <>
+                      <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
+                        {referenceOptions.map((object: any) => {
+                          const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
+                          const value = Obj.getDXN(object).toString();
+                          const isActive = activeReferences.has(value);
+                          return (
+                            <SearchList.Item
+                              classNames='flex gap-2 items-center'
+                              key={value}
+                              value={label}
+                              onSelect={() => onUpdateReference?.(value, !isActive)}
+                            >
+                              <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
+                              {label}
+                            </SearchList.Item>
+                          );
+                        })}
+                      </SearchList.Content>
+                      <SearchList.Empty classNames={[descriptionMessage, 'mlb-cardSpacingChrome']}>
+                        {t('no reference options label')}
+                      </SearchList.Empty>
+                    </>
+                  ) : (
+                    <p className={mx(descriptionMessage, 'mlb-cardSpacingChrome')}>{t('no reference options label')}</p>
+                  )}
+                  <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 mbe-cardSpacingChrome'>
+                    <Select.Root
+                      value={activeTypename === 'idle' ? undefined : activeTypename}
+                      onValueChange={setActiveTypename}
+                    >
+                      <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
+                      <Select.Portal>
+                        <Select.Content>
+                          <Select.ScrollUpButton />
+                          <Select.Viewport>
+                            <Select.Option value='idle'>{t('idle type filter label')}</Select.Option>
+                            {typenameOptions.map((typename) => (
+                              <Select.Option key={typename} value={typename}>
+                                {t('typename label', { ns: typename, defaultValue: typename })}
+                              </Select.Option>
+                            ))}
+                          </Select.Viewport>
+                          <Select.ScrollDownButton />
+                          <Select.Arrow />
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select.Root>
+                    <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' />
+                  </div>
                 </SearchList.Root>
               </Tabs.Tabpanel>
               <Tabs.Tabpanel value='model'>

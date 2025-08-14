@@ -58,6 +58,9 @@ export const translations = [
         'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
+        'type filter placeholder': 'Type',
+        'idle type filter label': 'Any',
+        'no reference options label': 'No results',
 
         'sequence logs label': 'Logs',
 
