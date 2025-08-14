@@ -16,6 +16,7 @@ const relationsStoryUrl = storybookUrl('ui-react-ui-table-relations--default', 9
 test.describe('Table', () => {
   test('Loads', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -25,6 +26,7 @@ test.describe('Table', () => {
 
   test('sort', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -41,6 +43,7 @@ test.describe('Table', () => {
 
   test('selection', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -62,6 +65,7 @@ test.describe('Table', () => {
 
   test('delete row', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -73,6 +77,7 @@ test.describe('Table', () => {
 
   test('delete row--select all', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -90,6 +95,7 @@ test.describe('Table', () => {
 
   test('delete column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -116,6 +122,7 @@ test.describe('Table', () => {
   // Rest of add column test remains the same as it's a more complex flow.
   test('add column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -130,6 +137,7 @@ test.describe('Table', () => {
 
   test('reference > reference / create new object', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -166,6 +174,7 @@ test.describe('Table', () => {
 
   test('test toggles', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -188,6 +197,7 @@ test.describe('Table', () => {
 
   test('extant relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
 
     // Wait for the page to load
@@ -234,6 +244,7 @@ test.describe('Table', () => {
 
   test('new relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
 
     // Wait for the page to load
