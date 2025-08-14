@@ -10,7 +10,7 @@ import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
@@ -22,14 +22,13 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useBlueprintHandlers, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
   ChatOptions,
-  type ChatOptionsProps,
   type ChatPresetsProps,
   ChatReferences,
   ChatStatusIndicator,
@@ -320,20 +319,6 @@ const ChatPrompt = ({
     [event],
   );
 
-  // TODO(thure): The components depending on `processor.context.objects` are not reacting to changes, why is this?
-
-  const handleReferenceChange = useCallback<NonNullable<ChatOptionsProps['onObjectChange']>>((dxn, checked) => {
-    log.info('update', { dxn, checked });
-    return processor.context[checked ? 'bind' : 'unbind']({ objects: [Ref.fromDXN(DXN.parse(dxn))] });
-  }, []);
-
-  // TODO(thure): Ditto here regarding the name of the callback.
-  const { onUpdateBlueprint } = useBlueprintHandlers({
-    space,
-    context: processor.context,
-    blueprintRegistry: processor.blueprintRegistry,
-  });
-
   return (
     <div
       className={mx(
@@ -359,11 +344,9 @@ const ChatPrompt = ({
         space={space}
         blueprintRegistry={processor.blueprintRegistry}
         context={processor.context}
-        onBlueprintChange={onUpdateBlueprint}
         preset={preset}
         presets={presets}
         onPresetChange={onChangePreset}
-        onObjectChange={handleReferenceChange}
       />
 
       <ChatActions
@@ -374,7 +357,7 @@ const ChatPrompt = ({
         onEvent={handleEvent}
       >
         <div role='none' className='pli-cardSpacingChrome grow'>
-          <ChatReferences context={processor.context} onReferenceChange={handleReferenceChange} />
+          <ChatReferences space={space} context={processor.context} />
         </div>
         {online !== undefined && (
           <Input.Root>

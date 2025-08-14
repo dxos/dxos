@@ -2,55 +2,60 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, useAsyncState, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { isNonNullable } from '@dxos/util';
 
-import { useBlueprints } from '../../hooks';
+import {
+  useActiveBlueprints,
+  useActiveReferences,
+  useBlueprintHandlers,
+  useBlueprints,
+  useReferencesHandlers,
+} from '../../hooks';
 import { meta } from '../../meta';
 
 export type ChatOptionsProps = {
-  space?: Space;
-  context?: AiContextBinder;
+  space: Space;
+  context: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
-  onBlueprintChange?: (key: string, isActive: boolean) => void;
   presets?: { id: string; label: string }[];
   preset?: string;
   onPresetChange?: (id: string) => void;
-  onObjectChange?: (dxn: string, isActive: boolean) => void;
 };
 
 /**
  * Manages the runtime context for the chat.
  */
 export const ChatOptions = ({
+  space,
   context,
   blueprintRegistry,
-  onBlueprintChange,
-  space,
   presets,
   preset,
   onPresetChange,
-  onObjectChange,
 }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
-  // TODO(burdon): Possibly constrain query as registry grows.
-  const blueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+  const blueprints = useBlueprints({ blueprintRegistry });
+  const activeBlueprints = useActiveBlueprints({ context });
+  const { onUpdateBlueprint } = useBlueprintHandlers({
+    space,
+    context,
+    blueprintRegistry,
+  });
 
-  const activeBlueprints = useBlueprints({ context });
-
-  const [activeDxns] = useAsyncState<string[]>(async () => {
-    const objects = await Ref.Array.loadAll(context?.objects.value ?? []);
-    return objects.filter(isNonNullable).map((obj) => Obj.getDXN(obj).toString());
-  }, [context?.objects]);
+  const activeReferences = useActiveReferences({ context });
+  const { onUpdateReference } = useReferencesHandlers({
+    space,
+    context,
+  });
 
   return (
     <Popover.Root>
@@ -82,7 +87,7 @@ export const ChatOptions = ({
                           classNames='flex gap-2 items-center'
                           key={blueprint.key}
                           value={blueprint.name}
-                          onSelect={() => onBlueprintChange?.(blueprint.key, !isActive)}
+                          onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
                         >
                           <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {blueprint.name}
@@ -99,13 +104,13 @@ export const ChatOptions = ({
                     {(space?.db.query(Filter.everything()).runSync() ?? []).map(({ object }) => {
                       const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
                       const value = Obj.getDXN(object).toString();
-                      const isActive = activeDxns?.find((dxn) => dxn === value);
+                      const isActive = activeReferences.has(value);
                       return (
                         <SearchList.Item
                           classNames='flex gap-2 items-center'
                           key={value}
                           value={label}
-                          onSelect={() => onObjectChange?.(value, !isActive)}
+                          onSelect={() => onUpdateReference?.(value, !isActive)}
                         >
                           <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {label}
