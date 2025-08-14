@@ -71,7 +71,7 @@ export interface ReplicatorConnection {
    * Batch syncing considered enabled if ReplicatorConnection implements `pushBatch` and `pullBatch` methods.
    * @returns true if the batch syncing is enabled.
    */
-  bundleSyncEnabled: boolean;
+  get bundleSyncEnabled(): boolean;
 
   /**
    * Pushes the batch of documents to the remote peer.
