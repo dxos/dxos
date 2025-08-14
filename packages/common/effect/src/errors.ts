@@ -95,7 +95,7 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
 };
 
 /**
- * Runs the embedded effect asynchronously and throws any failures and defects as errors.
+ * Converts a cause to an error.
  * Inserts effect spans as stack frames.
  * The error will have stack frames of where the effect was run (if stack trace limit allows).
  * Removes effect runtime internal stack frames.
@@ -104,21 +104,13 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
  *
  * @throws AggregateError if there are multiple errors.
  */
-export const runAndForwardErrors = async <A, E>(
-  effect: Effect.Effect<A, E, never>,
-  options?: { signal?: AbortSignal },
-): Promise<A> => {
-  const exit = await Effect.runPromiseExit(effect, options);
-  if (Exit.isSuccess(exit)) {
-    return exit.value;
-  }
-
-  if (Cause.isEmpty(exit.cause)) {
+export const causeToError = (cause: Cause.Cause<any>): Error => {
+  if (Cause.isEmpty(cause)) {
     throw new Error('Fiber failed without a cause');
-  } else if (Cause.isInterrupted(exit.cause)) {
+  } else if (Cause.isInterruptedOnly(cause)) {
     throw new Error('Fiber was interrupted');
   } else {
-    const errors = [...Chunk.toArray(Cause.failures(exit.cause)), ...Chunk.toArray(Cause.defects(exit.cause))];
+    const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
 
     const getStackFrames = (): string[] => {
       const o: { stack: string } = {} as any;
@@ -135,4 +127,44 @@ export const runAndForwardErrors = async <A, E>(
       throw new AggregateError(newErrors);
     }
   }
+};
+
+/**
+ * Throws an error based on the cause.
+ * Inserts effect spans as stack frames.
+ * The error will have stack frames of where the effect was run (if stack trace limit allows).
+ * Removes effect runtime internal stack frames.
+ *
+ * To be used in place of `Effect.runPromise`.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
+export const throwCause = (cause: Cause.Cause<any>): never => {
+  throw causeToError(cause);
+};
+
+export const unwrapExit = <A>(exit: Exit.Exit<A, any>): A => {
+  if (Exit.isSuccess(exit)) {
+    return exit.value;
+  }
+
+  return throwCause(exit.cause);
+};
+
+/**
+ * Runs the embedded effect asynchronously and throws any failures and defects as errors.
+ * Inserts effect spans as stack frames.
+ * The error will have stack frames of where the effect was run (if stack trace limit allows).
+ * Removes effect runtime internal stack frames.
+ *
+ * To be used in place of `Effect.runPromise`.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
+export const runAndForwardErrors = async <A, E>(
+  effect: Effect.Effect<A, E, never>,
+  options?: { signal?: AbortSignal },
+): Promise<A> => {
+  const exit = await Effect.runPromiseExit(effect, options);
+  return unwrapExit(exit);
 };
