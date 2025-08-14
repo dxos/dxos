@@ -609,15 +609,15 @@ export class AutomergeHost extends Resource {
       const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
       if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
         log('pushing bundle', { amount: missingOnRemote.length });
-        const { failedToPush } = await this._pushInBundles(peerId, missingOnRemote);
-        toReplicateWithoutBatching.push(...failedToPush);
+        const { syncInteractively } = await this._pushInBundles(peerId, missingOnRemote);
+        toReplicateWithoutBatching.push(...syncInteractively);
       } else {
         toReplicateWithoutBatching.push(...missingOnRemote);
       }
       if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
         log('pulling bundle', { amount: missingOnLocal.length });
-        const { failedToPull } = await this._pullInBundles(peerId, missingOnLocal);
-        toReplicateWithoutBatching.push(...failedToPull);
+        const { syncInteractively } = await this._pullInBundles(peerId, missingOnLocal);
+        toReplicateWithoutBatching.push(...syncInteractively);
       } else {
         toReplicateWithoutBatching.push(...missingOnLocal);
       }
@@ -642,22 +642,22 @@ export class AutomergeHost extends Resource {
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
   // TODO(mykola): Use effect to retry batches.
-  private async _pushInBundles(peerId: PeerId, documentsToPush: DocumentId[]): Promise<{ failedToPush: DocumentId[] }> {
+  private async _pushInBundles(
+    peerId: PeerId,
+    documentIds: DocumentId[],
+  ): Promise<{ syncInteractively: DocumentId[] }> {
     // Split documents into bundles of BUNDLE_SIZE.
-    const bundles = splitIntoBundles(documentsToPush, BUNDLE_SIZE);
-    const failedToPush: DocumentId[] = [];
+    const documentsToPush = [...documentIds];
+    const syncInteractively: DocumentId[] = [];
 
     // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (bundles.length > 0) {
+    while (documentsToPush.length > 0) {
       const concurrentTasks: Promise<void>[] = [];
       for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
-        const bundle = bundles.shift();
-        if (!bundle) {
-          break;
-        }
+        const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
         concurrentTasks.push(
           this._pushBundle(peerId, bundle).catch(() => {
-            failedToPush.push(...bundle);
+            syncInteractively.push(...bundle);
           }),
         );
       }
@@ -665,7 +665,7 @@ export class AutomergeHost extends Resource {
       concurrentTasks.length = 0;
     }
 
-    return { failedToPush };
+    return { syncInteractively };
   }
 
   private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
@@ -674,10 +674,13 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.pushBundle(peerId, bundle);
   }
 
-  private async _pullInBundles(peerId: PeerId, documentIds: DocumentId[]): Promise<{ failedToPull: DocumentId[] }> {
+  private async _pullInBundles(
+    peerId: PeerId,
+    documentIds: DocumentId[],
+  ): Promise<{ syncInteractively: DocumentId[] }> {
     // Split documents into bundles of BUNDLE_SIZE.
     const documentsToPull = [...documentIds];
-    const failedToPull: DocumentId[] = [];
+    const syncInteractively: DocumentId[] = [];
 
     // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPull.length > 0) {
@@ -686,7 +689,7 @@ export class AutomergeHost extends Resource {
         const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
         concurrentTasks.push(
           this._pullBundle(peerId, bundle).catch(() => {
-            failedToPull.push(...bundle);
+            syncInteractively.push(...bundle);
           }),
         );
       }
@@ -694,7 +697,7 @@ export class AutomergeHost extends Resource {
       concurrentTasks.length = 0;
     }
 
-    return { failedToPull };
+    return { syncInteractively };
   }
 
   private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
@@ -782,12 +785,4 @@ export type PeerSyncState = {
    * Total number of documents on the remote peer.
    */
   remoteDocumentCount: number;
-};
-
-const splitIntoBundles = <T>(items: T[], bundleSize: number): T[][] => {
-  const bundles: T[][] = [];
-  for (let i = 0; i < items.length; i += bundleSize) {
-    bundles.push(items.slice(i, i + bundleSize));
-  }
-  return bundles;
 };
