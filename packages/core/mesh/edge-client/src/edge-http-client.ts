@@ -46,7 +46,7 @@ import { getEdgeUrlWithProtocol } from './utils';
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
-const WARNING_BODY_SIZE = 1024 * 1024; // 1MB
+const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
   /**
