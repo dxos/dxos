@@ -647,7 +647,6 @@ export class AutomergeHost extends Resource {
     peerId: PeerId,
     documentIds: DocumentId[],
   ): Promise<{ syncInteractively: DocumentId[] }> {
-    // Split documents into bundles of BUNDLE_SIZE.
     const documentsToPush = [...documentIds];
     const syncInteractively: DocumentId[] = [];
 
@@ -680,7 +679,6 @@ export class AutomergeHost extends Resource {
     peerId: PeerId,
     documentIds: DocumentId[],
   ): Promise<{ syncInteractively: DocumentId[] }> {
-    // Split documents into bundles of BUNDLE_SIZE.
     const documentsToPull = [...documentIds];
     const syncInteractively: DocumentId[] = [];
 
