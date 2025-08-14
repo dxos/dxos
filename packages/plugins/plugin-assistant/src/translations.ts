@@ -84,6 +84,7 @@ export const translations = [
         'button scroll down': 'Scroll down',
         'blueprints in context title': 'Blueprints',
         'objects in context title': 'Documents',
+        'remove object in context label': 'Remove document',
         'chat model title': 'Model',
 
         'settings default label': 'Default',

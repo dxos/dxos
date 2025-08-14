@@ -32,7 +32,6 @@ import {
   type ChatOptionsProps,
   type ChatPresetsProps,
   ChatReferences,
-  type ChatReferencesProps,
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
@@ -321,17 +320,14 @@ const ChatPrompt = ({
     [event],
   );
 
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
-    log.info('update', { dxns });
-    return processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
-  }, []);
+  // TODO(thure): The components depending on `processor.context.objects` are not reacting to changes, why is this?
 
   const handleReferenceChange = useCallback<NonNullable<ChatOptionsProps['onObjectChange']>>(
     (dxn, checked) => {
       log.info('update', { dxn, checked });
       return processor.context[checked ? 'bind' : 'unbind']({ objects: [Ref.fromDXN(DXN.parse(dxn))] });
     },
-    [processor, processor.context],
+    [processor.context.objects],
   );
 
   // TODO(thure): Ditto here regarding the name of the callback.
@@ -365,7 +361,9 @@ const ChatPrompt = ({
       <ChatOptions
         space={space}
         blueprintRegistry={processor.blueprintRegistry}
-        context={processor.context}
+        context={
+          /* TODO(thure): Why are we prop-drilling `context` and `blueprintRegistry`? If it’s a context can we not just `useContext`? */ processor.context
+        }
         onBlueprintChange={onUpdateBlueprint}
         preset={preset}
         presets={presets}
@@ -381,7 +379,7 @@ const ChatPrompt = ({
         onEvent={handleEvent}
       >
         <div role='none' className='pli-cardSpacingChrome grow'>
-          <ChatReferences space={space} context={processor.context} onUpdate={handleUpdateReferences} />
+          <ChatReferences context={processor.context} onReferenceChange={handleReferenceChange} />
         </div>
         {online !== undefined && (
           <Input.Root>

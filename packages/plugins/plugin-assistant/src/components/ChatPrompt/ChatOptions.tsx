@@ -50,7 +50,7 @@ export const ChatOptions = ({
   const [activeDxns] = useAsyncState<string[]>(async () => {
     const objects = await Ref.Array.loadAll(context?.objects.value ?? []);
     return objects.filter(isNonNullable).map((obj) => Obj.getDXN(obj).toString());
-  }, [context]);
+  }, [context?.objects]);
 
   return (
     <Popover.Root>
@@ -71,7 +71,7 @@ export const ChatOptions = ({
             defaultActivePart='list'
             classNames='min-is-min is-[calc(100dvw-.5rem)] sm:is-max max-is-[--text-content]'
           >
-            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"]]:overflow-y-auto'>
+            <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:order-1'>
               <Tabs.Tabpanel value='blueprints'>
                 <SearchList.Root>
                   <SearchList.Content classNames='plb-cardSpacingChrome'>
@@ -136,7 +136,7 @@ export const ChatOptions = ({
                   })}
                 </ul>
               </Tabs.Tabpanel>
-              <Tabs.Tablist classNames='sm:overflow-x-hidden p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator'>
+              <Tabs.Tablist classNames='sm:overflow-x-hidden p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
                 <Tabs.IconTab
                   value='blueprints'
                   icon='ph--blueprint--regular'
