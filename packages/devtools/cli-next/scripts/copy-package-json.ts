@@ -1,3 +1,5 @@
+// TODO(wittjosiah): Get the linter to stop ignoring this file.
+
 import { FileSystem, Path } from "@effect/platform"
 import { NodeContext } from "@effect/platform-node"
 import { Effect } from "effect"
