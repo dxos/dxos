@@ -609,13 +609,15 @@ export class AutomergeHost extends Resource {
       const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
       if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
         log('pushing bundle', { amount: missingOnRemote.length });
-        await this._pushInBundles(peerId, missingOnRemote);
+        const { failedToPush } = await this._pushInBundles(peerId, missingOnRemote);
+        toReplicateWithoutBatching.push(...failedToPush);
       } else {
         toReplicateWithoutBatching.push(...missingOnRemote);
       }
       if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
         log('pulling bundle', { amount: missingOnLocal.length });
-        await this._pullInBundles(peerId, missingOnLocal);
+        const { failedToPull } = await this._pullInBundles(peerId, missingOnLocal);
+        toReplicateWithoutBatching.push(...failedToPull);
       } else {
         toReplicateWithoutBatching.push(...missingOnLocal);
       }
@@ -638,9 +640,10 @@ export class AutomergeHost extends Resource {
     }
   }
 
-  private async _pushInBundles(peerId: PeerId, documentsToPush: DocumentId[]) {
+  private async _pushInBundles(peerId: PeerId, documentsToPush: DocumentId[]): Promise<{ failedToPush: DocumentId[] }> {
     // Split documents into bundles of BUNDLE_SIZE.
     const bundles = splitIntoBundles(documentsToPush, BUNDLE_SIZE);
+    const failedToPush: DocumentId[] = [];
 
     // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (bundles.length > 0) {
@@ -650,11 +653,17 @@ export class AutomergeHost extends Resource {
         if (!bundle) {
           break;
         }
-        concurrentTasks.push(this._pushBundle(peerId, bundle));
+        concurrentTasks.push(
+          this._pushBundle(peerId, bundle).catch(() => {
+            failedToPush.push(...bundle);
+          }),
+        );
       }
       await Promise.all(concurrentTasks);
       concurrentTasks.length = 0;
     }
+
+    return { failedToPush };
   }
 
   private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
@@ -663,23 +672,27 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.pushBundle(peerId, bundle);
   }
 
-  private async _pullInBundles(peerId: PeerId, documentsToPull: DocumentId[]) {
+  private async _pullInBundles(peerId: PeerId, documentIds: DocumentId[]): Promise<{ failedToPull: DocumentId[] }> {
     // Split documents into bundles of BUNDLE_SIZE.
-    const bundles = splitIntoBundles(documentsToPull, BUNDLE_SIZE);
+    const documentsToPull = [...documentIds];
+    const failedToPull: DocumentId[] = [];
 
     // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
-    while (bundles.length > 0) {
+    while (documentsToPull.length > 0) {
       const concurrentTasks: Promise<void>[] = [];
       for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
-        const bundle = bundles.shift();
-        if (!bundle) {
-          break;
-        }
-        concurrentTasks.push(this._pullBundle(peerId, bundle));
+        const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
+        concurrentTasks.push(
+          this._pullBundle(peerId, bundle).catch(() => {
+            failedToPull.push(...bundle);
+          }),
+        );
       }
       await Promise.all(concurrentTasks);
       concurrentTasks.length = 0;
     }
+
+    return { failedToPull };
   }
 
   private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {

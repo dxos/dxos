@@ -46,6 +46,7 @@ import { getEdgeUrlWithProtocol } from './utils';
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
+const WARNING_BODY_SIZE = 1024 * 1024; // 1MB
 
 export type RetryConfig = {
   /**
@@ -371,9 +372,14 @@ export class EdgeHttpClient {
 }
 
 const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+  const bodyString = body && JSON.stringify(body);
+  if (bodyString && bodyString.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: bodyString.length });
+  }
+
   return {
     method,
-    body: body && JSON.stringify(body),
+    body: bodyString,
     headers: authHeader ? { Authorization: authHeader } : undefined,
   };
 };
