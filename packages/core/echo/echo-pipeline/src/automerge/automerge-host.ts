@@ -596,15 +596,6 @@ export class AutomergeHost extends Resource {
         return;
       }
 
-      log.info('HOST collection sync', {
-        collectionId,
-        peerId,
-        different,
-        missingOnLocal,
-        missingOnRemote,
-        localState,
-        remoteState,
-      });
       const toReplicateWithoutBatching = [...different];
       const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
       if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
@@ -612,6 +603,11 @@ export class AutomergeHost extends Resource {
         const { syncInteractively } = await this._pushInBundles(peerId, missingOnRemote);
         toReplicateWithoutBatching.push(...syncInteractively);
       } else {
+        log.verbose('failed to push bundle, replicating interactively', {
+          collectionId,
+          peerId,
+          amount: missingOnRemote.length,
+        });
         toReplicateWithoutBatching.push(...missingOnRemote);
       }
       if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
@@ -619,6 +615,11 @@ export class AutomergeHost extends Resource {
         const { syncInteractively } = await this._pullInBundles(peerId, missingOnLocal);
         toReplicateWithoutBatching.push(...syncInteractively);
       } else {
+        log.verbose('failed to pull bundle, replicating interactively', {
+          collectionId,
+          peerId,
+          amount: missingOnLocal.length,
+        });
         toReplicateWithoutBatching.push(...missingOnLocal);
       }
 
