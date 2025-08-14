@@ -29,9 +29,12 @@ import { waitForSync } from '../../util';
 
 const file = Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy'));
 
-const name = Options.text('name').pipe(Options.withDescription('The name of the function to deploy'), Options.optional);
+const name = Options.text('name').pipe(
+  Options.withDescription('The name of the function to deploy.'),
+  Options.optional,
+);
 const version = Options.text('version').pipe(
-  Options.withDescription('The version of the function to deploy'),
+  Options.withDescription('The version of the function to deploy.'),
   Options.optional,
 );
 const spaceId = Options.text('spaceId').pipe(
@@ -47,69 +50,84 @@ const composerScript = Options.boolean('composerScript').pipe(
   Options.withDefault(false),
 );
 
+export const deployFunction = Effect.fn(function* ({
+  file,
+  name,
+  version,
+  composerScript,
+  functionId,
+  spaceId,
+}: {
+  file: string;
+  name: Option.Option<string>;
+  version: Option.Option<string>;
+  composerScript: boolean;
+  functionId: Option.Option<string>;
+  spaceId: Option.Option<string>;
+}) {
+  const { scriptFileContent, bundledScript } = yield* loadScript(file);
+
+  const client = yield* ClientService;
+  const identity = client.halo.identity.get();
+  // TODO(wittjosiah): How to surface this error to the user?
+  invariant(identity, 'Identity not available');
+
+  yield* spaceId.pipe(
+    // TODO(wittjosiah): Feedback about invalid space ID.
+    Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
+    Option.match({
+      onNone: () =>
+        upload({
+          ownerPublicKey: identity.identityKey,
+          bundledSource: bundledScript,
+          functionId: Option.getOrUndefined(functionId),
+          name: Option.getOrUndefined(name),
+          version: Option.getOrUndefined(version),
+        }),
+      onSome: (spaceId) =>
+        // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
+        Effect.gen(function* () {
+          const space = client.spaces.get(spaceId);
+          invariant(space, 'Space not found');
+          yield* Effect.tryPromise(() => space.waitUntilReady());
+          const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
+          const uploadResult = yield* upload({
+            ownerPublicKey: identity.identityKey,
+            bundledSource: bundledScript,
+            functionId: Option.getOrUndefined(functionId),
+            fnObject: existingFunctionObject,
+            name: Option.getOrUndefined(name),
+            version: Option.getOrUndefined(version),
+          });
+          const functionObject = yield* upsertFunctionObject({
+            client,
+            space,
+            existingObject: existingFunctionObject,
+            uploadResult,
+            file,
+            name: Option.getOrUndefined(name),
+          });
+          if (composerScript) {
+            yield* upsertComposerScript({
+              client,
+              space,
+              functionObject,
+              scriptFileName: path.basename(file),
+              scriptFileContent,
+              name: Option.getOrUndefined(name),
+            });
+          }
+          yield* waitForSync(space);
+        }),
+    }),
+  );
+});
+
 export const deploy = Command.make(
   'deploy',
   { file, name, version, composerScript, functionId, spaceId },
-  ({ file, name, version, composerScript, functionId, spaceId }) =>
-    Effect.gen(function* () {
-      const { scriptFileContent, bundledScript } = yield* loadScript(file);
-
-      const client = yield* ClientService;
-      const identity = client.halo.identity.get();
-      // TODO(wittjosiah): How to surface this error to the user?
-      invariant(identity, 'Identity not available');
-
-      yield* spaceId.pipe(
-        // TODO(wittjosiah): Feedback about invalid space ID.
-        Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
-        Option.match({
-          onNone: () =>
-            upload({
-              ownerPublicKey: identity.identityKey,
-              bundledSource: bundledScript,
-              functionId: Option.getOrUndefined(functionId),
-              name: Option.getOrUndefined(name),
-              version: Option.getOrUndefined(version),
-            }),
-          onSome: (spaceId) =>
-            // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
-            Effect.gen(function* () {
-              const space = client.spaces.get(spaceId);
-              invariant(space, 'Space not found');
-              yield* Effect.tryPromise(() => space.waitUntilReady());
-              const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
-              const uploadResult = yield* upload({
-                ownerPublicKey: identity.identityKey,
-                bundledSource: bundledScript,
-                functionId: Option.getOrUndefined(functionId),
-                fnObject: existingFunctionObject,
-                name: Option.getOrUndefined(name),
-                version: Option.getOrUndefined(version),
-              });
-              const functionObject = yield* upsertFunctionObject({
-                client,
-                space,
-                existingObject: existingFunctionObject,
-                uploadResult,
-                file,
-                name: Option.getOrUndefined(name),
-              });
-              if (composerScript) {
-                yield* upsertComposerScript({
-                  client,
-                  space,
-                  functionObject,
-                  scriptFileName: path.basename(file),
-                  scriptFileContent,
-                  name: Option.getOrUndefined(name),
-                });
-              }
-              yield* waitForSync(space);
-            }),
-        }),
-      );
-    }),
-);
+  deployFunction,
+).pipe(Command.withDescription('Deploy a function to EDGE.'));
 
 const loadScript = Effect.fn(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;

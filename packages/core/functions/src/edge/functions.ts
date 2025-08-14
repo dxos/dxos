@@ -29,7 +29,7 @@ export const uploadWorkerFunction = async ({
   functionId,
   ownerPublicKey,
 }: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
-  log('Uploading function', { functionId, name, version, source: source.length, ownerPublicKey });
+  log('uploading function', { functionId, name, version, source: source.length, ownerPublicKey });
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
   const edgeClient = new EdgeHttpClient(edgeUrl);
@@ -41,7 +41,7 @@ export const uploadWorkerFunction = async ({
   );
 
   // TODO(burdon): Edge service log.
-  log('Uploaded', {
+  log('uploaded', {
     identityKey: edgeIdentity.identityKey,
     functionId,
     name,

@@ -11,13 +11,15 @@ import { truncateKey } from '@dxos/debug';
 
 import { ClientService } from '../../services';
 
-export const list = Command.make('list', {}, () =>
-  Effect.gen(function* () {
-    const client = yield* ClientService;
-    const spaces = client.spaces.get();
-    const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-    yield* Effect.log(formattedSpaces);
-  }),
+export const listSpaces = Effect.fn(function* () {
+  const client = yield* ClientService;
+  const spaces = client.spaces.get();
+  const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
+  yield* Effect.log(JSON.stringify(formattedSpaces, null, 2));
+});
+
+export const list = Command.make('list', {}, listSpaces).pipe(
+  Command.withDescription('List all spaces available on this device.'),
 );
 
 // TODO(wittjosiah): Factor out.

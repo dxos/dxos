@@ -3,36 +3,27 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Duration, Effect, Option, Schedule } from 'effect';
+import { Duration, Effect, Schedule } from 'effect';
 
-import { SpaceId } from '@dxos/client/echo';
-import { invariant } from '@dxos/invariant';
-
-import { ClientService } from '../../services';
-import { waitForSync } from '../../util';
+import { getSpace, waitForSync } from '../../util';
 
 const spaceId = Options.text('spaceId').pipe(Options.withDescription('The space ID to sync'));
 
-const timeout = Options.integer('timeout').pipe(
-  Options.withDescription('The timeout in milliseconds'),
+const spaceTimeout = Options.integer('spaceTimeout').pipe(
+  Options.withDescription('The timeout to wait for the space to be available in milliseconds.'),
   Options.withDefault(5000),
 );
 
-const getSpace = Effect.fn(function* (spaceId: SpaceId) {
-  const client = yield* ClientService;
-  return yield* Option.fromNullable(client.spaces.get(spaceId));
-});
-
-export const syncSpace = Effect.fn(function* ({ spaceId, timeout }: { spaceId: string; timeout: number }) {
-  invariant(SpaceId.isValid(spaceId), 'Invalid space ID');
-
+export const syncSpace = Effect.fn(function* ({ spaceId, spaceTimeout }: { spaceId: string; spaceTimeout: number }) {
   // If space is not available locally, wait for it to sync.
   const space = yield* getSpace(spaceId).pipe(
     Effect.retry(Schedule.fixed('100 millis')),
-    Effect.timeout(Duration.millis(timeout)),
+    Effect.timeout(Duration.millis(spaceTimeout)),
   );
 
   yield* waitForSync(space);
 });
 
-export const sync = Command.make('sync', { spaceId, timeout }, syncSpace);
+export const sync = Command.make('sync', { spaceId, spaceTimeout }, syncSpace).pipe(
+  Command.withDescription('Wait for a space to be fully synchronized with EDGE.'),
+);

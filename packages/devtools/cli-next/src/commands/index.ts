@@ -17,13 +17,13 @@ const version = '0.8.3'; // {x-release-please-version}
 // TODO(wittjosiah): Env vars.
 
 const profile = Options.text('profile').pipe(
-  Options.withDescription('The profile to use for the config file'),
+  Options.withDescription('The profile to use for the config file.'),
   Options.withDefault(ENV_DX_PROFILE_DEFAULT),
   Options.withAlias('p'),
 );
 
 const config = Options.file('config', { exists: 'yes' }).pipe(
-  Options.withDescription('The path to the config file to use'),
+  Options.withDescription('The path to the config file to use.'),
   Options.withAlias('c'),
   Options.optional,
 );
