@@ -151,9 +151,6 @@ export type CreateSpaceResponseBody = {
    * HEX encoded public key of the space.
    */
   spaceKey: string;
-  /**
-   * SpaceId.
-   */
   spaceId: SpaceId;
   automergeRoot: string;
 };

@@ -157,9 +157,9 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
+const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'p';
+    const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>

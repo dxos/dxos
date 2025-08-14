@@ -34,6 +34,7 @@ import {
   ChatContainer,
   type ComponentProps,
   GraphContainer,
+  LoggingContainer,
   SurfaceContainer,
   TasksContainer,
 } from './components';
@@ -297,7 +298,7 @@ export const WithResearch = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [GraphContainer, BlueprintContainer]],
+    components: [ChatContainer, [/*GraphContainer, BlueprintContainer,*/ LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 } satisfies Story;

@@ -77,10 +77,11 @@ export namespace ContentBlock {
     name: Schema.String,
 
     /**
-     * Parsed input of the tool call.
+     * Unparsed input of the tool call.
+     * Anthropic models are known to emit empty strings for tools that have not parameters.
      */
     // TODO(dmaretskyi): We might need to be able to reprsent partial json.
-    input: Schema.Unknown,
+    input: Schema.String,
 
     ...Base.fields,
   }).pipe(Schema.mutable);
@@ -100,8 +101,10 @@ export namespace ContentBlock {
 
     /**
      * The result of the tool call.
+     * JSON encoding is preferred.
+     * Missing on error.
      */
-    result: Schema.Unknown,
+    result: Schema.optional(Schema.String),
 
     // TODO(dmaretskyi): Use discriminated union.
     // result: Schema.Union(
@@ -295,6 +298,10 @@ export namespace ContentBlock {
 //  - Read receipts don't need to be added to schema until they being implemented.
 const MessageSchema = Schema.Struct({
   id: ObjectId,
+
+  parentMessage: Schema.optional(ObjectId),
+  // TODO(dmaretskyi): Consider adding a channelId too.
+
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
     GeneratorAnnotation.set('date.iso8601'),
@@ -304,6 +311,8 @@ const MessageSchema = Schema.Struct({
     description: 'Contents of the message.',
     default: [],
   }),
+
+  // TODO(dmaretskyi): Add tool call ID here.
   properties: Schema.optional(
     Schema.mutable(
       Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({

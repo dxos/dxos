@@ -15,7 +15,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
+import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -125,6 +125,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(LocalFunctionExecutionService.layer),
+          Layer.provideMerge(TracingService.layerNoop),
         ),
       ),
     ),

@@ -5,6 +5,7 @@
 import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
 import { Chunk, type Context, Effect, Function, Option, Queue, type Schema, Stream } from 'effect';
 
+import { type ToolId } from '@dxos/ai';
 import {
   type AiInputPreprocessingError,
   AiParser,
@@ -13,12 +14,13 @@ import {
   type ConsolePrinter,
   ToolExecutionService,
   ToolResolverService,
-  callTools,
+  callTool,
   getToolCalls,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -98,6 +100,7 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
   history?: DataType.Message[];
   objects?: Obj.Any[]; // TODO(burdon): Meta only (typename and id -- write to binder).
   blueprints?: Blueprint.Blueprint[];
+  toolIds?: ToolId[];
   toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
 };
@@ -148,7 +151,11 @@ export class AiSession {
   ): Effect.Effect<
     DataType.Message[],
     AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
-    AiLanguageModel.AiLanguageModel | ToolResolverService | ToolExecutionService | AiTool.ToHandler<Tools>
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
   > =>
     Effect.gen(this, function* () {
       const observer = params.observer ?? GenerationObserver.noop();
@@ -165,6 +172,7 @@ export class AiSession {
       const promptMessages = yield* formatUserPrompt(params);
       yield* this.messageQueue.offer(promptMessages);
       yield* observer.onMessage(promptMessages);
+      yield* TracingService.emitConverationMessage(promptMessages);
 
       this._history = [...(params.history ?? [])];
       this._pending = [promptMessages];
@@ -216,6 +224,7 @@ export class AiSession {
         this._pending.push(response);
         yield* this.messageQueue.offer(response);
         yield* observer.onMessage(response);
+        yield* TracingService.emitConverationMessage(response);
 
         // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
@@ -224,7 +233,17 @@ export class AiSession {
         }
 
         // TODO(burdon): Report errors to user; with proposed actions.
-        const toolResults = yield* callTools(toolkit, toolCalls);
+        const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
+          callTool(toolkit, toolCall).pipe(
+            Effect.provide(
+              TracingService.layerSubframe((context) => ({
+                ...context,
+                parentMessage: response.id,
+                toolCallId: toolCall.toolCallId,
+              })),
+            ),
+          ),
+        );
         const toolResultsMessage = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'user' },
@@ -234,6 +253,7 @@ export class AiSession {
         this._pending.push(toolResultsMessage);
         yield* this.messageQueue.offer(toolResultsMessage);
         yield* observer.onMessage(toolResultsMessage);
+        yield* TracingService.emitConverationMessage(toolResultsMessage);
       } while (true);
 
       // Signals to stream consumers that the session has completed and no more messages are coming.
@@ -266,9 +286,13 @@ export class AiSession {
 const createToolkit = <Tools extends AiTool.Any>({
   toolkit,
   blueprints = [],
-}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints'>) =>
+  toolIds = [],
+}: Pick<SessionRunParams<Tools>, 'toolkit' | 'blueprints' | 'toolIds'>) =>
   Effect.gen(function* () {
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit(blueprints.flatMap(({ tools }) => tools));
+    const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
+      ...blueprints.flatMap(({ tools }) => tools),
+      ...toolIds,
+    ]);
     const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),
     );

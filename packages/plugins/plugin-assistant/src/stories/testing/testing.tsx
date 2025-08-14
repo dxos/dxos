@@ -34,10 +34,14 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout } from '@dxos/storybook-utils';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
@@ -121,6 +125,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           const chat = space.db.add(
             Obj.make(Assistant.Chat, {
               queue: Ref.fromDXN(space.queues.create().dxn),
+              traceQueue: Ref.fromDXN(space.queues.create().dxn),
             }),
           );
 
@@ -130,6 +135,11 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
         },
         ...props,
       }),
+
+      // Cards
+      ThemePlugin({ tx: defaultTx }),
+      StorybookLayoutPlugin(),
+      PreviewPlugin(),
 
       // User plugins.
       AssistantPlugin(),
@@ -158,5 +168,4 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
     fullscreen: true,
     classNames: 'justify-center bg-deckSurface',
   }),
-  withTheme,
 ];

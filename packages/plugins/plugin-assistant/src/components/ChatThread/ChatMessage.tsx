@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
+import { resolveRef } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -130,6 +132,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
           a: ({ node: { properties }, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
+                // TODO(burdon): Check valid length (since serialized).
                 const dxn = DXN.parse(properties.href);
                 return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
@@ -137,16 +140,22 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
             // TODO(burdon): Can we revert to the default handler?
             return (
-              <a
-                href={href}
-                className='text-primary-500 hover:text-primary-500' // TODO(burdon): Token.
-                target='_blank'
-                rel='noopener noreferrer'
-                {...props}
-              >
+              <Link href={href} target='_blank' rel='noopener noreferrer' {...props}>
                 {children}
-              </a>
+              </Link>
             );
+          },
+          img: ({ node: { properties }, ...props }) => {
+            const client = useClient();
+            if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
+              try {
+                const dxn = DXN.parse(properties?.src);
+                const subject = resolveRef(client, dxn, space);
+                const data = useMemo(() => ({ subject }), [subject]);
+                return <Surface role='card--transclusion' data={data} limit={1} />;
+              } catch {}
+            }
+            return <img {...properties} />;
           },
         }}
       />
@@ -274,7 +283,8 @@ const ToggleContainer = (props: ToggleContainerProps) => {
   return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
 };
 
-export const renderObjectLink = (obj: Obj.Any) => `[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
+export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
+  `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
 // TODO(burdon): Move to parser.
 const preprocessTextContent = (content: string) =>

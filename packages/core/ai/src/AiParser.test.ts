@@ -87,7 +87,7 @@ describe('parser', () => {
             _tag: 'toolCall',
             toolCallId: '123',
             name: 'foo',
-            input: { bar: 'baz' },
+            input: JSON.stringify({ bar: 'baz' }),
           },
         ]);
       }),
@@ -117,7 +117,7 @@ describe('parser', () => {
             _tag: 'toolCall',
             toolCallId: '123',
             name: 'foo',
-            input: { bar: 'baz' },
+            input: JSON.stringify({ bar: 'baz' }),
           },
         ]);
       }),
@@ -312,7 +312,7 @@ describe('parser', () => {
                 _tag: 'toolCall',
                 toolCallId: '123',
                 name: 'foo',
-                input: { bar: 'baz' },
+                input: '{"bar":"baz"}',
               },
             ] satisfies ContentBlock.Any[]
           ).map((block) => [block]),

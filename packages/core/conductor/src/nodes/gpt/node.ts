@@ -9,7 +9,7 @@ import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolv
 import { AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ComputeEventLogger, QueueService } from '@dxos/functions';
+import { ComputeEventLogger, QueueService, TracingService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
@@ -150,6 +150,7 @@ export const gptNode = defineComputeNode({
       // TODO(dmaretskyi): Move them out.
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
+      TracingService.layerNoop,
     );
 
     // TODO(dmaretskyi): Should this use conversation instead?
