@@ -322,13 +322,10 @@ const ChatPrompt = ({
 
   // TODO(thure): The components depending on `processor.context.objects` are not reacting to changes, why is this?
 
-  const handleReferenceChange = useCallback<NonNullable<ChatOptionsProps['onObjectChange']>>(
-    (dxn, checked) => {
-      log.info('update', { dxn, checked });
-      return processor.context[checked ? 'bind' : 'unbind']({ objects: [Ref.fromDXN(DXN.parse(dxn))] });
-    },
-    [processor.context.objects],
-  );
+  const handleReferenceChange = useCallback<NonNullable<ChatOptionsProps['onObjectChange']>>((dxn, checked) => {
+    log.info('update', { dxn, checked });
+    return processor.context[checked ? 'bind' : 'unbind']({ objects: [Ref.fromDXN(DXN.parse(dxn))] });
+  }, []);
 
   // TODO(thure): Ditto here regarding the name of the callback.
   const { onUpdateBlueprint } = useBlueprintHandlers({
@@ -361,9 +358,7 @@ const ChatPrompt = ({
       <ChatOptions
         space={space}
         blueprintRegistry={processor.blueprintRegistry}
-        context={
-          /* TODO(thure): Why are we prop-drilling `context` and `blueprintRegistry`? If it’s a context can we not just `useContext`? */ processor.context
-        }
+        context={processor.context}
         onBlueprintChange={onUpdateBlueprint}
         preset={preset}
         presets={presets}
