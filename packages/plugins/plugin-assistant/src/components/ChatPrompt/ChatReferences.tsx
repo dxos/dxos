@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
@@ -28,6 +28,10 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
       .filter(isNonNullable)
       .map((obj) => ({ id: Obj.getDXN(obj).toString(), label: Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id }));
   }, [context]);
+
+  useEffect(() => {
+    console.log('[active items]', items);
+  }, [items]);
 
   const handleSearch = useCallback<NonNullable<TagPickerOptions['onSearch']>>(
     (text, dxns) => {

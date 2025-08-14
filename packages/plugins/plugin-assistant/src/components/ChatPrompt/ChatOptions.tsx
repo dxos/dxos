@@ -8,9 +8,10 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { isNonNullable } from '@dxos/util';
 
 import { useBlueprints } from '../../hooks';
 import { meta } from '../../meta';
@@ -23,6 +24,7 @@ export type ChatOptionsProps = {
   presets?: { id: string; label: string }[];
   preset?: string;
   onPresetChange?: (id: string) => void;
+  onObjectChange?: (dxn: string, isActive: boolean) => void;
 };
 
 /**
@@ -36,6 +38,7 @@ export const ChatOptions = ({
   presets,
   preset,
   onPresetChange,
+  onObjectChange,
 }: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
@@ -43,6 +46,11 @@ export const ChatOptions = ({
   const blueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
 
   const activeBlueprints = useBlueprints({ context });
+
+  const [activeDxns] = useAsyncState<string[]>(async () => {
+    const objects = await Ref.Array.loadAll(context?.objects.value ?? []);
+    return objects.filter(isNonNullable).map((obj) => Obj.getDXN(obj).toString());
+  }, [context]);
 
   return (
     <Popover.Root>
@@ -90,15 +98,14 @@ export const ChatOptions = ({
                   <SearchList.Content classNames='plb-cardSpacingChrome'>
                     {(space?.db.query(Filter.everything()).runSync() ?? []).map(({ object }) => {
                       const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-                      const dxn = Obj.getDXN(object);
-                      const value = dxn.toString();
-                      const isActive = context?.objects.value.find((ref) => ref.dxn.toString() === dxn.toString());
+                      const value = Obj.getDXN(object).toString();
+                      const isActive = activeDxns?.find((dxn) => dxn === value);
                       return (
                         <SearchList.Item
                           classNames='flex gap-2 items-center'
                           key={value}
                           value={label}
-                          onSelect={() => context?.[isActive ? 'unbind' : 'bind']({ objects: [Ref.make(object)] })}
+                          onSelect={() => onObjectChange?.(value, !isActive)}
                         >
                           <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {label}

@@ -29,6 +29,7 @@ import {
   ChatActions,
   type ChatActionsProps,
   ChatOptions,
+  type ChatOptionsProps,
   type ChatPresetsProps,
   ChatReferences,
   type ChatReferencesProps,
@@ -322,8 +323,16 @@ const ChatPrompt = ({
 
   const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
     log.info('update', { dxns });
-    void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
+    return processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
+
+  const handleReferenceChange = useCallback<NonNullable<ChatOptionsProps['onObjectChange']>>(
+    (dxn, checked) => {
+      log.info('update', { dxn, checked });
+      return processor.context[checked ? 'bind' : 'unbind']({ objects: [Ref.fromDXN(DXN.parse(dxn))] });
+    },
+    [processor, processor.context],
+  );
 
   // TODO(thure): Ditto here regarding the name of the callback.
   const { onUpdateBlueprint } = useBlueprintHandlers({
@@ -361,6 +370,7 @@ const ChatPrompt = ({
         preset={preset}
         presets={presets}
         onPresetChange={onChangePreset}
+        onObjectChange={handleReferenceChange}
       />
 
       <ChatActions
