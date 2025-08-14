@@ -669,6 +669,10 @@ export class AutomergeHost extends Resource {
   }
 
   private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+
     const handles = documentIds.map((documentId) => this._repo.handles[documentId]);
     const bundle = exportBundle(this._repo, handles);
     await this._echoNetworkAdapter.pushBundle(peerId, bundle);
@@ -701,6 +705,9 @@ export class AutomergeHost extends Resource {
   }
 
   private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
     const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
     for (const [documentId, data] of Object.entries(bundle)) {
