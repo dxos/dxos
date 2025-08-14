@@ -4,12 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Icon, IconButton, Popover, Separator, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
@@ -20,13 +19,24 @@ export type ChatOptionsProps = {
   space?: Space;
   context?: AiContextBinder;
   blueprintRegistry?: Blueprint.Registry;
-  onUpdateBlueprint?: (key: string, isActive: boolean) => void;
+  onBlueprintChange?: (key: string, isActive: boolean) => void;
+  presets?: { id: string; label: string }[];
+  preset?: string;
+  onPresetChange?: (id: string) => void;
 };
 
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, space }: ChatOptionsProps) => {
+export const ChatOptions = ({
+  context,
+  blueprintRegistry,
+  onBlueprintChange,
+  space,
+  presets,
+  preset,
+  onPresetChange,
+}: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(burdon): Possibly constrain query as registry grows.
@@ -64,7 +74,7 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                           classNames='flex gap-2 items-center'
                           key={blueprint.key}
                           value={blueprint.name}
-                          onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
+                          onSelect={() => onBlueprintChange?.(blueprint.key, !isActive)}
                         >
                           <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {blueprint.name}
@@ -100,16 +110,23 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                 </SearchList.Root>
               </Tabs.Tabpanel>
               <Tabs.Tabpanel value='model'>
-                <ul>
-                  {DEFAULT_OLLAMA_MODELS.map((model) => (
-                    <li key={model}>{model}</li>
-                  ))}
-                </ul>
-                <Separator />
-                <ul>
-                  {DEFAULT_EDGE_MODELS.map((model) => (
-                    <li key={model}>{model}</li>
-                  ))}
+                <ul role='listbox' className='plb-cardSpacingChrome'>
+                  {presets?.map(({ id, label }) => {
+                    const isActive = preset === id;
+                    return (
+                      <li
+                        role='option'
+                        key={id}
+                        aria-selected={isActive}
+                        tabIndex={0}
+                        className='dx-focus-ring flex gap-2 items-center p-1 rounded-sm select-none cursor-pointer hover:bg-hoverOverlay'
+                        onClick={() => onPresetChange?.(id)}
+                      >
+                        <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
+                        {label}
+                      </li>
+                    );
+                  })}
                 </ul>
               </Tabs.Tabpanel>
               <Tabs.Tablist classNames='sm:overflow-x-hidden p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator'>

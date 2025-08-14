@@ -9,7 +9,6 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { type ThemedClassName, useAsyncState, useTranslation } from '@dxos/react-ui';
 import { TagPicker, type TagPickerItemData, type TagPickerOptions } from '@dxos/react-ui-tag-picker';
-import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -44,7 +43,7 @@ export const ChatReferences = ({ classNames, space, context, onUpdate }: ChatRef
 
   return (
     <TagPicker
-      classNames={mx('h-[1.75rem] text-sm', classNames)}
+      classNames={['bs-[1.75rem] text-sm flex items-center', classNames]}
       mode='multi-select'
       placeholder={t('context objects placeholder')}
       items={items}

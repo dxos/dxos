@@ -29,7 +29,6 @@ import {
   ChatActions,
   type ChatActionsProps,
   ChatOptions,
-  ChatPresets,
   type ChatPresetsProps,
   ChatReferences,
   type ChatReferencesProps,
@@ -219,7 +218,9 @@ type ChatPromptProps = ThemedClassName<
     Omit<ChatPresetsProps, 'onChange'> & {
       expandable?: boolean;
       online?: boolean;
+      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
       onChangeOnline?: (online: boolean) => void;
+      // TODO(thure): Ditto here.
       onChangePreset?: ChatPresetsProps['onChange'];
     }
 >;
@@ -324,6 +325,7 @@ const ChatPrompt = ({
     void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
   }, []);
 
+  // TODO(thure): Ditto here regarding the name of the callback.
   const { onUpdateBlueprint } = useBlueprintHandlers({
     space,
     context: processor.context,
@@ -351,19 +353,14 @@ const ChatPrompt = ({
         onSubmit={handleSubmit}
       />
 
-      <div />
-      <ChatReferences
-        classNames='col-span-2 flex pis-1 items-center'
-        space={space}
-        context={processor.context}
-        onUpdate={handleUpdateReferences}
-      />
-
       <ChatOptions
         space={space}
         blueprintRegistry={processor.blueprintRegistry}
         context={processor.context}
-        onUpdateBlueprint={onUpdateBlueprint}
+        onBlueprintChange={onUpdateBlueprint}
+        preset={preset}
+        presets={presets}
+        onPresetChange={onChangePreset}
       />
 
       <ChatActions
@@ -373,15 +370,14 @@ const ChatPrompt = ({
         processing={streaming}
         onEvent={handleEvent}
       >
-        <>
-          <div className='grow' />
-          {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
-          {online !== undefined && (
-            <Input.Root>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-            </Input.Root>
-          )}
-        </>
+        <div role='none' className='pli-cardSpacingChrome grow'>
+          <ChatReferences space={space} context={processor.context} onUpdate={handleUpdateReferences} />
+        </div>
+        {online !== undefined && (
+          <Input.Root>
+            <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
+          </Input.Root>
+        )}
       </ChatActions>
     </div>
   );
