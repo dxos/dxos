@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -20,6 +20,7 @@ import {
   useReferencesHandlers,
 } from '../../hooks';
 import { meta } from '../../meta';
+import { Assistant } from '../../types';
 
 export type ChatOptionsProps = {
   space: Space;
@@ -56,6 +57,16 @@ export const ChatOptions = ({
     space,
     context,
   });
+  const referenceOptions = useQuery(
+    space,
+    Filter.not(
+      Filter.or(
+        Filter.type(Blueprint.Blueprint),
+        Filter.type(Assistant.Chat),
+        Filter.typename('dxos.org/type/Properties'),
+      ),
+    ),
+  );
 
   return (
     <Popover.Root>
@@ -101,7 +112,7 @@ export const ChatOptions = ({
               <Tabs.Tabpanel value='objects'>
                 <SearchList.Root>
                   <SearchList.Content classNames='plb-cardSpacingChrome'>
-                    {(space?.db.query(Filter.everything()).runSync() ?? []).map(({ object }) => {
+                    {referenceOptions.map((object: any) => {
                       const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
                       const value = Obj.getDXN(object).toString();
                       const isActive = activeReferences.has(value);
