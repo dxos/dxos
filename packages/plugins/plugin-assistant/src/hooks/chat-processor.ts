@@ -17,12 +17,11 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
+import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { AiServiceOverloadedError } from './errors';
 import { type AiChatServices } from './useChatServices';
 
 // TODO(burdon): Is this still used?

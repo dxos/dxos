@@ -1,6 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { it } from '@effect/vitest';
 import { Cause, Effect, Fiber } from 'effect';
-import { inspect } from 'node:util';
 
 const doWork = Effect.fn('doWork')(function* () {
   yield* Effect.sleep('1 minute');
@@ -15,7 +18,7 @@ it.effect.skip(
       const resultFiber = yield* doWork().pipe(Effect.fork);
 
       setTimeout(() => {
-        Effect.runPromise(Fiber.interrupt(resultFiber));
+        void Effect.runPromise(Fiber.interrupt(resultFiber));
       }, 2_000);
 
       const result = yield* resultFiber;
