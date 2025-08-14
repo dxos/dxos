@@ -640,6 +640,8 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
+  // TODO(mykola): Use effect to retry batches.
   private async _pushInBundles(peerId: PeerId, documentsToPush: DocumentId[]): Promise<{ failedToPush: DocumentId[] }> {
     // Split documents into bundles of BUNDLE_SIZE.
     const bundles = splitIntoBundles(documentsToPush, BUNDLE_SIZE);
