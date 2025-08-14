@@ -26,7 +26,8 @@
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "test": "moon run :test",
-    "toolbox": "tsx tools/toolbox/src/main.ts"
+    "toolbox": "tsx tools/toolbox/src/main.ts",
+    "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\""
   },
   "dependencies": {
     "tslib": "^2.8.1"
