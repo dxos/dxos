@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Separator, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -63,7 +63,7 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                         <SearchList.Item
                           classNames='flex gap-2 items-center'
                           key={blueprint.key}
-                          value={blueprint.key}
+                          value={blueprint.name}
                           onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
                         >
                           <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
@@ -80,9 +80,17 @@ export const ChatOptions = ({ context, blueprintRegistry, onUpdateBlueprint, spa
                   <SearchList.Content classNames='plb-cardSpacingChrome'>
                     {(space?.db.query(Filter.everything()).runSync() ?? []).map(({ object }) => {
                       const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-                      const value = Obj.getDXN(object).toString();
+                      const dxn = Obj.getDXN(object);
+                      const value = dxn.toString();
+                      const isActive = context?.objects.value.find((ref) => ref.dxn.toString() === dxn.toString());
                       return (
-                        <SearchList.Item key={value} value={value} onSelect={() => {}}>
+                        <SearchList.Item
+                          classNames='flex gap-2 items-center'
+                          key={value}
+                          value={label}
+                          onSelect={() => context?.[isActive ? 'unbind' : 'bind']({ objects: [Ref.make(object)] })}
+                        >
+                          <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
                           {label}
                         </SearchList.Item>
                       );
