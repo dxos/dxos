@@ -101,6 +101,7 @@ export const Random: Story = {
           return;
         }
 
+        let commit: Commit | undefined = undefined;
         const p = Math.random();
         if (p < 0.15 && branches.length < 6) {
           const branch = { name: faker.lorem.word() } satisfies Branch;
@@ -109,33 +110,44 @@ export const Random: Story = {
         } else if (p < 0.4) {
           const branch = branches[Math.floor(Math.random() * branches.length)];
           lastBranch.current = branch.name;
+        } else if (p < 0.5 && branches.length > 3 && lastCommit.current && lastBranch.current !== branches[0].name) {
+          commit = {
+            id: faker.string.uuid(),
+            branch: branches[0].name,
+            icon: IconType.TIMER,
+            level: LogLevel.INFO,
+            parent: [lastCommit.current!],
+          };
         }
 
-        const commit = {
-          id: faker.string.uuid(),
-          branch: lastBranch.current,
-          icon: faker.helpers.arrayElement([
-            IconType.WARN,
-            IconType.CHECK,
-            IconType.ROCKET,
-            IconType.X,
-            IconType.FLAG,
-            IconType.TIMER,
-            IconType.USER,
-            IconType.USER_INTERACTION,
-            IconType.AGENT,
-          ]),
-          level: faker.helpers.arrayElement([
-            LogLevel.TRACE,
-            LogLevel.DEBUG,
-            LogLevel.VERBOSE,
-            LogLevel.INFO,
-            LogLevel.WARN,
-            LogLevel.ERROR,
-          ]),
-          message: faker.lorem.paragraph(),
-          parent: lastCommit.current,
-        } satisfies Commit;
+        if (!commit) {
+          commit = {
+            id: faker.string.uuid(),
+            branch: lastBranch.current,
+            icon: faker.helpers.arrayElement([
+              IconType.WARN,
+              IconType.CHECK,
+              IconType.ROCKET,
+              IconType.X,
+              IconType.FLAG,
+              IconType.TIMER,
+              IconType.USER,
+              IconType.USER_INTERACTION,
+              IconType.AGENT,
+            ]),
+            level: faker.helpers.arrayElement([
+              LogLevel.TRACE,
+              LogLevel.DEBUG,
+              LogLevel.VERBOSE,
+              LogLevel.INFO,
+              LogLevel.WARN,
+              LogLevel.ERROR,
+            ]),
+            message: faker.lorem.paragraph(),
+            parent: lastCommit.current,
+          };
+        }
+
         lastCommit.current = commit.id;
         setCommits((commits) => [...commits, commit]);
       },
