@@ -8,7 +8,7 @@ import { Args, Command, Options } from '@effect/cli';
 import { FileSystem } from '@effect/platform';
 import { Effect, Option } from 'effect';
 
-import { type Client, type PublicKey } from '@dxos/client';
+import { type PublicKey } from '@dxos/client';
 import { type AnyLiveObject, Filter, type Space, SpaceId, getMeta } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import {
@@ -26,6 +26,8 @@ import { DataType } from '@dxos/schema';
 
 import { ClientService } from '../../services';
 import { waitForSync } from '../../util';
+
+const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
 
 const file = Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy'));
 
@@ -87,6 +89,7 @@ export const deployFunction = Effect.fn(function* ({
       onSome: (spaceId) =>
         // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
         Effect.gen(function* () {
+          client.addTypes(DATA_TYPES);
           const space = client.spaces.get(spaceId);
           invariant(space, 'Space not found');
           yield* Effect.tryPromise(() => space.waitUntilReady());
@@ -100,7 +103,6 @@ export const deployFunction = Effect.fn(function* ({
             version: Option.getOrUndefined(version),
           });
           const functionObject = yield* upsertFunctionObject({
-            client,
             space,
             existingObject: existingFunctionObject,
             uploadResult,
@@ -109,7 +111,6 @@ export const deployFunction = Effect.fn(function* ({
           });
           if (composerScript) {
             yield* upsertComposerScript({
-              client,
               space,
               functionObject,
               scriptFileName: path.basename(file),
@@ -220,22 +221,18 @@ const loadFunctionObject = Effect.fn(function* (space: Space, functionId?: strin
 });
 
 const upsertFunctionObject = Effect.fn(function* ({
-  client,
   space,
   existingObject,
   uploadResult,
   file,
   name,
 }: {
-  client: Client;
   space: Space;
   existingObject: FunctionType | undefined;
   uploadResult: UploadFunctionResponseBody;
   file: string;
   name?: string;
 }) {
-  client.addTypes([FunctionType]);
-
   let functionObject = existingObject;
   if (!functionObject) {
     functionObject = Obj.make(FunctionType, {
@@ -254,10 +251,9 @@ const upsertFunctionObject = Effect.fn(function* ({
   return functionObject;
 });
 
-const makeObjectNavigableInComposer = Effect.fn(function* (client: Client, space: Space, obj: AnyLiveObject<any>) {
+const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: AnyLiveObject<any>) {
   const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<DataType.Collection> | undefined;
   if (collectionRef) {
-    client.addTypes([DataType.Collection]);
     const collection = yield* Effect.tryPromise(() => collectionRef.load());
     if (collection) {
       collection.objects.push(Ref.make(obj));
@@ -266,22 +262,18 @@ const makeObjectNavigableInComposer = Effect.fn(function* (client: Client, space
 });
 
 const upsertComposerScript = Effect.fn(function* ({
-  client,
   space,
   functionObject,
   scriptFileName,
   scriptFileContent,
   name,
 }: {
-  client: Client;
   space: Space;
   functionObject: FunctionType;
   scriptFileName: string;
   scriptFileContent: string;
   name?: string;
 }) {
-  client.addTypes([ScriptType, DataType.Text]);
-
   if (functionObject.source) {
     const script = yield* Effect.tryPromise(() => functionObject.source!.load());
     const source = yield* Effect.tryPromise(() => script.source.load());
@@ -291,7 +283,7 @@ const upsertComposerScript = Effect.fn(function* ({
     const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
     const obj = space.db.add(Obj.make(ScriptType, { name: name ?? scriptFileName, source: Ref.make(sourceObj) }));
     functionObject.source = Ref.make(obj);
-    yield* makeObjectNavigableInComposer(client, space, obj);
+    yield* makeObjectNavigableInComposer(space, obj);
     yield* Effect.log('Created composer script', obj.id);
   }
 });
