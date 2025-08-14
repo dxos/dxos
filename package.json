@@ -10,6 +10,7 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
+    "1p-credentials": "bash -c \"op inject -i '$(git rev-parse --show-toplevel)/.env.1password'\"",
     "beast": "beast docs",
     "build": "moon run :build",
     "changed-packages": "scripts/changed",

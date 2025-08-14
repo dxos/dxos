@@ -3,7 +3,7 @@
 //
 
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
-import { Effect, type Layer, Option, Stream, pipe } from 'effect';
+import { Cause, Effect, Exit, Fiber, type Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
@@ -17,12 +17,11 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
+import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
 
-import { AiServiceOverloadedError } from './errors';
 import { type AiChatServices } from './useChatServices';
 
 // TODO(burdon): Is this still used?
@@ -67,6 +66,8 @@ export class AiChatProcessor {
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
+
+  private _currentRequest?: Fiber.Fiber<void, any> = undefined;
 
   /**
    * Current streaming message (from the AI service).
@@ -171,6 +172,10 @@ export class AiChatProcessor {
    * Make GPT request.
    */
   async request(message: string, _options: AiRequestOptions = {}): Promise<void> {
+    if (this._currentRequest) {
+      throw new Error('Request already in progress');
+    }
+
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
     const session = new AiSession();
@@ -189,36 +194,34 @@ export class AiChatProcessor {
     });
 
     try {
-      const messages = await runAndForwardErrors(
-        this._conversation
-          .run({
-            session,
-            prompt: message,
-            system: this._options.system,
-          })
-          .pipe(
-            Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-            // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
-            Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-            Effect.provide(this._services),
-            Effect.tapErrorCause((cause) => {
-              log.error('error', { cause });
-              return Effect.void;
-            }),
-          ),
-      );
+      this._currentRequest = this._conversation
+        .run({
+          session,
+          prompt: message,
+          system: this._options.system,
+        })
+        .pipe(
+          Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+          // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
+          Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
+          Effect.provide(this._services),
+          Effect.tapErrorCause((cause) => {
+            log.error('error', { cause });
+            return Effect.void;
+          }),
+          Effect.asVoid,
+          Effect.runFork,
+        );
 
-      log('completed', { messages });
+      const exit = await this._currentRequest.pipe(Fiber.join, Effect.runPromiseExit);
+      if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+        throwCause(exit.cause);
+      }
     } catch (err) {
       log.catch(err);
-      if (err instanceof Error && err.message.includes('Overloaded')) {
-        this._observableRegistry.set(
-          this.error,
-          Option.some(new AiServiceOverloadedError('AI service overloaded', { cause: err })),
-        );
-      } else {
-        this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
-      }
+      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+    } finally {
+      this._currentRequest = undefined;
     }
   }
 
@@ -228,7 +231,12 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     log.info('cancelling...');
 
-    // TODO(dmaretskyi): Abort using Fiber.interrupt.
+    if (this._currentRequest) {
+      await this._currentRequest.pipe(Fiber.interrupt, runAndForwardErrors);
+      this._currentRequest = undefined;
+    }
+
+    this._observableRegistry.set(this._session, Option.none());
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {
