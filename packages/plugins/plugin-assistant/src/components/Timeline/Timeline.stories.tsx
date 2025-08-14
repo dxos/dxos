@@ -35,29 +35,34 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    debug: true,
     branches: [{ name: 'main' }, { name: 'feature-a' }, { name: 'feature-b' }, { name: 'feature-c' }],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parent: 'c1' },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c2' },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parent: 'c2' },
-      { id: 'c5', message: faker.lorem.paragraph(), branch: 'feature-b', parent: 'c2' },
-      { id: 'c6', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c3' },
-      { id: 'c7', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c6' },
-      { id: 'c8', message: faker.lorem.paragraph(), branch: 'feature-c', parent: 'c6' },
-      { id: 'c9', message: faker.lorem.paragraph(), branch: 'main', parent: 'c4' },
+      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c5', message: faker.lorem.paragraph(), branch: 'feature-b', parents: ['c2'] },
+      { id: 'c6', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
+      { id: 'c7', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c6'] },
+      { id: 'c8', message: faker.lorem.paragraph(), branch: 'feature-c', parents: ['c6'] },
+      { id: 'c9', message: faker.lorem.paragraph(), branch: 'main', parents: ['c4'] },
     ],
   },
 };
 
-export const Simple: Story = {
+export const Merge: Story = {
   args: {
-    branches: [{ name: 'main' }, { name: 'feature-a' }],
+    debug: true,
+    branches: [{ name: 'main' }, { name: 'feature-a' }, { name: 'feature-b' }],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c1' },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parent: 'c2' },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parent: 'c1' },
+      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+      { id: 'c4', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c3'] },
+      { id: 'c5', message: faker.lorem.paragraph(), branch: 'feature-b', parents: ['c3'] },
+      { id: 'c6', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c7', message: faker.lorem.paragraph(), branch: 'main', parents: ['c6', 'c4', 'c5'] },
     ],
   },
 };
@@ -67,9 +72,9 @@ export const Linear: Story = {
     branches: [{ name: 'main' }],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
-      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parent: 'c1' },
-      { id: 'c3', message: faker.lorem.paragraph(), branch: 'main', parent: 'c2' },
-      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parent: 'c3' },
+      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: faker.lorem.paragraph(), branch: 'main', parents: ['c2'] },
+      { id: 'c4', message: faker.lorem.paragraph(), branch: 'main', parents: ['c3'] },
     ],
   },
 };
@@ -81,6 +86,7 @@ export const Empty: Story = {
   },
 };
 
+// TODO(burdon): Merge.
 export const Random: Story = {
   render: () => {
     const [branches, setBranches] = useState<Branch[]>([{ name: 'main' }]);
@@ -102,7 +108,7 @@ export const Random: Story = {
         }
 
         const p = Math.random();
-        if (p < 0.15 && branches.length < 6) {
+        if (p < 0.2 && branches.length < 6) {
           const branch = { name: faker.lorem.word() } satisfies Branch;
           setBranches((branches) => [...branches, branch]);
           lastBranch.current = branch.name;
@@ -134,7 +140,7 @@ export const Random: Story = {
             LogLevel.ERROR,
           ]),
           message: faker.lorem.paragraph(),
-          parent: lastCommit.current,
+          parents: lastCommit.current ? [lastCommit.current] : [],
         } satisfies Commit;
         lastCommit.current = commit.id;
         setCommits((commits) => [...commits, commit]);
