@@ -38,7 +38,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray } from '@dxos/util';
+import { ComplexSet, bufferToArray, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -653,17 +653,14 @@ export class AutomergeHost extends Resource {
 
     // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPush.length > 0) {
-      const concurrentTasks: Promise<void>[] = [];
-      for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
-        const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
-        concurrentTasks.push(
-          this._pushBundle(peerId, bundle).catch(() => {
+      await Promise.all(
+        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
+          const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
+          await this._pushBundle(peerId, bundle).catch(() => {
             syncInteractively.push(...bundle);
-          }),
-        );
-      }
-      await Promise.all(concurrentTasks);
-      concurrentTasks.length = 0;
+          });
+        }),
+      );
     }
 
     return { syncInteractively };
@@ -689,17 +686,14 @@ export class AutomergeHost extends Resource {
 
     // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPull.length > 0) {
-      const concurrentTasks: Promise<void>[] = [];
-      for (let i = 0; i < BUNDLE_SYNC_CONCURRENCY; i++) {
-        const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
-        concurrentTasks.push(
-          this._pullBundle(peerId, bundle).catch(() => {
+      await Promise.all(
+        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
+          const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
+          await this._pullBundle(peerId, bundle).catch(() => {
             syncInteractively.push(...bundle);
-          }),
-        );
-      }
-      await Promise.all(concurrentTasks);
-      concurrentTasks.length = 0;
+          });
+        }),
+      );
     }
 
     return { syncInteractively };
