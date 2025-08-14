@@ -54,8 +54,10 @@ export class ExecutionGraph {
           branch,
           message: event.message,
           icon: IconType.FLAG,
-          parent:
-            event.parentMessage && event.toolCallId ? getToolCallId(event.parentMessage, event.toolCallId) : undefined,
+          parents:
+            event.parentMessage && event.toolCallId
+              ? [getToolCallId(event.parentMessage, event.toolCallId)]
+              : undefined,
         });
       }
     }
