@@ -13,11 +13,11 @@ runtime:
 
   services:
     edge:
-      url: ws://localhost:8787/
+      url: wss://edge.dxos.workers.dev/
     iceProviders:
       - urls: https://edge-production.dxos.workers.dev/ice
     ai:
-      server: http://localhost:8788
+      server: https://ai-service.dxos.workers.dev
     ipfs:
       server: https://api.ipfs.dxos.network/api/v0
       gateway: https://gateway.ipfs.dxos.network/ipfs
