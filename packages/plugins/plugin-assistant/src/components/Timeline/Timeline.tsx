@@ -14,6 +14,8 @@ const columnWidth = 24;
 const nodeRadius = 5;
 const lineStyle = 'stroke-1';
 
+const cx = (c: number) => c * columnWidth + columnWidth / 2;
+
 const colors = [
   { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
   { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
@@ -52,9 +54,12 @@ const levelColors: Record<LogLevel, string> = {
   [LogLevel.ERROR]: 'text-red-500',
 };
 
+/**
+ * Commit (similar to Mercurial).
+ */
 export type Commit = {
   id: string;
-  parent?: string; // TODO(burdon): Possibly multiple.
+  parents?: string[];
   branch: string;
   icon?: string;
   level?: LogLevel;
@@ -67,43 +72,102 @@ export type Branch = {
   name: string;
 };
 
-export type Span = {
+type Span = {
   start: number;
   end: number;
-  parentColumn?: number;
 };
 
 export type TimelineProps = ThemedClassName<{
   branches: Branch[];
   commits: Commit[];
   showIcon?: boolean;
+  debug?: boolean;
 }>;
 
 // TODO(burdon): Reuse in toolCall messages.
-// TODO(burdon): Key up/down; selected.
-export const Timeline = ({ classNames, branches, commits, showIcon = true }: TimelineProps) => {
-  const spans = useMemo(() => {
-    const spans = new Map<string, Span>();
-    branches.forEach((branch) => {
-      spans.set(branch.name, { start: -1, end: -1 });
-    });
+// TODO(burdon): Selection; Key up/down.
+export const Timeline = ({ classNames, branches, commits, showIcon = true, debug = false }: TimelineProps) => {
+  // NOTE: Assumes commits are in topological order.
+  const getIndex = (id: string) => commits.findIndex((c) => c.id === id);
+  const getBranch = (id: string) => commits.find((c) => c.id === id)?.branch;
+  const getBranchIndex = (branch: string): number => branches.findIndex((b) => b.name === branch);
 
+  const spans = useMemo(() => {
+    /**
+     * Create spans for each branch.
+     */
+    const spans = new Map<string, Span>();
     commits.forEach((commit, index) => {
-      const span = spans.get(commit.branch);
-      if (span) {
-        if (span.start === -1) {
-          const parentIndex = commit.parent ? commits.findIndex((c) => c.id === commit.parent) : 0;
-          span.start = parentIndex;
-          span.parentColumn = commit.parent
-            ? branches.findIndex((branch) => branch.name === commits[parentIndex].branch)
-            : undefined;
-        }
+      let span = spans.get(commit.branch);
+      if (!span) {
+        span = { start: index, end: index };
+        spans.set(commit.branch, span);
+      } else {
         span.end = index;
+      }
+
+      const parents = commit.parents ?? [];
+      for (const parent of parents) {
+        const branch = getBranch(parent);
+        if (branch && branch !== commit.branch) {
+          span.start = Math.min(span.start, getIndex(parent));
+
+          // Detect merge.
+          if (parents.length > 1) {
+            const parentSpan = spans.get(branch);
+            if (parentSpan) {
+              parentSpan.end = Math.max(parentSpan.end, index);
+            }
+          }
+        }
       }
     });
 
     return spans;
   }, [commits, branches]);
+
+  const getPaths = (commit: Commit, branch: string, span: Span, index: number): string[] => {
+    const parents = commit.parents ?? [];
+    const commitIndex = getBranchIndex(commit.branch);
+    const branchIndex = getBranchIndex(branch);
+
+    const paths: string[] = [];
+
+    // Vertical connectors.
+    if (span.start < index && index < span.end) {
+      paths.push(`M ${cx(branchIndex)} 0 l 0 ${lineHeight}`);
+    } else if (commit.branch === branch && parents.length > 0) {
+      paths.push(`M ${cx(branchIndex)} 0 l 0 ${lineHeight / 2}`);
+    } else if (commit.branch === branch && index < span.end) {
+      paths.push(`M ${cx(branchIndex)} ${lineHeight / 2} l 0 ${lineHeight}`);
+    }
+
+    // Branch.
+    if (commit.branch !== branch && index === span.start) {
+      paths.push(trim`
+        M ${cx(commitIndex)} ${lineHeight / 2}
+        L ${cx(branchIndex) - lineHeight / 2} ${lineHeight / 2}
+        a ${lineHeight / 2} ${lineHeight / 2} 0 0 1 ${lineHeight / 2} ${lineHeight / 2}
+      `);
+    }
+
+    // Merge.
+    // TODO(burdon): Check end commit.
+    if (commit.branch !== branch && index === span.end) {
+      // console.log(branch, span, index);
+      // for (const parent of parents) {
+      //   console.log('===', parent, commit.branch, getBranch(parent), branch);
+      // }
+
+      paths.push(trim`
+        M ${cx(commitIndex)} ${lineHeight / 2}
+        L ${cx(branchIndex) - lineHeight / 2} ${lineHeight / 2}
+        a ${lineHeight / 2} ${lineHeight / 2} -90 0 0 ${lineHeight / 2} ${-lineHeight / 2}
+      `);
+    }
+
+    return paths;
+  };
 
   return (
     <div className={mx('flex flex-col is-full', classNames)}>
@@ -115,69 +179,31 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
             style={{ height: `${lineHeight}px` }}
           >
             <svg width={branches.length * columnWidth} height={lineHeight} className='shrink-0'>
-              {[...branches].reverse().map((branch, _j) => {
-                const j = branches.length - 1 - _j;
+              {/* Connectors */}
+              {branches.map((branch, c) => {
+                const color = colors[c % colors.length];
                 const span = spans.get(branch.name);
-                const color = colors[j % colors.length];
-                if (!span) {
+                if (!span || span.start === -1 || span.end === -1) {
                   return null;
                 }
 
                 return (
-                  <Fragment key={j}>
-                    {/* Upper */}
-                    {index !== 0 && span.start !== -1 && span.start < index && span.end >= index && (
-                      <line
-                        x1={j * columnWidth + columnWidth / 2}
-                        y1={0}
-                        x2={j * columnWidth + columnWidth / 2}
-                        y2={lineHeight / 2}
-                        className={mx(lineStyle, color.stroke)}
-                      />
-                    )}
-                    {/* Lower */}
-                    {span.end !== -1 &&
-                      (span.start < index || (span.start === index && span.parentColumn === undefined)) &&
-                      index < span.end && (
-                        <line
-                          x1={j * columnWidth + columnWidth / 2}
-                          y1={lineHeight / 2}
-                          x2={j * columnWidth + columnWidth / 2}
-                          y2={lineHeight}
-                          className={mx(lineStyle, color.stroke)}
-                        />
-                      )}
-                    {/* Arc to parents */}
-                    {span.start === index && span.parentColumn !== undefined && span.parentColumn !== -1 && (
-                      <path
-                        d={trim`
-                          M ${0.5 + span.parentColumn * columnWidth + columnWidth / 2} ${lineHeight / 2} 
-                          L ${j * columnWidth + columnWidth / 4} ${lineHeight / 2} 
-                          A ${lineHeight / 4} ${lineHeight / 4} 0 0 1 ${j * columnWidth + columnWidth / 2} ${(lineHeight * 3) / 4} 
-                          L ${j * columnWidth + columnWidth / 2} ${lineHeight}
-                        `}
-                        className={mx(lineStyle, color.stroke)}
-                        fill='none'
-                      />
-                    )}
-                    {branch.name === commit.branch && (
-                      <circle
-                        cx={j * columnWidth + columnWidth / 2}
-                        cy={lineHeight / 2}
-                        r={nodeRadius}
-                        className={mx(lineStyle, color.stroke, color.hover)}
-                      />
-                    )}
+                  <Fragment key={c}>
+                    {getPaths(commit, branch.name, span, index).map((path, i) => (
+                      <path key={i} d={path} className={mx(lineStyle, color.stroke)} fill='none' />
+                    ))}
                   </Fragment>
                 );
               })}
-              {branches.map((branch, j) => {
-                const color = colors[j % colors.length];
+
+              {/* Nodes */}
+              {branches.map((branch, c) => {
+                const color = colors[c % colors.length];
                 return (
                   branch.name === commit.branch && (
                     <circle
-                      key={j}
-                      cx={j * columnWidth + columnWidth / 2}
+                      key={c}
+                      cx={cx(c)}
                       cy={lineHeight / 2}
                       r={nodeRadius}
                       className={mx(lineStyle, color.stroke, color.hover)}
@@ -194,7 +220,7 @@ export const Timeline = ({ classNames, branches, commits, showIcon = true }: Tim
               </div>
             )}
             <div className='pie-3 text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
-              {commit.message}
+              {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
             </div>
           </div>
         );
