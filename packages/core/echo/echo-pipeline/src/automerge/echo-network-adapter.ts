@@ -223,7 +223,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async pushBundle(peerId: PeerId, bundle: Bundle) {
     const connection = this._connections.get(peerId);
     if (!connection) {
-      return;
+      throw new Error('Connection not found.');
     }
     return connection.connection.pushBundle!(bundle);
   }
