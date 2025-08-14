@@ -79,8 +79,17 @@ export const FIND_PARAMS = {
   allowableStates: ['ready', 'requesting'] satisfies HandleState[],
 };
 
+/**
+ * Maximum amount of documents to sync in a single bundle.
+ */
 const BUNDLE_SIZE = 100;
+/**
+ * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
+ */
 const BUNDLE_SYNC_CONCURRENCY = 2;
+/**
+ * If the number of documents to sync is greater than this threshold, we will use bundles.
+ */
 const BUNDLE_SYNC_THRESHOLD = 50;
 
 /**
@@ -655,7 +664,8 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
           const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
-          await this._pushBundle(peerId, bundle).catch(() => {
+          await this._pushBundle(peerId, bundle).catch((err) => {
+            log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
           });
         }),
@@ -687,7 +697,8 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
           const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
-          await this._pullBundle(peerId, bundle).catch(() => {
+          await this._pullBundle(peerId, bundle).catch((err) => {
+            log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
           });
         }),
