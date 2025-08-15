@@ -5,3 +5,4 @@
 export * from './document';
 export * from './tasks';
 export * from './research';
+export * from './discord';

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient, HttpClientError, HttpClientResponse, KeyValueStore } from '@effect/platform';
+import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, Ref, Schema } from 'effect';
+import { Config, Effect, Layer, Redacted } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
@@ -14,137 +14,14 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
-  defineFunction,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
-import { AiError, AiToolkit } from '@effect/ai';
-import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-import { log } from '@dxos/log';
-import { ResponseError } from '@effect/platform/HttpClientError';
-import { BaseError } from '@dxos/errors';
-
-const generateSnowflake = (unixTimestamp: number): bigint => {
-  const discordEpoch = 1420070400000n; // Discord Epoch (ms)
-  return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
-};
-
-const parseSnowflake = (snowflake: string): Date => {
-  const discordEpoch = 1420070400000n; // Discord Epoch (ms)
-  return new Date(Number((BigInt(snowflake) >> 22n) + discordEpoch));
-};
-
-const DEFAULT_AFTER = 1704067200; // 2024-01-01
-
-const DiscordConfigFromCredential = Layer.unwrapEffect(
-  Effect.gen(function* () {
-    return DiscordConfig.layer({
-      token: yield* CredentialsService.getApiKey({ service: 'discord.com' }),
-    });
-  }),
-);
-
-const fetchDiscordMessages = defineFunction({
-  name: 'dxos.org/function/fetch-discord-messages',
-  inputSchema: Schema.Struct({
-    serverId: Schema.optional(Schema.String),
-    channelId: Schema.optional(Schema.String),
-    after: Schema.optional(Schema.Number),
-    pageSize: Schema.optional(Schema.Number),
-    limit: Schema.optional(Schema.Number),
-  }),
-  handler: Effect.fnUntraced(
-    function* ({ data: { serverId, channelId, after = DEFAULT_AFTER, pageSize = 100, limit = 500 } }) {
-      const rest = yield* DiscordREST;
-
-      let channelIds: string[] = [];
-      if (channelId) {
-        channelIds = [channelId];
-      } else if (serverId) {
-        const channels = yield* rest.listGuildChannels(serverId);
-        const { threads } = yield* rest.getActiveGuildThreads(serverId);
-        const allChannels = [...channels, ...threads];
-        log('allChannels', {
-          channels: allChannels.map((channel) => ({ id: channel.id, name: 'name' in channel && channel.name })),
-        });
-        channelIds = allChannels.map((channel) => channel.id);
-      } else {
-        throw new Error('serverId or channelId is required');
-      }
-
-      yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channelIds.length}` });
-
-      const allMessages: DataType.Message[] = [];
-      for (const channelId of channelIds) {
-        let lastMessage: Option.Option<DataType.Message> = Option.none();
-        while (true) {
-          const { id: lastId = undefined } = pipe(
-            lastMessage,
-            Option.map(Obj.getKeys('discord.com')),
-            Option.flatMap(Option.fromIterable),
-            Option.getOrElse(() => ({ id: undefined })),
-          );
-
-          const options = {
-            after: !lastId ? `${generateSnowflake(after)}` : lastId,
-            limit: pageSize,
-          };
-          log('fetching messages', {
-            lastId,
-            afterSnowflake: options.after,
-            after: parseSnowflake(options.after),
-            limit: options.limit,
-          });
-          const messages = yield* rest.listMessages(channelId, options).pipe(
-            Effect.map(
-              Array.map((message) =>
-                Obj.make(DataType.Message, {
-                  [Obj.Meta]: {
-                    keys: [
-                      { id: message.id, source: 'discord.com' },
-                      { id: channelId, source: 'discord.com/thread' },
-                    ],
-                  },
-                  sender: { name: message.author.username },
-                  created: message.timestamp,
-                  blocks: [{ _tag: 'text', text: message.content }],
-                }),
-              ),
-            ),
-            Effect.map(Array.reverse),
-            Effect.catchTag('ErrorResponse', (err) =>
-              err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err),
-            ),
-          );
-          if (messages.length > 0) {
-            lastMessage = Option.fromNullable(messages.at(-1));
-            allMessages.push(...messages);
-          } else {
-            break;
-          }
-          yield* TracingService.emitStatus({ message: `Fetched messages: ${allMessages.length}` });
-          if (allMessages.length >= limit) {
-            break;
-          }
-        }
-        if (allMessages.length >= limit) {
-          break;
-        }
-      }
-
-      return allMessages;
-    },
-    Effect.provide(
-      DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
-        Layer.provide(FetchHttpClient.layer),
-      ),
-    ),
-    Effect.orDie,
-  ),
-});
+import { AiToolkit } from '@effect/ai';
+import { fetchDiscordMessages } from '../functions';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
