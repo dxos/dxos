@@ -8,13 +8,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Effect, Layer } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { ColumnContainer, render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { ColumnContainer, render, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -124,7 +130,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             (obj) =>
               ({
                 _tag: 'text',
-                text: renderObjectLink(obj),
+                text: renderObjectLink(obj, true),
               }) satisfies ContentBlock.Text,
           ),
         ]),
@@ -165,7 +171,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             _tag: 'toolCall',
             toolCallId: '1234',
             name: 'search',
-            input: {},
+            input: JSON.stringify({}),
           },
         ]),
         createMessage('user', [
@@ -189,7 +195,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
             _tag: 'toolCall',
             toolCallId: '4567',
             name: 'create',
-            input: {},
+            input: JSON.stringify({}),
           },
         ]),
         createMessage('user', [
@@ -232,11 +238,20 @@ const meta = {
   component: ChatThread,
   render: render(StoryContainer),
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      types: [DataType.Organization, DataType.Person],
+    withPluginManager({
+      plugins: [
+        ClientPlugin({
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+          },
+          types: [DataType.Organization, DataType.Person],
+        }),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
+        IntentPlugin(),
+        PreviewPlugin(),
+      ],
     }),
-    withTheme,
     withLayout({
       Container: ColumnContainer,
       classNames: 'is-[40rem]',

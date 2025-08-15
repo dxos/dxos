@@ -10,7 +10,7 @@ export type Color = {
 };
 
 // NOTE: Don't include blue/red which are used as system colors.
-const colors: Color[] = [
+export const colors: Color[] = [
   { color: 'orange', bg: 'bg-orangeFill', text: 'text-orangeFill', tag: 'bg-orangeSurface' },
   { color: 'amber', bg: 'bg-amberFill', text: 'text-amberFill', tag: 'bg-amberSurface' },
   { color: 'yellow', bg: 'bg-yellowFill', text: 'text-yellowFill', tag: 'bg-yellowSurface' },

@@ -24,7 +24,7 @@ export const callTool: <Tools extends AiTool.Any>(
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
     log.info('callTool', { toolCall: JSON.stringify(toolCall) });
-    return yield* toolkit.handle(toolCall.name as any, toolCall.input as any).pipe(
+    return yield* toolkit.handle(toolCall.name as any, JSON.parse(toolCall.input)).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>
@@ -32,7 +32,8 @@ export const callTool: <Tools extends AiTool.Any>(
             _tag: 'toolResult',
             toolCallId: toolCall.toolCallId,
             name: toolCall.name,
-            result,
+            // TODO(dmaretskyi): Should we use encodedResult?
+            result: JSON.stringify(result),
           }) satisfies ContentBlock.ToolResult,
       ),
       Effect.catchAll((error) =>
@@ -43,7 +44,6 @@ export const callTool: <Tools extends AiTool.Any>(
               _tag: 'toolResult',
               toolCallId: toolCall.toolCallId,
               name: toolCall.name,
-              result: null,
               error: String(error),
             }) satisfies ContentBlock.ToolResult,
         ),

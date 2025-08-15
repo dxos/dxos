@@ -222,7 +222,7 @@ export const parseResponse =
                     _tag: 'toolCall',
                     toolCallId: part.id,
                     name: part.name,
-                    input: part.params,
+                    input: JSON.stringify(part.params),
                   } satisfies ContentBlock.ToolCall);
                   break;
                 }

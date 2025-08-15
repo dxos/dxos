@@ -2,17 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Logger } from 'effect';
+import { Effect, Logger, Option } from 'effect';
 
-import { type Space, type SpaceId, type SpaceSyncState } from '@dxos/client/echo';
+import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
 import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+
+import { ClientService } from '../services';
+
+export const getSpace = (rawSpaceId: string) =>
+  Effect.gen(function* () {
+    const client = yield* ClientService;
+    const spaceId = yield* SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
+    return yield* Option.fromNullable(client.spaces.get(spaceId));
+  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new Error('Space not found'))));
 
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
 export const waitForSync = Effect.fn(function* (space: Space) {
+  // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
     yield* Effect.log('Edge replication is disabled, enabling...');
     yield* Effect.tryPromise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));

@@ -14,6 +14,6 @@ describe('string', () => {
         - 3
     `;
 
-    expect(text).to.eq('- 1\n- 2\n  - 3\n');
+    expect(text).to.eq('- 1\n- 2\n  - 3');
   });
 });
