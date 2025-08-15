@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -48,16 +49,19 @@ export type TimelineProps = ThemedClassName<{
   commits: Commit[];
   showIcon?: boolean;
   debug?: boolean;
+  onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
 }>;
 
-// TODO(burdon): Selection; Key up/down.
-// TODO(burdon): Reuse in toolCall messages.
+/**
+ * GitGraph-style timeline.
+ */
 export const Timeline = ({
   classNames,
   branches: _branches,
   commits,
   showIcon = true,
   debug = false,
+  onCurrentChange,
 }: TimelineProps) => {
   // Auto-discover branches if not provided.
   const branches = useMemo(() => {
@@ -113,10 +117,44 @@ export const Timeline = ({
     return spans;
   }, [commits, branches]);
 
+  // Navigation.
+  const container = useRef<HTMLDivElement>(null);
+  const [current, setCurrent] = useState<number | undefined>();
+  useEffect(
+    () => onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] }),
+    [commits, current],
+  );
+  useEffect(() => {
+    return addEventListener(container.current!, 'keydown', (event) => {
+      switch (event.key) {
+        case 'ArrowDown': {
+          if (event.metaKey) {
+            setCurrent(commits.length - 1);
+          } else {
+            setCurrent((selected) => (selected === undefined ? 0 : Math.min(commits.length - 1, selected + 1)));
+          }
+          break;
+        }
+        case 'ArrowUp': {
+          if (event.metaKey) {
+            setCurrent(0);
+          } else {
+            setCurrent((selected) => (selected === undefined ? commits.length - 1 : Math.max(0, selected - 1)));
+          }
+          break;
+        }
+        case 'Escape': {
+          setCurrent(undefined);
+          break;
+        }
+      }
+    });
+  }, [commits.length, container.current]);
+
   return (
-    <div className={mx('flex flex-col is-full', classNames)}>
+    <div tabIndex={0} className={mx('flex flex-col is-full !outline-none', classNames)} ref={container}>
       {commits.map((commit, index) => {
-        // TODO(burdon): Skip branches from branches that are not whitelisted.
+        // Skip branches that are not whitelisted.
         const idx = getBranchIndex(commit.branch);
         if (idx === -1) {
           return null;
@@ -125,8 +163,14 @@ export const Timeline = ({
         return (
           <div
             key={commit.id}
-            className='group flex shrink-0 items-center gap-2 overflow-hidden hover:bg-hoverSurface'
+            aria-current={current === index}
+            className={mx(
+              'group flex shrink-0 items-center gap-2 overflow-hidden',
+              // TODO(burdon): Factor out fragment?
+              'aria-[current=true]:!bg-primary-500 hover:bg-hoverSurface',
+            )}
             style={{ height: `${lineHeight}px` }}
+            onClick={() => setCurrent(index)}
           >
             <div className='flex shrink-0'>
               <LineVector branches={branches} spans={spans} commit={commit} index={index} />
@@ -161,14 +205,14 @@ const lineStyle = 'stroke-1';
 const cx = (c: number) => c * columnWidth + columnWidth / 2;
 
 const colors = [
-  { stroke: 'stroke-orange-500', hover: 'group-hover:fill-orange-500' },
-  { stroke: 'stroke-sky-500', hover: 'group-hover:fill-sky-500' },
-  { stroke: 'stroke-green-500', hover: 'group-hover:fill-green-500' },
-  { stroke: 'stroke-fuchsia-500', hover: 'group-hover:fill-fuchsia-500' },
-  { stroke: 'stroke-cyan-500', hover: 'group-hover:fill-cyan-500' },
-  { stroke: 'stroke-emerald-500', hover: 'group-hover:fill-emerald-500' },
-  { stroke: 'stroke-violet-500', hover: 'group-hover:fill-violet-500' },
-  { stroke: 'stroke-teal-500', hover: 'group-hover:fill-teal-500' },
+  { stroke: 'stroke-orange-500', fill: 'group-aria-[current=true]:fill-orange-500' },
+  { stroke: 'stroke-sky-500', fill: 'group-aria-[current=true]:fill-sky-500' },
+  { stroke: 'stroke-green-500', fill: 'group-aria-[current=true]:fill-green-500' },
+  { stroke: 'stroke-fuchsia-500', fill: 'group-aria-[current=true]:fill-fuchsia-500' },
+  { stroke: 'stroke-cyan-500', fill: 'group-aria-[current=true]:fill-cyan-500' },
+  { stroke: 'stroke-emerald-500', fill: 'group-aria-[current=true]:fill-emerald-500' },
+  { stroke: 'stroke-violet-500', fill: 'group-aria-[current=true]:fill-violet-500' },
+  { stroke: 'stroke-teal-500', fill: 'group-aria-[current=true]:fill-teal-500' },
 ];
 
 const levelColors: Record<LogLevel, string> = {
@@ -251,7 +295,7 @@ const LineVector = ({
       })}
 
       {/* Node */}
-      <circle cx={cx(col)} cy={halfHeight} r={nodeRadius} className={mx(lineStyle, color.stroke, color.hover)} />
+      <circle cx={cx(col)} cy={halfHeight} r={nodeRadius} className={mx(lineStyle, color.stroke, color.fill)} />
     </svg>
   );
 };
