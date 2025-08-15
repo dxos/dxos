@@ -2,19 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-// @ts-ignore
+// TODO(wittjosiah): Better typescript support for functions using the sdk.
+// @ts-nocheck
+
+import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
+import { format, subDays } from 'date-fns';
 import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
-// @ts-ignore
-import {
-  FetchHttpClient,
-  HttpClient,
-  HttpClientRequest,
-  // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
-// @ts-ignore
-import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
-// @ts-ignore
-import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'effect';
 
 export default defineFunction({
   inputSchema: S.Struct({
@@ -34,6 +28,8 @@ export default defineFunction({
 
   handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
     Effect.gen(function* () {
+      yield* Effect.log('running gmail sync', { mailboxId, userId, after, pageSize });
+
       const { token } = yield* Effect.tryPromise({
         try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
         catch: (e: any) => e,
