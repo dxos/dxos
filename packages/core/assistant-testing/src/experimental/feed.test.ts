@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer, Redacted, Ref } from 'effect';
+import { Array, Config, Effect, flow, Layer, Option, Predicate, Redacted, Ref } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -17,11 +19,9 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { DataType } from '@dxos/schema';
 import { AiToolkit } from '@effect/ai';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-import { DataType } from '@dxos/schema';
-import { FetchHttpClient } from '@effect/platform';
-import { Obj } from '@dxos/echo';
 
 const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
@@ -30,67 +30,77 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
 
 const DEFAULT_AFTER = 1704067200; // 2024-01-01
 
+const DiscordConfigFromCredential = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const { apiKey } = yield* CredentialsService.getCredential({ service: 'discord.com' });
+    return DiscordConfig.layerConfig({
+      token: Config.succeed(Redacted.make(apiKey!)),
+    });
+  }),
+);
+
 const fetchDiscord: (params: {
   channelId: string;
   after?: number;
   pageSize?: number;
-}) => Effect.Effect<DataType.Message[], never> = Effect.fn('fetchDiscord')(function* ({
-  channelId,
-  after = DEFAULT_AFTER,
-  pageSize = 5,
-}) {
-  const { apiKey } = yield* CredentialsService.getCredential({ service: 'discord.com' });
-  const newMessages = yield* Ref.make(0);
-  const lastMessage = yield* Ref.make(undefined);
-  const backfill = true;
+  maxMessages?: number;
+}) => Effect.Effect<DataType.Message[], never, CredentialsService | HttpClient.HttpClient> = Effect.fn('fetchDiscord')(
+  function* ({ channelId, after = DEFAULT_AFTER, pageSize = 100, maxMessages = 500 }) {
+    const newMessages = yield* Ref.make(0);
+    const lastMessage = yield* Ref.make<Option.Option<DataType.Message>>(Option.none());
+    const backfill = true;
 
-  const enqueueMessages = Effect.gen(function* () {
     const rest = yield* DiscordREST;
 
+    const allMessages: DataType.Message[] = [];
     while (true) {
-      const last = yield* Ref.get(lastMessage);
+      const { id: lastId = undefined } = yield* Ref.get(lastMessage).pipe(
+        Effect.map(
+          flow(
+            Option.map(Obj.getKeys('discord.com')),
+            Option.flatMap(Option.fromIterable),
+            Option.getOrElse(() => ({ id: undefined })),
+          ),
+        ),
+      ) ?? {};
+
       const options = {
-        after: backfill && !last ? `${generateSnowflake(after)}` : last?.foreignId,
+        after: backfill && !lastId ? `${generateSnowflake(after)}` : lastId,
         limit: pageSize,
       };
-      const messages = yield* rest.getChannelMessages(channelId, options).pipe((res) => res.json());
-      const queueMessages = messages
-        .map((message: any) =>
-          Obj.make(DataType.Message, {
-            [Obj.Meta]: {
-              keys: [{ id: message.id, source: 'discord.com' }],
-            },
-            sender: { name: message.author.username },
-            created: message.timestamp,
-
-            content: message.content,
-          }),
-        )
-        .toReversed();
-      if (queueMessages.length > 0) {
-        yield* Ref.update(newMessages, (n: any) => n + queueMessages.length);
-        yield* Ref.update(lastMessage, (m: any) => queueMessages.at(-1));
+      const messages = yield* rest.listMessages(channelId, options).pipe(
+        Effect.map(
+          Array.map((message) =>
+            Obj.make(DataType.Message, {
+              [Obj.Meta]: {
+                keys: [{ id: message.id, source: 'discord.com' }],
+              },
+              sender: { name: message.author.username },
+              created: message.timestamp,
+              blocks: [{ _tag: 'text', text: message.content }],
+            }),
+          ),
+        ),
+        Effect.map(Array.reverse),
+      );
+      if (messages.length > 0) {
+        yield* Ref.update(newMessages, (n) => n + messages.length);
+        yield* Ref.update(lastMessage, (m) => Option.fromNullable(messages.at(-1)));
+        allMessages.push(...messages);
+      } else {
+        break;
       }
-      if (messages.length < pageSize) {
+      yield* TracingService.emitStatus({ message: `Fetched messages: ${allMessages.length}` });
+      if (allMessages.length >= maxMessages) {
         break;
       }
     }
-  }).pipe(
-    Effect.provide(
-      DiscordRESTMemoryLive.pipe(
-        Layer.provideMerge(
-          DiscordConfig.layerConfig({
-            token: Config.succeed(Redacted.make(apiKey!)),
-          }),
-        ),
-        Layer.provideMerge(FetchHttpClient.layer),
-      ),
-    ),
-  );
 
-  yield* enqueueMessages;
-  return { newMessages: yield* Ref.get(newMessages) };
-});
+    return allMessages;
+  },
+  Effect.provide(DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential))),
+  Effect.orDie,
+);
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -105,17 +115,33 @@ const TestLayer = Layer.mergeAll(
         indexing: { vector: true },
         types: [],
       }),
-      CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
+      CredentialsService.configuredLayer([
+        { service: 'exa.ai', apiKey: EXA_API_KEY },
+        { service: 'discord.com', apiKey: Redacted.value(Effect.runSync(Config.redacted('DISCORD_TOKEN'))) },
+      ]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerNoop,
+      TracingService.layerLogInfo(),
+      FetchHttpClient.layer,
     ),
   ),
 );
 
-describe('Research', { timeout: 600_000 }, () => {
+describe('Feed', { timeout: 600_000 }, () => {
   it.effect(
-    'call a function to generate a research report',
-    Effect.fnUntraced(function* ({ expect: _ }) {}, Effect.provide(TestLayer), TestHelpers.taggedTest('llm')),
+    'fetch discord messages',
+    Effect.fnUntraced(
+      function* ({ expect: _ }) {
+        const messages = yield* fetchDiscord({
+          channelId: '837690136044503110',
+          // after: Date.now() / 1000 - 128 * 3600,
+        });
+        for (const message of messages) {
+          console.log(message.sender.name, message.blocks.find((block) => block._tag === 'text')?.text);
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.taggedTest('llm'),
+    ),
   );
 });

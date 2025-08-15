@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+import { dual } from 'effect/Function';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -130,6 +131,18 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
   invariant(meta != null, 'Invalid object.');
   return meta;
 };
+
+/**
+ * @returns Foreign keys for the object from the specified source.
+ */
+export const getKeys: {
+  (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
+  (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
+} = dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
+  const meta = EchoSchema.getMeta(obj);
+  invariant(meta != null, 'Invalid object.');
+  return meta.keys.filter((key) => key.source === source);
+});
 
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (obj: Any | Relation.Any): boolean => {
