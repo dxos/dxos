@@ -162,7 +162,7 @@ export class EdgeAgentManager extends Resource {
       space.notarizationPlugin.setActiveEdgePollingEnabled(agentFeedNeedsNotarization);
       activePollingEnabled = activePollingEnabled || agentFeedNeedsNotarization;
 
-      log.info('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
+      log.verbose('set active edge polling', { enabled: agentFeedNeedsNotarization, spaceId: space.id });
     }
 
     if (activePollingEnabled) {
@@ -178,6 +178,6 @@ export class EdgeAgentManager extends Resource {
     if (deviceKey) {
       this._ensureAgentIsInSpaces(deviceKey);
     }
-    log.info('agent status update', { status });
+    log.verbose('agent status update', { status });
   }
 }
