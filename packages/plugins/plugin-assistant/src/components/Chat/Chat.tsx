@@ -10,7 +10,7 @@ import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
@@ -22,17 +22,15 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useBlueprintHandlers, useReferencesProvider } from '../../hooks';
+import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
   ChatOptions,
-  ChatPresets,
   type ChatPresetsProps,
   ChatReferences,
-  type ChatReferencesProps,
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
@@ -219,7 +217,9 @@ type ChatPromptProps = ThemedClassName<
     Omit<ChatPresetsProps, 'onChange'> & {
       expandable?: boolean;
       online?: boolean;
+      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
       onChangeOnline?: (online: boolean) => void;
+      // TODO(thure): Ditto here.
       onChangePreset?: ChatPresetsProps['onChange'];
     }
 >;
@@ -319,17 +319,6 @@ const ChatPrompt = ({
     [event],
   );
 
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((dxns) => {
-    log.info('update', { dxns });
-    void processor.context.bind({ objects: dxns.map((dxn) => Ref.fromDXN(DXN.parse(dxn))) });
-  }, []);
-
-  const { onUpdateBlueprint } = useBlueprintHandlers({
-    space,
-    context: processor.context,
-    blueprintRegistry: processor.blueprintRegistry,
-  });
-
   return (
     <div
       className={mx(
@@ -351,18 +340,13 @@ const ChatPrompt = ({
         onSubmit={handleSubmit}
       />
 
-      <div />
-      <ChatReferences
-        classNames='col-span-2 flex pis-1 items-center'
-        space={space}
-        context={processor.context}
-        onUpdate={handleUpdateReferences}
-      />
-
       <ChatOptions
+        space={space}
         blueprintRegistry={processor.blueprintRegistry}
         context={processor.context}
-        onUpdateBlueprint={onUpdateBlueprint}
+        preset={preset}
+        presets={presets}
+        onPresetChange={onChangePreset}
       />
 
       <ChatActions
@@ -372,16 +356,15 @@ const ChatPrompt = ({
         processing={streaming}
         onEvent={handleEvent}
       >
-        <>
-          <div className='grow' />
-          {presets && <ChatPresets preset={preset} presets={presets} onChange={onChangePreset} />}
-          {online !== undefined && (
-            <Input.Root>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-            </Input.Root>
-          )}
-          <button onClick={() => processor.cancel()}>Cancel</button>
-        </>
+        <div role='none' className='pli-cardSpacingChrome grow'>
+          <ChatReferences space={space} context={processor.context} />
+        </div>
+        {online !== undefined && (
+          <Input.Root>
+            <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
+          </Input.Root>
+        )}
+        <button onClick={() => processor.cancel()}>Cancel</button>
       </ChatActions>
     </div>
   );
