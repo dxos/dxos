@@ -65,11 +65,6 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }
         // console.log(`Fetched ${messages.length} messages`);
 
-        const linearIssues = yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
-          team: '1127c63a-6f77-4725-9229-50f6cd47321c',
-        });
-        console.log(linearIssues);
-
         // const result = yield* AiSession.run({
         //   history: [
         //     Obj.make(DataType.Message, {
@@ -90,6 +85,24 @@ describe('Feed', { timeout: 600_000 }, () => {
         //   system: 'Summarize the messages.',
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
+
+        const linearIssues = yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+          team: '1127c63a-6f77-4725-9229-50f6cd47321c',
+        });
+        console.log(linearIssues);
+
+        const result = yield* AiSession.run({
+          history: [
+            Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: JSON.stringify(linearIssues) }],
+            }),
+          ],
+          prompt: 'Summarize the whats new.',
+          system: 'Summarize the whats new. Reference specific people by name.',
+        }).pipe(Effect.provide(AiService.model('@anthropic/claude-sonnet-4-0')));
+        console.log(result.at(-1)?.blocks.find((block) => block._tag === 'text')?.text);
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),

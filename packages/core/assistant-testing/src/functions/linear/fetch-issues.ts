@@ -21,6 +21,9 @@ query Team($teamId: String!) {
             state { 
                 name
             }
+            project {
+                name
+            }
         }
         cursor
         }
@@ -32,21 +35,6 @@ query Team($teamId: String!) {
   }
 }
 `;
-
-const apiKeyAuth = (query: CredentialQuery) =>
-  HttpClient.mapRequestEffect(
-    Effect.fnUntraced(function* (request) {
-      return HttpClientRequest.setHeaders(request, {
-        Authorization: Redacted.value(yield* CredentialsService.getApiKey(query)),
-      });
-    }),
-  );
-
-const graphqlRequestBody = (query: string, variables: Record<string, any> = {}) =>
-  HttpBody.json({
-    query,
-    variables,
-  });
 
 export default defineFunction({
   name: 'dxos.org/function/linear/fetch-issues',
@@ -68,3 +56,24 @@ export default defineFunction({
     return json.data.team.issues.edges.map((edge: any) => edge.node);
   }),
 });
+
+/**
+ * Maps the request to include the API key from the credential.
+ */
+const apiKeyAuth = (query: CredentialQuery) =>
+  HttpClient.mapRequestEffect(
+    Effect.fnUntraced(function* (request) {
+      return HttpClientRequest.setHeaders(request, {
+        Authorization: Redacted.value(yield* CredentialsService.getApiKey(query)),
+      });
+    }),
+  );
+
+/**
+ * @returns JSON body for the graphql request.
+ */
+const graphqlRequestBody = (query: string, variables: Record<string, any> = {}) =>
+  HttpBody.json({
+    query,
+    variables,
+  });
