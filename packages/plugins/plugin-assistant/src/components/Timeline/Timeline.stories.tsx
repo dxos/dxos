@@ -10,12 +10,30 @@ import React, { useRef, useState } from 'react';
 import { LogLevel } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Toolbar, useInterval } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { type ScrollController } from '@dxos/react-ui-components';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type Branch, type Commit, IconType, Timeline } from './Timeline';
+import { type Commit, Timeline } from './Timeline';
 
 faker.seed(1);
+
+enum IconType {
+  // General status.
+  WARN = 'ph--warning-circle--regular',
+  CHECK = 'ph--check-circle--regular',
+  ROCKET = 'ph--rocket--regular',
+  X = 'ph--x-circle--regular',
+  FLAG = 'ph--flag--regular',
+  TIMER = 'ph--timer--regular',
+
+  // Interactions.
+  USER = 'ph--user--regular',
+  USER_INTERACTION = 'ph--user-sound--regular',
+  AGENT = 'ph--robot--regular',
+  THINK = 'ph--brain--regular',
+  LINK = 'ph--link--regular',
+  TOOL = 'ph--wrench--regular',
+}
 
 const meta: Meta<typeof Timeline> = {
   title: 'plugins/plugin-assistant/Timeline',
@@ -36,7 +54,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     debug: true,
-    branches: [{ name: 'main' }, { name: 'feature-a' }, { name: 'feature-b' }, { name: 'feature-c' }],
+    // branches: ['main', 'feature-a', 'feature-b', 'feature-c'],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
@@ -54,7 +72,7 @@ export const Default: Story = {
 export const Merge: Story = {
   args: {
     debug: true,
-    branches: [{ name: 'main' }, { name: 'feature-a' }, { name: 'feature-b' }],
+    branches: ['main', 'feature-a', 'feature-b'],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
@@ -69,7 +87,7 @@ export const Merge: Story = {
 
 export const Linear: Story = {
   args: {
-    branches: [{ name: 'main' }],
+    branches: ['main'],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
@@ -89,16 +107,16 @@ export const Empty: Story = {
 // TODO(burdon): Merge.
 export const Random: Story = {
   render: () => {
-    const [branches, setBranches] = useState<Branch[]>([{ name: 'main' }]);
+    const [branches, setBranches] = useState<string[]>(['main']);
     const [commits, setCommits] = useState<Commit[]>([
       {
         id: faker.string.uuid(),
-        branch: branches[0].name,
+        branch: branches[0],
         message: faker.lorem.paragraph(),
       },
     ]);
     const lastCommit = useRef<string | undefined>(commits[0].id);
-    const lastBranch = useRef<string>(branches[0].name);
+    const lastBranch = useRef<string>(branches[0]);
     const closedBranches = useRef<Set<string>>(new Set());
 
     const [running, setRunning] = useState(true);
@@ -112,20 +130,20 @@ export const Random: Story = {
         const p = Math.random();
         if (p < 0.2 && branches.length < 6) {
           // New branch.
-          const branch = { name: faker.lorem.word() } satisfies Branch;
+          const branch = faker.lorem.word();
           setBranches((branches) => [...branches, branch]);
-          lastBranch.current = branch.name;
+          lastBranch.current = branch;
         } else if (p < 0.4) {
           // Update branch.
           const branch = branches[Math.floor(Math.random() * branches.length)];
-          if (!closedBranches.current.has(branch.name)) {
-            lastBranch.current = branch.name;
+          if (!closedBranches.current.has(branch)) {
+            lastBranch.current = branch;
           }
-        } else if (p < 0.5 && branches.length > 3 && lastCommit.current && lastBranch.current !== branches[0].name) {
+        } else if (p < 0.5 && branches.length > 3 && lastCommit.current && lastBranch.current !== branches[0]) {
           // Merge branch.
           closedBranches.current.add(lastBranch.current);
           const lastBranchCommit = commits.findLast((c) => c.branch === lastBranch.current);
-          lastBranch.current = branches[0].name;
+          lastBranch.current = branches[0];
           if (lastBranchCommit) {
             commit = {
               id: faker.string.uuid(),
@@ -183,9 +201,7 @@ export const Random: Story = {
           <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
           <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
         </Toolbar.Root>
-        <ScrollContainer ref={scrollerRef}>
-          <Timeline branches={branches} commits={commits} />
-        </ScrollContainer>
+        <Timeline ref={scrollerRef} branches={branches} commits={commits} />
       </div>
     );
   },
