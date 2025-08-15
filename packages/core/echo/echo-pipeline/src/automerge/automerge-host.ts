@@ -732,6 +732,8 @@ export class AutomergeHost extends Resource {
     for (const [documentId, data] of Object.entries(bundle)) {
       this._repo.import(data, { docId: documentId as DocumentId });
     }
+    // TODO(mykola): Should not be required. This is automerge bug
+    await this._repo.flush(Array.from(Object.keys(bundle)) as DocumentId[]);
   }
 
   private _onHeadsChanged(documentId: DocumentId, heads: Heads): void {
