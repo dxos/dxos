@@ -6,14 +6,7 @@ import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import {
-  FunctionTrigger,
-  FunctionTriggerSchema,
-  type FunctionTriggerType,
-  FunctionType,
-  ScriptType,
-  TriggerKind,
-} from '@dxos/functions';
+import { FunctionTrigger, type FunctionTriggerType, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -51,7 +44,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleAdd = () => {
-    setTrigger(Obj.make(FunctionTriggerSchema, {}));
+    setTrigger(Obj.make(FunctionTrigger, {}));
     setSelected(undefined);
   };
 

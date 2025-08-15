@@ -364,6 +364,7 @@ const ChatPrompt = ({
             <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
           </Input.Root>
         )}
+        <button onClick={() => processor.cancel()}>Cancel</button>
       </ChatActions>
     </div>
   );
