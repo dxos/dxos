@@ -136,7 +136,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       <CommandItem
         {...props}
         onSelect={handleSelect}
-        className={mx('p-1 rounded select-none cursor-pointer data-[selected]:bg-hoverOverlay', classNames)}
+        className={mx('p-1 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay', classNames)}
         ref={forwardedRef}
       >
         {children}
