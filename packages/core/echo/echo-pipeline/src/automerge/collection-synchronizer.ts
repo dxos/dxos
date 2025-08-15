@@ -239,9 +239,9 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
   const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
   for (const documentId of allDocuments) {
-    if (!local.documents[documentId]) {
+    if (!local.documents[documentId] || local.documents[documentId].length === 0) {
       missingOnLocal.push(documentId as DocumentId);
-    } else if (!remote.documents[documentId]) {
+    } else if (!remote.documents[documentId] || remote.documents[documentId].length === 0) {
       missingOnRemote.push(documentId as DocumentId);
     } else if (!am.equals(local.documents[documentId], remote.documents[documentId])) {
       different.push(documentId as DocumentId);

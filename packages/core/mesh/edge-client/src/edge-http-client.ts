@@ -19,8 +19,11 @@ import {
   type EdgeHttpResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
+  type ExportBundleRequest,
+  type ExportBundleResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
+  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -43,6 +46,7 @@ import { getEdgeUrlWithProtocol } from './utils';
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
+const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
   /**
@@ -272,6 +276,30 @@ export class EdgeHttpClient {
   }
 
   //
+  // Import/Export space.
+  //
+
+  public async importBundle(
+    spaceId: SpaceId, //
+    body: ImportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async exportBundle(
+    spaceId: SpaceId,
+    body: ExportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExportBundleResponse> {
+    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  //
   // Internal
   //
 
@@ -344,9 +372,14 @@ export class EdgeHttpClient {
 }
 
 const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+  const bodyString = body && JSON.stringify(body);
+  if (bodyString && bodyString.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: bodyString.length });
+  }
+
   return {
     method,
-    body: body && JSON.stringify(body),
+    body: bodyString,
     headers: authHeader ? { Authorization: authHeader } : undefined,
   };
 };
