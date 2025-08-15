@@ -86,7 +86,7 @@ const BUNDLE_SIZE = 100;
 /**
  * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
  */
-const BUNDLE_SYNC_CONCURRENCY = 2;
+const BUNDLE_SYNC_CONCURRENCY = 5;
 /**
  * If the number of documents to sync is greater than this threshold, we will use bundles.
  */
@@ -671,6 +671,9 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
           const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
+          if (bundle.length === 0) {
+            return;
+          }
           await this._pushBundle(peerId, bundle).catch((err) => {
             log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
@@ -711,6 +714,9 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
           const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
+          if (bundle.length === 0) {
+            return;
+          }
           await this._pullBundle(peerId, bundle).catch((err) => {
             log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
