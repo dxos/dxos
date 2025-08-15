@@ -33,10 +33,20 @@ export type ChatOptionsProps = {
 };
 
 const idleFilter = Filter.not(
-  Filter.or(Filter.type(Blueprint.Blueprint), Filter.type(Assistant.Chat), Filter.typename('dxos.org/type/Properties')),
+  Filter.or(
+    Filter.type(Blueprint.Blueprint),
+    Filter.type(Assistant.Chat),
+    Filter.typename('dxos.org/type/Properties'),
+    Filter.typename('dxos.org/type/View'),
+  ),
 );
 
-const omitFromTypenameOptions = [Blueprint.Blueprint.typename, Assistant.Chat.typename, 'dxos.org/type/Properties'];
+const omitFromTypenameOptions = [
+  Blueprint.Blueprint.typename,
+  Assistant.Chat.typename,
+  'dxos.org/type/Properties',
+  'dxos.org/type/View',
+];
 
 const useTypenameOptions = (space?: Space) => {
   const [schemas, setSchemas] = useState<string[]>([]);
@@ -48,9 +58,13 @@ const useTypenameOptions = (space?: Space) => {
     return space.db.schemaRegistry.query().subscribe(
       (query) => {
         setSchemas(
-          [...space.db.graph.schemaRegistry.schemas, ...query.results]
-            .map(Type.getTypename)
-            .filter((typename) => !omitFromTypenameOptions.includes(typename)),
+          Array.from(
+            new Set(
+              [...space.db.graph.schemaRegistry.schemas, ...query.results]
+                .map(Type.getTypename)
+                .filter((typename) => !omitFromTypenameOptions.includes(typename)),
+            ),
+          ),
         );
       },
       { fire: true },
