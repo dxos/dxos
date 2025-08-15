@@ -180,6 +180,8 @@ export class EdgeReplicant {
       if (
         state.peers?.length === 1 &&
         state.peers[0].differentDocuments === 0 &&
+        state.peers[0].missingOnLocal === 0 &&
+        state.peers[0].missingOnRemote === 0 &&
         state.peers[0].localDocumentCount >= (minDocuments ?? 0)
       ) {
         log.info('replication is done', { state, time: Date.now() });
