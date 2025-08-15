@@ -10,24 +10,7 @@ import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Remove?
-export enum IconType {
-  // General status.
-  WARN = 'ph--warning-circle--regular',
-  CHECK = 'ph--check-circle--regular',
-  ROCKET = 'ph--rocket--regular',
-  X = 'ph--x-circle--regular',
-  FLAG = 'ph--flag--regular',
-  TIMER = 'ph--timer--regular',
-
-  // Interactions.
-  USER = 'ph--user--regular',
-  USER_INTERACTION = 'ph--user-sound--regular',
-  AGENT = 'ph--robot--regular',
-  THINK = 'ph--brain--regular',
-  LINK = 'ph--link--regular',
-  TOOL = 'ph--wrench--regular',
-}
+// TODO(burdon): Move to react-ui-components?
 
 /**
  * Mercurial-style Commit.

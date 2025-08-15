@@ -13,9 +13,27 @@ import { Button, Toolbar, useInterval } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type Commit, IconType, Timeline } from './Timeline';
+import { type Commit, Timeline } from './Timeline';
 
 faker.seed(1);
+
+enum IconType {
+  // General status.
+  WARN = 'ph--warning-circle--regular',
+  CHECK = 'ph--check-circle--regular',
+  ROCKET = 'ph--rocket--regular',
+  X = 'ph--x-circle--regular',
+  FLAG = 'ph--flag--regular',
+  TIMER = 'ph--timer--regular',
+
+  // Interactions.
+  USER = 'ph--user--regular',
+  USER_INTERACTION = 'ph--user-sound--regular',
+  AGENT = 'ph--robot--regular',
+  THINK = 'ph--brain--regular',
+  LINK = 'ph--link--regular',
+  TOOL = 'ph--wrench--regular',
+}
 
 const meta: Meta<typeof Timeline> = {
   title: 'plugins/plugin-assistant/Timeline',
