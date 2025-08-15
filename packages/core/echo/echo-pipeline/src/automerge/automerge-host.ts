@@ -86,7 +86,7 @@ const BUNDLE_SIZE = 100;
 /**
  * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
  */
-const BUNDLE_SYNC_CONCURRENCY = 5;
+const BUNDLE_SYNC_CONCURRENCY = 2;
 /**
  * If the number of documents to sync is greater than this threshold, we will use bundles.
  */
