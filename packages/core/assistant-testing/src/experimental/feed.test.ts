@@ -4,7 +4,7 @@
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Array, Config, Effect, flow, Layer, Option, Predicate, Redacted, Ref } from 'effect';
+import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, Ref } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
@@ -28,6 +28,11 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
   return (BigInt(unixTimestamp * 1000) - discordEpoch) << 22n;
 };
 
+const parseSnowflake = (snowflake: string): Date => {
+  const discordEpoch = 1420070400000n; // Discord Epoch (ms)
+  return new Date(Number((BigInt(snowflake) >> 22n) + discordEpoch));
+};
+
 const DEFAULT_AFTER = 1704067200; // 2024-01-01
 
 const DiscordConfigFromCredential = Layer.unwrapEffect(
@@ -44,30 +49,33 @@ const fetchDiscord: (params: {
   after?: number;
   pageSize?: number;
   maxMessages?: number;
-}) => Effect.Effect<DataType.Message[], never, CredentialsService | HttpClient.HttpClient> = Effect.fn('fetchDiscord')(
+}) => Effect.Effect<DataType.Message[], never, CredentialsService | HttpClient.HttpClient | TracingService> = Effect.fn(
+  'fetchDiscord',
+)(
   function* ({ channelId, after = DEFAULT_AFTER, pageSize = 100, maxMessages = 500 }) {
-    const newMessages = yield* Ref.make(0);
-    const lastMessage = yield* Ref.make<Option.Option<DataType.Message>>(Option.none());
-    const backfill = true;
+    let lastMessage: Option.Option<DataType.Message> = Option.none();
 
     const rest = yield* DiscordREST;
 
     const allMessages: DataType.Message[] = [];
     while (true) {
-      const { id: lastId = undefined } = yield* Ref.get(lastMessage).pipe(
-        Effect.map(
-          flow(
-            Option.map(Obj.getKeys('discord.com')),
-            Option.flatMap(Option.fromIterable),
-            Option.getOrElse(() => ({ id: undefined })),
-          ),
-        ),
-      ) ?? {};
+      const { id: lastId = undefined } = pipe(
+        lastMessage,
+        Option.map(Obj.getKeys('discord.com')),
+        Option.flatMap(Option.fromIterable),
+        Option.getOrElse(() => ({ id: undefined })),
+      );
 
       const options = {
-        after: backfill && !lastId ? `${generateSnowflake(after)}` : lastId,
+        after: !lastId ? `${generateSnowflake(after)}` : lastId,
         limit: pageSize,
       };
+      console.log({
+        lastId,
+        afterSnowflake: options.after,
+        after: parseSnowflake(options.after),
+        limit: options.limit,
+      });
       const messages = yield* rest.listMessages(channelId, options).pipe(
         Effect.map(
           Array.map((message) =>
@@ -84,8 +92,7 @@ const fetchDiscord: (params: {
         Effect.map(Array.reverse),
       );
       if (messages.length > 0) {
-        yield* Ref.update(newMessages, (n) => n + messages.length);
-        yield* Ref.update(lastMessage, (m) => Option.fromNullable(messages.at(-1)));
+        lastMessage = Option.fromNullable(messages.at(-1));
         allMessages.push(...messages);
       } else {
         break;
@@ -133,8 +140,8 @@ describe('Feed', { timeout: 600_000 }, () => {
     Effect.fnUntraced(
       function* ({ expect: _ }) {
         const messages = yield* fetchDiscord({
-          channelId: '837690136044503110',
-          // after: Date.now() / 1000 - 128 * 3600,
+          channelId: '1404487604761526423',
+          after: Date.now() / 1000 - 128 * 3600,
         });
         for (const message of messages) {
           console.log(message.sender.name, message.blocks.find((block) => block._tag === 'text')?.text);
