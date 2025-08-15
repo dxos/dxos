@@ -57,7 +57,7 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(SpaceAction.AddObject, { object: trigger, target: space }),
+            createIntent(SpaceAction.AddObject, { object: trigger, target: space, hidden: true }),
             createIntent(LayoutAction.Open, {
               part: 'main',
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],

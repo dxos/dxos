@@ -69,7 +69,7 @@ export const NumberInput = ({
           type='number'
           disabled={disabled}
           placeholder={placeholder}
-          value={getValue() ?? 0}
+          value={getValue()}
           onChange={(event) => onValueChange(type, event.target.value)}
           onBlur={onBlur}
         />
