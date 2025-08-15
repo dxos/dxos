@@ -6,7 +6,7 @@ import { type ComponentFragment } from '@dxos/react-ui-types';
 
 import { ghostHover } from './hover';
 
-// TODO(burdon): Use semantic tokens (e.g., accentSurfaceHover, bg-gridSelectionOverlay).
+// TODO(burdon): Use semantic tokens (e.g., accentSurfaceHover, bg-gridSelectionOverlay)?
 
 export const ghostSelectedCurrent = [
   ghostHover,
