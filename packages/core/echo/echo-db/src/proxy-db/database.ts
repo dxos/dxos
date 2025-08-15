@@ -98,6 +98,11 @@ export interface EchoDatabase {
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
 
   /**
+   * Get the current sync state.
+   */
+  getSyncState(): Promise<SpaceSyncState>;
+
+  /**
    * Get notification about the sync progress with other peers.
    */
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
@@ -353,6 +358,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this.flush();
+  }
+
+  getSyncState(): Promise<SpaceSyncState> {
+    return this._coreDatabase.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
