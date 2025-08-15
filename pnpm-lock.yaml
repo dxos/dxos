@@ -26,6 +26,9 @@ overrides:
 pnpmfileChecksum: sha256-I26ibQHzR4rDQrxFzxv3gV/eiaOj3gHH1boJmPZ5xig=
 
 patchedDependencies:
+  '@automerge/automerge-repo':
+    hash: cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030
+    path: patches/@automerge__automerge-repo.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2742,7 +2745,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2876,7 +2879,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4964,7 +4967,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@automerge/automerge-repo-network-websocket':
         specifier: 2.3.0-alpha.0
         version: 2.3.0-alpha.0
@@ -5001,6 +5004,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/esbuild-plugins':
         specifier: workspace:*
         version: link:../../common/esbuild-plugins
@@ -5468,6 +5474,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -5634,6 +5643,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -8349,6 +8361,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8391,6 +8406,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -8406,6 +8424,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-rx/rx-react':
+        specifier: 0.38.0
+        version: 0.38.0(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(react@18.2.0)(scheduler@0.23.2)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -10836,7 +10857,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11026,7 +11047,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11286,7 +11307,7 @@ importers:
         version: 3.1.1
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -13047,7 +13068,7 @@ importers:
     devDependencies:
       '@automerge/automerge-repo':
         specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       '@automerge/automerge-repo-network-broadcastchannel':
         specifier: 2.3.0-alpha.0
         version: 2.3.0-alpha.0
@@ -33634,13 +33655,13 @@ snapshots:
 
   '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
     transitivePeerDependencies:
       - supports-color
 
   '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
       cbor-x: 1.5.4
       debug: 4.4.1
       eventemitter3: 5.0.1
@@ -33653,11 +33674,11 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0
+      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.3.0-alpha.0':
+  '@automerge/automerge-repo@2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1
