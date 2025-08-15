@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { FetchHttpClient, HttpClient, HttpClientError, HttpClientResponse } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, Ref } from 'effect';
+import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, Ref, Schema } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
@@ -20,9 +20,11 @@ import {
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
-import { AiToolkit } from '@effect/ai';
+import { AiError, AiToolkit } from '@effect/ai';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import { log } from '@dxos/log';
+import { ResponseError } from '@effect/platform/HttpClientError';
+import { BaseError } from '@dxos/errors';
 
 const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
@@ -190,7 +192,14 @@ describe('Feed', { timeout: 600_000 }, () => {
           system: 'Summarize the messages.',
         })
           .pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')))
-          .pipe(Effect.catchAll((err) => Effect.sync(() => console.error(err))));
+          .pipe(
+            Effect.catchTag(
+              'AiError',
+              Effect.fnUntraced(function* (err) {
+                return yield* Effect.fail(yield* mapAiError(err));
+              }),
+            ),
+          );
         console.log(result);
       },
       Effect.provide(TestLayer),
@@ -198,3 +207,32 @@ describe('Feed', { timeout: 600_000 }, () => {
     ),
   );
 });
+
+const AnthropicErrorResponse = Schema.Struct({
+  type: Schema.Literal('error'),
+  error: Schema.Struct({
+    type: Schema.String,
+    message: Schema.String,
+  }),
+});
+
+class AnthropicError extends BaseError.extend('ANTHROPIC_ERROR') {}
+
+const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
+  Effect.gen(function* () {
+    const cause = err.cause;
+    if (HttpClientError.isHttpClientError(cause) && cause.reason === 'StatusCode') {
+      const body = yield* cause.response.json.pipe(
+        Effect.flatMap(Schema.decodeUnknown(AnthropicErrorResponse, { exact: false })),
+      );
+
+      const parsedCause = new AnthropicError(`${body.error.type}: ${body.error.message}`);
+      return new AiError.AiError({
+        description: body.error.message,
+        module: err.module,
+        method: err.method,
+        cause: parsedCause,
+      });
+    }
+    return err;
+  }).pipe(Effect.catchAll(() => Effect.succeed(err)));
