@@ -104,8 +104,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     useEffect(() => {
       onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
-      el?.scrollIntoView({ behavior: 'instant', block: 'center' });
-    }, [commits, current]);
+      el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+    }, [current]);
     useEffect(() => {
       return addEventListener(containerRef.current!, 'keydown', (event) => {
         switch (event.key) {
