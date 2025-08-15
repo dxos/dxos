@@ -28,6 +28,7 @@ import { isNotFalsy } from '@dxos/util';
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
+import { mapAiError } from './error-handling';
 
 export type AiSessionOptions = {};
 
@@ -212,6 +213,12 @@ export class AiSession {
           //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
           disableToolCallResolution: true,
         }).pipe(
+          Stream.catchTag(
+            'AiError',
+            Effect.fnUntraced(function* (err) {
+              return yield* Effect.fail(yield* mapAiError(err));
+            }),
+          ),
           AiParser.parseResponse({
             onBlock: (block) =>
               Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], { discard: true }),

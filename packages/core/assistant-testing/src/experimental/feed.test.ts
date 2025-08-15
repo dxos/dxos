@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient, HttpClientError, HttpClientResponse } from '@effect/platform';
+import { FetchHttpClient, HttpClient, HttpClientError, HttpClientResponse, KeyValueStore } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, Ref, Schema } from 'effect';
 
@@ -14,6 +14,7 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
+  defineFunction,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TracingService,
@@ -46,96 +47,104 @@ const DiscordConfigFromCredential = Layer.unwrapEffect(
   }),
 );
 
-const fetchDiscord: (params: {
-  serverId?: string;
-  channelId?: string;
-  after?: number;
-  pageSize?: number;
-  limit?: number;
-}) => Effect.Effect<DataType.Message[], never, CredentialsService | HttpClient.HttpClient | TracingService> = Effect.fn(
-  'fetchDiscord',
-)(
-  function* ({ serverId, channelId, after = DEFAULT_AFTER, pageSize = 100, limit = 500 }) {
-    const rest = yield* DiscordREST;
+const fetchDiscordMessages = defineFunction({
+  name: 'dxos.org/function/fetch-discord-messages',
+  inputSchema: Schema.Struct({
+    serverId: Schema.optional(Schema.String),
+    channelId: Schema.optional(Schema.String),
+    after: Schema.optional(Schema.Number),
+    pageSize: Schema.optional(Schema.Number),
+    limit: Schema.optional(Schema.Number),
+  }),
+  handler: Effect.fnUntraced(
+    function* ({ data: { serverId, channelId, after = DEFAULT_AFTER, pageSize = 100, limit = 500 } }) {
+      const rest = yield* DiscordREST;
 
-    let channelIds: string[] = [];
-    if (channelId) {
-      channelIds = [channelId];
-    } else if (serverId) {
-      const channels = yield* rest.listGuildChannels(serverId);
-      const { threads } = yield* rest.getActiveGuildThreads(serverId);
-      const allChannels = [...channels, ...threads];
-      log('allChannels', {
-        channels: allChannels.map((channel) => ({ id: channel.id, name: 'name' in channel && channel.name })),
-      });
-      channelIds = allChannels.map((channel) => channel.id);
-    } else {
-      throw new Error('serverId or channelId is required');
-    }
-
-    yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channelIds.length}` });
-
-    const allMessages: DataType.Message[] = [];
-    for (const channelId of channelIds) {
-      let lastMessage: Option.Option<DataType.Message> = Option.none();
-      while (true) {
-        const { id: lastId = undefined } = pipe(
-          lastMessage,
-          Option.map(Obj.getKeys('discord.com')),
-          Option.flatMap(Option.fromIterable),
-          Option.getOrElse(() => ({ id: undefined })),
-        );
-
-        const options = {
-          after: !lastId ? `${generateSnowflake(after)}` : lastId,
-          limit: pageSize,
-        };
-        log('fetching messages', {
-          lastId,
-          afterSnowflake: options.after,
-          after: parseSnowflake(options.after),
-          limit: options.limit,
+      let channelIds: string[] = [];
+      if (channelId) {
+        channelIds = [channelId];
+      } else if (serverId) {
+        const channels = yield* rest.listGuildChannels(serverId);
+        const { threads } = yield* rest.getActiveGuildThreads(serverId);
+        const allChannels = [...channels, ...threads];
+        log('allChannels', {
+          channels: allChannels.map((channel) => ({ id: channel.id, name: 'name' in channel && channel.name })),
         });
-        const messages = yield* rest.listMessages(channelId, options).pipe(
-          Effect.map(
-            Array.map((message) =>
-              Obj.make(DataType.Message, {
-                [Obj.Meta]: {
-                  keys: [
-                    { id: message.id, source: 'discord.com' },
-                    { id: channelId, source: 'discord.com/thread' },
-                  ],
-                },
-                sender: { name: message.author.username },
-                created: message.timestamp,
-                blocks: [{ _tag: 'text', text: message.content }],
-              }),
+        channelIds = allChannels.map((channel) => channel.id);
+      } else {
+        throw new Error('serverId or channelId is required');
+      }
+
+      yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channelIds.length}` });
+
+      const allMessages: DataType.Message[] = [];
+      for (const channelId of channelIds) {
+        let lastMessage: Option.Option<DataType.Message> = Option.none();
+        while (true) {
+          const { id: lastId = undefined } = pipe(
+            lastMessage,
+            Option.map(Obj.getKeys('discord.com')),
+            Option.flatMap(Option.fromIterable),
+            Option.getOrElse(() => ({ id: undefined })),
+          );
+
+          const options = {
+            after: !lastId ? `${generateSnowflake(after)}` : lastId,
+            limit: pageSize,
+          };
+          log('fetching messages', {
+            lastId,
+            afterSnowflake: options.after,
+            after: parseSnowflake(options.after),
+            limit: options.limit,
+          });
+          const messages = yield* rest.listMessages(channelId, options).pipe(
+            Effect.map(
+              Array.map((message) =>
+                Obj.make(DataType.Message, {
+                  [Obj.Meta]: {
+                    keys: [
+                      { id: message.id, source: 'discord.com' },
+                      { id: channelId, source: 'discord.com/thread' },
+                    ],
+                  },
+                  sender: { name: message.author.username },
+                  created: message.timestamp,
+                  blocks: [{ _tag: 'text', text: message.content }],
+                }),
+              ),
             ),
-          ),
-          Effect.map(Array.reverse),
-          Effect.catchTag('ErrorResponse', (err) => (err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err))),
-        );
-        if (messages.length > 0) {
-          lastMessage = Option.fromNullable(messages.at(-1));
-          allMessages.push(...messages);
-        } else {
-          break;
+            Effect.map(Array.reverse),
+            Effect.catchTag('ErrorResponse', (err) =>
+              err.cause.code === 50001 ? Effect.succeed([]) : Effect.fail(err),
+            ),
+          );
+          if (messages.length > 0) {
+            lastMessage = Option.fromNullable(messages.at(-1));
+            allMessages.push(...messages);
+          } else {
+            break;
+          }
+          yield* TracingService.emitStatus({ message: `Fetched messages: ${allMessages.length}` });
+          if (allMessages.length >= limit) {
+            break;
+          }
         }
-        yield* TracingService.emitStatus({ message: `Fetched messages: ${allMessages.length}` });
         if (allMessages.length >= limit) {
           break;
         }
       }
-      if (allMessages.length >= limit) {
-        break;
-      }
-    }
 
-    return allMessages;
-  },
-  Effect.provide(DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential))),
-  Effect.orDie,
-);
+      return allMessages;
+    },
+    Effect.provide(
+      DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
+        Layer.provide(FetchHttpClient.layer),
+      ),
+    ),
+    Effect.orDie,
+  ),
+});
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -167,7 +176,7 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
-        const messages = yield* fetchDiscord({
+        const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
           serverId: '837138313172353095',
           // channelId: '1404487604761526423',
           after: Date.now() / 1000 - 128 * 3600,
@@ -182,24 +191,20 @@ describe('Feed', { timeout: 600_000 }, () => {
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
-              blocks: messages.map((message) => ({
-                _tag: 'text',
-                text: message.sender.name + ': ' + message.blocks.find((block) => block._tag === 'text')?.text,
-              })),
+              blocks: messages
+                .map(
+                  (message) =>
+                    ({
+                      _tag: 'text',
+                      text: message.sender.name + ': ' + message.blocks.find((block) => block._tag === 'text')?.text,
+                    }) as const,
+                )
+                .filter((block) => block._tag === 'text' && block.text.trim().length > 0),
             }),
           ],
-          prompt: '',
+          prompt: 'Summarize the messages.',
           system: 'Summarize the messages.',
-        })
-          .pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')))
-          .pipe(
-            Effect.catchTag(
-              'AiError',
-              Effect.fnUntraced(function* (err) {
-                return yield* Effect.fail(yield* mapAiError(err));
-              }),
-            ),
-          );
+        }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         console.log(result);
       },
       Effect.provide(TestLayer),
@@ -207,32 +212,3 @@ describe('Feed', { timeout: 600_000 }, () => {
     ),
   );
 });
-
-const AnthropicErrorResponse = Schema.Struct({
-  type: Schema.Literal('error'),
-  error: Schema.Struct({
-    type: Schema.String,
-    message: Schema.String,
-  }),
-});
-
-class AnthropicError extends BaseError.extend('ANTHROPIC_ERROR') {}
-
-const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
-  Effect.gen(function* () {
-    const cause = err.cause;
-    if (HttpClientError.isHttpClientError(cause) && cause.reason === 'StatusCode') {
-      const body = yield* cause.response.json.pipe(
-        Effect.flatMap(Schema.decodeUnknown(AnthropicErrorResponse, { exact: false })),
-      );
-
-      const parsedCause = new AnthropicError(`${body.error.type}: ${body.error.message}`);
-      return new AiError.AiError({
-        description: body.error.message,
-        module: err.module,
-        method: err.method,
-        cause: parsedCause,
-      });
-    }
-    return err;
-  }).pipe(Effect.catchAll(() => Effect.succeed(err)));
