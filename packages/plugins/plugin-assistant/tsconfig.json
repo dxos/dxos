@@ -151,6 +151,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
@@ -158,6 +161,9 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-tag-picker"
