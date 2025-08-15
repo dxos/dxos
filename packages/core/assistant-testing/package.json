@@ -57,6 +57,7 @@
     "@effect/rpc": "0.68.3",
     "@effect/sql": "0.44.1",
     "@effect/workflow": "0.8.3",
+    "dfx": "^0.124.1",
     "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"

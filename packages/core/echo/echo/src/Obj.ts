@@ -32,12 +32,18 @@ export interface Any extends BaseObj {}
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
-export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>>;
+export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
+  [Meta]?: Partial<EchoSchema.ObjectMeta>;
+};
+
+export const Meta: unique symbol = EchoSchema.MetaId as any;
 
 /**
  * Creates new object.
+ * @param schema - Object schema.
+ * @param props - Object properties.
+ * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  */
-// TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
