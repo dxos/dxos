@@ -8,7 +8,7 @@ import { Array, Config, Effect, flow, Layer, Option, pipe, Predicate, Redacted, 
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import {
@@ -22,7 +22,7 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 import { AiToolkit } from '@effect/ai';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
-import { threadId } from 'worker_threads';
+import { log } from '@dxos/log';
 
 const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)
@@ -38,9 +38,8 @@ const DEFAULT_AFTER = 1704067200; // 2024-01-01
 
 const DiscordConfigFromCredential = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const { apiKey } = yield* CredentialsService.getCredential({ service: 'discord.com' });
-    return DiscordConfig.layerConfig({
-      token: Config.succeed(Redacted.make(apiKey!)),
+    return DiscordConfig.layer({
+      token: yield* CredentialsService.getApiKey({ service: 'discord.com' }),
     });
   }),
 );
@@ -57,23 +56,26 @@ const fetchDiscord: (params: {
   function* ({ serverId, channelId, after = DEFAULT_AFTER, pageSize = 100, limit = 500 }) {
     const rest = yield* DiscordREST;
 
-    let channels: string[] = [];
+    let channelIds: string[] = [];
     if (channelId) {
-      channels = [channelId];
+      channelIds = [channelId];
     } else if (serverId) {
-      const channelObjs = yield* rest.listGuildChannels(serverId);
+      const channels = yield* rest.listGuildChannels(serverId);
       const { threads } = yield* rest.getActiveGuildThreads(serverId);
-      channels = [...channelObjs.map((channel) => channel.id), ...threads.map((thread) => thread.id)];
+      const allChannels = [...channels, ...threads];
+      log('allChannels', {
+        channels: allChannels.map((channel) => ({ id: channel.id, name: 'name' in channel && channel.name })),
+      });
+      channelIds = allChannels.map((channel) => channel.id);
     } else {
       throw new Error('serverId or channelId is required');
     }
 
-    yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channels.length}` });
-
-    let lastMessage: Option.Option<DataType.Message> = Option.none();
+    yield* TracingService.emitStatus({ message: `Will fetch from channels: ${channelIds.length}` });
 
     const allMessages: DataType.Message[] = [];
-    for (const channelId of channels) {
+    for (const channelId of channelIds) {
+      let lastMessage: Option.Option<DataType.Message> = Option.none();
       while (true) {
         const { id: lastId = undefined } = pipe(
           lastMessage,
@@ -86,7 +88,7 @@ const fetchDiscord: (params: {
           after: !lastId ? `${generateSnowflake(after)}` : lastId,
           limit: pageSize,
         };
-        console.log({
+        log('fetching messages', {
           lastId,
           afterSnowflake: options.after,
           after: parseSnowflake(options.after),
@@ -146,9 +148,9 @@ const TestLayer = Layer.mergeAll(
         indexing: { vector: true },
         types: [],
       }),
-      CredentialsService.configuredLayer([
-        { service: 'exa.ai', apiKey: EXA_API_KEY },
-        { service: 'discord.com', apiKey: Redacted.value(Effect.runSync(Config.redacted('DISCORD_TOKEN'))) },
+      CredentialsService.layerConfig([
+        { service: 'exa.ai', apiKey: Config.succeed(Redacted.make(EXA_API_KEY)) },
+        { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
       ]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
@@ -172,6 +174,24 @@ describe('Feed', { timeout: 600_000 }, () => {
           console.log(message.sender.name, message.blocks.find((block) => block._tag === 'text')?.text);
         }
         console.log(`Fetched ${messages.length} messages`);
+
+        const result = yield* AiSession.run({
+          history: [
+            Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: messages.map((message) => ({
+                _tag: 'text',
+                text: message.sender.name + ': ' + message.blocks.find((block) => block._tag === 'text')?.text,
+              })),
+            }),
+          ],
+          prompt: '',
+          system: 'Summarize the messages.',
+        })
+          .pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')))
+          .pipe(Effect.catchAll((err) => Effect.sync(() => console.error(err))));
+        console.log(result);
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),

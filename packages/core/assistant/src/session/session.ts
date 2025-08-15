@@ -116,6 +116,18 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  * Could be personal or shared.
  */
 export class AiSession {
+  static run: <Tools extends AiTool.Any>(
+    params: SessionRunParams<Tools>,
+  ) => Effect.Effect<
+    DataType.Message[],
+    AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
+  > = <Tools extends AiTool.Any>(params: SessionRunParams<Tools>) => new AiSession().run(params);
+
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 

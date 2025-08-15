@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer, Redacted, type Config } from 'effect';
 
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
@@ -43,8 +43,34 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       return yield* Effect.promise(() => credentials.getCredential(query));
     });
 
+  static getApiKey = (query: CredentialQuery): Effect.Effect<Redacted.Redacted<string>, never, CredentialsService> =>
+    Effect.gen(function* () {
+      const credential = yield* CredentialsService.getCredential(query);
+      if (!credential.apiKey) {
+        throw new Error(`API key not found for service: ${query.service}`);
+      }
+      return Redacted.make(credential.apiKey);
+    });
+
   static configuredLayer = (credentials: ServiceCredential[]) =>
     Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
+
+  static layerConfig = (credentials: { service: string; apiKey: Config.Config<Redacted.Redacted<string>> }[]) =>
+    Layer.effect(
+      CredentialsService,
+      Effect.gen(function* () {
+        const serviceCredentials = yield* Effect.forEach(credentials, ({ service, apiKey }) =>
+          Effect.gen(function* () {
+            return {
+              service,
+              apiKey: Redacted.value(yield* apiKey),
+            };
+          }),
+        );
+
+        return new ConfiguredCredentialsService(serviceCredentials);
+      }),
+    );
 
   static layerFromDatabase = () =>
     Layer.effect(
