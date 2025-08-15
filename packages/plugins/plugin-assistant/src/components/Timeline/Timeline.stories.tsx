@@ -10,7 +10,7 @@ import React, { useRef, useState } from 'react';
 import { LogLevel } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Toolbar, useInterval } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { type ScrollController } from '@dxos/react-ui-components';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type Commit, Timeline } from './Timeline';
@@ -201,9 +201,7 @@ export const Random: Story = {
           <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
           <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
         </Toolbar.Root>
-        <ScrollContainer ref={scrollerRef}>
-          <Timeline branches={branches} commits={commits} />
-        </ScrollContainer>
+        <Timeline ref={scrollerRef} branches={branches} commits={commits} />
       </div>
     );
   },
