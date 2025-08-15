@@ -22,6 +22,7 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { DataType } from '@dxos/schema';
 import { AiToolkit } from '@effect/ai';
 import { fetchDiscordMessages } from '../functions';
+import { fetchLinearIssues } from '../functions/linear';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -39,6 +40,7 @@ const TestLayer = Layer.mergeAll(
       CredentialsService.layerConfig([
         { service: 'exa.ai', apiKey: Config.succeed(Redacted.make(EXA_API_KEY)) },
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
+        { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
@@ -53,36 +55,41 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
-        const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
-          serverId: '837138313172353095',
-          // channelId: '1404487604761526423',
-          after: Date.now() / 1000 - 128 * 3600,
-        });
-        for (const message of messages) {
-          console.log(message.sender.name, message.blocks.find((block) => block._tag === 'text')?.text);
-        }
-        console.log(`Fetched ${messages.length} messages`);
+        // const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
+        //   serverId: '837138313172353095',
+        //   // channelId: '1404487604761526423',
+        //   after: Date.now() / 1000 - 128 * 3600,
+        // });
+        // for (const message of messages) {
+        //   console.log(message.sender.name, message.blocks.find((block) => block._tag === 'text')?.text);
+        // }
+        // console.log(`Fetched ${messages.length} messages`);
 
-        const result = yield* AiSession.run({
-          history: [
-            Obj.make(DataType.Message, {
-              created: new Date().toISOString(),
-              sender: { role: 'user' },
-              blocks: messages
-                .map(
-                  (message) =>
-                    ({
-                      _tag: 'text',
-                      text: message.sender.name + ': ' + message.blocks.find((block) => block._tag === 'text')?.text,
-                    }) as const,
-                )
-                .filter((block) => block._tag === 'text' && block.text.trim().length > 0),
-            }),
-          ],
-          prompt: 'Summarize the messages.',
-          system: 'Summarize the messages.',
-        }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
-        console.log(result);
+        const linearIssues = yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+          team: '1127c63a-6f77-4725-9229-50f6cd47321c',
+        });
+        console.log(linearIssues);
+
+        // const result = yield* AiSession.run({
+        //   history: [
+        //     Obj.make(DataType.Message, {
+        //       created: new Date().toISOString(),
+        //       sender: { role: 'user' },
+        //       blocks: messages
+        //         .map(
+        //           (message) =>
+        //             ({
+        //               _tag: 'text',
+        //               text: message.sender.name + ': ' + message.blocks.find((block) => block._tag === 'text')?.text,
+        //             }) as const,
+        //         )
+        //         .filter((block) => block._tag === 'text' && block.text.trim().length > 0),
+        //     }),
+        //   ],
+        //   prompt: 'Summarize the messages.',
+        //   system: 'Summarize the messages.',
+        // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
+        // console.log(result);
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('llm'),

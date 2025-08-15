@@ -9,7 +9,7 @@ import { DataType } from '@dxos/schema';
 
 import { DatabaseService } from './database';
 
-type CredentialQuery = {
+export type CredentialQuery = {
   service?: string;
 };
 
