@@ -53,13 +53,7 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
         <div className='p-2'>
-          <Chat.Prompt
-            {...chatProps}
-            classNames='p-2 border border-transparent rounded-md'
-            preset={preset?.id}
-            online={online}
-            onChangeOnline={setOnline}
-          />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onChangeOnline={setOnline} />
         </div>
       </Chat.Root>
     </StackItem.Content>
