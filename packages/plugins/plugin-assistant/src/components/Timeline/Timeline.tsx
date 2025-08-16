@@ -6,7 +6,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { Icon, type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
@@ -100,6 +100,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     // Navigation.
     const containerRef = useRef<HTMLDivElement>(null);
     const [current, setCurrent] = useState<number | undefined>();
+    const currentRef = useDynamicRef(current);
     const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
     useEffect(() => {
       onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
@@ -109,21 +110,45 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     useEffect(() => {
       return addEventListener(containerRef.current!, 'keydown', (event) => {
         switch (event.key) {
-          case 'ArrowDown': {
+          case 'ArrowUp': {
             event.preventDefault(); // Prevent implicit scrolling.
-            if (event.metaKey) {
-              setCurrent(commits.length - 1);
+            if (event.metaKey || currentRef.current === undefined) {
+              setCurrent(0);
             } else {
-              setCurrent((selected) => (selected === undefined ? 0 : Math.min(commits.length - 1, selected + 1)));
+              setCurrent((selected) => {
+                if (event.shiftKey && selected !== undefined) {
+                  const branch = commits[selected].branch;
+                  for (let i = selected - 1; i >= 0; i--) {
+                    if (commits[i].branch === branch) {
+                      return i;
+                    }
+                  }
+                  return selected;
+                } else {
+                  return selected === undefined ? commits.length - 1 : Math.max(0, selected - 1);
+                }
+              });
             }
             break;
           }
-          case 'ArrowUp': {
+          case 'ArrowDown': {
             event.preventDefault(); // Prevent implicit scrolling.
-            if (event.metaKey) {
-              setCurrent(0);
+            if (event.metaKey || currentRef.current === undefined) {
+              setCurrent(commits.length - 1);
             } else {
-              setCurrent((selected) => (selected === undefined ? commits.length - 1 : Math.max(0, selected - 1)));
+              setCurrent((selected) => {
+                if (event.shiftKey && selected !== undefined) {
+                  const branch = commits[selected].branch;
+                  for (let i = selected + 1; i <= commits.length - 1; i++) {
+                    if (commits[i].branch === branch) {
+                      return i;
+                    }
+                  }
+                  return selected;
+                } else {
+                  return selected === undefined ? 0 : Math.min(commits.length - 1, selected + 1);
+                }
+              });
             }
             break;
           }
@@ -133,7 +158,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
           }
         }
       });
-    }, [commits.length, containerRef.current]);
+    }, [commits, containerRef.current]);
 
     return (
       <ScrollContainer ref={scrollerRef}>
@@ -162,8 +187,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   <LineVector
                     branches={branches}
                     spans={spans}
-                    commit={commit}
                     index={index}
+                    commit={commit}
                     currentCommit={currentCommit}
                   />
                 </div>
@@ -224,21 +249,21 @@ const levelColors: Record<LogLevel, string> = {
 const LineVector = ({
   branches,
   spans,
-  commit,
   index,
+  commit,
   currentCommit,
 }: {
   branches: readonly string[];
   spans: Map<string, Span>;
-  commit: Commit;
   index: number;
+  commit: Commit;
   currentCommit: Commit | undefined;
 }) => {
   const halfHeight = lineHeight / 2;
   const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
 
   // Create connector path.
-  const createPath = (commit: Commit, branch: string, span: Span, index: number): string | undefined => {
+  const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
     const parents = commit.parents ?? [];
     const commitIndex = getBranchIndex(commit.branch);
     const branchIndex = getBranchIndex(branch);
@@ -283,7 +308,7 @@ const LineVector = ({
       {branches.map((branch, col) => {
         const color = colors[col % colors.length];
         const span = spans.get(branch);
-        const path = span && createPath(commit, branch, span, index);
+        const path = span && createPath(index, commit, branch, span);
         if (!path) {
           return null;
         }
