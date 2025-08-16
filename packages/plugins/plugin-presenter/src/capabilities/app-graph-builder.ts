@@ -22,6 +22,39 @@ export default (context: PluginContext) =>
     Capabilities.AppGraphBuilder,
     createExtension({
       id: PRESENTER_PLUGIN,
+      // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => {
+              const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+              const settings = get(
+                rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value),
+              );
+              const isPresentable = settings?.presentCollections
+                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
+                : Obj.instanceOf(Markdown.Document, node.data);
+              return isPresentable ? Option.some(node.data) : Option.none();
+            }),
+            Option.map((object) => {
+              const id = fullyQualifiedId(object);
+              return [
+                {
+                  id: [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR),
+                  data: { type: PRESENTER_PLUGIN, object },
+                  type: PRESENTER_PLUGIN,
+                  properties: {
+                    label: 'Presenter',
+                    icon: 'ph--presentation--regular',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
       actions: (node) =>
         Rx.make((get) =>
           pipe(

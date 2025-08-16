@@ -25,17 +25,27 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: Markdown.Document; variant: 'presenter' } =>
-        Obj.instanceOf(Markdown.Document, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
+      filter: (data): data is { subject: { type: typeof PRESENTER_PLUGIN; object: Markdown.Document } } =>
+        !!data.subject &&
+        typeof data.subject === 'object' &&
+        'type' in data.subject &&
+        'object' in data.subject &&
+        data.subject.type === PRESENTER_PLUGIN &&
+        Obj.instanceOf(Markdown.Document, data.subject.object),
+      component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: DataType.Collection; variant: 'presenter' } =>
-        Obj.instanceOf(DataType.Collection, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
+      filter: (data): data is { subject: { type: typeof PRESENTER_PLUGIN; object: DataType.Collection } } =>
+        !!data.subject &&
+        typeof data.subject === 'object' &&
+        'type' in data.subject &&
+        'object' in data.subject &&
+        data.subject.type === PRESENTER_PLUGIN &&
+        Obj.instanceOf(DataType.Collection, data.subject.object),
+      component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,

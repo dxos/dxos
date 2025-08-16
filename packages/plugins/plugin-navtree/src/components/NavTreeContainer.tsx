@@ -41,7 +41,9 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 );
 
 const getChildrenFilter = (node: Node): node is Node =>
-  untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
+  untracked(
+    () => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
+  );
 
 const filterItems = (node: Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
