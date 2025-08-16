@@ -65,13 +65,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
           <Chat.Thread />
           <div className='p-4'>
-            <Chat.Prompt
-              {...chatProps}
-              classNames='p-2 border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-              preset={preset?.id}
-              online={online}
-              onChangeOnline={setOnline}
-            />
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onChangeOnline={setOnline} />
           </div>
         </Chat.Root>
       )}

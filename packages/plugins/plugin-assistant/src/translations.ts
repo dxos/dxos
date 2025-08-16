@@ -71,7 +71,7 @@ export const translations = [
 
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
-
+        'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
 
