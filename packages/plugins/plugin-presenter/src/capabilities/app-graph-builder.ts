@@ -67,7 +67,6 @@ export default (context: PluginContext) =>
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
                     icon: 'ph--presentation--regular',
-                    disposition: 'list-item',
                     keyBinding: {
                       macos: 'shift+meta+p',
                       windows: 'shift+alt+p',
