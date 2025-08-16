@@ -40,7 +40,7 @@ import { type ChatEvent } from './events';
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid bs-[var(--rail-action)] is-[var(--rail-action)] items-center justify-center'>{children}</div>
   );
 };
 
@@ -53,7 +53,6 @@ const outlineClassNames =
 // Components outside of this Radix-style group shuld define their own APIs.
 //
 
-// TODO(burdon): Inject via effect layer.
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
