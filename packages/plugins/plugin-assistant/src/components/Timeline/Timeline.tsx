@@ -322,12 +322,11 @@ const LineVector = ({
       })}
 
       {/* Node */}
-      <circle cx={cx(col)} cy={halfHeight} r={nodeRadius} />
       <circle
         cx={cx(col)}
         cy={halfHeight}
         r={nodeRadius}
-        className={mx(lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+        className={mx('fill-baseSurface', lineStyle, color.stroke, color.fill, opacity(commit.branch))}
       />
     </svg>
   );

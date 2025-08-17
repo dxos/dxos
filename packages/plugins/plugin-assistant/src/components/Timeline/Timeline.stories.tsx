@@ -71,30 +71,32 @@ const generateCommit = (
   let branch: string | undefined = undefined;
 
   const p = Math.random();
-  if (p < 0.2 && branches.length < 6) {
-    // New branch.
-    branch = faker.lorem.word();
-    lastBranch = branch;
-  } else if (p < 0.4) {
-    // Update branch.
-    const branch = branches[Math.floor(Math.random() * branches.length)];
-    if (!closedBranches.has(branch)) {
+  if (commits.length > 3) {
+    if (p < 0.2 && branches.length < 6) {
+      // New branch.
+      branch = faker.lorem.word();
       lastBranch = branch;
-    }
-  } else if (p < 0.5 && branches.length > 3 && lastCommit && lastBranch !== branches[0]) {
-    // Merge branch.
-    closedBranches.add(lastBranch);
-    const lastBranchCommit = commits.findLast((c) => c.branch === lastBranch);
-    lastBranch = branches[0];
-    if (lastBranchCommit) {
-      commit = {
-        id: faker.string.uuid(),
-        branch: lastBranch,
-        icon: IconType.TIMER,
-        level: LogLevel.INFO,
-        message: 'Merge',
-        parents: [lastBranchCommit.id, lastCommit],
-      };
+    } else if (p < 0.4) {
+      // Switch branch.
+      const branch = branches[Math.floor(Math.random() * branches.length)];
+      if (!closedBranches.has(branch)) {
+        lastBranch = branch;
+      }
+    } else if (p < 0.5 && branches.length > 3 && lastCommit && lastBranch !== branches[0]) {
+      // Merge branch.
+      closedBranches.add(lastBranch);
+      const lastBranchCommit = commits.findLast((c) => c.branch === lastBranch);
+      lastBranch = branches[0];
+      if (lastBranchCommit) {
+        commit = {
+          id: faker.string.uuid(),
+          branch: lastBranch,
+          icon: IconType.TIMER,
+          level: LogLevel.INFO,
+          message: 'Merge',
+          parents: [lastBranchCommit.id, lastCommit],
+        };
+      }
     }
   }
 
