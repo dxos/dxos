@@ -67,7 +67,7 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
       if (pinned) {
         viewport?.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       }
-    }, [viewport, viewport?.scrollHeight, pinned]);
+    }, [viewport, children, pinned]);
 
     useEffect(() => {
       if (!viewport) {
