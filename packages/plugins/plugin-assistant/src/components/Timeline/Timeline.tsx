@@ -282,9 +282,8 @@ const LineVector = ({
       return `M ${cx(branchIndex)} ${halfHeight} l 0 ${lineHeight}`;
     }
 
-    // TODO(burdon): Assumes can only branch to the right.
-
     // Branch.
+    // TODO(burdon): Assumes can only branch to the right.
     if (commit.branch !== branch && index === span.start) {
       return trim`
         M ${cx(commitIndex)} ${halfHeight}
