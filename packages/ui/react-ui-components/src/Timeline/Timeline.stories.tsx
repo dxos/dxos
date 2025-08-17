@@ -132,7 +132,7 @@ const generateCommit = (
 };
 
 const meta: Meta<typeof Timeline> = {
-  title: 'plugins/plugin-assistant/Timeline',
+  title: 'ui/react-ui-components/Timeline',
   component: Timeline,
   decorators: [
     withTheme,

@@ -108,9 +108,6 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
     let hitBottom = false;
     let wheelTimeout: NodeJS.Timeout | undefined = undefined;
     return combine(
-      addEventListener(scrollerRef.current, 'mousedown', () => {
-        pinnedRef.current = false;
-      }),
       addEventListener(scrollerRef.current, 'wheel', () => {
         pinnedRef.current = wheelTimeout ? isBottom(scrollerRef.current) : false;
         hitBottom = hitBottom || pinnedRef.current;

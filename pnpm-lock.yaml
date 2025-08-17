@@ -12847,6 +12847,9 @@ importers:
 
   packages/ui/react-ui-components:
     dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

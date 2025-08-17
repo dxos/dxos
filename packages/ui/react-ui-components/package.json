@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
