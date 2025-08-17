@@ -20,7 +20,6 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 import { Sketch } from './Sketch';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
-  // TODO(burdon): Remove dependency on echo-db.
   return Obj.make(DiagramType, {
     canvas: Ref.make(Obj.make(CanvasType, { schema: TLDRAW_SCHEMA, content })),
   });

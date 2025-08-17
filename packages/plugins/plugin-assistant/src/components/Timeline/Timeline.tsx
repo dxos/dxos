@@ -13,6 +13,11 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Move to react-ui-components?
 
+const lineHeight = 24;
+const columnWidth = 14;
+const nodeRadius = 4;
+const lineStyle = 'stroke-1';
+
 /**
  * Mercurial-style Commit.
  */
@@ -30,17 +35,22 @@ export type Commit = {
 export type TimelineProps = ThemedClassName<{
   /** Optional whitelist. */
   branches?: string[];
-  commits: Commit[];
+  commits?: Commit[];
   showIcon?: boolean;
   debug?: boolean;
   onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
 }>;
 
+const empty = Object.freeze([]);
+
 /**
  * GitGraph-style timeline.
  */
 export const Timeline = forwardRef<ScrollController, TimelineProps>(
-  ({ classNames, branches: _branches, commits, showIcon = true, debug = false, onCurrentChange }, forwardedRef) => {
+  (
+    { classNames, branches: _branches, commits = empty, showIcon = true, debug = false, onCurrentChange },
+    forwardedRef,
+  ) => {
     const scrollerRef = useForwardedRef(forwardedRef);
 
     // Auto-discover branches if not provided.
@@ -176,9 +186,9 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                 data-index={index}
                 aria-current={current === index}
                 className={mx(
-                  'group flex shrink-0 items-center gap-2 overflow-hidden',
-                  // TODO(burdon): Factor out fragment?
-                  'aria-[current=true]:!bg-primary-500 hover:bg-hoverSurface',
+                  'group flex shrink-0 overflow-hidden pis-3 pie-3 gap-2 items-center',
+                  // TODO(burdon): Factor out fragment.
+                  'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
                 )}
                 style={{ height: `${lineHeight}px` }}
                 onClick={() => setCurrent(index)}
@@ -199,7 +209,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     )}
                   </div>
                 )}
-                <div className='pie-3 text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
+                <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
                   {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
                 </div>
               </div>
@@ -215,11 +225,6 @@ type Span = {
   start: number;
   end: number;
 };
-
-const lineHeight = 24;
-const columnWidth = 24;
-const nodeRadius = 5;
-const lineStyle = 'stroke-1';
 
 const cx = (c: number) => c * columnWidth + columnWidth / 2;
 

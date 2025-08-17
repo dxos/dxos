@@ -7,10 +7,8 @@ import { useEffect, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { setDeep } from '@dxos/util';
 
 import { type DiagramType, TLDRAW_SCHEMA } from '../types';
-import { getDeep } from '../util';
 
 import { TLDrawStoreAdapter } from './adapter';
 
@@ -28,21 +26,9 @@ export const useStoreAdapter = (object?: DiagramType) => {
     }
 
     const t = setTimeout(async () => {
-      invariant(object.canvas);
-
-      try {
-        // OTF migration from old path.
-        const accessor = createDocAccessor(object, ['content']);
-        const oldData = getDeep(accessor.handle.doc(), accessor.path);
-        if (Object.keys(oldData ?? {}).length) {
-          object.canvas.target!.content = oldData;
-          accessor.handle.change((object) => setDeep(object, accessor.path, {}));
-        }
-      } catch (err) {
-        log.catch(err);
-      }
-
-      const accessor = createDocAccessor(object.canvas.target!, ['content']);
+      invariant(object.canvas.target);
+      console.log(JSON.stringify(object.canvas.target, undefined, 2));
+      const accessor = createDocAccessor(object.canvas.target, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
     });
