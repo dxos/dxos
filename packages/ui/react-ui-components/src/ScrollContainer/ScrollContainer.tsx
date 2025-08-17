@@ -23,6 +23,7 @@ export interface ScrollController {
 
 export type ScrollContainerProps = ThemedClassName<
   PropsWithChildren<{
+    pin?: boolean;
     fade?: boolean;
   }>
 >;
@@ -31,9 +32,9 @@ export type ScrollContainerProps = ThemedClassName<
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
 export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps>(
-  ({ children, classNames, fade }, forwardedRef) => {
+  ({ children, classNames, pin: _pin, fade }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
-    const [pinned, setPinned] = useState(true);
+    const [pinned, setPinned] = useState(_pin);
     const [isOverflowing, setIsOverflowing] = useState(false);
 
     // Scroll controller imperative ref.
@@ -56,17 +57,17 @@ export const ScrollContainer = forwardRef<ScrollController, ScrollContainerProps
     );
 
     const updateScrollState = useCallback(() => {
-      if (viewport) {
+      if (viewport && _pin) {
         setPinned(viewport.scrollTop === viewport.scrollHeight - viewport.clientHeight);
         setIsOverflowing(viewport.scrollHeight > viewport.clientHeight);
       }
-    }, [viewport]);
+    }, [viewport, _pin]);
 
     useEffect(() => {
       if (pinned) {
         viewport?.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
       }
-    }, [viewport, viewport?.scrollHeight, pinned]);
+    }, [viewport, children, pinned]);
 
     useEffect(() => {
       if (!viewport) {
