@@ -110,6 +110,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
     return combine(
       addEventListener(scrollerRef.current, 'wheel', () => {
         pinnedRef.current = wheelTimeout ? isBottom(scrollerRef.current) : false;
+        // Wheel event will continue due to momentum.
         hitBottom = hitBottom || pinnedRef.current;
         clearTimeout(wheelTimeout);
         wheelTimeout = setTimeout(() => {
