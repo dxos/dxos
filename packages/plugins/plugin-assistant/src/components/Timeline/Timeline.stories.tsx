@@ -200,6 +200,10 @@ export const Random: Story = {
   args: generateCommits(100),
 };
 
+export const Compact: Story = {
+  args: { ...generateCommits(100), compact: true },
+};
+
 export const Streaming: Story = {
   render: () => {
     const [branches, setBranches] = useState<string[]>(['main']);
