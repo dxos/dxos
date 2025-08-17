@@ -15,8 +15,8 @@ import { trim } from '@dxos/util';
 
 const lineHeight = 24;
 const columnWidth = 14;
-const nodeRadius = 4;
-const lineStyle = 'stroke-1';
+const nodeRadius = 5;
+const lineStyle = 'stroke-2';
 
 /**
  * Mercurial-style Commit.
@@ -305,7 +305,10 @@ const LineVector = ({
 
   const col = branches.findIndex((branch) => branch === commit.branch);
   const color = colors[col % colors.length];
-  const opacity = (branch: string | undefined) => (branch === currentCommit?.branch ? 'opacity-100' : 'opacity-80');
+  const opacity = (branch: string | undefined) => [
+    'duration-500 transition-opacity',
+    branch === currentCommit?.branch ? 'opacity-100' : 'opacity-50',
+  ];
 
   return (
     <svg width={branches.length * columnWidth} height={lineHeight}>
@@ -322,6 +325,7 @@ const LineVector = ({
       })}
 
       {/* Node */}
+      <circle cx={cx(col)} cy={halfHeight} r={nodeRadius} className={mx('fill-baseSurface stroke-baseSurface')} />
       <circle
         cx={cx(col)}
         cy={halfHeight}
