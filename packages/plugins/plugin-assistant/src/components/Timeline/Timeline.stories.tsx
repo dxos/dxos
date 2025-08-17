@@ -35,6 +35,102 @@ enum IconType {
   TOOL = 'ph--wrench--regular',
 }
 
+const generateCommits = (n: number): { commits: Commit[]; branches: string[] } => {
+  const commits = [];
+  const branches = ['main'];
+  let lastBranch = branches[0];
+  let lastCommit: string | undefined;
+  const closedBranches = new Set<string>();
+
+  for (let i = 0; i < n; i++) {
+    const { commit, branch } = generateCommit(commits, branches, lastBranch, lastCommit, closedBranches);
+    if (commit) {
+      commits.push(commit);
+      lastCommit = commit.id;
+    }
+    if (branch) {
+      branches.push(branch);
+      lastBranch = branch;
+    }
+  }
+
+  return { commits, branches };
+};
+
+const generateCommit = (
+  commits: Commit[],
+  branches: string[],
+  lastBranch: string,
+  lastCommit: string | undefined,
+  closedBranches: Set<string>,
+): {
+  commit: Commit | undefined;
+  branch: string | undefined;
+} => {
+  let commit: Commit | undefined = undefined;
+  let branch: string | undefined = undefined;
+
+  const p = Math.random();
+  if (commits.length > 3) {
+    if (p < 0.2 && branches.length < 6) {
+      // New branch.
+      branch = faker.lorem.word();
+      lastBranch = branch;
+    } else if (p < 0.4) {
+      // Switch branch.
+      const branch = branches[Math.floor(Math.random() * branches.length)];
+      if (!closedBranches.has(branch)) {
+        lastBranch = branch;
+      }
+    } else if (p < 0.5 && branches.length > 3 && lastCommit && lastBranch !== branches[0]) {
+      // Merge branch.
+      closedBranches.add(lastBranch);
+      const lastBranchCommit = commits.findLast((c) => c.branch === lastBranch);
+      lastBranch = branches[0];
+      if (lastBranchCommit) {
+        commit = {
+          id: faker.string.uuid(),
+          branch: lastBranch,
+          icon: IconType.TIMER,
+          level: LogLevel.INFO,
+          message: 'Merge',
+          parents: [lastBranchCommit.id, lastCommit],
+        };
+      }
+    }
+  }
+
+  if (!commit) {
+    commit = {
+      id: faker.string.uuid(),
+      branch: lastBranch,
+      icon: faker.helpers.arrayElement([
+        IconType.WARN,
+        IconType.CHECK,
+        IconType.ROCKET,
+        IconType.X,
+        IconType.FLAG,
+        IconType.TIMER,
+        IconType.USER,
+        IconType.USER_INTERACTION,
+        IconType.AGENT,
+      ]),
+      level: faker.helpers.arrayElement([
+        LogLevel.TRACE,
+        LogLevel.DEBUG,
+        LogLevel.VERBOSE,
+        LogLevel.INFO,
+        LogLevel.WARN,
+        LogLevel.ERROR,
+      ]),
+      message: faker.lorem.paragraph(),
+      parents: lastCommit ? [lastCommit] : [],
+    };
+  }
+
+  return { commit, branch };
+};
+
 const meta: Meta<typeof Timeline> = {
   title: 'plugins/plugin-assistant/Timeline',
   component: Timeline,
@@ -54,7 +150,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     debug: true,
-    // branches: ['main', 'feature-a', 'feature-b', 'feature-c'],
+    showIcon: false,
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
@@ -72,6 +168,7 @@ export const Default: Story = {
 export const Merge: Story = {
   args: {
     debug: true,
+    showIcon: false,
     branches: ['main', 'feature-a', 'feature-b'],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
@@ -97,15 +194,13 @@ export const Linear: Story = {
   },
 };
 
-export const Empty: Story = {
-  args: {
-    branches: [],
-    commits: [],
-  },
+export const Empty: Story = {};
+
+export const Random: Story = {
+  args: generateCommits(100),
 };
 
-// TODO(burdon): Merge.
-export const Random: Story = {
+export const Streaming: Story = {
   render: () => {
     const [branches, setBranches] = useState<string[]>(['main']);
     const [commits, setCommits] = useState<Commit[]>([
@@ -126,68 +221,26 @@ export const Random: Story = {
           return;
         }
 
-        let commit: Commit | undefined = undefined;
-        const p = Math.random();
-        if (p < 0.2 && branches.length < 6) {
-          // New branch.
-          const branch = faker.lorem.word();
-          setBranches((branches) => [...branches, branch]);
-          lastBranch.current = branch;
-        } else if (p < 0.4) {
-          // Update branch.
-          const branch = branches[Math.floor(Math.random() * branches.length)];
-          if (!closedBranches.current.has(branch)) {
-            lastBranch.current = branch;
-          }
-        } else if (p < 0.5 && branches.length > 3 && lastCommit.current && lastBranch.current !== branches[0]) {
-          // Merge branch.
-          closedBranches.current.add(lastBranch.current);
-          const lastBranchCommit = commits.findLast((c) => c.branch === lastBranch.current);
-          lastBranch.current = branches[0];
-          if (lastBranchCommit) {
-            commit = {
-              id: faker.string.uuid(),
-              branch: lastBranch.current,
-              icon: IconType.TIMER,
-              level: LogLevel.INFO,
-              message: 'Merge',
-              parents: [lastBranchCommit.id, lastCommit.current],
-            };
-          }
+        const { commit, branch } = generateCommit(
+          commits,
+          branches,
+          lastBranch.current,
+          lastCommit.current,
+          closedBranches.current,
+        );
+        if (!commit) {
+          return;
         }
 
-        if (!commit) {
-          commit = {
-            id: faker.string.uuid(),
-            branch: lastBranch.current,
-            icon: faker.helpers.arrayElement([
-              IconType.WARN,
-              IconType.CHECK,
-              IconType.ROCKET,
-              IconType.X,
-              IconType.FLAG,
-              IconType.TIMER,
-              IconType.USER,
-              IconType.USER_INTERACTION,
-              IconType.AGENT,
-            ]),
-            level: faker.helpers.arrayElement([
-              LogLevel.TRACE,
-              LogLevel.DEBUG,
-              LogLevel.VERBOSE,
-              LogLevel.INFO,
-              LogLevel.WARN,
-              LogLevel.ERROR,
-            ]),
-            message: faker.lorem.paragraph(),
-            parents: lastCommit.current ? [lastCommit.current] : [],
-          };
+        lastBranch.current = commit.branch;
+        if (branch) {
+          setBranches((branches) => [...branches, branch]);
         }
 
         lastCommit.current = commit.id;
         setCommits((commits) => [...commits, commit]);
       },
-      500,
+      1_000,
       [running],
     );
 
