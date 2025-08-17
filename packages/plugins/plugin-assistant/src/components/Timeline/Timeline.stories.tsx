@@ -151,7 +151,6 @@ export const Default: Story = {
   args: {
     debug: true,
     showIcon: false,
-    // branches: ['main', 'feature-a', 'feature-b', 'feature-c'],
     commits: [
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
