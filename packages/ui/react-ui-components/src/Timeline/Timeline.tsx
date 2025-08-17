@@ -7,11 +7,10 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Move to react-ui-components?
+import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
 export type TimelineOptions = {
   lineHeight: number;
@@ -198,8 +197,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer pin ref={scrollerRef}>
-        <div tabIndex={0} className={mx('flex flex-col is-full !outline-none', classNames)} ref={containerRef}>
+      <ScrollContainer.Root pin ref={scrollerRef}>
+        <ScrollContainer.Content
+          classNames={['flex flex-col is-full !outline-none', classNames]}
+          tabIndex={0}
+          ref={containerRef}
+        >
           {commits.map((commit, index) => {
             // Skip branches that are not whitelisted.
             const idx = getBranchIndex(commit.branch);
@@ -243,8 +246,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
               </div>
             );
           })}
-        </div>
-      </ScrollContainer>
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     );
   },
 );

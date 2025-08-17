@@ -8,7 +8,6 @@ import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
-import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
@@ -41,17 +40,16 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     }, [messages, collapse]);
 
     return (
-      <ScrollContainer fade pin ref={forwardedRef} classNames={classNames}>
-        <div
-          role='none'
-          className={mx('flex flex-col gap-2')}
+      <ScrollContainer.Root fade pin ref={forwardedRef} classNames={classNames}>
+        <ScrollContainer.Content
+          classNames='flex flex-col gap-2'
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
             <ChatMessage key={message.id} message={message} {...props} />
           ))}
-        </div>
-      </ScrollContainer>
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     );
   },
 );
