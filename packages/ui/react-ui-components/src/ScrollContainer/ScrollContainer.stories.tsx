@@ -43,7 +43,7 @@ const meta: Meta<typeof ScrollContainer> = {
           <div className='flex-1' />
           <div>{lines.length}</div>
         </Toolbar.Root>
-        <ScrollContainer fade {...args} ref={scroller}>
+        <ScrollContainer fade pin {...args} ref={scroller}>
           {lines.map((line, index) => (
             <div key={index} className='p-2'>
               {line}

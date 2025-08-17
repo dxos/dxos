@@ -231,15 +231,16 @@ export const Streaming: Story = {
         if (!commit) {
           return;
         }
+
+        lastBranch.current = commit.branch;
         if (branch) {
           setBranches((branches) => [...branches, branch]);
         }
 
-        setCommits((commits) => [...commits, commit]);
-        lastBranch.current = commit.branch;
         lastCommit.current = commit.id;
+        setCommits((commits) => [...commits, commit]);
       },
-      500,
+      1_000,
       [running],
     );
 

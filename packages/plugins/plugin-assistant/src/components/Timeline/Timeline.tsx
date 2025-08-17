@@ -171,7 +171,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer ref={scrollerRef}>
+      <ScrollContainer pin ref={scrollerRef}>
         <div tabIndex={0} className={mx('flex flex-col is-full !outline-none', classNames)} ref={containerRef}>
           {commits.map((commit, index) => {
             // Skip branches that are not whitelisted.

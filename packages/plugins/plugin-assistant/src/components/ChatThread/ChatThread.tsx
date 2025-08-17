@@ -41,7 +41,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     }, [messages, collapse]);
 
     return (
-      <ScrollContainer ref={forwardedRef} classNames={classNames} fade>
+      <ScrollContainer ref={forwardedRef} classNames={classNames} fade pin>
         <div
           role='none'
           className={mx('flex flex-col gap-2', filteredMessages.length > 0 && 'pbs-4 pbe-4')}
