@@ -4,12 +4,12 @@
 
 import path from 'node:path';
 
-import { Args, Command, Options } from '@effect/cli';
 import { FileSystem } from '@effect/platform';
-import { Effect, Option } from 'effect';
+import { Effect } from 'effect';
 
-import { type PublicKey } from '@dxos/client';
-import { type AnyLiveObject, Filter, type Space, SpaceId, getMeta } from '@dxos/client/echo';
+import { type Client, type PublicKey } from '@dxos/client';
+import { Filter, type Space, type SpaceId, getMeta } from '@dxos/client/echo';
+import { type Identity } from '@dxos/client/halo';
 import { Obj, Ref } from '@dxos/echo';
 import {
   FunctionType,
@@ -24,115 +24,15 @@ import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
-import { ClientService } from '../../services';
-import { waitForSync } from '../../util';
+import { ClientService } from '../../../../services';
+import { waitForSync } from '../../../../util';
 
 const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
 
-const file = Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy'));
-
-const name = Options.text('name').pipe(
-  Options.withDescription('The name of the function to deploy.'),
-  Options.optional,
-);
-const version = Options.text('version').pipe(
-  Options.withDescription('The version of the function to deploy.'),
-  Options.optional,
-);
-const spaceId = Options.text('spaceId').pipe(
-  Options.withDescription('Space key to create/update Script source in.'),
-  Options.optional,
-);
-const functionId = Options.text('functionId').pipe(
-  Options.withDescription('Existing UserFunction ID to update.'),
-  Options.optional,
-);
-const composerScript = Options.boolean('composerScript').pipe(
-  Options.withDescription('Loads the script into composer.'),
-  Options.withDefault(false),
-);
-
-export const deployFunction = Effect.fn(function* ({
-  file,
-  name,
-  version,
-  composerScript,
-  functionId,
-  spaceId,
-}: {
-  file: string;
-  name: Option.Option<string>;
-  version: Option.Option<string>;
-  composerScript: boolean;
-  functionId: Option.Option<string>;
-  spaceId: Option.Option<string>;
-}) {
-  const { scriptFileContent, bundledScript } = yield* loadScript(file);
-
-  const client = yield* ClientService;
-  const identity = client.halo.identity.get();
-  // TODO(wittjosiah): How to surface this error to the user?
-  invariant(identity, 'Identity not available');
-
-  yield* spaceId.pipe(
-    // TODO(wittjosiah): Feedback about invalid space ID.
-    Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
-    Option.match({
-      onNone: () =>
-        upload({
-          ownerPublicKey: identity.identityKey,
-          bundledSource: bundledScript,
-          functionId: Option.getOrUndefined(functionId),
-          name: Option.getOrUndefined(name),
-          version: Option.getOrUndefined(version),
-        }),
-      onSome: (spaceId) =>
-        // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
-        Effect.gen(function* () {
-          client.addTypes(DATA_TYPES);
-          const space = client.spaces.get(spaceId);
-          invariant(space, 'Space not found');
-          yield* Effect.tryPromise(() => space.waitUntilReady());
-          const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
-          const uploadResult = yield* upload({
-            ownerPublicKey: identity.identityKey,
-            bundledSource: bundledScript,
-            functionId: Option.getOrUndefined(functionId),
-            fnObject: existingFunctionObject,
-            name: Option.getOrUndefined(name),
-            version: Option.getOrUndefined(version),
-          });
-          const functionObject = yield* upsertFunctionObject({
-            space,
-            existingObject: existingFunctionObject,
-            uploadResult,
-            file,
-            name: Option.getOrUndefined(name),
-          });
-          if (composerScript) {
-            yield* upsertComposerScript({
-              space,
-              functionObject,
-              scriptFileName: path.basename(file),
-              scriptFileContent,
-              name: Option.getOrUndefined(name),
-            });
-          }
-          yield* waitForSync(space);
-        }),
-    }),
-  );
-});
-
-export const deploy = Command.make(
-  'deploy',
-  { file, name, version, composerScript, functionId, spaceId },
-  deployFunction,
-).pipe(Command.withDescription('Deploy a function to EDGE.'));
-
-const loadScript = Effect.fn(function* (path: string) {
+export const loadScript = Effect.fn(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   let scriptFileContent: string | undefined;
+  // TODO(burdon): Use Effect.try?
   try {
     scriptFileContent = yield* fs.readFileString(path);
   } catch (err: any) {
@@ -150,7 +50,6 @@ const loadScript = Effect.fn(function* (path: string) {
 const bundleScript = Effect.fn(function* (path: string) {
   const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
   const buildResult = yield* Effect.tryPromise(() => bundler.bundle({ path }));
-
   if (buildResult.error || !buildResult.bundle) {
     return { error: buildResult.error || new Error('Bundle creation failed') };
   }
@@ -159,20 +58,20 @@ const bundleScript = Effect.fn(function* (path: string) {
 });
 
 // TODO(wittjosiah): Align with plugin-script.
-const upload = Effect.fn(function* ({
-  ownerPublicKey,
-  bundledSource,
+export const upload = Effect.fn(function* ({
   functionId,
-  fnObject,
   name,
   version,
+  ownerPublicKey,
+  bundledSource,
+  fnObject,
 }: {
-  ownerPublicKey: PublicKey;
-  bundledSource: string;
   functionId?: string;
-  fnObject?: FunctionType;
   name?: string;
   version?: string;
+  ownerPublicKey: PublicKey;
+  bundledSource: string;
+  fnObject?: FunctionType;
 }) {
   const client = yield* ClientService;
   const result = yield* Effect.tryPromise(() =>
@@ -191,6 +90,64 @@ const upload = Effect.fn(function* ({
     version: result.version,
   });
   return result;
+});
+
+// TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
+export const uploadToSpace = Effect.fn(function* ({
+  functionId,
+  name,
+  version,
+  client,
+  identity,
+  spaceId,
+  file,
+  script,
+  bundledScript,
+  scriptFileContent,
+}: {
+  functionId?: string;
+  name?: string;
+  version?: string;
+  client: Client;
+  identity: Identity;
+  spaceId: SpaceId;
+  file: string;
+  script: boolean;
+  bundledScript: string;
+  scriptFileContent: string;
+}) {
+  client.addTypes(DATA_TYPES);
+  const space = client.spaces.get(spaceId);
+  invariant(space, 'Space not found');
+  yield* Effect.tryPromise(() => space.waitUntilReady());
+  const existingFunctionObject = yield* loadFunctionObject(space, functionId);
+  const uploadResult = yield* upload({
+    ownerPublicKey: identity.identityKey,
+    bundledSource: bundledScript,
+    functionId,
+    fnObject: existingFunctionObject,
+    name,
+    version,
+  });
+  const functionObject = yield* upsertFunctionObject({
+    space,
+    existingObject: existingFunctionObject,
+    uploadResult,
+    file,
+    name,
+  });
+
+  if (script) {
+    yield* upsertComposerScript({
+      space,
+      functionObject,
+      scriptFileName: path.basename(file),
+      scriptFileContent,
+      name,
+    });
+  }
+
+  yield* waitForSync(space);
 });
 
 const getNextVersion = (fnObject: FunctionType | undefined) => {
@@ -251,7 +208,7 @@ const upsertFunctionObject = Effect.fn(function* ({
   return functionObject;
 });
 
-const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: AnyLiveObject<any>) {
+const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Any) {
   const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<DataType.Collection> | undefined;
   if (collectionRef) {
     const collection = yield* Effect.tryPromise(() => collectionRef.load());

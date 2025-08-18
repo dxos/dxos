@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, it } from '@effect/vitest';
 
-import { TestLogger } from '../../testing';
+import { TestLogger } from '../../../testing';
 
 describe('spaces sync', () => {
   const testLogger = new TestLogger();

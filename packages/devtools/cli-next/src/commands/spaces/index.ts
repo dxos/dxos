@@ -9,6 +9,6 @@ import { query } from './query';
 import { sync } from './sync';
 
 export const spaces = Command.make('spaces').pipe(
-  Command.withSubcommands([list, query, sync]),
   Command.withDescription('Manage ECHO spaces.'),
+  Command.withSubcommands([list, query, sync]),
 );

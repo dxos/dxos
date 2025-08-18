@@ -5,10 +5,10 @@
 import { beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect, LogLevel } from 'effect';
 
-import { ClientService } from '../../services';
-import { TestLogger, testLayer } from '../../testing';
+import { ClientService } from '../../../services';
+import { TestLogger, testLayer } from '../../../testing';
 
-import { listSpaces } from './list';
+import { handler } from './list';
 
 describe('spaces list', () => {
   const testLogger = new TestLogger();
@@ -19,10 +19,10 @@ describe('spaces list', () => {
 
   it('should list empty space list', () =>
     Effect.gen(function* () {
-      yield* listSpaces();
+      yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      expect(logs[0].message).toEqual(['[]']);
+      expect(logs[0].args).toEqual(['[]']);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 
   it('should list spaces', () =>
@@ -30,10 +30,10 @@ describe('spaces list', () => {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.spaces.create());
-      yield* listSpaces();
+      yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      const formattedSpaces = JSON.parse(logs[0].message as string);
+      const formattedSpaces = JSON.parse(logs[0].args as string);
       expect(formattedSpaces).toHaveLength(2);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 });

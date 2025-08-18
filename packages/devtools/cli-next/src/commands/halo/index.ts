@@ -9,6 +9,6 @@ import { identity } from './identity';
 import { join } from './join';
 
 export const halo = Command.make('halo').pipe(
-  Command.withSubcommands([create, identity, join]),
   Command.withDescription('Manage HALO identity.'),
+  Command.withSubcommands([create, identity, join]),
 );
