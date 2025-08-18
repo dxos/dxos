@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Options } from '@effect/cli';
+import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
+
+import { json } from '../../options';
 
 export const status = Command.make(
   'status',
   {
-    json: Options.boolean('json').pipe(Options.withDescription('Output in JSON format.')),
+    json,
   },
   Effect.fn(function* ({ json }) {
     if (json) {

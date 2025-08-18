@@ -7,29 +7,29 @@ import { NodeContext } from '@effect/platform-node';
 import { assert, describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { TestConsole } from '../../../testing';
+import { TestConsole } from '../testing';
 
-import { status } from './status';
+import { dx } from './dx';
 
-const run = status.pipe(
-  Command.run({
-    name: 'test',
-    version: '1.0.0',
-  }),
-);
+const run = Command.run(dx, {
+  name: 'DXOS CLI',
+  version: '0.8.3', // {x-release-please-version}
+});
 
-describe('status', () => {
+const args = (cmd: string) => [__filename, ...cmd.split(' ')];
+
+describe('smoke tests', () => {
   it('should show status and capture console output', () =>
     Effect.gen(function* () {
       const logger = yield* TestConsole.TestConsole;
-      // TODO(burdon): Create array of tests.
+
+      // TODO(burdon): Create array of test/result tuples?
       {
-        yield* run(['dx', 'status']);
+        yield* run(args('dx edge status'));
         assert.deepStrictEqual(logger.logs.at(0), { level: 'log', args: ['ok'], message: 'ok' });
       }
       {
-        // TODO(burdon): Try factoring out --json attr to lower level.
-        yield* run(['dx', 'status', '--json']);
+        yield* run(args('dx edge status --json'));
         assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
       }
     }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, Effect.runPromise));
