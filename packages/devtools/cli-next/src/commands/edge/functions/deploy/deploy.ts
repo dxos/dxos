@@ -9,9 +9,11 @@ import { SpaceId } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../../../services';
-import { spaceId } from '../../../options';
+import { Common } from '../../../options';
 
 import { loadScript, upload, uploadToSpace } from './util';
+
+const spaceId = Common.spaceId.pipe(Options.optional);
 
 export const deploy = Command.make(
   'deploy',

@@ -7,7 +7,12 @@ import { Effect, Option } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { ClientService } from '../../services';
+import { ClientService } from '../../../services';
+
+const displayName = Options.text('displayName').pipe(
+  Options.withDescription('The display name of the identity.'),
+  Options.optional,
+);
 
 export const handler = Effect.fn(function* ({ displayName }: { displayName: Option.Option<string> }) {
   const client = yield* ClientService;
@@ -24,10 +29,7 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: Opti
 export const create = Command.make(
   'create',
   {
-    displayName: Options.text('displayName').pipe(
-      Options.withDescription('The display name of the identity.'),
-      Options.optional,
-    ),
+    displayName,
   },
   handler,
 ).pipe(Command.withDescription('Create a new identity.'));

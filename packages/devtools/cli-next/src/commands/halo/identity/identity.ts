@@ -5,7 +5,7 @@
 import { Command } from '@effect/cli';
 import { Effect } from 'effect';
 
-import { ClientService } from '../../services';
+import { ClientService } from '../../../services';
 
 export const handler = Effect.fn(function* () {
   const client = yield* ClientService;
