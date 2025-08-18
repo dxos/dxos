@@ -6,9 +6,8 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
+import { type Commit } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
-
-import { type Commit } from '../components';
 
 enum IconType {
   // General status.
@@ -120,7 +119,7 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           id: getToolResultId(message.id, block.toolCallId),
           branch,
           parent,
-          icon: block.error ? IconType.X : IconType.CHECK,
+          icon: block.error ? IconType.ERROR : IconType.CHECK,
           message: block.error ? block.error : block.name,
         };
       case 'status':
