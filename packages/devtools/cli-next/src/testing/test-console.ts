@@ -45,6 +45,7 @@ class TestConsoleService {
   }
 }
 
+// TODO(burdon): We could have a single namespace "Testing" with all test utilities.
 export namespace TestConsole {
   export class TestConsole extends Context.Tag('TestConsole')<TestConsole, TestConsoleService>() {}
 
