@@ -5,12 +5,12 @@
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
-import { json } from '../../options';
+import { Common } from '../../options';
 
 export const status = Command.make(
   'status',
   {
-    json,
+    json: Common.json,
   },
   Effect.fn(function* ({ json }) {
     if (json) {
