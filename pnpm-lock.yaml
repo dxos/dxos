@@ -14211,6 +14211,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4
