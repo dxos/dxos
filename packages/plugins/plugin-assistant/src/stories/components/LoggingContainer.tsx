@@ -9,9 +9,8 @@ import React, { useRef } from 'react';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { type ScrollController } from '@dxos/react-ui-components';
+import { type ScrollController, Timeline } from '@dxos/react-ui-components';
 
-import { Timeline } from '../../components';
 import { useExecutionGraph } from '../../hooks';
 import { meta } from '../../meta';
 import { Assistant } from '../../types';
