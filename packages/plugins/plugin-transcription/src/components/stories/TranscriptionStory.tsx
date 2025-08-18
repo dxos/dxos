@@ -33,9 +33,11 @@ export const TranscriptionStory: FC<{
           onClick={() => onRunningChange((running) => !running)}
         />
       </Toolbar.Root>
-      <ScrollContainer pin>
-        <Transcript space={space} model={model} attendableId='story' />
-      </ScrollContainer>
+      <ScrollContainer.Root pin>
+        <ScrollContainer.Content>
+          <Transcript space={space} model={model} attendableId='story' />
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     </div>
   );
 };
