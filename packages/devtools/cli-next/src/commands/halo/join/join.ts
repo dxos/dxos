@@ -5,37 +5,51 @@
 import { Args, Command, Prompt } from '@effect/cli';
 import { Effect, Match } from 'effect';
 
+import { type Client } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { invariant } from '@dxos/invariant';
 
-import { ClientService } from '../../services';
+import { ClientService } from '../../../services';
 
 const invitationCode = Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.'));
 
-export const joinIdentity = Effect.fn(function* ({ invitationCode: encoded }: { invitationCode: string }) {
-  const client = yield* ClientService;
-  // TODO(wittjosiah): How to surface this error to the user cleanly?
-  invariant(!client.halo.identity.get(), 'Identity already exists');
+export const join = Command.make(
+  'join',
+  {
+    invitationCode,
+  },
+  Effect.fn(function* ({ invitationCode }) {
+    const client = yield* ClientService;
+    // TODO(wittjosiah): How to surface this error to the user cleanly?
+    invariant(!client.halo.identity.get(), 'Identity already exists');
 
+    const identity = yield* sendInvitation({ client, invitationCode });
+    yield* Effect.log('Identity key:', identity?.identityKey?.toHex());
+    yield* Effect.log('Display name:', identity?.profile?.displayName);
+  }),
+).pipe(Command.withDescription('Join an existing identity using an invitation code.'));
+
+const sendInvitation = Effect.fn(function* ({
+  client,
+  invitationCode: encoded,
+}: {
+  client: Client;
+  invitationCode: string;
+}) {
   if (encoded.startsWith('http') || encoded.startsWith('socket')) {
     const searchParams = new URLSearchParams(encoded.substring(encoded.lastIndexOf('?')));
     encoded = searchParams.get('deviceInvitationCode') ?? encoded;
   }
+
   const invitationCode = InvitationEncoder.decode(encoded);
   const invitation = client.halo.join(invitationCode);
   yield* waitForState(invitation, Invitation.State.READY_FOR_AUTHENTICATION);
+
   const authCode = yield* Prompt.text({ message: 'Enter the authentication code' }).pipe(Prompt.run);
   yield* Effect.tryPromise(() => invitation.authenticate(authCode));
   yield* waitForState(invitation, Invitation.State.SUCCESS);
-
-  const identity = client.halo.identity.get();
-  yield* Effect.log('Identity key:', identity?.identityKey?.toHex());
-  yield* Effect.log('Display name:', identity?.profile?.displayName);
+  return client.halo.identity.get();
 });
-
-export const join = Command.make('join', { invitationCode }, joinIdentity).pipe(
-  Command.withDescription('Join an existing identity with an invitation code.'),
-);
 
 const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
   Effect.gen(function* () {
