@@ -7,7 +7,7 @@ import { NodeContext } from '@effect/platform-node';
 import { assert, describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { TestConsole, testConsole, withTestConsole } from '../../../testing';
+import { TestConsole } from '../../../testing';
 
 import { status } from './status';
 
@@ -21,11 +21,10 @@ const run = status.pipe(
 describe('status', () => {
   it('should show status and capture console output', () =>
     Effect.gen(function* () {
-      const logger = yield* TestConsole;
+      const logger = yield* TestConsole.TestConsole;
       // TODO(burdon): Create array of tests.
       {
-        yield* run(['dx', 'status']); //.pipe(Console.withConsole(logger.console));
-        console.log('===', logger.logs);
+        yield* run(['dx', 'status']);
         assert.deepStrictEqual(logger.logs.at(0), { level: 'log', args: ['ok'], message: 'ok' });
       }
       {
@@ -35,7 +34,7 @@ describe('status', () => {
       }
     }).pipe(
       //
-      Effect.provide(Layer.mergeAll(testConsole, withTestConsole, NodeContext.layer)),
+      Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)),
       Effect.scoped,
       Effect.runPromise,
     ));

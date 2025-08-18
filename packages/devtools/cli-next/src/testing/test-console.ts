@@ -10,7 +10,7 @@ function logToString(...args: any[]): string {
   return args
     .map((arg) => {
       if (typeof arg === 'string') {
-        return arg; // console.log prints raw strings, no quotes
+        return arg;
       }
 
       return util.inspect(arg, { colors: false, depth: null });
@@ -18,7 +18,7 @@ function logToString(...args: any[]): string {
     .join(' ');
 }
 
-export class TestConsoleImpl {
+class TestConsoleService {
   private _logs: Array<{ level: string; args: unknown; message: string }> = [];
 
   readonly console: Console.Console;
@@ -45,22 +45,20 @@ export class TestConsoleImpl {
   }
 }
 
-export class TestConsole extends Context.Tag('TestConsole')<TestConsole, TestConsoleImpl>() {}
+export namespace TestConsole {
+  export class TestConsole extends Context.Tag('TestConsole')<TestConsole, TestConsoleService>() {}
 
-export const testConsole: Layer.Layer<TestConsole, never, Console.Console> = Layer.effect(
-  TestConsole,
-  Effect.gen(function* () {
-    return new TestConsoleImpl(yield* Effect.console);
-  }),
-);
+  const testConsole = Layer.effect(
+    TestConsole,
+    Effect.gen(function* () {
+      return new TestConsoleService(yield* Effect.console);
+    }),
+  );
 
-export const withTestConsole: Layer.Layer<never, never, TestConsole> = Effect.gen(function* () {
-  const { console } = yield* TestConsole;
-  return Console.setConsole(console);
-}).pipe(Layer.unwrapEffect);
+  const setConsole = Effect.gen(function* () {
+    const { console } = yield* TestConsole;
+    return Console.setConsole(console);
+  }).pipe(Layer.unwrapEffect);
 
-export const TestConsoleLayer: Layer.Layer<TestConsole, never, Console.Console> = Layer.mergeAll(
-  //
-  testConsole,
-  withTestConsole,
-);
+  export const layer = Layer.provideMerge(setConsole, testConsole);
+}
