@@ -63,7 +63,7 @@ const CardSurfaceRoot = ({
     return (
       <CardStaticRoot
         classNames={[
-          role === 'card--transclusion' && 'mlb-[1em]',
+          role === 'card--transclusion' && 'mlb-1',
           role === 'card--transclusion' && hoverableControls,
           classNames,
         ]}

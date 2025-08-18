@@ -132,7 +132,7 @@ const generateCommit = (
 };
 
 const meta: Meta<typeof Timeline> = {
-  title: 'plugins/plugin-assistant/Timeline',
+  title: 'ui/react-ui-components/Timeline',
   component: Timeline,
   decorators: [
     withTheme,
@@ -198,6 +198,10 @@ export const Empty: Story = {};
 
 export const Random: Story = {
   args: generateCommits(100),
+};
+
+export const Compact: Story = {
+  args: { ...generateCommits(100), compact: true },
 };
 
 export const Streaming: Story = {

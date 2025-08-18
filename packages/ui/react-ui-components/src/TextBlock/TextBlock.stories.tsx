@@ -9,26 +9,31 @@ import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { TextBlock } from './TextBlock';
 
-export const DefaultStory = ({ blocks, period = 200 }: { blocks: string[]; period?: number }) => {
+const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: number }) => {
   const [text, setText] = useState('');
   const [refresh, setRefresh] = useState({});
 
   useEffect(() => {
+    if (!blocks) {
+      return;
+    }
+
     let i = 0;
-    const interval = setInterval(() => {
-      if (i >= blocks.length - 1) {
+    const t = setInterval(() => {
+      if (i >= blocks.length) {
         clearInterval(interval);
       } else {
-        setText((text) => text + ' ' + blocks[i]);
+        setText((text) => text + blocks[i]);
       }
       i++;
-    }, period);
+    }, interval);
 
-    return () => clearInterval(interval);
-  }, [blocks, period, refresh]);
+    return () => clearInterval(t);
+  }, [blocks, interval, refresh]);
 
   return (
     <div>
@@ -60,17 +65,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+function splitIntoWordChunks(text: string, wordsPerChunk: number): string[] {
+  const words = text.split(/\s+/);
+  const chunks: string[] = [];
+  for (let i = 0; i < words.length; i += wordsPerChunk) {
+    chunks.push(words.slice(i, i + wordsPerChunk).join(' ') + ' ');
+  }
+
+  return chunks;
+}
+
 export const Default: Story = {
   args: {
-    blocks: [
-      'Hello! How can I',
-      "help you today? I'm ready",
-      'to assist you with tasks',
-      'related to reading or writing',
-      'documents using the available',
-      'tools. Is there a specific',
-      "document you'd like to work",
-      'with or a task you need help with?',
-    ],
+    blocks: splitIntoWordChunks(
+      trim`
+        Markdown is a lightweight markup language used to format plain text in a simple and readable way. It allows you to create structured documents using conventions for headings, lists, emphasis (bold/italic), links, images, code, blockquotes, tables, and horizontal rules. The goal is to make the text readable in its raw form while also enabling easy conversion to HTML or other formatted outputs. It’s widely used in documentation, note-taking, and online writing.
+        Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
+        There are also extended flavors of Markdown (like GitHub Flavored Markdown) that add features such as checkboxes, footnotes, and task lists, expanding its capabilities for more complex documents.
+        Markdown’s simplicity makes it ideal for writing structured content quickly while keeping the source clean and readable.
+        If you want, I can also break down how Markdown parsing actually works behind the scenes, which explains how these plain-text symbols get converted to formatted output. Do you want me to do that?
+      `,
+      5,
+    ),
   },
 };

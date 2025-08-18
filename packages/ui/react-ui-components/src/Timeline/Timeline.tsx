@@ -7,16 +7,31 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Move to react-ui-components?
+import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
-const lineHeight = 24;
-const columnWidth = 14;
-const nodeRadius = 4;
-const lineStyle = 'stroke-1';
+export type TimelineOptions = {
+  lineHeight: number;
+  columnWidth: number;
+  nodeRadius: number;
+  lineStyle: string;
+};
+
+export const defaultOptions: TimelineOptions = {
+  lineHeight: 24,
+  columnWidth: 14,
+  nodeRadius: 5,
+  lineStyle: 'stroke-2',
+};
+
+export const compactOptions: TimelineOptions = {
+  lineHeight: 20,
+  columnWidth: 12,
+  nodeRadius: 4,
+  lineStyle: 'stroke-1',
+};
 
 /**
  * Mercurial-style Commit.
@@ -37,6 +52,8 @@ export type TimelineProps = ThemedClassName<{
   branches?: string[];
   commits?: Commit[];
   showIcon?: boolean;
+  compact?: boolean;
+  options?: TimelineOptions;
   debug?: boolean;
   onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
 }>;
@@ -48,7 +65,16 @@ const empty = Object.freeze([]);
  */
 export const Timeline = forwardRef<ScrollController, TimelineProps>(
   (
-    { classNames, branches: _branches, commits = empty, showIcon = true, debug = false, onCurrentChange },
+    {
+      classNames,
+      branches: _branches,
+      commits = empty,
+      showIcon = true,
+      compact = false,
+      options = compact ? compactOptions : defaultOptions,
+      debug = false,
+      onCurrentChange,
+    },
     forwardedRef,
   ) => {
     const scrollerRef = useForwardedRef(forwardedRef);
@@ -171,8 +197,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer pin ref={scrollerRef}>
-        <div tabIndex={0} className={mx('flex flex-col is-full !outline-none', classNames)} ref={containerRef}>
+      <ScrollContainer.Root pin ref={scrollerRef}>
+        <ScrollContainer.Content
+          classNames={['flex flex-col is-full !outline-none', classNames]}
+          tabIndex={0}
+          ref={containerRef}
+        >
           {commits.map((commit, index) => {
             // Skip branches that are not whitelisted.
             const idx = getBranchIndex(commit.branch);
@@ -190,7 +220,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                   // TODO(burdon): Factor out fragment.
                   'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
                 )}
-                style={{ height: `${lineHeight}px` }}
+                style={{ height: `${options.lineHeight}px` }}
                 onClick={() => setCurrent(index)}
               >
                 <div className='flex shrink-0'>
@@ -200,6 +230,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     index={index}
                     commit={commit}
                     currentCommit={currentCommit}
+                    options={options}
                   />
                 </div>
                 {showIcon && (
@@ -215,8 +246,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
               </div>
             );
           })}
-        </div>
-      </ScrollContainer>
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     );
   },
 );
@@ -225,8 +256,6 @@ type Span = {
   start: number;
   end: number;
 };
-
-const cx = (c: number) => c * columnWidth + columnWidth / 2;
 
 const colors = [
   { stroke: 'stroke-orange-500', fill: 'group-aria-[current=true]:fill-orange-500' },
@@ -257,14 +286,17 @@ const LineVector = ({
   index,
   commit,
   currentCommit,
+  options,
 }: {
   branches: readonly string[];
   spans: Map<string, Span>;
   index: number;
   commit: Commit;
   currentCommit: Commit | undefined;
+  options: TimelineOptions;
 }) => {
-  const halfHeight = lineHeight / 2;
+  const halfHeight = options.lineHeight / 2;
+  const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
   const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
 
   // Create connector path.
@@ -275,16 +307,15 @@ const LineVector = ({
 
     // Vertical connectors.
     if (span.start < index && index < span.end) {
-      return `M ${cx(branchIndex)} 0 l 0 ${lineHeight}`;
+      return `M ${cx(branchIndex)} 0 l 0 ${options.lineHeight}`;
     } else if (commit.branch === branch && parents.length > 0) {
       return `M ${cx(branchIndex)} 0 l 0 ${halfHeight}`;
     } else if (commit.branch === branch && index < span.end) {
-      return `M ${cx(branchIndex)} ${halfHeight} l 0 ${lineHeight}`;
+      return `M ${cx(branchIndex)} ${halfHeight} l 0 ${options.lineHeight}`;
     }
 
-    // TODO(burdon): Assumes can only branch to the right.
-
     // Branch.
+    // TODO(burdon): Assumes can only branch to the right.
     if (commit.branch !== branch && index === span.start) {
       return trim`
         M ${cx(commitIndex)} ${halfHeight}
@@ -305,10 +336,13 @@ const LineVector = ({
 
   const col = branches.findIndex((branch) => branch === commit.branch);
   const color = colors[col % colors.length];
-  const opacity = (branch: string | undefined) => (branch === currentCommit?.branch ? 'opacity-100' : 'opacity-80');
+  const opacity = (branch: string | undefined) => [
+    'duration-500 transition-opacity',
+    branch === currentCommit?.branch ? 'opacity-100' : 'opacity-50',
+  ];
 
   return (
-    <svg width={branches.length * columnWidth} height={lineHeight}>
+    <svg width={branches.length * options.columnWidth} height={options.lineHeight}>
       {/* Connectors */}
       {branches.map((branch, col) => {
         const color = colors[col % colors.length];
@@ -318,15 +352,21 @@ const LineVector = ({
           return null;
         }
 
-        return <path key={col} d={path} fill='none' className={mx(lineStyle, color.stroke, opacity(branch))} />;
+        return <path key={col} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />;
       })}
 
       {/* Node */}
       <circle
         cx={cx(col)}
         cy={halfHeight}
-        r={nodeRadius}
-        className={mx('fill-baseSurface', lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+        r={options.nodeRadius}
+        className={mx('fill-baseSurface stroke-baseSurface')}
+      />
+      <circle
+        cx={cx(col)}
+        cy={halfHeight}
+        r={options.nodeRadius}
+        className={mx('fill-baseSurface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
       />
     </svg>
   );
