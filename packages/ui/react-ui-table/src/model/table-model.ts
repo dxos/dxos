@@ -12,14 +12,13 @@ import {
   type JsonProp,
   type JsonSchemaType,
   getSchema,
-  getSnapshot,
   getValue,
   setValue,
   toEffectSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { isLiveObject } from '@dxos/live-object';
+import { getSnapshot, isLiveObject } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
