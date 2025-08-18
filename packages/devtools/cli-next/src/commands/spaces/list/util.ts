@@ -2,31 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
 import { Effect } from 'effect';
 
 import { type PublicKey } from '@dxos/client';
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { ClientService } from '../../services';
-
-export const listSpaces = Effect.fn(function* () {
-  const client = yield* ClientService;
-  const spaces = client.spaces.get();
-  const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-  yield* Effect.log(JSON.stringify(formattedSpaces, null, 2));
-});
-
-export const list = Command.make('list', {}, listSpaces).pipe(
-  Command.withDescription('List all spaces available on this device.'),
-);
-
 // TODO(wittjosiah): Factor out.
 const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
 // TODO(wittjosiah): Use @effect/printer.
-const formatSpace = Effect.fn(function* (space: Space, options = { verbose: false, truncateKeys: false }) {
+export const formatSpace = Effect.fn(function* (space: Space, options = { verbose: false, truncateKeys: false }) {
   yield* Effect.tryPromise(() => space.waitUntilReady());
 
   // TODO(burdon): Factor out.

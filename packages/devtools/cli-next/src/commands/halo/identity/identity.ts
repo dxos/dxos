@@ -5,9 +5,9 @@
 import { Command } from '@effect/cli';
 import { Effect } from 'effect';
 
-import { ClientService } from '../../services';
+import { ClientService } from '../../../services';
 
-export const getIdentity = Effect.fn(function* () {
+export const handler = Effect.fn(function* () {
   const client = yield* ClientService;
   const identity = client.halo.identity.get();
   if (!identity) {
@@ -21,6 +21,6 @@ export const getIdentity = Effect.fn(function* () {
   }
 });
 
-export const identity = Command.make('identity', {}, getIdentity).pipe(
+export const identity = Command.make('identity', {}, handler).pipe(
   Command.withDescription('Get the current identity.'),
 );

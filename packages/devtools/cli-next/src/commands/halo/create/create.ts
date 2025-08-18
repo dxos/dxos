@@ -7,14 +7,14 @@ import { Effect, Option } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { ClientService } from '../../services';
+import { ClientService } from '../../../services';
 
 const displayName = Options.text('displayName').pipe(
   Options.withDescription('The display name of the identity.'),
   Options.optional,
 );
 
-export const createIdentity = Effect.fn(function* ({ displayName }: { displayName: Option.Option<string> }) {
+export const handler = Effect.fn(function* ({ displayName }: { displayName: Option.Option<string> }) {
   const client = yield* ClientService;
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
@@ -26,6 +26,10 @@ export const createIdentity = Effect.fn(function* ({ displayName }: { displayNam
   yield* Effect.log('Display name:', identity.profile?.displayName);
 });
 
-export const create = Command.make('create', { displayName }, createIdentity).pipe(
-  Command.withDescription('Create a new identity.'),
-);
+export const create = Command.make(
+  'create',
+  {
+    displayName,
+  },
+  handler,
+).pipe(Command.withDescription('Create a new identity.'));
