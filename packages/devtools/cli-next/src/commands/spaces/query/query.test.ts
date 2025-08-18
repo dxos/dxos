@@ -32,7 +32,7 @@ describe('spaces query', () => {
       yield* handler({ spaceId: client.spaces.default.id, typename: DataType.Task.typename });
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      expect(logs[0].message).toEqual(['[]']);
+      expect(logs[0].args).toEqual(['[]']);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 
   it('should query space for objects', () =>
@@ -48,7 +48,7 @@ describe('spaces query', () => {
       yield* handler({ spaceId: space.id, typename: DataType.Task.typename });
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      const formattedObjects = JSON.parse(logs[0].message as string);
+      const formattedObjects = JSON.parse(logs[0].args as string);
       expect(formattedObjects).toHaveLength(2);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import util from 'util';
+import util from 'node:util';
 
 import { Console, Context, Effect, Layer } from 'effect';
 

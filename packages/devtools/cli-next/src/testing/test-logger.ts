@@ -6,11 +6,12 @@ import { Effect, type LogLevel, Logger } from 'effect';
 
 type LogEntry = {
   logLevel: LogLevel.LogLevel;
-  /** Array of log args. */
-  // TODO(burdon): Rename args.
-  message: unknown;
+  args: unknown;
 };
 
+/**
+ * @deprecated
+ */
 export class TestLogger {
   static readonly layer = (logger: TestLogger) => Logger.replace(Logger.defaultLogger, logger.logger);
 
@@ -26,7 +27,7 @@ export class TestLogger {
 
   get logger() {
     return Logger.make(({ logLevel, message }) => {
-      this.logs.push({ logLevel, message });
+      this.logs.push({ logLevel, args: message });
       return Effect.void;
     });
   }
@@ -42,7 +43,7 @@ export class TestLogger {
   // TODO(burdon): Support regexp.
   getLogsByMessage(message: string) {
     // TODO(burdon): log.message is always an array?
-    return this.logs.filter((log) => typeof log.message === 'string' && log.message.includes(message));
+    return this.logs.filter((log) => typeof log.args === 'string' && log.args.includes(message));
   }
 
   getLogsByFunction(predicate: (log: LogEntry) => boolean) {

@@ -22,7 +22,7 @@ describe('spaces list', () => {
       yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      expect(logs[0].message).toEqual(['[]']);
+      expect(logs[0].args).toEqual(['[]']);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 
   it('should list spaces', () =>
@@ -33,7 +33,7 @@ describe('spaces list', () => {
       yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
-      const formattedSpaces = JSON.parse(logs[0].message as string);
+      const formattedSpaces = JSON.parse(logs[0].args as string);
       expect(formattedSpaces).toHaveLength(2);
     }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
 });
