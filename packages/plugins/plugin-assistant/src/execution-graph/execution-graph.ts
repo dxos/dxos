@@ -119,7 +119,7 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
           id: getToolResultId(message.id, block.toolCallId),
           branch,
           parent,
-          icon: block.error ? IconType.ERROR : IconType.CHECK,
+          icon: block.error ? IconType.X : IconType.CHECK,
           message: block.error ? block.error : block.name,
         };
       case 'status':
