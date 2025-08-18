@@ -18,10 +18,6 @@ export const listSpaces = Effect.fn(function* () {
   yield* Effect.log(JSON.stringify(formattedSpaces, null, 2));
 });
 
-export const list = Command.make('list', {}, listSpaces).pipe(
-  Command.withDescription('List all spaces available on this device.'),
-);
-
 // TODO(wittjosiah): Factor out.
 const maybeTruncateKey = (key: PublicKey, truncate = false) => (truncate ? truncateKey(key) : key.toHex());
 
@@ -90,3 +86,7 @@ const getSyncIndicator = (up: boolean, down: boolean) => {
     }
   }
 };
+
+export const list = Command.make('list', {}, listSpaces).pipe(
+  Command.withDescription('List all spaces available on this device.'),
+);

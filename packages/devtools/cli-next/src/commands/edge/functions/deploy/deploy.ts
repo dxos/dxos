@@ -24,115 +24,101 @@ import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
-import { ClientService } from '../../services';
-import { waitForSync } from '../../util';
+import { ClientService } from '../../../../services';
+import { waitForSync } from '../../../../util';
 
 const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
 
-const file = Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy'));
+export const deploy = Command.make(
+  'deploy',
+  {
+    file: Args.text({ name: 'file' }).pipe(Args.withDescription('The file to deploy.')),
+    // TODO(burdon): Human readable name?
+    name: Options.text('name').pipe(Options.withDescription('The name of the function.'), Options.optional),
+    version: Options.text('version').pipe(
+      Options.withDescription('The version of the function to deploy.'),
+      Options.optional,
+    ),
+    // TODO(burdon): Rename `script` or `source`? (no product names in infrastructure).
+    composerScript: Options.boolean('composerScript').pipe(
+      Options.withDescription('Loads the script into composer.'),
+      Options.withDefault(false),
+    ),
+    functionId: Options.text('functionId').pipe(
+      Options.withDescription('Existing UserFunction ID to update.'),
+      Options.optional,
+    ),
+    spaceId: Options.text('spaceId').pipe(
+      Options.withDescription('Space key to create/update Script source in.'),
+      Options.optional,
+    ),
+  },
+  Effect.fn(function* ({ file, name, version, composerScript, functionId, spaceId }) {
+    const { scriptFileContent, bundledScript } = yield* loadScript(file);
 
-const name = Options.text('name').pipe(
-  Options.withDescription('The name of the function to deploy.'),
-  Options.optional,
-);
-const version = Options.text('version').pipe(
-  Options.withDescription('The version of the function to deploy.'),
-  Options.optional,
-);
-const spaceId = Options.text('spaceId').pipe(
-  Options.withDescription('Space key to create/update Script source in.'),
-  Options.optional,
-);
-const functionId = Options.text('functionId').pipe(
-  Options.withDescription('Existing UserFunction ID to update.'),
-  Options.optional,
-);
-const composerScript = Options.boolean('composerScript').pipe(
-  Options.withDescription('Loads the script into composer.'),
-  Options.withDefault(false),
-);
+    const client = yield* ClientService;
+    const identity = client.halo.identity.get();
+    // TODO(wittjosiah): How to surface this error to the user?
+    invariant(identity, 'Identity not available');
 
-export const deployFunction = Effect.fn(function* ({
-  file,
-  name,
-  version,
-  composerScript,
-  functionId,
-  spaceId,
-}: {
-  file: string;
-  name: Option.Option<string>;
-  version: Option.Option<string>;
-  composerScript: boolean;
-  functionId: Option.Option<string>;
-  spaceId: Option.Option<string>;
-}) {
-  const { scriptFileContent, bundledScript } = yield* loadScript(file);
-
-  const client = yield* ClientService;
-  const identity = client.halo.identity.get();
-  // TODO(wittjosiah): How to surface this error to the user?
-  invariant(identity, 'Identity not available');
-
-  yield* spaceId.pipe(
-    // TODO(wittjosiah): Feedback about invalid space ID.
-    Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
-    Option.match({
-      onNone: () =>
-        upload({
-          ownerPublicKey: identity.identityKey,
-          bundledSource: bundledScript,
-          functionId: Option.getOrUndefined(functionId),
-          name: Option.getOrUndefined(name),
-          version: Option.getOrUndefined(version),
-        }),
-      onSome: (spaceId) =>
-        // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
-        Effect.gen(function* () {
-          client.addTypes(DATA_TYPES);
-          const space = client.spaces.get(spaceId);
-          invariant(space, 'Space not found');
-          yield* Effect.tryPromise(() => space.waitUntilReady());
-          const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
-          const uploadResult = yield* upload({
+    yield* spaceId.pipe(
+      // TODO(wittjosiah): Feedback about invalid space ID.
+      Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
+      Option.match({
+        onNone: () =>
+          upload({
             ownerPublicKey: identity.identityKey,
             bundledSource: bundledScript,
             functionId: Option.getOrUndefined(functionId),
-            fnObject: existingFunctionObject,
             name: Option.getOrUndefined(name),
             version: Option.getOrUndefined(version),
-          });
-          const functionObject = yield* upsertFunctionObject({
-            space,
-            existingObject: existingFunctionObject,
-            uploadResult,
-            file,
-            name: Option.getOrUndefined(name),
-          });
-          if (composerScript) {
-            yield* upsertComposerScript({
+          }),
+        onSome: (spaceId) =>
+          // TODO(wittjosiah): This was ported directly from the old CLI and is a mess, refactor.
+          Effect.gen(function* () {
+            client.addTypes(DATA_TYPES);
+            const space = client.spaces.get(spaceId);
+            invariant(space, 'Space not found');
+            yield* Effect.tryPromise(() => space.waitUntilReady());
+            const existingFunctionObject = yield* loadFunctionObject(space, Option.getOrUndefined(functionId));
+            const uploadResult = yield* upload({
+              ownerPublicKey: identity.identityKey,
+              bundledSource: bundledScript,
+              functionId: Option.getOrUndefined(functionId),
+              fnObject: existingFunctionObject,
+              name: Option.getOrUndefined(name),
+              version: Option.getOrUndefined(version),
+            });
+            const functionObject = yield* upsertFunctionObject({
               space,
-              functionObject,
-              scriptFileName: path.basename(file),
-              scriptFileContent,
+              existingObject: existingFunctionObject,
+              uploadResult,
+              file,
               name: Option.getOrUndefined(name),
             });
-          }
-          yield* waitForSync(space);
-        }),
-    }),
-  );
-});
+            if (composerScript) {
+              yield* upsertComposerScript({
+                space,
+                functionObject,
+                scriptFileName: path.basename(file),
+                scriptFileContent,
+                name: Option.getOrUndefined(name),
+              });
+            }
 
-export const deploy = Command.make(
-  'deploy',
-  { file, name, version, composerScript, functionId, spaceId },
-  deployFunction,
+            yield* waitForSync(space);
+          }),
+      }),
+    );
+  }),
 ).pipe(Command.withDescription('Deploy a function to EDGE.'));
+
+// TODO(burdon): Move to other files (keep main CLI file simple?)
 
 const loadScript = Effect.fn(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   let scriptFileContent: string | undefined;
+  // TODO(burdon): Use Effect.try?
   try {
     scriptFileContent = yield* fs.readFileString(path);
   } catch (err: any) {
@@ -150,7 +136,6 @@ const loadScript = Effect.fn(function* (path: string) {
 const bundleScript = Effect.fn(function* (path: string) {
   const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
   const buildResult = yield* Effect.tryPromise(() => bundler.bundle({ path }));
-
   if (buildResult.error || !buildResult.bundle) {
     return { error: buildResult.error || new Error('Bundle creation failed') };
   }

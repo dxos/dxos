@@ -10,9 +10,17 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../services';
 
-const invitationCode = Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.'));
+const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
+  Effect.gen(function* () {
+    const latch = yield* Effect.makeLatch();
+    const subscription = invitation.subscribe((invitation) => {
+      Match.value(invitation.state).pipe(Match.when(state, () => Effect.runSync(latch.open)));
+    });
+    yield* latch.await;
+    subscription.unsubscribe();
+  });
 
-export const joinIdentity = Effect.fn(function* ({ invitationCode: encoded }: { invitationCode: string }) {
+const handler = Effect.fn(function* ({ invitationCode: encoded }: { invitationCode: string }) {
   const client = yield* ClientService;
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
@@ -33,16 +41,10 @@ export const joinIdentity = Effect.fn(function* ({ invitationCode: encoded }: { 
   yield* Effect.log('Display name:', identity?.profile?.displayName);
 });
 
-export const join = Command.make('join', { invitationCode }, joinIdentity).pipe(
-  Command.withDescription('Join an existing identity with an invitation code.'),
-);
-
-const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
-  Effect.gen(function* () {
-    const latch = yield* Effect.makeLatch();
-    const subscription = invitation.subscribe((invitation) => {
-      Match.value(invitation.state).pipe(Match.when(state, () => Effect.runSync(latch.open)));
-    });
-    yield* latch.await;
-    subscription.unsubscribe();
-  });
+export const join = Command.make(
+  'join',
+  {
+    invitationCode: Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.')),
+  },
+  handler,
+).pipe(Command.withDescription('Join an existing identity using an invitation code.'));

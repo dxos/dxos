@@ -8,7 +8,7 @@ import { Effect, LogLevel } from 'effect';
 import { ClientService } from '../../services';
 import { TestLogger, testLayer } from '../../testing';
 
-import { getIdentity } from './identity';
+import { handler } from './identity';
 
 describe('halo identity', () => {
   const testLogger = new TestLogger();
@@ -19,7 +19,7 @@ describe('halo identity', () => {
 
   it('should log if identity is not initialized', () =>
     Effect.gen(function* () {
-      yield* getIdentity();
+      yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(1);
       expect(logs[0].message).toEqual(['Identity not initialized.']);
@@ -29,7 +29,7 @@ describe('halo identity', () => {
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' }));
-      yield* getIdentity();
+      yield* handler();
       const logs = testLogger.getLogsByLevel(LogLevel.Info);
       expect(logs).toHaveLength(2);
       expect(logs[0].message).toEqual(['Identity key:', client.halo.identity.get()?.identityKey.toHex()]);
