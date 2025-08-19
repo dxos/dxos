@@ -8,6 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { MarkdownViewer } from './MarkdownViewer';
 
@@ -23,37 +24,40 @@ export default meta;
 
 type Story = StoryObj<typeof MarkdownViewer>;
 
-const content = `
-# Hello, world!
+const content = trim`
+  # Hello World!
 
-${faker.lorem.paragraphs(1)}
+  > An example of the MarkdownViewer component.
 
-Here's a JSON block:
+  ${faker.lorem.paragraphs(1)}
 
-~~~json
-{
-  "hello": "world"
-}
-~~~
+  Here's a JSON block:
 
-And some code:
+  ~~~json
+  {
+    "hello": "world"
+  }
+  ~~~
 
-~~~ts
-const App = () => {
-  const title = 'Hello, world!';
-  return <div>{title}</div>;
-};
-~~~
+  And some code:
 
-${faker.lorem.paragraphs(1)}
+  ~~~tsx
+  import React from 'react'
 
-Based on my research, Notion was founded by <dxn:queue:data:BM7HDJOXAVPI6W2NXMJGLTOEIAHLFQAMH:01K2505JCCC060VYDNBYVQB9G6:01K2507FNEH8JFWYWFYNRT1JRN> and <dxn:queue:data:BM7HDJOXAVPI6W2NXMJGLTOEIAHLFQAMH:01K2505JCCC060VYDNBYVQB9G6:01K2507FNECDNJS603GB56S0VV> in 2013, with <dxn:queue:data:BM7HDJOXAVPI6W2NXMJGLTOEIAHLFQAMH:01K2505JCCC060VYDNBYVQB9G6:01K2507FNESXJ918FBAV7SXFE8> joining as a co-founder in 2018.
-The company <dxn:queue:data:BM7HDJOXAVPI6W2NXMJGLTOEIAHLFQAMH:01K2505JCCC060VYDNBYVQB9G6:01K2507FNE2SQBXS4S0T01S5Q4> has grown from a struggling startup to a $10 billion productivity platform with over 100 million users.
+  const App = () => {
+    const title = 'Hello, world!'
+    return <div>{title}</div>
+  }
+  ~~~
+
+  ## Examples
+
+  ${faker.lorem.paragraphs(1)}
 `;
 
 export const Default: Story = {
   args: {
-    classNames: 'w-[30rem] border border-border rounded-md p-4',
+    classNames: 'w-[30rem] border border-border rounded-md p-4 overflow-x-hidden overflow-y-auto',
     content,
   },
 };

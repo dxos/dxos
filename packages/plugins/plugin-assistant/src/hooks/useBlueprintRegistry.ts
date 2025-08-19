@@ -21,10 +21,13 @@ export const useBlueprintRegistry = () => {
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
+export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Blueprint.Registry }) =>
+  useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+
 /**
  * Create reactive map of active blueprints (by key).
  */
-export const useBlueprints = ({ context }: { context?: AiContextBinder }) => {
+export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
   useSignalEffect(() => {
     const refs = [...(context?.blueprints.value ?? [])];

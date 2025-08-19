@@ -5,12 +5,10 @@
 import { AgentStatus } from '@dxos/ai';
 import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
-import type { ObjectId } from '@dxos/keys';
+import { type ObjectId } from '@dxos/keys';
+import { type Commit } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 
-import type { Branch, Commit } from '../components';
-
-// TODO(dmaretskyi): Deduplicate. Importing from components causes an error.
 enum IconType {
   // General status.
   WARN = 'ph--warning-circle--regular',
@@ -66,10 +64,10 @@ export class ExecutionGraph {
   /**
    * Returns the current state of the graph.
    */
-  getGraph(): { commits: Commit[]; branches: Branch[] } {
+  getGraph(): { branches: string[]; commits: Commit[] } {
     return {
+      branches: Array.from(this._branchNames),
       commits: this._commits,
-      branches: Array.from(this._branchNames).map((name) => ({ name })),
     };
   }
 }

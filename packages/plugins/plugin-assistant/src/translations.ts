@@ -58,6 +58,9 @@ export const translations = [
         'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
+        'type filter placeholder': 'Type',
+        'idle type filter label': 'Any',
+        'no reference options label': 'No results',
 
         'sequence logs label': 'Logs',
 
@@ -68,7 +71,7 @@ export const translations = [
 
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
-
+        'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
 
@@ -79,10 +82,13 @@ export const translations = [
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
         'context objects placeholder': 'Add to context...',
-        'button add blueprint': 'Configure blueprints',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',
+        'blueprints in context title': 'Blueprints',
+        'objects in context title': 'Documents',
+        'remove object in context label': 'Remove document',
+        'chat model title': 'Model',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',

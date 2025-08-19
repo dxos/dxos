@@ -7,7 +7,7 @@ import { getRandomPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { EdgeClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
+import { EdgeClient, type EdgeHttpClient, MessageSchema, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
@@ -80,7 +80,8 @@ describe('EchoEdgeReplicator', () => {
   });
 
   const connectReplicator = async (client: EdgeClient, context: EchoReplicatorContext) => {
-    const replicator = new EchoEdgeReplicator({ edgeConnection: client });
+    // EdgeHttpClient functionality is not tested here.
+    const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
     await replicator.connect(context);
     onTestFinished(() => replicator.disconnect());
     return replicator;

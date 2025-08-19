@@ -9,9 +9,8 @@ import React, { useRef } from 'react';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { type ScrollController, Timeline } from '@dxos/react-ui-components';
 
-import { Timeline } from '../../components';
 import { useExecutionGraph } from '../../hooks';
 import { meta } from '../../meta';
 import { Assistant } from '../../types';
@@ -34,9 +33,7 @@ export const LoggingContainer = ({ space }: ComponentProps) => {
           onClick={() => scrollerRef.current?.scrollToBottom()}
         />
       </Toolbar.Root>
-      <ScrollContainer ref={scrollerRef}>
-        <Timeline branches={branches} commits={commits} />
-      </ScrollContainer>
+      <Timeline ref={scrollerRef} branches={branches} commits={commits} />
     </div>
   );
 };
