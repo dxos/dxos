@@ -243,7 +243,7 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test.only('new relations work as expected', async ({ browser, browserName }) => {
+  test('new relations work as expected', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: relationsStoryUrl });
