@@ -37,23 +37,16 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
                   // TODO(burdon): Sometimes hangs evem after logging OK.
                   // Cloudflare socket? (detected via `lsof -i`)
                   // 192.168.1.150:56747 -> 172.67.201.139:443
-                  const f = () => {
-                    if (process.env.DX_TRACK_LEAKS) {
-                      (globalThis as any).wtf.dump();
-                    }
-                  };
-                  f();
+                  if (process.env.DX_TRACK_LEAKS) {
+                    (globalThis as any).wtf.dump();
+                  }
                 }),
                 Effect.orDie,
               ),
 
               // Timeout.
               Effect.gen(function* () {
-                yield* Effect.sleep(10_000);
-                // if (process.env.DX_TRACK_LEAKS) {
-                //   (globalThis as any).wtf.dump();
-                // }
-
+                yield* Effect.sleep(5_000);
                 return yield* Effect.die(new Error('Shutdown timeout reached'));
               }).pipe(Effect.orDie),
             ]),
