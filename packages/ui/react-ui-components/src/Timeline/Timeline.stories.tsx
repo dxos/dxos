@@ -165,6 +165,18 @@ export const Default: Story = {
   },
 };
 
+export const Branch: Story = {
+  args: {
+    debug: true,
+    showIcon: false,
+    commits: [
+      { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
+      { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
+      { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+    ],
+  },
+};
+
 export const Merge: Story = {
   args: {
     debug: true,

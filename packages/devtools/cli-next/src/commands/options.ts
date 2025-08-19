@@ -18,4 +18,5 @@ export const Common = {
 
   spaceId: Options.text('spaceId').pipe(Options.withDescription('Space ID.')),
   typename: Options.text('typename').pipe(Options.withDescription('The typename to query.')),
+  verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose logging.')),
 };

@@ -36,6 +36,9 @@
       "path": "../../core/functions"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
