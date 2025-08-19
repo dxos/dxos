@@ -161,9 +161,6 @@ export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolve
   go(obj);
 };
 
-/**
- * @internal
- */
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
   if (descriptor) {
