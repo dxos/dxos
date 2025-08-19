@@ -6,7 +6,7 @@ import { Command, Options } from '@effect/cli';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
-// import { ClientService, ConfigService } from '../services';
+import { ClientService, ConfigService } from '../services';
 
 import { edge } from './edge';
 import { halo } from './halo';
@@ -28,16 +28,20 @@ export const dx = Command.make('dx', {
     Options.withDefault(ENV_DX_PROFILE_DEFAULT),
     Options.withAlias('p'),
   ),
+  verbose: Options.boolean('verbose').pipe(
+    //
+    Options.withDescription('Verbose logging.'),
+  ),
 }).pipe(
   Command.withSubcommands([
     //
     halo,
-    edge,
-    hub,
     spaces,
+    edge,
+    // TODO(burdon): Admin-only (separate dynamic module?)
+    hub,
   ]),
-  // TODO(wittjosiah): Will there be commands that don't need the client? Push down to subcommands?
-  // TODO(burdon): Doesn't close cleanly.
-  // Command.provide(ClientService.layer),
-  // Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
+  // TODO(wittjosiah): Create separate command path for clients that don't need the client.
+  Command.provide(ClientService.layer),
+  Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
 );
