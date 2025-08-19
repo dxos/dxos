@@ -103,7 +103,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-table/relations',
+  title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   parameters: { translations, controls: { disable: true } },
   decorators: [

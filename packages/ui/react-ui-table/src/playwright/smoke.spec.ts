@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { type DxGrid } from '@dxos/lit-grid';
+import { faker } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
@@ -283,6 +284,20 @@ test.describe('Table', () => {
 
     // Assert that the cell element has the org name
     await expect(targetCell).toHaveText(orgName);
+
+    // Make a change to a non-ref cell to check that populated refs don’t cause problems with snapshots or schemas.
+    await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
+      dxGridElement.scrollToColumn(6);
+    });
+
+    const nonRefContent = faker.lorem.words(3);
+    const nonRefCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="6"]');
+    await nonRefCell.click();
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+    await page.keyboard.type(nonRefContent, { delay: 500 });
+    await page.keyboard.press('Enter');
+    await expect(nonRefCell).toHaveText(nonRefContent);
 
     await page.close();
   });
