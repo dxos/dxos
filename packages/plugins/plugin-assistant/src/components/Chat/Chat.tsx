@@ -37,13 +37,6 @@ import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThrea
 
 import { type ChatEvent } from './events';
 
-// TODO(burdon): Factor out.
-const Endcap = ({ children }: PropsWithChildren) => {
-  return (
-    <div className='grid bs-[var(--rail-action)] is-[var(--rail-action)] items-center justify-center'>{children}</div>
-  );
-};
-
 const outlineClassNames =
   'p-2 bg-groupSurface border border-transparent rounded focus-within:outline focus-within:border-transparent outline-neutralFocusIndicator';
 
@@ -182,57 +175,63 @@ const ChatPrompt = ({
   return (
     <div
       className={mx(
-        'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
+        // 'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
+        'is-full flex flex-col',
         outline && outlineClassNames,
         classNames,
       )}
     >
-      <Endcap>
-        <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
-      </Endcap>
+      <div className='flex gap-2'>
+        <div className='p-1'>
+          <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
+        </div>
 
-      <ChatEditor
-        ref={editorRef}
-        autoFocus
-        lineWrapping
-        classNames='col-span-2 pis-1 pbs-2'
-        placeholder={placeholder ?? t('prompt placeholder')}
-        extensions={extensions}
-        onSubmit={handleSubmit}
-      />
+        <ChatEditor
+          ref={editorRef}
+          autoFocus
+          lineWrapping
+          classNames='col-span-2 pbs-0.5'
+          placeholder={placeholder ?? t('prompt placeholder')}
+          extensions={extensions}
+          onSubmit={handleSubmit}
+        />
+      </div>
 
-      <ChatOptions
-        space={space}
-        blueprintRegistry={processor.blueprintRegistry}
-        context={processor.context}
-        preset={preset}
-        presets={presets}
-        onPresetChange={onChangePreset}
-      />
+      <div className='flex items-center'>
+        <ChatOptions
+          space={space}
+          blueprintRegistry={processor.blueprintRegistry}
+          context={processor.context}
+          preset={preset}
+          presets={presets}
+          onPresetChange={onChangePreset}
+        />
 
-      <ChatActions
-        classNames='col-span-2'
-        microphone={true}
-        recording={recording}
-        processing={streaming}
-        onEvent={handleEvent}
-      >
         <div role='none' className='pli-cardSpacingChrome grow'>
           <ChatReferences space={space} context={processor.context} />
         </div>
-        {online !== undefined && (
-          <Input.Root>
-            <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-          </Input.Root>
-        )}
-        <IconButton
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('button cancel')}
-          onClick={() => processor.cancel()}
-        />
-      </ChatActions>
+
+        <ChatActions
+          classNames='col-span-2'
+          microphone={true}
+          recording={recording}
+          processing={streaming}
+          onEvent={handleEvent}
+        >
+          {online !== undefined && (
+            <Input.Root>
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
+            </Input.Root>
+          )}
+          <IconButton
+            variant='ghost'
+            icon='ph--x--regular'
+            iconOnly
+            label={t('button cancel')}
+            onClick={() => processor.cancel()}
+          />
+        </ChatActions>
+      </div>
     </div>
   );
 };

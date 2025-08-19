@@ -8,18 +8,14 @@ import Glob from 'glob';
 
 const glob = promisify(Glob.glob);
 
-/**
- *
- */
 // TODO(burdon): Comment.
 const knownIndirectPeers = [
-  '@dxos/gem-*',
+  '@dxos/devtools',
   '@dxos/react-*',
   '@dxos/react-ui-*',
-  '@dxos/devtools',
-  '@dxos/shell',
   // TODO(thure): glob v7 runs out of memory if we do a `**` search, and this is (hopefully) the only L3 content package; find a better solution.
   '@dxos/react-ui-table/node_modules/@dxos/react-ui-searchlist',
+  '@dxos/shell',
 ];
 
 const knownDirectPeers = ['@dxos/plugin-*', ...knownIndirectPeers];
@@ -33,6 +29,7 @@ const dedupe = (acc: Record<string, string>, path: string) => {
   if (name && !acc[name]) {
     acc[name] = path;
   }
+
   return acc;
 };
 
@@ -49,8 +46,6 @@ export const resolveKnownPeers = async (content: string[], cwd: string): Promise
   const knownPeerContent = Object.values(
     indirectPeers.reduce(flatten, []).reduce(dedupe, directPeers.reduce(flatten, []).reduce(dedupe, {})),
   ).map((value) => `${value}/dist/lib/**/*.mjs`);
-
-  // console.log('[found known peer content paths]', knownPeerContent);
 
   return [...content, ...knownPeerContent];
 };

@@ -17,7 +17,7 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const isBottom = (el: HTMLElement | null) => {
@@ -58,14 +58,13 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   const autoScrollRef = useRef(false);
   const [overflow, setOverflow] = useState(false);
   const [pinned, setPinned] = useState(pin);
-  const pinnedRef = useDynamicRef(pinned);
 
   const timeoutRef = useRef<NodeJS.Timeout>();
   const handleScrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     if (scrollerRef.current) {
       // Temporarily hide scrollbar to prevent flicker.
       autoScrollRef.current = true;
-      scrollerRef.current.classList.add('cm-hide-scrollbar');
+      scrollerRef.current.classList.add('scrollbar-none');
       scrollerRef.current.scrollTo({
         top: scrollerRef.current.scrollHeight,
         behavior,
@@ -74,7 +73,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
       clearTimeout(timeoutRef.current);
       if (behavior !== 'instant') {
         timeoutRef.current = setTimeout(() => {
-          // scrollerRef.current?.classList.remove('cm-hide-scrollbar');
+          scrollerRef.current?.classList.remove('scrollbar-none');
           autoScrollRef.current = false;
         }, 500);
       }

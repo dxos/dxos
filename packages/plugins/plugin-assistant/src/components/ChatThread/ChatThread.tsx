@@ -63,10 +63,12 @@ const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => 
   const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
 
   return (
-    <div className={mx('absolute bottom-0 right-4 opacity-100 transition-opacity duration-500', pinned && 'opacity-0')}>
+    <div className={mx('absolute bottom-0 right-6 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}>
       <IconButton
+        variant='primary'
         icon='ph--arrow-down--regular'
         iconOnly
+        size={5}
         label={t('button scroll down')}
         onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
       />
