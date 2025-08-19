@@ -8,10 +8,9 @@ import { Console, Effect, pipe } from 'effect';
 
 import { withRetry } from '@dxos/edge-client';
 
-import { Common } from '../../../options';
-
 // TODO(burdon): Circular dep.
 // import { dx } from '../../../dx';
+import { Common } from '../../../options';
 
 // export const list = Command.make(
 //   'list',
