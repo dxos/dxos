@@ -10,6 +10,11 @@ import { Options } from '@effect/cli';
 //
 
 export const Common = {
+  apiKey: Options.text('api-key').pipe(
+    Options.withDescription('API key.'),
+    Options.withDefault(process.env['DX_API_KEY']),
+  ),
+
   json: Options.boolean('json').pipe(Options.withDescription('Output in JSON format.')),
   timeout: Options.integer('timeout').pipe(
     Options.withDescription('The timeout before the command fails.'),

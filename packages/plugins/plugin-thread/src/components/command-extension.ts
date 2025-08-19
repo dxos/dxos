@@ -27,7 +27,10 @@ const parser = StreamLanguage.define<{ count: number }>({
 });
 
 const styles = HighlightStyle.define([
-  { tag: tags.tagName, class: mx('dx-tag dx-tag--indigo text-baseText font-medium') },
+  {
+    tag: tags.tagName,
+    class: mx('dx-tag dx-tag--indigo text-baseText font-medium'),
+  },
 ]);
 
 export const command: Extension = [parser, syntaxHighlighting(styles)];
