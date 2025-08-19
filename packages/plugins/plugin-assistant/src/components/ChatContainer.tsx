@@ -37,6 +37,8 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
   const blueprintRegistry = useBlueprintRegistry();
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
 
+  // TODO(burdon): Handle new chat.
+
   useEffect(() => {
     if (processor && onProcessorReady) {
       const timeout = setTimeout(() => onProcessorReady(processor));
