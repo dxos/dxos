@@ -3,18 +3,19 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Effect, Option } from 'effect';
+import { Console, Effect, Option } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../../services';
 
-const displayName = Options.text('displayName').pipe(
-  Options.withDescription('The display name of the identity.'),
-  Options.optional,
-);
-
-export const handler = Effect.fn(function* ({ displayName }: { displayName: Option.Option<string> }) {
+export const handler = Effect.fn(function* ({
+  agent,
+  displayName,
+}: {
+  agent: boolean;
+  displayName: Option.Option<string>;
+}) {
   const client = yield* ClientService;
   // TODO(wittjosiah): How to surface this error to the user cleanly?
   invariant(!client.halo.identity.get(), 'Identity already exists');
@@ -22,14 +23,28 @@ export const handler = Effect.fn(function* ({ displayName }: { displayName: Opti
   const identity = yield* Effect.tryPromise(() =>
     client.halo.createIdentity({ displayName: Option.getOrUndefined(displayName) }),
   );
-  yield* Effect.log('Identity key:', identity.identityKey.toHex());
-  yield* Effect.log('Display name:', identity.profile?.displayName);
+
+  if (agent) {
+    yield* Effect.tryPromise(() => {
+      invariant(client.services.services.EdgeAgentService, 'Missing EdgeAgentService');
+      return client.services.services.EdgeAgentService.createAgent(null as any, { timeout: 10_000 });
+    });
+  }
+
+  yield* Console.log(`Identity key: ${identity.identityKey.toHex()}`);
+  yield* Console.log(`Display name: ${identity.profile?.displayName}`);
 });
 
 export const create = Command.make(
   'create',
   {
-    displayName,
+    agent: Options.boolean('noAgent', { ifPresent: false }).pipe(
+      Options.withDescription('Do not create an EDGE agent for the identity.'),
+    ),
+    displayName: Options.text('displayName').pipe(
+      Options.withDescription('The display name of the identity.'),
+      Options.optional,
+    ),
   },
   handler,
 ).pipe(Command.withDescription('Create a new identity.'));
