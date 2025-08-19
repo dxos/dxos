@@ -200,7 +200,7 @@ export const WithChess = {
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/chess'],
   },
 } satisfies Story;
