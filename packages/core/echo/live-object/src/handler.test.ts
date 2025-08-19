@@ -6,6 +6,7 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
+import { ATTR_META } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
@@ -13,7 +14,6 @@ import { isNode } from '@dxos/util';
 import type { Live } from './live';
 import { live } from './object';
 import { objectData } from './proxy';
-import { ATTR_META } from '@dxos/echo-schema';
 
 registerSignalsRuntime();
 
