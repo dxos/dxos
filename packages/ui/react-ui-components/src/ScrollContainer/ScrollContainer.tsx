@@ -106,24 +106,14 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
       return;
     }
 
-    // Listen for scroll events.
-    let hitBottom = false;
-    let wheelTimeout: NodeJS.Timeout | undefined = undefined;
     return combine(
+      // Check if user scrolls.
       addEventListener(scrollerRef.current, 'wheel', () => {
-        pinnedRef.current = wheelTimeout ? isBottom(scrollerRef.current) : false;
-        // Wheel event will continue due to momentum.
-        hitBottom = hitBottom || pinnedRef.current;
-        clearTimeout(wheelTimeout);
-        wheelTimeout = setTimeout(() => {
-          wheelTimeout = undefined;
-          pinnedRef.current = hitBottom;
-          hitBottom = false;
-        }, 200);
+        setPinned(isBottom(scrollerRef.current));
       }),
+      // Check if scrolls.
       addEventListener(scrollerRef.current, 'scroll', () => {
         setOverflow((scrollerRef.current?.scrollTop ?? 0) > 0);
-        pinnedRef.current = isBottom(scrollerRef.current);
       }),
     );
   }, []);
@@ -193,5 +183,7 @@ export const ScrollContainer = {
   Root,
   Content,
 };
+
+export { useScrollContainerContext };
 
 export type { RootProps as ScrollContainerRootProps, ContentProps as ScrollContainerContentProps };

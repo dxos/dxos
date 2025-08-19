@@ -6,10 +6,13 @@ import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController, useScrollContainerContext } from '@dxos/react-ui-components';
+import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
+
+import { meta } from '../../meta';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
@@ -23,7 +26,7 @@ export type ChatThreadProps = ThemedClassName<
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages, collapse = true, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages, collapse = true, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -42,14 +45,33 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     return (
       <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
         <ScrollContainer.Content
-          classNames='flex flex-col gap-2 pbs-2 pbe-2'
+          classNames='relative flex flex-col gap-2 pbs-2 pbe-2'
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ChatMessage key={message.id} message={message} {...props} />
+            <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
         </ScrollContainer.Content>
+        <ScrollToBottomButton onEvent={onEvent} />
       </ScrollContainer.Root>
     );
   },
 );
+
+const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => {
+  const { t } = useTranslation(meta.id);
+  const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
+
+  return (
+    <div className={mx('absolute bottom-0 right-4 opacity-100 transition-opacity duration-500', pinned && 'opacity-0')}>
+      <IconButton
+        icon='ph--arrow-down--regular'
+        iconOnly
+        label={t('button scroll down')}
+        onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
+      />
+    </div>
+  );
+};
+
+ScrollToBottomButton.displayName = 'ScrollToBottomButton';
