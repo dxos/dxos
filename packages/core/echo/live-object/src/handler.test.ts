@@ -13,6 +13,7 @@ import { isNode } from '@dxos/util';
 import type { Live } from './live';
 import { live } from './object';
 import { objectData } from './proxy';
+import { ATTR_META } from '@dxos/echo-schema';
 
 registerSignalsRuntime();
 
@@ -63,13 +64,23 @@ for (const schema of [undefined, Testing.TestSchemaWithClass]) {
       test('toJSON', () => {
         const original = { classInstance: new Testing.TestClass() };
         const reactive = createObject(original);
-        expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
+        if (!schema) {
+          expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
+        } else {
+          expect(JSON.stringify(reactive)).to.eq(
+            JSON.stringify({
+              [ATTR_META]: {
+                keys: [],
+              },
+              ...original,
+            }),
+          );
+        }
       });
 
       test('chai deep equal works', () => {
         const original = { classInstance: new Testing.TestClass() };
         const reactive = createObject(original);
-        expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
         expect(reactive).to.deep.eq(original);
         expect(reactive).to.not.deep.eq({ ...original, number: 11 });
       });
