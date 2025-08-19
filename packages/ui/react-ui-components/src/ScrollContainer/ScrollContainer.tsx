@@ -17,7 +17,7 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const isBottom = (el: HTMLElement | null) => {
@@ -31,8 +31,9 @@ export interface ScrollController {
 }
 
 type ScrollContainerContextValue = {
+  scrollToBottom: (behavior?: ScrollBehavior) => void;
   controller?: ScrollController;
-  scrollToBottom: () => void;
+  pinned?: boolean;
 };
 
 const [ScrollContainerProvider, useScrollContainerContext] =
@@ -54,13 +55,14 @@ export type RootProps = ThemedClassName<
  */
 const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pin, fade }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const pinnedRef = useRef(pin);
   const autoScrollRef = useRef(false);
   const [overflow, setOverflow] = useState(false);
+  const [pinned, setPinned] = useState(pin);
+  const pinnedRef = useDynamicRef(pinned);
 
   const timeoutRef = useRef<NodeJS.Timeout>();
   const handleScrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    if (scrollerRef.current && pinnedRef.current) {
+    if (scrollerRef.current) {
       // Temporarily hide scrollbar to prevent flicker.
       autoScrollRef.current = true;
       scrollerRef.current.classList.add('cm-hide-scrollbar');
@@ -85,11 +87,11 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
       scrollToTop: () => {
         invariant(scrollerRef.current);
         scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        pinnedRef.current = false;
+        setPinned(false);
       },
       scrollToBottom: () => {
         handleScrollToBottom('instant');
-        pinnedRef.current = true;
+        setPinned(true);
       },
     }),
     [handleScrollToBottom, scrollerRef.current],
@@ -127,7 +129,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   }, []);
 
   return (
-    <ScrollContainerProvider scrollToBottom={handleScrollToBottom} controller={controller}>
+    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={handleScrollToBottom}>
       <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
         {fade && (
           <div
@@ -157,20 +159,22 @@ type ContentProps = ThemedClassName<PropsWithChildren<Omit<HTMLAttributes<HTMLDi
 
 const Content = forwardRef<HTMLDivElement, ContentProps>(({ classNames, children, ...props }, forwardedRef) => {
   const contentRef = useForwardedRef(forwardedRef);
-  const { scrollToBottom } = useScrollContainerContext(Content.displayName!);
+  const { pinned, scrollToBottom } = useScrollContainerContext(Content.displayName!);
 
   useEffect(() => {
-    if (!contentRef.current) {
+    if (!pinned || !contentRef.current) {
       return;
     }
 
     // Setup resize observer to detect content changes.
     const resizeObserver = new ResizeObserver(() => scrollToBottom());
+    scrollToBottom('instant');
+
     resizeObserver.observe(contentRef.current);
     return () => {
       resizeObserver.disconnect();
     };
-  }, [scrollToBottom]);
+  }, [pinned, scrollToBottom]);
 
   return (
     <div className={mx('is-full', classNames)} {...props} ref={contentRef}>
