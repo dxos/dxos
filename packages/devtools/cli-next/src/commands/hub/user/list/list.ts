@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import path from 'path';
+import path from 'node:path';
 
 import { Command } from '@effect/cli';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
