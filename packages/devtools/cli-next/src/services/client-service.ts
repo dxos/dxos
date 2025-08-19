@@ -8,6 +8,9 @@ import { Client } from '@dxos/client';
 
 import { ConfigService } from './config-service';
 
+// TODO(burdon): How to get this from options?
+const verbose = false;
+
 // TODO(wittjosiah): Factor out.
 export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
   static layer = Layer.scoped(
@@ -18,12 +21,15 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
       yield* Effect.tryPromise(() => client.initialize());
       yield* Effect.addFinalizer(() =>
         Effect.gen(function* () {
-          yield* Effect.log('Shutting down...');
+          if (verbose) {
+            yield* Effect.log('Shutting down...');
+          }
+
           yield* Effect.interruptible(
             Effect.raceFirst(
               // TODO(burdon): Sometimes hangs.
               Effect.tryPromise(() => client.destroy()).pipe(
-                Effect.tap(() => Effect.log('OK')),
+                Effect.tap(() => verbose && Effect.log('OK')),
                 Effect.orDie,
               ),
               // Timeout.

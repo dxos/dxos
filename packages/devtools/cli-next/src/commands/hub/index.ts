@@ -2,16 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Options } from '@effect/cli';
+import { Command } from '@effect/cli';
+
+import { Common } from '../options';
 
 import { user } from './user';
 
 export const hub = Command.make('hub', {
-  profile: Options.text('apikey').pipe(
-    //
-    Options.withDescription('Hub API key.'),
-    Options.withDefault(process.env['DX_API_KEY']),
-  ),
+  apiKey: Common.apiKey,
 }).pipe(
   //
   Command.withDescription('Manage Hub.'),
