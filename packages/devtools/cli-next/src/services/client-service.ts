@@ -9,7 +9,7 @@ import { Client } from '@dxos/client';
 import { ConfigService } from './config-service';
 
 // TODO(burdon): How to get this from options?
-const verbose = false;
+const verbose = true;
 
 // TODO(wittjosiah): Factor out.
 export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
@@ -25,22 +25,38 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
             yield* Effect.log('Shutting down...');
           }
 
+          // Make the finalizer effect interruptible.
           yield* Effect.interruptible(
-            Effect.raceFirst(
-              // TODO(burdon): Sometimes hangs.
+            Effect.raceAll([
+              // Effect.repeat(Console.log('action...'), Schedule.fixed('1 second')),
+
+              // Try to cleanly exit.
               Effect.tryPromise(() => client.destroy()).pipe(
                 Effect.tap(() => verbose && Effect.log('OK')),
+                Effect.tap(() => {
+                  // TODO(burdon): Sometimes hangs evem after logging OK.
+                  // Cloudflare socket? (detected via `lsof -i`)
+                  // 192.168.1.150:56747 -> 172.67.201.139:443
+                  const f = () => {
+                    if (process.env.DX_TRACK_LEAKS) {
+                      (globalThis as any).wtf.dump();
+                    }
+                  };
+                  f();
+                }),
                 Effect.orDie,
               ),
+
               // Timeout.
               Effect.gen(function* () {
-                yield* Effect.sleep(1_000);
-                if (process.env.DX_TRACK_LEAKS) {
-                  (globalThis as any).wtf.dump();
-                }
+                yield* Effect.sleep(10_000);
+                // if (process.env.DX_TRACK_LEAKS) {
+                //   (globalThis as any).wtf.dump();
+                // }
+
                 return yield* Effect.die(new Error('Shutdown timeout reached'));
               }).pipe(Effect.orDie),
-            ),
+            ]),
           );
         }),
       );

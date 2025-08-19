@@ -15,24 +15,21 @@ import { spaces } from './spaces';
 
 // TODO(wittjosiah): Env vars.
 
-export const dx = Command.make('dx', {
+export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
-    //
     Options.withDescription('Config file path.'),
     Options.withAlias('c'),
     Options.optional,
   ),
   profile: Options.text('profile').pipe(
-    //
     Options.withDescription('Profile for the config file.'),
     Options.withDefault(ENV_DX_PROFILE_DEFAULT),
     Options.withAlias('p'),
   ),
-  verbose: Options.boolean('verbose').pipe(
-    //
-    Options.withDescription('Verbose logging.'),
-  ),
-}).pipe(
+  verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose logging.')),
+});
+
+export const dx = command.pipe(
   Command.withSubcommands([
     //
     halo,
