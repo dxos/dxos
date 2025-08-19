@@ -6,6 +6,7 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
+import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 
@@ -105,62 +106,66 @@ const chatMessageToCommit = (message: DataType.Message): Commit[] => {
   return message.blocks.map((block, idx) => {
     const branch = getMessageBranch(message);
     const parent = getParentId(message);
+    const parents = parent ? [parent] : [];
     switch (block._tag) {
       case 'toolCall':
         return {
           id: getToolCallId(message.id, block.toolCallId),
           branch,
-          parent,
+          parents,
           icon: IconType.TOOL,
+          level: LogLevel.INFO,
           message: block.name,
-        };
+        } satisfies Commit;
       case 'toolResult':
         return {
           id: getToolResultId(message.id, block.toolCallId),
           branch,
-          parent,
+          parents,
           icon: block.error ? IconType.X : IconType.CHECK,
+          level: block.error ? LogLevel.ERROR : LogLevel.INFO,
           message: block.error ? block.error : block.name,
-        };
+        } satisfies Commit;
       case 'status':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
-          parent,
+          parents,
           message: block.statusText,
+          level: LogLevel.INFO,
           icon: IconType.FLAG,
-        };
+        } satisfies Commit;
       case 'reasoning':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
-          parent,
+          parents,
           message: block.reasoningText ?? 'Thinking...',
           icon: IconType.THINK,
-        };
+        } satisfies Commit;
       case 'text':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
-          parent,
+          parents,
           icon: message.sender.role === 'user' ? IconType.USER : IconType.AGENT,
           message: ellipsisEnd(block.text, 64),
-        };
+        } satisfies Commit;
       case 'reference':
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
-          parent,
+          parents,
           icon: IconType.LINK,
           message: stringifyRef(block.reference),
-        };
+        } satisfies Commit;
       default:
         return {
           id: getGenericBlockId(message.id, idx),
           branch,
-          parent,
+          parents,
           message: block._tag,
-        };
+        } satisfies Commit;
     }
   });
 };

@@ -6,10 +6,11 @@ import { Command, Options } from '@effect/cli';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
-import { ClientService, ConfigService } from '../services';
+// import { ClientService, ConfigService } from '../services';
 
 import { edge } from './edge';
 import { halo } from './halo';
+import { hub } from './hub';
 import { spaces } from './spaces';
 
 // TODO(wittjosiah): Env vars.
@@ -28,8 +29,15 @@ export const dx = Command.make('dx', {
     Options.withAlias('p'),
   ),
 }).pipe(
-  Command.withSubcommands([halo, edge, spaces]),
+  Command.withSubcommands([
+    //
+    halo,
+    edge,
+    hub,
+    spaces,
+  ]),
   // TODO(wittjosiah): Will there be commands that don't need the client? Push down to subcommands?
-  Command.provide(ClientService.layer),
-  Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
+  // TODO(burdon): Doesn't close cleanly.
+  // Command.provide(ClientService.layer),
+  // Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
 );
