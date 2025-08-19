@@ -1,8 +1,9 @@
 import { CredentialsService, defineFunction, type CredentialQuery } from '@dxos/functions';
 import { HttpBody, HttpClient, HttpClientRequest } from '@effect/platform';
 import { Effect, Redacted, Schema } from 'effect';
+import { apiKeyAuth, graphqlRequestBody } from '../../util';
 
-const gql = `
+const query = `
 query Team($teamId: String!) {
   team(id: $teamId) {
     id
@@ -48,7 +49,7 @@ export default defineFunction({
     const client = yield* HttpClient.HttpClient.pipe(Effect.map(apiKeyAuth({ service: 'linear.app' })));
 
     const response = yield* client.post('https://api.linear.app/graphql', {
-      body: yield* graphqlRequestBody(gql, {
+      body: yield* graphqlRequestBody(query, {
         teamId: data.team,
       }),
     });
@@ -56,24 +57,3 @@ export default defineFunction({
     return json.data.team.issues.edges.map((edge: any) => edge.node);
   }),
 });
-
-/**
- * Maps the request to include the API key from the credential.
- */
-const apiKeyAuth = (query: CredentialQuery) =>
-  HttpClient.mapRequestEffect(
-    Effect.fnUntraced(function* (request) {
-      return HttpClientRequest.setHeaders(request, {
-        Authorization: Redacted.value(yield* CredentialsService.getApiKey(query)),
-      });
-    }),
-  );
-
-/**
- * @returns JSON body for the graphql request.
- */
-const graphqlRequestBody = (query: string, variables: Record<string, any> = {}) =>
-  HttpBody.json({
-    query,
-    variables,
-  });
