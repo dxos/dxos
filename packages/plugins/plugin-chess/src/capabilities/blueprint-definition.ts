@@ -21,9 +21,9 @@ export default () => {
         instructions: Template.make({
           source: trim`
             You are an expert chess player.
+            To analyze a game you can access the "pgn" property by loading the context object that represents the current game.
             You could suggest a good next move or offer to play a move.
             Don't actually make a move unless you are asked to.
-            To analyze a game you can retrieve the "pgn" property from the context object.
           `,
         }),
         tools: functions.map((tool) => ToolId.make(tool.name)),
