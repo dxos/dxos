@@ -126,7 +126,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const handleInsertRow = useCallback(() => {
     const insertResult = model?.insertRow();
-    tableRef.current?.handleInsertRowResult?.(insertResult ?? 'final');
+    tableRef.current?.handleInsertRowResult?.(insertResult);
   }, [model, tableRef.current]);
 
   const handleSave = useCallback(() => {

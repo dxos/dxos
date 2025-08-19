@@ -77,7 +77,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
 
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
-  handleInsertRowResult?: (insertRowResult: InsertRowResult) => void;
+  handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
 export type TableMainProps = {
@@ -126,7 +126,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     }, [presentation, dxGrid, getCells]);
 
     const handleInsertRowResult = useCallback(
-      (insertResult: InsertRowResult) => {
+      (insertResult?: InsertRowResult) => {
         if (insertResult === 'draft') {
           requestAnimationFrame(() => {
             dxGrid?.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
