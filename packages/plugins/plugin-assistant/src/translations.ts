@@ -78,12 +78,13 @@ export const translations = [
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
-        'context objects placeholder': 'Add to context...',
+        'context objects placeholder': 'Add to context',
+        'context settings placeholder': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',
         'blueprints in context title': 'Blueprints',
-        'objects in context title': 'Documents',
+        'objects in context title': 'Content',
         'remove object in context label': 'Remove document',
         'chat model title': 'Model',
 
