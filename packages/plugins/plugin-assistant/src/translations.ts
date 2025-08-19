@@ -33,13 +33,10 @@ export const translations = [
         'delete object label': 'Delete sequence',
       },
       [Assistant.Chat.typename]: {
-        'typename label': 'Assistant',
-        'typename label_zero': 'Assistants',
-        'typename label_one': 'Assistant',
-        'typename label_other': 'Assistants',
-        'object name placeholder': 'New assistant',
-        'rename object label': 'Rename assistant',
-        'delete object label': 'Delete assistant',
+        'typename label': 'AI Chat',
+        'object name placeholder': 'New AI Chat',
+        'rename object label': 'Rename AI Chat',
+        'delete object label': 'Delete AI Chat',
       },
       [meta.id]: {
         'templates label': 'Templates',

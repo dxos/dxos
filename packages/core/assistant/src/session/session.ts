@@ -166,7 +166,6 @@ export class AiSession {
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables.
       const system = yield* formatSystemPrompt(params);
-      console.log(system);
 
       // Generate user prompt.
       const promptMessages = yield* formatUserPrompt(params);

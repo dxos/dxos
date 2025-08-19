@@ -40,9 +40,9 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     }, [messages, collapse]);
 
     return (
-      <ScrollContainer.Root fade pin ref={forwardedRef} classNames={classNames}>
+      <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
         <ScrollContainer.Content
-          classNames='flex flex-col gap-2'
+          classNames='flex flex-col gap-2 pbs-2 pbe-2'
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
