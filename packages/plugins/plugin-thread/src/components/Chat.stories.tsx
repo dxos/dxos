@@ -52,7 +52,7 @@ const Story = () => {
   }
 
   return (
-    <main className='max-is-prose mli-auto bs-dvh overflow-hidden'>
+    <main className='is-full max-is-prose mli-auto bs-dvh overflow-hidden'>
       <ChatContainer space={space} thread={channel.defaultThread.target} />
     </main>
   );
@@ -80,7 +80,7 @@ const meta: Meta<typeof Thread.Root> = {
     }),
     withTheme,
     withLayout({ fullscreen: true }),
-    withClientProvider({ createSpace: true, types: [ThreadType, DataType.Message] }),
+    withClientProvider({ createSpace: true, types: [ThreadType, ChannelType, DataType.Message] }),
   ],
   parameters: { translations },
 };
