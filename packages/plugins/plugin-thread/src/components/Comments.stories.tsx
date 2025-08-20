@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -14,6 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { AnchoredTo, DataType } from '@dxos/schema';
 import { layoutCentered, render, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -30,27 +31,23 @@ const DefaultStory = () => {
   const space = useSpace();
   const anchors = useQuery(space, Query.type(AnchoredTo));
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (identity && space) {
-      const t = setTimeout(async () => {
-        const object = space.db.add(Obj.make(Type.Expando, {}));
-        const thread1 = space.db.add(createCommentThread(identity));
-        const thread2 = space.db.add(createCommentThread(identity));
-        space.db.add(
-          Relation.make(AnchoredTo, {
-            [Relation.Source]: thread1,
-            [Relation.Target]: object,
-          }),
-        );
-        space.db.add(
-          Relation.make(AnchoredTo, {
-            [Relation.Source]: thread2,
-            [Relation.Target]: object,
-          }),
-        );
-      });
-
-      return () => clearTimeout(t);
+      const object = space.db.add(Obj.make(Type.Expando, {}));
+      const thread1 = space.db.add(createCommentThread(identity));
+      const thread2 = space.db.add(createCommentThread(identity));
+      space.db.add(
+        Relation.make(AnchoredTo, {
+          [Relation.Source]: thread1,
+          [Relation.Target]: object,
+        }),
+      );
+      space.db.add(
+        Relation.make(AnchoredTo, {
+          [Relation.Source]: thread2,
+          [Relation.Target]: object,
+        }),
+      );
     }
   }, [identity, space]);
 
