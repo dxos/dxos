@@ -21,7 +21,7 @@ export const getStatus = () =>
     client.edge.setIdentity(identity);
     const status = yield* Effect.tryPromise(() => client.edge.getStatus());
 
-    const json = yield* Config.boolean('json');
+    const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
     if (json) {
       yield* Console.log(JSON.stringify(status, null, 2));
     } else if (status.problems.length > 0) {

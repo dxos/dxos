@@ -13,7 +13,7 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
   static layer = Layer.scoped(
     ClientService,
     Effect.gen(function* () {
-      const verbose = yield* Config.boolean('verbose');
+      const verbose = yield* Config.boolean('VERBOSE').pipe(Config.withDefault(false));
       const config = yield* ConfigService;
       const client = new Client({ config });
       yield* Effect.tryPromise(() => client.initialize());

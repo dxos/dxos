@@ -27,9 +27,12 @@ export const command = Command.make('dx', {
     Options.withDefault(ENV_DX_PROFILE_DEFAULT),
     Options.withAlias('p'),
   ),
-  json: Options.boolean('json').pipe(Options.withDescription('JSON output.')),
-  timeout: Options.integer('timeout').pipe(Options.withDescription('The timeout before the command fails.')),
-  verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose logging.')),
+  json: Options.boolean('json', { ifPresent: true }).pipe(Options.withDescription('JSON output.')),
+  timeout: Options.integer('timeout').pipe(
+    Options.withDescription('The timeout before the command fails.'),
+    Options.optional,
+  ),
+  verbose: Options.boolean('verbose', { ifPresent: true }).pipe(Options.withDescription('Verbose logging.')),
 });
 
 export const dx = command.pipe(
@@ -44,9 +47,13 @@ export const dx = command.pipe(
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provide(ClientService.layer),
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
-  Command.provide(({ json, verbose }) =>
-    Layer.setConfigProvider(
-      ConfigProvider.fromJson({ JSON: json, VERBOSE: verbose }).pipe(ConfigProvider.constantCase),
-    ),
-  ),
+  Command.provide(({ json, verbose }) => {
+    return Layer.setConfigProvider(
+      // Only set if provided in order to allow for fallback to environment variables.
+      ConfigProvider.fromJson({
+        JSON: json || undefined,
+        VERBOSE: verbose || undefined,
+      }).pipe(ConfigProvider.orElse(() => ConfigProvider.fromEnv())),
+    );
+  }),
 );
