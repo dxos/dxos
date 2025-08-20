@@ -9,6 +9,7 @@ import { type Resource } from '@dxos/react-ui';
 import { meta } from './meta';
 import { Assistant } from './types';
 
+// TODO(burdon): Standardize translation names.
 export const translations = [
   {
     'en-US': {
@@ -56,15 +57,15 @@ export const translations = [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
         'type filter placeholder': 'Type',
-        'idle type filter label': 'Any',
-        'no reference options label': 'No results',
+        'any type filter label': 'Any',
 
         'sequence logs label': 'Logs',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
-        'no tools': 'No tools are configured.',
+        'no tools': 'No tools are configured',
+        'no results': 'No results',
 
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
@@ -78,8 +79,8 @@ export const translations = [
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
-        'context objects placeholder': 'Add to context',
-        'context settings placeholder': 'Chat settings',
+        'button context objects': 'Add to context',
+        'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',

@@ -2,13 +2,42 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect } from 'react';
+import { useSignalEffect } from '@preact-signals/safe-react';
+import { type DependencyList, type EffectCallback, useEffect } from 'react';
 
-export const useAsyncEffect = <T>(callback: () => Promise<T> | void, deps?: any[]) => {
+export const useAsyncEffect = (
+  cb: (controller: AbortController) => Promise<EffectCallback | void>,
+  deps?: DependencyList,
+) => {
   useEffect(() => {
-    const t = setTimeout(() => {
-      void callback();
-    });
-    return () => clearTimeout(t);
+    let effect: EffectCallback | void;
+    const controller = new AbortController();
+    void (async () => {
+      if (!controller.signal.aborted) {
+        effect = await cb(controller);
+      }
+    })();
+
+    return () => {
+      controller.abort();
+      effect?.();
+    };
   }, deps);
+};
+
+export const useAsyncSignalEffect = (cb: (controller: AbortController) => Promise<EffectCallback | void>) => {
+  useSignalEffect(() => {
+    let effect: EffectCallback | void;
+    const controller = new AbortController();
+    void (async () => {
+      if (!controller.signal.aborted) {
+        effect = await cb(controller);
+      }
+    })();
+
+    return () => {
+      controller.abort();
+      effect?.();
+    };
+  });
 };

@@ -32,7 +32,7 @@ export type ChatEditorProps = ThemedClassName<
     extensions?: Extension;
     references?: ReferencesOptions;
   } & AutocompleteOptions &
-    Pick<UseTextEditorProps, 'autoFocus'> &
+    Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
