@@ -80,7 +80,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     };
   }
 
-  get status(): EdgeStatus {
+  get status() {
     return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
       ? EdgeStatus.CONNECTED
       : EdgeStatus.NOT_CONNECTED;
@@ -94,7 +94,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return this._identity.peerKey;
   }
 
-  setIdentity(identity: EdgeIdentity): void {
+  setIdentity(identity: EdgeIdentity) {
     if (identity.identityKey !== this._identity.identityKey || identity.peerKey !== this._identity.peerKey) {
       log('Edge identity changed', { identity, oldIdentity: this._identity });
       this._identity = identity;
@@ -107,7 +107,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Send message.
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
-  public async send(message: Message): Promise<void> {
+  public async send(message: Message) {
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -127,12 +127,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._currentConnection.send(message);
   }
 
-  public onMessage(listener: MessageListener): () => void {
+  public onMessage(listener: MessageListener) {
     this._messageListeners.add(listener);
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: () => void): () => void {
+  public onReconnected(listener: () => void) {
     this._reconnectListeners.add(listener);
     if (this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
@@ -277,7 +277,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
 }
 
 const encodePresentationWsAuthHeader = (encodedPresentation: Uint8Array): string => {
-  // = and / characters are not allowed in the WebSocket subprotocol header.
+  // '=' and '/' characters are not allowed in the WebSocket subprotocol header.
   const encodedToken = Buffer.from(encodedPresentation).toString('base64').replace(/=*$/, '').replaceAll('/', '|');
   return `base64url.bearer.authorization.dxos.org.${encodedToken}`;
 };
