@@ -222,8 +222,8 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
 
+  // NOTE: This handler is only called if the tab is *already active*.
   const handleClick = useCallback(
-    // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
       setActivePart('panel');
       onClick?.(event);

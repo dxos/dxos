@@ -30,6 +30,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
         t = setTimeout(() => setJoke({ joke, punchline }), 2_000);
       }
     });
+
     return () => clearTimeout(t);
   }, []);
 

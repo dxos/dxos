@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
   type FieldType,
   type ProjectionModel,
@@ -47,7 +47,7 @@ export const FieldEditor = ({
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
   const [schemas, setSchemas] = useState<EchoSchema[]>([]);
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!registry) {
       return;
     }
@@ -55,14 +55,10 @@ export const FieldEditor = ({
     const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
-    const t = setTimeout(async () => {
-      const schemas = await registry.query().run();
-      setSchemas(schemas);
-    });
-    return () => {
-      clearTimeout(t);
-      subscription?.();
-    };
+    const schemas = await registry.query().run();
+    setSchemas(schemas);
+
+    return () => subscription?.();
   }, [registry]);
 
   const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();

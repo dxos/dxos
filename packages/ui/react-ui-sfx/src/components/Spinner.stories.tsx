@@ -21,11 +21,10 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
         <Button onClick={() => setState('pulse')}>Pulse</Button>
         <Button onClick={() => setState('spin')}>Spin</Button>
         <Button onClick={() => setState('flash')}>Flash</Button>
+        <Button onClick={() => setState('error')}>Error</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <div className='flex w-6 h-6'>
-          <Spinner state={state} />
-        </div>
+        <Spinner state={state} size={6} />
       </div>
     </div>
   );
