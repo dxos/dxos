@@ -6,6 +6,7 @@ RUN apt-get update \
     ca-certificates \
     curl \
     git-lfs \
+    gpg \
     jq \
     libenchant-2-2 \
     libpng++-dev \
