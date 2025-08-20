@@ -28,6 +28,7 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
 
   // TODO(burdon): Create effect utility for reactive arrays.
   const [items, setItems] = useState<Type.Expando[]>([]);
+  // TODO(burdon): Replace with useAsyncSignalEffect.
   useEffect(() => {
     let t: NodeJS.Timeout;
     effect(() => {

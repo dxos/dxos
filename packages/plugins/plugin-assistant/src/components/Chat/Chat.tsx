@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -37,8 +37,9 @@ import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThrea
 
 import { type ChatEvent } from './events';
 
+// TOOD(burdon): Use attention.
 const outlineClassNames =
-  'p-2 bg-groupSurface border border-transparent rounded focus-within:outline focus-within:border-transparent outline-neutralFocusIndicator';
+  'p-2 bg-groupSurface border border-transparent rounded focus-within:border-transparent _focus-within:outline _outline-neutralFocusIndicator';
 
 //
 // Context
@@ -175,7 +176,7 @@ const ChatPrompt = ({
   return (
     <div className={mx('is-full flex flex-col', outline && outlineClassNames, classNames)}>
       <div className='flex gap-2'>
-        <div className='p-1.5'>
+        <div className='p-1'>
           <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
         </div>
 
@@ -190,7 +191,7 @@ const ChatPrompt = ({
         />
       </div>
 
-      <div className='flex items-center'>
+      <div className='flex pbs-2 items-center'>
         <ChatOptions
           space={space}
           blueprintRegistry={processor.blueprintRegistry}
@@ -216,13 +217,6 @@ const ChatPrompt = ({
               <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
             </Input.Root>
           )}
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('button cancel')}
-            onClick={() => processor.cancel()}
-          />
         </ChatActions>
       </div>
     </div>

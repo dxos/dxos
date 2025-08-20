@@ -12,14 +12,7 @@ import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-u
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
-import {
-  useActiveBlueprints,
-  useActiveReferences,
-  useBlueprintHandlers,
-  useBlueprints,
-  useItemTypes,
-  useReferencesHandlers,
-} from '../../hooks';
+import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
 
 const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-[25rem] max-is-[--text-content]';
@@ -50,7 +43,7 @@ export const ChatOptions = ({
     <div role='none' className='flex gap-0.5'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('button context objects')} />
+          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly size={5} label={t('button context objects')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
@@ -65,6 +58,7 @@ export const ChatOptions = ({
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
+            size={5}
             label={t('button context settings')}
           />
         </Popover.Trigger>
@@ -114,13 +108,13 @@ const BlueprintsPanel = ({
           const isActive = activeBlueprints.has(blueprint.key);
           return (
             <SearchList.Item
-              classNames='flex gap-2 items-center'
+              classNames='flex items-center overflow-hidden'
               key={blueprint.key}
               value={blueprint.name}
               onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
             >
+              <div className='grow truncate'>{blueprint.name}</div>
               <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-              {blueprint.name}
             </SearchList.Item>
           );
         })}
@@ -145,11 +139,11 @@ const ModelsPanel = ({
             key={id}
             aria-selected={isActive}
             tabIndex={0}
-            className='dx-focus-ring flex gap-2 items-center p-1 rounded-sm select-none cursor-pointer hover:bg-hoverOverlay'
+            className='overflow-hidden dx-focus-ring flex gap-2 p-1 pis-2 pie-2 items-center rounded-sm select-none cursor-pointer hover:bg-hoverOverlay'
             onClick={() => onPresetChange?.(id)}
           >
+            <div className='grow truncate'>{label}</div>
             <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-            {label}
           </li>
         );
       })}
@@ -186,27 +180,24 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
 
   // Context objects.
   const objects = useQuery(space, typename === ANY ? anyFilter : Filter.typename(typename));
-  const active = useActiveReferences({ context });
-  const { onUpdateReference } = useReferencesHandlers({ space, context });
+  const { objects: contextObjects, onUpdateObject } = useContextObjects({ space, context });
 
   return (
     <SearchList.Root classNames='pis-2 pie-2'>
       <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
         {objects.length ? (
           objects.map((object) => {
-            // TODO(burdon): Skip if no name?
             const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-            const value = Obj.getDXN(object).toString();
-            const isActive = active.has(value);
+            const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
             return (
               <SearchList.Item
-                key={value}
+                classNames='flex items-center overflow-hidden'
+                key={object.id}
                 value={object.id}
-                classNames='flex gap-2 items-center'
-                onSelect={() => onUpdateReference?.(value, !isActive)}
+                onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
               >
+                <div className='grow truncate'>{label}</div>
                 <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-                {label}
               </SearchList.Item>
             );
           })
