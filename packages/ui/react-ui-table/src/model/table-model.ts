@@ -69,6 +69,8 @@ const defaultFeatures: TableFeatures = {
   schemaEditable: false,
 };
 
+export type InsertRowResult = 'draft' | 'final';
+
 export type TableModelProps<T extends TableRow = TableRow> = {
   view: DataType.View;
   schema: JsonSchemaType;
@@ -79,7 +81,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
   onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
-  onInsertRow?: (data?: any) => boolean;
+  onInsertRow?: (data?: any) => InsertRowResult;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
@@ -97,7 +99,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     end: { row: 0, col: 0 },
   });
 
-  private readonly _onInsertRow?: (data?: any) => boolean;
+  private readonly _onInsertRow?: (data?: any) => InsertRowResult;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
@@ -335,11 +337,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getColumnCount = (): number => this._projection?.fields.length ?? 0;
 
-  public insertRow = (): void => {
+  public insertRow = (): InsertRowResult => {
     const result = this._onInsertRow?.();
-    if (result === false && this._draftRows.value.length === 0) {
+    if (result === 'draft' && this._draftRows.value.length === 0) {
       this.createDraftRow();
     }
+    return result ?? 'final';
   };
 
   private createDraftRow(): void {
@@ -394,14 +397,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return false;
     }
 
-    const success = this._onInsertRow?.(draftRow.data);
+    const insertRowResult = this._onInsertRow?.(draftRow.data);
 
-    if (success) {
+    if (insertRowResult === 'final') {
       const newDraftRows = this._draftRows.value.filter((_, index) => index !== draftRowIndex);
       this._draftRows.value = newDraftRows;
     }
 
-    return success ?? false;
+    return insertRowResult === 'final';
   };
 
   public deleteRow = (rowIndex: number): void => {
