@@ -3,4 +3,3 @@
 //
 
 export * from './dx';
-export * from './options';
