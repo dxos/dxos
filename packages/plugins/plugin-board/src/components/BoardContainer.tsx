@@ -22,15 +22,23 @@ export type BoardContainerProps = {
   board: BoardType.Board;
 };
 
-export const BoardContainer = ({ role, board }: BoardContainerProps) => {
+export const BoardContainer = ({ board }: BoardContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const controller = useRef<BoardController>(null);
 
   const [items, setItems] = useState<Type.Expando[]>([]);
-  useAsyncSignalEffect(async () => {
-    const items = await Ref.Array.loadAll(refs);
-    setItems(items.filter(isNonNullable));
-  }, [board.items]);
+
+  useAsyncSignalEffect(
+    async (controller) => {
+      const refs = [...board.items];
+      console.log(board.items.length);
+      const items = await Ref.Array.loadAll(refs);
+      if (!controller.signal.aborted) {
+        setItems(items.filter(isNonNullable));
+      }
+    },
+    [board.items],
+  );
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (position = { x: 0, y: 0 }) => {
@@ -42,6 +50,7 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
           navigable: false,
           onCreateObject: (object: Obj.Any) => {
             board.items.push(Ref.make(object));
+            console.log(board.items.length);
             board.layout.cells[object.id] = { ...position, width: 1, height: 1 };
             controller.current?.center(position);
           },

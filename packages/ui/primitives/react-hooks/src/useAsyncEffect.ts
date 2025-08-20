@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useSignalEffect } from '@preact-signals/safe-react';
+import { effect } from '@preact-signals/safe-react';
 import { type DependencyList, type EffectCallback, useEffect } from 'react';
 
 /**
@@ -16,17 +16,17 @@ export const useAsyncEffect = (
 ) => {
   useEffect(() => {
     const controller = new AbortController();
-    let effect: EffectCallback | void;
+    let cleanup: EffectCallback | void;
     const t = setTimeout(async () => {
       if (!controller.signal.aborted) {
-        effect = await cb(controller);
+        cleanup = await cb(controller);
       }
     });
 
     return () => {
       clearTimeout(t);
       controller.abort();
-      effect?.();
+      cleanup?.();
     };
   }, deps ?? []);
 };
@@ -34,20 +34,24 @@ export const useAsyncEffect = (
 /**
  * Combines useSignalEffect with useAsyncEffect.
  */
-export const useAsyncSignalEffect = (cb: (controller: AbortController) => Promise<EffectCallback | void>) => {
-  useSignalEffect(() => {
+export const useAsyncSignalEffect = (
+  cb: (controller: AbortController) => Promise<EffectCallback | void>,
+  deps?: DependencyList,
+): void => {
+  useEffect(() => {
     const controller = new AbortController();
-    let effect: EffectCallback | void;
-    const t = setTimeout(async () => {
+    let cleanup: EffectCallback | void;
+    effect(() => {
       if (!controller.signal.aborted) {
-        effect = await cb(controller);
+        void cb(controller).then((c) => {
+          cleanup = c;
+        });
       }
     });
 
     return () => {
-      clearTimeout(t);
       controller.abort();
-      effect?.();
+      cleanup?.();
     };
-  });
+  }, deps ?? []);
 };
