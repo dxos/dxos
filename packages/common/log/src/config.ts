@@ -6,8 +6,8 @@ import { type LogProcessor } from './context';
 
 /**
  * Standard levels.
+ * NOTE: Keep aligned with LogLevel in @dxos/protocols.
  */
-// NOTE: Keep aligned with LogLevel in @dxos/protocols.
 // TODO(burdon): Update numbers?
 export enum LogLevel {
   TRACE = 5,
@@ -18,7 +18,7 @@ export enum LogLevel {
   ERROR = 14,
 }
 
-export const levels: { [index: string]: LogLevel } = {
+export const levels: Record<string, LogLevel> = {
   trace: LogLevel.TRACE,
   debug: LogLevel.DEBUG,
   verbose: LogLevel.VERBOSE,
