@@ -64,7 +64,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Chat.Root chat={chat} processor={processor}>
           <Chat.Thread />
           <div className='p-4'>
-            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onChangeOnline={setOnline} />
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </div>
         </Chat.Root>
       )}
