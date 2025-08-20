@@ -7,6 +7,8 @@ import { Schema } from 'effect';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo-schema';
 
+import { ItemAnnotation } from '../annotations';
+
 import { Organization } from './organization';
 import { PostalAddress } from './postal-address';
 
@@ -96,6 +98,6 @@ export const Person = PersonSchema.pipe(
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
-).pipe(Schema.annotations({ title: 'Person', description: 'A person.' }), LabelAnnotation.set(['fullName']));
+).pipe(Schema.annotations({ title: 'Person' }), LabelAnnotation.set(['fullName']), ItemAnnotation.set(true));
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}

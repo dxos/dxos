@@ -2,72 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import {
   useActiveBlueprints,
   useActiveReferences,
   useBlueprintHandlers,
   useBlueprints,
+  useItemTypes,
   useReferencesHandlers,
 } from '../../hooks';
 import { meta } from '../../meta';
-import { Assistant } from '../../types';
-
-// TODO(burdon): Factor out.
-// TODO(burdon): Annotation? Change to whitelist (by plugin types).
-const idleFilter = Filter.not(
-  Filter.or(
-    Filter.type(Blueprint.Blueprint),
-    Filter.type(Assistant.Chat),
-    Filter.typename('dxos.org/type/Properties'),
-    Filter.typename('dxos.org/type/Text'),
-    Filter.typename('dxos.org/type/View'),
-  ),
-);
-
-const omitFromTypenameOptions = [
-  Blueprint.Blueprint.typename,
-  Assistant.Chat.typename,
-  'dxos.org/type/Properties',
-  'dxos.org/type/Text',
-  'dxos.org/type/View',
-];
-
-const useTypenameOptions = (space?: Space) => {
-  const [schemas, setSchemas] = useState<string[]>([]);
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-
-    return space.db.schemaRegistry.query().subscribe(
-      (query) => {
-        setSchemas(
-          Array.from(
-            new Set(
-              [...space.db.graph.schemaRegistry.schemas, ...query.results]
-                .map(Type.getTypename)
-                .filter((typename) => !omitFromTypenameOptions.includes(typename)),
-            ),
-          ),
-        );
-      },
-      { fire: true },
-    );
-  }, [space]);
-
-  return schemas;
-};
 
 const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-[25rem] max-is-[--text-content]';
 
@@ -97,13 +50,7 @@ export const ChatOptions = ({
     <div role='none' className='flex gap-0.5'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton
-            icon='ph--plus--regular'
-            variant='ghost'
-            size={5}
-            iconOnly
-            label={t('context objects placeholder')}
-          />
+          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('button context objects')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
@@ -115,11 +62,10 @@ export const ChatOptions = ({
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton
-            icon='ph--sliders-horizontal--regular'
             variant='ghost'
-            size={5}
+            icon='ph--sliders-horizontal--regular'
             iconOnly
-            label={t('context settings placeholder')}
+            label={t('button context settings')}
           />
         </Popover.Trigger>
         <Popover.Portal>
@@ -211,57 +157,75 @@ const ModelsPanel = ({
   );
 };
 
-const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>) => {
+const ANY = '__any__';
+
+const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>): React.JSX.Element => {
   const { t } = useTranslation(meta.id);
 
-  const [activeTypename, setActiveTypename] = useState<string>('idle');
-  const typenameOptions = useTypenameOptions(space);
+  // Item types sorted by label.
+  const types = useItemTypes(space);
+  const typenames = useMemo(() => {
+    const typenames = types.map((type) => {
+      const typename = Type.getTypename(type);
+      return {
+        typename,
+        label: t('typename label', { ns: typename, defaultValue: typename }),
+      };
+    });
 
-  const activeReferences = useActiveReferences({ context });
+    typenames.sort((a, b) => a.label.localeCompare(b.label));
+    return typenames;
+  }, [types]);
+
+  // Current type and filter.
+  const [typename, setTypename] = useState<string>(ANY);
+  const anyFilter = useMemo(
+    () => Filter.or(...typenames.map(({ typename }) => Filter.typename(typename))),
+    [typenames],
+  );
+
+  // Context objects.
+  const objects = useQuery(space, typename === ANY ? anyFilter : Filter.typename(typename));
+  const active = useActiveReferences({ context });
   const { onUpdateReference } = useReferencesHandlers({ space, context });
-  const referenceOptions = useQuery(space, activeTypename === 'idle' ? idleFilter : Filter.typename(activeTypename));
 
   return (
     <SearchList.Root classNames='pis-2 pie-2'>
-      {referenceOptions.length ? (
-        <>
-          <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
-            {referenceOptions.map((object: any) => {
-              const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
-              const value = Obj.getDXN(object).toString();
-              const isActive = activeReferences.has(value);
-              return (
-                <SearchList.Item
-                  classNames='flex gap-2 items-center'
-                  key={value}
-                  value={label}
-                  onSelect={() => onUpdateReference?.(value, !isActive)}
-                >
-                  <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-                  {label}
-                </SearchList.Item>
-              );
-            })}
-          </SearchList.Content>
-          <SearchList.Empty classNames={[descriptionMessage, 'mlb-cardSpacingChrome']}>
-            {t('no reference options label')}
-          </SearchList.Empty>
-        </>
-      ) : (
-        <p className={mx(descriptionMessage, 'mlb-cardSpacingChrome')}>{t('no reference options label')}</p>
-      )}
+      <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
+        {objects.length ? (
+          objects.map((object) => {
+            // TODO(burdon): Skip if no name?
+            const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
+            const value = Obj.getDXN(object).toString();
+            const isActive = active.has(value);
+            return (
+              <SearchList.Item
+                key={value}
+                value={object.id}
+                classNames='flex gap-2 items-center'
+                onSelect={() => onUpdateReference?.(value, !isActive)}
+              >
+                <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
+                {label}
+              </SearchList.Item>
+            );
+          })
+        ) : (
+          <SearchList.Item>{t('no results')}</SearchList.Item>
+        )}
+      </SearchList.Content>
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 mbe-cardSpacingChrome'>
-        <Select.Root value={activeTypename === 'idle' ? undefined : activeTypename} onValueChange={setActiveTypename}>
+        <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />
               <Select.Viewport>
-                <Select.Option value='idle'>{t('idle type filter label')}</Select.Option>
-                {typenameOptions.map((typename) => (
+                <Select.Option value={ANY}>{t('any type filter label')}</Select.Option>
+                {typenames.map(({ typename, label }) => (
                   <Select.Option key={typename} value={typename}>
-                    {t('typename label', { ns: typename, defaultValue: typename })}
+                    {label}
                   </Select.Option>
                 ))}
               </Select.Viewport>

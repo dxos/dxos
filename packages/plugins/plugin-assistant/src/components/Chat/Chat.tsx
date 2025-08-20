@@ -173,16 +173,9 @@ const ChatPrompt = ({
   );
 
   return (
-    <div
-      className={mx(
-        // 'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
-        'is-full flex flex-col',
-        outline && outlineClassNames,
-        classNames,
-      )}
-    >
+    <div className={mx('is-full flex flex-col', outline && outlineClassNames, classNames)}>
       <div className='flex gap-2'>
-        <div className='p-1'>
+        <div className='p-1.5'>
           <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
         </div>
 
