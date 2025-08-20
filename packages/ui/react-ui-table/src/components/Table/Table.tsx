@@ -48,6 +48,7 @@ import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 42 } };
+const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //
 // Table.Root
@@ -408,6 +409,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           frozen={frozen}
           columns={model.columnMeta.value}
           columnDefault={columnDefault}
+          rowDefault={rowDefault}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.projection.fields.length}
           overscroll='trap'

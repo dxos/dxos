@@ -60,11 +60,11 @@ const frozen = {
 };
 
 const sheetColDefault = {
-  frozenColsStart: { size: 48, readonly: true },
+  frozenColsStart: { size: 48, readonly: true, focusUnfurl: false },
   grid: { size: defaultColSize, resizeable: true },
 };
 const sheetRowDefault = {
-  frozenRowsStart: { size: defaultRowSize, readonly: true },
+  frozenRowsStart: { size: defaultRowSize, readonly: true, focusUnfurl: false },
   grid: { size: defaultRowSize, resizeable: true },
 };
 
