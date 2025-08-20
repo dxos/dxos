@@ -13,6 +13,7 @@ import { Effect, Layer, Logger } from 'effect';
 import { LogLevel, levels, log } from '@dxos/log';
 
 import { dx } from './commands';
+import { DXOS_VERSION } from './version';
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
@@ -28,7 +29,7 @@ if (process.env.DX_TRACK_LEAKS) {
 
 const run = Command.run(dx, {
   name: 'DXOS CLI',
-  version: '0.8.3', // {x-release-please-version}
+  version: DXOS_VERSION,
 });
 
 run(process.argv).pipe(
