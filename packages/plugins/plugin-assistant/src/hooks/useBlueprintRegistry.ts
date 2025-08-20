@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useSignalEffect } from '@preact/signals-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
@@ -10,6 +9,7 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useAsyncSignalEffect } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -29,14 +29,10 @@ export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Bluep
  */
 export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
-  useSignalEffect(() => {
+  useAsyncSignalEffect(async () => {
     const refs = [...(context?.blueprints.value ?? [])];
-    const t = setTimeout(async () => {
-      const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
-      setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
-    });
-
-    return () => clearTimeout(t);
+    const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
+    setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
   });
 
   return active;

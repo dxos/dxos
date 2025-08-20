@@ -3,7 +3,7 @@
 //
 
 import { Effect } from 'effect';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
@@ -13,6 +13,7 @@ import { InvocationTraceContainer } from '@dxos/devtools';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { SpaceAction } from '@dxos/plugin-space/types';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
@@ -54,18 +55,18 @@ export default () =>
 
         // Initialize companion chat if it doesn't exist.
         // TODO(wittjosiah): Factor out to container.
-        useEffect(() => {
-          const timeout = setTimeout(async () => {
-            const space = getSpace(data.companionTo);
-            if (space && data.subject === 'assistant-chat') {
-              const result = await space.db
-                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
-                .run();
-              if (result.objects.length > 0) {
-                return;
-              }
+        useAsyncEffect(async () => {
+          const space = getSpace(data.companionTo);
+          if (space && data.subject === 'assistant-chat') {
+            const result = await space.db
+              .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
+              .run();
+            if (result.objects.length > 0) {
+              return;
+            }
 
-              const program = Effect.gen(function* () {
+            await Effect.runPromise(
+              Effect.gen(function* () {
                 const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 yield* dispatch(
@@ -76,13 +77,9 @@ export default () =>
                     target: data.companionTo,
                   }),
                 );
-              });
-
-              void Effect.runPromise(program);
-            }
-          });
-
-          return () => clearTimeout(timeout);
+              }),
+            );
+          }
         }, [data.subject]);
 
         // TODO(wittjosiah): Factor out to container.

@@ -6,6 +6,7 @@ import { type Decorator } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { type CreateAppOptions, useApp } from '../App';
 import { Capabilities, Events } from '../common';
@@ -89,12 +90,8 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
     }, [pluginManager, context]);
 
     // Fire events.
-    useEffect(() => {
-      const timeout = setTimeout(async () => {
-        await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-      });
-
-      return () => clearTimeout(timeout);
+    useAsyncEffect(async () => {
+      await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
     }, [pluginManager]);
 
     // Create app.
