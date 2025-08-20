@@ -10,12 +10,16 @@ import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Effect, Layer, Logger } from 'effect';
 
-import { LogLevel, log } from '@dxos/log';
+import { LogLevel, levels, log } from '@dxos/log';
 
 import { dx } from './commands';
 
-// TODO(burdon): Hide unless DX_DEBUG set.
-log.config({ filter: LogLevel.ERROR });
+let filter = LogLevel.ERROR;
+const level = process.env.DX_DEBUG;
+if (level) {
+  filter = levels[level] ?? LogLevel.ERROR;
+}
+log.config({ filter });
 
 if (process.env.DX_TRACK_LEAKS) {
   const require = createRequire(import.meta.url);
