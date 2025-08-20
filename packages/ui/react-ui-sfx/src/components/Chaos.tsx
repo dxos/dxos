@@ -4,7 +4,7 @@
 
 import { OrbitControls, PerspectiveCamera, Stats, useFBO } from '@react-three/drei';
 import { Canvas, createPortal, extend, useFrame } from '@react-three/fiber';
-import React, { useEffect, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 import { invariant } from '@dxos/invariant';

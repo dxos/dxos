@@ -48,6 +48,7 @@ export const ChatOptions = ({
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
             <ObjectsPanel space={space} context={context} />
+            <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

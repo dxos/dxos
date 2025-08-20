@@ -34,6 +34,7 @@ export const modules = [
   'plugins/*/src/**',
   'sdk/*/src/**',
   'ui/*/src/**',
+  'ui/primitives/*/src/**',
 ];
 
 export const stories = modules.map((dir) => join(packages, dir, storyFiles));
