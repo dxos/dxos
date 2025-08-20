@@ -29,6 +29,12 @@ export const QueueSubspaceTags = Object.freeze({
 
 export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
 
+// TODO(burdon): Refactor.
+// Consider: https://github.com/multiformats/multiaddr
+// dxn:echo:[<space-id>:[<queue-id>:]]<object-id>
+// dxn:echo:[S/<space-id>:[Q/<queue-id>:]]<object-id>
+// dxn:type:dxos.org/markdown/Contact
+
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
  * Each DXN starts with a dxn prefix, followed by a resource kind.
@@ -89,12 +95,17 @@ export class DXN {
     QUEUE: 'queue',
   });
 
-  get kind() {
-    return this.#kind;
-  }
-
+  /**
+   * Exactly equals.
+   */
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
+  }
+
+  static equalsEchoId(a: DXN, b: DXN): boolean {
+    const a1 = a.asEchoDXN();
+    const b1 = b.asEchoDXN();
+    return !!a1 && !!b1 && a1.echoId === b1.echoId;
   }
 
   // TODO(burdon): Rename isValid.
@@ -182,12 +193,12 @@ export class DXN {
     switch (kind) {
       case DXN.kind.TYPE:
         if (parts.length > 2) {
-          throw new Error('Invalid "type" DXN');
+          throw new Error('Invalid DXN.kind.TYPE');
         }
         break;
       case DXN.kind.ECHO:
         if (parts.length !== 2) {
-          throw new Error('Invalid "echo" DXN');
+          throw new Error('Invalid DXN.kind.ECHO');
         }
         break;
     }
@@ -225,6 +236,10 @@ export class DXN {
     };
   }
 
+  get kind() {
+    return this.#kind;
+  }
+
   get parts() {
     return this.#parts;
   }
@@ -233,6 +248,10 @@ export class DXN {
   get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
+  }
+
+  equals(other: DXN): boolean {
+    return DXN.equals(this, other);
   }
 
   hasTypenameOf(typename: string): boolean {
@@ -264,6 +283,7 @@ export class DXN {
     const [spaceId, echoId] = this.#parts;
     return {
       spaceId: spaceId === LOCAL_SPACE_TAG ? undefined : (spaceId as SpaceId | undefined),
+      // TODO(burdon): objectId.
       echoId,
     };
   }
@@ -294,33 +314,18 @@ export class DXN {
   }
 }
 
-// TODO(dmaretskyi): Fluent API:
-/*
-class DXN {
-  ...
-isEchoDXN(): this is EchoDXN {
-  return this.#kind === DXN.kind.ECHO;
-}
-...
-}
-
-interface EchoDXN extends DXN {
-  objectId: ObjectId;
-}
-
-declare const dxn: DXN;
-
-dxn.objectId
-
-if(dxn.isEchoDXN()) {
-  dxn.objectId
-}
-  ```
-
 /**
  * API namespace.
  */
 export declare namespace DXN {
+  /**
+   * DXN represented as a javascript string.
+   */
+  // TODO(burdon): Use Effect branded string?
+  // export const String = S.String.pipe(S.brand('DXN'));
+  // export type String = S.To(typoeof String);
+  export type String = string & { __DXNString: never };
+
   export type TypeDXN = {
     type: string;
     version?: string;
@@ -337,12 +342,4 @@ export declare namespace DXN {
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.
   };
-
-  /**
-   * DXN represented as a javascript string.
-   */
-  export type String = string & { __DXNString: never };
-  // TODO(burdon): Make brand.
-  // export const String = S.String.pipe(S.brand('DXN'));
-  // export type String = S.To(typoeof String);
 }

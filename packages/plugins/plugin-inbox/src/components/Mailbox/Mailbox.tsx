@@ -105,7 +105,6 @@ export type MailboxProps = Pick<MailboxType, 'name'> & {
 };
 
 export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
-  // TODO(thure): The container should manage the queue.
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
 

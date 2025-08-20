@@ -185,6 +185,7 @@ type TabsTabProps = ButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
 const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
+
   const handleClick = useCallback(
     // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -220,6 +221,7 @@ type TabsIconTabProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, '
 const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps) => {
   const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
   const { hasAttention } = useAttention(attendableId);
+
   const handleClick = useCallback(
     // NOTE: This handler is only called if the tab is *already active*.
     (event: MouseEvent<HTMLButtonElement>) => {
