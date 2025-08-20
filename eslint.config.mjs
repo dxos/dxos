@@ -30,6 +30,7 @@ export default tseslint.config(
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
+      'packages/devtools/cli-next/src/version.ts',
 
       // Config
       '**/eslint.config.mjs',
