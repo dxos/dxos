@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
@@ -12,6 +12,7 @@ import { log } from '@dxos/log';
 import { initializeAppObservability } from '@dxos/observability';
 import * as Sentry from '@dxos/observability/sentry';
 import { ClientServicesProxy, Config, Defaults } from '@dxos/react-client';
+import { useAsyncEffect } from '@dxos/react-hooks';
 import { type RpcPort } from '@dxos/rpc';
 
 // NOTE: Sandbox runs in an iframe which is sandboxed from the web extension.
@@ -76,16 +77,12 @@ const waitForRpc = async () =>
 const App = () => {
   const [services, setServices] = useState<ClientServicesProxy>();
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      log('waiting for rpc...');
-      await waitForRpc();
-      const rpcPort = windowPort();
-      const servicesProvider = new ClientServicesProxy(rpcPort);
-      setServices(servicesProvider);
-    });
-
-    return () => clearTimeout(timeout);
+  useAsyncEffect(async () => {
+    log('waiting for rpc...');
+    await waitForRpc();
+    const rpcPort = windowPort();
+    const servicesProvider = new ClientServicesProxy(rpcPort);
+    setServices(servicesProvider);
   }, []);
 
   if (!services) {
