@@ -12,7 +12,7 @@
       "extra-files": [
         "packages/sdk/client/src/version.ts",
         "packages/sdk/client-services/src/version.ts",
-        "packages/devtools/cli-next/src/commands/index.ts",
+        "packages/devtools/cli-next/src/version.ts",
         {
           "type": "json",
           "path": "packages/apps/composer-app/src-tauri/tauri.conf.json",
