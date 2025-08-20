@@ -6,7 +6,7 @@ import path from 'node:path';
 
 import { Command } from '@effect/cli';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Console, Effect, pipe } from 'effect';
+import { Config, Console, Effect, pipe } from 'effect';
 
 import { withRetry } from '@dxos/edge-client';
 
@@ -17,14 +17,13 @@ import { Common } from '../../../options';
 export const list = Command.make(
   'list',
   {
-    json: Common.json,
     apiKey: Common.apiKey,
   },
-  ({ json, apiKey }) =>
+  ({ apiKey }) =>
     Effect.flatMap(command, ({ verbose }) =>
       Effect.gen(function* () {
         const config = yield* ConfigService;
-        const baseUrl = config.get('runtime.services.hub.url', 'https://hub.dxos.network') as string;
+        const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
         const url = path.join(baseUrl, '/api/user/profile');
         if (verbose) {
           yield* Effect.log(`Calling: ${url}`);
@@ -42,10 +41,11 @@ export const list = Command.make(
           Effect.withSpan('EdgeHttpClient'),
         );
 
+        const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
         if (json) {
           return yield* Console.log(result);
         } else {
-          // TODO(burdon): Output table.
+          // TODO(burdon): Output table. Look at @effect/printer.
           return yield* Console.log((result as any).profiles?.length + ' profiles');
         }
       }),
