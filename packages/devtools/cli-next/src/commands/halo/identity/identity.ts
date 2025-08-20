@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Effect } from 'effect';
+import { Console, Effect } from 'effect';
 
 import { ClientService } from '../../../services';
 
@@ -12,12 +12,12 @@ export const handler = Effect.fn(function* () {
   const identity = client.halo.identity.get();
   if (!identity) {
     // TODO(wittjosiah): Look into @effect/printer-ansi for colored output.
-    yield* Effect.log('Identity not initialized.');
+    yield* Console.log('Identity not initialized.');
   } else {
     yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
     const { identityKey, profile } = identity;
-    yield* Effect.log('Identity key:', identityKey.toHex());
-    yield* Effect.log('Display name:', profile?.displayName);
+    yield* Console.log(`Identity key: ${identityKey.toHex()}`);
+    yield* Console.log(`Display name: ${profile?.displayName}`);
   }
 });
 
