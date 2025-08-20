@@ -28,6 +28,8 @@ export const editorSlots: ThemeExtensionsOptions['slots'] = {
 
 export const editorGutter = EditorView.theme({
   '.cm-gutters': {
+    // NOTE: Color required to cover content if scrolling horizontally.
+    // TODO(burdon): Non-transparent background clips the focus ring.
     background: 'var(--dx-baseSurface)',
     paddingRight: '1rem',
   },
@@ -42,8 +44,9 @@ export const editorMonospace = EditorView.theme({
 export const editorWithToolbarLayout =
   'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
 
+// NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
 export const stackItemContentEditorClassNames = (role?: string) =>
   mx(
-    'attention-surface dx-focus-ring-inset data-[toolbar=disabled]:pbs-2',
+    'p-0.5 dx-focus-ring-inset attention-surface data-[toolbar=disabled]:pbs-2',
     role === 'section' ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-bs-24' : 'min-bs-0',
   );

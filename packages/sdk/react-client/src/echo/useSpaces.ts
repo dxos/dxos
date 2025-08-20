@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { type PublicKeyLike } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { useMulticastObservable } from '@dxos/react-hooks';
+import { useAsyncEffect, useMulticastObservable } from '@dxos/react-hooks';
 
 import { useClient } from '../client';
 
@@ -23,18 +23,14 @@ export const useSpace = (spaceKeyLike?: PublicKeyLike): Space | undefined => {
   const spaces = useMulticastObservable<Space[]>(client.spaces);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     // Only wait for ready if looking for the default space.
     if (spaceKeyLike) {
       return;
     }
 
-    const timeout = setTimeout(async () => {
-      await client.spaces.waitUntilReady();
-      setReady(true);
-    });
-
-    return () => clearTimeout(timeout);
+    await client.spaces.waitUntilReady();
+    setReady(true);
   }, [client, spaceKeyLike]);
 
   if (spaceKeyLike) {

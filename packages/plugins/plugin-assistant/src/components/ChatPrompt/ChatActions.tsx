@@ -28,7 +28,6 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
 
       <IconButton
         disabled={!processing}
-        classNames='px-1.5'
         variant='ghost'
         size={5}
         icon='ph--x--regular'
@@ -40,7 +39,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
       {microphone && (
         <IconButton
           disabled={!processing}
-          classNames={mx('px-1.5', recording && 'bg-primary-500')}
+          classNames={mx(recording && 'bg-primary-500')}
           variant='ghost'
           size={5}
           icon='ph--microphone--regular'

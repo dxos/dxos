@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { useLayout, usePluginManager } from '@dxos/app-framework';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { HelpContext, type Step } from '../../types';
 import { Tooltip, floaterProps } from '../Tooltip';
@@ -93,20 +94,16 @@ export const WelcomeTour = ({ steps: initialSteps, running: runningProp, onRunni
     }
   };
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (runningProp) {
-        // This handles the case when the target is not yet in the document.
-        // If the target is not in the document, when the joyride is turned on, it will not show the tooltip.
-        await waitForTarget(steps[stepIndex]);
-        setStepIndex(0);
-        setRunning(true);
-      } else if (typeof runningProp !== 'undefined') {
-        setRunning(false);
-      }
-    });
-
-    return () => clearTimeout(timeout);
+  useAsyncEffect(async () => {
+    if (runningProp) {
+      // This handles the case when the target is not yet in the document.
+      // If the target is not in the document, when the joyride is turned on, it will not show the tooltip.
+      await waitForTarget(steps[stepIndex]);
+      setStepIndex(0);
+      setRunning(true);
+    } else if (typeof runningProp !== 'undefined') {
+      setRunning(false);
+    }
   }, [runningProp]);
 
   // https://docs.react-joyride.com/callback

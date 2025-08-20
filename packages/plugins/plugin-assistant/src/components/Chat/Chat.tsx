@@ -170,10 +170,8 @@ type ChatPromptProps = ThemedClassName<
     Omit<ChatPresetsProps, 'onChange'> & {
       expandable?: boolean;
       online?: boolean;
-      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
-      onChangeOnline?: (online: boolean) => void;
-      // TODO(thure): Ditto here.
-      onChangePreset?: ChatPresetsProps['onChange'];
+      onOnlineChange?: (online: boolean) => void;
+      onPresetChange?: ChatPresetsProps['onChange'];
     }
 >;
 
@@ -185,11 +183,11 @@ const ChatPrompt = ({
   online,
   presets,
   preset,
-  onChangePreset,
-  onChangeOnline,
+  onPresetChange,
+  onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { space, chat, event, processor } = useChatContext(ChatPrompt.displayName);
+  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
   const streaming = useRxValue(processor.streaming);
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
@@ -277,7 +275,7 @@ const ChatPrompt = ({
   return (
     <div
       className={mx(
-        'is-full flex flex-col',
+        'is-full flex flex-col density-fine',
         outline && [
           'p-2 bg-groupSurface border border-transparent rounded',
           '[&:has(div:focus)]:border-transparent [&:has(div:focus)]:outline outline-neutralFocusIndicator',
@@ -286,9 +284,7 @@ const ChatPrompt = ({
       )}
     >
       <div className='flex gap-2'>
-        <div className='p-1'>
-          <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
-        </div>
+        <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
         <ChatEditor
           ref={editorRef}
@@ -308,7 +304,7 @@ const ChatPrompt = ({
           context={processor.context}
           preset={preset}
           presets={presets}
-          onPresetChange={onChangePreset}
+          onPresetChange={onPresetChange}
         />
 
         <div role='none' className='pli-cardSpacingChrome grow'>
@@ -324,7 +320,7 @@ const ChatPrompt = ({
         >
           {online !== undefined && (
             <Input.Root>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
             </Input.Root>
           )}
         </ChatActions>
