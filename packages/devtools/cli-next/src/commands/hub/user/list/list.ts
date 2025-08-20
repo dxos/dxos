@@ -12,8 +12,10 @@ import { withRetry } from '@dxos/edge-client';
 
 import { ConfigService } from '../../../../services';
 
-export const list = Command.make('list', {}, () =>
-  Effect.gen(function* () {
+export const list = Command.make(
+  'list',
+  {},
+  Effect.fn(function* () {
     const config = yield* ConfigService;
     const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
     const url = path.join(baseUrl, '/api/user/profile');
