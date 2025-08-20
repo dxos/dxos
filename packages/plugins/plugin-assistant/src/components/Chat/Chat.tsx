@@ -13,7 +13,7 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -291,7 +291,6 @@ const ChatPrompt = ({
         </div>
 
         <ChatEditor
-          id={fullyQualifiedId(chat)}
           ref={editorRef}
           autoFocus
           lineWrapping
