@@ -6,6 +6,7 @@ import { Command } from '@effect/cli';
 
 import { Common } from '../options';
 
+import { status } from './status';
 import { user } from './user';
 
 export const hub = Command.make('hub', {
@@ -13,5 +14,5 @@ export const hub = Command.make('hub', {
 }).pipe(
   //
   Command.withDescription('Manage Hub.'),
-  Command.withSubcommands([user]),
+  Command.withSubcommands([status, user]),
 );

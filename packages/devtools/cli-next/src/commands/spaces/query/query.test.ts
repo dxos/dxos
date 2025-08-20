@@ -2,26 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { beforeEach, describe, expect, it } from '@effect/vitest';
-import { Effect, LogLevel } from 'effect';
+import { describe, expect, it } from '@effect/vitest';
+import { Effect } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { ClientService } from '../../../services';
-import { TestLogger, testLayer } from '../../../testing';
+import { TestConsole, TestLayer } from '../../../testing';
 
 import { handler } from './query';
 
 describe('spaces query', () => {
-  const testLogger = new TestLogger();
-
-  beforeEach(() => {
-    testLogger.clear();
-  });
-
-  // TOOD(burdon): Convert tests to use factored out functions (not CLI).
-
   it('should query empty space', () =>
     Effect.gen(function* () {
       // TODO(wittjosiah): Create test runtime so that client service can be shared with `beforeEach`.
@@ -30,10 +22,11 @@ describe('spaces query', () => {
       yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* Effect.tryPromise(() => client.spaces.default.waitUntilReady());
       yield* handler({ spaceId: client.spaces.default.id, typename: DataType.Task.typename });
-      const logs = testLogger.getLogsByLevel(LogLevel.Info);
+      const logger = yield* TestConsole.TestConsole;
+      const logs = logger.logs;
       expect(logs).toHaveLength(1);
       expect(logs[0].args).toEqual(['[]']);
-    }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 
   it('should query space for objects', () =>
     Effect.gen(function* () {
@@ -46,9 +39,10 @@ describe('spaces query', () => {
       space.db.add(Obj.make(DataType.Task, { title: 'Task 1' }));
       space.db.add(Obj.make(DataType.Task, { title: 'Task 2' }));
       yield* handler({ spaceId: space.id, typename: DataType.Task.typename });
-      const logs = testLogger.getLogsByLevel(LogLevel.Info);
+      const logger = yield* TestConsole.TestConsole;
+      const logs = logger.logs;
       expect(logs).toHaveLength(1);
       const formattedObjects = JSON.parse(logs[0].args as string);
       expect(formattedObjects).toHaveLength(2);
-    }).pipe(Effect.provide(testLayer(testLogger)), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 });
