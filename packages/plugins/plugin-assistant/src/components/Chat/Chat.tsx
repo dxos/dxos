@@ -13,7 +13,7 @@ import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -37,10 +37,6 @@ import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThrea
 
 import { type ChatEvent } from './events';
 
-// TOOD(burdon): Use attention.
-const outlineClassNames =
-  'p-2 bg-groupSurface border border-transparent rounded focus-within:border-transparent _focus-within:outline _outline-neutralFocusIndicator';
-
 //
 // Context
 // NOTE: The context should not be exported. It is only used internally.
@@ -58,172 +54,6 @@ type ChatContextValue = {
 
 // NOTE: Do not export.
 const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
-
-//
-// Prompt
-//
-
-type ChatPromptProps = ThemedClassName<
-  {
-    outline?: boolean;
-  } & Pick<ChatEditorProps, 'placeholder'> &
-    Omit<ChatPresetsProps, 'onChange'> & {
-      expandable?: boolean;
-      online?: boolean;
-      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
-      onChangeOnline?: (online: boolean) => void;
-      // TODO(thure): Ditto here.
-      onChangePreset?: ChatPresetsProps['onChange'];
-    }
->;
-
-const ChatPrompt = ({
-  classNames,
-  outline,
-  placeholder,
-  expandable,
-  online,
-  presets,
-  preset,
-  onChangePreset,
-  onChangeOnline,
-}: ChatPromptProps) => {
-  const { t } = useTranslation(meta.id);
-  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
-  const streaming = useRxValue(processor.streaming);
-  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
-
-  const [active, setActive] = useState(false);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'record-start':
-          setActive(true);
-          break;
-        case 'record-stop':
-          setActive(false);
-          break;
-      }
-    });
-  }, [event]);
-
-  const editorRef = useRef<ChatEditorController>(null);
-
-  // TODO(burdon): Configure capability in TranscriptionPlugin.
-  const { recording } = useVoiceInput({
-    active,
-    onUpdate: (text) => {
-      editorRef.current?.setText(text);
-      editorRef.current?.focus();
-    },
-  });
-
-  // TODO(burdon): Reconcile with object tags.
-  const referencesProvider = useReferencesProvider(space);
-  const extensions = useMemo<Extension[]>(() => {
-    return [
-      referencesProvider && references({ provider: referencesProvider }),
-      Prec.highest(
-        keymap.of(
-          [
-            {
-              key: 'cmd-d',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'toggle-debug' });
-                return true;
-              },
-            },
-            expandable && {
-              key: 'cmd-ArrowUp',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'thread-open' });
-                return true;
-              },
-            },
-            expandable && {
-              key: 'cmd-ArrowDown',
-              preventDefault: true,
-              run: () => {
-                event.emit({ type: 'thread-close' });
-                return true;
-              },
-            },
-          ].filter(isNotFalsy),
-        ),
-      ),
-    ].filter(isNotFalsy);
-  }, [event, expandable, referencesProvider]);
-
-  const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
-    (text) => {
-      if (!streaming) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
-    },
-    [streaming, event],
-  );
-
-  const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
-    (ev) => {
-      event.emit(ev);
-    },
-    [event],
-  );
-
-  return (
-    <div className={mx('is-full flex flex-col', outline && outlineClassNames, classNames)}>
-      <div className='flex gap-2'>
-        <div className='p-1'>
-          <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
-        </div>
-
-        <ChatEditor
-          ref={editorRef}
-          autoFocus
-          lineWrapping
-          classNames='col-span-2 pbs-0.5'
-          placeholder={placeholder ?? t('prompt placeholder')}
-          extensions={extensions}
-          onSubmit={handleSubmit}
-        />
-      </div>
-
-      <div className='flex pbs-2 items-center'>
-        <ChatOptions
-          space={space}
-          blueprintRegistry={processor.blueprintRegistry}
-          context={processor.context}
-          preset={preset}
-          presets={presets}
-          onPresetChange={onChangePreset}
-        />
-
-        <div role='none' className='pli-cardSpacingChrome grow'>
-          <ChatReferences space={space} context={processor.context} />
-        </div>
-
-        <ChatActions
-          classNames='col-span-2'
-          microphone={true}
-          recording={recording}
-          processing={streaming}
-          onEvent={handleEvent}
-        >
-          {online !== undefined && (
-            <Input.Root>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-            </Input.Root>
-          )}
-        </ChatActions>
-      </div>
-    </div>
-  );
-};
-
-ChatPrompt.displayName = 'Chat.Prompt';
 
 //
 // Root
@@ -328,6 +158,183 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 };
 
 ChatRoot.displayName = 'Chat.Root';
+
+//
+// Prompt
+//
+
+type ChatPromptProps = ThemedClassName<
+  {
+    outline?: boolean;
+  } & Pick<ChatEditorProps, 'placeholder'> &
+    Omit<ChatPresetsProps, 'onChange'> & {
+      expandable?: boolean;
+      online?: boolean;
+      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
+      onChangeOnline?: (online: boolean) => void;
+      // TODO(thure): Ditto here.
+      onChangePreset?: ChatPresetsProps['onChange'];
+    }
+>;
+
+const ChatPrompt = ({
+  classNames,
+  outline,
+  placeholder,
+  expandable,
+  online,
+  presets,
+  preset,
+  onChangePreset,
+  onChangeOnline,
+}: ChatPromptProps) => {
+  const { t } = useTranslation(meta.id);
+  const { space, chat, event, processor } = useChatContext(ChatPrompt.displayName);
+
+  const streaming = useRxValue(processor.streaming);
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    return event.on((event) => {
+      switch (event.type) {
+        case 'record-start':
+          setActive(true);
+          break;
+        case 'record-stop':
+          setActive(false);
+          break;
+      }
+    });
+  }, [event]);
+
+  const editorRef = useRef<ChatEditorController>(null);
+
+  // TODO(burdon): Configure capability in TranscriptionPlugin.
+  const { recording } = useVoiceInput({
+    active,
+    onUpdate: (text) => {
+      editorRef.current?.setText(text);
+      editorRef.current?.focus();
+    },
+  });
+
+  // TODO(burdon): Reconcile with object tags.
+  const referencesProvider = useReferencesProvider(space);
+  const extensions = useMemo<Extension[]>(() => {
+    return [
+      referencesProvider && references({ provider: referencesProvider }),
+      Prec.highest(
+        keymap.of(
+          [
+            {
+              key: 'cmd-d',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'toggle-debug' });
+                return true;
+              },
+            },
+            expandable && {
+              key: 'cmd-ArrowUp',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'thread-open' });
+                return true;
+              },
+            },
+            expandable && {
+              key: 'cmd-ArrowDown',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'thread-close' });
+                return true;
+              },
+            },
+          ].filter(isNotFalsy),
+        ),
+      ),
+    ].filter(isNotFalsy);
+  }, [event, expandable, referencesProvider]);
+
+  const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
+    (text) => {
+      if (!streaming) {
+        event.emit({ type: 'submit', text });
+        return true;
+      }
+    },
+    [streaming, event],
+  );
+
+  const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
+
+  return (
+    <div
+      className={mx(
+        'is-full flex flex-col',
+        outline && [
+          'p-2 bg-groupSurface border border-transparent rounded',
+          '[&:has(div:focus)]:border-transparent [&:has(div:focus)]:outline outline-neutralFocusIndicator',
+        ],
+        classNames,
+      )}
+    >
+      <div className='flex gap-2'>
+        <div className='p-1'>
+          <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
+        </div>
+
+        <ChatEditor
+          id={fullyQualifiedId(chat)}
+          ref={editorRef}
+          autoFocus
+          lineWrapping
+          classNames='col-span-2 pbs-0.5'
+          placeholder={placeholder ?? t('prompt placeholder')}
+          extensions={extensions}
+          onSubmit={handleSubmit}
+        />
+      </div>
+
+      <div className='flex pbs-2 items-center'>
+        <ChatOptions
+          space={space}
+          blueprintRegistry={processor.blueprintRegistry}
+          context={processor.context}
+          preset={preset}
+          presets={presets}
+          onPresetChange={onChangePreset}
+        />
+
+        <div role='none' className='pli-cardSpacingChrome grow'>
+          <ChatReferences space={space} context={processor.context} />
+        </div>
+
+        <ChatActions
+          classNames='col-span-2'
+          microphone={true}
+          recording={recording}
+          processing={streaming}
+          onEvent={handleEvent}
+        >
+          {online !== undefined && (
+            <Input.Root>
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
+            </Input.Root>
+          )}
+        </ChatActions>
+      </div>
+    </div>
+  );
+};
+
+ChatPrompt.displayName = 'Chat.Prompt';
 
 //
 // Thread
