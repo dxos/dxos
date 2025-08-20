@@ -47,6 +47,8 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
+const columnDefault = { grid: { minSize: 42 } };
+
 //
 // Table.Root
 //
@@ -405,6 +407,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           columns={model.columnMeta.value}
+          columnDefault={columnDefault}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.projection.fields.length}
           overscroll='trap'
