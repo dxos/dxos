@@ -10,39 +10,43 @@ import { Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type CreateAgentResponseBody,
   type CreateAgentRequestBody,
+  type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeHttpResponse,
+  type EdgeStatus,
   type ExecuteWorkflowResponseBody,
+  type ExportBundleRequest,
+  type ExportBundleResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
+  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
-  type RecoverIdentityRequest,
-  type RecoverIdentityResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueueQuery,
   type QueryResult,
+  type QueueQuery,
+  type RecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
-  type EdgeStatus,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
-import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
+import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
+const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
   /**
@@ -272,6 +276,30 @@ export class EdgeHttpClient {
   }
 
   //
+  // Import/Export space.
+  //
+
+  public async importBundle(
+    spaceId: SpaceId, //
+    body: ImportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async exportBundle(
+    spaceId: SpaceId,
+    body: ExportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExportBundleResponse> {
+    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
+    });
+  }
+
+  //
   // Internal
   //
 
@@ -344,9 +372,14 @@ export class EdgeHttpClient {
 }
 
 const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+  const bodyString = body && JSON.stringify(body);
+  if (bodyString && bodyString.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: bodyString.length });
+  }
+
   return {
     method,
-    body: body && JSON.stringify(body),
+    body: bodyString,
     headers: authHeader ? { Authorization: authHeader } : undefined,
   };
 };

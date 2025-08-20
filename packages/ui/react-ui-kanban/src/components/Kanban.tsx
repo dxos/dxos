@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { IconButton, useTranslation, Tag } from '@dxos/react-ui';
-import { useSelectionActions, useSelected, AttentionGlyph } from '@dxos/react-ui-attention';
+import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { AttentionGlyph, useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   Card,
   CardDragPreview,
@@ -19,7 +19,7 @@ import {
 } from '@dxos/react-ui-stack';
 
 import { translationKey } from '../translations';
-import { UNCATEGORIZED_VALUE, type BaseKanbanItem, type KanbanModel } from '../types';
+import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../types';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
@@ -31,16 +31,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { multiSelect, clear } = useSelectionActions([model.id]);
   const selected = useSelected(model.id, 'multi');
-  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
   const handleAddCard = useCallback(
-    (columnValue: string | undefined) => {
-      if (onAddCard) {
-        const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
-        setFocusedCardId(newCardId);
-      }
-    },
+    (columnValue: string | undefined) => onAddCard?.(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue),
     [onAddCard],
   );
 
@@ -59,11 +53,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
         const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
-        const columnItem = useMemo(() => ({ id: columnValue }), [columnValue]);
         return (
           <CardStack.Root asChild key={columnValue}>
             <StackItem.Root
-              item={columnItem}
+              item={{ id: columnValue }}
               size={20}
               disableRearrange={uncategorized}
               focusIndicatorVariant='group'

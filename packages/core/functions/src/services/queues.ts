@@ -2,11 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Layer } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
+import type { Obj, Relation } from '@dxos/echo';
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
+import type { DXN, QueueSubspaceTag } from '@dxos/keys';
 
-export class QueueService extends Context.Tag('QueueService')<
+/**
+ * Gives access to all queues.
+ */
+export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
   QueueService,
   {
     /**
@@ -16,27 +21,57 @@ export class QueueService extends Context.Tag('QueueService')<
 
     /**
      * The queue that is used to store the context of the current research.
+     * @deprecated Use `ContextQueueService` instead.
      */
-    // TODO(dmaretskyi): Is this really part of the queue service?
-    readonly contextQueue: Queue | undefined;
+    readonly queue: Queue | undefined;
   }
 >() {
   static notAvailable = Layer.succeed(QueueService, {
     queues: {
-      get(dxn) {
+      get(_dxn) {
         throw new Error('Queues not available');
       },
       create() {
         throw new Error('Queues not available');
       },
     },
-    contextQueue: undefined,
+    queue: undefined,
   });
 
-  static make = (queues: QueueFactory, contextQueue: Queue | undefined): Context.Tag.Service<QueueService> => {
+  static make = (queues: QueueFactory, queue?: Queue): Context.Tag.Service<QueueService> => {
     return {
       queues,
-      contextQueue,
+      queue,
     };
   };
+
+  static layer = (queues: QueueFactory, queue?: Queue): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues, queue));
+
+  /**
+   * Gets a queue by its DXN.
+   */
+  static getQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
+    dxn: DXN,
+  ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
+
+  /**
+   * Creates a new queue.
+   */
+  static createQueue = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(options?: {
+    subspaceTag?: QueueSubspaceTag;
+  }): Effect.Effect<Queue<T>, never, QueueService> =>
+    QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
+}
+
+/**
+ * Gives access to a specific queue passed as a context.
+ */
+export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
+  ContextQueueService,
+  {
+    readonly queue: Queue;
+  }
+>() {
+  static layer = (queue: Queue) => Layer.succeed(ContextQueueService, { queue });
 }

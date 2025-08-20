@@ -4,8 +4,8 @@
 
 import { Flags } from '@oclif/core';
 
-import { sleep, Trigger } from '@dxos/async';
-import { mapCredentials, printCredentials, TABLE_FLAGS } from '@dxos/cli-base';
+import { Trigger, sleep } from '@dxos/async';
+import { TABLE_FLAGS, mapCredentials, printCredentials } from '@dxos/cli-base';
 import type { Credential } from '@dxos/client/halo';
 
 import { BaseCommand } from '../../../base';

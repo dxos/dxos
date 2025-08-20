@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FloppyDisk, Folder, FolderOpen } from '@phosphor-icons/react';
 import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, Input, Message, useTranslation } from '@dxos/react-ui';
+import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
-import { getSize } from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
-import { type FilesState, LocalFilesAction, type FilesSettingsProps } from '../types';
+import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
 
 export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
   const { t } = useTranslation(FILES_PLUGIN);
@@ -28,19 +26,31 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
         }
       >
         {state.rootHandle && <Input.Label>{state.rootHandle.name}</Input.Label>}
-        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}>
-          <Folder className={getSize(5)} />
-        </Button>
+        <IconButton
+          classNames='mis-2'
+          icon='ph--folder--regular'
+          iconOnly
+          label={t('save files to directory label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.SelectRoot))}
+        />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger export label')}>
-        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Export))}>
-          <FloppyDisk className={getSize(5)} />
-        </Button>
+        <IconButton
+          classNames='mis-2'
+          icon='ph--floppy-disk--regular'
+          iconOnly
+          label={t('trigger export label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.Export))}
+        />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('trigger import label')}>
-        <Button classNames='mis-2' onClick={() => dispatch(createIntent(LocalFilesAction.Import))}>
-          <FolderOpen className={getSize(5)} />
-        </Button>
+        <IconButton
+          classNames='mis-2'
+          icon='ph--folder-open--regular'
+          iconOnly
+          label={t('trigger import label')}
+          onClick={() => dispatch(createIntent(LocalFilesAction.Import))}
+        />
       </DeprecatedFormInput>
       <DeprecatedFormInput label={t('auto export label')}>
         <Input.Switch

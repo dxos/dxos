@@ -5,12 +5,12 @@
 import { Effect } from 'effect';
 
 import {
-  contributes,
   Capabilities,
-  createResolver,
-  type PluginContext,
-  createIntent,
   LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

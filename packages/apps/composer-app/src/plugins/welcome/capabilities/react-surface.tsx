@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { WelcomeScreen, WELCOME_SCREEN } from '../components';
+import { WELCOME_SCREEN, WelcomeScreen } from '../components';
 import { WELCOME_PLUGIN } from '../meta';
 
 export default () =>

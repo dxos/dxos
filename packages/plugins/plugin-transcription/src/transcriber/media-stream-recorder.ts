@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
-import { type WavConfig, type AudioChunk, type AudioRecorder } from './audio-recorder';
+import { type AudioChunk, type AudioRecorder, type WavConfig } from './audio-recorder';
 
 let initializingPromise: Promise<void> | undefined;
 

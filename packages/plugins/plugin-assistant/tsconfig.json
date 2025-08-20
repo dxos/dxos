@@ -55,13 +55,13 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
-    },
-    {
-      "path": "../../core/artifact-testing"
-    },
-    {
       "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-testing"
+    },
+    {
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/compute"
@@ -115,6 +115,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -148,6 +151,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
@@ -157,10 +163,19 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
       "path": "../../ui/react-ui-tag-picker"
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-board"
     },
     {
       "path": "../plugin-chess"
@@ -203,6 +218,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-theme"
     },
     {
       "path": "../plugin-transcription"

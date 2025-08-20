@@ -10,26 +10,31 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import {
-  runPlan,
-  type RunPlanParams,
-  readYAMLSpecFile,
-  type TestPlan,
-  runReplicant,
   type GlobalOptions,
   type RunParams,
+  type RunPlanParams,
+  type TestPlan,
+  readYAMLSpecFile,
+  runPlan,
+  runReplicant,
 } from './plan';
 import {
+  AutomergeTestPlan,
+  AutomergeTestPlan,
+  EdgeSync,
+  EdgeWs,
   EmptyTestPlan,
-  StorageTestPlan,
-  TransportTestPlan,
+  QueryTestPlan,
   QueryTestPlan,
   ReplicationTestPlan,
-  AutomergeTestPlan,
-  EdgeReplication,
+  ReplicationTestPlan,
+  StorageTestPlan,
+  TransportTestPlan,
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
-  edge: () => new EdgeReplication(),
+  edgeSync: () => new EdgeSync(),
+  edgeWs: () => new EdgeWs(),
   automerge: () => new AutomergeTestPlan(),
   // signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),

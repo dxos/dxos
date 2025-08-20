@@ -2,8 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Obj, type Ref, type Relation } from '@dxos/echo';
-import { type AnyEchoObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
+import {
+  type HasId,
+  SelfDXNId,
+  assertObjectModelShape,
+  defineHiddenProperty,
+  setRefResolverOnData,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -19,6 +27,49 @@ const TRACE_QUEUE_LOAD = false;
  */
 export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> implements Queue<T> {
   private readonly _signal = compositeRuntime.createSignal();
+
+  private readonly _refreshTask = new DeferredTask(Context.default(), async () => {
+    const thisRefreshId = ++this._refreshId;
+    let changed = false;
+    try {
+      TRACE_QUEUE_LOAD &&
+        log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
+      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
+      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      const decodedObjects = await Promise.all(
+        objects.map((obj) =>
+          Obj.fromJSON(obj, {
+            refResolver: this._refResolver,
+            dxn: this._dxn.extend([(obj as any).id]),
+          }),
+        ),
+      );
+      if (thisRefreshId !== this._refreshId) {
+        return;
+      }
+
+      for (const obj of decodedObjects) {
+        this._objectCache.set(obj.id, obj as T);
+      }
+
+      changed = objectSetChanged(this._objects, decodedObjects);
+
+      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
+      this._objects = decodedObjects as T[];
+    } catch (err) {
+      log.catch(err);
+      this._error = err as Error;
+    } finally {
+      this._isLoading = false;
+      if (changed) {
+        this._signal.notifyWrite();
+      }
+    }
+  });
 
   private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
@@ -75,6 +126,11 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
   async append(items: T[]): Promise<void> {
     items.forEach((item) => assertObjectModelShape(item));
 
+    for (const item of items) {
+      setRefResolverOnData(item, this._refResolver);
+      defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
+    }
+
     // Optimistic update.
     this._objects = [...this._objects, ...items];
     for (const item of items) {
@@ -117,15 +173,19 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
     const decodedObjects = await Promise.all(
       objects.map(async (obj) => {
-        const decoded = await Obj.fromJSON(obj, { refResolver: this._refResolver });
+        const decoded = await Obj.fromJSON(obj, {
+          refResolver: this._refResolver,
+          dxn: this._dxn.extend([(obj as any).id]),
+        });
         this._objectCache.set(decoded.id, decoded as T);
         return decoded;
       }),
     );
+
     return decodedObjects as T[];
   }
 
-  async getObjectsById(ids: ObjectId[]): Promise<(T | null)[]> {
+  async getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]> {
     const missingIds = ids.filter((id) => !this._objectCache.has(id));
     if (missingIds.length > 0) {
       if (!this._querying) {
@@ -137,7 +197,8 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
         }
       }
     }
-    return ids.map((id) => this._objectCache.get(id) ?? null);
+
+    return ids.map((id) => this._objectCache.get(id));
   }
 
   /**
@@ -146,45 +207,11 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
    */
   // TODO(dmaretskyi): Split optimistic into separate state so it doesn't get overridden.
   async refresh(): Promise<void> {
-    const thisRefreshId = ++this._refreshId;
-    let changed = false;
-    try {
-      TRACE_QUEUE_LOAD &&
-        log.info('queue refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue(this._subspaceTag, this._spaceId, { queueId: this._queueId });
-      TRACE_QUEUE_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects.length });
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-
-      const decodedObjects = await Promise.all(
-        objects.map((obj) => Obj.fromJSON(obj, { refResolver: this._refResolver })),
-      );
-      if (thisRefreshId !== this._refreshId) {
-        return;
-      }
-
-      for (const obj of decodedObjects) {
-        this._objectCache.set(obj.id, obj as T);
-      }
-
-      changed = objectSetChanged(this._objects, decodedObjects);
-
-      TRACE_QUEUE_LOAD && log.info('queue refresh', { changed, objects: objects.length, refreshId: thisRefreshId });
-      this._objects = decodedObjects as T[];
-    } catch (err) {
-      log.catch(err);
-      this._error = err as Error;
-    } finally {
-      this._isLoading = false;
-      if (changed) {
-        this._signal.notifyWrite();
-      }
-    }
+    await this._refreshTask.runBlocking();
   }
 }
 
-const objectSetChanged = (before: AnyEchoObject[], after: AnyEchoObject[]) => {
+const objectSetChanged = (before: (Obj.Any | Relation.Any)[], after: (Obj.Any | Relation.Any)[]) => {
   if (before.length !== after.length) {
     return true;
   }

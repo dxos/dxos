@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
@@ -13,13 +13,13 @@ import { Obj, Ref } from '@dxos/echo';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Sketch } from './Sketch';
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
 import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 
+import { Sketch } from './Sketch';
+
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
-  // TODO(burdon): Remove dependency on echo-db.
   return Obj.make(DiagramType, {
     canvas: Ref.make(Obj.make(CanvasType, { schema: TLDRAW_SCHEMA, content })),
   });

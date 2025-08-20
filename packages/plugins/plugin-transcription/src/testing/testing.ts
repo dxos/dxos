@@ -5,9 +5,7 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant';
+import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -17,7 +15,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { useQueue, type Space } from '@dxos/react-client/echo';
+import { type Space, useQueue } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
 
@@ -69,7 +67,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     });
   }
 
-  createBlock(): DataType.MessageBlock.Transcription {
+  createBlock(): DataType.MessageBlock.Transcript {
     let text = faker.lorem.paragraph();
     if (this._space) {
       const label = faker.commerce.productName();
@@ -81,7 +79,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
     }
 
     return {
-      type: 'transcription',
+      _tag: 'transcript',
       started: this.next().toISOString(),
       text,
     };
@@ -95,11 +93,13 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  AiService = new EdgeAiServiceClient({
-    endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-  });
-
-  executor = new FunctionExecutor(new ServiceContainer().setServices({ ai: { client: this.AiService } }));
+  executor = new FunctionExecutor(
+    new ServiceContainer().setServices({
+      // ai: {
+      //   client: this.AiService,
+      // },
+    }),
+  );
 
   space: Space | undefined;
   currentMessage: number = 0;

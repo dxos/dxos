@@ -6,9 +6,10 @@ import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapCapabilities } from './capabilities';
 import { type MapControlType } from '../components';
 import { MAP_PLUGIN } from '../meta';
+
+import { MapCapabilities } from './capabilities';
 
 export default () => {
   const state = new LocalStorageStore<MapCapabilities.State>(MAP_PLUGIN, {

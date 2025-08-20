@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { decodeReference, ObjectStructure, type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, ObjectStructure, decodeReference } from '@dxos/echo-protocol';
 
 /**
  * Assumes properties are at root.

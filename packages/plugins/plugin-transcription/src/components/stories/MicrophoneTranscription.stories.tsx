@@ -7,17 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
-  extractionAnthropicFn,
   type ExtractionFunction,
+  extractionAnthropicFn,
   extractionNerFn,
-  processTranscriptMessage,
   getNer,
-} from '@dxos/assistant';
+  processTranscriptMessage,
+} from '@dxos/assistant/extraction';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo-schema';
@@ -32,16 +30,17 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { seedTestData, Testing } from '@dxos/schema/testing';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TranscriptionStory } from './TranscriptionStory';
-import { useIsSpeaking } from './useIsSpeaking';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { renderMarkdown } from '../Transcript';
+
+import { TranscriptionStory } from './TranscriptionStory';
+import { useIsSpeaking } from './useIsSpeaking';
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
@@ -117,11 +116,15 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
-      const AiService = new EdgeAiServiceClient({
-        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-      });
       executor = new FunctionExecutor(
-        new ServiceContainer().setServices({ ai: { client: AiService }, database: { db: space!.db } }),
+        new ServiceContainer().setServices({
+          // ai: {
+          //   client: new Edge AiServiceClient({
+          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+          //   }),
+          // },
+          // database: { db: space!.db },
+        }),
       );
     }
 
@@ -200,7 +203,7 @@ const meta: Meta<typeof DefaultStory> = {
         StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();

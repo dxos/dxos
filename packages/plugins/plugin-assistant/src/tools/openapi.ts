@@ -2,6 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): tools
+// @ts-ignore
+
 import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
@@ -80,7 +83,7 @@ export const createToolsFromApi = async (
           inputSchema.properties![name] = normalizeSchema(schema);
           if (required) {
             inputSchema.required ??= [];
-            inputSchema.required!.push(name);
+            inputSchema.required.push(name);
           }
         }
       }

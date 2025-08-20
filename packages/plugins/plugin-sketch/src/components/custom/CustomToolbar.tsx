@@ -30,8 +30,8 @@ import {
   TextToolbarItem,
   TldrawUiMenuItem,
   TriangleToolbarItem,
-  useTools,
   XBoxToolbarItem,
+  useTools,
 } from '@tldraw/tldraw';
 import React, { memo } from 'react';
 

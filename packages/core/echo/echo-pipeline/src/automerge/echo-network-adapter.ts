@@ -2,15 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { NetworkAdapter, type Message, type PeerId, type PeerMetadata } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  type Heads,
+  type Message,
+  NetworkAdapter,
+  type PeerId,
+  type PeerMetadata,
+} from '@automerge/automerge-repo';
 
-import { synchronized, Trigger } from '@dxos/async';
+import { Trigger, synchronized } from '@dxos/async';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
+
+import { createIdFromSpaceKey } from '../common/space-id';
 
 import {
   type EchoReplicator,
@@ -20,12 +29,11 @@ import {
   type ShouldSyncCollectionParams,
 } from './echo-replicator';
 import {
-  isCollectionQueryMessage,
-  isCollectionStateMessage,
   type CollectionQueryMessage,
   type CollectionStateMessage,
+  isCollectionQueryMessage,
+  isCollectionStateMessage,
 } from './network-protocol';
-import { createIdFromSpaceKey } from '../common/space-id';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -201,6 +209,30 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           : null;
       })
       .filter(isNonNullable);
+  }
+
+  bundleSyncEnabledForPeer(peerId: PeerId): boolean {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      return false;
+    }
+    return connection.connection.bundleSyncEnabled;
+  }
+
+  async pushBundle(peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      throw new Error('Connection not found.');
+    }
+    return connection.connection.pushBundle!(bundle);
+  }
+
+  async pullBundle(peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
+    const connection = this._connections.get(peerId);
+    if (!connection) {
+      throw new Error('Connection not found.');
+    }
+    return connection.connection.pullBundle!(docHeads);
   }
 
   private _send(message: Message): void {

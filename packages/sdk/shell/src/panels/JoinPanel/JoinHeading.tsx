@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
-import React, { cloneElement, type ForwardedRef, forwardRef } from 'react';
+import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
-import { Button, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
+
+import { Heading } from '../../components';
 
 import { type JoinPanelMode } from './JoinPanelProps';
-import { Heading } from '../../components';
 
 export interface JoinSpaceHeadingProps {
   mode?: JoinPanelMode;
@@ -30,7 +30,7 @@ export const JoinHeading = forwardRef(
         classNames={mx(descriptionText, 'plb-0 pli-2 absolute block-start-0 inline-end-0 z-[1]')}
         data-testid='join-exit'
       >
-        <X weight='bold' className={getSize(4)} />
+        <Icon icon='ph--x--bold' size={4} />
         <span className='sr-only'>{t('exit label')}</span>
       </Button>
     );

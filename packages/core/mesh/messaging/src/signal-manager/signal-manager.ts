@@ -5,7 +5,7 @@
 import { type Event } from '@dxos/async';
 import { type Lifecycle } from '@dxos/context';
 
-import { type SignalStatus, type SignalMethods } from '../signal-methods';
+import { type SignalMethods, type SignalStatus } from '../signal-methods';
 
 /**
  * Manages a collection of signaling clients.

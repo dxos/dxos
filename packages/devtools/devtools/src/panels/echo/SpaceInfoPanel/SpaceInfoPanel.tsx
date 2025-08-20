@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import { ArrowClockwise } from '@phosphor-icons/react';
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
@@ -10,16 +9,16 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Toolbar } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { Icon, Toolbar } from '@dxos/react-ui';
+
+import { PanelContainer } from '../../../components';
+import { DataSpaceSelector } from '../../../containers';
+import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 import { FeedTable, type FeedTableProps } from './FeedTable';
 import { PipelineTable, type PipelineTableProps } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 import { SyncStateInfo } from './SyncStateInfo';
-import { PanelContainer } from '../../../components';
-import { DataSpaceSelector } from '../../../containers';
-import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 export type SpaceInfoPanelProps = {
   space?: Space;
@@ -60,7 +59,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       <Toolbar.Root>
         {!props.space && <DataSpaceSelector />}
         <Toolbar.Button onClick={() => forceUpdate({})}>
-          <ArrowClockwise className={getSize(5)} />
+          <Icon icon='ph--arrow-clockwise--regular' size={5} />
         </Toolbar.Button>
         <div className='grow' />
         <Toolbar.Button onClick={toggleActive}>

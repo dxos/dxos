@@ -16,7 +16,7 @@ import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { sheetExtension } from '../../extensions';
-import { createSheet, SheetType } from '../../types';
+import { SheetType, createSheet } from '../../types';
 
 type StoryProps = CellEditorProps;
 

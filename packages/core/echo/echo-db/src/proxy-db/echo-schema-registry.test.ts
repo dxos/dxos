@@ -6,14 +6,14 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import {
-  TypeIdentifierAnnotationId,
   EchoSchema,
   EntityKind,
-  TypeAnnotationId,
   StoredSchema,
-  toJsonSchema,
   type TypeAnnotation,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
   getSchemaTypename,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';

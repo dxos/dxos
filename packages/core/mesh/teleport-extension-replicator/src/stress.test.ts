@@ -3,14 +3,14 @@
 //
 
 import * as fc from 'fast-check';
-import { onTestFinished, describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, Event } from '@dxos/async';
+import { Event, asyncTimeout } from '@dxos/async';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { type Teleport } from '@dxos/teleport';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
@@ -21,9 +21,7 @@ const MAX_NUM_FEEDS = 3;
 
 class TestAgent {
   public storage = createStorage({ type: StorageType.RAM });
-  readonly feedStore = new FeedStore({
-    factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
-  });
+  readonly feedStore: FeedStore<any>;
 
   readonly replicator = new ReplicatorExtension().setOptions({ upload: true });
 
@@ -32,6 +30,9 @@ class TestAgent {
     readonly keyring: Keyring,
     readonly peer: Teleport,
   ) {
+    this.feedStore = new FeedStore({
+      factory: new FeedFactory({ root: this.storage.createDirectory('feeds'), signer: this.keyring }),
+    });
     peer.addExtension('dxos.mesh.teleport.replicator', this.replicator);
   }
 

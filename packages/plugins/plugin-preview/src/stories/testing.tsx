@@ -1,0 +1,103 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type { Meta } from '@storybook/react-vite';
+import React, { type FC } from 'react';
+
+import { Obj, Ref } from '@dxos/echo';
+import { faker } from '@dxos/random';
+import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { DataType } from '@dxos/schema';
+
+import { ContactCard, OrganizationCard, ProjectCard } from '../components';
+import { type PreviewProps } from '../types';
+
+faker.seed(1234);
+
+type CardProps<T extends object> = {
+  Component: FC<PreviewProps<T>>;
+  subject: T;
+  icon?: string;
+  image?: boolean;
+};
+
+export type DefaultstoryProps = {
+  role: 'card--popover' | 'card--intrinsic' | 'card--extrinsic' | 'card--transclusion';
+  cards: CardProps<any>[];
+};
+
+export const Defaultstory: Meta<DefaultstoryProps>['render'] = ({ role, cards }) => {
+  return (
+    <div className='grid grid-cols-3'>
+      {cards.map(({ Component, icon, image, subject }, i) => (
+        <div key={i} className='flex justify-center'>
+          <CardContainer icon={icon} role={role}>
+            <Component role={role} subject={image ? subject : omitImage(subject)} />
+          </CardContainer>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export const omitImage = ({ image: _, ...rest }: any) => rest;
+
+// TODO(burdon): Test data should exercise the standard data generators.
+export const createCards = (image = true): CardProps<any>[] => {
+  const organization = Obj.make(DataType.Organization, {
+    name: faker.company.name(),
+    image:
+      'https://plus.unsplash.com/premium_photo-1672116452571-896980a801c8?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    website: faker.internet.url(),
+    description: faker.lorem.paragraph(),
+  });
+
+  const contact = Obj.make(DataType.Person, {
+    fullName: faker.person.fullName(),
+    image:
+      'https://plus.unsplash.com/premium_photo-1664536392779-049ba8fde933?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    organization: Ref.make(organization),
+    emails: [
+      {
+        label: 'Work',
+        value: faker.internet.email(),
+      },
+      {
+        label: 'Work',
+        value: faker.internet.email(),
+      },
+      {
+        label: 'Work',
+        value: faker.internet.email(),
+      },
+    ],
+  });
+
+  const project = Obj.make(DataType.Project, {
+    name: faker.person.fullName(),
+    image: 'https://dxos.network/dxos-logotype-blue.png',
+    description: faker.lorem.paragraph(),
+  });
+
+  return [
+    {
+      Component: OrganizationCard,
+      subject: organization,
+      icon: 'ph--building-office--regular',
+      image,
+    },
+    {
+      Component: ContactCard,
+      subject: contact,
+      icon: 'ph--user--regular',
+      image,
+    },
+    {
+      Component: ProjectCard,
+      subject: project,
+      icon: 'ph--building--regular',
+      image,
+    },
+  ];
+};

@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDoubleRight, Spinner } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
@@ -53,7 +52,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
     return (
       <>
         <div role='none' className='flex items-center justify-center text-description'>
-          <CaretDoubleRight />
+          <Icon icon='ph--caret-double-right--regular' />
         </div>
         <div role='none' className='flex items-center overflow-hidden'>
           <p
@@ -94,10 +93,10 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
         )}
         ref={forwardedRef}
       >
-        <Spinner
-          weight='bold'
+        <Icon
+          icon='ph--spinner--bold'
+          classNames='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}
-          className='is-6 bs-4 invisible data-[visible=show]:visible animate-spin-slow'
         />
         <span className='truncate min-is-0' aria-live='polite'>
           {activity ? children : null}

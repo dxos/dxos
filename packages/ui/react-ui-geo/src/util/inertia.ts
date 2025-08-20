@@ -4,7 +4,7 @@
 // https://github.com/Fil/d3-inertia
 //
 
-import { select, drag, timer } from 'd3';
+import { drag, select, timer } from 'd3';
 import versor from 'versor';
 
 export const restrictAxis =

@@ -2,102 +2,126 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Message, type ExecutableTool } from '@dxos/ai';
-import { type ArtifactDefinition } from '@dxos/artifact';
+import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { Effect } from 'effect';
+
+import {
+  type AiInputPreprocessingError,
+  type AiToolNotFoundError,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import { Event } from '@dxos/async';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { AiService, ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { DatabaseService, type TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
+import { DataType } from '@dxos/schema';
 
-import { ContextBinder, type ContextBinding } from '../context';
-import { AISession, type SessionRunOptions } from '../session';
+import { type AiAssistantError } from '../errors';
+import { AiSession, type GenerationObserver } from '../session';
 
-export interface ConversationRunOptions {
-  systemPrompt?: string;
+import { AiContextBinder, type ContextBinding } from './context';
+
+export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
+  system?: string;
+  toolkit?: AiToolkit.AiToolkit<Tools>;
+  observer?: GenerationObserver;
 
-  tools?: ExecutableTool[];
-  artifacts?: ArtifactDefinition[];
-  extensions?: ToolContextExtensions;
-  generationOptions?: SessionRunOptions['generationOptions'];
-
-  /** @depreacated Should be managed by the conversation. */
-  requiredArtifactIds?: string[];
-
-  // TODO(dmaretskyi): Move into conversation.
-  artifactDiffResolver?: SessionRunOptions['artifactDiffResolver'];
+  /**
+   * @deprecated Remove
+   */
+  session?: AiSession;
 }
 
-export type ConversationOptions = {
-  serviceContainer: ServiceContainer;
-  queue: Queue<Message | ContextBinding>;
+export type AiConversationOptions = {
+  queue: Queue<DataType.Message | ContextBinding>;
 };
 
 /**
- * Persistent conversation state.
- * Context + history + artifacts.
- * Backed by a Queue.
+ * Durable conversation state (initiated by users and agents) backed by a Queue.
  */
-export class Conversation {
-  private readonly _serviceContainer: ServiceContainer;
-  private readonly _queue: Queue<Message | ContextBinding>;
-
-  /**
-   * Fired when the execution loop begins.
-   * This is called before the first message is sent.
-   */
-  public readonly onBegin = new Event<AISession>();
+export class AiConversation {
+  private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
    * Blueprints bound to the conversation.
    */
-  public readonly context: ContextBinder;
+  public readonly _context: AiContextBinder;
 
-  constructor(options: ConversationOptions) {
-    this._serviceContainer = options.serviceContainer;
+  /**
+   * Fired when the execution loop begins.
+   * This is called before the first message is sent.
+   *
+   * @deprecated Pass in a session instead.
+   */
+  // TODO(burdon): Is this still deprecated?
+  public readonly onBegin = new Event<AiSession>();
+
+  constructor(options: AiConversationOptions) {
     this._queue = options.queue;
-    this.context = new ContextBinder(this._queue);
+    this._context = new AiContextBinder(this._queue);
   }
 
-  async run(options: ConversationRunOptions): Promise<Message[]> {
-    const session = new AISession({ operationModel: 'configured' });
-    this.onBegin.emit(session);
-
-    const history = await this.getHistory();
-    const context = await this.context.query();
-    const blueprints = (await Ref.Array.loadAll([...context.blueprints])).filter(isNonNullable);
-    if (blueprints.length > 1) {
-      log.warn('multiple blueprints are not yet supported');
-    }
-
-    const messages = await session.run({
-      history,
-      prompt: options.prompt,
-      systemPrompt: (options.systemPrompt ?? '') + (blueprints.at(0)?.instructions ?? ''),
-
-      // TODO(dmaretskyi): Artifacts come from the blueprint?
-      artifacts: options.artifacts ?? [],
-      tools: blueprints.at(0)?.tools ?? [],
-      executableTools: options.tools,
-      requiredArtifactIds: options.requiredArtifactIds,
-      client: this._serviceContainer.getService(AiService).client,
-      toolResolver: this._serviceContainer.getService(ToolResolverService).toolResolver,
-      extensions: {
-        serviceContainer: this._serviceContainer,
-        ...options.extensions,
-      },
-      generationOptions: options.generationOptions,
-    });
-
-    await this._queue.append(messages);
-
-    return messages;
+  get context() {
+    return this._context;
   }
 
-  async getHistory(): Promise<Message[]> {
+  async getHistory(): Promise<DataType.Message[]> {
     const queueItems = await this._queue.queryObjects();
-    return queueItems.filter(Obj.instanceOf(Message));
+    return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
+
+  /**
+   * Executes a prompt.
+   * Each invocation creates a new `AiSession`, which handles potential tool calls.
+   */
+  run = <Tools extends AiTool.Any>({
+    // TODO(burdon): Decide whether to pass in or to fully encapsulate.
+    session = new AiSession(),
+    ...params
+  }: AiConversationRunParams<Tools>): Effect.Effect<
+    DataType.Message[],
+    AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
+  > =>
+    Effect.gen(this, function* () {
+      const history = yield* Effect.promise(() => this.getHistory());
+      const context = yield* Effect.promise(() => this.context.query());
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
+
+      // TODO(burdon): These don't need to be loaded; just need id and typename from context.
+      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
+
+      log.info('run', {
+        prompt: params.prompt,
+        system: params.system,
+        history: history.length,
+        objects: objects.length,
+        blueprints: blueprints.length,
+        toolkit: params.toolkit,
+      });
+
+      const start = Date.now();
+      this.onBegin.emit(session);
+
+      const messages = yield* session.run({
+        prompt: params.prompt,
+        system: params.system,
+        history,
+        objects,
+        blueprints,
+        toolkit: params.toolkit,
+        observer: params.observer,
+      });
+
+      log.info('result', { messages: messages, duration: Date.now() - start });
+      yield* Effect.promise(() => this._queue.append(messages));
+      return messages;
+    }).pipe(Effect.withSpan('AiConversation.run'));
 }

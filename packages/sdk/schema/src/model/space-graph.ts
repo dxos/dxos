@@ -6,9 +6,9 @@ import { batch, effect } from '@preact/signals-core';
 
 import { type CleanupFn } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { Relation, Obj, Type, Filter, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { type GraphEdge, AbstractGraphBuilder, type Graph, ReactiveGraphModel, type GraphNode } from '@dxos/graph';
+import { AbstractGraphBuilder, type Graph, type GraphEdge, type GraphNode, ReactiveGraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
@@ -31,6 +31,8 @@ export type SpaceGraphEdge = GraphEdge.Optional;
 class SpaceGraphBuilder extends AbstractGraphBuilder<SpaceGraphNode, SpaceGraphEdge, SpaceGraphModel> {}
 
 const defaultFilter: Filter<any> = Filter.everything();
+
+const truncate = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
 export type SpaceGraphModelOptions = {
   showSchema?: boolean;
@@ -67,6 +69,10 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     return this._objects ?? [];
   }
 
+  get queue(): Queue | undefined {
+    return this._queue;
+  }
+
   isOpen() {
     return this._space !== undefined;
   }
@@ -90,7 +96,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
   }
 
   async open(space: Space, queue?: Queue): Promise<this> {
-    log('open');
+    log('open', { space, queue });
     if (this.isOpen()) {
       await this.close();
     }
@@ -152,13 +158,21 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
     );
 
     if (this._queue) {
-      this._queueSubscription = effect(() => {
+      const clearEffect = effect(() => {
         const items = this._queue?.objects;
         if (items) {
           this._queueItems = [...items];
         }
         this.invalidate();
       });
+      const pollingTask = setInterval(() => {
+        void this._queue?.refresh();
+      }, 1000);
+
+      this._queueSubscription = () => {
+        clearEffect();
+        clearInterval(pollingTask);
+      };
     }
   }
 
@@ -238,7 +252,7 @@ export class SpaceGraphModel extends ReactiveGraphModel<SpaceGraphNode, SpaceGra
               type: 'object',
               data: {
                 object,
-                label: (schema && Obj.getLabel(object)) ?? object.id,
+                label: (schema && Obj.getLabel(object)) ?? Obj.getTypename(object) + '/' + truncate(object.id),
               },
             };
 

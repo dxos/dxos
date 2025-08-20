@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Locator, Page, FrameLocator } from '@playwright/test';
+import type { FrameLocator, Locator, Page } from '@playwright/test';
 
 type Scope = Locator | FrameLocator | Page;
 

@@ -42,7 +42,6 @@ export * from './safe-await';
 export * from './safe-instanceof';
 export * from './safe-parse';
 export * from './sliding-window-summary';
-export * from './sliding-window-summary';
 export * from './sort';
 export * from './string';
 export * from './sum';

@@ -3,26 +3,39 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import { Match } from 'effect';
+import { Match, Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 
 // TODO(burdon): Reconcile with @dxos/graph.
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 
-export type Selection =
-  | { mode: 'single'; id?: string }
-  | { mode: 'multi'; ids: string[] }
-  | { mode: 'range'; from?: string; to?: string }
-  | { mode: 'multi-range'; ranges: { from: string; to: string }[] };
+export const SelectionSchema = Schema.Union(
+  Schema.Struct({ mode: Schema.Literal('single'), id: Schema.optional(Schema.String) }).pipe(Schema.mutable),
+  Schema.Struct({ mode: Schema.Literal('multi'), ids: Schema.Array(Schema.String).pipe(Schema.mutable) }).pipe(
+    Schema.mutable,
+  ),
+  Schema.Struct({
+    mode: Schema.Literal('range'),
+    from: Schema.optional(Schema.String),
+    to: Schema.optional(Schema.String),
+  }).pipe(Schema.mutable),
+  Schema.Struct({
+    mode: Schema.Literal('multi-range'),
+    ranges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String })).pipe(Schema.mutable),
+  }).pipe(Schema.mutable),
+).pipe(Schema.mutable);
+
+export type Selection = Schema.Schema.Type<typeof SelectionSchema>;
 
 export const defaultSelection = Match.type<SelectionMode>().pipe(
-  Match.when('single', () => ({ mode: 'single' }) as Selection),
-  Match.when('multi', () => ({ mode: 'multi', ids: [] }) as Selection),
-  Match.when('range', () => ({ mode: 'range' }) as Selection),
-  Match.when('multi-range', () => ({ mode: 'multi-range', ranges: [] }) as Selection),
+  Match.withReturnType<Selection>(),
+  Match.when('single', () => ({ mode: 'single' })),
+  Match.when('multi', () => ({ mode: 'multi', ids: [] })),
+  Match.when('range', () => ({ mode: 'range' })),
+  Match.when('multi-range', () => ({ mode: 'multi-range', ranges: [] })),
   Match.exhaustive,
 );
 
@@ -127,7 +140,7 @@ export class SelectionManager {
     untracked(() => {
       const selection = this.getSelection(contextId, 'multi-range');
       invariant(selection?.mode === 'multi-range', 'Selection mode is not multi-range');
-      selection.ranges = ranges;
+      selection.ranges.splice(0, selection.ranges.length, ...ranges);
     });
   }
 

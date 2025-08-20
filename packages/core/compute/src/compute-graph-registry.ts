@@ -7,12 +7,13 @@ import type { ConfigParams } from 'hyperformula/typings/ConfigParams';
 import type { FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type SpaceId, type Space } from '@dxos/client/echo';
+import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { HyperFormula } from '#hyperformula';
+
 import { ComputeGraph } from './compute-graph';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
 

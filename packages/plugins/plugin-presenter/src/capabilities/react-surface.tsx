@@ -7,14 +7,14 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import {
+  CollectionPresenterContainer,
+  DocumentPresenterContainer,
   MarkdownSlide,
   PresenterSettings,
-  DocumentPresenterContainer,
-  CollectionPresenterContainer,
 } from '../components';
 import { PRESENTER_PLUGIN } from '../meta';
 import { type PresenterSettingsProps } from '../types';
@@ -25,22 +25,32 @@ export default () =>
       id: `${PRESENTER_PLUGIN}/document`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: DocumentType; variant: 'presenter' } =>
-        Obj.instanceOf(DocumentType, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <DocumentPresenterContainer document={data.subject} />,
+      filter: (data): data is { subject: { type: typeof PRESENTER_PLUGIN; object: Markdown.Document } } =>
+        !!data.subject &&
+        typeof data.subject === 'object' &&
+        'type' in data.subject &&
+        'object' in data.subject &&
+        data.subject.type === PRESENTER_PLUGIN &&
+        Obj.instanceOf(Markdown.Document, data.subject.object),
+      component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/collection`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: DataType.Collection; variant: 'presenter' } =>
-        Obj.instanceOf(DataType.Collection, data.subject) && data.variant === 'presenter',
-      component: ({ data }) => <CollectionPresenterContainer collection={data.subject} />,
+      filter: (data): data is { subject: { type: typeof PRESENTER_PLUGIN; object: DataType.Collection } } =>
+        !!data.subject &&
+        typeof data.subject === 'object' &&
+        'type' in data.subject &&
+        'object' in data.subject &&
+        data.subject.type === PRESENTER_PLUGIN &&
+        Obj.instanceOf(DataType.Collection, data.subject.object),
+      component: ({ data }) => <CollectionPresenterContainer collection={data.subject.object} />,
     }),
     createSurface({
       id: `${PRESENTER_PLUGIN}/slide`,
       role: 'slide',
-      filter: (data): data is { subject: DocumentType } => Obj.instanceOf(DocumentType, data.subject),
+      filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
       component: ({ data }) => <MarkdownSlide document={data.subject} />,
     }),
     createSurface({

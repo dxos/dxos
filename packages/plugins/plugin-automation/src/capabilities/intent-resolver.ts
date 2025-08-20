@@ -3,12 +3,12 @@
 //
 
 import {
-  contributes,
   Capabilities,
-  createResolver,
-  type PluginContext,
-  createIntent,
   LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
@@ -57,7 +57,7 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(SpaceAction.AddObject, { object: trigger, target: space }),
+            createIntent(SpaceAction.AddObject, { object: trigger, target: space, hidden: true }),
             createIntent(LayoutAction.Open, {
               part: 'main',
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],

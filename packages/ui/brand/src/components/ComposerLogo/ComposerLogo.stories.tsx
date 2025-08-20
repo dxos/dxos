@@ -6,15 +6,15 @@ import '@dxos-theme';
 
 import '@fontsource/k2d/100-italic.css';
 
-import { Ghost, Square } from '@phosphor-icons/react';
 import React, { useRef, useState } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 import { DXOS } from '../../icons';
+
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 
 // import ident from '../../../assets/sounds/ident-1.mp3';
 
@@ -112,13 +112,13 @@ export const Pacman = {
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-blue-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-purple-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-red-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
               </div>
             </div>
 
@@ -127,7 +127,7 @@ export const Pacman = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Square weight='duotone' className='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>

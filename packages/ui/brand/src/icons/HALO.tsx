@@ -3,7 +3,7 @@
 //
 
 import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
-import React, { forwardRef, type ReactElement } from 'react';
+import React, { type ReactElement, forwardRef } from 'react';
 
 const weights = new Map<IconWeight, ReactElement>([
   [

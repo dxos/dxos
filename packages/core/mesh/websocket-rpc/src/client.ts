@@ -6,7 +6,7 @@ import WebSocket from 'isomorphic-ws';
 
 import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
-import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
+import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
 import { WebSocketWithTokenAuth } from './token-auth';
 

@@ -3,13 +3,13 @@
 //
 
 import {
-  NODE_INPUT,
-  NODE_OUTPUT,
   type ComputeNode,
   type Executable,
+  NODE_INPUT,
+  NODE_OUTPUT,
   type NodeType,
-  registry,
   getTemplateInputSchema,
+  registry,
 } from '@dxos/conductor';
 import { raise } from '@dxos/debug';
 import { ObjectId, toJsonSchema } from '@dxos/echo-schema';

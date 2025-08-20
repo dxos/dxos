@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
-import { MessageSchema, type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 
 import { protocol } from './defs';
 import { type EdgeIdentity } from './edge-identity';

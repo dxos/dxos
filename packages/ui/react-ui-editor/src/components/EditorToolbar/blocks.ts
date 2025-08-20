@@ -7,8 +7,9 @@ import { type EditorView } from '@codemirror/view';
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
-import { removeBlockquote, addBlockquote, removeCodeblock, addCodeblock, insertTable } from '../../extensions';
+import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '../../extensions';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const createBlockGroupAction = (value: string) =>
   createEditorActionGroup('block', {
@@ -49,7 +50,7 @@ const createBlockActions = (value: string, getView: () => EditorView, blankLine?
   });
 
 export const createBlocks = (state: EditorToolbarState, getView: () => EditorView) => {
-  const value = state?.blockQuote ? 'blockquote' : state.blockType ?? '';
+  const value = state?.blockQuote ? 'blockquote' : (state.blockType ?? '');
   const blockGroupAction = createBlockGroupAction(value);
   const blockActions = createBlockActions(value, getView, state.blankLine);
   return {

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type, type Ref } from '@dxos/echo';
+import { type Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -101,10 +101,8 @@ export const TraceEvent = Schema.Struct({
   // TODO(burdon): Need enum/numeric result (not string).
   outcome: Schema.String,
   truncated: Schema.Boolean,
-  /**
-   * Time when the event was persisted.
-   */
-  ingestionTimestampMs: Schema.Number,
+  /** Time when the event was persisted. */
+  ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));

@@ -7,8 +7,8 @@ import React from 'react';
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Input, toLocalizedString, useTranslation, List, ListItem, IconButton } from '@dxos/react-ui';
-import { controlItemClasses, ControlPage, ControlSection, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { ControlPage, ControlSection, DeprecatedFormInput, controlItemClasses } from '@dxos/react-ui-form';
 
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction, type SpaceSettingsProps } from '../types';

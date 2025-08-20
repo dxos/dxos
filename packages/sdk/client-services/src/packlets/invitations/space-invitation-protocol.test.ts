@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncChain, Trigger } from '@dxos/async';
+import { Trigger, chain } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -22,7 +22,7 @@ const closeAfterTest = async (peer: ServiceContext) => {
 
 describe('services/space-invitations-protocol', () => {
   test('genesis', async () => {
-    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+    const [peer] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.dataSpaceManager!.createSpace();
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
@@ -31,7 +31,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('genesis & ready', async () => {
-    const [peer] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+    const [peer] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
     const space = await peer.dataSpaceManager!.createSpace();
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
@@ -41,7 +41,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('invitation with no auth', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
@@ -65,7 +65,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('invitation when already joined', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const space1 = await host.dataSpaceManager!.createSpace();
     const spaceKey = space1.key;
@@ -92,7 +92,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('creates and accepts invitation with retry', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     let attempt = 0;
 
@@ -153,7 +153,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('timeout', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
     const space = await host.dataSpaceManager!.createSpace();
     const hostInvitation = await createInvitation(host, {
       kind: Invitation.Kind.SPACE,
@@ -175,7 +175,7 @@ describe('services/space-invitations-protocol', () => {
   });
 
   test('cancels invitation', async () => {
-    const [host, guest] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+    const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
     const hostConnected = new Trigger<Invitation>();
     const guestConnected = new Trigger<Invitation>();

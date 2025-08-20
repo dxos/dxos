@@ -4,22 +4,20 @@
 
 import '@dxos-theme';
 
-import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Obj } from '@dxos/echo';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
-import { Ref, type Space, type TypedObject } from '@dxos/react-client/echo';
+import { type Space, type TypedObject } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';
 
@@ -51,11 +49,11 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [DocumentType, DataType.Text],
+    types: [Markdown.Document, DataType.Text],
     onSpaceCreated: ({ space }) => {
       space.db.add(
-        Obj.make(DocumentType, {
-          content: Ref.make(Obj.make(DataType.Text, { content: '## Type here...\n\ntry the airplane mode switch.' })),
+        Markdown.makeDocument({
+          content: '## Type here...\n\ntry the airplane mode switch.',
         }),
       );
     },
@@ -97,7 +95,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Airplane size={28} className={offline ? 'active' : ''} />
+                    <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>
@@ -112,7 +110,7 @@ const main = async () => {
                     }}
                   />
                   <Input.Label>
-                    <Stack size={28} className={batching ? 'active' : ''} />
+                    <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
                   </Input.Label>
                 </Input.Root>
               </Tooltip.Trigger>

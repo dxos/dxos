@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 

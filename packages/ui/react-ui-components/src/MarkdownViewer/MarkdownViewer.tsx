@@ -2,35 +2,49 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { type ReactMarkdownOptions } from 'react-markdown/lib/react-markdown';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { omit } from '@dxos/util';
 
-type MarkdownViewerProps = ThemedClassName<{
+// TODO(burdon): Benchmark vs. codemirror, which would be more consistent.
+
+export type MarkdownViewerProps = ThemedClassName<{
   content?: string;
+  components?: ReactMarkdownOptions['components'];
 }>;
 
 /**
- * Transform text into react elements.
- *
+ * Transforms markdown text into react elements.
  * https://github.com/remarkjs/react-markdown
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  */
-// TODO(burdon): Styles.
-// TODO(burdon): Factor out (react-ui-syntax-highlighter).
-export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = '' }) => {
+export const MarkdownViewer = ({ classNames, components, content = '' }: MarkdownViewerProps) => {
   return (
-    <div className={mx('space-y-2', classNames)}>
+    <div className={mx('gap-2', classNames)}>
       <ReactMarkdown
+        skipHtml
         components={{
-          a: ({ node, children, href, ...props }) => (
+          h1: ({ children }) => {
+            return <h1 className='pbs-1 pbe-1 text-xl'>{children}</h1>;
+          },
+          h2: ({ children }) => {
+            return <h2 className='pbs-1 pbe-1 text-lg'>{children}</h2>;
+          },
+          h3: ({ children }) => {
+            return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
+          },
+          p: ({ children }) => {
+            return <div className='pbs-1 pbe-1 text-subdued'>{children}</div>;
+          },
+          a: ({ children, href, ...props }) => (
             <a
               href={href}
-              className='text-primary-500 hover:text-primary-500'
+              className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use token.
               target='_blank'
               rel='noopener noreferrer'
               {...props}
@@ -38,34 +52,44 @@ export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = 
               {children}
             </a>
           ),
-          ol: ({ node, children, ...props }) => (
-            <ol className='leading-tight list-decimal pl-6' {...omit(props, ['ordered'])}>
+          ol: ({ children, ...props }) => (
+            <ol className='pbs-1 pbe-1 pis-6 leading-tight list-decimal' {...omit(props, ['ordered'])}>
               {children}
             </ol>
           ),
-          ul: ({ node, children, ...props }) => (
-            <ul className='leading-tight list-disc pl-6' {...omit(props, ['ordered'])}>
+          ul: ({ children, ...props }) => (
+            <ul className='pbs-1 pbe-1 pis-6 leading-tight list-disc' {...omit(props, ['ordered'])}>
               {children}
             </ul>
           ),
-          li: ({ node, children, ...props }) => (
+          li: ({ children, ...props }) => (
             <li className='' {...omit(props, ['ordered'])}>
               {children}
             </li>
           ),
-          blockquote: ({ node, children, ...props }) => (
-            <blockquote className='border-l-4 border-primary-500 pl-4 my-4 text-primary-500' {...props}>
+          blockquote: ({ children, ...props }) => (
+            <blockquote
+              className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-primary-500 text-primary-500'
+              {...props}
+            >
               {children}
             </blockquote>
           ),
+          pre: ({ children }) => children,
           code: ({ children, className }) => {
             const [_, language] = /language-(\w+)/.exec(className || '') || [];
+            // TODO(burdon): Copy/paste button.
             return (
-              <SyntaxHighlighter PreTag='div' language={language} className='p-0'>
+              <SyntaxHighlighter
+                PreTag='div'
+                language={language}
+                className='mbs-2 mbe-2 border border-separator rounded-sm text-sm !p-2 !bg-groupSurface'
+              >
                 {children}
               </SyntaxHighlighter>
             );
           },
+          ...components,
         }}
       >
         {content}
@@ -73,7 +97,3 @@ export const MarkdownViewer: FC<MarkdownViewerProps> = ({ classNames, content = 
     </div>
   );
 };
-
-// const Cursor = () => {
-//   return <span className='animate-[pulse_1s_steps(1)_infinite] text-primary-500'>▊</span>;
-// };

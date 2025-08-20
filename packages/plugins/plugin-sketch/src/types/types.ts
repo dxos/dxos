@@ -5,8 +5,9 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { Schema } from 'effect';
 
-import { DiagramType } from './diagram';
 import { SKETCH_PLUGIN } from '../meta';
+
+import { DiagramType } from './diagram';
 
 export namespace SketchAction {
   const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;

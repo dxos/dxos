@@ -6,7 +6,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { SequenceDefinition } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorView,
   createBasicExtensions,

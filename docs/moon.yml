@@ -35,7 +35,7 @@ tasks:
       - typedoc
     preset: server
   typedoc:
-    command: pnpm run typedoc
+    command: pnpm run --silent typedoc
     deps:
       - ^:typedoc
     inputs:

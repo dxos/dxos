@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { trackLeaks, Trigger, Mutex } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
+import { Mutex, Trigger, trackLeaks } from '@dxos/async';
+import { Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

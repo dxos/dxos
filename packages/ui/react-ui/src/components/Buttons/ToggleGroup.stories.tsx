@@ -4,21 +4,22 @@
 
 import '@dxos-theme';
 
-import { TextB, TextItalic } from '@phosphor-icons/react';
 import React from 'react';
 
-import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
+
+import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
 
 // TODO(burdon): Create Radix-style Root, Item, etc?
 const DefaultStory = (props: ToggleGroupProps) => {
   return (
     <ToggleGroup {...props}>
       <ToggleGroupItem value='textb'>
-        <TextB />
+        <Icon icon='ph--text-b--regular' />
       </ToggleGroupItem>
       <ToggleGroupItem value='texti'>
-        <TextItalic />
+        <Icon icon='ph--text-italic--regular' />
       </ToggleGroupItem>
     </ToggleGroup>
   );

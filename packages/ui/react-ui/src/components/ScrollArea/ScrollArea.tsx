@@ -3,16 +3,16 @@
 //
 
 import {
+  Corner as ScrollAreaPrimitiveCorner,
+  type ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
   Root as ScrollAreaPrimitiveRoot,
   type ScrollAreaProps as ScrollAreaPrimitiveRootProps,
-  Viewport as ScrollAreaPrimitiveViewport,
-  type ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
   Scrollbar as ScrollAreaPrimitiveScrollbar,
   type ScrollAreaScrollbarProps as ScrollAreaPrimitiveScrollbarProps,
   Thumb as ScrollAreaPrimitiveThumb,
   type ScrollAreaThumbProps as ScrollAreaPrimitiveThumbProps,
-  Corner as ScrollAreaPrimitiveCorner,
-  type ScrollAreaCornerProps as ScrollAreaPrimitiveCornerProps,
+  Viewport as ScrollAreaPrimitiveViewport,
+  type ScrollAreaViewportProps as ScrollAreaPrimitiveViewportProps,
 } from '@radix-ui/react-scroll-area';
 import React, { forwardRef } from 'react';
 

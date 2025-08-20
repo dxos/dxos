@@ -10,9 +10,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useEditorContext } from '../../hooks';
-import { Tools, Toolbar } from '../Toolbar';
 import { type TestId } from '../defs';
 import { eventsAuto, eventsNone } from '../styles';
+import { Toolbar, Tools } from '../Toolbar';
 
 export type UIProps = ThemedClassName<{
   showTools?: boolean;

@@ -6,8 +6,9 @@ import { timer as d3Timer } from 'd3';
 import { type Timer } from 'd3';
 import { useEffect, useState } from 'react';
 
-import { type Vector } from './context';
 import { type GlobeController } from '../components';
+
+import { type Vector } from './context';
 
 export type SpinnerOptions = {
   disabled?: boolean;

@@ -5,15 +5,15 @@
 import { Schema } from 'effect';
 import React from 'react';
 
-import { Message } from '@dxos/ai';
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { DataType } from '@dxos/schema';
 
-import { createFunctionAnchors, Box } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
+import { Box, createFunctionAnchors } from './common';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message)));
+const InputSchema = createInputSchema(DataType.Message);
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(DataType.Message)));
 
 export const TableShape = Schema.extend(
   ComputeShape,

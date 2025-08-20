@@ -10,11 +10,13 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -47,7 +49,7 @@
     "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "effect": "3.17.0"
+    "effect": "3.17.7"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

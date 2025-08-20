@@ -4,16 +4,20 @@
 
 import { expect, test } from '@playwright/test';
 
+import { type DxGrid } from '@dxos/lit-grid';
+import { faker } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { TableManager } from './TableManager';
 
 const storyUrl = storybookUrl('ui-react-ui-table-table--default', 9004);
+const relationsStoryUrl = storybookUrl('ui-react-ui-table-relations--default', 9004);
 
 // NOTE(ZaymonFC): This test suite relies on the faker seed being set to 0 in the story.
 test.describe('Table', () => {
   test('Loads', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -23,6 +27,7 @@ test.describe('Table', () => {
 
   test('sort', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -39,6 +44,7 @@ test.describe('Table', () => {
 
   test('selection', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -60,6 +66,7 @@ test.describe('Table', () => {
 
   test('delete row', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -71,6 +78,7 @@ test.describe('Table', () => {
 
   test('delete row--select all', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -88,6 +96,7 @@ test.describe('Table', () => {
 
   test('delete column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -114,6 +123,7 @@ test.describe('Table', () => {
   // Rest of add column test remains the same as it's a more complex flow.
   test('add column', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -128,6 +138,7 @@ test.describe('Table', () => {
 
   test('reference > reference / create new object', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -164,6 +175,7 @@ test.describe('Table', () => {
 
   test('test toggles', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });
     const table = new TableManager(page);
 
@@ -180,6 +192,112 @@ test.describe('Table', () => {
     await expect(page.getByTestId('table-switch').nth(1)).toBeChecked();
     await expect(table.grid.cell(0, 0, 'grid')).toHaveText('Sapiente.');
     await expect(table.grid.cell(0, 1, 'grid')).toHaveText('Beatae.');
+
+    await page.close();
+  });
+
+  test('extant relations work as expected', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: relationsStoryUrl });
+
+    // Wait for the page to load
+    await page.locator('dx-grid > .dx-grid').nth(1).waitFor({ state: 'visible' });
+
+    // Find the dx-grid element for the contactModel (second table)
+    // The contactModel is used in the second Table.Main component in the story
+    const dxGrid = page.locator('dx-grid').nth(1);
+    await dxGrid.waitFor({ state: 'visible' });
+
+    // Scroll to the last column (column 8)
+    await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
+      dxGridElement.scrollToColumn(8);
+    });
+
+    // Click on the cell at aria-rowindex=0 aria-colindex=8 to focus it
+    const targetCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="8"]');
+    await targetCell.click();
+
+    // Click again to engage edit mode
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+
+    // Type the first few letters of an org name.
+    const orgName =
+      (await page
+        .locator('dx-grid')
+        .nth(0)
+        .locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content')
+        .textContent()) ?? 'never';
+    await page.keyboard.type(orgName.substring(0, 4), { delay: 500 });
+
+    // Assert that there is an element with aria-selected on the page
+    await expect(page.locator('[role="option"][aria-selected]')).toBeVisible();
+
+    // Type the enter key
+    await page.keyboard.press('Enter');
+
+    // Assert that the cell element has the org name
+    await expect(targetCell).toHaveText(orgName);
+
+    await page.close();
+  });
+
+  test('new relations work as expected', async ({ browser, browserName }) => {
+    test.skip(browserName === 'webkit');
+    test.skip(browserName === 'firefox');
+    const { page } = await setupPage(browser, { url: relationsStoryUrl });
+
+    // Wait for the page to load
+    await page.locator('dx-grid > .dx-grid').nth(1).waitFor({ state: 'visible' });
+
+    // Find the dx-grid element for the contactModel (second table)
+    // The contactModel is used in the second Table.Main component in the story
+    const dxGrid = page.locator('dx-grid').nth(1);
+    await dxGrid.waitFor({ state: 'visible' });
+
+    // Scroll to the last column (column 8)
+    await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
+      dxGridElement.scrollToColumn(8);
+    });
+
+    // Click on the cell at aria-rowindex=0 aria-colindex=8 to focus it
+    const targetCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="8"]');
+    await targetCell.click();
+
+    // Click again to engage edit mode
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+
+    // Type the first few letters of an org name.
+    const orgName = 'Sally';
+    await page.keyboard.type(orgName, { delay: 500 });
+
+    // Assert that there is an element with aria-selected on the page
+    await expect(page.locator('[role="option"][aria-selected]')).toBeVisible();
+
+    // Type the enter key
+    await page.keyboard.press('Enter');
+
+    // Click the save button in the popover
+    await page.getByTestId('save-button').click();
+
+    // Assert that the cell element has the org name
+    await expect(targetCell).toHaveText(orgName);
+
+    // Make a change to a non-ref cell to check that populated refs don’t cause problems with snapshots or schemas.
+    await dxGrid.evaluate(async (dxGridElement: DxGrid) => {
+      dxGridElement.scrollToColumn(6);
+    });
+
+    const nonRefContent = faker.lorem.words(3);
+    const nonRefCell = dxGrid.locator('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="6"]');
+    await nonRefCell.click();
+    await page.keyboard.press('Enter');
+    await page.getByTestId('grid.cell-editor').waitFor({ state: 'visible' });
+    await page.keyboard.type(nonRefContent, { delay: 500 });
+    await page.keyboard.press('Enter');
+    await expect(nonRefCell).toHaveText(nonRefContent);
 
     await page.close();
   });

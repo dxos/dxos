@@ -12,7 +12,7 @@ import { TABLE_PLUGIN } from '../meta';
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Schema.String.annotations({
-    [TypenameAnnotationId]: ['limited-static', 'dynamic'],
+    [TypenameAnnotationId]: ['used-static', 'dynamic'],
   }),
 });
 

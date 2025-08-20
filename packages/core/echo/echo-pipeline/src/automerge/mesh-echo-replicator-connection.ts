@@ -111,6 +111,10 @@ export class MeshReplicatorConnection extends Resource implements ReplicatorConn
     return this._isEnabled;
   }
 
+  get bundleSyncEnabled(): boolean {
+    return false;
+  }
+
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
     return this._params.shouldAdvertise(params);
   }

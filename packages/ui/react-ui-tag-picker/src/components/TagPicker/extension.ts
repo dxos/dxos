@@ -3,19 +3,18 @@
 //
 
 import {
+  type Completion,
+  type CompletionContext,
+  type CompletionResult,
+  acceptCompletion,
   autocompletion,
   completionKeymap,
-  type Completion,
-  type CompletionResult,
-  type CompletionContext,
   startCompletion,
-  acceptCompletion,
 } from '@codemirror/autocomplete';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxTree } from '@codemirror/language';
-import { Prec, RangeSetBuilder, type Extension } from '@codemirror/state';
+import { type Extension, Prec, RangeSetBuilder } from '@codemirror/state';
 import {
-  keymap,
   Decoration,
   type DecorationSet,
   EditorView,
@@ -23,6 +22,7 @@ import {
   ViewPlugin,
   type ViewUpdate,
   WidgetType,
+  keymap,
 } from '@codemirror/view';
 
 import { type ChromaticPalette } from '@dxos/react-ui';

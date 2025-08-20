@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -26,12 +27,13 @@
   "dependencies": {
     "@preact-signals/safe-react": "^0.9.0",
     "jsonpath": "^1.1.1",
-    "react-syntax-highlighter": "^15.5.0"
+    "react-syntax-highlighter": "^15.6.1"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@types/jsonpath": "^0.2.4",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",

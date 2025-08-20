@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { InvocationTraceContainer, type InvocationTraceContainerProps } from './InvocationTraceContainer';
 import { useDevtoolsState } from '../../../hooks';
+
+import { InvocationTraceContainer, type InvocationTraceContainerProps } from './InvocationTraceContainer';
 
 export type InvocationTracePanelProps = Pick<InvocationTraceContainerProps, 'target' | 'detailAxis'>;
 

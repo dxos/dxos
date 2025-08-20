@@ -8,10 +8,11 @@ import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Frame } from './Frame';
 import { useEditorContext } from '../../hooks';
 import { PathComponent } from '../../shapes';
-import { isPath, isPolygon, type Shape } from '../../types';
+import { type Shape, isPath, isPolygon } from '../../types';
+
+import { Frame } from './Frame';
 
 export const DEFS_ID = 'dx-defs';
 export const MARKER_PREFIX = 'dx-marker';

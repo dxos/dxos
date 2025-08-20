@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createIntent, defineModule, contributes, Capabilities, Events, definePlugin } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { KanbanView, translations as kanbanTranslations } from '@dxos/react-ui-kanban';
 
-import { ArtifactDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateKanbanSchema, KanbanAction } from './types';
@@ -54,10 +54,5 @@ export const KanbanPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/artifact-definition`,
-      activatesOn: Events.SetupArtifactDefinition,
-      activate: ArtifactDefinition,
     }),
   ]);

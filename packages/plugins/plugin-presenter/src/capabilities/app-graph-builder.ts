@@ -5,12 +5,12 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { contributes, type PluginContext, Capabilities, createIntent, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -22,6 +22,39 @@ export default (context: PluginContext) =>
     Capabilities.AppGraphBuilder,
     createExtension({
       id: PRESENTER_PLUGIN,
+      // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => {
+              const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
+              const settings = get(
+                rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value),
+              );
+              const isPresentable = settings?.presentCollections
+                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
+                : Obj.instanceOf(Markdown.Document, node.data);
+              return isPresentable ? Option.some(node.data) : Option.none();
+            }),
+            Option.map((object) => {
+              const id = fullyQualifiedId(object);
+              return [
+                {
+                  id: [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR),
+                  data: { type: PRESENTER_PLUGIN, object },
+                  type: PRESENTER_PLUGIN,
+                  properties: {
+                    label: 'Presenter',
+                    icon: 'ph--presentation--regular',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -32,8 +65,8 @@ export default (context: PluginContext) =>
                 rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(PRESENTER_PLUGIN)?.value),
               );
               const isPresentable = settings?.presentCollections
-                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(DocumentType, node.data)
-                : Obj.instanceOf(DocumentType, node.data);
+                ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
+                : Obj.instanceOf(Markdown.Document, node.data);
               return isPresentable ? Option.some(node.data) : Option.none();
             }),
             Option.map((object) => {
@@ -67,6 +100,7 @@ export default (context: PluginContext) =>
                   properties: {
                     label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
                     icon: 'ph--presentation--regular',
+                    disposition: 'list-item',
                     keyBinding: {
                       macos: 'shift+meta+p',
                       windows: 'shift+alt+p',

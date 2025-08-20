@@ -4,31 +4,29 @@
 
 import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
-import { type Message } from '@dxos/ai';
 import { PublicKey } from '@dxos/keys';
-import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController, useScrollContainerContext } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
+import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
+
+import { meta } from '../../meta';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
-import { type ChatProcessor } from '../../hooks';
 
-export type ChatThreadProps = ThemedClassName<{
-  identity?: Identity;
-  space?: Space;
-  // TODO(burdon): Replace with context.
-  processor?: ChatProcessor;
-  messages?: Message[];
-  collapse?: boolean;
-}> &
-  Pick<ChatMessageProps, 'debug' | 'tools' | 'onPrompt' | 'onDelete' | 'onAddToGraph'>;
+export type ChatThreadProps = ThemedClassName<
+  {
+    identity?: Identity;
+    messages?: DataType.Message[];
+    collapse?: boolean;
+  } & Pick<ChatMessageProps, 'debug' | 'space' | 'tools' | 'onEvent'>
+>;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, space, processor, messages, collapse = true, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages, collapse = true, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -36,7 +34,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
     const { messages: filteredMessages = [] } = useMemo(() => {
       if (collapse) {
-        return (messages ?? []).reduce<{ messages: Message[]; current?: Message }>(messageReducer, {
+        return (messages ?? []).reduce<{ messages: DataType.Message[]; current?: DataType.Message }>(messageReducer, {
           messages: [],
         });
       } else {
@@ -45,24 +43,37 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     }, [messages, collapse]);
 
     return (
-      <ScrollContainer ref={forwardedRef} classNames={classNames} fade>
-        <div
-          role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-6 pbe-6')}
+      <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
+        <ScrollContainer.Content
+          classNames='relative flex flex-col gap-2 pbs-2 pbe-2'
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
           {filteredMessages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              classNames='px-4 pbe-4'
-              space={space}
-              processor={processor}
-              message={message}
-              {...props}
-            />
+            <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
-        </div>
-      </ScrollContainer>
+        </ScrollContainer.Content>
+        <ScrollToBottomButton onEvent={onEvent} />
+      </ScrollContainer.Root>
     );
   },
 );
+
+const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => {
+  const { t } = useTranslation(meta.id);
+  const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
+
+  return (
+    <div className={mx('absolute bottom-0 right-6 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}>
+      <IconButton
+        variant='primary'
+        icon='ph--arrow-down--regular'
+        iconOnly
+        size={5}
+        label={t('button scroll down')}
+        onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
+      />
+    </div>
+  );
+};
+
+ScrollToBottomButton.displayName = 'ScrollToBottomButton';

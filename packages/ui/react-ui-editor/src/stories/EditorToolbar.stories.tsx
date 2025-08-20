@@ -16,14 +16,14 @@ import { EditorToolbar, useEditorToolbarState } from '../components';
 import { editorWidth } from '../defaults';
 import {
   InputModeExtensions,
-  createMarkdownExtensions,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
   useFormattingState,
 } from '../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../hooks';
+import { type UseTextEditorProps, useTextEditor } from '../hooks';
 import { translations } from '../translations';
 import { type EditorInputMode, type EditorViewMode } from '../types';
 
@@ -43,7 +43,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
       moveToEndOfLine: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly' }),
+        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),

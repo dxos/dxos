@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { WnfsCapabilities } from './capabilities';
 import { image } from '../extensions';
+
+import { WnfsCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(MarkdownCapabilities.Extensions, [

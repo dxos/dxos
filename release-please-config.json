@@ -12,6 +12,12 @@
       "extra-files": [
         "packages/sdk/client/src/version.ts",
         "packages/sdk/client-services/src/version.ts",
+        "packages/devtools/cli-next/src/commands/index.ts",
+        {
+          "type": "json",
+          "path": "packages/apps/composer-app/src-tauri/tauri.conf.json",
+          "jsonpath": "$.version"
+        },
         {
           "type": "json",
           "path": "docs/package.json",
@@ -85,16 +91,6 @@
         {
           "type": "json",
           "path": "packages/common/esbuild-plugins/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/common/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -229,17 +225,17 @@
         },
         {
           "type": "json",
-          "path": "packages/core/artifact/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/artifact-testing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/assistant-testing/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/blueprints/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -395,6 +391,11 @@
         {
           "type": "json",
           "path": "packages/devtools/cli-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli-next/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -949,6 +950,16 @@
         },
         {
           "type": "json",
+          "path": "tools/dx-tools/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/eslint-plugin-rules/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/lit-storybook/package.json",
           "jsonpath": "$.version"
         },
@@ -985,6 +996,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-icons/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-import-source/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -6,8 +6,8 @@ import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact, type Device, type Identity, type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
-  type DeviceProfileDocument,
   type Credential,
+  type DeviceProfileDocument,
   type Presentation,
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';

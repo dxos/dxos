@@ -2,15 +2,17 @@
 // Copyright 2021 DXOS.org
 //
 
-import del from 'del';
 import crypto from 'node:crypto';
-import { promises as fs, constants } from 'node:fs';
+import { constants, promises as fs } from 'node:fs';
 import path from 'node:path';
+
+import del from 'del';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { createStorage } from './storage';
 import { type File, StorageType } from '../common';
 import { randomText, storageTests } from '../testing';
+
+import { createStorage } from './storage';
 
 const ROOT_DIRECTORY = path.resolve(path.join(__dirname, '../out', 'testing'));
 

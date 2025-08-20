@@ -3,24 +3,17 @@
 //
 
 import { composeStories } from '@storybook/react';
-import { screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { ProjectionModel } from '@dxos/schema';
 
-import * as stories from './FieldEditor.stories';
-import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 import { FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
 
-const { Default } = composeStories(stories);
+import * as stories from './FieldEditor.stories';
+import { type FieldEditorDebugObjects } from './FieldEditor.stories';
 
-const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
-  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
-  expect(debugObjects).toBeDefined();
-  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
-  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
-  return debugObjects;
-};
+const { Default } = composeStories(stories);
 
 describe('FieldEditor', () => {
   afterEach(() => {
@@ -33,7 +26,7 @@ describe('FieldEditor', () => {
     expect(screen.getByText('Type format')).toBeInTheDocument();
     expect(screen.getByText('String')).toBeInTheDocument();
 
-    // Verify the initial field shows as String type
+    // Verify the initial field shows as String type.
     expect(screen.getByText('String')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('combobox'));
@@ -55,3 +48,11 @@ describe('FieldEditor', () => {
     expect(name.description).toBe('Full name.');
   });
 });
+
+const getFieldEditorDebugObjects = (): FieldEditorDebugObjects => {
+  const debugObjects = (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] as FieldEditorDebugObjects;
+  expect(debugObjects).toBeDefined();
+  expect(debugObjects.props).toBeInstanceOf(Object); // Props object
+  expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
+  return debugObjects;
+};

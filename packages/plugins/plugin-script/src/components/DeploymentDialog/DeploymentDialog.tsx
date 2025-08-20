@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
@@ -16,9 +16,9 @@ import { type Template } from '../../templates';
 export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
 
 // TODO(ZaymonFC):
-//   - Show activity and feedback to the user.
-//   - Only take an array of templateIds and get the name from the data.
-//   - Pending / onError states.
+//  - Show activity and feedback to the user.
+//  - Only take an array of templateIds and get the name from the data.
+//  - Pending / onError states.
 
 type DeploymentDialogProps = {
   accessToken: DataType.AccessToken;

@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
+
+import { Schema } from 'effect';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { live, Expando } from '@dxos/client/echo';
+import { Expando, live } from '@dxos/client/echo';
 import { Ref, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -18,7 +19,7 @@ import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
-import { createConfig, getBaseDataDir, EXPECTED_JSON_DATA, SNAPSHOT_DIR, SNAPSHOTS_DIR } from './util';
+import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.

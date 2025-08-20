@@ -5,9 +5,10 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
+import { toJsonSchema } from '../json';
+
 import { Format } from './format';
 import { FormatEnum, TypeEnum, getTypeEnum } from './types';
-import { toJsonSchema } from '../json';
 
 describe('formats', () => {
   test('annotations', ({ expect }) => {

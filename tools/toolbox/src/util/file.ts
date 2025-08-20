@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { readFile, writeFile } from 'node:fs/promises';
+
 import chalk from 'chalk';
 import { parse, stringify } from 'comment-json';
-import { readFile, writeFile } from 'node:fs/promises';
 
 export const loadJson = async <T>(filename: string): Promise<T> => {
   try {

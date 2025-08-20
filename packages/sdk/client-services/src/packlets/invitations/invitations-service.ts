@@ -4,8 +4,8 @@
 
 import { Stream } from '@dxos/codec-protobuf/stream';
 import {
-  type AuthenticationRequest,
   type AcceptInvitationRequest,
+  type AuthenticationRequest,
   type Invitation,
   type InvitationsService,
   QueryInvitationsResponse,

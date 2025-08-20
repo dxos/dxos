@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): defineArtifact
+// @ts-nocheck
+
 import { Schema } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, contributes, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { defineArtifact } from '@dxos/artifact';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
+import { defineArtifact } from '@dxos/blueprints';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';

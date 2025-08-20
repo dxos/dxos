@@ -2,5 +2,7 @@ type: application
 language: typescript
 tags:
   - e2e
+  - tauri
   - typecheck
   - vite
+  - ts-test

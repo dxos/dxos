@@ -109,6 +109,7 @@ export const translations = [
         'invite options label': 'Change the active invite option.',
         'reset in progress label': 'Resetting...',
         'confirm label': 'Confirm',
+        'delete label': 'Delete',
         'reset storage input label':
           'WARNING: This will delete all data on this device. Type {{confirmationValue}} to continue.',
         'join new identity input label':
@@ -128,6 +129,10 @@ export const translations = [
         'resetting message': 'One moment while the device is reset…',
         'expires label': 'Expires {{timeLeft}}',
         'no expiration label': 'Doesn’t expire',
+        'drag handle label': 'Drag to rearrange',
+        'expand label': 'Expand',
+        'collapse label': 'Collapse',
+        'add object to space label': 'Add to a space',
 
         // TODO(burdon): Factor out.
         'red label': 'Red',

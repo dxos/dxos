@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
-import { TextB } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Toggle } from './Toggle';
 import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
+
+import { Toggle } from './Toggle';
 
 type StorybookToggleProps = {};
 
 const DefaultStory = (props: StorybookToggleProps) => {
   return (
     <Toggle {...props}>
-      <TextB />
+      <Icon icon='ph--text-b--regular' />
     </Toggle>
   );
 };

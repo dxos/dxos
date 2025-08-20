@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { renderHook, screen, render, act, cleanup } from '@testing-library/react';
+import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
 import React, { Component, type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -10,9 +10,10 @@ import { waitForCondition } from '@dxos/async';
 import { Client, Config, SystemStatus, fromHost } from '@dxos/client';
 import { log } from '@dxos/log';
 
+import { useIdentity } from '../halo';
+
 import { ClientProvider } from './ClientProvider';
 import { useClient } from './useClient';
-import { useIdentity } from '../halo';
 
 log.config({ filter: 'ClientContext:debug,warn' });
 

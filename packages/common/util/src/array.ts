@@ -16,7 +16,6 @@ export type DiffResult<A, B = A> = {
  * @param next
  * @param comparator
  */
-// TODO(burdon): Factor out.
 export const diff = <A, B = A>(
   previous: readonly A[],
   next: readonly B[],
@@ -43,7 +42,6 @@ export const diff = <A, B = A>(
   return result;
 };
 
-// TODO(burdon): Factor out.
 export const intersection = <A, B = A>(a: A[], b: B[], comparator: Comparator<A, B>): A[] =>
   a.filter((a) => b.find((b) => comparator(a, b)) !== undefined);
 

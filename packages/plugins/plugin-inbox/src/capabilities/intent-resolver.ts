@@ -5,8 +5,16 @@
 // import { Effect, pipe, Schema } from 'effect';
 
 // import { createTool, ToolRegistry, ToolResult } from '@dxos/ai';
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
-// import { ArtifactId } from '@dxos/artifact';
+
+import {
+  type AnyIntentChain,
+  Capabilities,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
+} from '@dxos/app-framework';
+// import { ArtifactId } from '@dxos/blueprints';
 // import { getSpace } from '@dxos/client/echo';
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
@@ -16,10 +24,12 @@ import { createQueueDXN } from '@dxos/echo-schema';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-import { InboxCapabilities } from './capabilities';
 import { CalendarType, InboxAction, MailboxType } from '../types';
+
+import { InboxCapabilities } from './capabilities';
 
 // TODO(dmaretskyi): Circular dep due to the assistant stories
 // import { AssistantCapabilities } from '@dxos/plugin-assistant';
@@ -62,12 +72,11 @@ export default (context: PluginContext) =>
     createResolver({
       intent: InboxAction.ExtractContact,
       resolve: async ({ space, message }) => {
-        log.info('Extract contact', { message });
-        const email = message.sender.email;
+        log.info('extract contact', { message });
         const name = message.sender.name;
-
+        const email = message.sender.email;
         if (!email) {
-          log.warn('Email is required for contact extraction', { sender: message.sender });
+          log.warn('email is required for contact extraction', { sender: message.sender });
           return;
         }
 
@@ -94,11 +103,12 @@ export default (context: PluginContext) =>
         const emailDomain = email.split('@')[1]?.toLowerCase();
         if (!emailDomain) {
           log.warn('Invalid email format, cannot extract domain', { email });
-          space.db.add(newContact);
-          return;
+          return {
+            intents: [createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true })],
+          };
         }
 
-        log.info('Extracted email domain', { emailDomain });
+        log.info('extracted email domain', { emailDomain });
 
         const { objects: existingOrganisations } = await space.db.query(Filter.type(DataType.Organization)).run();
         const matchingOrg = existingOrganisations.find((org) => {
@@ -124,34 +134,24 @@ export default (context: PluginContext) =>
         });
 
         if (matchingOrg) {
-          log.info('Found matching organization', { organization: matchingOrg });
+          log.info('found matching organization', { organization: matchingOrg });
           newContact.organization = Ref.make(matchingOrg);
         }
 
-        space.db.add(newContact);
-        log.info('Contact extracted and added to space', { contact: newContact });
+        const intents: AnyIntentChain[] = [];
+        if (!space.properties.staticRecords.includes(DataType.Person.typename)) {
+          log.info('adding record type for contacts');
+          intents.push(
+            createIntent(SpaceAction.UseStaticSchema, {
+              space,
+              typename: DataType.Person.typename,
+            }),
+          );
+        }
 
-        // TODO(wittjosiah): Create a table for contacts.
-        // const { objects: tables } = await space.db.query(Filter.type(TableType)).run();
-        // const contactTable = tables.find((table) => {
-        //   return table.view?.target?.query?.typename === DataType.Person.typename;
-        // });
+        intents.push(createIntent(SpaceAction.AddObject, { object: newContact, target: space, hidden: true }));
 
-        // if (!contactTable) {
-        //   log.info('No table found for contacts, creating one.');
-        //   return {
-        //     intents: [
-        //       pipe(
-        //         createIntent(TableAction.Create, {
-        //           space,
-        //           name: 'Contacts',
-        //           typename: DataType.Person.typename,
-        //         }),
-        //         chain(SpaceAction.AddObject, { target: space }),
-        //       ),
-        //     ],
-        //   };
-        // }
+        return { intents };
       },
     }),
     // TODO(dmaretskyi): There should be a generic execute{function/sequence/workflow} intent that runs the executable locally or remotelly.
@@ -166,7 +166,7 @@ export default (context: PluginContext) =>
         // const aiClient = null as any; // context.getCapability(AssistantCapabilities.AiClient);
 
         // const serviceContainer = new ServiceContainer().setServices({
-        //   ai: AiService.make(aiClient.value),
+        //   ai: AiService.AiService.make(aiClient.value),
         //   database: DatabaseService.make(space.db),
         //   queues: QueueService.make(space.queues, undefined),
         //   // eventLogger: consoleLogger,

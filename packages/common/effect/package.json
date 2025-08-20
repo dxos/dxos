@@ -9,6 +9,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
-    "effect": "3.17.0"
+    "effect": "3.17.7"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

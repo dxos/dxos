@@ -5,23 +5,23 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
+  TestReplicationNetwork,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
-  TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
 import {
   Expando,
-  getTypeAnnotation,
-  getSchemaTypename,
-  getTypeReference,
+  type ObjectId,
+  Ref,
   RelationSourceId,
   RelationTargetId,
   TypedObject,
-  type ObjectId,
-  Ref,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeReference,
 } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
@@ -31,9 +31,10 @@ import { live } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
 import { Filter, Query } from '../query';
+
+import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
 registerSignalsRuntime();
 

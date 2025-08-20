@@ -3,17 +3,17 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { Schema, Effect, pipe, Option } from 'effect';
+import { Effect, Option, Schema, pipe } from 'effect';
 
 import {
   Capabilities,
-  createResolver,
-  contributes,
   IntentAction,
   LayoutAction,
   type PluginContext,
-  createIntent,
   chain,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -24,19 +24,20 @@ import { isActionLike } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
-import { DeckCapabilities } from './capabilities';
 import { closeEntry, createEntryId, incrementPlank, openEntry } from '../layout';
 import { DECK_PLUGIN } from '../meta';
 import {
   DeckAction,
-  type LayoutMode,
   type DeckSettingsProps,
-  isLayoutMode,
-  getMode,
-  defaultDeck,
+  type LayoutMode,
   PLANK_COMPANION_TYPE,
+  defaultDeck,
+  getMode,
+  isLayoutMode,
 } from '../types';
 import { setActive } from '../util';
+
+import { DeckCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -92,7 +93,7 @@ export default (context: PluginContext) =>
           layout.complementarySidebarPanel = subject;
         }
 
-        const next = subject ? 'expanded' : options?.state ?? layout.complementarySidebarState;
+        const next = subject ? 'expanded' : (options?.state ?? layout.complementarySidebarState);
         if (next !== layout.complementarySidebarState) {
           layout.complementarySidebarState = next;
         }

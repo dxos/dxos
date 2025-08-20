@@ -3,6 +3,7 @@
 //
 
 import { relative } from 'path';
+
 import * as ts from 'typescript';
 
 import { BUGCHECK_STRING } from '../hook/hook';

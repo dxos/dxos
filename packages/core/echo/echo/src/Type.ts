@@ -39,7 +39,7 @@ export type Schema = EchoSchema.EchoSchema;
 /**
  * Returns all properties of an object or relation except for the id and kind.
  */
-export type Properties<T> = Omit<T, 'id' | KindId | RelationModule.Source | RelationModule.Target>;
+export type Properties<T = any> = Omit<T, 'id' | KindId | RelationModule.Source | RelationModule.Target>;
 
 //
 // Obj
@@ -80,6 +80,7 @@ export namespace Obj {
    * NOTE: This is not an instance type.
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
+  // TODO(burdon): This erases the ECHO type info (e.g., id, typename).
   export type Any = Schema.Schema.AnyNoContext;
 }
 
@@ -87,6 +88,7 @@ export namespace Obj {
 // Expando
 //
 
+// TODO(burdon): We're using Expando in many places as a base type.
 export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
   [key: string]: any;
 }

@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../../meta';
 
@@ -31,7 +29,7 @@ export const CommandsTrigger = () => {
       }
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
-      <MagnifyingGlass className={getSize(5)} />
+      <Icon icon='ph--magnifying-glass--regular' size={5} />
     </Button>
   );
 };

@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ComponentPropsWithRef, forwardRef, type ComponentPropsWithoutRef } from 'react';
+import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 // TODO(burdon): Remove dep.
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';

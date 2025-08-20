@@ -12,7 +12,7 @@ import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
 
-import { type TableModel, type ModalController } from '../../model';
+import { type ModalController, type TableModel } from '../../model';
 
 export type CreateRefPanelProps = { model?: TableModel; modals: ModalController };
 

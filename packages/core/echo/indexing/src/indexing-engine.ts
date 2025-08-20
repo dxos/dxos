@@ -3,7 +3,7 @@
 //
 
 import { synchronized } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';

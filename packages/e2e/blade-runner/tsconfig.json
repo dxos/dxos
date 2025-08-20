@@ -1,8 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/types",
-    "target": "esnext"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"
@@ -79,6 +78,9 @@
     },
     {
       "path": "../../core/halo/keyring"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/mesh/messaging"

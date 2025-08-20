@@ -16,13 +16,14 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { autocomplete, type AutocompleteOptions } from './autocomplete';
-import { references as referencesExtension, type ReferencesOptions } from './references';
+import { type AutocompleteOptions, autocomplete } from './autocomplete';
+import { type ReferencesOptions, references as referencesExtension } from './references';
 
 // TODO(burdon): Handle object references.
 
 export interface ChatEditorController {
   focus(): void;
+  getText(): string;
   setText(text: string): void;
 }
 
@@ -61,30 +62,27 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     );
 
     // Expose editor view.
-    useImperativeHandle(
-      forwardRef,
-      () => {
-        return {
-          focus: () => {
-            view?.focus();
-          },
-          setText: (text: string) => {
-            view?.dispatch({
-              changes: {
-                from: 0,
-                to: view.state.doc.length,
-                insert: text,
-              },
-              selection: {
-                anchor: text.length,
-                head: text.length,
-              },
-            });
-          },
-        };
-      },
-      [view, onSubmit],
-    );
+    useImperativeHandle(forwardRef, () => {
+      return {
+        focus: () => {
+          view?.focus();
+        },
+        getText: () => view?.state.doc.toString() ?? '',
+        setText: (text: string) => {
+          view?.dispatch({
+            changes: {
+              from: 0,
+              to: view.state.doc.length,
+              insert: text,
+            },
+            selection: {
+              anchor: text.length,
+              head: text.length,
+            },
+          });
+        },
+      };
+    }, [view, onSubmit]);
 
     return <div ref={parentRef} className={mx('is-full', classNames)} />;
   },

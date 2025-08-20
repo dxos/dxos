@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObject, getSchema, TypedObject } from '@dxos/echo-schema';
+import { EchoObject, TypedObject, getSchema } from '@dxos/echo-schema';
 
 import { live } from './object';
 
@@ -17,6 +17,7 @@ const Organization = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
 interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
 const Contact = Schema.Struct(
@@ -31,6 +32,7 @@ const Contact = Schema.Struct(
     version: '0.1.0',
   }),
 );
+
 interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };

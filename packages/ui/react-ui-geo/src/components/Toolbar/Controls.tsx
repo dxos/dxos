@@ -22,9 +22,8 @@ export const controlPositions: Record<ControlPosition, string> = {
 
 export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
   return (
-    <Toolbar.Root classNames={['gap-1', classNames]}>
+    <Toolbar.Root classNames={['gap-2', classNames]}>
       <IconButton
-        //
         icon='ph--plus--regular'
         label='zoom in'
         iconOnly
@@ -33,7 +32,6 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
         onClick={() => onAction?.('zoom-in')}
       />
       <IconButton
-        //
         icon='ph--minus--regular'
         label='zoom out'
         iconOnly
@@ -47,9 +45,8 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
 
 export const ActionControls = ({ classNames, onAction }: ControlProps) => {
   return (
-    <Toolbar.Root classNames={['gap-1', classNames]}>
+    <Toolbar.Root classNames={['gap-2', classNames]}>
       <IconButton
-        //
         icon='ph--play--regular'
         label='start'
         iconOnly
@@ -58,7 +55,6 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
         onClick={() => onAction?.('start')}
       />
       <IconButton
-        //
         icon='ph--globe-hemisphere-west--regular'
         label='toggle'
         iconOnly

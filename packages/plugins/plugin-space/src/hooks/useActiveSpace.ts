@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, useLayout, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, useLayout } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { parseId, useSpace } from '@dxos/react-client/echo';
 

@@ -20,7 +20,13 @@
       "path": "../../common/crypto"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -54,6 +60,9 @@
     },
     {
       "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-pipeline"
     },
     {
       "path": "../echo/echo-protocol"

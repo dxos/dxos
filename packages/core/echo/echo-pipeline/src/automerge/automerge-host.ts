@@ -3,32 +3,33 @@
 //
 
 import {
-  getBackend,
-  getHeads,
-  isAutomerge,
-  equals as headsEquals,
-  save,
   type Doc,
   type Heads,
+  getBackend,
+  getHeads,
+  equals as headsEquals,
+  isAutomerge,
+  save,
 } from '@automerge/automerge';
 import {
-  type DocHandleChangePayload,
-  Repo,
   type AnyDocumentId,
   type DocHandle,
+  type DocHandleChangePayload,
   type DocumentId,
+  type HandleState,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
   type PeerId,
+  Repo,
   type StorageAdapterInterface,
   type StorageKey,
   interpretAsDocumentId,
-  type HandleState,
 } from '@automerge/automerge-repo';
+import { exportBundle } from '@automerge/automerge-repo-bundles';
 
-import { Event, asyncTimeout } from '@dxos/async';
-import { Context, Resource, cancelWithContext, type Lifecycle } from '@dxos/context';
-import { DatabaseDirectory, type CollectionId } from '@dxos/echo-protocol';
+import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
+import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
+import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -37,14 +38,14 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { bufferToArray } from '@dxos/util';
+import { ComplexSet, bufferToArray, range } from '@dxos/util';
 
-import { CollectionSynchronizer, diffCollectionState, type CollectionState } from './collection-synchronizer';
+import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type EchoReplicator, type RemoteDocumentExistenceCheckParams } from './echo-replicator';
 import { HeadsStore } from './heads-store';
-import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
+import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 export type PeerIdProvider = () => string | undefined;
 
@@ -79,6 +80,19 @@ export const FIND_PARAMS = {
 };
 
 /**
+ * Maximum amount of documents to sync in a single bundle.
+ */
+const BUNDLE_SIZE = 100;
+/**
+ * Maximum amount of concurrent tasks to run when pushing or pulling bundles.
+ */
+const BUNDLE_SYNC_CONCURRENCY = 2;
+/**
+ * If the number of documents to sync is greater than this threshold, we will use bundles.
+ */
+const BUNDLE_SYNC_THRESHOLD = 50;
+
+/**
  * Abstracts over the AutomergeRepo.
  */
 @trace.resource()
@@ -96,6 +110,14 @@ export class AutomergeHost extends Resource {
   private _repo!: Repo;
   private _storage!: StorageAdapterInterface & Lifecycle;
   private readonly _headsStore: HeadsStore;
+
+  private _syncTask: DeferredTask | undefined = undefined;
+  /**
+   * Cache of collections that would be synced on next sync task run.
+   */
+  private readonly _collectionsToSync = new ComplexSet<{ collectionId: string; peerId: PeerId }>(
+    ({ collectionId, peerId }) => `${collectionId}|${peerId}`,
+  );
 
   @trace.info()
   private _peerId!: PeerId;
@@ -180,6 +202,22 @@ export class AutomergeHost extends Resource {
       }
     });
 
+    this._syncTask = new DeferredTask(this._ctx, async () => {
+      const collectionToSync = Array.from(this._collectionsToSync.values());
+      if (collectionToSync.length === 0) {
+        return;
+      }
+      await Promise.all(
+        collectionToSync.map(async ({ collectionId, peerId }) => {
+          try {
+            await this._handleCollectionSync(collectionId, peerId);
+          } catch (err) {
+            log.error('failed to sync collection', { collectionId, peerId, err });
+          }
+        }),
+      );
+    });
+
     await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
@@ -191,6 +229,7 @@ export class AutomergeHost extends Resource {
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
+    this._syncTask = undefined;
   }
 
   /**
@@ -515,6 +554,16 @@ export class AutomergeHost extends Resource {
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
     );
     this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
+
+    // Proactively push our updated local state to peers that are interested in this collection.
+    // This reduces reliance on the next periodic query and prevents replication stalls in fast paths
+    // where the remote queries before our local state is ready.
+    const interestedPeers = this._echoNetworkAdapter.getPeersInterestedInCollection(collectionId);
+    if (interestedPeers.length > 0) {
+      for (const peerId of interestedPeers) {
+        this._sendCollectionState(collectionId, peerId, { documents });
+      }
+    }
   }
 
   async clearLocalCollectionState(collectionId: string): Promise<void> {
@@ -546,6 +595,11 @@ export class AutomergeHost extends Resource {
   }
 
   private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId): void {
+    this._collectionsToSync.add({ collectionId, peerId });
+    this._syncTask?.schedule();
+  }
+
+  private async _handleCollectionSync(collectionId: string, peerId: PeerId) {
     const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
     const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
 
@@ -554,23 +608,138 @@ export class AutomergeHost extends Resource {
     }
 
     const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
-    const toReplicate = [...missingOnLocal, ...missingOnRemote, ...different];
 
-    if (toReplicate.length === 0) {
+    if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
+      return;
+    }
+
+    const toReplicateWithoutBatching = [...different];
+    const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
+    if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
+      log('pushing bundle', { amount: missingOnRemote.length });
+      const { syncInteractively } = await this._pushInBundles(peerId, missingOnRemote);
+      toReplicateWithoutBatching.push(...syncInteractively);
+    } else {
+      log.verbose('failed to push bundle, replicating interactively', {
+        collectionId,
+        peerId,
+        amount: missingOnRemote.length,
+      });
+      toReplicateWithoutBatching.push(...missingOnRemote);
+    }
+    if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
+      log('pulling bundle', { amount: missingOnLocal.length });
+      const { syncInteractively } = await this._pullInBundles(peerId, missingOnLocal);
+      toReplicateWithoutBatching.push(...syncInteractively);
+    } else {
+      log.verbose('failed to pull bundle, replicating interactively', {
+        collectionId,
+        peerId,
+        amount: missingOnLocal.length,
+      });
+      toReplicateWithoutBatching.push(...missingOnLocal);
+    }
+
+    if (toReplicateWithoutBatching.length === 0) {
       return;
     }
 
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      toReplicate,
-      count: toReplicate.length,
+      toReplicateWithoutBatching,
+      count: toReplicateWithoutBatching.length,
     });
 
     // Load the documents so they will start syncing.
-    for (const documentId of toReplicate) {
+    for (const documentId of toReplicateWithoutBatching) {
       this._repo.findWithProgress(documentId);
     }
+  }
+
+  // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
+  // TODO(mykola): Use effect to retry batches.
+  private async _pushInBundles(
+    peerId: PeerId,
+    documentIds: DocumentId[],
+  ): Promise<{ syncInteractively: DocumentId[] }> {
+    const documentsToPush = [...documentIds];
+    const syncInteractively: DocumentId[] = [];
+
+    // Push bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
+    while (documentsToPush.length > 0) {
+      await Promise.all(
+        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
+          const bundle = documentsToPush.splice(0, BUNDLE_SIZE);
+          if (bundle.length === 0) {
+            return;
+          }
+          await this._pushBundle(peerId, bundle).catch((err) => {
+            log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
+            syncInteractively.push(...bundle);
+          });
+        }),
+      );
+    }
+
+    return { syncInteractively };
+  }
+
+  private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+
+    const handles = documentIds.map((documentId) => this._repo.handles[documentId]);
+    const bundle = exportBundle(this._repo, handles);
+    await this._echoNetworkAdapter.pushBundle(
+      peerId,
+      Array.from(bundle.docs.entries()).map(([documentId, doc]) => ({
+        documentId,
+        data: doc.data,
+        heads: doc.heads,
+      })),
+    );
+  }
+
+  private async _pullInBundles(
+    peerId: PeerId,
+    documentIds: DocumentId[],
+  ): Promise<{ syncInteractively: DocumentId[] }> {
+    const documentsToPull = [...documentIds];
+    const syncInteractively: DocumentId[] = [];
+
+    // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
+    while (documentsToPull.length > 0) {
+      await Promise.all(
+        range(BUNDLE_SYNC_CONCURRENCY).map(async () => {
+          const bundle = documentsToPull.splice(0, BUNDLE_SIZE);
+          if (bundle.length === 0) {
+            return;
+          }
+          await this._pullBundle(peerId, bundle).catch((err) => {
+            log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
+            syncInteractively.push(...bundle);
+          });
+        }),
+      );
+    }
+
+    return { syncInteractively };
+  }
+
+  private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
+    // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
+    const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
+    const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
+    for (const [documentId, data] of Object.entries(bundle)) {
+      this._repo.import(data, { docId: documentId as DocumentId });
+    }
+    // TODO(mykola): Should not be required. This is automerge bug
+    await this._repo.flush(Array.from(Object.keys(bundle)) as DocumentId[]);
   }
 
   private _onHeadsChanged(documentId: DocumentId, heads: Heads): void {

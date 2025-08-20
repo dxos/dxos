@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useState, useEffect, Fragment, type FC } from 'react';
+import React, { type FC, Fragment, useEffect, useState } from 'react';
 
-import { parseToolName, type Tool } from '@dxos/ai';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
-import { type Blueprint } from '@dxos/assistant';
+import { type Tool } from '@dxos/ai';
+import { type Blueprint } from '@dxos/blueprints';
 import { type Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -16,29 +14,20 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type ChatProcessor } from '../../hooks';
+import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
-  blueprints?: readonly Ref.Ref<Blueprint>[];
-  artifacts?: ArtifactDefinition[];
   services?: { service: ServiceType; tools: Tool[] }[];
   functions?: FunctionType[];
-  activeBlueprints?: readonly Ref.Ref<Blueprint>[];
-  striped?: boolean;
+  // TODO(burdon): Combine into single array.
+  blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
 }>;
 
-export const Toolbox = ({
-  classNames,
-  artifacts,
-  functions,
-  services,
-  blueprints,
-  activeBlueprints,
-  striped,
-}: ToolboxProps) => {
+export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -49,7 +38,7 @@ export const Toolbox = ({
           items={blueprints.map(({ target }) => ({
             name: target?.name ?? '',
             description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
           }))}
         />
       )}
@@ -60,18 +49,7 @@ export const Toolbox = ({
           items={activeBlueprints.map(({ target }) => ({
             name: target?.name ?? '',
             description: target?.description ?? '',
-            subitems: target?.tools.map((toolId) => ({ name: `∙ ${parseToolName(toolId)}` })),
-          }))}
-        />
-      )}
-
-      {artifacts && artifacts.length > 0 && (
-        <Section
-          title='Artifacts'
-          items={artifacts.map(({ name, description, tools }) => ({
-            name,
-            description,
-            subitems: tools.map(({ name, description }) => ({ name: `∙ ${parseToolName(name)}`, description })),
+            subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
           }))}
         />
       )}
@@ -91,11 +69,9 @@ export const Toolbox = ({
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
       )}
 
-      {!blueprints?.length &&
-        !activeBlueprints?.length &&
-        !artifacts?.length &&
-        !services?.length &&
-        !functions?.length && <div>{t('no tools')}</div>}
+      {!blueprints?.length && !activeBlueprints?.length && !services?.length && !functions?.length && (
+        <div>{t('no tools')}</div>
+      )}
     </div>
   );
 };
@@ -134,12 +110,12 @@ const Section: FC<{
   );
 };
 
-export type ToolboxContainerProps = ThemedClassName<{ space?: Space; processor?: ChatProcessor }>;
+export type ToolboxContainerProps = ThemedClassName<{
+  space?: Space;
+  processor?: AiChatProcessor;
+}>;
 
 export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
-  // Plugin artifacts.
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-
   // Registered services.
   const services = useQuery(space, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
@@ -161,9 +137,12 @@ export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContai
     <Toolbox
       classNames={classNames}
       blueprints={processor?.context.blueprints.value}
-      artifacts={artifactDefinitions}
       services={serviceTools}
       functions={functions}
     />
   );
+};
+
+const safeToolId = (name: string) => {
+  return name.split('_').pop();
 };

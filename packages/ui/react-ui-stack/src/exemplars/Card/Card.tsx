@@ -5,19 +5,20 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
-  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
+  type ComponentPropsWithoutRef,
   type FC,
-  forwardRef,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { cardChrome, cardRoot, cardHeading, cardText, cardSpacing } from './fragments';
 import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
+
+import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
@@ -62,7 +63,7 @@ const CardSurfaceRoot = ({
     return (
       <CardStaticRoot
         classNames={[
-          role === 'card--transclusion' && 'mlb-[1em]',
+          role === 'card--transclusion' && 'mlb-1',
           role === 'card--transclusion' && hoverableControls,
           classNames,
         ]}
@@ -156,9 +157,9 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
+const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'p';
+    const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>

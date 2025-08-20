@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusFinders, useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup, useFocusFinders, useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { Button, type ButtonProps, type ThemedClassName } from '@dxos/react-ui';
+import { Button, type ButtonProps, IconButton, type IconButtonProps, type ThemedClassName } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ghostHover, ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
+import { ghostSelectedContainerMd, mx } from '@dxos/react-ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -204,15 +204,46 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
         {...props}
         onClick={handleClick}
         classNames={[
-          'pli-2 rounded-sm',
           orientation === 'vertical' && 'block justify-start text-start is-full',
           orientation === 'vertical' && ghostSelectedContainerMd,
-          ghostHover,
           classNames,
         ]}
       >
         {children}
       </Button>
+    </TabsPrimitive.Trigger>
+  );
+};
+
+type TabsIconTabProps = IconButtonProps & Pick<TabsPrimitive.TabsTriggerProps, 'value'>;
+
+const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps) => {
+  const { setActivePart, orientation, value: contextValue, attendableId } = useTabsContext('TabsTab');
+  const { hasAttention } = useAttention(attendableId);
+  const handleClick = useCallback(
+    // NOTE: This handler is only called if the tab is *already active*.
+    (event: MouseEvent<HTMLButtonElement>) => {
+      setActivePart('panel');
+      onClick?.(event);
+    },
+    [setActivePart, onClick],
+  );
+
+  return (
+    <TabsPrimitive.Trigger value={value} asChild>
+      <IconButton
+        density='fine'
+        variant={
+          orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
+        }
+        {...props}
+        onClick={handleClick}
+        classNames={[
+          orientation === 'vertical' && 'justify-start text-start is-full',
+          orientation === 'vertical' && ghostSelectedContainerMd,
+          classNames,
+        ]}
+      />
     </TabsPrimitive.Trigger>
   );
 };
@@ -233,6 +264,7 @@ export const Tabs = {
   Root: TabsRoot,
   Tablist: TabsTablist,
   Tab: TabsTab,
+  IconTab: TabsIconTab,
   TabPrimitive: TabsPrimitive.Trigger,
   TabGroupHeading: TabsTabGroupHeading,
   Tabpanel: TabsTabpanel,

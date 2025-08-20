@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { SmileyBlank, SmileyXEyes } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 import { useRouteError } from 'react-router-dom';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { Icon } from '@dxos/react-ui';
 
 export type ErrorProps = { noJoke?: boolean };
 
@@ -14,7 +13,7 @@ export const Error = ({ noJoke }: ErrorProps) => {
   const error = useRouteError();
   const stack = (error as any)?.stack;
   const [{ joke, punchline }, setJoke] = useState<any>({});
-  const Face = punchline ? SmileyXEyes : SmileyBlank;
+  const faceIcon = punchline ? 'ph--smiley-x-eyes--regular' : 'ph--smiley-blank--regular';
 
   useEffect(() => {
     if (noJoke) {
@@ -35,10 +34,10 @@ export const Error = ({ noJoke }: ErrorProps) => {
   }, []);
 
   return (
-    <div className='flex flex-col m-8 overflow-hidden divide-y border shadow-md'>
+    <div className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-separator shadow-md'>
       {!noJoke && (
         <div className='flex items-center p-4'>
-          <Face className={mx(getSize(12), 'text-neutral-500')} />
+          <Icon icon={faceIcon} size={12} classNames='text-neutral-500' />
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>

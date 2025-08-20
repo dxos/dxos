@@ -5,10 +5,11 @@
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import { type RunParams } from './run-process';
-import { type ReplicantParams } from './spec';
 import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS } from '../redis';
+
+import { type RunParams } from './run-process';
+import { type ReplicantParams } from './spec';
 
 /**
  * Entry point for process running in agent mode.
@@ -18,12 +19,16 @@ export const runReplicant = async ({ replicantParams }: RunParams) => {
     initLogProcessor(replicantParams);
     log.info('running replicant', { params: replicantParams });
 
+    process.on('SIGINT', () => finish('SIGINT'));
+    process.on('SIGTERM', () => finish('SIGTERM'));
+
     const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantParams, DEFAULT_REDIS_OPTIONS);
     const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(env);
 
     env.setReplicant(replicant);
     await env.open();
     process.once('beforeExit', () => env.close());
+    // Ensure graceful termination so Node writes CPU profile when enabled.
   } catch (err) {
     log.catch(err, { params: replicantParams });
     finish(1);
@@ -49,7 +54,7 @@ const initLogProcessor = (params: ReplicantParams) => {
   }
 };
 
-const finish = (code: number) => {
+const finish = (code: number | string) => {
   if (isNode()) {
     process.exit(code);
   } else {

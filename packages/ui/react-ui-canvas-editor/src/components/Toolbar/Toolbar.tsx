@@ -4,11 +4,10 @@
 
 import React, { useState } from 'react';
 
-import { Icon, Select, Toolbar as NaturalToolbar, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Icon, Toolbar as NaturalToolbar, Select, type ThemedClassName } from '@dxos/react-ui';
 
 import { type ActionHandler } from '../../actions';
-import { type LayoutKind, LAYOUTS } from '../../layout';
+import { LAYOUTS, type LayoutKind } from '../../layout';
 
 export type ToolbarProps = ThemedClassName<{
   onAction?: ActionHandler;
@@ -22,7 +21,7 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
 
   // TODO(burdon): Translations.
   return (
-    <NaturalToolbar.Root classNames={mx('p-1', classNames)}>
+    <NaturalToolbar.Root classNames={['p-1', classNames]}>
       <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
         <Icon icon='ph--bug--regular' />
       </NaturalToolbar.Button>

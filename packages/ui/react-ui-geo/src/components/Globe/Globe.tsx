@@ -4,14 +4,14 @@
 
 import {
   type GeoProjection,
+  easeLinear,
+  easeSinOut,
   geoMercator,
   geoOrthographic,
   geoPath,
   geoTransverseMercator,
   interpolateNumber,
   transition,
-  easeLinear,
-  easeSinOut,
 } from 'd3';
 import { type ControlPosition } from 'leaflet';
 import React, {
@@ -26,7 +26,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { type ThemedClassName, type ThemeMode, useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -44,7 +44,7 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { ZoomControls, ActionControls, type ControlProps, controlPositions } from '../Toolbar';
+import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -103,7 +103,7 @@ const defaultStyles: Record<ThemeMode, StyleSet> = {
 export type GlobeController = {
   canvas: HTMLCanvasElement;
   projection: GeoProjection;
-} & Pick<GlobeContextType, 'scale' | 'translation' | 'rotation' | 'setScale' | 'setTranslation' | 'setRotation'>;
+} & Pick<GlobeContextType, 'zoom' | 'translation' | 'rotation' | 'setZoom' | 'setTranslation' | 'setRotation'>;
 
 export type ProjectionType = 'orthographic' | 'mercator' | 'transverse-mercator';
 
@@ -154,6 +154,7 @@ type GlobeCanvasProps = {
  * Basic globe renderer.
  * https://github.com/topojson/world-atlas
  */
+// TODO(burdon): Move controller to root.
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
   ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
     const { themeMode } = useThemeContext();
@@ -173,55 +174,50 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     }, [topology, features, styles]);
 
     // State.
-    const { size, center, scale, translation, rotation, setCenter, setScale, setTranslation, setRotation } =
+    const { size, center, zoom, translation, rotation, setCenter, setZoom, setTranslation, setRotation } =
       useGlobeContext();
-
-    const scaleRef = useDynamicRef(scale);
+    const zoomRef = useDynamicRef(zoom);
 
     // Update rotation.
     useEffect(() => {
       if (center) {
-        setScale(1);
+        setZoom(1);
         setRotation(positionToRotation(geoToPosition(center)));
       }
     }, [center]);
 
     // External controller.
     const zooming = useRef(false);
-    useImperativeHandle<GlobeController, GlobeController>(
-      forwardRef,
-      () => {
-        return {
-          canvas,
-          projection,
-          center,
-          get scale() {
-            return scaleRef.current;
-          },
-          translation,
-          rotation,
-          setCenter,
-          setScale: (s) => {
-            if (typeof s === 'function') {
-              const is = interpolateNumber(scaleRef.current, s(scaleRef.current));
-              // Stop easing if already zooming.
-              transition()
-                .ease(zooming.current ? easeLinear : easeSinOut)
-                .duration(200)
-                .tween('scale', () => (t) => setScale(is(t)))
-                .on('end', () => {
-                  zooming.current = false;
-                });
-            } else {
-              setScale(s);
-            }
-          },
-          setTranslation,
-          setRotation,
-        };
-      },
-      [canvas],
-    );
+    useImperativeHandle<GlobeController, GlobeController>(forwardRef, () => {
+      return {
+        canvas,
+        projection,
+        center,
+        get zoom() {
+          return zoomRef.current;
+        },
+        translation,
+        rotation,
+        setCenter,
+        setZoom: (s) => {
+          if (typeof s === 'function') {
+            const is = interpolateNumber(zoomRef.current, s(zoomRef.current));
+            // Stop easing if already zooming.
+            transition()
+              .ease(zooming.current ? easeLinear : easeSinOut)
+              .duration(200)
+              .tween('scale', () => (t) => setZoom(is(t)))
+              .on('end', () => {
+                zooming.current = false;
+              });
+          } else {
+            setZoom(s);
+          }
+        },
+        setTranslation,
+        setRotation,
+      };
+    }, [canvas]);
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
@@ -236,14 +232,14 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         timer(() => {
           // https://d3js.org/d3-geo/projection
           projection
-            .scale((Math.min(size.width, size.height) / 2) * scale)
+            .scale((Math.min(size.width, size.height) / 2) * zoom)
             .translate([size.width / 2 + (translation?.x ?? 0), size.height / 2 + (translation?.y ?? 0)])
             .rotate(rotation ?? [0, 0, 0]);
 
-          renderLayers(generator, layers, scale, styles);
+          renderLayers(generator, layers, zoom, styles);
         });
       }
-    }, [generator, size, scale, translation, rotation, layers]);
+    }, [generator, size, zoom, translation, rotation, layers]);
 
     if (!size.width || !size.height) {
       return null;
@@ -253,8 +249,12 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
   },
 );
 
+//
+// Debug
+//
+
 const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) => {
-  const { size, scale, translation, rotation } = useGlobeContext();
+  const { size, zoom, translation, rotation } = useGlobeContext();
   return (
     <div
       className={mx(
@@ -263,11 +263,15 @@ const GlobeDebug = ({ position = 'topleft' }: { position?: ControlPosition }) =>
       )}
     >
       <pre className='font-mono text-xs text-green-700'>
-        {JSON.stringify({ size, scale, translation, rotation }, null, 2)}
+        {JSON.stringify({ size, zoom, translation, rotation }, null, 2)}
       </pre>
     </div>
   );
 };
+
+//
+// Panel
+//
 
 const GlobePanel = ({
   position,
@@ -277,25 +281,37 @@ const GlobePanel = ({
   return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position], classNames)}>{children}</div>;
 };
 
+//
+// Controls
+//
+
 const CustomControl = ({ position, children }: PropsWithChildren<{ position: ControlPosition }>) => {
   return <div className={mx('z-10 absolute overflow-hidden', controlPositions[position])}>{children}</div>;
 };
 
 type GlobeControlProps = { position?: ControlPosition } & Pick<ControlProps, 'onAction'>;
 
+const GlobeZoom = ({ onAction, position = 'bottomleft', ...props }: GlobeControlProps) => (
+  <CustomControl position={position} {...props}>
+    <ZoomControls onAction={onAction} />
+  </CustomControl>
+);
+
+const GlobeAction = ({ onAction, position = 'bottomright', ...props }: GlobeControlProps) => (
+  <CustomControl position={position} {...props}>
+    <ActionControls onAction={onAction} />
+  </CustomControl>
+);
+
+//
+// Globe
+//
+
 export const Globe = {
   Root: GlobeRoot,
   Canvas: GlobeCanvas,
-  Zoom: ({ onAction, position = 'bottomleft', ...props }: GlobeControlProps) => (
-    <CustomControl position={position} {...props}>
-      <ZoomControls onAction={onAction} />
-    </CustomControl>
-  ),
-  Action: ({ onAction, position = 'bottomright', ...props }: GlobeControlProps) => (
-    <CustomControl position={position} {...props}>
-      <ActionControls onAction={onAction} />
-    </CustomControl>
-  ),
+  Zoom: GlobeZoom,
+  Action: GlobeAction,
   Debug: GlobeDebug,
   Panel: GlobePanel,
 };

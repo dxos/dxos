@@ -5,10 +5,9 @@
 import '@dxos-theme';
 
 import { type Meta } from '@storybook/react-vite';
-import { Match, Option, pipe, Schema } from 'effect';
+import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { Message } from '@dxos/ai';
 import {
   Capabilities,
   CollaborationActions,
@@ -31,17 +30,19 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { command, type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
+import { type EditorSelection, type Range, command, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import MarkdownContainer from './MarkdownContainer';
-import { MarkdownPlugin } from '../MarkdownPlugin';
 import { MarkdownCapabilities } from '../capabilities';
-import { MARKDOWN_PLUGIN } from '../meta';
+import { MarkdownPlugin } from '../MarkdownPlugin';
+import { meta } from '../meta';
 import { translations } from '../translations';
-import { createDocument, DocumentType, type MarkdownSettingsProps } from '../types';
+import { Markdown } from '../types';
+
+import { MarkdownContainer } from './MarkdownContainer';
 
 faker.seed(1);
 
@@ -61,19 +62,25 @@ const TestItem = Schema.Struct({
   }),
 );
 
-const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) => {
+const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, content }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { parentRef } = useTextEditor({ initialValue: content });
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   const space = useSpace();
   const queueDxn = useMemo(() => space && space.queues.create().dxn, [space]);
-  const queue = useQueue<Message>(queueDxn);
+  const queue = useQueue<DataType.Message>(queueDxn);
 
   const handleInsert = async () => {
     invariant(space);
     invariant(queue);
-    await queue.append([Obj.make(Message, { role: 'assistant', content: [{ type: 'text', text: 'Hello' }] })]);
+    await queue.append([
+      Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [{ _tag: 'text', text: 'Hello' }],
+      }),
+    ]);
     const message = queue.objects.at(-1);
     invariant(message);
 
@@ -114,8 +121,8 @@ const TestChat: FC<{ doc: DocumentType; content: string }> = ({ doc, content }) 
 
 const DefaultStory = ({ document, chat }: { document: string; chat: string }) => {
   const space = useSpace();
-  const [doc, setDoc] = useState<DocumentType>();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+  const [doc, setDoc] = useState<Markdown.Document>();
+  const settings = useCapability(Capabilities.SettingsStore).getStore<Markdown.Settings>(meta.id)!.value;
   const { editorState } = useCapability(MarkdownCapabilities.State);
 
   useEffect(() => {
@@ -124,10 +131,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
     }
 
     const doc = space.db.add(
-      createDocument({
+      Markdown.makeDocument({
         name: 'Test',
-
-        // Create links.
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
           const dxn = Ref.make(obj).dxn.toString();
@@ -151,7 +156,8 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+// TODO(burdon): Make consistent.
+const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: DefaultStory,
   decorators: [
@@ -160,8 +166,8 @@ const meta: Meta<typeof DefaultStory> = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [DocumentType, TestItem],
-          onClientInitialized: async (_, client) => {
+          types: [Markdown.Document, TestItem],
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
@@ -181,7 +187,7 @@ const meta: Meta<typeof DefaultStory> = {
   },
 };
 
-export default meta;
+export default storybook;
 
 type Story = Meta<typeof DefaultStory>;
 

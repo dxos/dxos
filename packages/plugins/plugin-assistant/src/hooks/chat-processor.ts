@@ -2,30 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Signal, batch, computed, signal } from '@preact/signals-core';
+import { Registry, Result, Rx } from '@effect-rx/rx-react';
+import { Cause, Effect, Exit, Fiber, type Layer, Option, Stream, pipe } from 'effect';
 
-import {
-  DEFAULT_EDGE_MODEL,
-  type ExecutableTool,
-  type GenerateRequest,
-  type Message,
-  type MessageContentBlock,
-  type ToolUseContentBlock,
-} from '@dxos/ai';
+import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { type ArtifactDefinition } from '@dxos/artifact';
 import {
-  type AISession,
-  type ArtifactDiffResolver,
-  type BlueprintRegistry,
-  type ContextBinder,
-  type Conversation,
+  type AiConversation,
+  type AiConversationRunParams,
+  AiSession,
+  ArtifactDiffResolver,
+  createSystemPrompt,
 } from '@dxos/assistant';
+import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
+import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
-// TODO(burdon): Factor out.
+import { type AiChatServices } from './useChatServices';
+
+// TODO(burdon): Is this still used?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -33,21 +32,20 @@ declare global {
   }
 }
 
-type RequestOptions = {
+export type AiRequestOptions = {
   // Empty for now.
 };
 
-export type ChatProcessorOptions = {
-  // TODO(burdon): Change to AiToolkit.
-  tools?: readonly ExecutableTool[];
-  artifacts?: readonly ArtifactDefinition[];
+export type AiChatProcessorOptions = {
+  model?: ModelName;
+  modelRegistry?: ModelRegistry;
+  blueprintRegistry?: Blueprint.Registry;
+  observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
-  blueprintRegistry?: BlueprintRegistry;
-} & Pick<GenerateRequest, 'model' | 'systemPrompt'>;
+} & Pick<AiConversationRunParams<any>, 'system'>;
 
-const defaultOptions: ChatProcessorOptions = {
+const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
-  systemPrompt: 'you are a helpful assistant',
 };
 
 /**
@@ -56,226 +54,215 @@ const defaultOptions: ChatProcessorOptions = {
  * Executes tools based on AI responses.
  * Supports cancellation of in-progress requests.
  */
-// TODO(burdon): Rename ChatContext?
-export class ChatProcessor {
+export class AiChatProcessor {
   /**
-   * Pending messages (incl. the current user request).
-   * @reactive
+   * Last error.
    */
-  private readonly _pending: Signal<Message[]> = signal([]);
+  // TODO(wittjosiah): Error should come from the message stream.
+  readonly error = Rx.make<Option.Option<Error>>(Option.none());
+
+  /** Rx registry. */
+  private readonly _observableRegistry: Registry.Registry;
+
+  /** Current session. */
+  private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
+
+  private _currentRequest?: Fiber.Fiber<void, any> = undefined;
 
   /**
-   * Current streaming block (from the AI service).
-   * @reactive
+   * Current streaming message (from the AI service).
    */
-  private readonly _block: Signal<MessageContentBlock | undefined> = signal(undefined);
+  private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
+    return pipe(
+      get(this._session),
+      Option.map((session) => Stream.fromQueue(session.blockQueue)),
+      Option.getOrElse(() => Stream.make()),
+      Stream.scan<Option.Option<DataType.Message>, Option.Option<ContentBlock.Any>>(Option.none(), (acc, blockOption) =>
+        Option.flatMap(blockOption, (block) =>
+          acc.pipe(
+            Option.match({
+              onNone: () => [block],
+              onSome: (message) => [...message.blocks.filter((b) => !b.pending), block],
+            }),
+            Option.some,
+            Option.map((blocks) =>
+              Obj.make(DataType.Message, {
+                created: new Date().toISOString(),
+                sender: { role: 'assistant' },
+                blocks,
+              }),
+            ),
+          ),
+        ),
+      ),
+    );
+  });
 
   /**
    * Streaming state.
-   * @reactive
    */
-  public readonly streaming: Signal<boolean> = computed(() => this._block.value !== undefined);
+  readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
+    return pipe(
+      get(this._streaming),
+      Result.map((streaming) => Option.isSome(streaming)),
+      Result.getOrElse(() => false),
+    );
+  });
 
   /**
-   * Last error.
-   * @reactive
+   * Pending messages (incl. the current user request).
    */
-  public readonly error: Signal<Error | undefined> = signal(undefined);
+  private readonly _pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+    // TODO(wittjosiah): For some reason using Option.map here loses reactivity.
+    const session = get(this._session);
+    return Option.isSome(session)
+      ? pipe(
+          session.value.messageQueue,
+          Stream.fromQueue,
+          Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => [...acc, message]),
+        )
+      : Stream.make();
+  });
 
   /**
    * Array of Messages (incl. the current message being streamed).
-   * @reactive
    */
-  public readonly messages: Signal<Message[]> = computed(() => {
-    const messages = [...this._pending.value];
-    if (this._block.value && messages.length) {
-      const { content, ...rest } = messages.pop()!;
-      const message = { ...rest, content: [...content, this._block.value] };
-      messages.push(message);
-    }
-
-    return messages;
+  readonly messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+    const streaming = get(this._streaming);
+    return Result.map(get(this._pending), (pending) =>
+      Result.match(streaming, {
+        onInitial: () => pending,
+        onSuccess: (streaming) =>
+          Option.match(streaming.value, {
+            onNone: () => pending,
+            onSome: (message) => [...pending, message],
+          }),
+        onFailure: () => pending,
+      }),
+    );
   });
 
-  // TODO(burdon): Replace with Toolkit.
-  private _tools?: ExecutableTool[];
-
-  /** Current session. */
-  private _session: AISession | undefined = undefined;
-
   constructor(
-    private readonly _conversation: Conversation,
-    private readonly _options: ChatProcessorOptions = defaultOptions,
+    // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
+    private readonly _services: Layer.Layer<AiChatServices>,
+    private readonly _conversation: AiConversation,
+    private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    this._tools = [...(_options.tools ?? [])];
+    // Initialize registries and defaults before using in other logic.
+    this._observableRegistry = this._options.observableRegistry ?? Registry.make();
+    if (this._options.model && !this._options.system) {
+      const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
+      this._options.system = createSystemPrompt(capabilities);
+    }
+  }
+
+  get context() {
+    return this._conversation.context;
   }
 
   get conversation() {
     return this._conversation;
   }
 
-  get context(): ContextBinder {
-    return this._conversation.context;
-  }
-
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
-  }
-
-  get tools() {
-    return this._tools;
-  }
-
-  /**
-   * @deprecated Replace with blueprints
-   */
-  setTools(tools: ExecutableTool[]): void {
-    this._tools = tools;
   }
 
   /**
    * Make GPT request.
    */
-  async request(message: string, options: RequestOptions = {}): Promise<Message[]> {
+  async request(message: string, _options: AiRequestOptions = {}): Promise<void> {
+    if (this._currentRequest) {
+      throw new Error('Request already in progress');
+    }
+
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
 
-    this._conversation.onBegin.on(ctx, (session) => {
-      log.info('onBegin', { session, isDisposed: ctx.disposed });
+    const session = new AiSession();
+    this._observableRegistry.set(this._session, Option.some(session));
 
-      this._session = session;
-      ctx.onDispose(() => {
-        log.info('onDispose', { session, isDisposed: ctx.disposed });
-        if (this._session === session) {
-          this._session = undefined;
-        }
-      });
-
-      // Message complete.
-      session.message.on((message) => {
-        batch(() => {
-          this._pending.value = [...this._pending.value, message];
-          this._block.value = undefined;
-        });
-      });
-
-      // Streaming update (happens before message complete).
-      session.update.on((block) => {
-        batch(() => {
-          this._block.value = block;
-        });
-      });
-
-      session.userMessage.on((message) => {
-        log.info('userMessage', { message });
-        this._pending.value = [...this._pending.value, message];
-      });
-
-      session.toolStatusReport.on(({ message, status }) => {
-        const msg = this._pending.peek().find((m) => m.id === message.id);
-        const toolUse = msg?.content.find((block) => block.type === 'tool_use');
-        if (!toolUse) {
-          return;
-        }
-
-        const block = msg?.content.find(
-          (block): block is ToolUseContentBlock => block.type === 'tool_use' && block.id === toolUse.id,
-        );
-        if (block) {
-          this._pending.value = this._pending.value.map((m) => {
-            if (m.id === message.id) {
-              return {
-                ...m,
-                content: m.content.map((block) =>
-                  block.type === 'tool_use' && block.id === toolUse.id ? { ...block, currentStatus: status } : block,
-                ),
-              };
-            }
-
-            return m;
-          });
-        } else {
-          log.warn('no block for status report');
-        }
+    ctx.onDispose(() => {
+      log.info('onDispose', { session, isDisposed: ctx.disposed });
+      Option.match(this._observableRegistry.get(this._session), {
+        onSome: (s) => {
+          if (s === session) {
+            this._observableRegistry.set(this._session, Option.none());
+          }
+        },
+        onNone: () => {},
       });
     });
 
     try {
-      const messages = await this._conversation.run({
-        artifacts: [...(this._options.artifacts ?? [])],
-        requiredArtifactIds: this._options.artifacts?.map((artifact) => artifact.id) ?? [],
+      this._currentRequest = this._conversation
+        .run({
+          session,
+          prompt: message,
+          system: this._options.system,
+        })
+        .pipe(
+          Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+          // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
+          Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
+          Effect.provide(this._services),
+          Effect.tapErrorCause((cause) => {
+            log.error('error', { cause });
+            return Effect.void;
+          }),
+          Effect.asVoid,
+          Effect.runFork,
+        );
 
-        // TODO(dmaretskyi): Migrate to Effect's AiToolkit.
-        tools: this._tools ?? [],
-        systemPrompt: this._options.systemPrompt,
-        prompt: message,
-        extensions: this._options.extensions,
-        artifactDiffResolver: this._artifactDiffResolver,
-        generationOptions: {
-          model: this._options.model,
-        },
-      });
-
-      log('completed', { messages });
+      const exit = await this._currentRequest.pipe(Fiber.join, Effect.runPromiseExit);
+      if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+        throwCause(exit.cause);
+      }
     } catch (err) {
       log.catch(err);
-      if (err instanceof Error && err.message.includes('Overloaded')) {
-        this.error.value = new AiServiceOverloadedError('AI service overloaded', { cause: err });
-      } else {
-        this.error.value = new Error('AI service error', { cause: err });
-      }
+      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+    } finally {
+      this._currentRequest = undefined;
     }
-
-    return this._reset();
   }
 
   /**
    * Cancel pending requests.
-   * @returns Pending requests (incl. the request message).
    */
-  async cancel(): Promise<Message[]> {
+  async cancel(): Promise<void> {
     log.info('cancelling...');
 
-    // TODO(dmaretskyi): Conversation should handle aborting.
-    this._session?.abort();
-    return this._reset();
-  }
-
-  private async _reset(): Promise<Message[]> {
-    const messages = this._pending.value;
-    batch(() => {
-      this._pending.value = [];
-      this._block.value = undefined;
-    });
-
-    return messages;
-  }
-
-  private _artifactDiffResolver: ArtifactDiffResolver = async (artifacts) => {
-    const space = this._options.extensions?.space;
-    if (!space) {
-      return new Map();
+    if (this._currentRequest) {
+      await this._currentRequest.pipe(Fiber.interrupt, runAndForwardErrors);
+      this._currentRequest = undefined;
     }
 
-    const versions = new Map();
-    await Promise.all(
-      artifacts.map(async (artifact) => {
-        const {
-          objects: [object],
-        } = await space.db.query(Filter.ids(artifact.id)).run();
-        if (!object) {
-          return;
-        }
-        versions.set(artifact.id, {
-          version: getVersion(object),
-          diff: `Current state: ${JSON.stringify(object)}`,
-        });
-      }),
-    );
-    return versions;
-  };
-}
+    this._observableRegistry.set(this._session, Option.none());
+  }
 
-// TODO(wittjosiah): Move to ai-service-client.
-export class AiServiceOverloadedError extends Error {
-  code = 'AI_SERVICE_OVERLOADED';
+  private _artifactDiffResolver: ArtifactDiffResolver.Service = {
+    resolve: async (artifacts) => {
+      const space = this._options.extensions?.space;
+      if (!space) {
+        return new Map();
+      }
+
+      const versions = new Map();
+      await Promise.all(
+        artifacts.map(async (artifact) => {
+          const {
+            objects: [object],
+          } = await space.db.query(Filter.ids(artifact.id)).run();
+          if (!object) {
+            return;
+          }
+
+          versions.set(artifact.id, {
+            version: getVersion(object),
+            diff: `Current state: ${JSON.stringify(object)}`,
+          });
+        }),
+      );
+      return versions;
+    },
+  };
 }

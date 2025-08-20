@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getReader } from './stats';
 import { type ReplicantsSummary } from '../plan';
+
+import { getReader } from './stats';
 
 export const RESOURCE_USAGE_LOG = 'dxos.blade-runner.resource-usage';
 

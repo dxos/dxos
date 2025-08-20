@@ -10,22 +10,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
-    },
-    "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/types/src/types.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -40,7 +30,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "5.4.7"

@@ -20,6 +20,7 @@ export type PackageJson = {
   type?: string;
   private: boolean;
   exports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
+  imports?: string | Record<string, string | Record<string, string | Record<string, string>>>;
   main?: string;
   browser?: Record<string, string>;
   types?: string;
@@ -78,8 +79,8 @@ export class ProjectGraph {
   ): string[] {
     const manifest = this.getManifest(name);
     return Object.entries({
-      ...(deps ? manifest?.dependencies ?? {} : {}),
-      ...(devDeps ? manifest?.devDependencies ?? {} : {}),
+      ...(deps ? (manifest?.dependencies ?? {}) : {}),
+      ...(devDeps ? (manifest?.devDependencies ?? {}) : {}),
     })
       .filter(([name, version]) => version.startsWith('workspace:') && this.hasPackage(name))
       .map(([name]) => name);

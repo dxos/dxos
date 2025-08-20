@@ -7,21 +7,22 @@ import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 
-import { useApp, type CreateAppOptions } from '../App';
+import { type CreateAppOptions, useApp } from '../App';
 import { Capabilities, Events } from '../common';
 import {
+  type ActivationEvent,
+  type AnyCapability,
+  type PluginContext,
+  PluginManager,
   contributes,
   defineModule,
   definePlugin,
-  type ActivationEvent,
-  type AnyCapability,
-  PluginManager,
-  type PluginContext,
 } from '../core';
 
 // TODO(burdon): Factor out (use consistently in plugin framework?)
 export type Provider<C, R> = (context: C) => R;
 export type ProviderOrValue<C, R> = Provider<C, R> | R;
+
 export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
   return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
 };
@@ -56,7 +57,9 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
+  /** @deprecated */
   capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
+  /** @deprecated */
   fireEvents?: (ActivationEvent | string)[];
 };
 

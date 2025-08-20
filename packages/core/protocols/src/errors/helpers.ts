@@ -4,8 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { SystemError } from './base-errors.js';
 import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.js';
+
+import { SystemError } from './base-errors.js';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;

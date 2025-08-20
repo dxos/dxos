@@ -5,16 +5,16 @@
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 import { Schema } from 'effect';
 import { yieldOrContinue } from 'main-thread-scheduling';
-import React, { type FC, useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react';
+import React, { type FC, type WheelEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { Type } from '@dxos/echo';
 import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridAxisMeta,
   type DxGridCellValue,
   type DxGridElement,
-  type DxGridAxisMeta,
   type DxGridPlaneCells,
   Grid,
   toPlaneCellIndex,

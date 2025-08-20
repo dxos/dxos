@@ -8,8 +8,9 @@ import { ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Comparator, intersection } from '@dxos/util';
 
+import { type BaseObject } from '../types';
+
 import { MetaId } from './model';
-import type { BaseObject } from '../types';
 
 //
 // ObjectMeta

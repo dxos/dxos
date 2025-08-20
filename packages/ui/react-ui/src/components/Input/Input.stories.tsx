@@ -4,21 +4,22 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { baseSurface, modalSurface, activeSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
+import { activeSurface, baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
+
+import { withTheme } from '../../testing';
 
 import {
   type CheckboxProps,
   Input,
   type PinInputProps,
   type SwitchProps,
-  type TextInputProps,
   type TextAreaProps,
+  type TextInputProps,
 } from './Input';
-import { withTheme } from '../../testing';
 
 type VariantMap = {
   text: TextInputProps;

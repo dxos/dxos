@@ -9,10 +9,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs"
     },
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs"
     }
@@ -55,7 +57,7 @@
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "debounce": "^2.2.0",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
     "it-all": "^3.0.6",

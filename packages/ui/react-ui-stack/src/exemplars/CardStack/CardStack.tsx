@@ -8,7 +8,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { railGridHorizontalContainFitContent, Stack, type StackProps } from '../../components';
+import { Stack, type StackProps, railGridHorizontalContainFitContent } from '../../components';
 import { Card } from '../Card';
 
 type SharedCardStackProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };

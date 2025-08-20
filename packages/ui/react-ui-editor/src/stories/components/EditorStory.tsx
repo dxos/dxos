@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, forwardRef, useEffect, useState, useImperativeHandle, useMemo } from 'react';
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -16,17 +16,17 @@ import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { editorSlots, editorGutter } from '../../defaults';
+import { editorGutter, editorSlots } from '../../defaults';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
-  createDataExtensions,
   createBasicExtensions,
+  createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
 } from '../../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../../hooks';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 // Type definitions.
 export type DebugMode = 'raw' | 'tree' | 'raw+tree';
@@ -112,7 +112,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
         initialValue: text,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
-          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true }),
+          createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
           editorGutter,

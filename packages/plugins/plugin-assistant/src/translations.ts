@@ -2,24 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Assistant, TemplateType } from './types';
+import { Assistant } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [Assistant.Chat.typename]: {
-        'typename label': 'Assistant',
-        'typename label_zero': 'Assistants',
-        'typename label_one': 'Assistant',
-        'typename label_other': 'Assistants',
-        'object name placeholder': 'New assistant',
-        'rename object label': 'Rename assistant',
-        'delete object label': 'Delete assistant',
+      // TODO(burdon): From assistant.
+      [Blueprint.Blueprint.typename]: {
+        'typename label': 'Blueprint',
+        'typename label_zero': 'Blueprints',
+        'typename label_one': 'Blueprint',
+        'typename label_other': 'Blueprints',
+        'object name placeholder': 'New blueprint',
+        'rename object label': 'Rename blueprint',
+        'delete object label': 'Delete blueprint',
       },
+      // TODO(burdon): From conductor.
       [Sequence.typename]: {
         'typename label': 'Sequence',
         'typename label_zero': 'Sequences',
@@ -29,14 +32,11 @@ export const translations = [
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
       },
-      [TemplateType.typename]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
-        'rename object label': 'Rename template',
-        'delete object label': 'Delete template',
+      [Assistant.Chat.typename]: {
+        'typename label': 'AI Chat',
+        'object name placeholder': 'New AI Chat',
+        'rename object label': 'Rename AI Chat',
+        'delete object label': 'Delete AI Chat',
       },
       [meta.id]: {
         'templates label': 'Templates',
@@ -55,6 +55,9 @@ export const translations = [
         'description placeholder': 'Enter description of when this template should be used',
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
+        'type filter placeholder': 'Type',
+        'idle type filter label': 'Any',
+        'no reference options label': 'No results',
 
         'sequence logs label': 'Logs',
 
@@ -63,16 +66,27 @@ export const translations = [
 
         'no tools': 'No tools are configured.',
 
+        'button suggest': 'Assistant suggestion',
+        'button select option': 'Select option',
+        'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
 
+        'calling tool label': 'Calling tool...',
+        'calling label': 'Calling',
+        'error label': 'Error',
+
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
-        'context objects placeholder': 'Add to context...',
-        'button add blueprint': 'Configure blueprints',
+        'context objects placeholder': 'Add to context',
+        'context settings placeholder': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
         'button scroll down': 'Scroll down',
+        'blueprints in context title': 'Blueprints',
+        'objects in context title': 'Content',
+        'remove object in context label': 'Remove document',
+        'chat model title': 'Model',
 
         'settings default label': 'Default',
         'settings custom prompts label': 'Use custom prompts',

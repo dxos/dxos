@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StreamLanguage, HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
 import { tags } from '@dxos/react-ui-editor';
@@ -27,7 +27,10 @@ const parser = StreamLanguage.define<{ count: number }>({
 });
 
 const styles = HighlightStyle.define([
-  { tag: tags.tagName, class: mx('dx-tag dx-tag--indigo text-baseText font-medium') },
+  {
+    tag: tags.tagName,
+    class: mx('dx-tag dx-tag--indigo text-baseText font-medium'),
+  },
 ]);
 
 export const command: Extension = [parser, syntaxHighlighting(styles)];

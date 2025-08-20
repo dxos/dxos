@@ -12,14 +12,15 @@ import { MemoryTransportFactory, SwarmNetworkManager, createRtcTransportFactory 
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { StorageType, createStorage, type Storage } from '@dxos/random-access-storage';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { TestFeedBuilder } from './test-feed-builder';
 import { MetadataStore } from '../metadata';
-import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol, type Space } from '../space';
+import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, type Space, SpaceManager, SpaceProtocol } from '../space';
+
+import { TestFeedBuilder } from './test-feed-builder';
 
 export type NetworkManagerProvider = () => SwarmNetworkManager;
 

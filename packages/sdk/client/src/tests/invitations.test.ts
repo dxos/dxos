@@ -2,16 +2,16 @@
 // Copyright 2021 DXOS.org
 //
 
-import { beforeEach, onTestFinished, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncChain, sleep, Trigger, waitForCondition } from '@dxos/async';
+import { Trigger, chain, sleep, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
-  createAdmissionKeypair,
   type DataSpace,
+  InvitationsManager,
   InvitationsServiceImpl,
   type ServiceContext,
-  InvitationsManager,
+  createAdmissionKeypair,
 } from '@dxos/client-services';
 import {
   type PerformInvitationParams,
@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
 import { InvitationsProxy } from '../invitations';
@@ -309,7 +309,7 @@ describe('Invitations', () => {
       let space: DataSpace;
 
       beforeEach(async () => {
-        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+        const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
         space = await host.dataSpaceManager!.createSpace();
@@ -330,7 +330,7 @@ describe('Invitations', () => {
       let guest: ServiceContext;
 
       beforeEach(async () => {
-        const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
+        const peers = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
         await host.createIdentity();
@@ -352,7 +352,7 @@ describe('Invitations', () => {
       let hostMetadata: MetadataStore;
 
       beforeEach(async () => {
-        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+        const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
         invariant(hostContext.dataSpaceManager);
@@ -398,7 +398,7 @@ describe('Invitations', () => {
 
     describe('persistent invitations', () => {
       test('space with no auth', async () => {
-        const [hostContext, guestContext] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
+        const [hostContext, guestContext] = await chain<ServiceContext>([createIdentity, closeAfterTest])(
           createPeers(2),
         );
         invariant(hostContext.dataSpaceManager);
@@ -496,7 +496,7 @@ describe('Invitations', () => {
         });
       });
       test('non-persistent invitations are not persisted', async () => {
-        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+        const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
         const hostContext = peers[0];
 
         invariant(hostContext.dataSpaceManager);
@@ -552,7 +552,7 @@ describe('Invitations', () => {
       let space: DataSpace;
 
       beforeEach(async () => {
-        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+        const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
         invariant(hostContext.dataSpaceManager);
@@ -584,7 +584,7 @@ describe('Invitations', () => {
       let guest: InvitationsProxy;
 
       beforeEach(async () => {
-        const peers = await asyncChain<ServiceContext>([closeAfterTest])(createPeers(2));
+        const peers = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
         hostContext = peers[0];
         guestContext = peers[1];
 

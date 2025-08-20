@@ -4,10 +4,10 @@
 
 import { type Schema } from 'effect';
 
-import { type AnyIntentChain, defineCapability, type Label } from '@dxos/app-framework';
+import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
-import { type Position, type DeepReadonly } from '@dxos/util';
+import { type DeepReadonly, type Position } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
 import { type ObjectForm, type PluginState } from '../types';

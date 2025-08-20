@@ -4,10 +4,11 @@
 
 import { log } from '@dxos/log';
 
-import { Log } from './schema';
 import { Capabilities, Events } from '../../common';
-import { contributes, defineModule, lazy, definePlugin } from '../../core';
+import { contributes, defineModule, definePlugin, lazy } from '../../core';
 import { createResolver } from '../../plugin-intent';
+
+import { Log } from './schema';
 
 const Toolbar = lazy(() => import('./Toolbar'));
 

@@ -5,6 +5,7 @@
 import { existsSync } from 'fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, join } from 'path';
+
 import pb from 'protobufjs';
 
 const require = createRequire(import.meta.url);
@@ -25,7 +26,7 @@ export function createProtoResolver(original: ProtoResolver, baseDir?: string): 
 
     try {
       // Test if referenced package.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const config = require(join(target, 'package.json'));
       if (typeof config.protobuf !== 'string') {
         throw new Error(`Package "${target}" does not expose "protobuf" file.`);

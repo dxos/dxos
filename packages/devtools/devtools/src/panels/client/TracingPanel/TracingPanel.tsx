@@ -10,13 +10,13 @@ import { log } from '@dxos/log';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
+
+import { PanelContainer } from '../../../components';
 
 import { LogTable } from './LogTable';
 import { MetricsView } from './MetricsView';
 import { TraceView } from './TraceView';
 import { type ResourceState, type State } from './types';
-import { PanelContainer } from '../../../components';
 
 export const TracingPanel = () => {
   const client = useClient();
@@ -128,7 +128,7 @@ export const TracingPanel = () => {
   //  - 'info' column: font-mono + text-green-500 styling for JSON
 
   return (
-    <PanelContainer classNames={mx('grid grid-rows-[1fr_1fr] divide-y divide-separator')}>
+    <PanelContainer classNames='grid grid-rows-[1fr_1fr] divide-y divide-separator'>
       <DynamicTable rows={rows} properties={resourceProperties} features={features} onRowClick={handleRowClicked} />
       <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
         <Tabs.List className='flex divide-x divide-separator border-b border-separator'>

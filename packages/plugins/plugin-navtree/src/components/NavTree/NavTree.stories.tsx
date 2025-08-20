@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -28,7 +28,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -172,7 +172,7 @@ export const WithClient: Story = {
         AttentionPlugin(),
         NavTreePlugin(),
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),

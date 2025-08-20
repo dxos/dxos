@@ -6,12 +6,13 @@ import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { useClient } from '@dxos/react-client';
-import { getSyncSummary, type SpaceSyncStateMap, useSyncState } from '@dxos/react-client/echo';
+import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, useTranslation } from '@dxos/react-ui';
+
+import { SPACE_PLUGIN } from '../../meta';
 
 import { createClientSaveTracker } from './save-tracker';
 import { getIcon, getStatus } from './status';
-import { SPACE_PLUGIN } from '../../meta';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -29,7 +30,7 @@ export const SyncStatus = () => {
   return <SyncStatusIndicator state={state} saved={saved} />;
 };
 
-export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: Boolean }) => {
+export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: boolean }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const summary = getSyncSummary(state);
   const offline = Object.values(state).length === 0;

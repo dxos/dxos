@@ -9,7 +9,7 @@ import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { DropdownMenu as NaturalDropdownMenu, ToolbarMenu, MenuProvider } from '../components';
+import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';
 import { useMenuActions } from '../hooks';
 import { createActions, createNestedActions, createNestedActionsResolver, useMutateActions } from '../testing';
 import { translations } from '../translations';

@@ -1,10 +1,11 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test:
-    command: vitest run --passWithNoTests
+    command: dx-killorphans vitest run --passWithNoTests
     deps:
       - esbuild-plugins:compile
       - node-std:compile
+      - vite-plugin-import-source:compile
       - ^:compile
     inputs:
       - /vitest.base.config.ts
@@ -21,7 +22,7 @@ tasks:
     options:
       timeout: 600
   test-watch:
-    command: vitest
+    command: dx-killorphans vitest
     deps:
       - esbuild-plugins:compile
       - node-std:compile

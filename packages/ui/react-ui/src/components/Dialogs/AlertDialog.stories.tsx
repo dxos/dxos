@@ -6,10 +6,11 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { AlertDialog } from './AlertDialog';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 import { Toolbar } from '../Toolbar';
+
+import { AlertDialog } from './AlertDialog';
 
 type StoryProps = Partial<{
   title: string;

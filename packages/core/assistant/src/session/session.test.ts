@@ -2,18 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { describe, test } from 'vitest';
+import { AiTool, AiToolkit } from '@effect/ai';
+import { describe, it } from '@effect/vitest';
+import { Effect, Layer, Schema } from 'effect';
 
-import { EdgeAiServiceClient, ConsolePrinter, createTool, ToolResult, ToolRegistry } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
-import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { Type, Obj } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
-import { DXN } from '@dxos/keys';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { Obj, Type } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { AISession } from './session';
+import { AiSession } from './session';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -30,60 +29,92 @@ const CalendarEventSchema = Schema.Struct({
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
-// TODO(burdon): Flaky.
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', () => {
-  test('tool', async () => {
-    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
-    // const aiClient = new OllamaAiServiceClient({
-    //   overrides: { model: 'llama3.1:8b' },
-    // });
-    const session = new AISession({ operationModel: 'configured' });
-
-    const printer = new ConsolePrinter();
-    session.message.on((message) => printer.printMessage(message));
-    session.userMessage.on((message) => printer.printMessage(message));
-    session.block.on((block) => printer.printContentBlock(block));
-
-    // session.update.on((update) => {
-    //   log('update', { update });
-    // });
-
-    const calculatorTool = createTool('test', {
-      name: 'calculator',
-      description: 'Adds to numbers',
-      schema: Schema.Struct({
-        operand1: Schema.Number,
-        operand2: Schema.Number,
+class TestToolkit extends AiToolkit.make(
+  AiTool.make('Calculator', {
+    description: 'Basic calculator tool',
+    parameters: {
+      input: Schema.String.annotations({
+        description: 'The calculation to perform.',
       }),
-      execute: async ({ operand1, operand2 }) => {
-        return ToolResult.Success(operand1 + operand2);
+    },
+    success: Schema.Struct({
+      result: Schema.Number,
+    }),
+    failure: Schema.Never,
+  }),
+) {}
+
+// Tool handlers.
+const toolkitLayer = TestToolkit.toLayer({
+  Calculator: ({ input }) =>
+    Effect.gen(function* () {
+      const result = (() => {
+        // Restrict to basic arithmetic operations for safety.
+        const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
+        log.info('calculate', { sanitizedInput });
+
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        return Function(`"use strict"; return (${sanitizedInput})`)();
+      })();
+
+      return { result };
+    }),
+});
+
+describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
+  it.effect(
+    'no tools',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const session = new AiSession({ operationModel: 'configured' });
+        const response = yield* session.run({
+          prompt: 'Hello world!',
+          history: [],
+        });
+        log.info('response', { response });
       },
-    });
+      Effect.provide(
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          Layer.provideMerge(ToolResolverService.layerEmpty),
+          Layer.provideMerge(ToolExecutionService.layerEmpty),
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(TracingService.layerNoop),
+        ),
+      ),
+    ),
+  );
 
-    // Test creating an itinerary
-    const response = await session.run({
-      client: aiClient,
-      tools: [calculatorTool.id],
-      artifacts: [],
-      requiredArtifactIds: [],
-      history: [],
-      generationOptions: {
-        model: '@anthropic/claude-3-5-haiku-20241022',
+  it.effect(
+    'calculator',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const session = new AiSession({ operationModel: 'configured' });
+        const response = yield* session.run({
+          prompt: 'What is 10 + 20?',
+          history: [],
+          toolkit: TestToolkit,
+        });
+        log.info('response', { response });
       },
-      prompt: 'What is 10 + 20?',
-      toolResolver: new ToolRegistry([calculatorTool]),
-    });
+      Effect.provide(
+        Layer.mergeAll(
+          toolkitLayer,
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+          ),
+          TracingService.layerNoop,
+        ),
+      ),
+    ),
+  );
 
-    log('result', { response });
-  });
-
-  test('create calendar itinerary', { timeout: 60_000 }, async () => {
-    const aiClient = new EdgeAiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.REMOTE });
-    // const aiClient = new OllamaAiServiceClient({
-    //   overrides: { model: 'llama3.1:8b' },
-    // });
-    const session = new AISession({ operationModel: 'configured' });
-
+  // TODO(dmaretskyi): Revive test.
+  /*
+  it.skip('create calendar itinerary', { timeout: 60_000 }, async () => {
+    // overrides: { model: 'llama3.1:8b' },
+    const session = new AiSession({ operationModel: 'configured' });
     const objects = new Set<string>();
 
     // Define calendar artifact.
@@ -198,10 +229,12 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('AISession with Ollama', (
       finalMessage: response.at(-1),
     });
   });
+  */
 });
 
 // Travel to rome, florence, livorno, siena, madrid for conferences
-const CALENDAR_EVENTS: CalendarEvent[] = [
+
+const _CALENDAR_EVENTS: CalendarEvent[] = [
   Obj.make(CalendarEventSchema, {
     title: 'Exploring Ancient Ruins in Rome',
     startTime: '2024-01-01T10:00:00Z',

@@ -5,7 +5,7 @@
 import { type ClientServices } from '@dxos/client-protocol';
 import { type Any, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
 import { raise } from '@dxos/debug';
-import { parseMethodName, RpcPeer, type RpcPeerOptions, type ServiceBundle } from '@dxos/rpc';
+import { RpcPeer, type RpcPeerOptions, type ServiceBundle, parseMethodName } from '@dxos/rpc';
 import { MapCounter, trace } from '@dxos/tracing';
 import { type MaybePromise } from '@dxos/util';
 

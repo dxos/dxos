@@ -22,14 +22,15 @@ import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
-import { AnchorComponent } from './Anchor';
-import { type ShapeComponentProps, shapeAttrs } from './Shape';
 import { type DragDropPayload, useEditorContext } from '../../hooks';
 import { getBoundsProperties, getInputPoint, pointSubtract } from '../../layout';
 import { type Polygon } from '../../types';
-import { type TextBoxProps } from '../TextBox';
 import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
+import { type TextBoxProps } from '../TextBox';
+
+import { AnchorComponent } from './Anchor';
+import { type ShapeComponentProps, shapeAttrs } from './Shape';
 
 // Border around frame for preview snapshot.
 const previewBorder = 8;

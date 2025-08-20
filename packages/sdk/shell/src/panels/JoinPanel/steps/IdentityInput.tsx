@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { Action, Actions, StepHeading, Input } from '../../../components';
+import { Action, Actions, Input, StepHeading } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 export interface IdentityCreatorProps extends JoinStepProps {

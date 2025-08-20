@@ -10,16 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     },
     "./filter": {
+      "source": "./src/filter/index.ts",
       "types": "./dist/types/src/filter/index.d.ts",
       "browser": "./dist/lib/browser/filter/index.mjs",
       "node": "./dist/lib/node-esm/filter/index.mjs"
@@ -40,8 +43,9 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.0.0",
-    "@automerge/automerge-repo": "2.0.8",
+    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge-repo": "2.3.0-alpha.0",
+    "@automerge/automerge-repo-bundles": "2.3.0-alpha.0",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -76,7 +80,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
-    "effect": "3.17.0",
+    "effect": "3.17.7",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },

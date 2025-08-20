@@ -9,7 +9,7 @@ import { ulid } from 'ulidx';
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');
 // export const ObjectIdSchema = Schema.ULID.pipe(S.brand(ObjectIdBrand));
 const ObjectIdSchema = Schema.String.pipe(Schema.pattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i)).annotations({
-  description: 'a Universally Unique Lexicographically Sortable Identifier',
+  description: 'A Universally Unique Lexicographically Sortable Identifier',
   pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
 });
 
@@ -31,7 +31,7 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
     try {
       Schema.decodeSync(ObjectId)(id);
       return true;
-    } catch (err) {
+    } catch {
       return false;
     }
   }

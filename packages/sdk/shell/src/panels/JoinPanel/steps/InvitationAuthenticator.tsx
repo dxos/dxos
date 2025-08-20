@@ -9,7 +9,7 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { Actions, Action, Emoji, StepHeading, Label } from '../../../components';
+import { Action, Actions, Emoji, Label, StepHeading } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;

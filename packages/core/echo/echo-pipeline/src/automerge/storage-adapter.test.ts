@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';

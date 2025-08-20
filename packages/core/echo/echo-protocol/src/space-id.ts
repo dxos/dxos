@@ -18,7 +18,7 @@ export const createIdFromSpaceKey = async (spaceKey: PublicKey): Promise<SpaceId
     return cachedValue;
   }
 
-  const digest = await subtleCrypto.digest('SHA-256', spaceKey.asUint8Array());
+  const digest = await subtleCrypto.digest('SHA-256', spaceKey.asUint8Array() as Uint8Array<ArrayBuffer>);
 
   const bytes = new Uint8Array(digest).slice(0, SpaceId.byteLength);
   const spaceId = SpaceId.encode(bytes);

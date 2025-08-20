@@ -12,9 +12,7 @@ package dxos.config;
 
 option go_package = "github.com/dxos/dxos/proto/def/dxos/config";
 
-extend google.protobuf.FieldOptions {
-  optional string env_var = 1000;
-}
+extend google.protobuf.FieldOptions { optional string env_var = 1000; }
 
 message Config {
   optional int32 version = 1;
@@ -58,9 +56,10 @@ message Module {
     optional google.protobuf.Struct env = 10;
   }
 
-  optional string id = 8;     // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
-  optional string name = 1;   // TODO(burdon): Replace with id (or key?)
-  optional string type = 2;   // TODO(burdon): Define namespace (e.g., 'dxos.org/type/frame' vs. 'dxos.type.frame')
+  optional string id = 8;   // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
+  optional string name = 1; // TODO(burdon): Replace with id (or key?)
+  optional string type = 2; // TODO(burdon): Define namespace (e.g.,
+                            // 'dxos.org/type/frame' vs. 'dxos.type.frame')
 
   // TODO(burdon): Developer info message.
 
@@ -74,7 +73,7 @@ message Module {
   optional bool tunnel = 7;
 
   // TODO(burdon): Start at 100.
-  repeated Module deps = 10;  // TODO(burdon): E.g., types.
+  repeated Module deps = 10; // TODO(burdon): E.g., types.
   optional Build build = 100;
   repeated Repo repos = 101;
 
@@ -111,8 +110,8 @@ message Runtime {
     }
 
     message Log {
-      optional string filter = 1 [(env_var) = "LOG_FILTER"];
-      optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
+      optional string filter = 1 [ (env_var) = "LOG_FILTER" ];
+      optional string prefix = 2 [ (env_var) = "LOG_PREFIX" ];
     }
 
     message EdgeFeatures {
@@ -136,7 +135,8 @@ message Runtime {
     optional int32 invitation_expiration = 5;
 
     /// Location of the remote client host.
-    // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop vault.html).
+    // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop
+    // vault.html).
     optional string remote_source = 6;
 
     // Authenticate via `Sec-WebSocket-Protocol` header hack.
@@ -145,7 +145,8 @@ message Runtime {
     /// Connect to and serve client services to a remote proxy.
     optional string devtools_proxy = 7;
 
-    /// Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up client-services initialization.
+    /// Spaces will stay in SpaceState.CLOSED until explicitly opened. Speeds up
+    /// client-services initialization.
     optional bool lazy_space_open = 9;
 
     /// Disabled automerge & hypercore replication through P2P connections.
@@ -169,7 +170,7 @@ message Runtime {
     optional string org = 1;
     optional string theme = 2;
     optional string website = 3;
-    optional string public_url = 4 [(env_var) = "PUBLIC_URL"];
+    optional string public_url = 4 [ (env_var) = "PUBLIC_URL" ];
 
     optional BuildInfo build = 100;
     optional google.protobuf.Struct env = 101;
@@ -214,13 +215,9 @@ message Runtime {
     optional string channel = 7;
   }
 
-  message Props {
-    optional string title = 1;
-  }
+  message Props { optional string title = 1; }
 
-  message System {
-    optional string debug = 1;
-  }
+  message System { optional string debug = 1; }
 
   //
   // KUBE
@@ -255,9 +252,7 @@ message Runtime {
       int32 interval = 3;
     }
 
-    message Trace {
-      bool disabled = 1;
-    }
+    message Trace { bool disabled = 1; }
 
     message Telemetry {
       bool disabled = 1;
@@ -285,10 +280,10 @@ message Runtime {
 
     /// https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
     message KuboApiAuthorization {
-        /// Just for organizational purposes.
-        string name = 1;
-        string auth_secret = 2;
-        repeated string allowed_paths = 3;
+      /// Just for organizational purposes.
+      string name = 1;
+      string auth_secret = 2;
+      repeated string allowed_paths = 3;
     }
 
     // TODO(burdon): Needs documentation/
@@ -359,8 +354,9 @@ message Runtime {
     message Ipfs {
       optional string server = 1;
       optional string gateway = 2;
-      /// Used for IPFS API authentication, regardless if server is direct KUBO API (e.g. path of '/api/v0') or a reverse proxy
-      /// Same secret format as https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
+      /// Used for IPFS API authentication, regardless if server is direct KUBO
+      /// API (e.g. path of '/api/v0') or a reverse proxy Same secret format as
+      /// https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
       optional string server_auth_secret = 3;
     }
 
@@ -376,9 +372,7 @@ message Runtime {
       optional string credential = 3;
     }
 
-    message IceProvider {
-      string urls = 1;
-    }
+    message IceProvider { string urls = 1; }
 
     message Machine {
       optional string do_access_token = 1;
@@ -396,9 +390,7 @@ message Runtime {
       optional string server = 1;
     }
 
-    message Tunneling {
-      optional string server = 1;
-    }
+    message Tunneling { optional string server = 1; }
 
     message Supervisor { // TODO(burdon): Is this a service?
       optional string server = 1;
@@ -416,14 +408,13 @@ message Runtime {
       optional string type = 2;
     }
 
-    message Edge {
-      optional string url = 1;
-    }
+    message Edge { optional string url = 1; }
 
-    message Ai {
-      optional string server = 1;
-    }
+    message Ai { optional string server = 1; }
 
+    message Hub { optional string url = 1; }
+
+    /** Deprecated */
     optional Kube kube = 1;
     optional AppServer app = 2;
     optional Dxns dxns = 3;
@@ -434,12 +425,17 @@ message Runtime {
     optional Machine machine = 7;
     optional BotHost bot = 8;
     optional Publisher publisher = 9;
-    optional Supervisor supervisor = 10; // TODO(burdon): Promote to 1; start others at 10.
+    /** Deprecated */
+    optional Supervisor supervisor = 10;
+    /** Deprecated */
     optional Tunneling tunneling = 11;
+    /** Deprecated */
     optional Faasd faasd = 12;
+    /** Deprecated */
     optional AgentHosting agent_hosting = 13;
     optional Edge edge = 15;
     optional Ai ai = 16;
+    optional Hub hub = 17;
   }
 
   message Keys {

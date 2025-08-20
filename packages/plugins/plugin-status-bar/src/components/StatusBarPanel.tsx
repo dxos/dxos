@@ -8,9 +8,10 @@ import { Surface } from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 
+import { meta } from '../meta';
+
 import { StatusBar } from './StatusBar';
 import { VersionNumber } from './VersionNumber';
-import { meta } from '../meta';
 
 export const StatusBarActions = () => {
   const { t } = useTranslation(meta.id);

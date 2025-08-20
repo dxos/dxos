@@ -4,16 +4,14 @@
 
 import React from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
+import { PanelContainer } from '../../../components';
 
 import { SignalMessageTable } from './SignalMessageTable';
 import { SignalStatusTable } from './SignalStatusTable';
-import { PanelContainer } from '../../../components';
-import { styles } from '../../../styles';
 
 export const SignalPanel = () => {
   return (
-    <PanelContainer classNames={mx('grid grid-rows-[2fr_5fr]', styles.border)}>
+    <PanelContainer classNames='grid grid-rows-[2fr_5fr]'>
       <SignalStatusTable />
       <SignalMessageTable />
     </PanelContainer>

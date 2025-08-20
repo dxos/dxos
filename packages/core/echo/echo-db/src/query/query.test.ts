@@ -6,23 +6,24 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, sleep, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, Ref, getMeta } from '@dxos/echo-schema';
+import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { range } from '@dxos/util';
 
-import { Filter, Query } from './api';
 import { getObjectCore } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+
+import { Filter, Query } from './api';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });

@@ -2,19 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import yaml from 'js-yaml';
 import * as fs from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import yaml from 'js-yaml';
 import seedrandom from 'seedrandom';
 
 import { log } from '@dxos/log';
 
-import { buildBrowserBundle } from './browser/browser-bundle';
-import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './spec';
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 import { SchedulerEnvImpl } from '../env';
+
+import { buildBrowserBundle } from './browser/browser-bundle';
+import { type GlobalOptions, type ReplicantsSummary, type TestParams, type TestPlan } from './spec';
 
 const SUMMARY_FILENAME = 'test.json';
 
@@ -103,7 +105,15 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
 
   const schedulerEnv = new SchedulerEnvImpl(options, testParams);
   await schedulerEnv.open();
-  const result = await plan.run(schedulerEnv, testParams);
+  let result: any;
+  try {
+    result = await plan.run(schedulerEnv, testParams);
+  } catch (err) {
+    log.error('error running plan', err);
+    await schedulerEnv.close();
+    process.exit(1);
+  }
+
   const replicants = schedulerEnv.getReplicantsSummary();
 
   log.info('simulation complete', {

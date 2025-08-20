@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 
 import { Event } from '@dxos/async';
-import { mapSpaces, printSpaces, TABLE_FLAGS } from '@dxos/cli-base';
+import { TABLE_FLAGS, mapSpaces, printSpaces } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';

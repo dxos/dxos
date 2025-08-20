@@ -6,8 +6,9 @@ import { useRxValue } from '@effect-rx/rx-react';
 
 import { invariant } from '@dxos/invariant';
 
-import { usePluginManager } from './PluginManagerProvider';
 import { type InterfaceDef } from '../core';
+
+import { usePluginManager } from './PluginManagerProvider';
 
 /**
  * Hook to request capabilities from the plugin context.

@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema, type Context, type Effect } from 'effect';
+import { type Context, type Effect, Schema } from 'effect';
 
-import { type AiServiceClient } from '@dxos/ai';
-// import { type Space } from '@dxos/client/echo';
-import type { EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
-import { type SpaceId, type DXN } from '@dxos/keys';
+import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
 import type { Services } from './services';
@@ -40,19 +38,17 @@ export type FunctionHandler<TData = {}, TOutput = any> = (params: {
  */
 export interface FunctionContext {
   /**
+   * Space from which the function was invoked.
+   */
+  space: SpaceAPI | undefined;
+
+  /**
    * Resolves a service available to the function.
    * @throws if the service is not available.
    */
   getService: <T extends Context.Tag<any, any>>(tag: T) => Context.Tag.Service<T>;
 
   getSpace: (spaceId: SpaceId) => Promise<SpaceAPI>;
-
-  /**
-   * Space from which the function was invoked.
-   */
-  space: SpaceAPI | undefined;
-
-  ai: AiServiceClient;
 }
 
 export interface FunctionContextAi {
@@ -76,10 +72,9 @@ export interface QueuesAPI {
  */
 export interface SpaceAPI {
   get id(): SpaceId;
-
   get db(): EchoDatabase;
 
-  // TODO(dmaretskyi): Align with echo api --- queues.get(id).append(items);
+  // TODO(dmaretskyi): Align with echo api: queues.get(id).append(items);
   get queues(): QueuesAPI;
 }
 
@@ -89,6 +84,7 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
 };
 
 export type FunctionDefinition<T = {}, O = any> = {
+  name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
@@ -96,18 +92,31 @@ export type FunctionDefinition<T = {}, O = any> = {
 };
 
 // TODO(dmaretskyi): Bind input type to function handler.
-export const defineFunction = <T, O>(params: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
-  if (!Schema.isSchema(params.inputSchema)) {
+export const defineFunction = <T, O>({
+  name,
+  description,
+  inputSchema,
+  outputSchema = Schema.Any,
+  handler,
+}: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
+  if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
-  if (typeof params.handler !== 'function') {
+  if (typeof handler !== 'function') {
     throw new Error('Handler must be a function');
   }
 
   return {
-    description: params.description,
-    inputSchema: params.inputSchema,
-    outputSchema: params.outputSchema ?? Schema.Any,
-    handler: params.handler,
+    name,
+    description,
+    inputSchema,
+    outputSchema,
+    handler,
   };
 };
+
+export namespace FunctionDefinition {
+  export type Any = FunctionDefinition<any, any>;
+  export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
+  export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
+}

@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Obj, type Relation } from '@dxos/echo';
 import {
-  type BaseEchoObject,
+  type BaseObject,
   EntityKind,
   EntityKindId,
   RelationSourceId,
-  RelationTargetId,
-  type BaseObject,
   type RelationSourceTargetRefs,
+  RelationTargetId,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
@@ -19,7 +19,7 @@ import type { AnyLiveObject } from './echo-handler';
 /**
  * @deprecated Use {@link @dxos/echo#Relation.Any} instead.
  */
-export type AnyLiveRelation<T extends BaseObject> = Live<T> & BaseEchoObject & RelationSourceTargetRefs;
+export type AnyLiveRelation<T extends BaseObject> = Live<T> & (Obj.Any | Relation.Any) & RelationSourceTargetRefs;
 
 /**
  * @deprecated Use {@link @dxos/echo#Relation.isRelation} instead.

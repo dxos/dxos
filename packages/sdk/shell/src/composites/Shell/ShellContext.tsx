@@ -4,8 +4,8 @@
 
 import React, {
   type Context,
-  createContext,
   type PropsWithChildren,
+  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -13,13 +13,13 @@ import React, {
   useState,
 } from 'react';
 
-import { type PublicKey, useClient, ShellDisplay, ShellLayout, type LayoutRequest } from '@dxos/react-client';
+import { type LayoutRequest, type PublicKey, ShellDisplay, ShellLayout, useClient } from '@dxos/react-client';
 import type { Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { mx } from '@dxos/react-ui-theme';
 
-import { Shell } from './Shell';
 import { MemoryShellRuntime } from './memory-shell-runtime';
+import { Shell } from './Shell';
 
 export type ShellContextProps = {
   runtime?: MemoryShellRuntime;

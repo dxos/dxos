@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import { Effect, pipe } from 'effect';
 import React, { useCallback } from 'react';
 
 import {
@@ -15,10 +15,13 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { AttentionAction } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
+import { TableView } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
-import { EventsContainer, MailboxContainer, MessageContainer, MailboxObjectSettings } from '../components';
+import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
 import { CalendarType, InboxAction, MailboxType } from '../types';
@@ -114,7 +117,7 @@ export default () =>
       role: 'related',
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
-        const { dispatchPromise: dispatch } = useIntentDispatcher();
+        const { dispatch } = useIntentDispatcher();
         const space = getSpace(organization);
         const defaultSpace = useSpace();
         const currentSpaceContacts = useQuery(space, Filter.type(DataType.Person));
@@ -127,38 +130,54 @@ export default () =>
           typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
         );
 
-        // TODO(wittjosiah): Restore related.
-        const currentSpaceTables = [] as any[]; // useQuery(space, Filter.type(TableType));
-        const defaultSpaceTables = [] as any[]; // useQuery(defaultSpace, Filter.type(TableType));
-        const currentSpaceContactTable = currentSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Person.typename;
-        });
-        const defaultSpaceContactTable = defaultSpaceTables?.find((table) => {
-          return table.view?.target?.query?.typename === DataType.Person.typename;
-        });
+        const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
+        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
+        const currentSpaceContactTable = currentSpaceViews.find(
+          (view) =>
+            view.query.typename === DataType.Person.typename && Obj.instanceOf(TableView, view.presentation.target),
+        );
+        const defaultSpaceContactTable = defaultSpaceViews.find(
+          (view) =>
+            view.query.typename === DataType.Person.typename && Obj.instanceOf(TableView, view.presentation.target),
+        );
 
+        // TODO(wittjosiah): Generalized way of handling related objects navigation.
         const handleContactClick = useCallback(
-          async (contact: DataType.Person) => {
-            const table = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-            await dispatch(
-              createIntent(LayoutAction.UpdatePopover, {
-                part: 'popover',
-                options: {
-                  state: false,
-                  anchorId: '',
-                },
-              }),
-            );
-            if (table) {
-              return dispatch(
-                createIntent(LayoutAction.Open, {
-                  part: 'main',
-                  subject: [fullyQualifiedId(table)],
-                  options: { workspace: space?.id },
+          (contact: DataType.Person) =>
+            Effect.gen(function* () {
+              const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
+              yield* dispatch(
+                createIntent(LayoutAction.UpdatePopover, {
+                  part: 'popover',
+                  options: {
+                    state: false,
+                    anchorId: '',
+                  },
                 }),
               );
-            }
-          },
+              if (view) {
+                const id = fullyQualifiedId(view);
+                yield* dispatch(
+                  createIntent(LayoutAction.Open, {
+                    part: 'main',
+                    subject: [id],
+                    options: { workspace: space?.id },
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(DeckAction.ChangeCompanion, {
+                    primary: id,
+                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(AttentionAction.Select, {
+                    contextId: id,
+                    selection: { mode: 'multi', ids: [contact.id] },
+                  }),
+                );
+              }
+            }).pipe(Effect.runPromise),
           [dispatch, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, space, defaultSpace],
         );
 

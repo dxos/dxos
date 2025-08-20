@@ -2,20 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Planet } from '@phosphor-icons/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { log } from '@dxos/log';
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import type { CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useId, useTranslation } from '@dxos/react-ui';
+import { Icon, useId, useTranslation } from '@dxos/react-ui';
 
-import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
-import { useSpaceMachine } from './spaceMachine';
-import { SpaceManager } from './steps';
-import { Heading, CloseButton, Viewport } from '../../components';
+import { CloseButton, Heading, Viewport } from '../../components';
 import { InvitationManager } from '../../steps';
 import { stepStyles } from '../../styles';
+
+import { useSpaceMachine } from './spaceMachine';
+import { type SpacePanelHeadingProps, type SpacePanelImplProps, type SpacePanelProps } from './SpacePanelProps';
+import { SpaceManager } from './steps';
 
 const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) => {
   const { t } = useTranslation('os');
@@ -27,7 +27,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
       <div role='none' className='flex gap-4 items-center justify-center mlb-4'>
-        <Planet size={32} weight='light' />
+        <Icon icon='ph--planet--light' size={8} />
         <div className='block text-start font-light text-xl'>{name ?? space.key.truncate()}</div>
       </div>
     </Heading>

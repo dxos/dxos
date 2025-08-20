@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   Capabilities,
+  Surface,
   contributes,
   createSurface,
-  Surface,
   useCapabilities,
   useCapability,
   useLayout,
@@ -20,14 +20,14 @@ import { SettingsStore } from '@dxos/local-storage';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
 import {
+  type Space,
+  SpaceState,
   fullyQualifiedId,
   getSpace,
   isLiveObject,
   isSpace,
   parseId,
-  SpaceState,
   useSpace,
-  type Space,
 } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
@@ -35,13 +35,13 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { SpaceCapabilities } from './capabilities';
 import {
-  CollectionMain,
-  CollectionSection,
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  CollectionMain,
+  CollectionSection,
   CreateObjectDialog,
+  type CreateObjectDialogProps,
   CreateSpaceDialog,
   InlineSyncStatus,
   JOIN_DIALOG,
@@ -54,6 +54,7 @@ import {
   POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
+  RecordMain,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
@@ -61,10 +62,11 @@ import {
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
-  type CreateObjectDialogProps,
 } from '../components';
 import { SPACE_PLUGIN } from '../meta';
 import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
+
+import { SpaceCapabilities } from './capabilities';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -90,6 +92,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           {...rest}
         />
       ),
+    }),
+    createSurface({
+      id: `${SPACE_PLUGIN}/record-article`,
+      role: 'article',
+      position: 'fallback',
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      component: ({ data }) => <RecordMain record={data.subject} />,
     }),
     createSurface({
       id: `${SPACE_PLUGIN}/collection-fallback`,
@@ -275,14 +284,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             annotation.includes('unused-static') &&
             whitelistedTypenames.has(Type.getTypename(schema)) &&
             !space.properties.staticRecords?.includes(Type.getTypename(schema));
+          const usedStatic =
+            annotation.includes('used-static') &&
+            whitelistedTypenames.has(Type.getTypename(schema)) &&
+            space.properties.staticRecords?.includes(Type.getTypename(schema));
           const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || unusedStatic || objectForm;
+          return annotation.includes('static') || limitedStatic || unusedStatic || usedStatic || objectForm;
         });
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
             ...(annotation.includes('limited-static') ||
             annotation.includes('unused-static') ||
+            annotation.includes('used-static') ||
             annotation.includes('static') ||
             annotation.includes('object-form')
               ? fixed.map((schema) => Type.getTypename(schema))

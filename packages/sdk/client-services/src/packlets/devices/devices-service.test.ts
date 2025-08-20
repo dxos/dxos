@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { type DevicesService, type Device } from '@dxos/protocols/proto/dxos/client/services';
+import { type Device, type DevicesService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { DevicesServiceImpl } from './devices-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+
+import { DevicesServiceImpl } from './devices-service';
 
 describe('DevicesService', () => {
   let serviceContext: ServiceContext;

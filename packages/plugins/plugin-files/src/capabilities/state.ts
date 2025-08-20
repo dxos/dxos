@@ -5,16 +5,17 @@
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 
-import { Capabilities, contributes, createIntent, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
-import { FileCapabilities } from './capabilities';
 import { FILES_PLUGIN } from '../meta';
-import { LocalFilesAction, type FilesSettingsProps, type FilesState } from '../types';
-import { findFile, handleToLocalDirectory, handleToLocalFile, PREFIX } from '../util';
+import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
+import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../util';
+
+import { FileCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
   const state = new LocalStorageStore<FilesState>(FILES_PLUGIN, {
