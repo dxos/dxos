@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Effect } from 'effect';
+import { Console, Effect } from 'effect';
 
 import { ClientService } from '../../../services';
 
@@ -14,7 +14,7 @@ export const handler = Effect.fn(function* () {
   const client = yield* ClientService;
   const spaces = client.spaces.get();
   const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-  yield* Effect.log(JSON.stringify(formattedSpaces, null, 2));
+  yield* Console.log(JSON.stringify(formattedSpaces, null, 2));
 });
 
 export const list = Command.make('list', {}, handler).pipe(
