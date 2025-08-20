@@ -16,6 +16,7 @@ export enum LogLevel {
   INFO = 12,
   WARN = 13,
   ERROR = 14,
+  FATAL = 15,
 }
 
 export const levels: { [index: string]: LogLevel } = {
@@ -25,6 +26,7 @@ export const levels: { [index: string]: LogLevel } = {
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
   error: LogLevel.ERROR,
+  fatal: LogLevel.FATAL,
 };
 
 export const shortLevelName = {
@@ -34,6 +36,7 @@ export const shortLevelName = {
   [LogLevel.INFO]: 'I',
   [LogLevel.WARN]: 'W',
   [LogLevel.ERROR]: 'E',
+  [LogLevel.FATAL]: 'F',
 };
 
 export enum LogProcessorType {
