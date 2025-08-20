@@ -83,12 +83,12 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
+  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, Partial<DxGridAxisMetaProps>> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
+  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, Partial<DxGridAxisMetaProps>> = {
     grid: { size: defaultColSize },
   };
 
@@ -1074,16 +1074,40 @@ export class DxGrid extends LitElement {
       : !!(this.rows[plane]?.[index]?.resizeable ?? this.rowDefault[plane as DxGridFrozenRowsPlane]?.resizeable);
   }
 
+  private clampAxisSize(
+    plane: 'grid' | DxGridFrozenPlane,
+    axis: DxGridAxis,
+    index: number | string,
+    requestedSize: number,
+  ): number {
+    const minSize =
+      axis === 'col'
+        ? (this.columns[plane]?.[index]?.minSize ??
+          this.columnDefault[plane as DxGridFrozenColsPlane]?.minSize ??
+          sizeColMin)
+        : (this.rows[plane]?.[index]?.minSize ??
+          this.rowDefault[plane as DxGridFrozenRowsPlane]?.minSize ??
+          sizeRowMin);
+    const maxSize =
+      axis === 'col'
+        ? (this.columns[plane]?.[index]?.maxSize ??
+          this.columnDefault[plane as DxGridFrozenColsPlane]?.maxSize ??
+          sizeColMax)
+        : (this.rows[plane]?.[index]?.maxSize ??
+          this.rowDefault[plane as DxGridFrozenRowsPlane]?.maxSize ??
+          sizeRowMax);
+    return Math.max(minSize, Math.min(maxSize, requestedSize));
+  }
+
   private handleAxisResizeInternal(event: DxAxisResizeInternal): void {
     event.stopPropagation();
     const { plane, axis, delta, size, index, state } = event;
+    const nextSize = this.clampAxisSize(plane, axis, index, size + delta);
     if (axis === 'col') {
-      const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
       this.colSizes = { ...this.colSizes, [plane]: { ...this.colSizes[plane], [index]: nextSize } };
       this.updateVisInline();
       this.updateIntrinsicInlineSize();
     } else {
-      const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
       this.rowSizes = { ...this.colSizes, [plane]: { ...this.rowSizes[plane], [index]: nextSize } };
       this.updateVisBlock();
       this.updateIntrinsicBlockSize();

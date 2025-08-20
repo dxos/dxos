@@ -90,6 +90,8 @@ export type DxGridAxisMetaProps = {
   description?: string;
   resizeable?: boolean;
   readonly?: DxGridReadonlyValue;
+  minSize?: number;
+  maxSize?: number;
 };
 
 export type DxGridAxisSizes = DxGridPlaneRecord<DxGridFrozenPlane, Record<string, number>>;
