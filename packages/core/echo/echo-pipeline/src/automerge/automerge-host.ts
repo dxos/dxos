@@ -38,7 +38,7 @@ import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, isNonNullable, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -132,7 +132,7 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
-  private readonly _headsUpdates = new Set<DocumentId>();
+  private readonly _headsUpdates = new Map<DocumentId, Heads>();
   private _onHeadsChangedTask?: DeferredTask | undefined;
 
   constructor({
@@ -222,9 +222,9 @@ export class AutomergeHost extends Resource {
     });
 
     this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
-      const documentIds = Array.from(this._headsUpdates);
+      const docHeads = Array.from(this._headsUpdates.entries());
       this._headsUpdates.clear();
-      this._onHeadsChanged(documentIds);
+      this._onHeadsChanged(docHeads);
     });
 
     await this._echoNetworkAdapter.open();
@@ -424,10 +424,18 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
     this._indexMetadataStore.notifyMarkedDirty();
 
     const documentId = path[0] as DocumentId;
-    this._headsUpdates.add(documentId);
+    const document = this._repo.handles[documentId]?.doc();
+    if (!document) {
+      return;
+    }
+    const heads = getHeads(document);
+    this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
     this.documentsSaved.emit();
@@ -758,17 +766,8 @@ export class AutomergeHost extends Resource {
     return { docsToImport: bundle };
   }
 
-  private _onHeadsChanged(documentIds: DocumentId[]): void {
+  private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
     const collectionsChanged = new Set<CollectionId>();
-    const docHeads = documentIds
-      .map((documentId) => {
-        const document = this._repo.handles[documentId]?.doc();
-        if (!document) {
-          return undefined;
-        }
-        return [documentId, getHeads(document)] satisfies [DocumentId, Heads];
-      })
-      .filter(isNonNullable);
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
