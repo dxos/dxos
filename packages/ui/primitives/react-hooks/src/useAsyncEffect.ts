@@ -17,6 +17,7 @@ export const useAsyncEffect = (
   useEffect(() => {
     const controller = new AbortController();
     let cleanup: EffectCallback | void;
+    // NOTE: Timeout enables us to immediately cancel. if the component is unmounted.
     const t = setTimeout(async () => {
       if (!controller.signal.aborted) {
         cleanup = await cb(controller);
@@ -42,6 +43,7 @@ export const useAsyncSignalEffect = (
     const controller = new AbortController();
     let cleanup: EffectCallback | void;
     effect(() => {
+      // NOTE: We can't use setTimeout here with `effect`.
       if (!controller.signal.aborted) {
         void cb(controller).then((c) => {
           cleanup = c;
