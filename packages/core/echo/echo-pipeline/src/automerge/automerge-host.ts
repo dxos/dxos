@@ -168,6 +168,12 @@ export class AutomergeHost extends Resource {
   protected override async _open(): Promise<void> {
     this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
+    this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
+      const docHeads = Array.from(this._headsUpdates.entries());
+      this._headsUpdates.clear();
+      this._onHeadsChanged(docHeads);
+    });
+
     await this._storage.open?.();
 
     // Construct the automerge repo.
@@ -219,12 +225,6 @@ export class AutomergeHost extends Resource {
           }
         }),
       );
-    });
-
-    this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
-      const docHeads = Array.from(this._headsUpdates.entries());
-      this._headsUpdates.clear();
-      this._onHeadsChanged(docHeads);
     });
 
     await this._echoNetworkAdapter.open();
