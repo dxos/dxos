@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Console, Effect, Option } from 'effect';
+import { Config, Console, Effect, Option } from 'effect';
 
 import { createEdgeIdentity } from '@dxos/client/edge';
 
@@ -20,7 +20,17 @@ export const getStatus = () =>
     });
     client.edge.setIdentity(identity);
     const status = yield* Effect.tryPromise(() => client.edge.getStatus());
-    yield* Console.log(JSON.stringify(status, null, 2));
+
+    const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
+    if (json) {
+      yield* Console.log(JSON.stringify(status, null, 2));
+    } else if (status.problems.length > 0) {
+      for (const problem of status.problems) {
+        yield* Console.error(problem);
+      }
+    } else {
+      yield* Console.log('No problems found.');
+    }
   }).pipe(
     // TODO(wittjosiah): Tagged error.
     Effect.catchSome((error) => {
