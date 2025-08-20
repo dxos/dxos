@@ -9,6 +9,7 @@ import { type Resource } from '@dxos/react-ui';
 import { meta } from './meta';
 import { Assistant } from './types';
 
+// TODO(burdon): Standardize translation names.
 export const translations = [
   {
     'en-US': {
