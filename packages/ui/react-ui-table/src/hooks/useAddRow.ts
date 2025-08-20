@@ -8,6 +8,8 @@ import { useCallback } from 'react';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 
+import { type InsertRowResult } from '../model';
+
 export type UseAddRowParams = {
   space?: Space;
   schema?: Schema.Schema.AnyNoContext;
@@ -20,16 +22,16 @@ export type UseAddRowParams = {
  */
 export const useAddRow = ({ space, schema }: UseAddRowParams) => {
   return useCallback(
-    (data?: any) => {
+    (data?: any): InsertRowResult => {
       if (space && schema) {
         try {
           space.db.add(Obj.make(schema, data ?? {}));
-          return true;
+          return 'final';
         } catch (error) {
-          return false;
+          return 'draft';
         }
       }
-      return false;
+      return 'final';
     },
     [space, schema],
   );

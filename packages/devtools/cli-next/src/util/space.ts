@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Logger, Option } from 'effect';
+import { Console, Effect, Logger, Option } from 'effect';
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
@@ -24,7 +24,7 @@ const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
-    yield* Effect.log('Edge replication is disabled, enabling...');
+    yield* Console.log('Edge replication is disabled, enabling...');
     yield* Effect.tryPromise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   }
 
@@ -33,7 +33,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const handleSyncState = ({ peers = [] }: SpaceSyncState) =>
     Effect.gen(function* () {
       const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-      yield* Effect.log('syncing', syncState);
+      yield* Console.log('syncing', syncState);
 
       if (
         syncState &&

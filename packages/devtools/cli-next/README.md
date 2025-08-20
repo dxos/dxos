@@ -17,7 +17,7 @@ Once it's compiled it can be run from the cli-next package:
 ## Development
 
 ```bash
-npx tsx ./src/bin.ts --help
+moon run cli-next:dev -- --help
 ```
 
 TODO: Setup dev runner with `vite-node`.

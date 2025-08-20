@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Effect } from 'effect';
+import { Console, Effect } from 'effect';
 
 import { Filter } from '@dxos/client/echo';
 
@@ -19,7 +19,7 @@ export const handler = Effect.fn(function* ({ spaceId, typename }: { spaceId: st
   const filter = typename?.length ? Filter.typename(typename) : Filter.nothing();
   // TODO(wittjosiah): Use DatabaseService?
   const { objects } = yield* Effect.tryPromise(() => space.db.query(filter).run());
-  yield* Effect.log(JSON.stringify(objects, null, 2));
+  yield* Console.log(JSON.stringify(objects, null, 2));
 });
 
 export const query = Command.make(
