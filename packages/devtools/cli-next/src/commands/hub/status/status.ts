@@ -3,16 +3,13 @@
 //
 
 import { Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
-
-import { Common } from '../../options';
+import { Config, Console, Effect } from 'effect';
 
 export const status = Command.make(
   'status',
-  {
-    json: Common.json,
-  },
-  Effect.fn(function* ({ json }) {
+  {},
+  Effect.fn(function* () {
+    const json = yield* Config.boolean('json');
     if (json) {
       return yield* Console.log({ status: 'ok' });
     } else {

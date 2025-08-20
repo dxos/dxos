@@ -3,6 +3,7 @@
 //
 
 import { Command, Options } from '@effect/cli';
+import { ConfigProvider, Layer } from 'effect';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
@@ -26,6 +27,8 @@ export const command = Command.make('dx', {
     Options.withDefault(ENV_DX_PROFILE_DEFAULT),
     Options.withAlias('p'),
   ),
+  json: Options.boolean('json').pipe(Options.withDescription('JSON output.')),
+  timeout: Options.integer('timeout').pipe(Options.withDescription('The timeout before the command fails.')),
   verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose logging.')),
 });
 
@@ -41,4 +44,9 @@ export const dx = command.pipe(
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provide(ClientService.layer),
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
+  Command.provide(({ json, verbose }) =>
+    Layer.setConfigProvider(
+      ConfigProvider.fromJson({ JSON: json, VERBOSE: verbose }).pipe(ConfigProvider.constantCase),
+    ),
+  ),
 );

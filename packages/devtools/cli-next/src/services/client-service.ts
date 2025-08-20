@@ -2,20 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer } from 'effect';
+import { Config, Context, Effect, Layer } from 'effect';
 
 import { Client } from '@dxos/client';
 
 import { ConfigService } from './config-service';
-
-// TODO(burdon): How to get this from options?
-const verbose = true;
 
 // TODO(wittjosiah): Factor out.
 export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
   static layer = Layer.scoped(
     ClientService,
     Effect.gen(function* () {
+      const verbose = yield* Config.boolean('verbose');
       const config = yield* ConfigService;
       const client = new Client({ config });
       yield* Effect.tryPromise(() => client.initialize());

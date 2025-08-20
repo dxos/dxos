@@ -10,18 +10,13 @@ import { Options } from '@effect/cli';
 //
 
 export const Common = {
+  // TODO(wittjosiah): Migrate to nested Config.
   apiKey: Options.text('api-key').pipe(
     Options.withDescription('API key.'),
     Options.withDefault(process.env['DX_API_KEY']),
   ),
 
-  json: Options.boolean('json').pipe(Options.withDescription('Output in JSON format.')),
-  timeout: Options.integer('timeout').pipe(
-    Options.withDescription('The timeout before the command fails.'),
-    Options.withDefault(5_000),
-  ),
-
+  // TODO(wittjosiah): Factor out to spaces sub-command?
   spaceId: Options.text('spaceId').pipe(Options.withDescription('Space ID.')),
   typename: Options.text('typename').pipe(Options.withDescription('The typename to query.')),
-  verbose: Options.boolean('verbose').pipe(Options.withDescription('Verbose logging.')),
 };

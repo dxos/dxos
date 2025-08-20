@@ -6,7 +6,7 @@ import path from 'node:path';
 
 import { Command } from '@effect/cli';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Console, Effect, pipe } from 'effect';
+import { Config, Console, Effect, pipe } from 'effect';
 
 import { withRetry } from '@dxos/edge-client';
 
@@ -17,10 +17,9 @@ import { Common } from '../../../options';
 export const list = Command.make(
   'list',
   {
-    json: Common.json,
     apiKey: Common.apiKey,
   },
-  ({ json, apiKey }) =>
+  ({ apiKey }) =>
     Effect.flatMap(command, ({ verbose }) =>
       Effect.gen(function* () {
         const config = yield* ConfigService;
@@ -42,6 +41,7 @@ export const list = Command.make(
           Effect.withSpan('EdgeHttpClient'),
         );
 
+        const json = yield* Config.boolean('json');
         if (json) {
           return yield* Console.log(result);
         } else {
