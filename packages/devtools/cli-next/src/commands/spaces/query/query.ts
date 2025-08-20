@@ -2,16 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
+import { Command, Options } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
 import { Filter } from '@dxos/client/echo';
 
 import { getSpace } from '../../../util';
 import { Common } from '../../options';
-
-const spaceId = Common.spaceId;
-const typename = Common.typename;
 
 export const handler = Effect.fn(function* ({ spaceId, typename }: { spaceId: string; typename: string }) {
   const space = yield* getSpace(spaceId);
@@ -25,8 +22,8 @@ export const handler = Effect.fn(function* ({ spaceId, typename }: { spaceId: st
 export const query = Command.make(
   'query',
   {
-    spaceId,
-    typename,
+    spaceId: Common.spaceId,
+    typename: Options.text('typename').pipe(Options.withDescription('The typename to query.')),
   },
   handler,
 ).pipe(Command.withDescription('Query a space for objects.'));
