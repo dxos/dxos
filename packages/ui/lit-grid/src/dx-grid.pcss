@@ -137,7 +137,7 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &:not(.dx-grid__cell--no-focus-unfurl){
+      &:not([data-focus-unfurl="false"]):not(.dx-grid__cell--no-focus-unfurl) {
         &:focus,
         &:focus-within {
           & > .dx-grid__cell__content {

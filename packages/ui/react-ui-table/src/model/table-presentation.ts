@@ -317,7 +317,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
         value: props.title ?? field.path,
-        readonly: true,
         resizeHandle: 'col',
         accessoryHtml: `
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}

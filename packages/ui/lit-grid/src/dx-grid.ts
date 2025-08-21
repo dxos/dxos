@@ -8,7 +8,7 @@ import { type Ref, createRef, ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
-import { defaultColSize, defaultRowSize } from './defs';
+import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
 import './dx-grid-axis-resize-handle';
 import {
   DxAxisResize,
@@ -83,12 +83,12 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, Partial<DxGridAxisMetaProps>> = {
+  rowDefault: Partial<DxGridPlaneRecord<DxGridFrozenRowsPlane, Partial<DxGridAxisMetaProps>>> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, Partial<DxGridAxisMetaProps>> = {
+  columnDefault: Partial<DxGridPlaneRecord<DxGridFrozenColsPlane, Partial<DxGridAxisMetaProps>>> = {
     grid: { size: defaultColSize },
   };
 
@@ -1285,6 +1285,23 @@ export class DxGrid extends LitElement {
     return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
   }
 
+  private cellFocusUnfurl(col: number, row: number, plane: DxGridPlane): boolean {
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+
+    // Check cell-specific setting first.
+    const cellUnfurl = this.cell(col, row, plane)?.focusUnfurl;
+    if (cellUnfurl !== undefined) {
+      return cellUnfurl;
+    }
+
+    // Check column/row defaults.
+    const colUnfurl = this.columns?.[colPlane]?.[col]?.focusUnfurl ?? this.columnDefault?.[colPlane]?.focusUnfurl;
+    const rowUnfurl = this.rows?.[rowPlane]?.[row]?.focusUnfurl ?? this.rowDefault?.[rowPlane]?.focusUnfurl;
+
+    return colUnfurl ?? rowUnfurl ?? focusUnfurlDefault;
+  }
+
   /**
    * Determines if the cell's text content should be selectable based on its readonly value.
    * @returns true if the cells text content is selectable, false otherwise.
@@ -1347,6 +1364,7 @@ export class DxGrid extends LitElement {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const readonly = this.cellReadonly(col, row, plane);
+    const focusUnfurl = this.cellFocusUnfurl(col, row, plane);
     const textSelectable = this.cellTextSelectable(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveFrozenPlane(cell.resizeHandle, plane) : undefined;
@@ -1358,6 +1376,7 @@ export class DxGrid extends LitElement {
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
+      data-focus-unfurl=${focusUnfurl ? nothing : 'false'}
       ?data-dx-active=${active}
       data-text-selectable=${textSelectable ? 'true' : 'false'}
       data-dx-grid-action="cell"
