@@ -225,7 +225,7 @@ jobs:
 
     # TODO(wittjosiah): Switch to depot-macos-latest.
     #   Currently `depot-macos-latest` did not support Xcode 16.1 below which was needed for this to work.
-    runs-on: macos-latest
+    runs-on: depot-macos-latest
 
     steps:
       - uses: actions/checkout@v4
