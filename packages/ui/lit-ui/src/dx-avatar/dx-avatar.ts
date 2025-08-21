@@ -195,6 +195,7 @@ export class DxAvatar extends LitElement {
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
+              class="dx-avatar__image"
               href=${this.imgSrc}
               mask=${`url(#${this.maskId})`}
               crossorigin=${this.imgCrossOrigin}
