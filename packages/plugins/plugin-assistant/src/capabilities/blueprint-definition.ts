@@ -12,7 +12,8 @@ import { analysis, list, load } from '../functions';
 const functions = [analysis, list, load];
 const tools: string[] = [
   'get-schemas',
-  'create-record',
+  'add-schema',
+  'add-record',
   // 'open-item'
 ];
 

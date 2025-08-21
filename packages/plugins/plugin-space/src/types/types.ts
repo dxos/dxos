@@ -238,6 +238,9 @@ export namespace SpaceAction {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
+      typename: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Semantic version format.
+      version: Schema.optional(Schema.String),
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
     }),
