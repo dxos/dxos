@@ -4,11 +4,12 @@
 
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 import { move, play } from '../functions';
 
-const functions = [move, play];
+const functions: FunctionDefinition[] = [move, play];
 
 export default () => {
   return [
