@@ -47,7 +47,6 @@ export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
-  onEnter?: (cell: DxGridPosition) => void;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
@@ -57,7 +56,6 @@ export const TableValueEditor = ({
   model,
   modals,
   schema,
-  onEnter,
   onFocus,
   onSave,
   onQuery,
@@ -98,7 +96,6 @@ export const TableValueEditor = ({
     <TableCellEditor
       model={model}
       modals={modals}
-      onEnter={onEnter}
       onFocus={onFocus}
       onQuery={onQuery}
       onSave={onSave}
@@ -112,7 +109,6 @@ const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-paddin
 export const TableCellEditor = ({
   model,
   modals,
-  onEnter,
   onFocus,
   onQuery,
   onSave,
@@ -180,7 +176,6 @@ export const TableCellEditor = ({
       if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
-        onEnter?.(cell);
         onFocus?.();
         setEditing(null);
         onSave?.();
@@ -189,19 +184,26 @@ export const TableCellEditor = ({
         setValidationVariant('error');
       }
     },
-    [model, editing, onEnter, onFocus, setEditing],
+    [model, editing, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
     async (value) => {
-      if (!model || !editing) {
-        return;
-      }
       if (suppressNextBlur.current) {
         suppressNextBlur.current = false;
+      } else if (model && editing) {
+        // Save silently if validation passes
+        const cell = parseCellIndex(editing.index);
+        if (value !== undefined) {
+          const result = await model.validateCellData(cell, value);
+          if (result.valid) {
+            setValidationError(null);
+            model.setCellData(cell, value);
+            setEditing(null);
+            onSave?.();
+          }
+        }
       }
-
-      // Don't save on blur - let handleClose handle validation and saving
     },
     [model, editing],
   );
@@ -222,8 +224,8 @@ export const TableCellEditor = ({
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
+          suppressNextBlur.current = true;
           onSave?.();
-          onEnter?.(cell);
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
           }
@@ -234,13 +236,14 @@ export const TableCellEditor = ({
       } else {
         setValidationError(null);
         setEditing(null);
+        suppressNextBlur.current = true;
         onSave?.();
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, setEditing, onSave],
+    [model, editing, onFocus, fieldProjection, setEditing, onSave],
   );
 
   const extension = useMemo(() => {
@@ -310,7 +313,6 @@ export const TableCellEditor = ({
                   if (isCreateOption(data)) {
                     const { field, props } = fieldProjection;
                     if (props.referenceSchema) {
-                      suppressNextBlur.current = true;
                       modals.openCreateRef(
                         props.referenceSchema,
                         document.querySelector(cellQuery(editing.index, gridId)),
