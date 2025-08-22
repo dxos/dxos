@@ -15,7 +15,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-class SchemaToolkit extends AiToolkit.make(
+class Toolkit extends AiToolkit.make(
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -57,7 +57,7 @@ class SchemaToolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    SchemaToolkit.toLayer({
+    Toolkit.toLayer({
       'get-schemas': () => {
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
@@ -75,6 +75,7 @@ class SchemaToolkit extends AiToolkit.make(
               jsonSchema: Type.toJsonSchema(schema),
               kind: 'record',
             }));
+
           const schemas = [...forms, ...allowed];
           if (space) {
             const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
@@ -94,8 +95,8 @@ class SchemaToolkit extends AiToolkit.make(
         return Effect.gen(function* () {
           const space = getActiveSpace(context);
           invariant(space, 'No space');
+
           const schema = Type.toEffectSchema(jsonSchema).pipe(Type.Obj({ typename, version: '0.1.0' }));
-          console.log('add-schema', { name, typename, jsonSchema, schema });
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(createIntent(SpaceAction.AddSchema, { space, name, typename, schema }));
         }).pipe(Effect.orDie);
@@ -107,6 +108,7 @@ class SchemaToolkit extends AiToolkit.make(
         const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
         return Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
           const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
@@ -125,6 +127,6 @@ class SchemaToolkit extends AiToolkit.make(
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, SchemaToolkit),
-  contributes(Capabilities.ToolkitHandler, SchemaToolkit.layer(context)),
+  contributes(Capabilities.Toolkit, Toolkit),
+  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
 ];

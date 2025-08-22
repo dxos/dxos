@@ -19,6 +19,7 @@ import {
   MarkdownSettings,
   MarkdownState,
   ReactSurface,
+  Toolkit,
 } from './capabilities';
 import { MarkdownEvents } from './events';
 import { meta } from './meta';
@@ -117,5 +118,11 @@ export const MarkdownPlugin = () =>
       id: `${meta.id}/module/blueprint`,
       activatesOn: Events.SetupArtifactDefinition,
       activate: BlueprintDefinition,
+    }),
+    defineModule({
+      id: `${meta.id}/module/toolkit`,
+      // TODO(wittjosiah): Use a different event.
+      activatesOn: Events.Startup,
+      activate: Toolkit,
     }),
   ]);

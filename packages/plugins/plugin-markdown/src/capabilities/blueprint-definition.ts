@@ -8,7 +8,7 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 const functions: FunctionDefinition[] = [];
-const tools: string[] = [];
+const tools: string[] = ['load-document'];
 
 export default () => {
   return [
