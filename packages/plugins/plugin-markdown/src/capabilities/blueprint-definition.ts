@@ -12,19 +12,19 @@ const tools: string[] = [];
 
 export default () => {
   return [
+    contributes(Capabilities.Functions, functions),
     contributes(
       Capabilities.BlueprintDefinition,
       Blueprint.make({
         key: 'dxos.org/blueprint/markdown',
         name: 'Markdown',
+        tools: Blueprint.toolDefinitions({ functions, tools }),
         instructions: Template.make({
           source: trim`
             ...
           `,
         }),
-        tools: Blueprint.toolDefinitions({ functions, tools }),
       }),
     ),
-    contributes(Capabilities.Functions, functions),
   ];
 };

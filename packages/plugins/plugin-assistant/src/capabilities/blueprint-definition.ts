@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
@@ -18,15 +17,15 @@ const tools: string[] = [
 
 export default () => {
   return [
+    contributes(Capabilities.Functions, functions),
     contributes(
       Capabilities.BlueprintDefinition,
       Blueprint.make({
         key: 'dxos.org/blueprint/assistant',
         name: 'Assistant',
+        tools: Blueprint.toolDefinitions({ functions, tools }),
         instructions: templates.system,
-        tools: [...functions.map((tool) => ToolId.make(tool.name)), ...tools.map((tool) => ToolId.make(tool))],
       }),
     ),
-    contributes(Capabilities.Functions, functions),
   ];
 };
