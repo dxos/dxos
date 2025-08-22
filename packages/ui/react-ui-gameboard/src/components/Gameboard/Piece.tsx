@@ -38,6 +38,10 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
 
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!model) {
+      return;
+    }
+
     const el = ref.current;
     invariant(el);
 
@@ -60,7 +64,7 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
           nativeSetDragImage,
         });
       },
-      canDrag: () => !promotingRef.current && model?.turn === piece.side,
+      canDrag: () => !promotingRef.current && !model.readonly && model.turn === piece.side,
       onDragStart: () => setDragging(true),
       onDrop: ({ location: { current } }) => {
         // TODO(burdon): Create wrapper function to catch errors.
