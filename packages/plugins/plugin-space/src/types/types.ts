@@ -273,6 +273,7 @@ export namespace SpaceAction {
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
+      views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
       navigable: Schema.optional(Schema.Boolean),
       // TODO(wittjosiah): This is a function, is there a better way to handle this?

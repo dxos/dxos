@@ -31,7 +31,7 @@ import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPa
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
-export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'name'> & {
+export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'views' | 'typename' | 'name'> & {
   onCreateObject?: (object: Obj.Any) => void;
   shouldNavigate?: (object: Obj.Any) => boolean;
 };
@@ -39,6 +39,7 @@ export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 't
 export const CreateObjectDialog = ({
   target: initialTarget,
   typename: initialTypename,
+  views,
   name,
   onCreateObject,
   shouldNavigate: _shouldNavigate,
@@ -99,7 +100,9 @@ export const CreateObjectDialog = ({
     <Dialog.Content classNames={cardDialogContent}>
       <div role='none' className={cardDialogHeader}>
         <Dialog.Title>
-          {t('create object dialog title', { object: t('typename label', { ns: typename, defaultValue: 'Item' }) })}
+          {t('create object dialog title', {
+            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Item' }),
+          })}
         </Dialog.Title>
         <Dialog.Close asChild>
           <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
@@ -112,6 +115,7 @@ export const CreateObjectDialog = ({
         forms={forms}
         spaces={spaces}
         target={target}
+        views={views}
         typename={typename}
         name={name}
         defaultSpaceId={client.spaces.default.id}

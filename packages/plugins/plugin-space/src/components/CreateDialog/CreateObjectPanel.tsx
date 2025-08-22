@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { type TypeAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -24,6 +25,7 @@ export type CreateObjectPanelProps = {
   spaces: Space[];
   typename?: string;
   target?: Space | DataType.Collection;
+  views?: boolean;
   name?: string;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
@@ -37,6 +39,7 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
+  views,
   name: initialName,
   defaultSpaceId,
   resolve,
@@ -47,6 +50,13 @@ export const CreateObjectPanel = ({
   const { t } = useTranslation(SPACE_PLUGIN);
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
+    .filter((form) => {
+      if (views == null) {
+        return true;
+      } else {
+        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
+      }
+    })
     .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {

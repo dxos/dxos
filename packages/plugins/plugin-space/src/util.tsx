@@ -374,15 +374,30 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
 export const createStaticSchemaActions = ({
   schema,
   space,
+  dispatch,
   deletable,
 }: {
   schema: Type.Obj.Any;
   space: Space;
+  dispatch: PromiseIntentDispatcher;
   deletable: boolean;
 }) => {
   const getId = (id: string) => `${space.id}/${Type.getTypename(schema)}/${id}`;
 
   const actions: NodeArg<ActionData>[] = [
+    {
+      id: getId(SpaceAction.AddObject._tag),
+      type: ACTION_TYPE,
+      data: async () => {
+        await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space, views: true }));
+      },
+      properties: {
+        label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+        icon: 'ph--plus--regular',
+        disposition: 'list-item-primary',
+        testId: 'spacePlugin.addViewToSchema',
+      },
+    },
     {
       id: getId(SpaceAction.RenameObject._tag),
       type: ACTION_TYPE,
@@ -520,6 +535,23 @@ export const constructObjectActions = ({
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
+            },
+          },
+        ]
+      : []),
+    ...(Obj.instanceOf(DataType.StoredSchema, object)
+      ? [
+          {
+            id: getId(SpaceAction.AddObject._tag),
+            type: ACTION_TYPE,
+            data: async () => {
+              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space, views: true }));
+            },
+            properties: {
+              label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
+              icon: 'ph--plus--regular',
+              disposition: 'list-item-primary',
+              testId: 'spacePlugin.addViewToSchema',
             },
           },
         ]
