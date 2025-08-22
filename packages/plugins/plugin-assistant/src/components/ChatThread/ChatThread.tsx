@@ -58,17 +58,21 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
   },
 );
 
+// TODO(burdon): Move into ScrollContainer.
 const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => {
   const { t } = useTranslation(meta.id);
   const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
 
   return (
-    <div className={mx('absolute bottom-0 right-6 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}>
+    <div
+      role='none'
+      className={mx('absolute bottom-2 right-4 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}
+    >
       <IconButton
         variant='primary'
         icon='ph--arrow-down--regular'
         iconOnly
-        size={5}
+        size={4}
         label={t('button scroll down')}
         onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
       />

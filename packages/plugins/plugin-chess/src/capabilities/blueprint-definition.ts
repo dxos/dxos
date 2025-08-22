@@ -7,9 +7,9 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { move, play } from '../functions';
+import { create, move, play } from '../functions';
 
-const functions: FunctionDefinition[] = [move, play];
+const functions: FunctionDefinition[] = [create, move, play];
 
 export default () => {
   return [
