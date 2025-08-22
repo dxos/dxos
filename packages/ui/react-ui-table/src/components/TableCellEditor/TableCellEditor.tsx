@@ -221,10 +221,10 @@ export const TableCellEditor = ({
         const result = await model.validateCellData(cell, value);
 
         if (result.valid) {
+          suppressNextBlur.current = true;
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
-          suppressNextBlur.current = true;
           onSave?.();
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
@@ -234,9 +234,9 @@ export const TableCellEditor = ({
           setValidationVariant('error');
         }
       } else {
+        suppressNextBlur.current = true;
         setValidationError(null);
         setEditing(null);
-        suppressNextBlur.current = true;
         onSave?.();
         if (event && onFocus) {
           onFocus(determineNavigationAxis(event), determineNavigationDelta(event));
