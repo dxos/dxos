@@ -6,13 +6,10 @@ import React, { type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController, useScrollContainerContext } from '@dxos/react-ui-components';
-import { mx } from '@dxos/react-ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
-
-import { meta } from '../../meta';
 
 import { ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
@@ -52,32 +49,8 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
             <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
         </ScrollContainer.Content>
-        <ScrollToBottomButton onEvent={onEvent} />
+        <ScrollContainer.ScrollDown />
       </ScrollContainer.Root>
     );
   },
 );
-
-// TODO(burdon): Move into ScrollContainer.
-const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => {
-  const { t } = useTranslation(meta.id);
-  const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
-
-  return (
-    <div
-      role='none'
-      className={mx('absolute bottom-2 right-4 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}
-    >
-      <IconButton
-        variant='primary'
-        icon='ph--arrow-down--regular'
-        iconOnly
-        size={4}
-        label={t('button scroll down')}
-        onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
-      />
-    </div>
-  );
-};
-
-ScrollToBottomButton.displayName = 'ScrollToBottomButton';

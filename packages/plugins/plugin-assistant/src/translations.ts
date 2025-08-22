@@ -83,7 +83,6 @@ export const translations = [
         'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
-        'button scroll down': 'Scroll down',
         'blueprints in context title': 'Blueprints',
         'objects in context title': 'Content',
         'remove object in context label': 'Remove document',

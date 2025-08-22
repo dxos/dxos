@@ -17,8 +17,10 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { translationKey } from '../translations';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -175,14 +177,52 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(({ classNames, children
 Content.displayName = 'ScrollContainer.Content';
 
 //
+// ScrollDown
+//
+
+type ScrollDownProps = ThemedClassName;
+
+const ScrollDown = ({ classNames }: ScrollDownProps) => {
+  const { t } = useTranslation(translationKey);
+  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDown.displayName);
+
+  return (
+    <div
+      role='none'
+      className={mx(
+        'absolute bottom-2 right-4 opacity-100 transition-opacity duration-300',
+        pinned && 'opacity-0',
+        classNames,
+      )}
+    >
+      <IconButton
+        variant='primary'
+        icon='ph--arrow-down--regular'
+        iconOnly
+        size={4}
+        label={t('button scroll down')}
+        onClick={() => scrollToBottom()}
+      />
+    </div>
+  );
+};
+
+ScrollDown.displayName = 'ScrollContainer.ScrollDown';
+
+//
 // ScrollContainer
 //
 
 export const ScrollContainer = {
   Root,
   Content,
+  ScrollDown,
 };
 
 export { useScrollContainerContext };
 
-export type { RootProps as ScrollContainerRootProps, ContentProps as ScrollContainerContentProps };
+export type {
+  RootProps as ScrollContainerRootProps,
+  ContentProps as ScrollContainerContentProps,
+  ScrollDownProps as ScrollContainerScrollDownProps,
+};
