@@ -10,11 +10,13 @@ import { Blueprint } from '@dxos/blueprints';
 import { analysis, list, load } from '../functions';
 
 const functions = [analysis, list, load];
-const tools: string[] = [
+const tools = [
+  // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
   'add-schema',
   'add-record',
-  // 'open-item'
+  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
+  'open-item',
 ];
 
 export default () => {

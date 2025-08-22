@@ -2,18 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiTool, AiToolkit } from '@effect/ai';
+import { Console, Schema } from 'effect';
+
 import {
   Capabilities,
   Events,
   IntentPlugin,
   type Plugin,
+  type PluginContext,
   SettingsPlugin,
   contributes,
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
@@ -42,6 +46,7 @@ import { Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
@@ -79,6 +84,24 @@ export const config = {
     },
   }),
 };
+
+class TestingToolkit extends AiToolkit.make(
+  AiTool.make('open-item', {
+    description: trim`
+      Opens an item in the application.
+    `,
+    parameters: {
+      id: ArtifactId,
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+) {
+  static layer = (_context: PluginContext) =>
+    TestingToolkit.toLayer({
+      'open-item': ({ id }) => Console.log('Called open-item', { id }),
+    });
+}
 
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
@@ -156,6 +179,14 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/toolkit',
+          activatesOn: Events.Startup,
+          activate: (context) => [
+            contributes(Capabilities.Toolkit, TestingToolkit),
+            contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
           ],
         }),
       ]),
