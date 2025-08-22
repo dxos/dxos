@@ -6,9 +6,9 @@ import { Option } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
@@ -26,7 +26,7 @@ export type CreateObjectPanelProps = {
   typename?: string;
   target?: Space | DataType.Collection;
   views?: boolean;
-  name?: string;
+  initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onTargetChange?: (target: Space) => void;
@@ -40,7 +40,7 @@ export const CreateObjectPanel = ({
   typename,
   target,
   views,
-  name: initialName,
+  initialFormValues: _initialFormValues,
   defaultSpaceId,
   resolve,
   onTargetChange,
@@ -48,6 +48,7 @@ export const CreateObjectPanel = ({
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .filter((form) => {
@@ -98,7 +99,7 @@ export const CreateObjectPanel = ({
     <div role='none' className={cardDialogOverflow}>
       <Form
         autoFocus
-        values={{ name: initialName }}
+        values={initialFormValues}
         schema={form.formSchema}
         testId='create-object-form'
         onSave={handleCreateObject}

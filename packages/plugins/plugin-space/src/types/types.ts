@@ -275,6 +275,7 @@ export namespace SpaceAction {
       target: Schema.Union(SpaceSchema, DataType.Collection),
       views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
+      initialFormValues: Schema.optional(Schema.Any),
       navigable: Schema.optional(Schema.Boolean),
       // TODO(wittjosiah): This is a function, is there a better way to handle this?
       onCreateObject: Schema.optional(Schema.Any),

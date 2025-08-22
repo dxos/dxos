@@ -426,7 +426,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, views, typename, navigable = true, onCreateObject }) => {
+      resolve: ({ target, views, typename, initialFormValues, navigable = true, onCreateObject }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -440,6 +440,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                   target,
                   views,
                   typename,
+                  initialFormValues,
                   onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {

@@ -31,7 +31,10 @@ import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPa
 
 export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
 
-export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'views' | 'typename' | 'name'> & {
+export type CreateObjectDialogProps = Pick<
+  CreateObjectPanelProps,
+  'target' | 'views' | 'typename' | 'initialFormValues'
+> & {
   onCreateObject?: (object: Obj.Any) => void;
   shouldNavigate?: (object: Obj.Any) => boolean;
 };
@@ -40,7 +43,7 @@ export const CreateObjectDialog = ({
   target: initialTarget,
   typename: initialTypename,
   views,
-  name,
+  initialFormValues,
   onCreateObject,
   shouldNavigate: _shouldNavigate,
 }: CreateObjectDialogProps) => {
@@ -117,7 +120,7 @@ export const CreateObjectDialog = ({
         target={target}
         views={views}
         typename={typename}
-        name={name}
+        initialFormValues={initialFormValues}
         defaultSpaceId={client.spaces.default.id}
         resolve={resolve}
         onTargetChange={setTarget}

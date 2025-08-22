@@ -389,7 +389,13 @@ export const createStaticSchemaActions = ({
       id: getId(SpaceAction.AddObject._tag),
       type: ACTION_TYPE,
       data: async () => {
-        await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space, views: true }));
+        await dispatch(
+          createIntent(SpaceAction.OpenCreateObject, {
+            target: space,
+            views: true,
+            initialFormValues: { typename: Type.getTypename(schema) },
+          }),
+        );
       },
       properties: {
         label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
@@ -545,7 +551,13 @@ export const constructObjectActions = ({
             id: getId(SpaceAction.AddObject._tag),
             type: ACTION_TYPE,
             data: async () => {
-              await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space, views: true }));
+              await dispatch(
+                createIntent(SpaceAction.OpenCreateObject, {
+                  target: space,
+                  views: true,
+                  initialFormValues: { typename: object.typename },
+                }),
+              );
             },
             properties: {
               label: ['add view to schema label', { ns: Type.getTypename(DataType.StoredSchema) }],
