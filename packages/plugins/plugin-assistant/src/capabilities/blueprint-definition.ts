@@ -13,7 +13,8 @@ const functions = [analysis, list, load];
 const tools = [
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
-  'create-record',
+  'add-schema',
+  'add-record',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
 ];
