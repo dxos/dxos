@@ -21,7 +21,7 @@ export default () => {
         tools: Blueprint.toolDefinitions({ functions, tools }),
         instructions: Template.make({
           source: trim`
-            ...
+            You can create and update markdown documents.
           `,
         }),
       }),

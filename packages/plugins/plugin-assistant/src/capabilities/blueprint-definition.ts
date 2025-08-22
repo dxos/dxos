@@ -5,10 +5,11 @@
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
+import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
 
-const functions = [analysis, list, load];
+const functions: FunctionDefinition[] = [analysis, list, load];
 const tools: string[] = [
   'get-schemas',
   'create-record',
