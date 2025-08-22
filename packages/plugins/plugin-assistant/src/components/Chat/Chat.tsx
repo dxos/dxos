@@ -85,23 +85,6 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     });
   }, [queue?.objects, pending]);
 
-  // TODO(burdon): Replace with tool to select artifact.
-  // const { dispatchPromise: dispatch } = useIntentDispatcher();
-  // useEffect(() => {
-  //   if (!processor?.streaming.value && queue?.objects) {
-  //     const message = queue.objects[queue.objects.length - 1];
-  //     if (dispatch && space && chat && message) {
-  //       void dispatch(
-  //         createIntent(CollaborationActions.InsertContent, {
-  //           target: artifact,
-  //           object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
-  //           label: 'View proposal',
-  //         }),
-  //       );
-  //     }
-  //   }
-  // }, [queue, processor?.streaming.value]);
-
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {

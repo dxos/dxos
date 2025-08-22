@@ -59,7 +59,7 @@ export class AiChatProcessor {
    * Last error.
    */
   // TODO(wittjosiah): Error should come from the message stream.
-  readonly error = Rx.make<Option.Option<Error>>(Option.none());
+  public readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
   /** Rx registry. */
   private readonly _observableRegistry: Registry.Registry;

@@ -17,6 +17,10 @@ const tools = [
   'add-record',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
+  // TODO(burdon): Anthropic only.
+  //  https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool#example-str-replace-command
+  //  AI_TOOL_NOT_FOUND: str_replace_based_edit_tool
+  // 'str_replace_based_edit_tool',
 ];
 
 export default () => {
