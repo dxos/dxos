@@ -28,7 +28,7 @@ export type PieceProps = ThemedClassName<{
 
 export const Piece = memo(({ classNames, Component, piece, orientation, bounds, label, onClick }: PieceProps) => {
   useTrackProps({ classNames, Component, piece, orientation, bounds, label }, Piece.displayName, false);
-  const { model, moveNumber, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
+  const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState<HTMLElement>();
@@ -38,6 +38,10 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
 
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!model) {
+      return;
+    }
+
     const el = ref.current;
     invariant(el);
 
@@ -60,10 +64,7 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
           nativeSetDragImage,
         });
       },
-      canDrag: () =>
-        !promotingRef.current &&
-        model?.turn === piece.side &&
-        (moveNumber === undefined || model?.moveNumber === moveNumber),
+      canDrag: () => !promotingRef.current && !model.readonly && model.turn === piece.side,
       onDragStart: () => setDragging(true),
       onDrop: ({ location: { current } }) => {
         // TODO(burdon): Create wrapper function to catch errors.

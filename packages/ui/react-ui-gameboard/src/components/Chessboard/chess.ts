@@ -88,12 +88,16 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     this.update(pgn);
   }
 
-  get game(): ChessJS {
-    return this._chess;
+  get readonly(): boolean {
+    return this._moveIndex.value !== this._chess.history().length;
   }
 
   get turn(): Player {
     return this._chess.turn() === 'w' ? 'white' : 'black';
+  }
+
+  get game(): ChessJS {
+    return this._chess;
   }
 
   get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
