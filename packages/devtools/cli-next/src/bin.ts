@@ -4,8 +4,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createRequire } from 'node:module';
-
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Effect, Layer, Logger } from 'effect';
@@ -23,8 +21,8 @@ if (level) {
 log.config({ filter });
 
 if (process.env.DX_TRACK_LEAKS) {
-  const require = createRequire(import.meta.url);
-  (globalThis as any).wtf = require('wtfnode');
+  const wtf = await import('wtfnode');
+  (globalThis as any).wtf = wtf;
 }
 
 const run = Command.run(dx, {
