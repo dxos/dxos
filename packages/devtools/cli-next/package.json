@@ -34,10 +34,12 @@
     "@effect/typeclass": "0.36.0",
     "@effect/workflow": "0.8.3",
     "effect": "3.17.7",
+    "wtfnode": "^0.9.1",
     "yaml": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
+    "@types/wtfnode": "^0.10.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.0"
   },
