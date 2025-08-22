@@ -110,7 +110,21 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   private initializeEffects(): void {
     const arrangementWatcher = effect(() => {
-      const _ = this.kanban.columnFieldId;
+      // Subscribe to changes in:
+      // - the current column field selection
+      const pivotPath = this.columnFieldPath;
+      // - the column field selection options
+      void this._getSelectOptions();
+      // - the list of items
+      const items = this._items.value;
+      // - and each item's column field value
+      if (pivotPath) {
+        for (const item of items) {
+          item[pivotPath];
+        }
+      }
+
+      // Finally, recompute arrangement.
       this._cards.value = this._computeArrangement();
     });
     this._ctx.onDispose(arrangementWatcher);
