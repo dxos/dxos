@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
@@ -12,16 +12,22 @@ import { mx } from '@dxos/react-ui-theme';
 import { meta } from '../meta';
 import { type Chess } from '../types';
 
-import { Chessboard } from './Chessboard';
+import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 
 export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);
+  const controller = useRef<ChessboardController>(null);
+
+  // TODO(burdon): Keyboard handler.
+  const handleSelect = useCallback<NonNullable<ChessboardInfoProps['onSelect']>>((index) => {
+    controller.current?.setMoveNumber(index);
+  }, []);
 
   return (
     <StackItem.Content classNames='@container bs-full is-full overflow-hidden'>
-      <Chessboard.Root game={game}>
+      <Chessboard.Root game={game} ref={controller}>
         <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && '@3xl:grid-cols-[1fr_320px]')}>
           <Chessboard.Content>
             <Chessboard.Board orientation={orientation} />
@@ -34,6 +40,7 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
                 max={8}
                 onOrientationChange={setOrientation}
                 onClose={() => setOpen(false)}
+                onSelect={handleSelect}
               />
             </div>
           )}
