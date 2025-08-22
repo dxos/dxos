@@ -4,20 +4,18 @@
 
 import { Effect, Schema } from 'effect';
 
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../types';
 
+// TODO(burdon): Reconcile with intents.
 // TODO(burdon): Evolve into generic tool. How is the current space determined?
 export default defineFunction({
   name: 'dxos.org/function/chess/create',
   description: 'Creates a new chess game.',
   inputSchema: Schema.Void,
-  outputSchema: Schema.String.annotations({
-    description: 'The ID of the new chess game.',
-  }),
+  outputSchema: Chess.Game,
   handler: Effect.fn(function* () {
-    const object = yield* DatabaseService.add(Chess.makeGame());
-    return object.id;
+    return Chess.makeGame();
   }),
 });

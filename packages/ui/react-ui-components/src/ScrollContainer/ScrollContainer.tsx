@@ -142,6 +142,8 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   );
 });
 
+Root.displayName = 'ScrollContainer.Root';
+
 //
 // Content
 //
@@ -177,14 +179,14 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(({ classNames, children
 Content.displayName = 'ScrollContainer.Content';
 
 //
-// ScrollDown
+// ScrollDownButton
 //
 
-type ScrollDownProps = ThemedClassName;
+type ScrollDownButtonProps = ThemedClassName;
 
-const ScrollDown = ({ classNames }: ScrollDownProps) => {
+const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
   const { t } = useTranslation(translationKey);
-  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDown.displayName);
+  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDownButton.displayName!);
 
   return (
     <div
@@ -207,22 +209,22 @@ const ScrollDown = ({ classNames }: ScrollDownProps) => {
   );
 };
 
-ScrollDown.displayName = 'ScrollContainer.ScrollDown';
+ScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
 
 //
 // ScrollContainer
 //
 
+export { useScrollContainerContext };
+
 export const ScrollContainer = {
   Root,
   Content,
-  ScrollDown,
+  ScrollDownButton,
 };
-
-export { useScrollContainerContext };
 
 export type {
   RootProps as ScrollContainerRootProps,
   ContentProps as ScrollContainerContentProps,
-  ScrollDownProps as ScrollContainerScrollDownProps,
+  ScrollDownButtonProps as ScrollContainerScrollDownButtonProps,
 };

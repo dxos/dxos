@@ -101,6 +101,7 @@ class SchemaToolkit extends AiToolkit.make(
         }).pipe(Effect.orDie);
       },
 
+      // TODO(burdon): Rename `create-object`.
       'add-record': ({ typename, data }) => {
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;

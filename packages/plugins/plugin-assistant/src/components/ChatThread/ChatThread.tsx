@@ -49,7 +49,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
             <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
         </ScrollContainer.Content>
-        <ScrollContainer.ScrollDown />
+        <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );
   },
