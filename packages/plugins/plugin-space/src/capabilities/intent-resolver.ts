@@ -361,10 +361,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, schema: schemaInput }) => {
+      resolve: async ({ space, name, typename, version, schema: schemaInput }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
+        }
+        if (typename) {
+          schema.storedSchema.typename = typename;
+        }
+        if (version) {
+          schema.storedSchema.version = version;
         }
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
