@@ -277,8 +277,7 @@ const ChatPrompt = ({
       className={mx(
         'is-full flex flex-col density-fine',
         outline && [
-          'p-2 bg-groupSurface border border-transparent rounded',
-          '[&:has(div:focus)]:border-transparent [&:has(div:focus)]:outline outline-neutralFocusIndicator',
+          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         ],
         classNames,
       )}

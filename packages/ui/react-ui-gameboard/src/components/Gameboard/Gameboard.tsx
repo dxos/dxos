@@ -16,6 +16,7 @@ import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece }
 
 export type GameboardContextValue<M extends GameboardModel> = {
   model: M;
+  moveNumber?: number;
   dragging?: boolean; // TODO(burdon): Change to PieceRecord.
   promoting?: PieceRecord;
   onPromotion: (move: Move) => void;
@@ -33,13 +34,14 @@ const useGameboardContext = <M extends GameboardModel>(consumerName: string): Ga
 
 type GameboardRootProps<M extends GameboardModel> = PropsWithChildren<{
   model?: M;
+  moveNumber?: number;
   onDrop?: (move: Move) => boolean;
 }>;
 
 /**
  * Generic board container.
  */
-const GameboardRoot = <M extends GameboardModel>({ children, model, onDrop }: GameboardRootProps<M>) => {
+const GameboardRoot = <M extends GameboardModel>({ children, model, moveNumber, onDrop }: GameboardRootProps<M>) => {
   const [dragging, setDragging] = useState(false);
   const [promoting, setPromoting] = useState<PieceRecord | undefined>();
 
@@ -88,7 +90,13 @@ const GameboardRoot = <M extends GameboardModel>({ children, model, onDrop }: Ga
   }, [model]);
 
   return (
-    <GameboardContextProvider model={model} dragging={dragging} promoting={promoting} onPromotion={handlePromotion}>
+    <GameboardContextProvider
+      model={model}
+      moveNumber={moveNumber}
+      dragging={dragging}
+      promoting={promoting}
+      onPromotion={handlePromotion}
+    >
       {children}
     </GameboardContextProvider>
   );
