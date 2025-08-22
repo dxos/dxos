@@ -361,10 +361,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, schema: schemaInput }) => {
+      resolve: async ({ space, name, typename, version, schema: schemaInput }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
+        }
+        if (typename) {
+          schema.storedSchema.typename = typename;
+        }
+        if (version) {
+          schema.storedSchema.version = version;
         }
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
@@ -420,7 +426,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, typename, navigable = true, onCreateObject }) => {
+      resolve: ({ target, views, typename, initialFormValues, navigable = true, onCreateObject }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -432,7 +438,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  views,
                   typename,
+                  initialFormValues,
                   onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {

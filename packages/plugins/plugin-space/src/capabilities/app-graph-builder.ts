@@ -540,8 +540,18 @@ export default (context: PluginContext) => {
               );
               const deletable = filteredViews.length === 0;
 
+              const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+              if (!dispatcher) {
+                return [];
+              }
+
               // TODO(wittjosiah): Remove cast.
-              return createStaticSchemaActions({ schema: schema as Type.Obj.Any, space, deletable });
+              return createStaticSchemaActions({
+                schema: schema as Type.Obj.Any,
+                space,
+                dispatch: dispatcher.dispatchPromise,
+                deletable,
+              });
             }),
             Option.getOrElse(() => []),
           ),

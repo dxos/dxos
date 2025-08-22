@@ -140,11 +140,16 @@ export const SchemaMetaSymbol = Symbol.for('@dxos/schema/SchemaMeta');
 export type SchemaMeta = TypeMeta & { id: string };
 
 /**
+ * Identifies a schema as a view.
+ */
+export const ViewAnnotationId = Symbol.for('@dxos/schema/annotation/View');
+export const ViewAnnotation = createAnnotationHelper<boolean>(ViewAnnotationId);
+
+/**
  * Identifies label property or JSON path expression.
  * Either a string or an array of strings representing field accessors each matched in priority order.
  */
 export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
-
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
 
 /**

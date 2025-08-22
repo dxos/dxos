@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { type MakeProps } from '@dxos/echo/Obj';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation, ViewAnnotation } from '@dxos/echo-schema';
 import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
 
 export const Map = Schema.Struct({
@@ -19,6 +19,7 @@ export const Map = Schema.Struct({
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
+  ViewAnnotation.set(true),
 );
 
 export type Map = Schema.Schema.Type<typeof Map>;

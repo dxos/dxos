@@ -10,10 +10,13 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { analysis, list, load } from '../functions';
 
 const functions: FunctionDefinition[] = [analysis, list, load];
-const tools: string[] = [
+const tools = [
+  // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
-  'create-record',
-  // 'open-item'
+  'add-schema',
+  'add-record',
+  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
+  'open-item',
 ];
 
 export default () => {

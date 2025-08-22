@@ -4574,6 +4574,9 @@ importers:
       effect:
         specifier: 3.17.7
         version: 3.17.7
+      wtfnode:
+        specifier: ^0.9.1
+        version: 0.9.1
       yaml:
         specifier: ^2.5.0
         version: 2.7.1
@@ -4581,6 +4584,9 @@ importers:
       '@types/node':
         specifier: 22.10.2
         version: 22.10.2
+      '@types/wtfnode':
+        specifier: ^0.10.0
+        version: 0.10.0
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -22330,6 +22336,9 @@ packages:
 
   '@types/ws@8.5.9':
     resolution: {integrity: sha512-jbdrY0a8lxfdTp/+r7Z4CkycbOFN8WX+IOchLJr3juT/xzbJ8URyTVSJ/hvNdadTgM1mnedb47n+Y31GsFnQlg==}
+
+  '@types/wtfnode@0.10.0':
+    resolution: {integrity: sha512-ItEhqP60vy3o3cXYapNHOPNyKE0SiDteX0hf3LdJbGbH0F7Il50G4N7Zr+VLiBWvh8hSR2e6EZ8xRHcO2zqoLQ==}
 
   '@types/yargs-parser@21.0.0':
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
@@ -42135,6 +42144,8 @@ snapshots:
   '@types/ws@8.5.9':
     dependencies:
       '@types/node': 22.10.2
+
+  '@types/wtfnode@0.10.0': {}
 
   '@types/yargs-parser@21.0.0': {}
 
