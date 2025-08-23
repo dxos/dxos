@@ -8,7 +8,7 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 const functions: FunctionDefinition[] = [];
-const tools: string[] = ['load-document'];
+const tools = ['load-document'];
 
 // TODO(burdon): Diff message format (xml).
 
@@ -24,7 +24,7 @@ export default () => {
         instructions: Template.make({
           source: trim`
             You can create and update markdown documents.
-            When asked to edit documents, return updates in diff format.
+            When asked to edit documents, return updates using the diff format.
           `,
         }),
       }),

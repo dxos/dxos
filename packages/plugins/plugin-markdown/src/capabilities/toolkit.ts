@@ -19,51 +19,38 @@ import { Markdown } from '../types';
 
 // TODO(burdon): Query for document by name.
 
-class SchemaToolkit extends AiToolkit.make(
+class Toolkit extends AiToolkit.make(
   AiTool.make('load-document', {
     description: trim`
-      Retrieves markdown document.
+      Retrieves the content of a markdown document.
     `,
     parameters: {
       id: ArtifactId,
     },
-    success: Schema.String,
-    failure: Schema.Any, // TODO(burdon): ???
+    success: Schema.Struct({
+      content: Schema.String,
+    }),
+    failure: Schema.Any,
   }),
 ) {
   static layer = (context: PluginContext) =>
-    SchemaToolkit.toLayer({
+    Toolkit.toLayer({
       'load-document': ({ id }) => {
-        console.log(context);
-        console.log(id);
+        // TODO(burdon): Create wrapper (with error handling).
         const space = getActiveSpace(context);
-        console.log(space); // undefined
+        console.log({ context, space, id });
         const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
         return Effect.gen(function* () {
           const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
-          const loadedContent = yield* Effect.promise(() => object.content?.load());
-          return loadedContent?.content;
+          const content = yield* Effect.promise(() => object.content.load());
+          console.log('>>>', content.content);
+          return { content: content.content };
         }).pipe(Effect.provide(service));
       },
     });
 }
 
-// index.tsx:86 Error: Database not available
-//     at get db (database.ts:23:13)
-//     at database.ts:55:15
-//     at :9009/AiToolkit.handler
-//     at toolFunctionHandler (services.ts:47:27)
-//     at toolFunctionHandler (AiToolkit.ts:176:41)
-//     at :9009/AiToolkit.handler
-//     at callTool (exec.ts:24:94)
-//     at callTool (session.ts:236:11)
-//     at AiSession.run (session.ts:265:52)
-//     at AiConversation.run (conversation.ts:126:20)
-//     at causeToError (errors.ts:121:25)
-//     at throwCause (errors.ts:143:9)
-//     at AiChatProcessor.request (chat-processor.ts:218:9)
-
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, SchemaToolkit),
-  contributes(Capabilities.ToolkitHandler, SchemaToolkit.layer(context)),
+  contributes(Capabilities.Toolkit, Toolkit),
+  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
 ];

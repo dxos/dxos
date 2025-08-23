@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'button scroll down': 'Scroll down',
+        'scroll-down.button': 'Scroll down',
       },
     },
   },

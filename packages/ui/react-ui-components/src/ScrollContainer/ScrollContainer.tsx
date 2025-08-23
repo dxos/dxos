@@ -62,7 +62,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   const [pinned, setPinned] = useState(pin);
 
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const handleScrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
     if (scrollerRef.current) {
       // Temporarily hide scrollbar to prevent flicker.
       autoScrollRef.current = true;
@@ -79,6 +79,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
           autoScrollRef.current = false;
         }, 500);
       }
+      setPinned(true);
     }
   }, []);
 
@@ -91,11 +92,10 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
         setPinned(false);
       },
       scrollToBottom: () => {
-        handleScrollToBottom('instant');
-        setPinned(true);
+        scrollToBottom('smooth');
       },
     }),
-    [handleScrollToBottom, scrollerRef.current],
+    [scrollToBottom, scrollerRef.current],
   );
 
   // Scroll controller imperative ref.
@@ -120,7 +120,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   }, []);
 
   return (
-    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={handleScrollToBottom}>
+    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
       <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
         {fade && (
           <div
@@ -202,7 +202,7 @@ const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
         icon='ph--arrow-down--regular'
         iconOnly
         size={4}
-        label={t('button scroll down')}
+        label={t('scroll-down.button')}
         onClick={() => scrollToBottom()}
       />
     </div>

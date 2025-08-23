@@ -39,6 +39,7 @@ export const translations = [
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
       },
+      // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',

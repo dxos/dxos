@@ -62,12 +62,7 @@ class Toolkit extends AiToolkit.make(
         const space = getActiveSpace(context);
         const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
         return Effect.gen(function* () {
-          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
-            typename: Type.getTypename(form.objectSchema),
-            jsonSchema: Type.toJsonSchema(form.objectSchema),
-            kind: 'item',
-          }));
-          const allowed = context
+          const whitelist = context
             .getCapabilities(ClientCapabilities.SchemaWhiteList)
             .flat()
             .map((schema) => ({
@@ -76,7 +71,13 @@ class Toolkit extends AiToolkit.make(
               kind: 'record',
             }));
 
-          const schemas = [...forms, ...allowed];
+          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
+            typename: Type.getTypename(form.objectSchema),
+            jsonSchema: Type.toJsonSchema(form.objectSchema),
+            kind: 'item',
+          }));
+
+          const schemas = [...whitelist, ...forms];
           if (space) {
             const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
             schemas.push(
@@ -87,6 +88,7 @@ class Toolkit extends AiToolkit.make(
               })),
             );
           }
+
           return schemas.map((schema) => schema.typename);
         }).pipe(Effect.provide(service));
       },
