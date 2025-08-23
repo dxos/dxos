@@ -35,20 +35,20 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
-      'load-document': ({ id }) => {
-        // TODO(burdon): Create wrapper (with error handling).
-        const space = getActiveSpace(context);
-        console.log({ context, space, id });
-        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
-        return Effect.gen(function* () {
+      'load-document': ({ id }) =>
+        Effect.gen(function* () {
           const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
           const content = yield* Effect.promise(() => object.content.load());
-          console.log('>>>', content.content);
           return { content: content.content };
-        }).pipe(Effect.provide(service));
-      },
+        }).pipe(wrapper(context)),
     });
 }
+
+// TODO(burdon): Factor out.
+const wrapper = (context: PluginContext) => {
+  const space = getActiveSpace(context);
+  return Effect.provide(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable);
+};
 
 export default (context: PluginContext) => [
   contributes(Capabilities.Toolkit, Toolkit),
