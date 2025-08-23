@@ -15,7 +15,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
-import { CalculatorToolkit, calculatorLayer, tapHttpErrors } from './testing';
+import { TestingToolkit, testingLayer, tapHttpErrors } from './testing';
 import { callTools, getToolCalls } from './tools';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
@@ -73,13 +73,13 @@ describe('ollama', () => {
           }),
         );
 
-        const toolkit = CalculatorToolkit;
+        const toolkit = TestingToolkit;
 
         do {
           const prompt = yield* preprocessAiInput(history);
           const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit: yield* CalculatorToolkit.pipe(Effect.provide(calculatorLayer)),
+            toolkit: yield* TestingToolkit.pipe(Effect.provide(testingLayer)),
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
@@ -109,7 +109,7 @@ describe('ollama', () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          calculatorLayer,
+          testingLayer,
           Layer.provide(
             OpenAiLanguageModel.model('qwen2.5:14b' as any),
             OpenAiClient.layer({

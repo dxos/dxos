@@ -139,13 +139,15 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
-      const chat = createChat('What is six times seven?');
-      const result = yield* chat.pipe(
-        Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-        Effect.provide(OpenAiLayer),
-        Effect.provide(toolkitLayer),
-      );
+      // @effect-diagnostics-next-line multipleEffectProvide:off
+      const createProgram = (prompt: string) =>
+        createChat(prompt).pipe(
+          Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
+          Effect.provide(OpenAiLayer),
+          Effect.provide(toolkitLayer),
+        );
 
+      const result = yield* createProgram('What is six times seven?');
       log.info('result', { result });
       expect(result).toContain('42');
     }, TestHelpers.runIf(process.env.OPENAI_API_KEY)),
@@ -154,13 +156,15 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
   it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(function* ({ expect }) {
-      const chat = createChat('What is six times seven?');
-      const result = yield* chat.pipe(
-        Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-        Effect.provide(AnthropicLayer),
-        Effect.provide(toolkitLayer),
-      );
+      // @effect-diagnostics-next-line multipleEffectProvide:off
+      const createProgram = (prompt: string) =>
+        createChat(prompt).pipe(
+          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+          Effect.provide(AnthropicLayer),
+          Effect.provide(toolkitLayer),
+        );
 
+      const result = yield* createProgram('What is six times seven?');
       log.info('result', { result });
       expect(result).toContain('42');
     }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
