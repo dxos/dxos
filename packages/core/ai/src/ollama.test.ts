@@ -64,6 +64,7 @@ describe('ollama', () => {
     'tools',
     Effect.fn(
       function* ({ expect: _ }) {
+        const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -73,13 +74,11 @@ describe('ollama', () => {
           }),
         );
 
-        const toolkit = TestingToolkit;
-
         do {
           const prompt = yield* preprocessAiInput(history);
           const blocks = yield* AiLanguageModel.streamText({
             prompt,
-            toolkit: yield* TestingToolkit.pipe(Effect.provide(testingLayer)),
+            toolkit,
             system: 'You are a helpful assistant.',
             disableToolCallResolution: true,
           }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
@@ -96,8 +95,7 @@ describe('ollama', () => {
             break;
           }
 
-          const toolkitWithHandlers = Effect.isEffect(toolkit) ? yield* toolkit : toolkit;
-          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolkitWithHandlers, toolCalls);
+          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolkit, toolCalls);
           history.push(
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),
