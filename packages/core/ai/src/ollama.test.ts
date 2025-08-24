@@ -15,7 +15,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { parseResponse } from './AiParser';
 import { preprocessAiInput } from './AiPreprocessor';
-import { TestingToolkit, testingLayer, tapHttpErrors } from './testing';
+import { TestingToolkit, tapHttpErrors, testingLayer } from './testing';
 import { callTools, getToolCalls } from './tools';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
