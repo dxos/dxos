@@ -17,10 +17,14 @@ export default defineFunction({
       description: 'The ID of the markdown document.',
     }),
   }),
-  outputSchema: Schema.String,
+  outputSchema: Schema.Struct({
+    content: Schema.String,
+  }),
   handler: Effect.fn(function* ({ data: { id } }) {
     const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
-    const content = yield* Effect.promise(() => object.content.load());
-    return content.content;
+    const { content } = yield* Effect.promise(() => object.content.load());
+    return {
+      content,
+    };
   }),
 });

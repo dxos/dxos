@@ -24,7 +24,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Is this still used?
+// TODO(burdon): Remove?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -32,9 +32,7 @@ declare global {
   }
 }
 
-export type AiRequestOptions = {
-  // Empty for now.
-};
+export type AiRequestOptions = {};
 
 export type AiChatProcessorOptions = {
   model?: ModelName;

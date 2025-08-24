@@ -86,10 +86,10 @@ export class AiConversation {
       log.info('run', {
         prompt: params.prompt,
         system: params.system,
+        toolkit: params.toolkit,
         history: history.length,
         objects: objects.length,
         blueprints: blueprints.length,
-        toolkit: params.toolkit,
       });
 
       const start = Date.now();
@@ -98,10 +98,10 @@ export class AiConversation {
       const messages = yield* session.run({
         prompt: params.prompt,
         system: params.system,
+        toolkit: params.toolkit,
         history,
         objects,
         blueprints,
-        toolkit: params.toolkit,
         observer: params.observer,
       });
 
