@@ -166,6 +166,7 @@ export const WithDocument = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: ['dxos.org/blueprint/assistant'],
   },
 } satisfies Story;
 
@@ -193,7 +194,22 @@ export const WithChess = {
       const object = space.db.add(
         Chess.makeGame({
           name: 'Challenge',
-          pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });
