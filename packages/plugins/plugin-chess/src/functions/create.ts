@@ -15,7 +15,8 @@ export default defineFunction({
   description: 'Creates a new chess game.',
   inputSchema: Schema.Void,
   outputSchema: Chess.Game,
-  handler: Effect.fn(function* () {
+  handler: Effect.fn(function* (context) {
+    console.log(context.context);
     return Chess.makeGame();
   }),
 });

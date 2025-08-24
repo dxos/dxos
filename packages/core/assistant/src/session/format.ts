@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type SessionRunParams } from './session';
+import { type AiSessionRunParams } from './session';
 
 /**
  * Formats the system prompt.
@@ -26,7 +26,7 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
     // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
@@ -71,7 +71,7 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
     const prelude: ContentBlock.Any[] = [];
 

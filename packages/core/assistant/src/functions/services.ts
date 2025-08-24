@@ -20,12 +20,12 @@ export const makeToolResolverFromFunctions = (
         return tool;
       }
 
-      const fn = functions.find((f) => f.name === id);
-      if (!fn) {
+      const functionDef = functions.find((fn) => fn.name === id);
+      if (!functionDef) {
         return yield* Effect.fail(new AiToolNotFoundError(id));
       }
 
-      return projectFunctionToTool(fn);
+      return projectFunctionToTool(functionDef);
     }),
   });
 };
@@ -39,8 +39,8 @@ export const makeToolExecutionServiceFromFunctions = (
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
-
       const localFunctionExecutionService = yield* LocalFunctionExecutionService;
+
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
@@ -51,13 +51,13 @@ export const makeToolExecutionServiceFromFunctions = (
               }
 
               const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
-              const fnDef = functions.find((f) => f.name === functionName);
-              if (!fnDef) {
+              const functionDef = functions.find((fn) => fn.name === functionName);
+              if (!functionDef) {
                 return yield* Effect.fail(new AiToolNotFoundError(tool.name));
               }
 
               return yield* localFunctionExecutionService
-                .invokeFunction(fnDef, input)
+                .invokeFunction(functionDef, input)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });
           };
@@ -80,10 +80,12 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assisatnt/FunctionToolAn
 >() {}
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
+
 const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
+
   const tool = AiTool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),

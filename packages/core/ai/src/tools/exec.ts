@@ -18,13 +18,18 @@ export const callTools: <Tools extends AiTool.Any>(
   },
 );
 
+/**
+ * Call individual tool.
+ */
 export const callTool: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.ToHandler<Tools>,
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
-    log.info('callTool', { toolCall: JSON.stringify(toolCall) });
-    return yield* toolkit.handle(toolCall.name as any, JSON.parse(toolCall.input)).pipe(
+    const input = JSON.parse(toolCall.input);
+    // TODO(burdon): Auto stringify proxy objects.
+    log.info('callTool', { toolCall: JSON.stringify(toolCall), input });
+    return yield* toolkit.handle(toolCall.name as any, input).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>

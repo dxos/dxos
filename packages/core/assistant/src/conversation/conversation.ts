@@ -2,24 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, type AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import {
-  type AiInputPreprocessingError,
-  type AiToolNotFoundError,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
-import { DatabaseService, type TracingService } from '@dxos/functions';
+import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type AiAssistantError } from '../errors';
-import { AiSession, type GenerationObserver } from '../session';
+import { AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
@@ -64,6 +57,7 @@ export class AiConversation {
     this._context = new AiContextBinder(this._queue);
   }
 
+  // TODO(burdon): Add Space to context?
   get context() {
     return this._context;
   }
@@ -81,15 +75,7 @@ export class AiConversation {
     // TODO(burdon): Decide whether to pass in or to fully encapsulate.
     session = new AiSession(),
     ...params
-  }: AiConversationRunParams<Tools>): Effect.Effect<
-    DataType.Message[],
-    AiAssistantError | AiInputPreprocessingError | AiError.AiError | AiToolNotFoundError,
-    | AiLanguageModel.AiLanguageModel
-    | ToolResolverService
-    | ToolExecutionService
-    | TracingService
-    | AiTool.ToHandler<Tools>
-  > =>
+  }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const context = yield* Effect.promise(() => this.context.query());

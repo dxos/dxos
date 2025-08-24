@@ -18,11 +18,11 @@ export class FunctionExecutor {
    */
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
   async invoke<F extends FunctionDefinition<any, any>>(
-    fnDef: F,
+    functionDef: F,
     input: F extends FunctionDefinition<infer I, infer _O> ? I : never,
   ): Promise<F extends FunctionDefinition<infer _I, infer O> ? O : never> {
     // Assert input matches schema
-    const assertInput = fnDef.inputSchema.pipe(Schema.asserts);
+    const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
     (assertInput as any)(input);
 
     const context: FunctionContext = {
@@ -33,7 +33,7 @@ export class FunctionExecutor {
       },
     };
 
-    const result = fnDef.handler({ context, data: input });
+    const result = functionDef.handler({ context, data: input });
 
     let data: unknown;
     if (Effect.isEffect(result)) {
@@ -46,7 +46,7 @@ export class FunctionExecutor {
     }
 
     // Assert output matches schema
-    const assertOutput = fnDef.outputSchema?.pipe(Schema.asserts);
+    const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
     (assertOutput as any)(data);
 
     return data as any;
