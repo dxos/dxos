@@ -108,6 +108,7 @@ export class AiSession {
     toolkit,
   }: AiSessionRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
+      // TODO(burdon): `observer` is prop passed in AiSessionRunParams.
       const observer = GenerationObserver.noop();
 
       // NULL: NO toolkit is passed from AiChatProcessor!
@@ -188,7 +189,7 @@ export class AiSession {
         // TODO(burdon): Potential retry.
         // TODO(burdon): Report errors to user; with proposed actions.
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
-          callTool(toolkit, toolCall).pipe(
+          callTool(toolkitHandlers, toolCall).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
@@ -244,6 +245,7 @@ const createToolkit = <Tools extends AiTool.Any>({
   blueprints = [],
 }: Pick<AiSessionRunParams<Tools>, 'toolkit' | 'toolIds' | 'blueprints'>) =>
   Effect.gen(function* () {
+    console.log('createToolkit', toolkit, toolIds, blueprints);
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
       ...blueprints.flatMap(({ tools }) => tools),
       ...toolIds,
