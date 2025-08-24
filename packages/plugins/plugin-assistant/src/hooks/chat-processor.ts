@@ -174,11 +174,10 @@ export class AiChatProcessor {
       throw new Error('Request already in progress');
     }
 
-    await using ctx = Context.default(); // Auto-disposed at the end of this block.
-
     const session = new AiSession();
     this._observableRegistry.set(this._session, Option.some(session));
 
+    await using ctx = Context.default(); // Auto-disposed at the end of this block.
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
       Option.match(this._observableRegistry.get(this._session), {

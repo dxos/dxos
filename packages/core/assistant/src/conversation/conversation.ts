@@ -12,20 +12,16 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
+import { type AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
 import { AiContextBinder, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
+  session: AiSession;
   prompt: string;
   system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
-
-  /**
-   * @deprecated Remove
-   */
-  session?: AiSession;
 }
 
 export type AiConversationOptions = {
@@ -46,8 +42,6 @@ export class AiConversation {
   /**
    * Fired when the execution loop begins.
    * This is called before the first message is sent.
-   *
-   * @deprecated Pass in a session instead.
    */
   public readonly onBegin = new Event<AiSession>();
 
@@ -70,11 +64,7 @@ export class AiConversation {
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run = <Tools extends AiTool.Any>({
-    // TODO(burdon): Decide whether to pass in or to fully encapsulate.
-    session = new AiSession(),
-    ...params
-  }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
+  run = <Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
       this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());

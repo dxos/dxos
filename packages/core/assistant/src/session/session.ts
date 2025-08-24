@@ -161,6 +161,7 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
+        // TODO(burdon): Check new version.
         // Signal to stream consumers that message blocks are complete.
         // Allows for coordination between the block and message queues
         //   to prevent the streaming blocks from being rendered twice when the message is produced.
