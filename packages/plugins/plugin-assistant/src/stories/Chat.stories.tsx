@@ -156,7 +156,8 @@ export const WithDocument = {
           name: 'Document',
           content: trim`
             # Hello, world!
-            This is a test.
+            This is a test document.
+            It contains markdown content.            
           `,
         }),
       );
