@@ -64,9 +64,7 @@ export class AiConversation {
       // Context.
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
-      // TODO(burdon): These don't need to be loaded; just need id and typename from context.
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
-
       log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
@@ -76,7 +74,10 @@ export class AiConversation {
       // Process request.
       const start = Date.now();
       const messages = yield* session.run({ ...params, history, objects, blueprints });
-      log.info('result', { messages: messages, duration: Date.now() - start });
+      log.info('result', {
+        messages: messages,
+        duration: Date.now() - start,
+      });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));

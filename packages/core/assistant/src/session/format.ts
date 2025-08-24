@@ -73,7 +73,7 @@ export const formatSystemPrompt = ({
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
 export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
-    const prelude: ContentBlock.Any[] = [];
+    const blocks: ContentBlock.Any[] = [];
 
     // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
     const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
@@ -94,18 +94,18 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
           continue;
         }
 
-        prelude.push({ _tag: 'anchor', objectId: id, version });
+        blocks.push({ _tag: 'anchor', objectId: id, version });
       }
 
       if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
+        blocks.push(createArtifactUpdateBlock(artifactDiff));
       }
     }
 
     return Obj.make(DataType.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
+      blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
   });
 
