@@ -14,7 +14,7 @@ export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
 
   /**
-   *
+   * Invoke function.
    */
   // TODO(dmaretskyi): Invocation context: queue, space, etc...
   async invoke<F extends FunctionDefinition<any, any>>(
