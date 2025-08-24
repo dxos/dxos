@@ -106,13 +106,11 @@ export class AiSession {
     blueprints = [],
     toolIds = [],
     toolkit,
+    observer = GenerationObserver.noop(),
   }: AiSessionRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
-      // TODO(burdon): `observer` is prop passed in AiSessionRunParams.
-      const observer = GenerationObserver.noop();
-
-      // NULL: NO toolkit is passed from AiChatProcessor!
       // Create toolkit.
+      // TODO(burdon): toolkit is undefined.
       const toolkitHandlers: AiToolkit.ToHandler<Tools> = yield* createToolkit({ toolkit, toolIds, blueprints });
       console.log(toolkitHandlers, toolkit);
 

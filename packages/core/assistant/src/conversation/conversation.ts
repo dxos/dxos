@@ -76,35 +76,24 @@ export class AiConversation {
     ...params
   }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
+      this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());
+
+      // Context.
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
-
       // TODO(burdon): These don't need to be loaded; just need id and typename from context.
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
 
       log.info('run', {
-        prompt: params.prompt,
-        system: params.system,
-        toolkit: params.toolkit,
         history: history.length,
-        objects: objects.length,
         blueprints: blueprints.length,
+        objects: objects.length,
       });
 
+      // Process request.
       const start = Date.now();
-      this.onBegin.emit(session);
-
-      const messages = yield* session.run({
-        prompt: params.prompt,
-        system: params.system,
-        toolkit: params.toolkit,
-        history,
-        objects,
-        blueprints,
-        observer: params.observer,
-      });
-
+      const messages = yield* session.run({ ...params, history, objects, blueprints });
       log.info('result', { messages: messages, duration: Date.now() - start });
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
