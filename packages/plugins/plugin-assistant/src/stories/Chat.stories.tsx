@@ -164,7 +164,7 @@ export const WithDocument = {
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
   },
 } satisfies Story;
 
@@ -297,7 +297,7 @@ export const WithResearch = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [LoggingContainer, GraphContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 } satisfies Story;
@@ -311,6 +311,6 @@ export const WithSearch = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
   },
 } satisfies Story;

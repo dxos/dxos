@@ -7,8 +7,9 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-const functions: FunctionDefinition[] = [];
-const tools = ['load-document'];
+import { create, open } from '../functions';
+
+const functions: FunctionDefinition[] = [create, open];
 
 // TODO(burdon): Diff message format (xml).
 
@@ -20,7 +21,7 @@ export default () => {
       Blueprint.make({
         key: 'dxos.org/blueprint/markdown',
         name: 'Markdown',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
+        tools: Blueprint.toolDefinitions({ functions }),
         instructions: Template.make({
           source: trim`
             You can create and update markdown documents.

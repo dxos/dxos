@@ -1,0 +1,26 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Effect, Schema } from 'effect';
+
+import { ArtifactId } from '@dxos/assistant';
+import { DatabaseService, defineFunction } from '@dxos/functions';
+
+import { Markdown } from '../types';
+
+export default defineFunction({
+  name: 'dxos.org/function/markdown/open',
+  description: 'Opens and reads the contents of a new markdown document.',
+  inputSchema: Schema.Struct({
+    id: ArtifactId.annotations({
+      description: 'The ID of the markdown document.',
+    }),
+  }),
+  outputSchema: Schema.String,
+  handler: Effect.fn(function* ({ data: { id } }) {
+    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
+    const content = yield* Effect.promise(() => object.content.load());
+    return content.content;
+  }),
+});
