@@ -11,12 +11,13 @@ import { Chunk, Effect, Layer, Stream } from 'effect';
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
-import { parseResponse } from './AiParser';
-import { preprocessAiInput } from './AiPreprocessor';
-import { TestingToolkit, tapHttpErrors, testingLayer } from './testing';
-import { callTools, getToolCalls } from './tools';
+import { parseResponse } from '../AiParser';
+import { preprocessAiInput } from '../AiPreprocessor';
+import { tapHttpErrors } from '../testing';
+
+import { processMessages } from './effect-ai-tools.test';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
 
@@ -64,57 +65,23 @@ describe('ollama', () => {
     'tools',
     Effect.fn(
       function* ({ expect: _ }) {
-        const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
-        const history: DataType.Message[] = [];
-        history.push(
-          Obj.make(DataType.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'user' },
-            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
-          }),
-        );
-
-        do {
-          const prompt = yield* preprocessAiInput(history);
-          const blocks = yield* AiLanguageModel.streamText({
-            prompt,
-            toolkit,
-            system: 'You are a helpful assistant.',
-            disableToolCallResolution: true,
-          }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
-          const message = Obj.make(DataType.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks,
-          });
-          log.info('message', { message });
-          history.push(message);
-
-          const toolCalls = getToolCalls(message);
-          if (toolCalls.length === 0) {
-            break;
-          }
-
-          const toolResults: ContentBlock.ToolResult[] = yield* callTools(toolkit, toolCalls);
-          history.push(
+        yield* processMessages({
+          messages: [
             Obj.make(DataType.Message, {
               created: new Date().toISOString(),
               sender: { role: 'user' },
-              blocks: toolResults,
+              blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
             }),
-          );
-        } while (true);
+          ],
+        });
       },
       Effect.provide(
-        Layer.mergeAll(
-          testingLayer,
-          Layer.provide(
-            OpenAiLanguageModel.model('qwen2.5:14b' as any),
-            OpenAiClient.layer({
-              apiUrl: 'http://localhost:11434/v1/',
-              transformClient: tapHttpErrors,
-            }).pipe(Layer.provide(FetchHttpClient.layer)),
-          ),
+        Layer.provide(
+          OpenAiLanguageModel.model('qwen2.5:14b' as any),
+          OpenAiClient.layer({
+            apiUrl: OLLAMA_ENDPOINT,
+            transformClient: tapHttpErrors,
+          }).pipe(Layer.provide(FetchHttpClient.layer)),
         ),
       ),
       TestHelpers.taggedTest('llm'),

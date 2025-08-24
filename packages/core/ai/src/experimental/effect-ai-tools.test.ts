@@ -84,10 +84,8 @@ describe('effect AI tool calls', () => {
         expect(messages.length).toBeGreaterThan(1);
       },
       Effect.provide(
-        Layer.mergeAll(
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-            Layer.provideMerge(AiServiceTestingPreset('direct')),
-          ),
+        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+          Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),
       ),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
@@ -98,7 +96,7 @@ describe('effect AI tool calls', () => {
 /**
  * Tool processing loop.
  */
-const processMessages = Effect.fn(function* ({
+export const processMessages = Effect.fn(function* ({
   system = 'You are a helpful assistant.',
   messages = [],
 }: {
