@@ -5,7 +5,6 @@
 import { type AiTool, type AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
@@ -39,12 +38,6 @@ export class AiConversation {
    */
   public readonly _context: AiContextBinder;
 
-  /**
-   * Fired when the execution loop begins.
-   * This is called before the first message is sent.
-   */
-  public readonly onBegin = new Event<AiSession>();
-
   constructor(options: AiConversationOptions) {
     this._queue = options.queue;
     this._context = new AiContextBinder(this._queue);
@@ -66,7 +59,6 @@ export class AiConversation {
    */
   run = <Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
-      this.onBegin.emit(session);
       const history = yield* Effect.promise(() => this.getHistory());
 
       // Context.
