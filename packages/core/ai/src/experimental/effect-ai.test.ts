@@ -14,13 +14,12 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import { hasToolCall } from './testing';
+
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
 // https://discord.com/channels/795981131316985866/1338871274398679130
 
-// TODO(burdon): Implement MCP server for ECHO on CF.
-
-// Providers.
 const OpenAiLayer = OpenAiClient.layerConfig({
   apiKey: Config.redacted('OPENAI_API_KEY'),
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
@@ -179,7 +178,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
         let prompt: AiInput.Raw = 'What is six times seven?';
         do {
-          // disableToolCallResolution
           const stream = chat.streamText({ toolkit, prompt });
           prompt = AiInput.empty;
 
@@ -189,6 +187,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
               log.info('item', { item, time: new Date().toISOString() });
             }),
           );
+
           log.break();
         } while (yield* hasToolCall(chat));
 
@@ -223,7 +222,6 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
         `;
 
         do {
-          // disableToolCallResolution
           const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = AiInput.empty;
 
@@ -240,14 +238,5 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
     { timeout: 120_000 },
-  );
-});
-
-// What's the right stopping condition?
-const hasToolCall = Effect.fn(function* (chat: AiChat.AiChat.Service) {
-  const history = yield* chat.history;
-  return (
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallResultPart'
   );
 });

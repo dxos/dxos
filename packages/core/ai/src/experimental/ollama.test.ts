@@ -17,7 +17,7 @@ import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
 import { tapHttpErrors } from '../testing';
 
-import { processMessages } from './effect-ai-tools.test';
+import { processMessages } from './testing';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
 

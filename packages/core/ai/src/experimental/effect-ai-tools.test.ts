@@ -2,21 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Effect, Layer, Stream } from 'effect';
+import { Effect, Layer } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
 import * as AiService from '../AiService';
-import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing';
-import { callTools, getToolCalls } from '../tools';
+import { AiServiceTestingPreset } from '../testing';
+
+import { processMessages } from './testing';
 
 describe('effect AI tool calls', () => {
   it.effect(
@@ -91,53 +88,4 @@ describe('effect AI tool calls', () => {
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );
-});
-
-/**
- * Tool processing loop.
- */
-export const processMessages = Effect.fn(function* ({
-  system = 'You are a helpful assistant.',
-  messages = [],
-}: {
-  system?: string;
-  messages?: DataType.Message[];
-}) {
-  const toolkit = yield* TestingToolkit.pipe(Effect.provide(testingLayer));
-  const history: DataType.Message[] = [...messages];
-
-  do {
-    const prompt = yield* preprocessAiInput(history);
-    const blocks = yield* AiLanguageModel.streamText({
-      disableToolCallResolution: true,
-      toolkit,
-      system,
-      prompt,
-    }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
-
-    const message = Obj.make(DataType.Message, {
-      created: new Date().toISOString(),
-      sender: { role: 'assistant' },
-      blocks,
-    });
-    history.push(message);
-    log.info('message', { message });
-
-    const toolCalls = getToolCalls(message);
-    if (toolCalls.length === 0) {
-      break;
-    }
-
-    log.info('toolCalls', { toolCalls });
-    const toolResults = yield* callTools(toolkit, toolCalls);
-    history.push(
-      Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: toolResults,
-      }),
-    );
-  } while (true);
-
-  return history;
 });
