@@ -8,10 +8,11 @@ import { Effect } from 'effect';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
+// TODO(burdon): Not called?
 export const callTools: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.ToHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, never> = Effect.fn('callTools')(
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTools')(
   function* (toolkit, toolCalls) {
     log.info('callTools', { count: toolCalls.length });
     return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
