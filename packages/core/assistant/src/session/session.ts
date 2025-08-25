@@ -260,4 +260,5 @@ const createToolkit = <Tools extends AiTool.Any>({
     ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
   });
 
-const createSnippet = (text: string, len = 32) => [text.slice(0, len), '...', text.slice(-len)].join('');
+const createSnippet = (text: string, len = 32) =>
+  text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');

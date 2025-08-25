@@ -132,4 +132,5 @@ class Toolkit extends AiToolkit.make(
 export default (context: PluginContext) => [
   contributes(Capabilities.Toolkit, Toolkit),
   contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  se,
 ];

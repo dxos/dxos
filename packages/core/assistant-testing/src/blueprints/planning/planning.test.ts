@@ -15,6 +15,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
@@ -26,7 +27,6 @@ import { readTasks, updateTasks } from '../../functions';
 import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
-import { TestHelpers } from '@dxos/effect';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   it.effect(
