@@ -42,6 +42,11 @@ export type AiChatProcessorOptions = {
   extensions?: ToolContextExtensions;
 } & Pick<AiConversationRunParams<any>, 'system'>;
 
+export type AiRequest = {
+  message: string;
+  options?: AiRequestOptions;
+};
+
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
 };
@@ -53,9 +58,7 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
  * Supports cancellation of in-progress requests.
  */
 export class AiChatProcessor {
-  /**
-   * Last error.
-   */
+  /** Last error. */
   // TODO(wittjosiah): Error should come from the message stream.
   public readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
@@ -65,7 +68,11 @@ export class AiChatProcessor {
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
 
+  /** Current request fiber. */
   private _currentRequest?: Fiber.Fiber<void, any> = undefined;
+
+  /** Last request for retries. */
+  private _lastRequest?: AiRequest;
 
   /**
    * Current streaming message (from the AI service).
@@ -167,15 +174,26 @@ export class AiChatProcessor {
   }
 
   /**
+   * Retry last request.
+   */
+  async retry(): Promise<void> {
+    if (this._lastRequest) {
+      return this.request(this._lastRequest);
+    }
+  }
+
+  /**
    * Make GPT request.
    */
-  async request(message: string, _options: AiRequestOptions = {}): Promise<void> {
+  async request(request: AiRequest): Promise<void> {
     if (this._currentRequest) {
       throw new Error('Request already in progress');
     }
 
+    // TODO(burdon): Hold on to session for retry?
     const session = new AiSession();
     this._observableRegistry.set(this._session, Option.some(session));
+    this._lastRequest = request;
 
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
     ctx.onDispose(() => {
@@ -194,7 +212,7 @@ export class AiChatProcessor {
       this._currentRequest = this._conversation
         .run({
           session,
-          prompt: message,
+          prompt: request.message,
           system: this._options.system,
         })
         .pipe(
@@ -214,6 +232,8 @@ export class AiChatProcessor {
       if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
         throwCause(exit.cause);
       }
+
+      this._observableRegistry.set(this.error, Option.none());
     } catch (err) {
       log.catch(err);
       this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));

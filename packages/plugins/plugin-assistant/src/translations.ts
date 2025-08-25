@@ -68,11 +68,14 @@ export const translations = [
         'no tools': 'No tools are configured',
         'no results': 'No results',
 
+        'button retry': 'Retry',
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
         'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
+
+        'toolkit label': 'Toolkit',
 
         'calling tool label': 'Calling tool...',
         'calling label': 'Calling',

@@ -40,6 +40,8 @@ import {
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
 
+const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
+
 const DefaultStory = ({
   debug = true,
   components,
@@ -105,13 +107,13 @@ const DefaultStory = ({
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+              <div key={index} className={panelClassNames}>
                 <Component space={space} debug={debug} onEvent={handleEvent} />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+          <div key={index} className={panelClassNames}>
             <Component space={space} debug={debug} onEvent={handleEvent} />
           </div>
         ),
@@ -137,6 +139,21 @@ type Story = StoryObj<typeof storybook>;
 // Stories
 //
 
+const document = trim`
+  # Hello, world!
+
+  This is a test document that contains Markdown content.
+  Markdown is a lightweight markup language for writing formatted text in plain text form. 
+  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+
+  Here is a spelllling mistake.
+
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+
+  Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
 export const Default = {
   decorators: getDecorators({
     config: config.remote,
@@ -154,11 +171,7 @@ export const WithDocument = {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
-          content: trim`
-            # Hello, world!
-            This is a test document.
-            It contains markdown content.            
-          `,
+          content: document,
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });

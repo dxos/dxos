@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useMemo } from 'react';
+import React, { type CSSProperties, forwardRef, useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -11,7 +11,7 @@ import { ScrollContainer, type ScrollController } from '@dxos/react-ui-component
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { ChatMessage, type ChatMessageProps } from './ChatMessage';
+import { ChatError, ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
 
 export type ChatThreadProps = ThemedClassName<
@@ -19,14 +19,19 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     collapse?: boolean;
+    error?: Error;
   } & Pick<ChatMessageProps, 'debug' | 'space' | 'tools' | 'onEvent'>
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages, collapse = true, onEvent, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages, collapse = true, error, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
+
+    useEffect(() => {
+      onEvent?.({ type: 'scroll-to-bottom' });
+    }, [error]);
 
     // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
     const { messages: filteredMessages = [] } = useMemo(() => {
@@ -48,6 +53,8 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
           {filteredMessages.map((message) => (
             <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
+
+          {error && <ChatError error={error} onEvent={onEvent} />}
         </ScrollContainer.Content>
         <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>

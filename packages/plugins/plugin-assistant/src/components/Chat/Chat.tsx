@@ -53,7 +53,7 @@ type ChatContextValue = {
 };
 
 // NOTE: Do not export.
-const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
 // Root
@@ -94,7 +94,6 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
           setDebug((current) => {
             const debug = !current;
             log.info('toggle-debug', { debug });
-            // log.config({ filter: debug ? 'assistant:debug' : 'info' });
             return debug;
           });
           break;
@@ -102,7 +101,14 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
         case 'submit': {
           if (!streaming) {
-            void processor.request(event.text);
+            void processor.request({ message: event.text });
+          }
+          break;
+        }
+
+        case 'retry': {
+          if (!streaming) {
+            void processor.retry();
           }
           break;
         }
@@ -320,8 +326,10 @@ ChatPrompt.displayName = 'Chat.Prompt';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
+
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
@@ -347,6 +355,7 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
+      error={error}
       onEvent={(ev) => event.emit(ev)}
     />
   );

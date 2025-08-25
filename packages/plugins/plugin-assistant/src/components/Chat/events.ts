@@ -20,6 +20,9 @@ export type ChatEvent =
       text: string;
     }
   | {
+      type: 'retry';
+    }
+  | {
       type: 'cancel';
     }
   | {
