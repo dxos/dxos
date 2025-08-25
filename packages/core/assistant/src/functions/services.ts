@@ -3,9 +3,10 @@
 //
 
 import { AiTool, type AiToolkit } from '@effect/ai';
-import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
+import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { todo } from '@dxos/debug';
 import { type FunctionDefinition, LocalFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -107,10 +108,12 @@ const makeToolName = (name: string) => {
 
 // TODO(dmaretskyi): Factor out.
 const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
-  return Match.value(schema.ast).pipe(
-    Match.when(Predicate.isTagged('TypeLiteral'), (ast) => {
-      return Object.fromEntries(ast.propertySignatures.map((prop) => [prop.name, Schema.make(prop.type)]));
-    }),
-    Match.orElseAbsurd,
-  );
+  switch (schema.ast._tag) {
+    case 'TypeLiteral':
+      return Object.fromEntries(schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(prop.type)]));
+    case 'VoidKeyword':
+      return {};
+    default:
+      return todo(`Unsupported schema AST: ${schema.ast._tag}`);
+  }
 };
