@@ -23,6 +23,8 @@ import { type ComponentProps } from './types';
  */
 export const SurfaceContainer = ({ space, debug }: ComponentProps) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
+
+  // TODO(burdon): Currently not reactive.
   const [objects] = useAsyncState<Type.Expando[]>(async () => {
     if (!chats.length) {
       return [];

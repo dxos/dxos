@@ -167,10 +167,11 @@ const addSpellingMistakes = (text: string, n: number): string => {
 
 export const Default = {
   decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
     config: config.remote,
   }),
   args: {
-    components: [ChatContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
