@@ -32,7 +32,7 @@
     }
   },
   "scripts": {
-    "run-tests": "tsx ./src/main.ts"
+    "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
   },
   "dependencies": {
     "@automerge/automerge": "3.1.1",
