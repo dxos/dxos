@@ -33,7 +33,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const handleSyncState = ({ peers = [] }: SpaceSyncState) =>
     Effect.gen(function* () {
       const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-      yield* Console.log('syncing', syncState);
+      yield* Console.log('syncing:', syncState ?? 'no connection to edge');
 
       if (
         syncState &&
@@ -50,4 +50,5 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
   yield* handleSyncState(syncState);
   yield* synced.await;
+  yield* Console.log('Sync complete');
 });
