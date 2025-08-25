@@ -91,7 +91,7 @@ export const Piece = memo(({ classNames, Component, piece, orientation, bounds, 
 
       // Check if piece moved.
       if (!current.location || !isEqualLocation(current.location, piece.location)) {
-        ref.current.style.transition = 'top 400ms ease-out, left 400ms ease-out';
+        ref.current.style.transition = 'top 250ms ease-out, left 250ms ease-out';
         ref.current.style.top = bounds.top + 'px';
         ref.current.style.left = bounds.left + 'px';
         setCurrent({ location: piece.location, bounds });

@@ -57,7 +57,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
         <NativeChatDialog.Content>
           <Chat.Thread />
         </NativeChatDialog.Content>
-        <NativeChatDialog.Footer>
+        <NativeChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
         </NativeChatDialog.Footer>
       </NativeChatDialog.Root>

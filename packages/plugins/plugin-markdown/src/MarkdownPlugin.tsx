@@ -14,6 +14,7 @@ import { DataType } from '@dxos/schema';
 import {
   AnchorSort,
   AppGraphSerializer,
+  BlueprintDefinition,
   IntentResolver,
   MarkdownSettings,
   MarkdownState,
@@ -111,5 +112,10 @@ export const MarkdownPlugin = () =>
       // TODO(wittjosiah): More relevant event?
       activatesOn: Events.AppGraphReady,
       activate: AnchorSort,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

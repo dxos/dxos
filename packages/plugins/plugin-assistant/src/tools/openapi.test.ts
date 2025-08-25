@@ -75,9 +75,9 @@ describe.skip('openapi', () => {
       // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
       const processor = new AiChatProcessor(null as any, null as any);
-      const reply = await processor.request(
-        `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
-      );
+      const reply = await processor.request({
+        message: `What is the cheapest flight from New York to Paris? going on ${new Date().toISOString()} and returning after a week. 1 adult traveler`,
+      });
 
       log.info('reply', { reply });
     });
@@ -88,7 +88,9 @@ describe.skip('openapi', () => {
       // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
       const processor = new AiChatProcessor(null as any, null as any);
-      const reply = await processor.request('Find me the William Wale in Brooklyn New York');
+      const reply = await processor.request({
+        message: 'Find me the William Wale in Brooklyn New York',
+      });
 
       log.info('reply', { reply });
     });
@@ -101,9 +103,9 @@ describe.skip('openapi', () => {
       // const aiClient = new Edge AiServiceClient({ endpoint: AI_SERVICE_ENDPOINT.LOCAL });
       // TODO(dmaretskyi): FIX ME.
       const processor = new AiChatProcessor(null as any, null as any);
-      const reply = await processor.request(
-        `Today's date is ${new Date().toISOString().split('T')[0]}. Give me weather forecast for Warsaw for next 5 days.`,
-      );
+      const reply = await processor.request({
+        message: `Today's date is ${new Date().toISOString().split('T')[0]}. Give me weather forecast for Warsaw for next 5 days.`,
+      });
 
       log.info('reply', { reply });
     });

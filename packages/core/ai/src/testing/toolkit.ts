@@ -6,9 +6,10 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Console, Effect, Schema } from 'effect';
 
 import { log } from '@dxos/log';
+import { trim } from '@dxos/util';
 
 // Tool definitions.
-export class CalculatorToolkit extends AiToolkit.make(
+export class TestingToolkit extends AiToolkit.make(
   AiTool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
@@ -21,22 +22,50 @@ export class CalculatorToolkit extends AiToolkit.make(
     }),
     failure: Schema.Never,
   }),
+
+  AiTool.make('Markdown', {
+    description: 'Load markdown document',
+    parameters: {
+      name: Schema.String.annotations({
+        description: 'The document name.',
+      }),
+    },
+    success: Schema.Struct({
+      result: Schema.String,
+    }),
+    failure: Schema.Never,
+  }),
 ) {}
 
 // Tool handlers.
-export const calculatorLayer = CalculatorToolkit.toLayer({
+export const testingLayer = TestingToolkit.toLayer({
   Calculator: Effect.fn(function* ({ input }) {
     const result = (() => {
       // Restrict to basic arithmetic operations for safety.
       const sanitizedInput = input.replace(/[^0-9+\-*/().\s]/g, '');
       log.info('calculate', { sanitizedInput });
 
-      // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
-      return Function(`"use strict"; return (${sanitizedInput})`)();
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      return new Function(`"use strict"; return (${sanitizedInput})`)();
     })();
 
     // TODO(burdon): How to return an error.
     yield* Console.log(`Executing calculation: ${input} = ${result}`);
     return { result };
   }),
+
+  Markdown: Effect.fn(function* ({ name }) {
+    yield* Console.log(`Reading markdown: ${name}`);
+    return { result: documents[name] };
+  }),
 });
+
+const documents: Record<string, string> = {
+  'test.md': trim`
+    # Test
+
+    This is a test document.
+    It has some spelllling mistakes.
+    But it's quite short.
+  `,
+};
