@@ -53,7 +53,6 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 
 export type AutomergeHostParams = {
   db: LevelDB;
-
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
 
@@ -427,13 +426,14 @@ export class AutomergeHost extends Resource {
     if (this._ctx.disposed) {
       return;
     }
-    this._indexMetadataStore.notifyMarkedDirty();
 
+    this._indexMetadataStore.notifyMarkedDirty();
     const documentId = path[0] as DocumentId;
     const document = this._repo.handles[documentId]?.doc();
     if (!document) {
       return;
     }
+
     const heads = getHeads(document);
     this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
