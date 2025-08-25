@@ -39,6 +39,7 @@ export const translations = [
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
       },
+      // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',
@@ -67,11 +68,14 @@ export const translations = [
         'no tools': 'No tools are configured',
         'no results': 'No results',
 
+        'button retry': 'Retry',
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
         'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
+
+        'toolkit label': 'Toolkit',
 
         'calling tool label': 'Calling tool...',
         'calling label': 'Calling',
@@ -83,7 +87,6 @@ export const translations = [
         'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
-        'button scroll down': 'Scroll down',
         'blueprints in context title': 'Blueprints',
         'objects in context title': 'Content',
         'remove object in context label': 'Remove document',

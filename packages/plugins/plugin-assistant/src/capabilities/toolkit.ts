@@ -15,7 +15,8 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-class SchemaToolkit extends AiToolkit.make(
+// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
+class Toolkit extends AiToolkit.make(
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -42,9 +43,9 @@ class SchemaToolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-  AiTool.make('add-record', {
+  AiTool.make('create-object', {
     description: trim`
-      Adds a new record to the current space.
+      Adds a new object or record to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
       Note that only record schemas are supported.
     `,
@@ -57,17 +58,13 @@ class SchemaToolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    SchemaToolkit.toLayer({
+    Toolkit.toLayer({
       'get-schemas': () => {
         const space = getActiveSpace(context);
-        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
+        invariant(space, 'No active space');
+
         return Effect.gen(function* () {
-          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
-            typename: Type.getTypename(form.objectSchema),
-            jsonSchema: Type.toJsonSchema(form.objectSchema),
-            kind: 'item',
-          }));
-          const allowed = context
+          const whitelist = context
             .getCapabilities(ClientCapabilities.SchemaWhiteList)
             .flat()
             .map((schema) => ({
@@ -75,7 +72,15 @@ class SchemaToolkit extends AiToolkit.make(
               jsonSchema: Type.toJsonSchema(schema),
               kind: 'record',
             }));
-          const schemas = [...forms, ...allowed];
+
+          // TODO(burdon): Why ObjectForm (bad name for data capability; UI term)?
+          const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
+            typename: Type.getTypename(form.objectSchema),
+            jsonSchema: Type.toJsonSchema(form.objectSchema),
+            kind: 'item',
+          }));
+
+          const schemas = [...whitelist, ...forms];
           if (space) {
             const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
             schemas.push(
@@ -86,44 +91,45 @@ class SchemaToolkit extends AiToolkit.make(
               })),
             );
           }
+
           return schemas.map((schema) => schema.typename);
-        }).pipe(Effect.provide(service));
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)));
       },
 
       'add-schema': ({ name, typename, jsonSchema }) => {
         return Effect.gen(function* () {
-          const space = getActiveSpace(context);
-          invariant(space, 'No space');
-          const schema = Type.toEffectSchema(jsonSchema).pipe(Type.Obj({ typename, version: '0.1.0' }));
-          console.log('add-schema', { name, typename, jsonSchema, schema });
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const space = getActiveSpace(context);
+          invariant(space, 'No active space');
+
+          const schema = Type.toEffectSchema(jsonSchema).pipe(Type.Obj({ typename, version: '0.1.0' }));
           yield* dispatch(createIntent(SpaceAction.AddSchema, { space, name, typename, schema }));
         }).pipe(Effect.orDie);
       },
 
-      'add-record': ({ typename, data }) => {
+      'create-object': ({ typename, data }) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
-        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
+        invariant(space, 'No active space');
+
         return Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
-
           const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
           if (!schema) {
             throw new Error(`Schema not found for ${typename}`);
           }
 
           const object = Obj.make(schema, data);
-          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space!, hidden: true }));
+          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
           return object;
-        }).pipe(Effect.provide(service), Effect.orDie);
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },
     });
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, SchemaToolkit),
-  contributes(Capabilities.ToolkitHandler, SchemaToolkit.layer(context)),
+  contributes(Capabilities.Toolkit, Toolkit),
+  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
 ];

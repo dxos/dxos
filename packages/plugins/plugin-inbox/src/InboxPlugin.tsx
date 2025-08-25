@@ -9,7 +9,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, InboxState, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, BlueprintDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CalendarType, InboxAction, MailboxType } from './types';
@@ -94,5 +94,10 @@ export const InboxPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);
