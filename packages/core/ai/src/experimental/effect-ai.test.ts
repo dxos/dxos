@@ -208,7 +208,7 @@ describe('AiLanguageModel', () => {
     { timeout: 120_000 },
   );
 
-  it.effect.only(
+  it.effect(
     'with parser',
     Effect.fn(
       function* ({ expect: _ }) {
