@@ -11,6 +11,7 @@ import { analysis, list, load } from '../functions';
 
 const functions: FunctionDefinition[] = [analysis, list, load];
 const tools = [
+  'add-to-context',
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
   'add-schema',

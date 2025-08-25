@@ -6,6 +6,7 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId } from '@dxos/assistant';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -17,6 +18,18 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 class Toolkit extends AiToolkit.make(
+  AiTool.make('add-to-context', {
+    description: trim`
+      Adds the object to the chat context.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the document to read.',
+      }),
+    },
+    success: Schema.Void,
+    failure: Schema.Never,
+  }),
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -59,6 +72,13 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
+      'add-to-context': ({ id }) => {
+        return Effect.gen(function* () {
+          // TODO(burdon): Add to chat context via binder (need current chat queue).
+          console.log('=========', id);
+        });
+      },
+
       'get-schemas': () => {
         const space = getActiveSpace(context);
         invariant(space, 'No active space');

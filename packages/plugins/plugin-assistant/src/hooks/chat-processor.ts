@@ -278,6 +278,7 @@ export class AiChatProcessor {
           });
         }),
       );
+
       return versions;
     },
   };
