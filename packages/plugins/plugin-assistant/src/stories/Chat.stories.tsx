@@ -40,6 +40,8 @@ import {
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
 
+const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
+
 const DefaultStory = ({
   debug = true,
   components,
@@ -64,7 +66,6 @@ const DefaultStory = ({
     }
 
     // TODO(burdon): Active should be ephemeral state of AiProcessor; write on edit/prompt.
-
     // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
     // Add blueprints to context.
     // const binder = new AiContextBinder(await chat.queue.load());
@@ -106,13 +107,13 @@ const DefaultStory = ({
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+              <div key={index} className={panelClassNames}>
                 <Component space={space} debug={debug} onEvent={handleEvent} />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+          <div key={index} className={panelClassNames}>
             <Component space={space} debug={debug} onEvent={handleEvent} />
           </div>
         ),
@@ -138,6 +139,32 @@ type Story = StoryObj<typeof storybook>;
 // Stories
 //
 
+const MARKDOWN_DOCUMENT = trim`
+  # Hello, world!
+
+  This is a test document that contains Markdown content.
+  Markdown is a lightweight markup language for writing formatted text in plain text form. 
+  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+
+  Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
+const addSpellingMistakes = (text: string, n: number): string => {
+  const words = text.split(' ');
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor(Math.random() * words.length);
+    const word = words[idx];
+    const charIdx = Math.floor(Math.random() * word.length);
+    const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1);
+  }
+
+  return words.join(' ');
+};
+
 export const Default = {
   decorators: getDecorators({
     config: config.remote,
@@ -155,17 +182,15 @@ export const WithDocument = {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
-          content: trim`
-            # Hello, world!
-            This is a test.
-          `,
+          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: ['dxos.org/blueprint/assistant'],
   },
 } satisfies Story;
 
@@ -193,7 +218,22 @@ export const WithChess = {
       const object = space.db.add(
         Chess.makeGame({
           name: 'Challenge',
-          pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });
@@ -298,7 +338,7 @@ export const WithResearch = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [LoggingContainer, GraphContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 } satisfies Story;
@@ -312,6 +352,6 @@ export const WithSearch = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
   },
 } satisfies Story;

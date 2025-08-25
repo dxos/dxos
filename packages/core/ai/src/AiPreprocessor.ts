@@ -19,6 +19,7 @@ import { AiInputPreprocessingError } from './errors';
  * 1. Filtering out messages that are not from the user or assistant.
  * 2. Converting each message into an AIInput.
  * 3. Removing any invalid AIInput.
+ *
  * The function returns a list of valid AIInput objects.
  */
 export const preprocessAiInput: (
@@ -45,7 +46,7 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                result: block.error ?? JSON.parse(block.result!),
+                                result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
                               }),
                           ),
                         });

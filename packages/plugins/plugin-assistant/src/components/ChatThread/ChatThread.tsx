@@ -2,19 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useMemo } from 'react';
+import React, { type CSSProperties, forwardRef, useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController, useScrollContainerContext } from '@dxos/react-ui-components';
-import { mx } from '@dxos/react-ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { meta } from '../../meta';
-
-import { ChatMessage, type ChatMessageProps } from './ChatMessage';
+import { ChatError, ChatMessage, type ChatMessageProps } from './ChatMessage';
 import { messageReducer } from './reducer';
 
 export type ChatThreadProps = ThemedClassName<
@@ -22,14 +19,19 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     collapse?: boolean;
+    error?: Error;
   } & Pick<ChatMessageProps, 'debug' | 'space' | 'tools' | 'onEvent'>
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages, collapse = true, onEvent, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages, collapse = true, error, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
+
+    useEffect(() => {
+      onEvent?.({ type: 'scroll-to-bottom' });
+    }, [error]);
 
     // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
     const { messages: filteredMessages = [] } = useMemo(() => {
@@ -51,29 +53,11 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
           {filteredMessages.map((message) => (
             <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
           ))}
+
+          {error && <ChatError error={error} onEvent={onEvent} />}
         </ScrollContainer.Content>
-        <ScrollToBottomButton onEvent={onEvent} />
+        <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );
   },
 );
-
-const ScrollToBottomButton = ({ onEvent }: Pick<ChatThreadProps, 'onEvent'>) => {
-  const { t } = useTranslation(meta.id);
-  const { pinned } = useScrollContainerContext(ScrollToBottomButton.displayName);
-
-  return (
-    <div className={mx('absolute bottom-0 right-6 opacity-100 transition-opacity duration-300', pinned && 'opacity-0')}>
-      <IconButton
-        variant='primary'
-        icon='ph--arrow-down--regular'
-        iconOnly
-        size={5}
-        label={t('button scroll down')}
-        onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
-      />
-    </div>
-  );
-};
-
-ScrollToBottomButton.displayName = 'ScrollToBottomButton';

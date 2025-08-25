@@ -9,6 +9,7 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
+  AiSession,
   type ContextBinding,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
@@ -46,34 +47,45 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         const artifact = yield* DatabaseService.add(Markdown.makeDocument({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
-        yield* conversation.run({
-          prompt: trim`
-            Let's design a new feature for our product. We need to add a user profile system with the following requirements:
+        {
+          const session = new AiSession();
+          yield* conversation.run({
+            session,
+            prompt: trim`
+              Let's design a new feature for our product. We need to add a user profile system with the following requirements:
 
-            1. Users should be able to create and edit their profiles
-            2. Profile should include basic info like name, bio, avatar
-            3. Users can control privacy settings for their profile
-            4. Profile should show user's activity history
-            5. Need to consider data storage and security implications
+              1. Users should be able to create and edit their profiles
+              2. Profile should include basic info like name, bio, avatar
+              3. Users can control privacy settings for their profile
+              4. Profile should show user's activity history
+              5. Need to consider data storage and security implications
 
-            What do you think about this approach? Let's capture the key design decisions in our spec.
+              What do you think about this approach? Let's capture the key design decisions in our spec.
 
-            The store spec in ${Obj.getDXN(artifact)}
-          `,
-          observer,
-        });
-        log.info('spec', { doc: artifact });
-        expect(artifact.content).not.toBe(prevContent);
-        prevContent = artifact.content;
+              The store spec in ${Obj.getDXN(artifact)}
+            `,
+            observer,
+          });
 
-        yield* conversation.run({
-          prompt: trim`
-            I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
-          `,
-          observer,
-        });
-        log.info('spec', { doc: artifact });
-        expect(artifact.content).not.toBe(prevContent);
+          log.info('spec', { doc: artifact });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
+
+        {
+          const session = new AiSession();
+          yield* conversation.run({
+            session,
+            prompt: trim`
+              I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
+            `,
+            observer,
+          });
+
+          log.info('spec', { doc: artifact });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
       },
       Effect.provide(
         Layer.mergeAll(
