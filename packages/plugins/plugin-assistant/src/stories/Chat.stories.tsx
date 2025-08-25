@@ -139,7 +139,7 @@ type Story = StoryObj<typeof storybook>;
 // Stories
 //
 
-const document = trim`
+const MARKDOWN_DOCUMENT = trim`
   # Hello, world!
 
   This is a test document that contains Markdown content.
@@ -150,6 +150,8 @@ const document = trim`
 
   Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
   Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+
+  Thiz sentence isn't quite right.
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
 `;
@@ -171,7 +173,7 @@ export const WithDocument = {
       const object = space.db.add(
         Markdown.makeDocument({
           name: 'Document',
-          content: document,
+          content: MARKDOWN_DOCUMENT,
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });
