@@ -156,7 +156,10 @@ const addSpellingMistakes = (text: string, n: number): string => {
   const words = text.split(' ');
   for (let i = 0; i < n; i++) {
     const idx = Math.floor(Math.random() * words.length);
-    words[idx] = words[idx].slice(0, -1);
+    const word = words[idx];
+    const charIdx = Math.floor(Math.random() * word.length);
+    const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1);
   }
 
   return words.join(' ');
