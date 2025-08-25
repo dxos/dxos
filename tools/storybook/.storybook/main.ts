@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join, resolve } from 'path';
+import { join, resolve } from 'node:path';
 
 import { type StorybookConfig } from '@storybook/react-vite';
-import react from '@vitejs/plugin-react-swc';
-import { type InlineConfig, mergeConfig } from 'vite';
-import inspect from 'vite-plugin-inspect';
+import { type InlineConfig } from 'vite';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -84,6 +82,11 @@ export const createConfig = ({
     if (isTrue(process.env.DX_DEBUG)) {
       console.log(JSON.stringify({ config, options }, null, 2));
     }
+
+    // NOTE: Dynamic imports seem to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
+    const { default: react } = await import('@vitejs/plugin-react-swc');
+    const { mergeConfig } = await import('vite');
+    const { default: inspect } = await import('vite-plugin-inspect');
 
     return mergeConfig(config, {
       publicDir: staticDir,
