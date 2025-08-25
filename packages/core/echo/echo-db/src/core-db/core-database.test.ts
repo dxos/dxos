@@ -155,7 +155,6 @@ describe('CoreDatabase', () => {
 
       // trigger loading but don't wait for it to finish
       db.getObjectById(stack.partiallyLoadedDocument.target?.id);
-
       await db.setSpaceRoot(newRootDocHandle.url);
       db.getObjectById(stack.partiallyLoadedDocument.target?.id);
       expect(db.getObjectById(stack.loadedDocument.target?.id)).not.to.be.undefined;

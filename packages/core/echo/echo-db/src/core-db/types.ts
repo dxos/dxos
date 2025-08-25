@@ -24,7 +24,7 @@ export type DecodedAutomergePrimaryValue =
 export type KeyPath = readonly (string | number)[];
 
 export interface IDocHandle<T = any> {
-  doc(): Doc<T> | undefined;
+  doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
   change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
   changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
   addListener(event: 'change', listener: () => void): void;
