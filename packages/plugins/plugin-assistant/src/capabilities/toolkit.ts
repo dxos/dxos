@@ -61,7 +61,8 @@ class Toolkit extends AiToolkit.make(
     Toolkit.toLayer({
       'get-schemas': () => {
         const space = getActiveSpace(context);
-        const service = space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable;
+        invariant(space, 'No active space');
+
         return Effect.gen(function* () {
           const whitelist = context
             .getCapabilities(ClientCapabilities.SchemaWhiteList)
@@ -72,7 +73,7 @@ class Toolkit extends AiToolkit.make(
               kind: 'record',
             }));
 
-          // TODO(burdon): Why form?
+          // TODO(burdon): Why ObjectForm (bad name for data capability; UI term)?
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
             typename: Type.getTypename(form.objectSchema),
             jsonSchema: Type.toJsonSchema(form.objectSchema),
@@ -92,27 +93,26 @@ class Toolkit extends AiToolkit.make(
           }
 
           return schemas.map((schema) => schema.typename);
-        }).pipe(Effect.provide(service));
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)));
       },
 
       'add-schema': ({ name, typename, jsonSchema }) => {
         return Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getActiveSpace(context);
-          invariant(space, 'No space');
+          invariant(space, 'No active space');
 
           const schema = Type.toEffectSchema(jsonSchema).pipe(Type.Obj({ typename, version: '0.1.0' }));
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(createIntent(SpaceAction.AddSchema, { space, name, typename, schema }));
         }).pipe(Effect.orDie);
       },
 
-      'create-object: ({ typename, data }) => {
+      'create-object': ({ typename, data }) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
-        invariant(space, 'No space');
+        invariant(space, 'No active space');
 
         return Effect.gen(function* () {
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-
           const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
@@ -122,7 +122,7 @@ class Toolkit extends AiToolkit.make(
           }
 
           const object = Obj.make(schema, data);
-          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space!, hidden: true }));
+          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
           return object;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },
