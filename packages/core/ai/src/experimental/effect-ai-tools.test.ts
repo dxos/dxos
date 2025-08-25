@@ -40,6 +40,7 @@ describe('effect AI tool calls', () => {
         ),
       ),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 
@@ -86,6 +87,7 @@ describe('effect AI tool calls', () => {
         ),
       ),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });
