@@ -26,9 +26,10 @@ import { readTasks, updateTasks } from '../../functions';
 import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
+import { TestHelpers } from '@dxos/effect';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
-  it.effect.only(
+describe('Planning Blueprint', { timeout: 120_000 }, () => {
+  it.effect(
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
@@ -128,6 +129,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           Layer.provideMerge(TracingService.layerNoop),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });
