@@ -89,7 +89,7 @@ export const createConfig = ({
       publicDir: staticDir,
       resolve: {
         alias: {
-          'tiktoken/lite': '.storybook/stub.mjs',
+          'tiktoken/lite': resolve(__dirname, './stub.mjs'),
           'node:util': '@dxos/node-std/util',
         },
       },
