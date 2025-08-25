@@ -78,6 +78,7 @@ export const applyDiffs = <T>(accessor: DocAccessor<T>, diffs: readonly string[]
       const idx = text.indexOf(diff.match);
       if (idx !== -1) {
         // TODO(burdon): Replace smallest substring.
+        // NOTE: This only replaces the first match.
         A.splice(doc, accessor.path as A.Prop[], idx, diff.match.length, diff.replace);
       } else {
         log.warn('diff not found', diff);
