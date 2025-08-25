@@ -28,6 +28,7 @@ import { isNotFalsy } from '@dxos/util';
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
+import { mapAiError } from './error-handling';
 
 export type AiSessionOptions = {};
 
@@ -116,6 +117,18 @@ export type SessionRunParams<Tools extends AiTool.Any> = {
  * Could be personal or shared.
  */
 export class AiSession {
+  static run: <Tools extends AiTool.Any>(
+    params: SessionRunParams<Tools>,
+  ) => Effect.Effect<
+    DataType.Message[],
+    AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
+    | AiLanguageModel.AiLanguageModel
+    | ToolResolverService
+    | ToolExecutionService
+    | TracingService
+    | AiTool.ToHandler<Tools>
+  > = <Tools extends AiTool.Any>(params: SessionRunParams<Tools>) => new AiSession().run(params);
+
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
 
@@ -199,6 +212,12 @@ export class AiSession {
           //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
           disableToolCallResolution: true,
         }).pipe(
+          Stream.catchTag(
+            'AiError',
+            Effect.fnUntraced(function* (err) {
+              return yield* Effect.fail(yield* mapAiError(err));
+            }),
+          ),
           AiParser.parseResponse({
             onBlock: (block) =>
               Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], { discard: true }),

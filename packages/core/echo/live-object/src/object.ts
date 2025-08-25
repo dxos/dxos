@@ -12,6 +12,7 @@ import {
   ObjectId,
   type ObjectMeta,
   ObjectMetaSchema,
+  attachTypedJsonSerializer,
   defineHiddenProperty,
   getTypeAnnotation,
 } from '@dxos/echo-schema';
@@ -73,6 +74,7 @@ const createReactiveObject = <T extends BaseObject>(
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
+    attachTypedJsonSerializer(obj);
     return createProxy<T>(obj, TypedReactiveHandler.instance);
   } else {
     if (options?.expando) {
