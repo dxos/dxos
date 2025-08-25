@@ -21,6 +21,7 @@ export const getSpace = (rawSpaceId: string) =>
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
+// TODO(dmaretsky): there a race condition with edge connection not showing up
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
