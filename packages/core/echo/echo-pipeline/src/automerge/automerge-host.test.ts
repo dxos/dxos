@@ -30,7 +30,6 @@ describe('AutomergeHost', () => {
 
   test('changes are preserved in storage', async () => {
     const level = await createLevel();
-
     const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -50,7 +49,6 @@ describe('AutomergeHost', () => {
 
   test('query single document heads', async () => {
     const level = await createLevel();
-
     const host = await setupAutomergeHost({ level });
     const handle = host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.doc()!);
@@ -67,7 +65,6 @@ describe('AutomergeHost', () => {
 
   test('query multiple document heads', async () => {
     const level = await createLevel();
-
     const host = await setupAutomergeHost({ level });
     const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
