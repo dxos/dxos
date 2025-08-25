@@ -14,7 +14,7 @@ const tools = [
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
   'add-schema',
-  'add-record',
+  'create-object',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
   // TODO(burdon): Anthropic only.
