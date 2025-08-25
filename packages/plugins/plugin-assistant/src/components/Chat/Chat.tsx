@@ -53,7 +53,7 @@ type ChatContextValue = {
 };
 
 // NOTE: Do not export.
-const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
 // Root
@@ -85,23 +85,6 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     });
   }, [queue?.objects, pending]);
 
-  // TODO(burdon): Replace with tool to select artifact.
-  // const { dispatchPromise: dispatch } = useIntentDispatcher();
-  // useEffect(() => {
-  //   if (!processor?.streaming.value && queue?.objects) {
-  //     const message = queue.objects[queue.objects.length - 1];
-  //     if (dispatch && space && chat && message) {
-  //       void dispatch(
-  //         createIntent(CollaborationActions.InsertContent, {
-  //           target: artifact,
-  //           object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
-  //           label: 'View proposal',
-  //         }),
-  //       );
-  //     }
-  //   }
-  // }, [queue, processor?.streaming.value]);
-
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
@@ -111,7 +94,6 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
           setDebug((current) => {
             const debug = !current;
             log.info('toggle-debug', { debug });
-            // log.config({ filter: debug ? 'assistant:debug' : 'info' });
             return debug;
           });
           break;
@@ -119,7 +101,14 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
         case 'submit': {
           if (!streaming) {
-            void processor.request(event.text);
+            void processor.request({ message: event.text });
+          }
+          break;
+        }
+
+        case 'retry': {
+          if (!streaming) {
+            void processor.retry();
           }
           break;
         }
@@ -277,8 +266,7 @@ const ChatPrompt = ({
       className={mx(
         'is-full flex flex-col density-fine',
         outline && [
-          'p-2 bg-groupSurface border border-transparent rounded',
-          '[&:has(div:focus)]:border-transparent [&:has(div:focus)]:outline outline-neutralFocusIndicator',
+          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         ],
         classNames,
       )}
@@ -338,8 +326,10 @@ ChatPrompt.displayName = 'Chat.Prompt';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
+
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
@@ -365,6 +355,7 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
+      error={error}
       onEvent={(ev) => event.emit(ev)}
     />
   );
