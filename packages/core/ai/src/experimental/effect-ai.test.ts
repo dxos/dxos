@@ -91,7 +91,7 @@ const toolkitLayer = TestToolkit.toLayer({
  * - Simple API for plugins/artifacts.
  * - Ecosystem and design partner.
  */
-describe.runIf(!process.env.CI)('AiLanguageModel', () => {
+describe('AiLanguageModel', () => {
   // Sanity test.
   it.effect(
     'Debug: Verify API configuration',
@@ -107,6 +107,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.retry({ times: 1 }),
       Effect.provide(OpenAiLayer),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 
@@ -132,6 +133,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       },
       Effect.provide([toolkitLayer, OpenAiLayer]),
       TestHelpers.runIf(process.env.OPENAI_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 
@@ -154,19 +156,23 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
 
   it.effect(
     'should process an agentic loop using Claude',
-    Effect.fn(function* ({ expect }) {
-      // @effect-diagnostics-next-line multipleEffectProvide:off
-      const createProgram = (prompt: string) =>
-        createChat(prompt).pipe(
-          Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
-          Effect.provide(AnthropicLayer),
-          Effect.provide(toolkitLayer),
-        );
+    Effect.fn(
+      function* ({ expect }) {
+        // @effect-diagnostics-next-line multipleEffectProvide:off
+        const createProgram = (prompt: string) =>
+          createChat(prompt).pipe(
+            Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+            Effect.provide(AnthropicLayer),
+            Effect.provide(toolkitLayer),
+          );
 
-      const result = yield* createProgram('What is six times seven?');
-      log.info('result', { result });
-      expect(result).toContain('42');
-    }, TestHelpers.runIf(process.env.ANTHROPIC_API_KEY)),
+        const result = yield* createProgram('What is six times seven?');
+        log.info('result', { result });
+        expect(result).toContain('42');
+      },
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
   );
 
   it.effect(
@@ -197,6 +203,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
     { timeout: 120_000 },
   );
@@ -236,6 +243,7 @@ describe.runIf(!process.env.CI)('AiLanguageModel', () => {
       Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
       Effect.provide(AnthropicLayer),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
     ),
     { timeout: 120_000 },
   );
