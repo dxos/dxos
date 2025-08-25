@@ -15,6 +15,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 class Toolkit extends AiToolkit.make(
   AiTool.make('get-schemas', {
     description: trim`
@@ -71,6 +72,7 @@ class Toolkit extends AiToolkit.make(
               kind: 'record',
             }));
 
+          // TODO(burdon): Why form?
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
             typename: Type.getTypename(form.objectSchema),
             jsonSchema: Type.toJsonSchema(form.objectSchema),
@@ -114,7 +116,6 @@ class Toolkit extends AiToolkit.make(
           const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
-
           const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
           if (!schema) {
             throw new Error(`Schema not found for ${typename}`);
