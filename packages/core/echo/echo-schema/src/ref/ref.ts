@@ -366,8 +366,7 @@ export class RefImpl<T> implements Ref<T> {
    * Clones the reference object.
    */
   noInline(): RefImpl<T> {
-    this.#target = undefined;
-    const ref = new RefImpl<T>(this.#dxn, this.#target);
+    const ref = new RefImpl<T>(this.#dxn, undefined);
     ref.#resolver = this.#resolver;
     return ref;
   }
