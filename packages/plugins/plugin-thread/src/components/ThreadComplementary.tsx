@@ -132,6 +132,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
           proposal,
         }),
       );
+      await dispatch(createIntent(ThreadAction.ToggleResolved, { thread }));
     },
     [dispatch, subject],
   );

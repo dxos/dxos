@@ -80,7 +80,7 @@ export namespace ThreadAction {
   export class AddProposal extends Schema.TaggedClass<AddProposal>()(`${THREAD_ACTION}/add-proposal`, {
     input: Schema.Struct({
       text: Schema.String,
-      anchor: Schema.optional(Schema.String),
+      anchor: Schema.String,
       sender: DataType.Actor,
       subject: EchoObjectSchema,
     }),

@@ -41,6 +41,7 @@
     "run:chat": "tsx ./bin/chat.ts"
   },
   "dependencies": {
+    "@automerge/automerge": "3.1.1",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
