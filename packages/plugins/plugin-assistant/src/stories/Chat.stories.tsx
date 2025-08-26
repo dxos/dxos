@@ -19,6 +19,8 @@ import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -353,5 +355,103 @@ export const WithSearch = {
   }),
   args: {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
+  },
+} satisfies Story;
+
+export const WithTranscription = {
+  decorators: getDecorators({
+    plugins: [TranscriptionPlugin()],
+    config: config.remote,
+    types: [Transcript.Transcript],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const transcription: DataType.Message[] = [
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'Hey everyone, glad we could all connect today. I was thinking we could discuss where AI might be heading in the next decade.',
+            },
+          ],
+          sender: { identityDid: 'Mykola' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'Yeah, that sounds great. Personally, I think AI will get deeply integrated into daily life—like assistants that don’t just answer questions but anticipate our needs.',
+            },
+          ],
+          sender: { identityDid: 'Rich' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'That’s true, but there are risks too. If AI predicts too much, we might lose the sense of making decisions ourselves.',
+            },
+          ],
+          sender: { identityDid: 'Dima' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'Good point. I think the balance will come from better human-AI collaboration rather than pure automation.',
+            },
+          ],
+          sender: { identityDid: 'Mykola' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'Right, like AI as a co-pilot instead of a replacement. I see that happening a lot in creative fields already.',
+            },
+          ],
+          sender: { identityDid: 'Rich' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'Exactly. And in science, too—AI models can suggest hypotheses humans wouldn’t think of, speeding up discoveries.',
+            },
+          ],
+          sender: { identityDid: 'Dima' },
+        }),
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          blocks: [
+            {
+              _tag: 'transcript',
+              started: new Date().toISOString(),
+              text: 'So it looks like the future is less about AI replacing us, and more about AI amplifying what humans can do.',
+            },
+          ],
+          sender: { identityDid: 'Mykola' },
+        }),
+      ];
+
+      await queue.append(transcription);
+      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
+      await binder.bind({ objects: [Ref.make(transcript)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/transcription'],
   },
 } satisfies Story;

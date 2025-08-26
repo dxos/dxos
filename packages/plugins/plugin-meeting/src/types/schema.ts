@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { ThreadType } from '@dxos/plugin-thread/types';
-import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out. Brand.
@@ -34,7 +34,7 @@ export const MeetingSchema = Schema.Struct({
   /**
    * Transcript of the meeting.
    */
-  transcript: Type.Ref(TranscriptType),
+  transcript: Type.Ref(Transcript.Transcript),
 
   /**
    * Markdown notes for the meeting.

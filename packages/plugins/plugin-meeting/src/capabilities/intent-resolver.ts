@@ -17,6 +17,7 @@ import { DataType } from '@dxos/schema';
 import { MeetingAction, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
+import { getMeetingContent } from '../summarize';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -77,20 +78,18 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {
-        throw new Error('Not implemented');
+        const client = context.getCapability(ClientCapabilities.Client);
+        const endpoint = client.config.values.runtime?.services?.ai?.server;
+        invariant(endpoint, 'AI service not configured.');
+        // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
+        const resolve = (typename: string) =>
+          context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
-        // const client = context.getCapability(ClientCapabilities.Client);
-        // const endpoint = client.config.values.runtime?.services?.ai?.server;
-        // invariant(endpoint, 'AI service not configured.');
-        // // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
-        // const resolve = (typename: string) =>
-        //   context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
-        // const text = await meeting.summary.load();
-        // text.content = 'Generating summary...';
-        // const content = await getMeetingContent(meeting, resolve);
-        // const summary = await summarizeTranscript(ai, content);
-        // text.content = summary;
+        const text = await meeting.summary.load();
+        text.content = 'Generating summary...';
+        const content = await getMeetingContent(meeting, resolve);
+        const summary = await summarizeTranscript(ai, content);
+        text.content = summary;
       },
     }),
   ]);

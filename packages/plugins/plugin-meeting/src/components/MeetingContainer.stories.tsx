@@ -15,7 +15,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
-import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -57,7 +57,9 @@ const meta: Meta<MeetingContainerProps> = {
               Obj.make(MeetingType, {
                 created: new Date().toISOString(),
                 participants: [],
-                transcript: Ref.make(Obj.make(TranscriptType, { queue: Ref.fromDXN(space.queues.create().dxn) })),
+                transcript: Ref.make(
+                  Obj.make(Transcript.Transcript, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+                ),
                 notes: Ref.make(DataType.makeText('Notes')),
                 summary: Ref.make(DataType.makeText()),
                 thread: Ref.make(Obj.make(ThreadType, { messages: [] })),

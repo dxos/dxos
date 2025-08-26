@@ -22,7 +22,7 @@ import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
-import { type TranscriptType } from '../../types';
+import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
 
@@ -52,7 +52,7 @@ export const renderMarkdown =
   };
 
 export type TranscriptProps = ThemedClassName<{
-  transcript?: TranscriptType;
+  transcript?: Transcript.Transcript;
   space?: Space;
   model: SerializationModel<DataType.Message>;
   // TODO(wittjosiah): Move to container.
