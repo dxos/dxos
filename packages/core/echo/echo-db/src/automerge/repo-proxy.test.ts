@@ -117,8 +117,9 @@ describe('RepoProxy', () => {
 
       await clientRepo.flush();
       await host.repo!.flush();
-      await host.close();
       await clientRepo.close();
+      await host.close();
+      await level.close();
     }
 
     {
