@@ -13,7 +13,7 @@ import { type Client, type PublicKey } from '@dxos/client';
 import { type AnyLiveObject } from '@dxos/client/echo';
 import { type Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionType, ScriptType, makeFunctionUrl, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, ScriptType, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -146,7 +146,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
     functionObject.name = this.flags.name ?? functionObject.name;
     functionObject.version = uploadResult.version;
-    setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
+    setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId);
     return functionObject;
   }
 
