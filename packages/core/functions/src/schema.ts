@@ -38,7 +38,8 @@ export const FunctionType = Schema.Struct({
    */
   // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
   // TODO(dmaretskyi): Consider making it part of ECHO meta.
-  key: Schema.String.annotations({
+  // TODO(dmaretskyi): Make required.
+  key: Schema.optional(Schema.String).annotations({
     description: 'Unique registration key for the blueprint',
   }),
 

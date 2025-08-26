@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientService } from '../../../../services';
 import { Common } from '../../../options';
 
-import { loadScript, upload, uploadToSpace } from './util';
+import { loadScript, upload, uploadToSpace } from '../util';
 
 const spaceId = Common.spaceId.pipe(Options.optional);
 

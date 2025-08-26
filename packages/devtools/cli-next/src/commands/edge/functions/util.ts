@@ -24,8 +24,10 @@ import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
-import { ClientService } from '../../../../services';
-import { waitForSync } from '../../../../util';
+import { createEdgeIdentity } from '@dxos/client/edge';
+import { EdgeHttpClient } from '@dxos/edge-client';
+import { ClientService } from '../../../services';
+import { waitForSync } from '../../../util';
 
 const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
 
@@ -198,7 +200,8 @@ const upsertFunctionObject = Effect.fn(function* ({
     });
     space.db.add(functionObject);
   }
-  functionObject.name = name ?? functionObject.name;
+  functionObject.key = uploadResult.meta.key ?? functionObject.key;
+  functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
   functionObject.version = uploadResult.version;
   functionObject.description = uploadResult.meta.description;
   functionObject.inputSchema = uploadResult.meta.inputSchema;
@@ -244,3 +247,54 @@ const upsertComposerScript = Effect.fn(function* ({
     yield* Effect.log('Created composer script', obj.id);
   }
 });
+
+export const createEdgeClient = (client: Client): EdgeHttpClient => {
+  const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+  invariant(edgeUrl, 'Edge is not configured.');
+  const edgeClient = new EdgeHttpClient(edgeUrl);
+  const edgeIdentity = createEdgeIdentity(client);
+  edgeClient.setIdentity(edgeIdentity);
+  return edgeClient;
+};
+
+export const getDeployedFunctions = async (client: Client): Promise<FunctionType[]> => {
+  const edgeClient = createEdgeClient(client);
+
+  const result = await edgeClient.listFunctions();
+  console.log(result.uploadedFunctions);
+  return result.uploadedFunctions.map((record: any) => {
+    // record shape is determined by EDGE API. We defensively parse.
+    const meta = safeJsonParse(record.metadataJSON);
+    const latest = record.latestVersion ?? {};
+    const versionMeta = safeJsonParse(latest.versionMetaJSON);
+
+    const functionId: string = record.id;
+    const name: string = meta?.name || meta?.key || functionId;
+    const version: string = latest?.version ?? '0.0.0';
+
+    const fn = Obj.make(FunctionType, {
+      key: functionId || name,
+      name,
+      version,
+      description: versionMeta?.description ?? meta?.description,
+      inputSchema: versionMeta?.inputSchema,
+      outputSchema: versionMeta?.outputSchema,
+    });
+
+    if (functionId) {
+      setUserFunctionUrlInMetadata(Obj.getMeta(fn), makeFunctionUrl({ functionId }));
+    }
+
+    return fn;
+  });
+};
+
+// Local helper to avoid throwing on bad JSON from server.
+const safeJsonParse = (value: unknown): any => {
+  if (typeof value !== 'string' || value.length === 0) return {};
+  try {
+    return JSON.parse(value);
+  } catch {
+    return {};
+  }
+};
