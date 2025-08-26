@@ -171,7 +171,8 @@ export const attachTypedJsonSerializer = (obj: any) => {
     value: typedJsonSerializer,
     writable: false,
     enumerable: false,
-    configurable: false,
+    // Setting `configurable` to false breaks proxy invariants, should be fixable.
+    configurable: true, 
   });
 };
 

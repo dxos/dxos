@@ -436,7 +436,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.nested.target.field).to.eq(obj1.nested?.target?.field);
+        expect(obj.nested['/']).to.eq(DXN.fromLocalObjectId(obj1.nested!.target!.id).toString());
       }
 
       const obj2 = db.add(obj1);
