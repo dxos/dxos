@@ -22,22 +22,22 @@ export default defineFunction({
       examples: ['e4', 'Bf3'],
     }),
   }),
-  outputSchema: Schema.Boolean.annotations({
-    description: 'False if the move was invalid.',
+  outputSchema: Schema.Struct({
+    pgn: Schema.String.annotations({
+      description: 'The PGN of the game after the move was played.',
+    }),
   }),
   handler: Effect.fn(function* ({ data: { id, move } }) {
     const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game);
-
-    // TODO(burdon): Avoid using try/catch inside Effect generators.
-    //  Use Effect's error handling mechanisms instead (e.g., Effect.try, Effect.tryPromise, Effect.catchAll, Effect.catchTag)
-    try {
-      const chess = new ChessJS();
+    const chess = new ChessJS();
+    if (object.pgn) {
       chess.loadPgn(object.pgn);
-      chess.move(move, { strict: false });
-      object.pgn = chess.pgn();
-      return true;
-    } catch {
-      return false;
+    } else if (object.fen) {
+      chess.load(object.fen);
     }
+
+    chess.move(move, { strict: false });
+    object.pgn = chess.pgn();
+    return { pgn: object.pgn };
   }),
 });

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';

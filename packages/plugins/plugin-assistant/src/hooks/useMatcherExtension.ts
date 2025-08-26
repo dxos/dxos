@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Move def to @dxos/echo.
 import { useMemo } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { type TypeaheadContext, matchCompletion, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 
+// TODO(burdon): Move def to @dxos/echo.
 export const useMatcherExtension = (space: Space) => {
   return useMemo(() => {
     const handleComplete = ({ line }: TypeaheadContext) => {
