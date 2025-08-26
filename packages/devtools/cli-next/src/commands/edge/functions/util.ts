@@ -264,26 +264,18 @@ export const getDeployedFunctions = async (client: Client): Promise<FunctionType
   console.log(result.uploadedFunctions);
   return result.uploadedFunctions.map((record: any) => {
     // record shape is determined by EDGE API. We defensively parse.
-    const meta = safeJsonParse(record.metadataJSON);
     const latest = record.latestVersion ?? {};
     const versionMeta = safeJsonParse(latest.versionMetaJSON);
 
-    const functionId: string = record.id;
-    const name: string = meta?.name || meta?.key || functionId;
-    const version: string = latest?.version ?? '0.0.0';
-
     const fn = Obj.make(FunctionType, {
-      key: functionId || name,
-      name,
-      version,
-      description: versionMeta?.description ?? meta?.description,
+      key: versionMeta?.key,
+      name: versionMeta?.name ?? versionMeta?.key ?? record.id,
+      version: latest?.version ?? '0.0.0',
+      description: versionMeta?.description,
       inputSchema: versionMeta?.inputSchema,
       outputSchema: versionMeta?.outputSchema,
     });
-
-    if (functionId) {
-      setUserFunctionUrlInMetadata(Obj.getMeta(fn), makeFunctionUrl({ functionId }));
-    }
+    setUserFunctionUrlInMetadata(Obj.getMeta(fn), makeFunctionUrl({ functionId: record.id }));
 
     return fn;
   });
