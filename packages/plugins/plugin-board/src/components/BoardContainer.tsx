@@ -55,7 +55,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
         board.items.splice(idx, 1);
       }
       delete board.layout.cells[id];
-      setItems((items) => items.filter((item) => item.id !== id));
     },
     [board],
   );
