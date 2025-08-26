@@ -97,10 +97,12 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const level = createTestLevel();
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
     let url: AutomergeUrl;
     {
+      const level = createTestLevel(tmpPath);
+      await openAndClose(level);
       const { host, dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -120,6 +122,8 @@ describe('RepoProxy', () => {
     }
 
     {
+      const level = createTestLevel(tmpPath);
+      await openAndClose(level);
       const { dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);

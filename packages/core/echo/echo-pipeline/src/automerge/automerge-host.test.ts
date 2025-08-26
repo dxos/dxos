@@ -7,6 +7,7 @@ import type { DocumentId, Heads } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { IndexMetadataStore } from '@dxos/indexing';
+import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -49,26 +50,30 @@ describe('AutomergeHost', () => {
   });
 
   test('query single document heads', async () => {
-    const level = await createLevel();
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
+    const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
     const handle = host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.doc()!);
     await host.flush();
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
+    await host.close();
+    await level.close();
 
     // Simulate a restart.
     {
-      const host = await setupAutomergeHost({ level });
+      const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
       expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     }
   });
 
   test('query multiple document heads', async () => {
-    const level = await createLevel();
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
-    const host = await setupAutomergeHost({ level });
+    const level = await createLevel(tmpPath);
+    const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
     const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
     await host.flush();
@@ -78,10 +83,12 @@ describe('AutomergeHost', () => {
     expectedHeads.splice(1, 0, undefined);
 
     expect(await host.getHeads(ids)).toEqual(expectedHeads);
+    await host.close();
+    await level.close();
 
     // Simulate a restart.
     {
-      const host = await setupAutomergeHost({ level });
+      const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
       expect(await host.getHeads(ids)).toEqual(expectedHeads);
     }
   });
@@ -122,8 +129,8 @@ describe('AutomergeHost', () => {
     await host2.close();
   });
 
-  const createLevel = async () => {
-    const level = createTestLevel();
+  const createLevel = async (tmpPath?: string) => {
+    const level = createTestLevel(tmpPath);
     await openAndClose(level);
     return level;
   };

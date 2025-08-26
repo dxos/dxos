@@ -73,6 +73,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  // for (let i = 0; i < 2000; i++) {
   test('reopen peer - updating indexes after restart', async () => {
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -87,6 +88,7 @@ describe('Integration tests', () => {
     await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
   });
+  // }
 
   test('reload peer', async () => {
     const dataAssertion = createDataAssertion();

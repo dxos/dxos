@@ -198,15 +198,13 @@ describe('Serializer', () => {
       const totalObjects = 123;
       const serializer = new Serializer();
       let data: SerializedSpace;
+      const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
       const spaceKey = PublicKey.random();
 
-      const kv = createTestLevel();
-      await openAndClose(kv);
-
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const root = await peer.host.createSpaceRoot(spaceKey);
 
       {
@@ -218,7 +216,7 @@ describe('Serializer', () => {
         await peer.close();
       }
       {
-        const peer = await builder.createPeer({ kv });
+        const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
         data = await serializer.export(db);
         expect(data.objects.length).to.eq(totalObjects);
