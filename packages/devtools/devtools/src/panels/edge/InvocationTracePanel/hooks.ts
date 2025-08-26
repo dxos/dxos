@@ -11,6 +11,7 @@ import {
   type InvocationTraceEvent,
   ScriptType,
   createInvocationSpans,
+  getUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Filter, type Space, getSpace, useQuery, useQueue } from '@dxos/react-client/echo';
@@ -20,8 +21,7 @@ import { getUuidFromDxn } from './utils';
 /**
  * Maps invocation target identifiers to readable script names.
  */
-export const useScriptNameResolver = ({ space }: { space?: Space }) => {
-  const scripts = useQuery(space, Filter.type(ScriptType));
+export const useFunctionNameResolver = ({ space }: { space?: Space }) => {
   const functions = useQuery(space, Filter.type(FunctionType));
 
   return useCallback(
@@ -31,18 +31,10 @@ export const useScriptNameResolver = ({ space }: { space?: Space }) => {
       }
       const uuidPart = getUuidFromDxn(invocationTargetId);
 
-      const matchingFunction = functions.find((f) => f.name === uuidPart);
-      if (matchingFunction) {
-        const matchingScript = scripts.find((script) => matchingFunction.source?.target?.id === script.id);
-        if (matchingScript) {
-          return matchingScript.name;
-        }
-        return matchingFunction.name;
-      }
-
-      return undefined;
+      const matchingFunction = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart);
+      return matchingFunction?.name;
     },
-    [functions, scripts],
+    [functions],
   );
 };
 
@@ -55,7 +47,11 @@ export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
       return undefined;
     }
 
-    return new Set(functions.filter((func) => func.source?.target?.id === target.id).map((func) => func.name));
+    return new Set(
+      functions
+        .filter((fn) => fn.source?.target?.id === target.id)
+        .map((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn))),
+    );
   }, [functions, target]);
 };
 
