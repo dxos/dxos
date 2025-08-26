@@ -5,7 +5,7 @@
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
-import { LifecycleState, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';
 
