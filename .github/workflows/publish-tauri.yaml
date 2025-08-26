@@ -269,7 +269,7 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
       - name: Build Tauri app for iOS
-        run: moon run composer-app:tauri-ios-build
+        run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
