@@ -14,10 +14,10 @@ import { TranscriptionAction } from '@dxos/plugin-transcription/types';
 import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
+import { getMeetingContent } from '../summarize';
 import { MeetingAction, MeetingType } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
-import { getMeetingContent } from '../summarize';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
