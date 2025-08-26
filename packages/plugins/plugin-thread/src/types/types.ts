@@ -77,6 +77,16 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
+  export class AddProposal extends Schema.TaggedClass<AddProposal>()(`${THREAD_ACTION}/add-proposal`, {
+    input: Schema.Struct({
+      text: Schema.String,
+      anchor: Schema.optional(Schema.String),
+      sender: DataType.Actor,
+      subject: EchoObjectSchema,
+    }),
+    output: Schema.Void,
+  }) {}
+
   export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
     input: Schema.Struct({
       subject: EchoObjectSchema,

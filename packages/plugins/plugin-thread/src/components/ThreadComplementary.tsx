@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   Capabilities,
+  CollaborationActions,
   LayoutAction,
   createIntent,
   useCapabilities,
@@ -13,7 +14,7 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
@@ -114,6 +115,27 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     [dispatch, subject],
   );
 
+  const handleAcceptProposal = useCallback(
+    async (anchor: AnchoredTo, messageId: string) => {
+      const thread = Relation.getSource(anchor) as ThreadType;
+      const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+      const message = thread.messages[messageIndex]?.target;
+      const proposal = message?.blocks.find((block) => block._tag === 'proposal');
+      if (!proposal || !anchor.anchor) {
+        return;
+      }
+
+      await dispatch(
+        createIntent(CollaborationActions.AcceptProposal, {
+          subject,
+          anchor: anchor.anchor,
+          proposal,
+        }),
+      );
+    },
+    [dispatch, subject],
+  );
+
   const comments = (
     <CommentsContainer
       anchors={anchors}
@@ -124,6 +146,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       onResolve={handleResolve}
       onMessageDelete={handleMessageDelete}
       onThreadDelete={handleThreadDelete}
+      onAcceptProposal={handleAcceptProposal}
     />
   );
 
