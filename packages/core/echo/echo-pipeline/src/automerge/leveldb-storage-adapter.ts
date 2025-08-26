@@ -36,7 +36,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     try {
-      if (!this.isOpen) {
+      if (!this.isOpen || this._params.db.status !== 'open') {
         // TODO(mykola): this should be an error.
         return undefined;
       }
@@ -54,7 +54,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
-    if (!this.isOpen) {
+    if (!this.isOpen || this._params.db.status !== 'open') {
       return undefined;
     }
     const startMs = Date.now();
@@ -72,14 +72,14 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
-    if (!this.isOpen) {
+    if (!this.isOpen || this._params.db.status !== 'open') {
       return undefined;
     }
     await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    if (!this.isOpen) {
+    if (!this.isOpen || this._params.db.status !== 'open') {
       return [];
     }
     const startMs = Date.now();
@@ -100,7 +100,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
-    if (!this.isOpen) {
+    if (!this.isOpen || this._params.db.status !== 'open') {
       return undefined;
     }
     const batch = this._params.db.batch();
