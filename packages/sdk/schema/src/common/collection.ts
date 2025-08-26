@@ -10,11 +10,23 @@ import { QueryType } from '@dxos/echo-schema';
 export const Collection = Schema.Struct({
   name: Schema.optional(Schema.String),
   objects: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
-}).pipe(Type.Obj({ typename: 'dxos.org/type/Collection', version: '0.1.0' }));
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Collection',
+    version: '0.1.0',
+  }),
+);
+
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
 export const QueryCollection = Schema.Struct({
   name: Schema.optional(Schema.String),
   query: QueryType,
-}).pipe(Type.Obj({ typename: 'dxos.org/type/QueryCollection', version: '0.1.0' }));
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/QueryCollection',
+    version: '0.1.0',
+  }),
+);
+
 export type QueryCollection = Schema.Schema.Type<typeof QueryCollection>;

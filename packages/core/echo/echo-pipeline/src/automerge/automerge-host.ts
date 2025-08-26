@@ -132,6 +132,9 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
+  private readonly _headsUpdates = new Map<DocumentId, Heads>();
+  private _onHeadsChangedTask?: DeferredTask | undefined;
+
   constructor({
     db,
     indexMetadataStore,
@@ -164,6 +167,12 @@ export class AutomergeHost extends Resource {
 
   protected override async _open(): Promise<void> {
     this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
+
+    this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
+      const docHeads = Array.from(this._headsUpdates.entries());
+      this._headsUpdates.clear();
+      this._onHeadsChanged(docHeads);
+    });
 
     await this._storage.open?.();
 
@@ -230,6 +239,7 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
     this._syncTask = undefined;
+    this._onHeadsChangedTask = undefined;
   }
 
   /**
@@ -414,14 +424,20 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
     this._indexMetadataStore.notifyMarkedDirty();
 
     const documentId = path[0] as DocumentId;
     const document = this._repo.handles[documentId]?.doc();
-    if (document) {
-      const heads = getHeads(document);
-      this._onHeadsChanged(documentId, heads);
+    if (!document) {
+      return;
     }
+    const heads = getHeads(document);
+    this._headsUpdates.set(documentId, heads);
+    invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
+    this._onHeadsChangedTask.schedule();
     this.documentsSaved.emit();
   }
 
@@ -708,6 +724,7 @@ export class AutomergeHost extends Resource {
   ): Promise<{ syncInteractively: DocumentId[] }> {
     const documentsToPull = [...documentIds];
     const syncInteractively: DocumentId[] = [];
+    const docsToImport: Record<DocumentId, Uint8Array> = {};
 
     // Pull bundles in parallel with BUNDLE_SYNC_CONCURRENCY max concurrent tasks.
     while (documentsToPull.length > 0) {
@@ -717,42 +734,60 @@ export class AutomergeHost extends Resource {
           if (bundle.length === 0) {
             return;
           }
-          await this._pullBundle(peerId, bundle).catch((err) => {
+          const result = await this._pullBundle(peerId, bundle).catch((err) => {
             log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
           });
+          if (result) {
+            Object.assign(docsToImport, result.docsToImport);
+          }
         }),
       );
     }
 
+    for (const [documentId, data] of Object.entries(docsToImport)) {
+      this._repo.import(data, { docId: documentId as DocumentId });
+    }
+    await this._repo.flush(Object.keys(docsToImport) as DocumentId[]);
+
     return { syncInteractively };
   }
 
-  private async _pullBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+  private async _pullBundle(
+    peerId: PeerId,
+    documentIds: DocumentId[],
+  ): Promise<{ docsToImport: Record<DocumentId, Uint8Array> } | undefined> {
     if (this._ctx.disposed) {
       return;
     }
     // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
     const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
-    for (const [documentId, data] of Object.entries(bundle)) {
-      this._repo.import(data, { docId: documentId as DocumentId });
-    }
-    // TODO(mykola): Should not be required. This is automerge bug
-    await this._repo.flush(Array.from(Object.keys(bundle)) as DocumentId[]);
+    return { docsToImport: bundle };
   }
 
-  private _onHeadsChanged(documentId: DocumentId, heads: Heads): void {
+  private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
     const collectionsChanged = new Set<CollectionId>();
+
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
-      if (state?.documents[documentId]) {
-        const newState = structuredClone(state);
-        newState.documents[documentId] = heads;
+      let newState: CollectionState | undefined;
+
+      for (const [documentId, heads] of docHeads) {
+        if (state?.documents[documentId]) {
+          if (!newState) {
+            newState = structuredClone(state);
+          }
+          newState.documents[documentId] = heads;
+        }
+      }
+
+      if (newState) {
         this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
         collectionsChanged.add(collectionId as CollectionId);
       }
     }
+
     for (const collectionId of collectionsChanged) {
       this.collectionStateUpdated.emit({ collectionId });
     }

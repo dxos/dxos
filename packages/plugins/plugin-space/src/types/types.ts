@@ -238,6 +238,9 @@ export namespace SpaceAction {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
+      typename: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Semantic version format.
+      version: Schema.optional(Schema.String),
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
     }),
@@ -270,7 +273,9 @@ export namespace SpaceAction {
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
+      views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
+      initialFormValues: Schema.optional(Schema.Any),
       navigable: Schema.optional(Schema.Boolean),
       // TODO(wittjosiah): This is a function, is there a better way to handle this?
       onCreateObject: Schema.optional(Schema.Any),

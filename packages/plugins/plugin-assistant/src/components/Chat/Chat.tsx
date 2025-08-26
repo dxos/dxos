@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -37,16 +37,6 @@ import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThrea
 
 import { type ChatEvent } from './events';
 
-// TODO(burdon): Factor out.
-const Endcap = ({ children }: PropsWithChildren) => {
-  return (
-    <div className='grid bs-[var(--rail-action)] is-[var(--rail-action)] items-center justify-center'>{children}</div>
-  );
-};
-
-const outlineClassNames =
-  'p-2 bg-groupSurface border border-transparent rounded focus-within:outline focus-within:border-transparent outline-neutralFocusIndicator';
-
 //
 // Context
 // NOTE: The context should not be exported. It is only used internally.
@@ -63,7 +53,100 @@ type ChatContextValue = {
 };
 
 // NOTE: Do not export.
-const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+
+//
+// Root
+//
+
+type ChatRootProps = ThemedClassName<
+  PropsWithChildren<
+    Pick<ChatContextValue, 'chat' | 'processor'> & {
+      onEvent?: (event: ChatEvent) => void;
+    }
+  >
+>;
+
+const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+  const [debug, setDebug] = useState(false);
+  const space = getSpace(chat);
+
+  // Messages.
+  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
+  const pending = useRxValue(processor.messages);
+  const streaming = useRxValue(processor.streaming);
+
+  const messages = useMemo(() => {
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
+    return Result.match(pending, {
+      onInitial: () => queueMessages,
+      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
+      onFailure: () => queueMessages,
+    });
+  }, [queue?.objects, pending]);
+
+  // Events.
+  const event = useMemo(() => new Event<ChatEvent>(), []);
+  useEffect(() => {
+    return event.on((event) => {
+      switch (event.type) {
+        case 'toggle-debug': {
+          setDebug((current) => {
+            const debug = !current;
+            log.info('toggle-debug', { debug });
+            return debug;
+          });
+          break;
+        }
+
+        case 'submit': {
+          if (!streaming) {
+            void processor.request({ message: event.text });
+          }
+          break;
+        }
+
+        case 'retry': {
+          if (!streaming) {
+            void processor.retry();
+          }
+          break;
+        }
+
+        case 'cancel': {
+          void processor.cancel();
+          break;
+        }
+
+        default: {
+          onEvent?.(event);
+        }
+      }
+    });
+  }, [event, onEvent, processor, streaming]);
+
+  if (!space) {
+    return null;
+  }
+
+  return (
+    <ChatContextProvider
+      debug={debug}
+      event={event}
+      chat={chat}
+      space={space}
+      processor={processor}
+      messages={messages}
+      {...props}
+    >
+      <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+        {children}
+      </div>
+    </ChatContextProvider>
+  );
+};
+
+ChatRoot.displayName = 'Chat.Root';
 
 //
 // Prompt
@@ -76,10 +159,8 @@ type ChatPromptProps = ThemedClassName<
     Omit<ChatPresetsProps, 'onChange'> & {
       expandable?: boolean;
       online?: boolean;
-      // TODO(thure): The convention for the names of handlers throughout the repo is meant to be `on{noun}{event}` in order to align with Radix. As an example of the `change` event, search the repo for the regex `on\w+Change`.
-      onChangeOnline?: (online: boolean) => void;
-      // TODO(thure): Ditto here.
-      onChangePreset?: ChatPresetsProps['onChange'];
+      onOnlineChange?: (online: boolean) => void;
+      onPresetChange?: ChatPresetsProps['onChange'];
     }
 >;
 
@@ -91,11 +172,12 @@ const ChatPrompt = ({
   online,
   presets,
   preset,
-  onChangePreset,
-  onChangeOnline,
+  onPresetChange,
+  onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
+
   const streaming = useRxValue(processor.streaming);
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
@@ -182,166 +264,60 @@ const ChatPrompt = ({
   return (
     <div
       className={mx(
-        'is-full grid grid-cols-[var(--rail-action)_1fr_var(--rail-action)] grid-rows-[min-content_min-content_min-content]',
-        outline && outlineClassNames,
+        'is-full flex flex-col density-fine',
+        outline && [
+          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
+        ],
         classNames,
       )}
     >
-      <Endcap>
-        <ChatStatusIndicator preset={preset} error={error} processing={streaming} />
-      </Endcap>
+      <div className='flex gap-2'>
+        <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
-      <ChatEditor
-        ref={editorRef}
-        autoFocus
-        lineWrapping
-        classNames='col-span-2 pis-1 pbs-2'
-        placeholder={placeholder ?? t('prompt placeholder')}
-        extensions={extensions}
-        onSubmit={handleSubmit}
-      />
+        <ChatEditor
+          ref={editorRef}
+          autoFocus
+          lineWrapping
+          classNames='col-span-2 pbs-0.5'
+          placeholder={placeholder ?? t('prompt placeholder')}
+          extensions={extensions}
+          onSubmit={handleSubmit}
+        />
+      </div>
 
-      <ChatOptions
-        space={space}
-        blueprintRegistry={processor.blueprintRegistry}
-        context={processor.context}
-        preset={preset}
-        presets={presets}
-        onPresetChange={onChangePreset}
-      />
+      <div className='flex pbs-2 items-center'>
+        <ChatOptions
+          space={space}
+          blueprintRegistry={processor.blueprintRegistry}
+          context={processor.context}
+          preset={preset}
+          presets={presets}
+          onPresetChange={onPresetChange}
+        />
 
-      <ChatActions
-        classNames='col-span-2'
-        microphone={true}
-        recording={recording}
-        processing={streaming}
-        onEvent={handleEvent}
-      >
         <div role='none' className='pli-cardSpacingChrome grow'>
           <ChatReferences space={space} context={processor.context} />
         </div>
-        {online !== undefined && (
-          <Input.Root>
-            <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onChangeOnline} />
-          </Input.Root>
-        )}
-        <IconButton
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('button cancel')}
-          onClick={() => processor.cancel()}
-        />
-      </ChatActions>
+
+        <ChatActions
+          classNames='col-span-2'
+          microphone={true}
+          recording={recording}
+          processing={streaming}
+          onEvent={handleEvent}
+        >
+          {online !== undefined && (
+            <Input.Root>
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
+            </Input.Root>
+          )}
+        </ChatActions>
+      </div>
     </div>
   );
 };
 
 ChatPrompt.displayName = 'Chat.Prompt';
-
-//
-// Root
-//
-
-type ChatRootProps = ThemedClassName<
-  PropsWithChildren<
-    Pick<ChatContextValue, 'chat' | 'processor'> & {
-      onEvent?: (event: ChatEvent) => void;
-    }
-  >
->;
-
-const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
-  const [debug, setDebug] = useState(false);
-  const space = getSpace(chat);
-
-  // Messages.
-  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
-  const pending = useRxValue(processor.messages);
-  const streaming = useRxValue(processor.streaming);
-
-  const messages = useMemo(() => {
-    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
-    return Result.match(pending, {
-      onInitial: () => queueMessages,
-      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
-      onFailure: () => queueMessages,
-    });
-  }, [queue?.objects, pending]);
-
-  // TODO(burdon): Replace with tool to select artifact.
-  // const { dispatchPromise: dispatch } = useIntentDispatcher();
-  // useEffect(() => {
-  //   if (!processor?.streaming.value && queue?.objects) {
-  //     const message = queue.objects[queue.objects.length - 1];
-  //     if (dispatch && space && chat && message) {
-  //       void dispatch(
-  //         createIntent(CollaborationActions.InsertContent, {
-  //           target: artifact,
-  //           object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
-  //           label: 'View proposal',
-  //         }),
-  //       );
-  //     }
-  //   }
-  // }, [queue, processor?.streaming.value]);
-
-  // Events.
-  const event = useMemo(() => new Event<ChatEvent>(), []);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'toggle-debug': {
-          setDebug((current) => {
-            const debug = !current;
-            log.info('toggle-debug', { debug });
-            // log.config({ filter: debug ? 'assistant:debug' : 'info' });
-            return debug;
-          });
-          break;
-        }
-
-        case 'submit': {
-          if (!streaming) {
-            void processor.request(event.text);
-          }
-          break;
-        }
-
-        case 'cancel': {
-          void processor.cancel();
-          break;
-        }
-
-        default: {
-          onEvent?.(event);
-        }
-      }
-    });
-  }, [event, onEvent, processor, streaming]);
-
-  if (!space) {
-    return null;
-  }
-
-  return (
-    <ChatContextProvider
-      debug={debug}
-      event={event}
-      chat={chat}
-      space={space}
-      processor={processor}
-      messages={messages}
-      {...props}
-    >
-      <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
-        {children}
-      </div>
-    </ChatContextProvider>
-  );
-};
-
-ChatRoot.displayName = 'Chat.Root';
 
 //
 // Thread
@@ -350,8 +326,10 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, messages } = useChatContext(ChatThread.displayName);
+  const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
+
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
@@ -377,6 +355,7 @@ const ChatThread = (props: ChatThreadProps) => {
       identity={identity}
       space={space}
       messages={messages}
+      error={error}
       onEvent={(ev) => event.emit(ev)}
     />
   );

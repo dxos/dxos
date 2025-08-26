@@ -10,12 +10,5 @@ import { Options } from '@effect/cli';
 //
 
 export const Common = {
-  json: Options.boolean('json').pipe(Options.withDescription('Output in JSON format.')),
-  timeout: Options.integer('timeout').pipe(
-    Options.withDescription('The timeout before the command fails.'),
-    Options.withDefault(5_000),
-  ),
-
-  spaceId: Options.text('spaceId').pipe(Options.withDescription('Space ID.')),
-  typename: Options.text('typename').pipe(Options.withDescription('The typename to query.')),
+  spaceId: Options.text('space-id').pipe(Options.withDescription('Space ID.')),
 };

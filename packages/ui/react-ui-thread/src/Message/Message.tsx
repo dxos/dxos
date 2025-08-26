@@ -20,6 +20,7 @@ export type MessageRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
   Partial<{ continues: boolean }>;
 
+// TODO(burdon): Show authorName on tooltip.
 export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
@@ -35,7 +36,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
+          <div role='none' className='flex flex-col items-center gap-2 pbs-1'>
             <Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}

@@ -83,7 +83,7 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition<T = {}, O = any> = {
+export type FunctionDefinition<T = any, O = any> = {
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;

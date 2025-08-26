@@ -29,7 +29,7 @@ export const deploy = Command.make(
       Options.withDescription('Loads the script into composer.'),
       Options.withDefault(false),
     ),
-    functionId: Options.text('functionId').pipe(
+    functionId: Options.text('function-id').pipe(
       Options.withDescription('Existing UserFunction ID to update.'),
       Options.optional,
     ),

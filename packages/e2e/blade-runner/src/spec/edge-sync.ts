@@ -54,12 +54,12 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 1000,
+        documentAmount: 5_000,
         textSize: 100,
         mutationAmount: 0,
-        waitAfterCreation: 1_000,
+        waitAfterCreation: 2_000,
       },
-      maxDocumentsPerInvocation: 500,
+      maxDocumentsPerInvocation: 5_000,
       simultaneousInvocations: false,
       indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {
@@ -75,12 +75,12 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
           services: {
             agentHosting: {
               type: 'AGENTHOSTING_API',
-              server: 'https://edge.dxos.workers.dev/v1alpha1/',
-              // server: 'http://localhost:8787/v1alpha1/',
+              // server: 'https://edge.dxos.workers.dev/v1alpha1/',
+              server: 'http://localhost:8787/v1alpha1/',
             },
             edge: {
-              url: 'https://edge.dxos.workers.dev',
-              // url: 'http://localhost:8787',
+              // url: 'https://edge.dxos.workers.dev',
+              url: 'http://localhost:8787',
             },
           },
         },

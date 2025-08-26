@@ -10,6 +10,9 @@ import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Particle effects.
+// TODO(burdon): Spring: https://examples.motion.dev/react/follow-pointer-with-spring
+// TODO(burdon): Magnets: https://examples.motion.dev/react/magnetic-filings
+// TODO(burdon): Grid: https://examples.motion.dev/react/staggered-grid
 
 export type GhostProps = {
   SIM_RESOLUTION: number;

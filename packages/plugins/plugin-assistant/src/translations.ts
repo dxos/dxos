@@ -9,6 +9,7 @@ import { type Resource } from '@dxos/react-ui';
 import { meta } from './meta';
 import { Assistant } from './types';
 
+// TODO(burdon): Standardize translation names.
 export const translations = [
   {
     'en-US': {
@@ -33,14 +34,12 @@ export const translations = [
         'delete object label': 'Delete sequence',
       },
       [Assistant.Chat.typename]: {
-        'typename label': 'Assistant',
-        'typename label_zero': 'Assistants',
-        'typename label_one': 'Assistant',
-        'typename label_other': 'Assistants',
-        'object name placeholder': 'New assistant',
-        'rename object label': 'Rename assistant',
-        'delete object label': 'Delete assistant',
+        'typename label': 'AI Chat',
+        'object name placeholder': 'New AI Chat',
+        'rename object label': 'Rename AI Chat',
+        'delete object label': 'Delete AI Chat',
       },
+      // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
         'templates label': 'Templates',
         'open ambient chat label': 'Open Assistant',
@@ -59,21 +58,24 @@ export const translations = [
         'select preset template placeholder': 'Select preset',
         'service registry label': 'Service Registry',
         'type filter placeholder': 'Type',
-        'idle type filter label': 'Any',
-        'no reference options label': 'No results',
+        'any type filter label': 'Any',
 
         'sequence logs label': 'Logs',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
 
-        'no tools': 'No tools are configured.',
+        'no tools': 'No tools are configured',
+        'no results': 'No results',
 
+        'button retry': 'Retry',
         'button suggest': 'Assistant suggestion',
         'button select option': 'Select option',
         'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
+
+        'toolkit label': 'Toolkit',
 
         'calling tool label': 'Calling tool...',
         'calling label': 'Calling',
@@ -81,12 +83,12 @@ export const translations = [
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Ask or search for anything...',
-        'context objects placeholder': 'Add to context...',
+        'button context objects': 'Add to context',
+        'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',
         'button cancel processing': 'Stop processing',
-        'button scroll down': 'Scroll down',
         'blueprints in context title': 'Blueprints',
-        'objects in context title': 'Documents',
+        'objects in context title': 'Content',
         'remove object in context label': 'Remove document',
         'chat model title': 'Model',
 

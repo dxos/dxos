@@ -47,7 +47,7 @@ const useAttended = () => {
 };
 
 /**
- * Computes HTML element attributes to apply so the attention system can detect changes
+ * Computes HTML element attributes to apply so the attention system can detect changes.
  * @param attendableId
  */
 const useAttentionAttributes = (attendableId?: string) => {

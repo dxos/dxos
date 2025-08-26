@@ -145,7 +145,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
               </Link>
             );
           },
-          img: ({ node: { properties }, ...props }) => {
+          img: ({ node: { properties } }) => {
             const client = useClient();
             if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
               try {
@@ -166,13 +166,11 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   // Suggest
   //
   ['suggest' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
     invariant(block._tag === 'suggest');
     return (
       <IconButton
         icon='ph--lightning--regular'
         label={block.text}
-        title={t('button suggest')}
         onClick={() => onEvent?.({ type: 'submit', text: block.text })}
       />
     );
@@ -182,7 +180,6 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   // Select
   //
   ['select' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
     invariant(block._tag === 'select');
     return (
       <div className='flex flex-wrap gap-1'>
@@ -191,7 +188,6 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
             classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
             key={idx}
             onClick={() => onEvent?.({ type: 'submit', text: option })}
-            title={t('button select option')}
           >
             {option}
           </Button>
@@ -205,8 +201,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['toolkit' as const]: ({ block }) => {
     invariant(block._tag === 'toolkit');
+    const { t } = useTranslation(meta.id);
+
     return (
-      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
+      <ToggleContainer title={t('toolkit label')} classNames={panelClasses} defaultOpen>
         <Toolbox classNames={marginClasses} />
       </ToggleContainer>
     );
@@ -262,6 +260,34 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   },
 };
 
+export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {
+  error: Error;
+};
+
+/**
+ * Error message with retry.
+ */
+export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <>
+      <MessageItem>
+        <ToggleContainer title={error.message || t('error label')} classNames={[panelClasses, 'bg-warningSurface']}>
+          <div className='p-2'>{String(error.cause)}</div>
+        </ToggleContainer>
+      </MessageItem>
+      <MessageItem>
+        <IconButton
+          classNames='bg-errorSurface text-errorSurfaceText'
+          icon='ph--lightning--regular'
+          label={t('button retry')}
+          onClick={() => onEvent?.({ type: 'retry' })}
+        />
+      </MessageItem>
+    </>
+  );
+};
+
 /**
  * Wrapper for each message.
  */
@@ -279,8 +305,8 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
   );
 };
 
-const ToggleContainer = (props: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
+const ToggleContainer = ({ classNames, ...props }: ToggleContainerProps) => {
+  return <NativeToggleContainer {...props} classNames={mx(panelClasses, classNames)} />;
 };
 
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
