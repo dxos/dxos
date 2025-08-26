@@ -223,6 +223,9 @@
       "path": "../plugin-theme"
     },
     {
+      "path": "../plugin-thread"
+    },
+    {
       "path": "../plugin-transcription"
     },
     {

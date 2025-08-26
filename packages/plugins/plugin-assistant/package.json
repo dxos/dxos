@@ -128,6 +128,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
+    "@dxos/plugin-thread": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
