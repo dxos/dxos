@@ -4,13 +4,12 @@
 
 import '@dxos-theme';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { useSignalsMemo } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -35,7 +34,7 @@ export const SurfaceContainer = ({ space, debug }: ComponentProps) => {
   // TODO(burdon): Specify role hint to hide toolbar.
   return (
     <div className='flex flex-col bs-full overflow-y-auto divide-y divide-separator'>
-      {objects?.map((object) => (
+      {objects.map((object) => (
         <div key={object.id} className='group contents'>
           {debug && (
             <div
