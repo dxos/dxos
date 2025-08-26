@@ -237,7 +237,6 @@ export class AutomergeHost extends Resource {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
-    await this._ctx.dispose();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
   }
@@ -424,13 +423,17 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    if (this._ctx.disposed) {
-      return;
+    if (!this.isOpen) {
+      return undefined;
     }
     this._indexMetadataStore.notifyMarkedDirty();
 
     const documentId = path[0] as DocumentId;
-    const document = this._repo.handles[documentId]?.doc();
+    const handle = this._repo.handles[documentId];
+    if (!handle || !handle.isReady()) {
+      return;
+    }
+    const document = handle.doc();
     if (!document) {
       return;
     }
