@@ -20,7 +20,7 @@ import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -57,7 +57,7 @@ describe('Database', () => {
   });
 
   test('db is persisted to storage without a flush', { timeout: 100000 }, async () => {
-    const level = createTestLevel();
+    const tmpPath = createTmpPath();
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
 
@@ -65,7 +65,7 @@ describe('Database', () => {
     let spaceKey: PublicKey;
     let rootUrl: string;
     {
-      const testPeer = await testBuilder.createPeer({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
       rootUrl = db.rootUrl!;
@@ -74,17 +74,17 @@ describe('Database', () => {
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
       await sleep(500); // Wait for the object to be saved.
-      await db.close();
+      await testPeer.close();
     }
 
     // Load database.
     {
-      const testPeer = await testBuilder.createPeer({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
-      await db.close();
+      await testPeer.close();
     }
   });
 

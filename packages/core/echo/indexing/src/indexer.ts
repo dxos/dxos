@@ -219,6 +219,16 @@ export class Indexer extends Resource {
    */
   async updateIndexes(): Promise<void> {
     await this._run.runBlocking();
+    // Note: Indexing task might schedule itself again if it run over indexing budget.
+    let iterations = 0;
+    while (this._run.scheduled) {
+      await this._run.join();
+      iterations++;
+      if (iterations > 10) {
+        log.warn('Indexer: updateIndexes is stuck');
+        break;
+      }
+    }
   }
 
   private async _loadIndexes(): Promise<void> {
