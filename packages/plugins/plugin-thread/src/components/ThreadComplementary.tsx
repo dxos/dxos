@@ -19,6 +19,7 @@ import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { mx } from '@dxos/react-ui-theme';
 import { AnchoredTo } from '@dxos/schema';
 
 import { ThreadCapabilities } from '../capabilities';
@@ -132,10 +133,13 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
-        classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+        classNames={[
+          'contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
+        ]}
         onValueChange={onChangeViewState}
       >
-        <Tabs.Tablist classNames={tx('toolbar.root', 'toolbar', {})}>
+        {/* TODO(burdon): Standardize (like Tollbar). */}
+        <Tabs.Tablist classNames={mx('bg-toolbarSurface border-b border-subduedSeparator')}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>
