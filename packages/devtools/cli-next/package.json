@@ -41,6 +41,7 @@
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "typescript": "^5.9.2",
+    "vite-node": "^3.2.4",
     "vitest": "^3.2.0"
   },
   "publishConfig": {
