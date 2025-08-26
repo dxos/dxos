@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
@@ -99,9 +99,9 @@ describe('workflow', () => {
 
   describe('function', () => {
     test('function resolved before execution', async () => {
-      const functionUrl = 'https://test.com/foo';
+      const functionId = '1234';
       const { fnObject, functionRef, resolveCount } = createFunction();
-      setUserFunctionUrlInMetadata(Obj.getMeta(fnObject), functionUrl);
+      setUserFunctionIdInMetadata(Obj.getMeta(fnObject), functionId);
       const graph = createFunctionTransform(functionRef);
       const workflowLoader = new WorkflowLoader(createResolver(graph));
       const workflow = await workflowLoader.load(graph.graphDxn);
@@ -110,7 +110,7 @@ describe('workflow', () => {
       const services = createTestExecutionContext({
         functions: {
           callFunction: async (path, { input }) => {
-            expect(path).toEqual(functionUrl);
+            expect(path).toEqual(`/${functionId}`);
             return { result: Math.pow(input.num1, input.num2) };
           },
         },

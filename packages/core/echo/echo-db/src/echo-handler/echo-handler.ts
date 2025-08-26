@@ -1004,7 +1004,6 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
-
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);

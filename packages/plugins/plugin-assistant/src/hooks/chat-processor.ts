@@ -190,7 +190,7 @@ export class AiChatProcessor {
       throw new Error('Request already in progress');
     }
 
-    // TODO(burdon): Hold on to session for retry?
+    // TODO(burdon): Retain session for retry?
     const session = new AiSession();
     this._observableRegistry.set(this._session, Option.some(session));
     this._lastRequest = request;
@@ -199,16 +199,17 @@ export class AiChatProcessor {
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
       Option.match(this._observableRegistry.get(this._session), {
+        onNone: () => {},
         onSome: (s) => {
           if (s === session) {
             this._observableRegistry.set(this._session, Option.none());
           }
         },
-        onNone: () => {},
       });
     });
 
     try {
+      this._observableRegistry.set(this.error, Option.none());
       this._currentRequest = this._conversation
         .run({
           session,
@@ -232,8 +233,6 @@ export class AiChatProcessor {
       if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
         throwCause(exit.cause);
       }
-
-      this._observableRegistry.set(this.error, Option.none());
     } catch (err) {
       log.catch(err);
       this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
@@ -245,9 +244,9 @@ export class AiChatProcessor {
   /**
    * Cancel pending requests.
    */
+  // TODO(burdon): Populate prompt.
   async cancel(): Promise<void> {
     log.info('cancelling...');
-
     if (this._currentRequest) {
       await this._currentRequest.pipe(Fiber.interrupt, runAndForwardErrors);
       this._currentRequest = undefined;
@@ -279,6 +278,7 @@ export class AiChatProcessor {
           });
         }),
       );
+
       return versions;
     },
   };

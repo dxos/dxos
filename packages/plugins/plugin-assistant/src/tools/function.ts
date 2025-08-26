@@ -6,7 +6,7 @@
 
 import { type ExecutableTool, ToolResult, createTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type SpaceId } from '@dxos/react-client/echo';
@@ -21,12 +21,12 @@ export const convertFunctionToTool = (
   if (!fn.description || !fn.inputSchema) {
     return undefined;
   }
-  const existingFunctionUrl = getUserFunctionUrlInMetadata(getMeta(fn));
-  if (!existingFunctionUrl) {
+  const existingFunctionId = getUserFunctionIdInMetadata(getMeta(fn));
+  if (!existingFunctionId) {
     return undefined;
   }
 
-  const url = getInvocationUrl(existingFunctionUrl, edgeUrl, { spaceId });
+  const url = getInvocationUrl(existingFunctionId, edgeUrl, { spaceId });
 
   // TODO(burdon): Should be DXN?
   return createTool('user-function', {

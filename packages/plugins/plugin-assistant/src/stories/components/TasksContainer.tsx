@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import React from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
