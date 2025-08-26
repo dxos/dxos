@@ -161,9 +161,6 @@ export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolve
   go(obj);
 };
 
-/**
- * @internal
- */
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
   if (descriptor) {
@@ -174,17 +171,21 @@ export const attachTypedJsonSerializer = (obj: any) => {
     value: typedJsonSerializer,
     writable: false,
     enumerable: false,
-    configurable: false,
+    // Setting `configurable` to false breaks proxy invariants, should be fixable.
+    configurable: true,
   });
 };
 
 // NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any) {
-  const { id, [TypeId]: typename, [MetaId]: meta, ...rest } = this;
+  const { id, ...rest } = this;
   const result: any = {
     id,
-    [ATTR_TYPE]: typename.toString(),
   };
+
+  if (this[TypeId]) {
+    result[ATTR_TYPE] = this[TypeId].toString();
+  }
 
   if (this[SelfDXNId]) {
     result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
@@ -201,8 +202,8 @@ const typedJsonSerializer = function (this: any) {
     result[ATTR_RELATION_TARGET] = targetDXN.toString();
   }
 
-  if (meta) {
-    result[ATTR_META] = serializeMeta(meta);
+  if (this[MetaId]) {
+    result[ATTR_META] = serializeMeta(this[MetaId]);
   }
 
   Object.assign(result, serializeData(rest));

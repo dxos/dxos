@@ -5,7 +5,7 @@
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
 import { type MixedEncoding } from 'level-transcoder';
 
-import { LifecycleState, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { type BatchLevel, type SublevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';
 
@@ -36,7 +36,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     try {
-      if (this._lifecycleState !== LifecycleState.OPEN) {
+      if (!this.isOpen) {
         // TODO(mykola): this should be an error.
         return undefined;
       }
@@ -54,7 +54,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
+    if (!this.isOpen) {
       return undefined;
     }
     const startMs = Date.now();
@@ -72,14 +72,14 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
+    if (!this.isOpen) {
       return undefined;
     }
     await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
+    if (!this.isOpen) {
       return [];
     }
     const startMs = Date.now();
@@ -100,7 +100,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
-    if (this._lifecycleState !== LifecycleState.OPEN) {
+    if (!this.isOpen) {
       return undefined;
     }
     const batch = this._params.db.batch();
