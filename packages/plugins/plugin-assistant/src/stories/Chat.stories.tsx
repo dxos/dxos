@@ -19,6 +19,7 @@ import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
+import { ThreadPlugin } from '@dxos/plugin-thread';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -32,6 +33,7 @@ import { Assistant } from '../types';
 import {
   BlueprintContainer,
   ChatContainer,
+  CommentsContainer,
   type ComponentProps,
   GraphContainer,
   LoggingContainer,
@@ -177,7 +179,7 @@ export const Default = {
 
 export const WithDocument = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
+    plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     onInit: async ({ space, binder }) => {
       const object = space.db.add(
@@ -190,7 +192,7 @@ export const WithDocument = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    components: [ChatContainer, SurfaceContainer, [CommentsContainer, LoggingContainer]],
     blueprints: ['dxos.org/blueprint/assistant'],
   },
 } satisfies Story;
