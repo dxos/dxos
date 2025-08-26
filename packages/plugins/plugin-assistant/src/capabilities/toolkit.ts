@@ -6,8 +6,8 @@ import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { ArtifactId } from '@dxos/assistant';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { AiContextService, ArtifactId } from '@dxos/assistant';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -29,7 +29,7 @@ class Toolkit extends AiToolkit.make(
     },
     success: Schema.Void,
     failure: Schema.Never,
-  }),
+  }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -72,12 +72,17 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
-      'add-to-context': ({ id }) => {
-        return Effect.gen(function* () {
-          // TODO(burdon): Add to chat context via binder (need current chat queue).
-          console.log('=========', id);
-        });
-      },
+      'add-to-context': Effect.fnUntraced(function* ({ id }) {
+        const { binder } = yield* AiContextService;
+        const { db } = yield* DatabaseService;
+        const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
+        yield* Effect.promise(() =>
+          binder.bind({
+            blueprints: [],
+            objects: [ref],
+          }),
+        );
+      }),
 
       'get-schemas': () => {
         const space = getActiveSpace(context);

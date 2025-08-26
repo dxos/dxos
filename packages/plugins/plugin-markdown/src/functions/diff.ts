@@ -13,6 +13,9 @@ import { trim } from '@dxos/util';
 
 import { Markdown } from '../types';
 
+// Relevant info:
+// https://github.com/Minahil-official/GPT-4.1-Promting-Guide?tab=readme-ov-file#-apply-patch-tool-format-v4a-diff
+
 // TODO(burdon): Create variant of function that creates comments.
 export default defineFunction({
   name: 'dxos.org/function/markdown/diff',

@@ -13,7 +13,7 @@ import { DataType } from '@dxos/schema';
 
 import { type AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
-import { AiContextBinder, type ContextBinding } from './context';
+import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
   session: AiSession;
@@ -73,7 +73,11 @@ export class AiConversation {
 
       // Process request.
       const start = Date.now();
-      const messages = yield* session.run({ ...params, history, objects, blueprints });
+      const messages = yield* session.run({ ...params, history, objects, blueprints }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+      );
       log.info('result', {
         messages: messages,
         duration: Date.now() - start,

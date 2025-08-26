@@ -3,7 +3,7 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Schema } from 'effect';
+import { Context, Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
@@ -137,3 +137,10 @@ export class AiContextBinder {
     );
   }
 }
+
+export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
+  AiContextService,
+  {
+    binder: AiContextBinder;
+  }
+>() {}
