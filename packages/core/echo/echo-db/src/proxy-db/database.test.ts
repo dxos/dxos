@@ -20,7 +20,7 @@ import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -57,7 +57,7 @@ describe('Database', () => {
   });
 
   test('db is persisted to storage without a flush', { timeout: 100000 }, async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
 

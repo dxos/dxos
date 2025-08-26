@@ -10,9 +10,11 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
+
+import { createTmpPath } from '../testing';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
@@ -97,7 +99,7 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
 
     let url: AutomergeUrl;
     {
@@ -136,7 +138,7 @@ describe('RepoProxy', () => {
   });
 
   test('new document persists without `flush`', async () => {
-    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const path = createTmpPath();
     let url: AutomergeUrl;
 
     {
@@ -168,7 +170,7 @@ describe('RepoProxy', () => {
   });
 
   test('document mutation persists without `flush`', async () => {
-    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const path = createTmpPath();
     let url: AutomergeUrl;
 
     {

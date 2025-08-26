@@ -21,7 +21,7 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { type CoreDatabase } from './core-database';
 
@@ -292,7 +292,7 @@ describe('CoreDatabase', () => {
     });
 
     test('reload objects', async () => {
-      const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+      const tmpPath = createTmpPath();
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const kv = createTestLevel(tmpPath);
@@ -382,7 +382,7 @@ const createClientDbInSpaceWithObject = async (
   object: AnyLiveObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
-  const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+  const tmpPath = createTmpPath();
 
   const testBuilder = new EchoTestBuilder();
   await openAndClose(testBuilder);

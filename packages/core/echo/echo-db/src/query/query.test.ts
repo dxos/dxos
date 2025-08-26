@@ -21,7 +21,7 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
 
@@ -154,7 +154,7 @@ describe('Query', () => {
   });
 
   test('query.run() queries everything after restart', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -181,7 +181,7 @@ describe('Query', () => {
   });
 
   test('objects with incorrect document urls are ignored', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();

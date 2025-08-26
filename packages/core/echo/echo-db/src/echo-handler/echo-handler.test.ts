@@ -32,7 +32,7 @@ import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
@@ -216,7 +216,7 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('instantiating reactive objects after a restart', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -250,7 +250,7 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('restart with static schema and schema is registered later', async () => {
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -644,7 +644,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta persistence', async () => {
       const metaKey = { source: 'example.com', id: '123' };
-      const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+      const tmpPath = createTmpPath();
 
       const spaceKey = PublicKey.random();
       const builder = new EchoTestBuilder();

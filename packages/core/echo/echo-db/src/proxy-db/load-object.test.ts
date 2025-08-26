@@ -13,7 +13,7 @@ import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type AnyLiveObject } from '../echo-handler';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { loadObjectReferences } from './load-object';
 
@@ -23,7 +23,7 @@ describe.skip('loadObjectReferences', () => {
     const nestedValue = 'test';
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -43,7 +43,7 @@ describe.skip('loadObjectReferences', () => {
   test('loads multiple fields', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -64,7 +64,7 @@ describe.skip('loadObjectReferences', () => {
   test('loads array', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -85,7 +85,7 @@ describe.skip('loadObjectReferences', () => {
   test('loads on multiple objects', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -110,7 +110,7 @@ describe.skip('loadObjectReferences', () => {
   test('immediate return for empty array', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -129,7 +129,7 @@ describe.skip('loadObjectReferences', () => {
   test('throws on timeout', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
@@ -161,7 +161,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
-    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });

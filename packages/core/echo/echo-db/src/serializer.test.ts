@@ -16,7 +16,7 @@ import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { EchoTestBuilder } from './testing';
+import { EchoTestBuilder, createTmpPath } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -198,7 +198,7 @@ describe('Serializer', () => {
       const totalObjects = 123;
       const serializer = new Serializer();
       let data: SerializedSpace;
-      const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+      const tmpPath = createTmpPath();
 
       const spaceKey = PublicKey.random();
 
