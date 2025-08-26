@@ -166,7 +166,6 @@ export class AutomergeHost extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    log.info('AUTOMERGE HOST opening...');
     this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
     this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
@@ -232,18 +231,14 @@ export class AutomergeHost extends Resource {
     await this._collectionSynchronizer.open();
     await this._echoNetworkAdapter.open();
     await this._echoNetworkAdapter.whenConnected();
-    log.info('AUTOMERGE HOST opened.');
   }
 
   protected override async _close(): Promise<void> {
-    log.info('AUTOMERGE HOST closing...');
-    await this._repo.shutdown();
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
-    log.info('AUTOMERGE HOST closed.');
   }
 
   /**
@@ -401,7 +396,6 @@ export class AutomergeHost extends Resource {
   }
 
   private async _beforeSave({ path, batch }: BeforeSaveParams): Promise<void> {
-    log.info('AUTOMERGE HOST beforeSave: starting...');
     const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle || !handle.isReady()) {
       return;
@@ -421,7 +415,6 @@ export class AutomergeHost extends Resource {
     );
     const idToLastHash = new Map(encodedIds.map((id) => [id, heads]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
-    log.info('AUTOMERGE HOST beforeSave: done.');
   }
 
   private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
@@ -437,9 +430,7 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    log.info('AUTOMERGE HOST afterSave: starting...');
     if (!this.isOpen) {
-      log.info('AUTOMERGE HOST afterSave: not open.');
       return undefined;
     }
     this._indexMetadataStore.notifyMarkedDirty();
@@ -458,7 +449,6 @@ export class AutomergeHost extends Resource {
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
     this.documentsSaved.emit();
-    log.info('AUTOMERGE HOST afterSave: done.');
   }
 
   @trace.info({ depth: null })
