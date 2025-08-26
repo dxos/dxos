@@ -7,10 +7,10 @@ import { Array, Effect, Schema, pipe } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
-import { createDocAccessor } from '@dxos/client/echo';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type Markdown } from '@dxos/plugin-markdown/types';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 
 import { ThreadAction } from '../types';
