@@ -12,7 +12,7 @@ import { useSignalsMemo } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { useBinder } from '../hooks';
+import { useContextBinder } from '../../hooks';
 
 import { type ComponentProps } from './types';
 
@@ -20,13 +20,12 @@ import { type ComponentProps } from './types';
  * Shows the surface relating to the first bound object to the curent chat.
  */
 export const SurfaceContainer = ({ space, debug }: ComponentProps) => {
-  const binder = useBinder(space);
+  const binder = useContextBinder(space);
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
     [binder],
   );
 
-  // TODO(burdon): Specify role hint to hide toolbar.
   return (
     <div className='flex flex-col bs-full overflow-y-auto divide-y divide-separator'>
       {objects.map((object) => (

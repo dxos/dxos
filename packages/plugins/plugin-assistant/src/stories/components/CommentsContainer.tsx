@@ -6,15 +6,14 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 
-import { useBinder } from '../hooks';
+import { useContextBinder } from '../../hooks';
 
 import { type ComponentProps } from './types';
 
 export const CommentsContainer = ({ space }: ComponentProps) => {
-  const binder = useBinder(space);
+  const binder = useContextBinder(space);
   const object = binder?.objects.value[0].target;
   const data = useMemo(() => ({ subject: 'comments', companionTo: object }), [object]);
-
   if (!object) {
     return null;
   }

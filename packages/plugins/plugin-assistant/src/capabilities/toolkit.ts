@@ -5,7 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
@@ -154,7 +154,7 @@ class Toolkit extends AiToolkit.make(
     });
 }
 
-export default (context: PluginContext) => [
+export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, Toolkit),
   contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
 ];
