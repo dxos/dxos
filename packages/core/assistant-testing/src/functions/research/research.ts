@@ -5,15 +5,27 @@
 import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import {
+  AiSession,
+  GenerationObserver,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import type { DXN } from '@dxos/keys';
+import {
+  ContextQueueService,
+  DatabaseService,
+  LocalFunctionExecutionService,
+  TracingService,
+  defineFunction,
+} from '@dxos/functions';
+import { type DXN } from '@dxos/keys';
 
-import { ExaToolkit } from './exa';
+import { exaFunction, exaMockFunction } from '../exa';
+
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
-// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
+// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
 import { createResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
@@ -48,24 +60,22 @@ export default defineFunction({
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
       yield* DatabaseService.flush({ indexes: true });
-
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
-
       const newObjectDXNs: DXN[] = [];
       const result = yield* new AiSession()
         .run({
           prompt: query,
           history: [],
           system: PROMPT,
-          toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
+          toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
+          toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
         })
         .pipe(
           Effect.provide(
             Layer.mergeAll(
-              mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
               LocalSearchHandler,
               makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
               ContextQueueService.layer(researchQueue),
@@ -75,22 +85,26 @@ export default defineFunction({
 
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
-
       const objects = yield* Effect.forEach(newObjectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 
       return {
-        objects,
         note,
+        objects,
       };
     },
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
-        ToolResolverService.layerEmpty,
-        ToolExecutionService.layerEmpty,
-      ),
+        // TODO(dmaretskyi): Extract those out.
+        makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
+        makeToolExecutionServiceFromFunctions(
+          [exaFunction, exaMockFunction],
+          AiToolkit.make() as any,
+          Layer.empty as any,
+        ),
+      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),
 });

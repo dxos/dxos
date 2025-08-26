@@ -105,7 +105,7 @@
     "date-fns": "^3.3.1",
     "esbuild-wasm": "^0.16.14",
     "prettier": "^3.6.2",
-    "react-syntax-highlighter": "^15.5.0",
+    "react-syntax-highlighter": "^15.6.1",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
@@ -114,10 +114,10 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.90.0",
+    "@effect/platform": "0.90.2",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.17.6",
+    "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "vite": "7.1.1"

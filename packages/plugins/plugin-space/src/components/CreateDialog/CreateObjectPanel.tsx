@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { type TypeAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
@@ -24,7 +25,8 @@ export type CreateObjectPanelProps = {
   spaces: Space[];
   typename?: string;
   target?: Space | DataType.Collection;
-  name?: string;
+  views?: boolean;
+  initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onTargetChange?: (target: Space) => void;
@@ -37,7 +39,8 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
-  name: initialName,
+  views,
+  initialFormValues: _initialFormValues,
   defaultSpaceId,
   resolve,
   onTargetChange,
@@ -45,8 +48,16 @@ export const CreateObjectPanel = ({
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
+  const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
+    .filter((form) => {
+      if (views == null) {
+        return true;
+      } else {
+        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
+      }
+    })
     .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
@@ -88,7 +99,7 @@ export const CreateObjectPanel = ({
     <div role='none' className={cardDialogOverflow}>
       <Form
         autoFocus
-        values={{ name: initialName }}
+        values={initialFormValues}
         schema={form.formSchema}
         testId='create-object-form'
         onSave={handleCreateObject}

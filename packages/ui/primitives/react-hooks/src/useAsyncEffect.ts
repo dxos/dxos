@@ -2,61 +2,58 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useEffect } from 'react';
-
-import { log } from '@dxos/log';
+import { effect } from '@preact-signals/safe-react';
+import { type DependencyList, type EffectCallback, useEffect } from 'react';
 
 /**
- * Process async event with optional non-async destructor.
- * Inspired by: https://github.com/rauldeheer/use-async-effect/blob/master/index.js
- *
- * ```tsx
- * useAsyncEffect(async () => {
- *   await test();
- * }, []);
- * ```
- *
- * The callback may check of the component is still mounted before doing state updates.
- *
- * ```tsx
- * const [value, setValue] = useState<string>();
- * useAsyncEffect<string>(async (isMounted) => {
- *   const value = await test();
- *   if (!isMounted()) {
- *     setValue(value);
- *   }
- * }, () => console.log('Unmounted'), []);
- * ```
- *
- * @param callback Receives a getter function that determines if the component is still mounted.
- * @param destructor Receives the value returned from the callback.
- * @param deps
- *
- * NOTE: This effect does not cancel the async operation if the component is unmounted.
- *
- * @deprecated Use useTimeout.
+ * Async version of useEffect.
+ * The `AbortController` can be used to detect if the component has been unmounted and
+ * can be used to propagate abort signals to downstream async operations (e.g., `fetch`).
  */
-export const useAsyncEffect = <T>(
-  callback: (isMounted: () => boolean) => Promise<T> | undefined,
-  destructor?: ((value?: T) => void) | any[],
-  deps?: any[],
+export const useAsyncEffect = (
+  cb: (controller: AbortController) => Promise<EffectCallback | void>,
+  deps?: DependencyList,
 ) => {
-  const [effectDestructor, effectDeps] =
-    typeof destructor === 'function' ? [destructor, deps] : [undefined, destructor];
-
   useEffect(() => {
-    let mounted = true;
-    let value: T | undefined;
-    const asyncResult = callback(() => mounted);
-    void Promise.resolve(asyncResult)
-      .then((result) => {
-        value = result;
-      })
-      .catch(log.catch);
+    const controller = new AbortController();
+    let cleanup: EffectCallback | void;
+    // NOTE: Timeout enables us to immediately cancel. if the component is unmounted.
+    const t = setTimeout(async () => {
+      if (!controller.signal.aborted) {
+        cleanup = await cb(controller);
+      }
+    });
 
     return () => {
-      mounted = false;
-      effectDestructor?.(value);
+      clearTimeout(t);
+      controller.abort();
+      cleanup?.();
     };
-  }, effectDeps);
+  }, deps ?? []);
+};
+
+/**
+ * Combines useSignalEffect with useAsyncEffect.
+ */
+export const useAsyncSignalEffect = (
+  cb: (controller: AbortController) => Promise<EffectCallback | void>,
+  deps?: DependencyList,
+): void => {
+  useEffect(() => {
+    const controller = new AbortController();
+    let cleanup: EffectCallback | void;
+    effect(() => {
+      // NOTE: We can't use setTimeout here with `effect`.
+      if (!controller.signal.aborted) {
+        void cb(controller).then((c) => {
+          cleanup = c;
+        });
+      }
+    });
+
+    return () => {
+      controller.abort();
+      cleanup?.();
+    };
+  }, deps ?? []);
 };

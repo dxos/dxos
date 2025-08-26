@@ -17,7 +17,7 @@ export type ChessboardInfoProps = ThemedClassName<
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
     onClose?: () => void;
-  } & Pick<HistoryProps, 'min' | 'max'>
+  } & Pick<HistoryProps, 'min' | 'max' | 'onSelect'>
 >;
 
 export const ChessboardInfo = ({
@@ -33,7 +33,7 @@ export const ChessboardInfo = ({
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] overflow-hidden bg-inputSurface p-2 rounded',
+        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] p-2 overflow-hidden bg-inputSurface rounded',
         classNames,
       )}
     >
@@ -44,7 +44,9 @@ export const ChessboardInfo = ({
       >
         {onClose && <IconButton icon='ph--x--regular' iconOnly label={t('button flip')} size={4} onClick={onClose} />}
       </PlayerIndicator>
+
       <History model={model} {...props} />
+
       <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]}>
         {onOrientationChange && (
           <IconButton
@@ -63,9 +65,14 @@ export const ChessboardInfo = ({
 
 ChessboardInfo.displayName = 'Chessboard.Info';
 
-type HistoryProps = ThemedClassName<{ model: ExtendedChessModel; min?: number; max?: number }>;
+type HistoryProps = ThemedClassName<{
+  model: ExtendedChessModel;
+  min?: number;
+  max?: number;
+  onSelect?: (index: number) => void;
+}>;
 
-const History = ({ classNames, model, min, max }: HistoryProps) => {
+const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const { t } = useTranslation(meta.id);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
@@ -80,14 +87,17 @@ const History = ({ classNames, model, min, max }: HistoryProps) => {
   const history = model.game.history();
   const moves = useMemo(
     () =>
-      history.reduce((acc, move, index) => {
-        if (index % 2 === 0) {
-          acc.push([move]);
-        } else {
-          acc[acc.length - 1].push(move);
-        }
-        return acc;
-      }, [] as string[][]),
+      history.reduce(
+        (acc, move, index) => {
+          if (index % 2 === 0) {
+            acc.push([{ index, move }]);
+          } else {
+            acc[acc.length - 1].push({ index, move });
+          }
+          return acc;
+        },
+        [] as { index: number; move: string }[][],
+      ),
     [history.length],
   );
 
@@ -95,6 +105,13 @@ const History = ({ classNames, model, min, max }: HistoryProps) => {
   useEffect(() => {
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight });
   }, [history.length]);
+
+  useEffect(() => {
+    const div = scrollerRef.current?.querySelector(`[data-index="${model.moveIndex.value - 1}"]`);
+    scrollerRef.current?.classList.add('scrollbar-none');
+    div?.scrollIntoView({ behavior: 'smooth' });
+    scrollerRef.current?.classList.remove('scrollbar-none');
+  }, [model.moveIndex.value]);
 
   return (
     <div
@@ -106,10 +123,26 @@ const History = ({ classNames, model, min, max }: HistoryProps) => {
       }}
     >
       {moves.map(([a, b], index) => (
-        <div key={index} className='grid grid-cols-[3rem_1fr_1fr] pis-4 leading-1'>
+        <div key={index} className='grid grid-cols-[3rem_1fr_1fr_1rem] gap-2 pis-4 leading-1'>
           <div className='content-center text-xs text-subdued'>{index + 1}</div>
-          <div>{a}</div>
-          <div>{b}</div>
+          {a && (
+            <div
+              data-index={a.index}
+              className={mx('pis-2 cursor-pointer', a.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              onClick={() => onSelect?.(a.index + 1)}
+            >
+              {a.move}
+            </div>
+          )}
+          {b && (
+            <div
+              data-index={b.index}
+              className={mx('pis-2 cursor-pointer', b.index === model.moveIndex.value - 1 && 'bg-primary-500')}
+              onClick={() => onSelect?.(b.index + 1)}
+            >
+              {b.move}
+            </div>
+          )}
         </div>
       ))}
       {label && <div className='text-center'>{label}</div>}

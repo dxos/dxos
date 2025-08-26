@@ -24,7 +24,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -57,8 +57,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
         <NativeChatDialog.Content>
           <Chat.Thread />
         </NativeChatDialog.Content>
-        <NativeChatDialog.Footer>
-          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onChangeOnline={setOnline} expandable />
+        <NativeChatDialog.Footer classNames='p-1.5'>
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
         </NativeChatDialog.Footer>
       </NativeChatDialog.Root>
     </Chat.Root>

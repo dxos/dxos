@@ -15,7 +15,8 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
+import { TestHelpers } from '@dxos/effect';
+import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -27,8 +28,8 @@ import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
-  it.effect.only(
+describe('Planning Blueprint', { timeout: 120_000 }, () => {
+  it.effect(
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
@@ -125,8 +126,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
         ).pipe(
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(LocalFunctionExecutionService.layer),
+          Layer.provideMerge(TracingService.layerNoop),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });

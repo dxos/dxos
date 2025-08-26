@@ -41,8 +41,10 @@ export class PipelineState {
    */
   _ctx = new Context();
 
-  // TODO(dmaretskyi): Remove?.
-  public readonly timeframeUpdate = this._timeframeClock.update;
+  // TODO(dmaretskyi): Remove?. Avoid accessing `_timeframeClock` before constructor initialization.
+  public get timeframeUpdate() {
+    return this._timeframeClock.update;
+  }
 
   public readonly stalled = new Event();
 

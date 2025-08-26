@@ -19,6 +19,7 @@ const instructions = trim`
   When you are done, reply with the created objects. Do not print the data, instead reply with inline references to the created objects.
   Those will be later substituted with the pills representing the created objects.
   Print the rest of the created objects as block references after the main note.
+
   <example>
     Based on my research, Google was founded by @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M and @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK46K31DDW62PBW9H2ZQ
 

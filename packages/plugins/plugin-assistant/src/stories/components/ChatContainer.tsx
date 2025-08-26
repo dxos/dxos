@@ -8,7 +8,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 
@@ -32,7 +31,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   }, [chat, chats]);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
 
   const handleNewChat = useCallback(() => {
@@ -62,16 +61,10 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Toolbar.IconButton icon='ph--trash--regular' iconOnly label='Reset' onClick={() => onEvent?.('reset')} />
       </Toolbar.Root>
       {!chat || !processor ? null : (
-        <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
+        <Chat.Root chat={chat} processor={processor}>
           <Chat.Thread />
           <div className='p-4'>
-            <Chat.Prompt
-              {...chatProps}
-              classNames='p-2 border border-transparent rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-              preset={preset?.id}
-              online={online}
-              onChangeOnline={setOnline}
-            />
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </div>
         </Chat.Root>
       )}

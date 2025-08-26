@@ -7,5 +7,6 @@ export * from './types';
 export * from './BlueprintContainer';
 export * from './ChatContainer';
 export * from './GraphContainer';
+export * from './LoggingContainer';
 export * from './SurfaceContainer';
 export * from './TasksContainer';

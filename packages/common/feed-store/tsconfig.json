@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "es2018",
     "types": [
       "@dxos/typings",
       "node"

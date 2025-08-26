@@ -5,7 +5,9 @@
 import { Context, Effect, Layer, type Schema } from 'effect';
 
 import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
-import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult } from '@dxos/echo-db';
+import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
+import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
+import type { EchoSchema } from '@dxos/echo-schema';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
@@ -30,7 +32,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     };
   };
 
-  static makeLayer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
+  static layer = (db: EchoDatabase): Layer.Layer<DatabaseService> => {
     return Layer.succeed(DatabaseService, DatabaseService.make(db));
   };
 
@@ -97,6 +99,19 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.query(queryOrFilter as any).pipe(
       Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
     );
+
+  static schemaQuery = <Q extends SchemaRegistryQuery>(
+    query: Q,
+  ): Effect.Effect<SchemaRegistryPreparedQuery<EchoSchema>, never, DatabaseService> =>
+    DatabaseService.pipe(
+      Effect.map(({ db }) => db.schemaRegistry.query(query)),
+      Effect.withSpan('DatabaseService.schemaQuery'),
+    );
+
+  static runSchemaQuery = <Q extends SchemaRegistryQuery>(
+    query: Q,
+  ): Effect.Effect<EchoSchema[], never, DatabaseService> =>
+    DatabaseService.schemaQuery(query).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
 
   /**
    * Adds an object to the database.

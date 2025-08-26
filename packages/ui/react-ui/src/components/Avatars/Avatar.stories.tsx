@@ -67,6 +67,8 @@ export default {
 const sampleImage =
   'https://png.pngtree.com/thumb_back/fh260/background/20230614/pngtree-the-photo-of-a-woman-with-red-sunglasses-is-surrounded-by-image_2931163.jpg';
 
+const brokenImage = 'https://png.pngtree.com/potato_squirrel.png';
+
 const row = (size: Size) => (
   <>
     <DefaultStory size={size} status='inactive' description='Offline' />
@@ -95,6 +97,12 @@ export const Default = () => (
 export const Image = () => (
   <div>
     <DefaultStory variant='circle' imgSrc={sampleImage} />
+  </div>
+);
+
+export const BrokenImage = () => (
+  <div>
+    <DefaultStory variant='circle' imgSrc={brokenImage} />
   </div>
 );
 

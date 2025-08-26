@@ -31,14 +31,17 @@ export type ChatContainerProps = {
 export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
 
+  // TODO(burdon): Handle new chat/branch.
+
   useEffect(() => {
     if (processor && onProcessorReady) {
+      // TODO(burdon): Why setTimeout?
       const timeout = setTimeout(() => onProcessorReady(processor));
       return () => clearTimeout(timeout);
     }
@@ -53,13 +56,7 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
         <div className='p-2'>
-          <Chat.Prompt
-            {...chatProps}
-            classNames='p-2 border border-transparent rounded-md'
-            preset={preset?.id}
-            online={online}
-            onChangeOnline={setOnline}
-          />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
         </div>
       </Chat.Root>
     </StackItem.Content>

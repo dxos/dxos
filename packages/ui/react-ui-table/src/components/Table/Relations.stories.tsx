@@ -12,6 +12,7 @@ import { type JsonSchemaType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -42,23 +43,20 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
     [],
   );
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!space) {
       return;
     }
 
-    const timeout = setTimeout(async () => {
-      const {
-        jsonSchema,
-        schema: effectSchema,
-        view,
-      } = await createTable({ client, space, typename: Type.getTypename(schema) });
-      setJsonSchema(jsonSchema);
-      setView(view);
-      space.db.add(view);
-      await space.db.schemaRegistry.register([effectSchema]);
-    });
-    return () => clearTimeout(timeout);
+    const {
+      jsonSchema,
+      schema: effectSchema,
+      view,
+    } = await createTable({ client, space, typename: Type.getTypename(schema) });
+    setJsonSchema(jsonSchema);
+    setView(view);
+    space.db.add(view);
+    await space.db.schemaRegistry.register([effectSchema]);
   }, [client, space, schema]);
 
   const model = useTableModel<TableRow>({ view, schema: jsonSchema, rows: [], features });
@@ -103,7 +101,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'ui/react-ui-table/relations',
+  title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   parameters: { translations, controls: { disable: true } },
   decorators: [

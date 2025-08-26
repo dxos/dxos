@@ -6,7 +6,6 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "dist",
-    "target": "ESNext",
     "types": [
       "node"
     ]

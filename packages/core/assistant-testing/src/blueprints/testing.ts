@@ -5,7 +5,7 @@
 import { type AiTool, AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import { type AiConversation, type AiConversationRunParams } from '@dxos/assistant';
+import { type AiConversation, type AiConversationRunParams, AiSession } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
 export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> & {
@@ -23,7 +23,9 @@ export const runSteps = Effect.fn(function* ({
   steps: TestStep[];
 }) {
   for (const { test, ...props } of steps) {
+    const session = new AiSession();
     yield* conversation.run({
+      session,
       ...props,
     });
 

@@ -29,8 +29,17 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
       <ReactMarkdown
         skipHtml
         components={{
+          h1: ({ children }) => {
+            return <h1 className='pbs-1 pbe-1 text-xl'>{children}</h1>;
+          },
+          h2: ({ children }) => {
+            return <h2 className='pbs-1 pbe-1 text-lg'>{children}</h2>;
+          },
+          h3: ({ children }) => {
+            return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
+          },
           p: ({ children }) => {
-            return <div className='pbs-1 pbe-1'>{children}</div>;
+            return <div className='pbs-1 pbe-1 text-subdued'>{children}</div>;
           },
           a: ({ children, href, ...props }) => (
             <a
@@ -59,7 +68,10 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
             </li>
           ),
           blockquote: ({ children, ...props }) => (
-            <blockquote className='pis-4 pbs-4 pbe-4 border-l-4 border-primary-500 text-primary-500' {...props}>
+            <blockquote
+              className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-primary-500 text-primary-500'
+              {...props}
+            >
               {children}
             </blockquote>
           ),
@@ -71,7 +83,7 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
               <SyntaxHighlighter
                 PreTag='div'
                 language={language}
-                className='mbs-2 mbe-2 border border-separator rounded-sm'
+                className='mbs-2 mbe-2 border border-separator rounded-sm text-sm !p-2 !bg-groupSurface'
               >
                 {children}
               </SyntaxHighlighter>

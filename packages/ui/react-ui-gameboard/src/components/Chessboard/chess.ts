@@ -6,6 +6,7 @@ import { type ReadonlySignal, signal } from '@preact/signals-core';
 import { Chess as ChessJS } from 'chess.js';
 import { type FC, type SVGProps } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import * as Alpha from '../../gen/pieces/chess/alpha';
@@ -62,7 +63,7 @@ export const getSquareColor = ([row, col]: Location) => {
   return (col + row) % 2 === 0 ? boardStyles.black : boardStyles.white;
 };
 
-export const createChess = (pgn?: string) => {
+export const createChess = (pgn?: string): ChessJS => {
   const chess = new ChessJS();
   if (pgn) {
     try {
@@ -76,42 +77,35 @@ export const createChess = (pgn?: string) => {
 };
 
 /**
- * Attempt move.
- */
-const tryMove = (chess: ChessJS, move: Move): ChessJS | null => {
-  const from = locationToPos(move.from);
-  const to = locationToPos(move.to);
-  try {
-    const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
-    chess.move({ from, to, promotion }, { strict: false });
-    return chess;
-  } catch {
-    // Ignore.
-    return null;
-  }
-};
-
-/**
  * Chess model.
  */
 export class ChessModel implements GameboardModel<ChessPiece> {
   private readonly _chess = new ChessJS();
   private readonly _pieces = signal<PieceMap<ChessPiece>>({});
+  private readonly _moveIndex = signal(0);
 
   constructor(pgn?: string) {
     this.update(pgn);
+  }
+
+  get readonly(): boolean {
+    return this._moveIndex.value !== this._chess.history().length;
   }
 
   get turn(): Player {
     return this._chess.turn() === 'w' ? 'white' : 'black';
   }
 
+  get game(): ChessJS {
+    return this._chess;
+  }
+
   get pieces(): ReadonlySignal<PieceMap<ChessPiece>> {
     return this._pieces;
   }
 
-  get game(): ChessJS {
-    return this._chess;
+  get moveIndex(): ReadonlySignal<number> {
+    return this._moveIndex;
   }
 
   /**
@@ -130,8 +124,13 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._chess.pgn();
   }
 
-  get fen(): string {
-    return this._chess.fen();
+  setMoveIndex(index: number) {
+    const temp = new ChessJS();
+    const history = this._chess.history({ verbose: true });
+    for (let i = 0; i < index && i < history.length; i++) {
+      temp.move(history[i]);
+    }
+    this._updateBoard(temp);
   }
 
   update(pgn = ''): void {
@@ -154,7 +153,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
       this._pieces.value = {};
     }
 
-    this._update();
+    this._updateBoard(this._chess);
   }
 
   isValidMove(move: Move): boolean {
@@ -173,7 +172,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
       return false;
     }
 
-    this._update();
+    this._updateBoard(this._chess);
     return true;
   }
 
@@ -185,36 +184,34 @@ export class ChessModel implements GameboardModel<ChessPiece> {
 
     const move = moves[Math.floor(Math.random() * moves.length)];
     this._chess.move(move);
-    this._update();
+
+    this._updateBoard(this._chess);
     return true;
   }
 
   /**
    * Update pieces preserving identity.
    */
-  private _update(): void {
-    const pieces: PieceMap<ChessPiece> = {};
-    this._chess.board().flatMap((row) =>
-      row.forEach((record) => {
-        if (!record) {
-          return;
-        }
-
-        const { square, type, color } = record;
-        const pieceType = `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece;
-        const location = posToLocation(square);
-        pieces[locationToString(location)] = {
-          id: `${square}-${pieceType}`,
-          type: pieceType,
-          side: color === 'w' ? 'white' : 'black',
-          location,
-        };
-      }),
-    );
-
-    this._pieces.value = mapPieces(this._pieces.value, pieces);
+  private _updateBoard(chess: ChessJS): void {
+    this._pieces.value = createPieceMap(chess);
+    this._moveIndex.value = chess.history().length;
   }
 }
+
+/**
+ * Attempt move.
+ */
+const tryMove = (chess: ChessJS, move: Move): ChessJS | null => {
+  const from = locationToPos(move.from);
+  const to = locationToPos(move.to);
+  try {
+    const promotion = move.promotion ? move.promotion[1].toLowerCase() : 'q';
+    chess.move({ from, to, promotion }, { strict: false });
+    return chess;
+  } catch {
+    return null;
+  }
+};
 
 const isValidNextMove = (previous: string[], current: string[]) => {
   if (current.length > previous.length + 1) {
@@ -231,20 +228,70 @@ const isValidNextMove = (previous: string[], current: string[]) => {
 };
 
 /**
+ * Starting from a new game, assign piece IDs based on their starting position.
+ * Then iterate through the history of the provided game and update the piece map.
+ */
+export const createPieceMap = (chess: ChessJS): PieceMap<ChessPiece> => {
+  const temp = new ChessJS();
+  let pieces = _createPieceMap(temp);
+  const history = chess.history({ verbose: true });
+  for (let i = 0; i < history.length; i++) {
+    const move = history[i];
+    temp.move(move);
+    pieces = _diffPieces(pieces, _createPieceMap(temp));
+    const test = new Set();
+    Object.values(pieces).forEach((piece) => {
+      invariant(!test.has(piece.id), 'Duplicate: ' + piece.id);
+      test.add(piece.id);
+    });
+  }
+
+  return pieces;
+};
+
+/**
+ * Create a map of pieces from the board positions; assign each piece the ID of the current square.
+ */
+const _createPieceMap = (chess: ChessJS): PieceMap<ChessPiece> => {
+  const pieces: PieceMap<ChessPiece> = {};
+  chess.board().flatMap((row) =>
+    row.forEach((record) => {
+      if (!record) {
+        return;
+      }
+
+      const { square, type, color } = record;
+      const pieceType = `${color.toUpperCase()}${type.toUpperCase()}` as ChessPiece;
+      const location = posToLocation(square);
+      pieces[locationToString(location)] = {
+        id: `${square}-${pieceType}`,
+        type: pieceType,
+        side: color === 'w' ? 'white' : 'black',
+        location,
+      };
+    }),
+  );
+
+  return pieces;
+};
+
+/**
  * Preserve the original piece objects (and IDs).
  */
-export const mapPieces = <T extends PieceType>(before: PieceMap<T>, after: PieceMap<T>): PieceMap<T> => {
+const _diffPieces = <T extends PieceType>(before: PieceMap<T>, after: PieceMap<T>): PieceMap<T> => {
   const difference: { added: PieceMap; removed: PieceMap } = {
     removed: {},
     added: {},
   };
 
+  // Removed.
   (Object.keys(before) as Array<keyof typeof before>).forEach((square) => {
     if (after[square]?.type !== before[square]?.type) {
       difference.removed[square] = before[square];
     }
   });
 
+  // Added.
   (Object.keys(after) as Array<keyof typeof after>).forEach((square) => {
     if (before[square]?.type !== after[square]?.type) {
       difference.added[square] = after[square];
@@ -253,19 +300,13 @@ export const mapPieces = <T extends PieceType>(before: PieceMap<T>, after: Piece
     }
   });
 
+  // Preserve IDs.
   for (const piece of Object.values(difference.added)) {
     const previous = Object.values(difference.removed).find((p) => p.type === piece.type);
     if (previous) {
       piece.id = previous.id;
     }
   }
-
-  log('delta', {
-    before: Object.keys(before).length,
-    after: Object.keys(after).length,
-    removed: Object.keys(difference.removed).length,
-    added: Object.keys(difference.added).length,
-  });
 
   return after;
 };

@@ -392,6 +392,5 @@
   "storyExplorer.preview.mode": "canvas",
   "storyExplorer.server.external.url": "http://localhost:9009",
   "storyExplorer.server.internal.enabled": false,
-  "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx",
-  "typescript.experimental.useTsgo": false
+  "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx"
 }

@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
@@ -56,8 +56,6 @@ export class Bindings {
  * Manages bindings of blueprints and objects to a conversation.
  */
 export class AiContextBinder {
-  constructor(private readonly _queue: Queue) {}
-
   /**
    * Reactive query of all bindings.
    */
@@ -69,6 +67,8 @@ export class AiContextBinder {
   ]);
 
   readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
+
+  constructor(private readonly _queue: Queue) {}
 
   /**
    * Asynchronous query of all bindings.
@@ -122,10 +122,16 @@ export class AiContextBinder {
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),
       Array.reduce(new Bindings(), (context, item) => {
-        item.blueprints.removed.forEach((item) => context.blueprints.delete(item));
-        item.blueprints.added.forEach((item) => context.blueprints.add(item));
-        item.objects.removed.forEach((item) => context.objects.delete(item));
-        item.objects.added.forEach((item) => context.objects.add(item));
+        item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+        item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
+        item.objects.removed.forEach((ref) => {
+          for (const obj of context.objects) {
+            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+              context.objects.delete(obj);
+            }
+          }
+        });
+        item.objects.added.forEach((ref) => context.objects.add(ref));
         return context;
       }),
     );

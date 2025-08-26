@@ -176,7 +176,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
     <div
       ref={containerRef}
       className={mx(
-        'flex items-center justify-center overflow-auto scrollbar-none',
+        'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
         'opacity-0 transition-opacity duration-1000',
         mounted && 'opacity-100',
         classNames,

@@ -152,6 +152,7 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
 
 type SelectOptionProps = SelectItemProps;
 
+// TODO(burdon): Option to show icon on left/right.
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (

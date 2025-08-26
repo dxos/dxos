@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build (tsc)",
       "type": "typescript",
       "tsconfig": "tsconfig.all.json",
       "problemMatcher": ["$tsc-watch"],
@@ -19,7 +19,7 @@
       }
     },
     {
-      "label": "build current tsconfig",
+      "label": "build current tsconfig (tsc)",
       "type": "typescript",
       "tsconfig": "${relativeFile}",
       "problemMatcher": ["$tsc-watch"],

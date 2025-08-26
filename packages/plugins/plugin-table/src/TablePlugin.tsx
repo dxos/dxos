@@ -10,7 +10,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { TableView } from '@dxos/react-ui-table/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableAction } from './types';
@@ -58,7 +58,7 @@ export const TablePlugin = () =>
         ),
     }),
     defineModule({
-      id: `${meta.id}/module/on-space-created`,
+      id: `${meta.id}/module/on-schema-added`,
       activatesOn: SpaceEvents.SchemaAdded,
       activate: () =>
         contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema }) =>
@@ -74,5 +74,10 @@ export const TablePlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

@@ -9,6 +9,7 @@ import { Effect, Layer, Schema } from 'effect';
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { AiSession } from './session';
@@ -77,6 +78,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
           Layer.provideMerge(ToolResolverService.layerEmpty),
           Layer.provideMerge(ToolExecutionService.layerEmpty),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
+          Layer.provideMerge(TracingService.layerNoop),
         ),
       ),
     ),
@@ -102,6 +104,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
+          TracingService.layerNoop,
         ),
       ),
     ),

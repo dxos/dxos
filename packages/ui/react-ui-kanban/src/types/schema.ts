@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { ViewAnnotation } from '@dxos/echo-schema';
 
 export const KanbanView = Schema.Struct({
   /**
@@ -31,6 +32,7 @@ export const KanbanView = Schema.Struct({
     typename: 'dxos.org/type/KanbanView',
     version: '0.1.0',
   }),
+  ViewAnnotation.set(true),
 );
 export type KanbanView = Schema.Schema.Type<typeof KanbanView>;
 

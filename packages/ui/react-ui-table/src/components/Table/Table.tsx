@@ -37,7 +37,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNotFalsy, safeParseInt } from '@dxos/util';
 
-import { ModalController, type TableModel, type TablePresentation } from '../../model';
+import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
 import { type TableCellEditorProps, TableValueEditor, createOption } from '../TableCellEditor';
@@ -46,6 +46,9 @@ import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
+
+const columnDefault = { grid: { minSize: 42 } };
+const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //
 // Table.Root
@@ -77,7 +80,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
 
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
-  focusDraft?: () => void;
+  handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
 export type TableMainProps = {
@@ -125,6 +128,23 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       dxGrid.getCells = getCells;
     }, [presentation, dxGrid, getCells]);
 
+    const handleInsertRowResult = useCallback(
+      (insertResult?: InsertRowResult) => {
+        if (insertResult === 'draft') {
+          requestAnimationFrame(() => {
+            dxGrid?.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            dxGrid?.refocus();
+          });
+        } else {
+          requestAnimationFrame(() => {
+            dxGrid?.setFocus({ plane: 'grid', col: 0, row: model ? model.getRowCount() - 1 : 0 });
+            dxGrid?.refocus();
+          });
+        }
+      },
+      [model, dxGrid],
+    );
+
     /**
      * Provides an external controller that can be called to repaint the table.
      */
@@ -142,14 +162,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             dxGrid.requestUpdate();
           }
         },
-        focusDraft: () => {
-          requestAnimationFrame(() => {
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
-            dxGrid.refocus();
-          });
-        },
+        handleInsertRowResult,
       };
-    }, [presentation, dxGrid]);
+    }, [presentation, dxGrid, model]);
 
     const handleSaveDraftRow = useCallback(
       (rowIndex = 0) => {
@@ -258,14 +273,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
           if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
-            if (draftRowCount < 1) {
-              model.insertRow();
-            }
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);
-            model.insertRow();
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            handleInsertRowResult(model.insertRow());
           } else {
             dxGrid.refocus(increment, delta);
           }
@@ -397,6 +408,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           columns={model.columnMeta.value}
+          columnDefault={columnDefault}
+          rowDefault={rowDefault}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.projection.fields.length}
           overscroll='trap'

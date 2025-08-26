@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
 import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
+import { resolveRef } from '@dxos/client';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
   MarkdownViewer,
   ToggleContainer as NativeToggleContainer,
@@ -129,6 +132,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
           a: ({ node: { properties }, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
+                // TODO(burdon): Check valid length (since serialized).
                 const dxn = DXN.parse(properties.href);
                 return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
@@ -136,16 +140,22 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
             // TODO(burdon): Can we revert to the default handler?
             return (
-              <a
-                href={href}
-                className='text-primary-500 hover:text-primary-500' // TODO(burdon): Token.
-                target='_blank'
-                rel='noopener noreferrer'
-                {...props}
-              >
+              <Link href={href} target='_blank' rel='noopener noreferrer' {...props}>
                 {children}
-              </a>
+              </Link>
             );
+          },
+          img: ({ node: { properties } }) => {
+            const client = useClient();
+            if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
+              try {
+                const dxn = DXN.parse(properties?.src);
+                const subject = resolveRef(client, dxn, space);
+                const data = useMemo(() => ({ subject }), [subject]);
+                return <Surface role='card--transclusion' data={data} limit={1} />;
+              } catch {}
+            }
+            return <img {...properties} />;
           },
         }}
       />
@@ -156,13 +166,11 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   // Suggest
   //
   ['suggest' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
     invariant(block._tag === 'suggest');
     return (
       <IconButton
         icon='ph--lightning--regular'
         label={block.text}
-        title={t('button suggest')}
         onClick={() => onEvent?.({ type: 'submit', text: block.text })}
       />
     );
@@ -172,7 +180,6 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   // Select
   //
   ['select' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
     invariant(block._tag === 'select');
     return (
       <div className='flex flex-wrap gap-1'>
@@ -181,7 +188,6 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
             classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
             key={idx}
             onClick={() => onEvent?.({ type: 'submit', text: option })}
-            title={t('button select option')}
           >
             {option}
           </Button>
@@ -195,8 +201,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['toolkit' as const]: ({ block }) => {
     invariant(block._tag === 'toolkit');
+    const { t } = useTranslation(meta.id);
+
     return (
-      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
+      <ToggleContainer title={t('toolkit label')} classNames={panelClasses} defaultOpen>
         <Toolbox classNames={marginClasses} />
       </ToggleContainer>
     );
@@ -252,6 +260,34 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   },
 };
 
+export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {
+  error: Error;
+};
+
+/**
+ * Error message with retry.
+ */
+export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <>
+      <MessageItem>
+        <ToggleContainer title={error.message || t('error label')} classNames={[panelClasses, 'bg-warningSurface']}>
+          <div className='p-2'>{String(error.cause)}</div>
+        </ToggleContainer>
+      </MessageItem>
+      <MessageItem>
+        <IconButton
+          classNames='bg-errorSurface text-errorSurfaceText'
+          icon='ph--lightning--regular'
+          label={t('button retry')}
+          onClick={() => onEvent?.({ type: 'retry' })}
+        />
+      </MessageItem>
+    </>
+  );
+};
+
 /**
  * Wrapper for each message.
  */
@@ -269,9 +305,12 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
   );
 };
 
-const ToggleContainer = (props: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
+const ToggleContainer = ({ classNames, ...props }: ToggleContainerProps) => {
+  return <NativeToggleContainer {...props} classNames={mx(panelClasses, classNames)} />;
 };
+
+export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
+  `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
 // TODO(burdon): Move to parser.
 const preprocessTextContent = (content: string) =>
