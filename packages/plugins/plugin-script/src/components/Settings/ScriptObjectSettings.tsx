@@ -6,7 +6,7 @@ import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -50,10 +50,10 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const space = getSpace(object);
   const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
 
-  const functionPath = fn && getUserFunctionUrlInMetadata(getMeta(fn));
+  const functionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
   const functionUrl =
-    functionPath &&
-    getInvocationUrl(functionPath, client.config.values.runtime?.services?.edge?.url ?? '', {
+    functionId &&
+    getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
       spaceId: space?.id,
     });
 

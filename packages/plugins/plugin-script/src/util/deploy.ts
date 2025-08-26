@@ -7,9 +7,8 @@ import { Obj, Ref } from '@dxos/echo';
 import {
   FunctionType,
   type ScriptType,
-  getUserFunctionUrlInMetadata,
-  makeFunctionUrl,
-  setUserFunctionUrlInMetadata,
+  getUserFunctionIdInMetadata,
+  setUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
@@ -19,8 +18,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { updateFunctionMetadata } from './functions';
 
 export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
-  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(Obj.getMeta(fn));
-  return Boolean(existingFunctionUrl) && !script.changed;
+  const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
+  return Boolean(existingFunctionId) && !script.changed;
 };
 
 type DeployScriptProps = {
@@ -28,10 +27,10 @@ type DeployScriptProps = {
   client: Client;
   space: Space;
   fn?: FunctionType;
-  existingFunctionUrl?: string;
+  existingFunctionId?: string;
 };
 
-type DeployScriptResult = { success: boolean; error?: Error; functionUrl?: string };
+type DeployScriptResult = { success: boolean; error?: Error; functionId?: string };
 
 /**
  * Deploy a script to a space, handling bundling and uploading to the FaaS infrastructure.
@@ -41,7 +40,7 @@ export const deployScript = async ({
   client,
   space,
   fn,
-  existingFunctionUrl,
+  existingFunctionId,
 }: DeployScriptProps): Promise<DeployScriptResult> => {
   const validationError = validateDeployInputs(script, space);
   if (validationError) {
@@ -49,8 +48,6 @@ export const deployScript = async ({
   }
 
   try {
-    const existingFunctionId = extractFunctionId(existingFunctionUrl);
-
     const { bundle, error } = await bundleScript(script.source!.target!.content);
     if (error || !bundle) {
       throw error || new Error('Bundle creation failed');
@@ -72,10 +69,9 @@ export const deployScript = async ({
     script.changed = false;
     updateFunctionMetadata(script, storedFunction, meta, functionId);
 
-    const functionUrl = makeFunctionUrl({ functionId });
-    setUserFunctionUrlInMetadata(Obj.getMeta(storedFunction), functionUrl);
+    setUserFunctionIdInMetadata(Obj.getMeta(storedFunction), functionId);
 
-    return { success: true, functionUrl };
+    return { success: true, functionId };
   } catch (err: any) {
     log.catch(err);
     return { success: false, error: err };
@@ -90,10 +86,6 @@ const validateDeployInputs = (script: ScriptType, space: Space): Error | null =>
     return new Error('Script source or space not available');
   }
   return null;
-};
-
-const extractFunctionId = (functionUrl?: string): string | undefined => {
-  return functionUrl?.split('/').at(-1);
 };
 
 const bundleScript = async (source: string): Promise<{ bundle?: string; error?: Error }> => {
@@ -115,9 +107,13 @@ const createOrUpdateFunctionInSpace = (
   version: string,
 ): FunctionType => {
   if (fn) {
+    fn.name = script.name ?? 'New Function';
     fn.version = version;
     return fn;
   } else {
-    return space.db.add(Obj.make(FunctionType, { name: functionId, version, source: Ref.make(script) }));
+    const fn = Obj.make(FunctionType, { name: script.name ?? 'New Function', version, source: Ref.make(script) });
+    space.db.add(fn);
+    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionId);
+    return fn;
   }
 };
