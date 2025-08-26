@@ -7,8 +7,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "type": "module",
   "sideEffects": true,
+  "type": "module",
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
