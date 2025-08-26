@@ -41,6 +41,7 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
 
   useEffect(() => {
     if (processor && onProcessorReady) {
+      // TODO(burdon): Why setTimeout?
       const timeout = setTimeout(() => onProcessorReady(processor));
       return () => clearTimeout(timeout);
     }

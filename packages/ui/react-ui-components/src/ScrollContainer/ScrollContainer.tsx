@@ -17,8 +17,10 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { translationKey } from '../translations';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -60,7 +62,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   const [pinned, setPinned] = useState(pin);
 
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const handleScrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
     if (scrollerRef.current) {
       // Temporarily hide scrollbar to prevent flicker.
       autoScrollRef.current = true;
@@ -77,6 +79,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
           autoScrollRef.current = false;
         }, 500);
       }
+      setPinned(true);
     }
   }, []);
 
@@ -89,11 +92,10 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
         setPinned(false);
       },
       scrollToBottom: () => {
-        handleScrollToBottom('instant');
-        setPinned(true);
+        scrollToBottom('smooth');
       },
     }),
-    [handleScrollToBottom, scrollerRef.current],
+    [scrollToBottom, scrollerRef.current],
   );
 
   // Scroll controller imperative ref.
@@ -118,7 +120,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   }, []);
 
   return (
-    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={handleScrollToBottom}>
+    <ScrollContainerProvider pinned={pinned} controller={controller} scrollToBottom={scrollToBottom}>
       <div className='relative grid flex-1 min-bs-0 overflow-hidden'>
         {fade && (
           <div
@@ -139,6 +141,8 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
     </ScrollContainerProvider>
   );
 });
+
+Root.displayName = 'ScrollContainer.Root';
 
 //
 // Content
@@ -175,14 +179,52 @@ const Content = forwardRef<HTMLDivElement, ContentProps>(({ classNames, children
 Content.displayName = 'ScrollContainer.Content';
 
 //
+// ScrollDownButton
+//
+
+type ScrollDownButtonProps = ThemedClassName;
+
+const ScrollDownButton = ({ classNames }: ScrollDownButtonProps) => {
+  const { t } = useTranslation(translationKey);
+  const { pinned, scrollToBottom } = useScrollContainerContext(ScrollDownButton.displayName!);
+
+  return (
+    <div
+      role='none'
+      className={mx(
+        'absolute bottom-2 right-4 opacity-100 transition-opacity duration-300',
+        pinned && 'opacity-0',
+        classNames,
+      )}
+    >
+      <IconButton
+        variant='primary'
+        icon='ph--arrow-down--regular'
+        iconOnly
+        size={4}
+        label={t('scroll-down.button')}
+        onClick={() => scrollToBottom()}
+      />
+    </div>
+  );
+};
+
+ScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
+
+//
 // ScrollContainer
 //
+
+export { useScrollContainerContext };
 
 export const ScrollContainer = {
   Root,
   Content,
+  ScrollDownButton,
 };
 
-export { useScrollContainerContext };
-
-export type { RootProps as ScrollContainerRootProps, ContentProps as ScrollContainerContentProps };
+export type {
+  RootProps as ScrollContainerRootProps,
+  ContentProps as ScrollContainerContentProps,
+  ScrollDownButtonProps as ScrollContainerScrollDownButtonProps,
+};

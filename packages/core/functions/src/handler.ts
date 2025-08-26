@@ -83,7 +83,7 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition<T = {}, O = any> = {
+export type FunctionDefinition<T = any, O = any> = {
   // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
   name: string;
   description?: string;
