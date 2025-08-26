@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { resolve } from 'node:path';
-import { join } from 'path';
+import { join, resolve } from 'node:path';
 
 import { type StorybookConfig } from '@storybook/web-components-vite';
-import { mergeConfig } from 'vite';
-import Inspect from 'vite-plugin-inspect';
+import { type InlineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
@@ -39,7 +37,11 @@ export const config = ({ stories: baseStories, ...baseConfig }: Partial<Storyboo
   /**
    * https://storybook.js.org/docs/api/main-config/main-config-vite-final
    */
-  viteFinal: async (config) => {
+  viteFinal: async (config: InlineConfig) => {
+    // NOTE: Dynamic imports seems to help avoid conflicts with storybook's internal esbuild-register usage & Vite 7.
+    const { mergeConfig } = await import('vite');
+    const { default: Inspect } = await import('vite-plugin-inspect');
+
     return mergeConfig(config, {
       plugins: [
         isTrue(process.env.DX_INSPECT) && Inspect(),

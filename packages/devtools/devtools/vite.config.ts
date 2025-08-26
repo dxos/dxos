@@ -6,7 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import { VitePluginFonts } from 'vite-plugin-fonts';
+import VitePluginFonts from 'unplugin-fonts/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -99,7 +99,7 @@ export default defineConfig({
     /**
      * Bundle fonts.
      * https://fonts.google.com
-     * https://www.npmjs.com/package/vite-plugin-fonts
+     * https://www.npmjs.com/package/unplugin-fonts
      */
     VitePluginFonts({
       google: {
