@@ -84,6 +84,7 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
 };
 
 export type FunctionDefinition<T = {}, O = any> = {
+  // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
@@ -91,7 +92,6 @@ export type FunctionDefinition<T = {}, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
-// TODO(dmaretskyi): Bind input type to function handler.
 export const defineFunction = <T, O>({
   name,
   description,

@@ -39,7 +39,6 @@ const getDeployedFunctions = async (client: Client): Promise<FunctionType[]> => 
   edgeClient.setIdentity(edgeIdentity);
 
   const result = await edgeClient.listFunctions();
-  console.log(result);
   return result.uploadedFunctions.map((record: any) => {
     // record shape is determined by EDGE API. We defensively parse.
     const meta = safeJsonParse(record?.metadataJSON);
