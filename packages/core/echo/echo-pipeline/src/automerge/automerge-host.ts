@@ -424,7 +424,7 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    if (!this.isOpen) {
+    if (!this._onHeadsChangedTask) {
       return undefined;
     }
     this._indexMetadataStore.notifyMarkedDirty();
