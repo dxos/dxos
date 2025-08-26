@@ -234,6 +234,7 @@ export class AutomergeHost extends Resource {
   }
 
   protected override async _close(): Promise<void> {
+    await this._repo.shutdown();
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
