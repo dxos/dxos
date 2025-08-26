@@ -4,12 +4,13 @@
 
 import '@dxos-theme';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
+import { useSignalsMemo } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
