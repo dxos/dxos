@@ -73,7 +73,7 @@ describe('AutomergeHost', () => {
     const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
 
     const level = await createLevel(tmpPath);
-    const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
+    const host = await setupAutomergeHost({ level });
     const handles = range(2, () => host.createDoc({ text: 'Hello world' }));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
     await host.flush();
@@ -88,8 +88,11 @@ describe('AutomergeHost', () => {
 
     // Simulate a restart.
     {
-      const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
+      const level = await createLevel(tmpPath);
+      const host = await setupAutomergeHost({ level });
       expect(await host.getHeads(ids)).toEqual(expectedHeads);
+      await host.close();
+      await level.close();
     }
   });
 
