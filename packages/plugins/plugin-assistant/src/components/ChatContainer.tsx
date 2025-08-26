@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle } from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type MaybePromise } from '@dxos/util';
 
 import {
   type AiChatProcessor,
@@ -26,10 +25,9 @@ import { Chat } from './Chat';
 export type ChatContainerProps = {
   chat: Assistant.Chat;
   role?: string;
-  onProcessorReady?: (processor: AiChatProcessor) => MaybePromise<void>;
 };
 
-export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) => {
+export const ChatContainer = forwardRef<AiChatProcessor | undefined, ChatContainerProps>(({ chat }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
@@ -38,14 +36,7 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
   const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
-
-  useEffect(() => {
-    if (processor && onProcessorReady) {
-      // TODO(burdon): Why setTimeout?
-      const timeout = setTimeout(() => onProcessorReady(processor));
-      return () => clearTimeout(timeout);
-    }
-  }, [processor, onProcessorReady]);
+  useImperativeHandle(forwardedRef, () => processor);
 
   // TODO(burdon): Handle new chat/branch.
   const handleNewChat = useCallback(() => {
@@ -75,6 +66,6 @@ export const ChatContainer = ({ chat, onProcessorReady }: ChatContainerProps) =>
       </Chat.Root>
     </StackItem.Content>
   );
-};
+});
 
 export default ChatContainer;

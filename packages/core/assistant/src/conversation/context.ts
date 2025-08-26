@@ -78,6 +78,7 @@ export class AiContextBinder {
     return this._reduce(queueItems);
   }
 
+  // TODO(burdon): Check if already bound.
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
     if (!props.blueprints?.length && !props.objects?.length) {

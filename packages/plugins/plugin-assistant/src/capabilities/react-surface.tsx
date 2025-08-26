@@ -3,7 +3,7 @@
 //
 
 import { Effect } from 'effect';
-import React, { useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
@@ -83,22 +83,26 @@ export default () =>
         }, [data.subject]);
 
         // TODO(wittjosiah): Factor out to container.
-        const handleProcessorReady = useCallback(
-          (processor: AiChatProcessor) => {
-            if (Obj.instanceOf(Blueprint.Blueprint, data.companionTo)) {
-              void processor.context.bind({ blueprints: [Ref.make(data.companionTo)] });
-            } else {
-              void processor.context.bind({ objects: [Ref.make(data.companionTo)] });
-            }
-          },
-          [data.companionTo],
-        );
+        const processorRef = useRef<AiChatProcessor>();
+        const processor = processorRef.current;
+        useEffect(() => {
+          if (!processor) {
+            return;
+          }
+
+          // TODO(burdon): Check if already bound.
+          if (Obj.instanceOf(Blueprint.Blueprint, data.companionTo)) {
+            void processor.context.bind({ blueprints: [Ref.make(data.companionTo)] });
+          } else {
+            void processor.context.bind({ objects: [Ref.make(data.companionTo)] });
+          }
+        }, [processor, data.companionTo]);
 
         if (data.subject === 'assistant-chat') {
           return null;
         }
 
-        return <ChatContainer role={role} chat={data.subject} onProcessorReady={handleProcessorReady} />;
+        return <ChatContainer ref={processorRef} role={role} chat={data.subject} />;
       },
     }),
     createSurface({
