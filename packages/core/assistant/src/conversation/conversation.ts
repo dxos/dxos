@@ -3,7 +3,7 @@
 //
 
 import { type AiTool, type AiToolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -63,8 +63,14 @@ export class AiConversation {
 
       // Context.
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
-      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((o) => o.value)),
+      );
+      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((o) => o.value)),
+      );
       log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
