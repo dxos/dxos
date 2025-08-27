@@ -10,18 +10,15 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import {
   Capabilities,
-  CollaborationActions,
   IntentPlugin,
   SettingsPlugin,
   contributes,
-  createIntent,
   useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -99,14 +96,14 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
     //   const message = deref(ref);
     // }
 
-    void dispatch(
-      createIntent(CollaborationActions.InsertContent, {
-        target: doc as any as Type.Expando,
-        object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
-        at: cursor,
-        label: 'Proposal',
-      }),
-    );
+    // void dispatch(
+    //   createIntent(CollaborationActions.InsertContent, {
+    //     target: doc as any as Type.Expando,
+    //     object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...queue.dxn.parts, message.id])),
+    //     at: cursor,
+    //     label: 'Proposal',
+    //   }),
+    // );
   };
 
   return (
