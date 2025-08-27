@@ -32,9 +32,7 @@ export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context
-    .getCapability(Capabilities.SettingsStore)
-      .getStore<Meeting.Settings>(not_meta.id)!.value;
+  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(not_meta.id)!.value;
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {

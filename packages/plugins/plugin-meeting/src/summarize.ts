@@ -24,7 +24,10 @@ import { trim } from '@dxos/util';
 import { type Meeting } from './types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
-export const getMeetingContent = async (meeting: Meeting.Meeting, resolve: (typename: string) => Record<string, any>) => {
+export const getMeetingContent = async (
+  meeting: Meeting.Meeting,
+  resolve: (typename: string) => Record<string, any>,
+) => {
   const notes = await meeting.notes.load();
   const { getTextContent } = resolve(Type.getTypename(Transcript.Transcript)!);
   const transcript = await meeting.transcript.load();
