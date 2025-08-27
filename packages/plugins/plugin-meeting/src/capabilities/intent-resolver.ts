@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { TranscriptActions } from '@dxos/plugin-transcription/types';
+import { TranscriptAction } from '@dxos/plugin-transcription/types';
 import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getSpace(channel);
           invariant(space);
-          const { object: transcript } = yield* dispatch(createIntent(TranscriptActions.Create, { spaceId: space.id }));
+          const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { spaceId: space.id }));
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
           const meeting = Obj.make(Meeting.Meeting, {
             name,
