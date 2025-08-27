@@ -6,11 +6,14 @@ import { Effect } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { fullyQualifiedId } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant, AssistantAction } from '../types';
+
+import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
@@ -68,6 +71,14 @@ export default (context: PluginContext) => [
           }),
         },
       }),
+    }),
+    createResolver({
+      intent: AssistantAction.SetCurrentChat,
+      resolve: ({ companionTo, chat }) =>
+        Effect.gen(function* () {
+          const state = context.getCapability(AssistantCapabilities.MutableState);
+          state.currentChat[fullyQualifiedId(companionTo)] = fullyQualifiedId(chat);
+        }),
     }),
   ]),
 ];

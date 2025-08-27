@@ -18,13 +18,15 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, Query, type QueryResult, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
+
+import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -98,8 +100,13 @@ export default (context: PluginContext) =>
             query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
           }
 
-          // TODO(burdon): Reconcile/coordinate with surface component that creates the chat and relation.
-          const chat = get(rxFromQuery(query)).at(-1);
+          const currentChatId = get(
+            rxFromSignal(
+              () => context.getCapability(AssistantCapabilities.State).currentChat[fullyQualifiedId(object)],
+            ),
+          );
+
+          const chat = get(rxFromQuery(query)).find((chat) => fullyQualifiedId(chat) === currentChatId);
           return [
             {
               id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),

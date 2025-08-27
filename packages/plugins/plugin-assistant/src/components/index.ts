@@ -8,6 +8,7 @@ export * from './AssistantSettings';
 export * from './Chat';
 export * from './PromptSettings';
 export * from './TemplateEditor';
+export * from './Toolbar';
 export * from './Toolbox';
 
 export const BlueprintContainer = lazy(() => import('./BlueprintContainer'));

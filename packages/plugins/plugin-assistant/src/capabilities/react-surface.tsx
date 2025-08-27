@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-import React, { useCallback } from 'react';
+import React from 'react';
 
-import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { SpaceAction } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
@@ -25,7 +23,7 @@ import {
   SequenceContainer,
 } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant, AssistantAction } from '../types';
+import { Assistant } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -49,36 +47,7 @@ export default () =>
       filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
-      component: ({ data, role }) => {
-        const { dispatch } = useIntentDispatcher();
-
-        const handleChatCreate = useCallback(async () => {
-          const space = getSpace(data.companionTo);
-          if (!space) {
-            return;
-          }
-
-          // NOTE: The plugin's graph builder is currently responsible for selecting the (last) companion chat.
-          // TODO(burdon): How should we manage multiple companion chats?
-          // TODO(burdon): Garbage collection of queues?
-          await Effect.runPromise(
-            Effect.gen(function* () {
-              const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-              yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
-              yield* dispatch(
-                createIntent(SpaceAction.AddRelation, {
-                  space,
-                  schema: Assistant.CompanionTo,
-                  source: object,
-                  target: data.companionTo,
-                }),
-              );
-            }),
-          );
-        }, [dispatch, data]);
-
-        return <ChatCompanion role={role} data={data} onChatCreate={handleChatCreate} />;
-      },
+      component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
     }),
     createSurface({
       id: `${meta.id}/sequence`,
