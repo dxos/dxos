@@ -192,7 +192,7 @@ export const WithDocument = {
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer, [CommentsContainer, LoggingContainer]],
+    components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
     blueprints: ['dxos.org/blueprint/assistant'],
   },
 } satisfies Story;

@@ -12,6 +12,7 @@ import { ThreadType } from '../types';
 
 export const createCommentThread = (identity: Identity): ThreadType => {
   return Obj.make(ThreadType, {
+    name: 'Comment',
     messages: faker.helpers.multiple(
       () =>
         Ref.make(
@@ -25,5 +26,26 @@ export const createCommentThread = (identity: Identity): ThreadType => {
         ),
       { count: { min: 2, max: 3 } },
     ),
+    status: 'active',
+  });
+};
+
+export const createProposalThread = (identity: Identity): ThreadType => {
+  return Obj.make(ThreadType, {
+    name: 'Proposal',
+    messages: faker.helpers.multiple(
+      () =>
+        Ref.make(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: {
+              identityDid: faker.datatype.boolean() ? identity.did : IdentityDid.random(),
+            },
+            blocks: [{ _tag: 'proposal', text: faker.lorem.sentences(3) }],
+          }),
+        ),
+      { count: { min: 1, max: 1 } },
+    ),
+    status: 'active',
   });
 };
