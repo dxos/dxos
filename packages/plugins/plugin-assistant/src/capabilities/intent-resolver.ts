@@ -85,7 +85,7 @@ export default (context: PluginContext) => [
       resolve: ({ companionTo, chat }) =>
         Effect.gen(function* () {
           const state = context.getCapability(AssistantCapabilities.MutableState);
-          state.currentChat[fullyQualifiedId(companionTo)] = fullyQualifiedId(chat);
+          state.currentChat[fullyQualifiedId(companionTo)] = chat;
         }),
     }),
   ]),

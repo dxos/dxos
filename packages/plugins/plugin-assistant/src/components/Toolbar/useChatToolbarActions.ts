@@ -81,19 +81,22 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                 variant: 'dropdownMenu',
               },
               (builder) => {
-                chats.forEach((chat) => {
-                  builder.action(
-                    chat.id,
-                    () =>
-                      Effect.gen(function* () {
-                        invariant(companionTo);
-                        yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat }));
-                      }).pipe(Effect.runPromise),
-                    {
-                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
-                    },
-                  );
-                });
+                chats
+                  // TODO(wittjosiah): This should be the default sort order.
+                  .toSorted((a, b) => a.id.localeCompare(b.id))
+                  .forEach((chat) => {
+                    builder.action(
+                      chat.id,
+                      () =>
+                        Effect.gen(function* () {
+                          invariant(companionTo);
+                          yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat }));
+                        }).pipe(Effect.runPromise),
+                      {
+                        label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
+                      },
+                    );
+                  });
               },
             );
           }

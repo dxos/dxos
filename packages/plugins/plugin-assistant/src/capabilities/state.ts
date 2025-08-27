@@ -10,6 +10,8 @@ import { meta } from '../meta';
 import { AssistantCapabilities } from './capabilities';
 
 export default () => {
+  // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
+  // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
   const state = new LocalStorageStore<AssistantCapabilities.AssistantState>(meta.id, {
     currentChat: {},
   });
