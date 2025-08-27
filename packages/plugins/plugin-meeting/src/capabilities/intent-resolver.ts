@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer } from 'effect';
+import { Effect } from 'effect';
 
-import { AiService } from '@dxos/ai';
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { LocalFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
@@ -77,35 +75,20 @@ export default (context: PluginContext) =>
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {
-        Effect.gen(function* () {
-          const functions =
-            context
-              .getCapabilities(Capabilities.Functions)
-              .find((funcs) => funcs.some((func) => func.name.startsWith('dxos.org/function/transcription/'))) ?? [];
-          const open = functions.find((func) => func.name === 'dxos.org/function/transcription/open');
-          const summarize = functions.find((func) => func.name === 'dxos.org/function/transcription/summarize');
-          invariant(open && summarize, 'Transcription functions not found');
+        throw new Error('Not implemented');
 
-          const transcript = yield* Effect.promise(() => meeting.transcript.load());
-          const transcriptContent = yield* LocalFunctionExecutionService.invokeFunction(open, {
-            id: fullyQualifiedId(transcript),
-          });
-          const notes = yield* Effect.promise(() => meeting.notes.load());
-          const summary = yield* LocalFunctionExecutionService.invokeFunction(summarize, {
-            transcript: transcriptContent.content,
-            notes: notes.content,
-          });
-          const text = yield* Effect.promise(() => meeting.summary.load());
-          text.content = summary;
-        }).pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              AiService.model('@anthropic/claude-opus-4-0'), //
-              LocalFunctionExecutionService.layer,
-            ),
-          ),
-          Effect.runPromise,
-        );
+        // const client = context.getCapability(ClientCapabilities.Client);
+        // const endpoint = client.config.values.runtime?.services?.ai?.server;
+        // invariant(endpoint, 'AI service not configured.');
+        // // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
+        // const resolve = (typename: string) =>
+        //   context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+
+        // const text = await meeting.summary.load();
+        // text.content = 'Generating summary...';
+        // const content = await getMeetingContent(meeting, resolve);
+        // const summary = await summarizeTranscript(ai, content);
+        // text.content = summary;
       },
     }),
   ]);
