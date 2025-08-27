@@ -4,9 +4,9 @@
 
 import { Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { LocalFunctionExecutionService, defineFunction } from '@dxos/functions';
+import { TracingService, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
@@ -29,7 +29,7 @@ export default defineFunction({
       description: 'The summary of the transcript.',
     }),
   }),
-  handler: Effect.fn(
+  handler: Effect.fnUntraced(
     function* ({ data: { transcript, notes } }) {
       const result = yield* new AiSession().run({
         prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
@@ -47,8 +47,11 @@ export default defineFunction({
       };
     },
     Effect.provide(
-      Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
-        Layer.provide(LocalFunctionExecutionService.layer),
+      Layer.mergeAll(
+        AiService.model('@anthropic/claude-sonnet-4-0'),
+        ToolResolverService.layerEmpty,
+        ToolExecutionService.layerEmpty,
+        TracingService.layerNoop,
       ),
     ),
   ),
