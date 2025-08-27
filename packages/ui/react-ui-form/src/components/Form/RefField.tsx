@@ -3,22 +3,24 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { type FocusEvent, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import {
   Expando,
   Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
+  type TypeAnnotation,
   getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxRefTag } from '@dxos/lit-ui/react';
-import { Input, useTranslation } from '@dxos/react-ui';
-import { TagPicker, type TagPickerItemData, type TagPickerMode } from '@dxos/react-ui-tag-picker';
+import { Icon, Input, useTranslation } from '@dxos/react-ui';
+import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { TagPickerItem } from '@dxos/react-ui-tag-picker';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
+import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -30,6 +32,9 @@ type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
   onQueryRefOptions?: QueryRefOptions;
+  createOptionLabel?: [string, { ns: string }];
+  createOptionIcon?: string;
+  onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
 };
 
 export const RefField = ({
@@ -43,6 +48,9 @@ export const RefField = ({
   getValue,
   onBlur,
   onQueryRefOptions,
+  createOptionLabel,
+  createOptionIcon,
+  onCreateFromQuery,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
@@ -62,7 +70,7 @@ export const RefField = ({
     );
   }
 
-  const handleGetValue = useCallback((): TagPickerItemData[] => {
+  const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
     const unknownToRefOption = (val: unknown) => {
@@ -87,15 +95,6 @@ export const RefField = ({
 
     return [];
   }, [getValue, availableOptions, array]);
-
-  const handleSearch = useCallback(
-    (text: string, ids: string[]): TagPickerItemData[] =>
-      availableOptions
-        .filter((option) => !ids.includes(option.id))
-        .filter((option) => option.label.toLowerCase().includes(text.toLowerCase()))
-        .map((option) => ({ id: option.id, label: option.label, hue: option.hue as any })),
-    [availableOptions],
-  );
 
   const handleUpdate = useCallback(
     (ids: string[]) => {
@@ -124,8 +123,6 @@ export const RefField = ({
     [availableOptions, array, onValueChange],
   );
 
-  const tagPickerMode: TagPickerMode = useMemo(() => (array ? 'multi-select' : 'single-select'), [array]);
-
   if (!refTypeInfo) {
     return null;
   }
@@ -133,6 +130,27 @@ export const RefField = ({
   const { status, error } = restInputProps.getStatus();
 
   const items = handleGetValue();
+  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
+  const labelById = useMemo(
+    () => Object.fromEntries(availableOptions.map((o) => [o.id, o.label ?? o.id])),
+    [availableOptions],
+  );
+  const [query, setQuery] = useState('');
+  const toggleSelect = useCallback(
+    (id: string) => {
+      if (array) {
+        const nextIds = selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
+        handleUpdate(nextIds);
+      } else {
+        if (selectedIds[0] === id) {
+          handleUpdate([]);
+        } else {
+          handleUpdate([id]);
+        }
+      }
+    },
+    [array, selectedIds, handleUpdate],
+  );
 
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
   return disabled && items.length < 1 ? null : (
@@ -150,15 +168,55 @@ export const RefField = ({
             ))
           )
         ) : (
-          <TagPicker
-            readonly={disabled}
-            items={items}
-            mode={tagPickerMode}
-            onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
-            onUpdate={handleUpdate}
-            onSearch={handleSearch}
-            classNames='bg-inputSurface p-1.5 rounded-sm'
-          />
+          <PopoverCombobox.Root placeholder={placeholder ?? t('empty readonly ref field label')}>
+            <PopoverCombobox.Trigger
+              classNames='bg-inputSurface p-1.5 rounded-sm w-full justify-between'
+              onBlur={onBlur}
+            >
+              {items?.map((item) => (
+                <TagPickerItem
+                  key={item.id}
+                  itemId={item.id}
+                  label={item.label}
+                  {...(item.hue ? { hue: item.hue } : {})}
+                  removeLabel={t('remove item label')}
+                  onItemClick={() => {
+                    toggleSelect(item.id);
+                  }}
+                />
+              ))}
+            </PopoverCombobox.Trigger>
+            <PopoverCombobox.Content
+              filter={(value, search) => (labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
+            >
+              <PopoverCombobox.Input
+                placeholder={'Search...'}
+                value={query}
+                onValueChange={(v) => setQuery(v)}
+                autoFocus
+              />
+              <PopoverCombobox.List constrainInline constrainBlock>
+                {availableOptions.map((option) => (
+                  <PopoverCombobox.Item key={option.id} value={option.id} onSelect={() => toggleSelect(option.id)}>
+                    {option.label}
+                  </PopoverCombobox.Item>
+                ))}
+                {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
+                  <PopoverCombobox.Item
+                    key='__create__'
+                    onSelect={() => {
+                      void onCreateFromQuery?.(refTypeInfo, query);
+                    }}
+                    classNames='inline-flex items-center gap-2'
+                  >
+                    <Icon icon={createOptionIcon} />
+                    {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
+                  </PopoverCombobox.Item>
+                )}
+              </PopoverCombobox.List>
+              <PopoverCombobox.Arrow />
+            </PopoverCombobox.Content>
+          </PopoverCombobox.Root>
         )}
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}

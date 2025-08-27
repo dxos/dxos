@@ -13282,6 +13282,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
