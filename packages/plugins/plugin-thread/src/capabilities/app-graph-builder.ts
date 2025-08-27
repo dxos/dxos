@@ -18,6 +18,8 @@ import { getAnchor } from '../util';
 
 import { ThreadCapabilities } from './capabilities';
 
+// TODO(wittjosiah): Highlight active calls in L1.
+//  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default (context: PluginContext) => {
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
