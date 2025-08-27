@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { MeetingType } from './types';
+import { Meeting } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [MeetingType.typename]: {
+      [Meeting.Meeting.typename]: {
         'typename label': 'Meetings',
         'typename label_zero': 'Meetings',
         'typename label_one': 'Meeting',

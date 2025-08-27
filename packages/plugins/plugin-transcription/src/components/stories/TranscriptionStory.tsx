@@ -12,7 +12,7 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { type DataType } from '@dxos/schema';
 
 import { type SerializationModel } from '../../model';
-import { Transcript } from '../Transcript';
+import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<DataType.Message>;
@@ -35,7 +35,7 @@ export const TranscriptionStory: FC<{
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Content>
-          <Transcript space={space} model={model} attendableId='story' />
+          <TranscriptView space={space} model={model} attendableId='story' />
         </ScrollContainer.Content>
       </ScrollContainer.Root>
     </div>

@@ -6,13 +6,13 @@ import { defineCapability } from '@dxos/app-framework';
 import { type Live } from '@dxos/live-object';
 import { type TranscriptionManager } from '@dxos/plugin-transcription';
 
-import { MEETING_PLUGIN } from '../meta';
-import { type MeetingType } from '../types';
+import { not_meta } from '../meta';
+import { type Meeting } from '../types';
 
 export namespace MeetingCapabilities {
   export type State = Live<{
-    activeMeeting?: MeetingType;
+    activeMeeting?: Meeting.Meeting;
     transcriptionManager?: TranscriptionManager;
   }>;
-  export const State = defineCapability<State>(`${MEETING_PLUGIN}/capability/state`);
+  export const State = defineCapability<State>(`${not_meta.id}/capability/state`);
 }

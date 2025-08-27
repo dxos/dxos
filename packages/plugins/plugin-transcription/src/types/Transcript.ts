@@ -5,13 +5,12 @@
 import { Schema } from 'effect';
 
 import { Queue } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { type DXN, Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * Root transcript object created when the user starts a transcription.
  */
-export const TranscriptSchema = Schema.Struct({
+export const Transcript = Schema.Struct({
   // TODO(wittjosiah): Remove?
   // TODO(burdon): Use Date or string?
   started: Schema.optional(Schema.String),
@@ -21,12 +20,14 @@ export const TranscriptSchema = Schema.Struct({
    * Queue containing TranscriptBlock objects.
    */
   queue: Type.Ref(Queue),
-});
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Transcript',
+    version: '0.1.0',
+  }),
+);
 
-export class TranscriptType extends TypedObject({
-  typename: 'dxos.org/type/Transcript',
-  version: '0.1.0',
-})(TranscriptSchema.fields) {}
+export type Transcript = Schema.Schema.Type<typeof Transcript>;
 
 // TODO(burdon): Do these need to be kept in sync with EDGE?
 
@@ -39,3 +40,5 @@ const TranscriptHeader = Schema.Struct({
 });
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
+
+export const makeTranscript = (queueDxn: DXN) => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
