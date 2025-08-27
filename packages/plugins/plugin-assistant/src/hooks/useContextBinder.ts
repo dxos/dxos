@@ -5,17 +5,14 @@
 import { useMemo } from 'react';
 
 import { AiContextBinder } from '@dxos/assistant';
-import { Filter } from '@dxos/echo';
-import { type Space, useQuery } from '@dxos/react-client/echo';
 
-import { Assistant } from '../types';
+import { type Assistant } from '../types';
 
-export const useContextBinder = (space: Space | undefined): AiContextBinder | undefined => {
-  const chats = useQuery(space, Filter.type(Assistant.Chat));
+export const useContextBinder = (chat: Assistant.Chat | undefined): AiContextBinder | undefined => {
   const binder = useMemo(() => {
-    const queue = chats.at(-1)?.queue.target;
+    const queue = chat?.queue.target;
     return queue && new AiContextBinder(queue);
-  }, [chats]);
+  }, [chat]);
 
   return binder;
 };
