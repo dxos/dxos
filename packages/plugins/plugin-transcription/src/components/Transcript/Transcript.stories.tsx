@@ -34,7 +34,7 @@ import {
 } from '../../testing';
 import { translations } from '../../translations';
 
-import { type TranscriptViewProps, TranscriptView, renderMarkdown } from './Transcript';
+import { TranscriptView, type TranscriptViewProps, renderMarkdown } from './Transcript';
 
 faker.seed(1);
 

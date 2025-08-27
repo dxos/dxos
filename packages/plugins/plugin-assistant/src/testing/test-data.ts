@@ -44,12 +44,11 @@ export const testTranscriptMessages = (): DataType.Message[] => {
       text: 'I agree. We should also research the risks of AI generating content and polluting knowledge bases.',
       sender: 'Rich',
     },
-    {},
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
     return Obj.make(DataType.Message, {
       created: created.toISOString(),
-      blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text! }],
+      blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text }],
       sender: { identityDid: message.sender },
     });
   });
