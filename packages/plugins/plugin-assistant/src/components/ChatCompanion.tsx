@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ChatContainer } from '../components';
-import { type AiChatProcessor } from '../hooks';
+import { useContextBinder } from '../hooks';
 import { Assistant } from '../types';
 
 export type ChatCompanionProps = {
@@ -20,6 +20,9 @@ export type ChatCompanionProps = {
 };
 
 export const ChatCompanion = ({ role, data, onChatCreate }: ChatCompanionProps) => {
+  const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
+  const binder = useContextBinder(chat);
+
   // Initialize companion chat if it doesn't exist.
   useAsyncEffect(async () => {
     const space = getSpace(data.companionTo);
@@ -31,26 +34,31 @@ export const ChatCompanion = ({ role, data, onChatCreate }: ChatCompanionProps) 
     }
   }, [data.companionTo]);
 
-  const processorRef = useRef<AiChatProcessor>();
-  const processor = processorRef.current;
   useEffect(() => {
-    if (!processor) {
+    if (!binder) {
       return;
     }
 
-    // TODO(burdon): Check if already bound.
-    if (Obj.instanceOf(Blueprint.Blueprint, data.companionTo)) {
-      void processor.context.bind({ blueprints: [Ref.make(data.companionTo)] });
-    } else {
-      void processor.context.bind({ objects: [Ref.make(data.companionTo)] });
+    const isBlueprint = Obj.instanceOf(Blueprint.Blueprint, data.companionTo);
+    const exists = isBlueprint
+      ? !!binder.blueprints.peek().find((ref) => ref.dxn.toString() === Obj.getDXN(data.companionTo).toString())
+      : !!binder.objects.peek().find((ref) => ref.dxn.toString() === Obj.getDXN(data.companionTo).toString());
+    if (exists) {
+      return;
     }
-  }, [processor, data.companionTo]);
 
-  if (data.subject === 'assistant-chat') {
+    if (isBlueprint) {
+      void binder.bind({ blueprints: [Ref.make(data.companionTo as Blueprint.Blueprint)] });
+    } else {
+      void binder.bind({ objects: [Ref.make(data.companionTo)] });
+    }
+  }, [binder, data.companionTo]);
+
+  if (!chat) {
     return null;
   }
 
-  return <ChatContainer ref={processorRef} role={role} chat={data.subject} onChatCreate={onChatCreate} />;
+  return <ChatContainer role={role} chat={chat} onChatCreate={onChatCreate} />;
 };
 
 export default ChatCompanion;
