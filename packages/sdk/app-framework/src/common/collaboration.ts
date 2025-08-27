@@ -4,17 +4,14 @@
 
 import { Schema } from 'effect';
 
-import { Expando, Ref } from '@dxos/echo-schema';
+import { DataType } from '@dxos/schema';
 
 export namespace CollaborationActions {
-  export class InsertContent extends Schema.TaggedClass<InsertContent>()('assistant/intent-content', {
+  export class AcceptProposal extends Schema.TaggedClass<AcceptProposal>()('collaboration/accept-proposal', {
     input: Schema.Struct({
-      target: Expando,
-      object: Ref(Expando),
-      at: Schema.optional(Schema.String),
-      label: Schema.String.pipe(Schema.optional),
-    }).annotations({
-      description: 'Enables plugins to inject content blocks or references into a related entity.',
+      subject: Schema.Any,
+      anchor: Schema.String,
+      proposal: DataType.MessageBlock.Proposal,
     }),
     output: Schema.Void,
   }) {}

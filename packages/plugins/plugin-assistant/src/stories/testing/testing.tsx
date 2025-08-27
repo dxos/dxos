@@ -13,6 +13,7 @@ import {
   type PluginContext,
   SettingsPlugin,
   contributes,
+  createResolver,
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
@@ -36,6 +37,7 @@ import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -187,6 +189,18 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           activate: (context) => [
             contributes(Capabilities.Toolkit, TestingToolkit),
             contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/intent-resolver',
+          activatesOn: Events.SetupIntentResolver,
+          activate: () => [
+            contributes(Capabilities.IntentResolver, [
+              createResolver({
+                intent: DeckAction.ChangeCompanion,
+                resolve: () => ({}),
+              }),
+            ]),
           ],
         }),
       ]),

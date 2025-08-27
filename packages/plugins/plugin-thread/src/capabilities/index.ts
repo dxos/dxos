@@ -12,5 +12,6 @@ export const ReactRoot = lazy(() => import('./react-root'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const ThreadSettings = lazy(() => import('./settings'));
 export const ThreadState = lazy(() => import('./state'));
+export const Toolkit = lazy(() => import('./toolkit'));
 
 export * from './capabilities';

@@ -8,6 +8,7 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 
 import { Markdown } from '../types';
 
+// TODO(wittjosiah): Reconcile with MarkdownAction.Create.
 export default defineFunction({
   name: 'dxos.org/function/markdown/create',
   description: 'Creates a new markdown document.',

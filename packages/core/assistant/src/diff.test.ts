@@ -9,15 +9,13 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Markdown } from '../types';
-
 import { applyDiffs } from './diff';
 
 describe('diff', () => {
   it('should apply diffs', async () => {
     const builder = new EchoTestBuilder();
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([Markdown.Document, DataType.Text]);
+    graph.schemaRegistry.addSchema([DataType.Text]);
 
     const document = trim`
       # Hello World
