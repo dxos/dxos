@@ -79,7 +79,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/object-chat-companion`,
+      id: `${meta.id}/companion-chat`,
       connector: (node) => {
         let query: QueryResult<Assistant.Chat> | undefined;
         return Rx.make((get) => {
@@ -102,7 +102,8 @@ export default (context: PluginContext) =>
             query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
           }
 
-          const chat = get(rxFromQuery(query))[0];
+          // TODO(burdon): Reconcile/coordinate with surface component that creates the chat and relation.
+          const chat = get(rxFromQuery(query)).at(-1);
           return [
             {
               id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
