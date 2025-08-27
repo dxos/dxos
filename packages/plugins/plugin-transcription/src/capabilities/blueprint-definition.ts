@@ -7,9 +7,9 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { open } from '../functions';
+import { open, summarize } from '../functions';
 
-const functions: FunctionDefinition[] = [open];
+const functions: FunctionDefinition[] = [open, summarize];
 
 export default () => {
   return [
@@ -22,7 +22,7 @@ export default () => {
         tools: Blueprint.toolDefinitions({ functions }),
         instructions: Template.make({
           source: trim`
-            You can open the transcription of a meeting.
+            You can open and summarize a meeting transcript.
           `,
         }),
       }),

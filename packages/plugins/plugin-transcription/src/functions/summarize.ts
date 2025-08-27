@@ -2,36 +2,87 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
-import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
+import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { LocalFunctionExecutionService, defineFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
+import { trim } from '@dxos/util';
 
-import { renderMarkdown } from '../components';
-import { Transcript } from '../types';
-
+/**
+ * Summarize a transcript of a meeting.
+ */
 export default defineFunction({
-  name: 'dxos.org/function/transcription/open',
-  description: 'Opens and reads the contents of a transcription object.',
+  name: 'dxos.org/function/summarize',
+  description: 'Summarize a transcript of a meeting.',
   inputSchema: Schema.Struct({
-    id: ArtifactId.annotations({
-      description: 'The ID of the transcription object.',
+    transcript: Schema.String.annotations({
+      description: 'The transcript of the meeting.',
+    }),
+    notes: Schema.optional(Schema.String).annotations({
+      description: 'Additional notes from the participants.',
     }),
   }),
   outputSchema: Schema.Struct({
-    content: Schema.String,
+    summary: Schema.String.annotations({
+      description: 'The summary of the transcript.',
+    }),
   }),
-  handler: Effect.fn(function* ({ data: { id } }) {
-    const transcript = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Transcript.Transcript);
-    const { dxn: queueDxn } = yield* Effect.promise(() => transcript.queue.load());
-    const queue = yield* QueueService.getQueue(queueDxn);
-    yield* Effect.promise(() => queue?.queryObjects());
-    const content = queue?.objects
-      .filter((message) => Obj.instanceOf(DataType.Message, message))
-      .flatMap((message, index) => renderMarkdown([])(message, index))
-      .join('\n\n');
-    return { content };
-  }),
+  handler: Effect.fnUntraced(
+    function* ({ data: { transcript, notes } }) {
+      const result = yield* new AiSession().run({
+        prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
+        history: [],
+        system: SUMMARIZE_PROMPT,
+        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
+      });
+
+      const lastBlock = result.at(-1)?.blocks.at(-1);
+      const summary = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
+      invariant(summary, 'No summary found');
+
+      return {
+        summary,
+      };
+    },
+    Effect.provide(
+      Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+        Layer.provide(LocalFunctionExecutionService.layer),
+      ),
+    ),
+  ),
 });
+
+const SUMMARIZE_PROMPT = trim`
+  You are a helpful assistant that summarizes transcripts of meetings.
+
+  # Goal
+  Create a markdown summary of the meeting transcript with text notes provided.
+  Notes are very important so make sure to include them in the summary if they contain meaningful information.
+
+  # Formatting
+  - Format the summary as a markdown document without extra comments like "Here is the summary of the transcript:".
+  - Use markdown formatting for headings and bullet points.
+  - Format the summary as a list of key points and takeaways.
+  - All names of people should be in bold.
+
+  # Note Taking
+  - Correlate items in the summary with the person of origin to build a coherent narrative.
+  - Include short quotes verbatim where appropriate. Especially when concerned with design decisions and problem descriptions.
+
+  # Tasks
+  At the end of the summary include tasks.
+  Extract only the tasks that are:
+  - Directly actionable.
+  - Clearly assigned to a person or team (or can easily be inferred).
+  - Strongly implied by the conversation and/or user note (no speculative tasks).
+  - Specific enough that someone reading them would know exactly what to do next.
+
+  Format all tasks as markdown checkboxes using the syntax:
+  - [ ] Task description.
+
+  Additional information can be included (indented).
+
+  If no actionable tasks are found, omit this tasks section.
+`;
