@@ -3,8 +3,6 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
-import { type Key, Obj, Ref } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo-schema';
 
 import { Transcript, TranscriptAction } from '../types';
 
@@ -12,12 +10,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: TranscriptAction.Create,
-      resolve: ({ name, spaceId }) => {
-        const transcript = Obj.make(Transcript.Transcript, {
-          // TODO(dmaretskyi): Use space.queues.create() instead.
-          queue: Ref.fromDXN(createQueueDXN(spaceId as Key.SpaceId)),
-        });
-
+      resolve: ({ name, space }) => {
+        const transcript = Transcript.makeTranscript(space.queues.create().dxn);
         return { data: { object: transcript } };
       },
     }),

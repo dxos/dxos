@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getSpace(channel);
           invariant(space);
-          const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { spaceId: space.id }));
+          const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { space }));
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
           const meeting = Obj.make(Meeting.Meeting, {
             name,
