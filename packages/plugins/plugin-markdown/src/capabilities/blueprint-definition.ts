@@ -11,12 +11,14 @@ import { create, diff, open } from '../functions';
 
 const functions: FunctionDefinition[] = [create, diff, open];
 
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
+
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
   contributes(
     Capabilities.BlueprintDefinition,
     Blueprint.make({
-      key: 'dxos.org/blueprint/markdown',
+      key: BLUEPRINT_KEY,
       name: 'Markdown',
       tools: Blueprint.toolDefinitions({ functions }),
       instructions: Template.make({

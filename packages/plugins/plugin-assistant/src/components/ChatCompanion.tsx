@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-import React from 'react';
+import { Array, Effect, Option, pipe } from 'effect';
+import React, { useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { SpaceAction } from '@dxos/plugin-space/types';
+import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ChatContainer } from '../components';
@@ -23,14 +24,14 @@ export type ChatCompanionProps = {
 };
 
 export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
+  const companionTo = data.companionTo;
+  const space = getSpace(companionTo);
   const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
   const binder = useContextBinder(chat);
-  const companionTo = data.companionTo;
   const { dispatch } = useIntentDispatcher();
 
   // Initialize companion chat if it doesn't exist.
   useAsyncEffect(async () => {
-    const space = getSpace(companionTo);
     if (chat || !space) {
       return;
     }
@@ -59,7 +60,27 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
 
       yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: nextChat }));
     }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.runPromise);
-  }, [chat, companionTo]);
+  }, [space, chat, companionTo]);
+
+  const metadata = useCapabilities(Capabilities.Metadata);
+  const blueprintKeys = useMemo(
+    () =>
+      pipe(
+        metadata,
+        Array.findFirst(
+          (capability): capability is { id: string; metadata: { blueprints?: string[] } } =>
+            capability.id === Obj.getTypename(companionTo),
+        ),
+        Option.flatMap((c) => Option.fromNullable(c.metadata.blueprints)),
+        Option.getOrElse(() => [] as string[]),
+      ),
+    [metadata, companionTo],
+  );
+  const allBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const pluginBlueprints = useMemo(
+    () => allBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
+    [allBlueprints, blueprintKeys],
+  );
 
   // TODO(wittjosiah): Occasionally this fails to bind but seems to be an upstream issue.
   //   It seems like the queue object signal emits as an empty array after previously emitting a non-empty array.
@@ -68,12 +89,16 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
       return;
     }
 
+    if (pluginBlueprints.length > 0) {
+      await binder.bind({ blueprints: pluginBlueprints.map((blueprint) => Ref.make(blueprint)) });
+    }
+
     if (Obj.instanceOf(Blueprint.Blueprint, companionTo)) {
       await binder.bind({ blueprints: [Ref.make(companionTo)] });
     } else {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
-  }, [binder, companionTo]);
+  }, [binder, companionTo, pluginBlueprints]);
 
   if (!chat) {
     return null;
