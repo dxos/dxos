@@ -49,12 +49,13 @@ export const ViewEditor = ({
   schema,
   view,
   registry,
-  readonly: _readonly,
+  readonly,
   showHeading = false,
   onTypenameChanged,
   onDelete,
   outerSpacing = true,
 }: ViewEditorProps) => {
+  const schemaReadonly = !isMutable(schema);
   const { t } = useTranslation(translationKey);
   const projection = useMemo(() => {
     // Use reactive and mutable version of json schema when schema is mutable.
@@ -62,7 +63,6 @@ export const ViewEditor = ({
     return new ProjectionModel(jsonSchema, view.projection);
   }, [schema, view.projection]);
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
-  const readonly = _readonly || !isMutable(schema);
 
   // TODO(burdon): Should be reactive.
   const viewValues = useMemo(() => {
@@ -146,7 +146,7 @@ export const ViewEditor = ({
 
   return (
     <div role='none' className={mx(classNames)}>
-      {readonly && (
+      {schemaReadonly && (
         <Callout.Root
           valence='info'
           classNames={['is-full mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}
@@ -204,7 +204,7 @@ export const ViewEditor = ({
                       <List.ItemDeleteButton
                         label={t('delete field label')}
                         autoHide={false}
-                        disabled={readonly || view.projection.fields.length <= 1}
+                        disabled={readonly || schemaReadonly || view.projection.fields.length <= 1}
                         onClick={() => handleDelete(field.id)}
                         data-testid='field.delete'
                       />
@@ -219,7 +219,7 @@ export const ViewEditor = ({
                     {expandedField === field.id && (
                       <div role='none' className='col-span-5'>
                         <FieldEditor
-                          readonly={readonly}
+                          readonly={readonly || schemaReadonly}
                           projection={projection}
                           field={field}
                           registry={registry}
