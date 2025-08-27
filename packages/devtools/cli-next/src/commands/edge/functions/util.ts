@@ -12,6 +12,7 @@ import { Filter, type Space, type SpaceId, getMeta } from '@dxos/client/echo';
 import { type Identity } from '@dxos/client/halo';
 import { Obj, Ref } from '@dxos/echo';
 import {
+  FUNCTIONS_PRESET_META_KEY,
   FunctionType,
   ScriptType,
   getUserFunctionUrlInMetadata,
@@ -261,7 +262,6 @@ export const getDeployedFunctions = async (client: Client): Promise<FunctionType
   const edgeClient = createEdgeClient(client);
 
   const result = await edgeClient.listFunctions();
-  console.log(result.uploadedFunctions);
   return result.uploadedFunctions.map((record: any) => {
     // record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
@@ -289,4 +289,17 @@ const safeJsonParse = (value: unknown): any => {
   } catch {
     return {};
   }
+};
+
+const invokeFunction = async (
+  edgeClient: EdgeHttpClient,
+  fn: FunctionType,
+  input: unknown,
+  { spaceId }: { spaceId?: SpaceId },
+) => {
+  const functionId = Obj.getMeta(fn).keys.find((key) => key.source === FUNCTIONS_PRESET_META_KEY)?.id;
+  if (!functionId) {
+    throw new Error('No identifier for the function at the EDGE service');
+  }
+  return await edgeClient.invokeFunction({ functionId, spaceId }, input);
 };

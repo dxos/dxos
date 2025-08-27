@@ -30,12 +30,11 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueryResult,
   type QueueQuery,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
-  type UploadFunctionResponseBody,
+  type UploadFunctionResponseBody
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
@@ -168,10 +167,6 @@ export class EdgeHttpClient {
   // OAuth and credentials
   //
 
-  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
-    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
-  }
-
   public async initiateOAuthFlow(
     body: InitiateOAuthFlowRequest,
     args?: EdgeHttpGetArgs,
@@ -256,6 +251,30 @@ export class EdgeHttpClient {
   ): Promise<UploadFunctionResponseBody> {
     const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
     return this._call(new URL(path, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
+    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async invokeFunction(
+    params: { functionId: string; version?: string; spaceId?: SpaceId },
+    input: unknown,
+    args?: EdgeHttpGetArgs,
+  ): Promise<any> {
+    const url = new URL(`/functions/${params.functionId}`, this.baseUrl);
+    if (params.version) {
+      url.searchParams.set('version', params.version);
+    }
+    if (params.spaceId) {
+      url.searchParams.set('spaceId', params.spaceId.toString());
+    }
+
+    return this._call(url, {
+      ...args,
+      body: JSON.stringify(input),
+      method: 'POST',
+    });
   }
 
   //
