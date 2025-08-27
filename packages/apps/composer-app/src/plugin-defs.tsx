@@ -27,7 +27,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KANBAN_PLUGIN, KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { meta as MarkdownMeta, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MEETING_PLUGIN, MeetingPlugin } from '@dxos/plugin-meeting';
+import { meta as MeetingMeta, MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NATIVE_PLUGIN, NativePlugin } from '@dxos/plugin-native';
 import { NAVTREE_PLUGIN, NavTreePlugin } from '@dxos/plugin-navtree';
@@ -49,7 +49,7 @@ import { THEME_PLUGIN, ThemePlugin } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
 import { THREAD_PLUGIN, ThreadPlugin } from '@dxos/plugin-thread';
 import { TOKEN_MANAGER_PLUGIN, TokenManagerPlugin } from '@dxos/plugin-token-manager';
-import { TRANSCRIPTION_PLUGIN, TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { meta as TranscriptionMeta, TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { WNFS_PLUGIN, WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isNotFalsy } from '@dxos/util';
 
@@ -115,9 +115,9 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       // prettier-ignore
       ASSISTANT_PLUGIN,
-      MEETING_PLUGIN,
+      MeetingMeta.id,
       OUTLINER_PLUGIN,
-      TRANSCRIPTION_PLUGIN,
+      TranscriptionMeta.id,
     ],
   ]
     .filter(isNotFalsy)

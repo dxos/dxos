@@ -22,7 +22,7 @@ import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
-import { type TranscriptType } from '../../types';
+import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
 
@@ -51,8 +51,8 @@ export const renderMarkdown =
     ];
   };
 
-export type TranscriptProps = ThemedClassName<{
-  transcript?: TranscriptType;
+export type TranscriptViewProps = ThemedClassName<{
+  transcript?: Transcript.Transcript;
   space?: Space;
   model: SerializationModel<DataType.Message>;
   // TODO(wittjosiah): Move to container.
@@ -63,14 +63,14 @@ export type TranscriptProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const Transcript = ({
+export const TranscriptView = ({
   classNames,
   transcript: object,
   space,
   model,
   attendableId,
   ignoreAttention,
-}: TranscriptProps) => {
+}: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {

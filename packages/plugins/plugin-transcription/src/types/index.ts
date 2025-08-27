@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './schema';
-export * from './types';
+export * as TranscriptAction from './TranscriptAction';
+export * as Transcript from './Transcript';
