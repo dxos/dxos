@@ -2,13 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { type DXN, Obj, Ref } from '@dxos/echo';
+import { type DXN, type Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
-import { useAsyncSignalEffect } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 export type UseContextObjects = {
@@ -26,14 +25,7 @@ export const useContextObjects = ({
   space?: Space;
   context?: AiContextBinder;
 }): UseContextObjects => {
-  const [active, setActive] = useState<Map<string, Obj.Any>>(new Map());
-  const objects = useMemo(() => [...active.values()], [active]);
-
-  useAsyncSignalEffect(async () => {
-    const refs = [...(context?.objects.value ?? [])];
-    const objects = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
-    setActive(new Map(objects.map((object) => [Obj.getDXN(object as any).toString(), object])));
-  });
+  const objects = context?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [];
 
   const handleUpdateObject = useCallback<UseContextObjects['onUpdateObject']>(
     async (dxn: DXN, checked: boolean) => {
