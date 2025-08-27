@@ -54,7 +54,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> =>
     Effect.gen(function* () {
       const { db } = yield* DatabaseService;
-      const object = yield* Effect.promise(() =>
+      const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({
             context: {
@@ -112,7 +112,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
+      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
 
   static schemaQuery = <Q extends SchemaRegistryQuery>(
@@ -126,7 +126,9 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   static runSchemaQuery = <Q extends SchemaRegistryQuery>(
     query: Q,
   ): Effect.Effect<EchoSchema[], never, DatabaseService> =>
-    DatabaseService.schemaQuery(query).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+    DatabaseService.schemaQuery(query).pipe(
+      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+    );
 
   /**
    * Adds an object to the database.
@@ -135,7 +137,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   static flush = (opts?: FlushOptions) =>
-    DatabaseService.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts))));
+    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
 }
 
 // TODO(burdon): Move to echo/errors.
