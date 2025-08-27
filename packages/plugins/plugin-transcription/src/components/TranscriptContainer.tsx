@@ -12,7 +12,7 @@ import { type DataType } from '@dxos/schema';
 import { useQueueModelAdapter } from '../hooks';
 import { type Transcript } from '../types';
 
-import { Transcript, renderMarkdown } from './Transcript';
+import { TranscriptView, renderMarkdown } from './Transcript';
 
 export type TranscriptionContainerProps = {
   role: string;
@@ -28,7 +28,7 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
 
   return (
     <StackItem.Content classNames='container-max-width pli-2'>
-      <Transcript attendableId={attendableId} space={space} model={model} transcript={transcript} />
+      <TranscriptView attendableId={attendableId} space={space} model={model} transcript={transcript} />
     </StackItem.Content>
   );
 };

@@ -51,7 +51,7 @@ export const renderMarkdown =
     ];
   };
 
-export type TranscriptProps = ThemedClassName<{
+export type TranscriptViewProps = ThemedClassName<{
   transcript?: Transcript.Transcript;
   space?: Space;
   model: SerializationModel<DataType.Message>;
@@ -63,14 +63,14 @@ export type TranscriptProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const Transcript = ({
+export const TranscriptView = ({
   classNames,
   transcript: object,
   space,
   model,
   attendableId,
   ignoreAttention,
-}: TranscriptProps) => {
+}: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {

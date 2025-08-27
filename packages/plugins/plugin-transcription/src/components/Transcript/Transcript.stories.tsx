@@ -34,7 +34,7 @@ import {
 } from '../../testing';
 import { translations } from '../../translations';
 
-import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
+import { type TranscriptViewProps, TranscriptView, renderMarkdown } from './Transcript';
 
 faker.seed(1);
 
@@ -42,7 +42,7 @@ faker.seed(1);
  * Story wrapper with test controls.
  */
 const TranscriptContainer: FC<
-  TranscriptProps & {
+  TranscriptViewProps & {
     running: boolean;
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
@@ -50,7 +50,7 @@ const TranscriptContainer: FC<
 > = ({ space, model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <Transcript space={space} model={model} />
+      <TranscriptView space={space} model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -70,7 +70,7 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
  * Basic story mutates array of messages.

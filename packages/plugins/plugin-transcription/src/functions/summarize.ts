@@ -29,7 +29,7 @@ export default defineFunction({
       description: 'The summary of the transcript.',
     }),
   }),
-  handler: Effect.fnUntraced(
+  handler: Effect.fn(
     function* ({ data: { transcript, notes } }) {
       const result = yield* new AiSession().run({
         prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
