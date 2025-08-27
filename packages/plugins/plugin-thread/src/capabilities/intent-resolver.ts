@@ -232,7 +232,6 @@ export default (context: PluginContext) =>
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');
-        const intents = [];
 
         const message = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
@@ -243,6 +242,7 @@ export default (context: PluginContext) =>
         });
         thread.messages.push(Ref.make(message));
 
+        const intents = [];
         const draft = state.drafts[subjectId]?.find((a) => a.id === anchor.id);
         if (draft) {
           // Move draft to document.
