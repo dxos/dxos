@@ -52,7 +52,7 @@ export const Meeting = Schema.Struct({
   thread: Type.Ref(ThreadType),
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Document',
+    typename: 'dxos.org/type/Meeting',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

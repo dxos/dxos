@@ -4,11 +4,21 @@
 
 import { Schema } from 'effect';
 
+import { SpaceSchema } from '@dxos/client/echo';
 import { ChannelType } from '@dxos/plugin-thread/types';
+import { DataType } from '@dxos/schema';
 
 import { not_meta } from '../meta';
 
 import { Meeting } from './Meeting';
+
+export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${not_meta.id}/on-space-created`, {
+  input: Schema.Struct({
+    space: SpaceSchema,
+    rootCollection: DataType.Collection,
+  }),
+  output: Schema.Void,
+}) {}
 
 export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/create`, {
   input: Schema.Struct({

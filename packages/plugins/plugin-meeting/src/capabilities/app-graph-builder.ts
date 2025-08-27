@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ChannelType } from '@dxos/plugin-thread/types';
-import { Query, type QueryResult, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { not_meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
@@ -24,89 +24,6 @@ import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${not_meta.id}/root`,
-      connector: (node) => {
-        let query: QueryResult<Meeting.Meeting> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(Meeting.Meeting));
-              }
-
-              const meetings = get(rxFromQuery(query));
-              return meetings.length > 0
-                ? [
-                    {
-                      id: `${space.id}-meetings`,
-                      type: `${not_meta.id}/meetings`,
-                      data: null,
-                      properties: {
-                        label: ['meetings label', { ns: not_meta.id }],
-                        icon: 'ph--note--regular',
-                        space,
-                      },
-                    },
-                  ]
-                : [];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
-    // TODO(wittjosiah): Show presence dots for meetings based on active participants in the call.
-    // TODO(wittjosiah): Highlight active meetings in L1.
-    //  Separate section for active meetings, with different icons & labels.
-    //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-    createExtension({
-      id: `${not_meta.id}/meetings`,
-      connector: (node) => {
-        let query: QueryResult<Meeting.Meeting> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === `${not_meta.id}/meetings` && isSpace(node.properties.space)
-                ? Option.some(node.properties.space)
-                : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(Meeting.Meeting));
-              }
-
-              const [{ metadata }] = get(context.capabilities(Capabilities.Metadata)).filter(
-                (
-                  capability,
-                ): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-                  capability.id === Meeting.Meeting.typename,
-              );
-
-              return get(rxFromQuery(query))
-                .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-                .map((meeting) => ({
-                  id: fullyQualifiedId(meeting),
-                  type: `${not_meta.id}/meeting`,
-                  data: meeting,
-                  properties: {
-                    label: metadata.label(meeting) ?? ['meeting label', { ns: not_meta.id }],
-                    icon: metadata.icon,
-                  },
-                }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     createExtension({
       id: `${not_meta.id}/share-call-link`,
