@@ -15,7 +15,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MeetingType } from './types';
+import { Meeting } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
@@ -42,9 +42,9 @@ export const MeetingPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: MeetingType.typename,
+          id: Meeting.Meeting.typename,
           metadata: {
-            label: (object: MeetingType) => object.name || new Date(object.created).toLocaleString(),
+            label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
             icon: 'ph--note--regular',
           },
         }),
@@ -53,7 +53,7 @@ export const MeetingPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schemas`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [MeetingType]),
+      activate: () => contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

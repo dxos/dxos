@@ -9,15 +9,15 @@ import { fullyQualifiedId } from '@dxos/client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, type MeetingType } from '../types';
+import { not_meta } from '../meta';
+import { type Meeting, MeetingAction } from '../types';
 
 export type MeetingContainerProps = {
-  meeting: MeetingType;
+  meeting: Meeting.Meeting;
 };
 
 export const MeetingContainer = ({ meeting }: MeetingContainerProps) => {
-  const { t } = useTranslation(MEETING_PLUGIN);
+  const { t } = useTranslation(not_meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const notes = meeting.notes?.target;
   const summary = meeting.summary?.target;
