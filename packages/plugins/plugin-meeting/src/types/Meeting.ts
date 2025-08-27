@@ -55,7 +55,7 @@ export const Meeting = Schema.Struct({
     typename: 'dxos.org/type/Document',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name', 'fallbackName']),
+  LabelAnnotation.set(['name']),
 );
 
 export type Meeting = Schema.Schema.Type<typeof Meeting>;
