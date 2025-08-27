@@ -8,9 +8,9 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
 import { not_meta } from '../../meta';
-import { type MeetingSettingsProps } from '../../types';
+import { type Meeting } from '../../types';
 
-export const MeetingSettings = ({ settings }: { settings: MeetingSettingsProps }) => {
+export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) => {
   const { t } = useTranslation(not_meta.id);
 
   return (
