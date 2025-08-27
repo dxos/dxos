@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { SpaceId } from '@dxos/react-client/echo';
+import { SpaceId } from '@dxos/keys';
 
 import { not_meta } from '../meta';
 

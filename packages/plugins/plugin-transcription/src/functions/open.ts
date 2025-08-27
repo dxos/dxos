@@ -23,10 +23,10 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
-  handler: Effect.fn(function* ({ data: { id }, context: { space } }) {
+  handler: Effect.fn(function* ({ data: { id } }) {
     const transcript = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Transcript.Transcript);
-    const { dxn: queueDxn } = yield* Effect.promise(() => transcript.queue.load());
-    const queue = yield* QueueService.getQueue(queueDxn);
+    const { dxn } = yield* Effect.promise(() => transcript.queue.load());
+    const queue = yield* QueueService.getQueue(dxn);
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
       .filter((message) => Obj.instanceOf(DataType.Message, message))
