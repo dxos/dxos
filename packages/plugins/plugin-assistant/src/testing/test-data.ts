@@ -36,11 +36,20 @@ export const testTranscriptMessages = (): DataType.Message[] => {
       text: 'So it looks like the future is less about AI replacing us, and more about AI amplifying what humans can do.',
       sender: 'Dima',
     },
+    {
+      text: 'I think we should research alignment of AI with human values.',
+      sender: 'Mykola',
+    },
+    {
+      text: 'I agree. We should also research the risks of AI generating content and polluting knowledge bases.',
+      sender: 'Rich',
+    },
+    {},
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
     return Obj.make(DataType.Message, {
       created: created.toISOString(),
-      blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text }],
+      blocks: [{ _tag: 'transcript', started: created.toISOString(), text: message.text! }],
       sender: { identityDid: message.sender },
     });
   });
