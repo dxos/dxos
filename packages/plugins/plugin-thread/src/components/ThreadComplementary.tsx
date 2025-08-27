@@ -23,7 +23,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo } from '@dxos/schema';
 
 import { ThreadCapabilities } from '../capabilities';
-import { CommentsContainer } from '../components';
+import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
 import { ThreadAction, ThreadType } from '../types';
 
@@ -115,8 +115,8 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     [dispatch, subject],
   );
 
-  const handleAcceptProposal = useCallback(
-    async (anchor: AnchoredTo, messageId: string) => {
+  const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
+    async (anchor, messageId) => {
       const thread = Relation.getSource(anchor) as ThreadType;
       const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
       const message = thread.messages[messageIndex]?.target;

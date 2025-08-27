@@ -36,7 +36,10 @@ class Toolkit extends AiToolkit.make(
       'add-proposals': ({ id, diffs: _diffs }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const client = context.getCapability(ClientCapabilities.Client);
           const state = context.getCapability(Capabilities.Layout);
+
           const dxn = ArtifactId.toDXN(id, state.workspace as SpaceId);
 
           const echoDxn = dxn.asEchoDXN();
@@ -44,14 +47,12 @@ class Toolkit extends AiToolkit.make(
             throw new Error(`Invalid object ID: ${id}`);
           }
 
-          const client = context.getCapability(ClientCapabilities.Client);
           const space = client.spaces.get(echoDxn.spaceId!);
           const object = space?.db.getObjectById<Markdown.Document>(echoDxn.echoId);
           if (!object) {
             throw new Error(`Object not found: ${id}`);
           }
 
-          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const content = yield* Effect.promise(() => object.content.load());
           const accessor = createDocAccessor(content, ['content']);
           yield* pipe(
