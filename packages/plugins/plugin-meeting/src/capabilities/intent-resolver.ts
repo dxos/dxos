@@ -8,6 +8,7 @@ import { Capabilities, type PluginContext, contributes, createIntent, createReso
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
 import { TranscriptAction } from '@dxos/plugin-transcription/types';
@@ -20,6 +21,17 @@ import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: MeetingAction.OnSpaceCreated,
+      resolve: ({ rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: meetingCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Meeting.Meeting.typename }),
+          );
+          rootCollection.objects.push(Ref.make(meetingCollection));
+        }),
+    }),
     createResolver({
       intent: MeetingAction.Create,
       resolve: ({ name, channel }) =>
