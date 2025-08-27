@@ -36,10 +36,6 @@ export const testTranscriptMessages = (): DataType.Message[] => {
       text: 'So it looks like the future is less about AI replacing us, and more about AI amplifying what humans can do.',
       sender: 'Dima',
     },
-    {
-      text: 'So it looks like the future is less about AI replacing us, and more about AI amplifying what humans can do.',
-      sender: 'Mykola',
-    },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
     return Obj.make(DataType.Message, {
