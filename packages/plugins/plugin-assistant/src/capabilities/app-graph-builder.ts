@@ -79,21 +79,17 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/companion-chat`,
+      id: `${meta.id}/companion-chat-`,
       connector: (node) => {
         let query: QueryResult<Assistant.Chat> | undefined;
         return Rx.make((get) => {
-          const nodeOption = get(node);
-          if (Option.isNone(nodeOption)) {
-            return [];
-          }
+          const object: Obj.Any | undefined = pipe(
+            get(node),
+            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
+            Option.getOrUndefined,
+          );
 
-          const object = nodeOption.value.data;
-          if (!Obj.isObject(object)) {
-            return [];
-          }
-
-          const space = getSpace(object);
+          const space = object && getSpace(object);
           if (!space) {
             return [];
           }
