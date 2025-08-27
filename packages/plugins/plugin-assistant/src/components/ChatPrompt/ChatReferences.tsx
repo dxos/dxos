@@ -7,7 +7,7 @@ import React from 'react';
 import { type AiContextBinder } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useContextObjects } from '../../hooks';
@@ -26,10 +26,11 @@ export const ChatReferences = ({ classNames, context, space }: ChatReferencesPro
     <ul className={mx('flex flex-wrap', classNames)}>
       {objects.map((obj) => {
         const dxn = Obj.getDXN(obj);
-        const label = Obj.getLabel(obj) ?? Obj.getTypename(obj) ?? obj.id;
+        const typename = Obj.getTypename(obj);
+        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object name placeholder', { ns: typename }] : obj.id);
         return (
           <li key={dxn.toString()} className='dx-tag plb-0 pis-2 flex items-center' data-hue='neutral'>
-            {label}
+            {toLocalizedString(label, t)}
             <IconButton
               iconOnly
               variant='ghost'

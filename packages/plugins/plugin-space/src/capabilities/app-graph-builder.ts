@@ -459,21 +459,25 @@ export default (context: PluginContext) => {
                   ),
                 );
               }
-              return get(rxFromQuery(query))
-                .map((object) =>
-                  get(
-                    rxFromSignal(() =>
-                      createObjectNode({
-                        object,
-                        space,
-                        resolve,
-                        droppable: false, // Cannot rearrange query collections.
-                        navigable: state.navigableCollections,
-                      }),
+              return (
+                get(rxFromQuery(query))
+                  // TODO(wittjosiah): This should be the default sort order.
+                  .toSorted((a, b) => a.id.localeCompare(b.id))
+                  .map((object) =>
+                    get(
+                      rxFromSignal(() =>
+                        createObjectNode({
+                          object,
+                          space,
+                          resolve,
+                          droppable: false, // Cannot rearrange query collections.
+                          navigable: state.navigableCollections,
+                        }),
+                      ),
                     ),
-                  ),
-                )
-                .filter(isNonNullable);
+                  )
+                  .filter(isNonNullable)
+              );
             }),
             Option.getOrElse(() => []),
           ),

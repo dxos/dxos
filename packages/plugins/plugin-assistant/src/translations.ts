@@ -74,6 +74,8 @@ export const translations = [
         'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
+        'button new thread': 'New Chat',
+        'chat history label': 'Chat History',
 
         'toolkit label': 'Toolkit',
 
