@@ -79,7 +79,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/companion-chat-`,
+      id: `${meta.id}/companion-chat`,
       connector: (node) => {
         let query: QueryResult<Assistant.Chat> | undefined;
         return Rx.make((get) => {

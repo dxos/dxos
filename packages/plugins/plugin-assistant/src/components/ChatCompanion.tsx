@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
@@ -22,37 +22,32 @@ export type ChatCompanionProps = {
 export const ChatCompanion = ({ role, data, onChatCreate }: ChatCompanionProps) => {
   const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
   const binder = useContextBinder(chat);
+  const artifact = data.companionTo;
 
   // Initialize companion chat if it doesn't exist.
   useAsyncEffect(async () => {
-    const space = getSpace(data.companionTo);
+    const space = getSpace(artifact);
     const result = await space?.db
-      .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
+      .query(Query.select(Filter.ids(artifact.id)).targetOf(Assistant.CompanionTo).source())
       .run();
     if (result?.objects.length === 0) {
       onChatCreate?.();
     }
-  }, [data.companionTo]);
+  }, [artifact, onChatCreate]);
 
-  useEffect(() => {
+  // TODO(wittjosiah): Occasionally this fails to bind but seems to be an upstream issue.
+  //   It seems like the queue object signal emits as an empty array after previously emitting a non-empty array.
+  useAsyncEffect(async () => {
     if (!binder) {
       return;
     }
 
-    const isBlueprint = Obj.instanceOf(Blueprint.Blueprint, data.companionTo);
-    const exists = isBlueprint
-      ? !!binder.blueprints.peek().find((ref) => ref.dxn.toString() === Obj.getDXN(data.companionTo).toString())
-      : !!binder.objects.peek().find((ref) => ref.dxn.toString() === Obj.getDXN(data.companionTo).toString());
-    if (exists) {
-      return;
-    }
-
-    if (isBlueprint) {
-      void binder.bind({ blueprints: [Ref.make(data.companionTo as Blueprint.Blueprint)] });
+    if (Obj.instanceOf(Blueprint.Blueprint, artifact)) {
+      await binder.bind({ blueprints: [Ref.make(artifact as Blueprint.Blueprint)] });
     } else {
-      void binder.bind({ objects: [Ref.make(data.companionTo)] });
+      await binder.bind({ objects: [Ref.make(artifact)] });
     }
-  }, [binder, data.companionTo]);
+  }, [binder, artifact]);
 
   if (!chat) {
     return null;

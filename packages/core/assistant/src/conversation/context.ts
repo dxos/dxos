@@ -84,15 +84,21 @@ export class AiContextBinder {
       return;
     }
 
+    const blueprints =
+      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
+      [];
+    const objects =
+      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
     // TODO(burdon): Check if already bound.
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
-          added: props.blueprints ?? [],
+          added: blueprints,
           removed: [],
         },
         objects: {
-          added: props.objects ?? [],
+          added: objects,
           removed: [],
         },
       }),
