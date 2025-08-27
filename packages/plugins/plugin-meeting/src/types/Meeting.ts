@@ -13,7 +13,7 @@ import { DataType } from '@dxos/schema';
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
 
-export const MeetingSchema = Schema.Struct({
+export const Meeting = Schema.Struct({
   /**
    * User-defined name of the meeting.
    */
@@ -50,13 +50,21 @@ export const MeetingSchema = Schema.Struct({
    * Message thread for the meeting.
    */
   thread: Type.Ref(ThreadType),
-}).pipe(LabelAnnotation.set(['name']));
-
-export const MeetingType = MeetingSchema.pipe(
+}).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/Meeting',
-    version: '0.3.0',
+    typename: 'dxos.org/type/Document',
+    version: '0.1.0',
+  }),
+  LabelAnnotation.set(['name', 'fallbackName']),
+);
+
+export type Meeting = Schema.Schema.Type<typeof Meeting>;
+
+// TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
+export const Settings = Schema.mutable(
+  Schema.Struct({
+    entityExtraction: Schema.optional(Schema.Boolean).pipe(Schema.withConstructorDefault(() => true)),
   }),
 );
 
-export interface MeetingType extends Schema.Schema.Type<typeof MeetingType> {}
+export interface Settings extends Schema.Schema.Type<typeof Settings> {}

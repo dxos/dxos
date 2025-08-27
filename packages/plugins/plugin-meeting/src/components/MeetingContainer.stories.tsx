@@ -22,13 +22,13 @@ import { DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
-import { MeetingType } from '../types';
+import { Meeting } from '../types';
 
 import { MeetingContainer, type MeetingContainerProps } from './MeetingContainer';
 
 const Story = () => {
   const space = useSpace();
-  const [meeting] = useQuery(space, Query.type(MeetingType));
+  const [meeting] = useQuery(space, Query.type(Meeting.Meeting));
   if (!meeting) {
     return null;
   }
@@ -54,7 +54,7 @@ const meta: Meta<MeetingContainerProps> = {
             const space = client.spaces.default;
             await space.waitUntilReady();
             space.db.add(
-              Obj.make(MeetingType, {
+              Obj.make(Meeting.Meeting, {
                 created: new Date().toISOString(),
                 participants: [],
                 transcript: Ref.make(

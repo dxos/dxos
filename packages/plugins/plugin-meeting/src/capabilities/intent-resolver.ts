@@ -14,7 +14,7 @@ import { TranscriptActions } from '@dxos/plugin-transcription/types';
 import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MeetingAction, MeetingType } from '../types';
+import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
@@ -29,7 +29,7 @@ export default (context: PluginContext) =>
           invariant(space);
           const { object: transcript } = yield* dispatch(createIntent(TranscriptActions.Create, { spaceId: space.id }));
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
-          const meeting = Obj.make(MeetingType, {
+          const meeting = Obj.make(Meeting.Meeting, {
             name,
             created: new Date().toISOString(),
             participants: [],
@@ -48,7 +48,7 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(Type.getTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
       },
     }),
