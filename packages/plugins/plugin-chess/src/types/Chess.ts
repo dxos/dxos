@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { ItemAnnotation } from '@dxos/schema';
 

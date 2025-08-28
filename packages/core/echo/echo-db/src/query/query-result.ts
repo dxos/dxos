@@ -5,7 +5,7 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';

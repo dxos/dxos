@@ -13,7 +13,7 @@ import {
   type Ref,
   Ref as RefImpl,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
 

@@ -3,7 +3,7 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import { type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo/internal';
 
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 

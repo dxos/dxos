@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StoredSchema } from '@dxos/echo-schema';
+import { StoredSchema } from '@dxos/echo/internal';
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 

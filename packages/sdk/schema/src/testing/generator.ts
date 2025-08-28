@@ -16,7 +16,7 @@ import {
   type TypedObject,
   getSchemaReference,
   getTypename,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';

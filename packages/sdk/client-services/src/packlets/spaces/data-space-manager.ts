@@ -37,7 +37,7 @@ import {
   createIdFromSpaceKey,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { ObjectId, getTypeReference } from '@dxos/echo-schema';
+import { ObjectId, getTypeReference } from '@dxos/echo/internal';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';

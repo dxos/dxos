@@ -3,7 +3,7 @@
 //
 
 import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {

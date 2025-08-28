@@ -5,7 +5,7 @@
 import { Either, Option, ParseResult, Schema, SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type PropertyKey } from '@dxos/echo-schema';
+import { type PropertyKey } from '@dxos/echo/internal';
 
 describe('validate', () => {
   test('clamp', ({ expect }) => {

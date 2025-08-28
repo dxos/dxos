@@ -5,7 +5,7 @@
 import { Context } from 'effect';
 
 import { type ObjectVersion } from '@dxos/echo-db';
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo/internal';
 
 /**
  * Resolves artifact ids to their versions.

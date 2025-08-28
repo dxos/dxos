@@ -15,7 +15,7 @@ import {
   getSchemaDXN,
   getSchemaVersion,
   getTypename,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 

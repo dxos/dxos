@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView } from '@dxos/schema';

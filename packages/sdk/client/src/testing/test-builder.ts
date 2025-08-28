@@ -11,7 +11,7 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
-import { Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';

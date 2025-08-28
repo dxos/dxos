@@ -11,7 +11,7 @@ import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
 import { type ExecutableTool, ToolResult, createRawTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
-import { normalizeSchema } from '@dxos/echo-schema';
+import { normalizeSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';

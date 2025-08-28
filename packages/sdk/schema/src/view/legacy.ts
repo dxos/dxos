@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { defineObjectMigration } from '@dxos/echo-db';
-import { FieldSortType, JsonSchemaType, QueryType, TypedObject } from '@dxos/echo-schema';
+import { FieldSortType, JsonSchemaType, QueryType, TypedObject } from '@dxos/echo/internal';
 
 import { FieldSchema, KeyValueProps } from './field';
 

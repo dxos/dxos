@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';

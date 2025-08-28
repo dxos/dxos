@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
 
 // TODO(burdon): Remove.
 

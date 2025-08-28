@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import { IconAnnotation, ItemAnnotation } from '../annotations';
 

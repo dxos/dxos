@@ -20,7 +20,7 @@ import {
   type RuntimeSchemaRegistry,
   TypeEnum,
   toEffectSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';

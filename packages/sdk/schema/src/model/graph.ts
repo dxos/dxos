@@ -3,7 +3,7 @@
 //
 
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo-schema';
+import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo/internal';
 import { GraphModel } from '@dxos/graph';
 import { Graph, type GraphNode, createEdgeId } from '@dxos/graph';
 import { live } from '@dxos/live-object';

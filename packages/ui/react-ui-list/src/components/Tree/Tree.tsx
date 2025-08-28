@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type HasId } from '@dxos/echo-schema';
+import { type HasId } from '@dxos/echo/internal';
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
 import { type TreeContextType, TreeProvider } from './TreeContext';

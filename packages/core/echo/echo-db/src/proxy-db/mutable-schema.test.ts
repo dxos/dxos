@@ -15,8 +15,8 @@ import {
   TypedObject,
   getTypeReference,
   getTypename,
-} from '@dxos/echo-schema';
-import { getSchema, getType } from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { getSchema, getType } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 

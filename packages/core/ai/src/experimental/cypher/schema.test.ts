@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { toJsonSchema } from '@dxos/echo-schema';
+import { toJsonSchema } from '@dxos/echo/internal';
 
 import { Contact, Organization, Project, Task } from '../../testing';
 

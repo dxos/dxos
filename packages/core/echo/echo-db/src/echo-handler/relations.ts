@@ -10,7 +10,7 @@ import {
   RelationSourceId,
   type RelationSourceTargetRefs,
   RelationTargetId,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';
 

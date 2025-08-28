@@ -5,7 +5,7 @@
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

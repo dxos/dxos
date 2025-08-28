@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';

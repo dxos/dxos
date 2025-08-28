@@ -13,7 +13,7 @@ import {
   ImmutableSchema,
   type ObjectId,
   RuntimeSchemaRegistry,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
 import { DXN, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';

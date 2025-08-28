@@ -3,7 +3,7 @@
 //
 
 import { raise } from '@dxos/debug';
-import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaType } from '@dxos/echo-schema';
+import { JSON_SCHEMA_ECHO_REF_ID, type JsonSchemaType } from '@dxos/echo/internal';
 import { trim } from '@dxos/util';
 
 /**

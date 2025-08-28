@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SelectOption } from '@dxos/echo-schema';
+import { type SelectOption } from '@dxos/echo/internal';
 
 import { type BaseKanbanItem, type KanbanView, UNCATEGORIZED_VALUE } from './types';
 

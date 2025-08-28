@@ -14,7 +14,7 @@ import {
   TypeIdentifierAnnotationId,
   getSchemaTypename,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 

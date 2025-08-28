@@ -17,7 +17,7 @@ import React, {
 
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
-import { getValue } from '@dxos/echo-schema';
+import { getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 // TODO(wittjosiah): Remove dependency on react-client.
 import { getSpace } from '@dxos/react-client/echo';

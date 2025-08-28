@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
-import { Ref } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
 import { isNode } from '@dxos/util';
 

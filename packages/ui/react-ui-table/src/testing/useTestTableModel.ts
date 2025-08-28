@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo, useRef } from 'react';
 
-import { isMutable, toJsonSchema } from '@dxos/echo-schema';
+import { isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';

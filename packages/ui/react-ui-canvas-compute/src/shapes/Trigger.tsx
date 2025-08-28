@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { ObjectId, Ref } from '@dxos/echo-schema';
+import { ObjectId, Ref } from '@dxos/echo/internal';
 import {
   type EmailTrigger,
   EmailTriggerOutput,

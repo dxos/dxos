@@ -13,7 +13,7 @@ import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo-schema';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';

@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 
 // TODO(burdon): Clashes with sdk/view.
 export class ViewType extends TypedObject({

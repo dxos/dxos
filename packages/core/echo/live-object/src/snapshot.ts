@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject, Ref } from '@dxos/echo-schema';
+import { type BaseObject, Ref } from '@dxos/echo/internal';
 import { deepMapValues } from '@dxos/util';
 
 import type { Live } from './live';

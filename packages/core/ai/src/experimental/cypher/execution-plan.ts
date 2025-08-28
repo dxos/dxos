@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { JsonPath } from '@dxos/echo-schema';
+import type { JsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

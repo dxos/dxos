@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ObjectId } from '@dxos/echo-schema';
+import type { ObjectId } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
 import type { QueryResult, QueueQuery } from '@dxos/protocols';

@@ -11,7 +11,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { Expando, live } from '@dxos/client/echo';
-import { Ref, TypedObject } from '@dxos/echo-schema';
+import { Ref, TypedObject } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';

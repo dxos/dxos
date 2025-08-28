@@ -3,7 +3,7 @@
 //
 
 import type { ObjectStructure } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 export const TYPES = {

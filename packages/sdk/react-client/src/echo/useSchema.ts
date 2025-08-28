@@ -7,7 +7,7 @@ import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type BaseSchema } from '@dxos/echo-schema';
+import { type BaseSchema } from '@dxos/echo/internal';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.

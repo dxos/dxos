@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
+import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
 
 import { Actor } from './actor';
 

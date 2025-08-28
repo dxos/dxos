@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 
 export const TestItemSchema = Schema.Struct({

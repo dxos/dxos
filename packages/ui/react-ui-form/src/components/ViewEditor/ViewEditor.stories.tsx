@@ -9,7 +9,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { type EchoSchema, Format, TypedObject, toJsonSchema } from '@dxos/echo-schema';
+import { type EchoSchema, Format, TypedObject, toJsonSchema } from '@dxos/echo/internal';
 import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';

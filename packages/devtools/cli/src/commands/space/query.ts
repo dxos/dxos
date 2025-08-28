@@ -7,7 +7,7 @@ import { Flags, ux } from '@oclif/core';
 import { TABLE_FLAGS, type TableFlags, table } from '@dxos/cli-base';
 import { ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo/internal';
 
 import { BaseCommand } from '../../base';
 

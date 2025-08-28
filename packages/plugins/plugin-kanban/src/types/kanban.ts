@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchemaType } from '@dxos/echo/internal';
 import { KanbanView } from '@dxos/react-ui-kanban';
 import { type CreateViewFromSpaceProps, type DataType, ProjectionModel, createViewFromSpace } from '@dxos/schema';
 

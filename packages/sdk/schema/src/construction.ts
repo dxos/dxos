@@ -11,7 +11,7 @@ import {
   TypeEnum,
   TypedObject,
   formatToType,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/live-object/testing';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';

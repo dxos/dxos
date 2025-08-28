@@ -16,7 +16,7 @@ export {
   Ref,
   RefArray,
   type TypedObject,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 export { type Live, live, isLiveObject } from '@dxos/live-object';
 export {
   DocAccessor,

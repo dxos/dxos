@@ -11,7 +11,7 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId, Ref } from '@dxos/echo-schema';
+import { Expando, type HasId, Ref } from '@dxos/echo/internal';
 import { SpaceId } from '@dxos/keys';
 import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';

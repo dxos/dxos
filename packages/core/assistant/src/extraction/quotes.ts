@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 

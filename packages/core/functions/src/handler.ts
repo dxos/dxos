@@ -5,7 +5,7 @@
 import { type Context, type Effect, Schema } from 'effect';
 
 import { type EchoDatabase } from '@dxos/echo-db';
-import { type HasId } from '@dxos/echo-schema';
+import { type HasId } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 

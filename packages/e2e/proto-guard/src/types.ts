@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 
 export class Todo extends TypedObject({
   typename: 'example.org/type/Todo',

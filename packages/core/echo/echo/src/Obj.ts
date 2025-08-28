@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import * as EchoSchema from '@dxos/echo-schema';
+import * as EchoSchema from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import type * as LiveObject from '@dxos/live-object';

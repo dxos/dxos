@@ -6,7 +6,7 @@ import { type Brand, type Schema } from 'effect';
 
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import type { SchemaId } from '@dxos/echo-schema';
+import type { SchemaId } from '@dxos/echo/internal';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { ComplexMap } from '@dxos/util';
 

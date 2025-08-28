@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo/internal';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';

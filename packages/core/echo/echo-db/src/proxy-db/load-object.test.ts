@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
+import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';

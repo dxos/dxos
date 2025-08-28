@@ -26,7 +26,7 @@ import {
   type SpaceState,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref } from '@dxos/echo-schema';
+import { type ObjectId, Ref } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';

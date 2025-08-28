@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
-import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
+import { type BaseObject, type PropertyKey } from '@dxos/echo/internal';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type SchemaProperty } from '@dxos/schema';

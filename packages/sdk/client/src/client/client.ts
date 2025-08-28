@@ -23,7 +23,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { EchoClient, type Hypergraph, type QueueService, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
-import { getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo/internal';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

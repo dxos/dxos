@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { JsonSchemaType } from '@dxos/echo-schema';
+import { JsonSchemaType } from '@dxos/echo/internal';
 import { type ContentBlock } from '@dxos/schema';
 
 import { type AgentStatus } from '../../status-report';
