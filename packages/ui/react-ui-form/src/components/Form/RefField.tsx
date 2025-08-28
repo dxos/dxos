@@ -28,7 +28,7 @@ import { translationKey } from '../../translations';
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
 
-type RefFieldProps = InputProps & {
+export type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
   onQueryRefOptions?: QueryRefOptions;

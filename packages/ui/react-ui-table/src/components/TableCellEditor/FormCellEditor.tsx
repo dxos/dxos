@@ -5,15 +5,20 @@
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getSnapshot } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo';
+import { getDXN } from '@dxos/echo/Obj';
+import { type TypeAnnotation, getSnapshot, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type Client } from '@dxos/react-client';
+import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import { Form, type FormProps } from '@dxos/react-ui-form';
+import { cellQuery, parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
-import { getDeep, setDeep } from '@dxos/util';
+import { getDeep, isNotFalsy, setDeep } from '@dxos/util';
 
-import { type TableModel } from '../../model';
+import { type ModalController, type TableModel } from '../../model';
+import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
 type FormCellEditorProps = {
@@ -21,13 +26,79 @@ type FormCellEditorProps = {
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
   onSave?: () => void;
+  client?: Client;
+  modals?: ModalController;
   __gridScope: any;
-};
+} & Omit<FormProps<any>, 'values' | 'schema'>;
 
-export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridScope }: FormCellEditorProps) => {
-  const { editing: contextEditing, setEditing } = useGridContext('ArrayEditor', __gridScope);
+const createOptionLabel = ['create new object label', { ns: translationKey }] as [string, { ns: string }];
+
+export const FormCellEditor = ({
+  fieldProjection,
+  model,
+  schema,
+  onSave,
+  client,
+  modals,
+  __gridScope,
+  ...formProps
+}: FormCellEditorProps) => {
+  const { editing: contextEditing, setEditing, id: gridId } = useGridContext('ArrayEditor', __gridScope);
   const [editing, setLocalEditing] = useState(false);
   const anchorRef = useRef<HTMLButtonElement | null>(null);
+
+  const getSchema = useCallback(
+    (typeAnnotation: TypeAnnotation) => {
+      const space = getSpace(model!.view);
+      invariant(space);
+
+      let schema;
+      if (client) {
+        schema = client.graph.schemaRegistry.getSchema(typeAnnotation.typename);
+      }
+      if (!schema) {
+        schema = space.db.schemaRegistry.getSchema(typeAnnotation.typename);
+      }
+      return { space, schema };
+    },
+    [client, model],
+  );
+
+  const handleQueryRefOptions = useCallback(
+    async (typeAnnotation: TypeAnnotation) => {
+      const { schema, space } = getSchema(typeAnnotation);
+      if (model && schema && space) {
+        const { objects } = await space.db.query(Filter.type(schema)).run();
+        return objects
+          .map((obj) => {
+            return {
+              dxn: getDXN(obj),
+              label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
+            };
+          })
+          .filter(isNotFalsy);
+      }
+
+      return [];
+    },
+    [client, model],
+  );
+
+  const handleCreateFromQuery = useCallback(
+    async (typeAnnotation: TypeAnnotation, query: string) => {
+      if (model && modals && contextEditing?.index) {
+        modals.openCreateRef(
+          typeAnnotation.typename,
+          document.querySelector(cellQuery(contextEditing.index, gridId)),
+          {
+            [fieldProjection.field.referencePath!]: query,
+          },
+          handleSave,
+        );
+      }
+    },
+    [model, client],
+  );
 
   useEffect(() => {
     if (contextEditing && contextEditing.cellElement) {
@@ -97,7 +168,16 @@ export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridS
       <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
         <Popover.Arrow />
         <Popover.Viewport>
-          <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
+          <Form
+            values={formValues}
+            schema={narrowedSchema as any}
+            onSave={handleSave}
+            {...formProps}
+            onQueryRefOptions={handleQueryRefOptions}
+            onCreateFromQuery={handleCreateFromQuery}
+            createOptionIcon='ph--plus--regular'
+            createOptionLabel={createOptionLabel}
+          />
         </Popover.Viewport>
       </Popover.Content>
     </Popover.Root>

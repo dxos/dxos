@@ -6,6 +6,7 @@ import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -50,6 +51,7 @@ export type TableCellEditorProps = {
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
   onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+  client?: Client;
 };
 
 export const TableValueEditor = ({
@@ -59,6 +61,7 @@ export const TableValueEditor = ({
   onFocus,
   onSave,
   onQuery,
+  client,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
@@ -77,7 +80,8 @@ export const TableValueEditor = ({
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
-    fieldProjection?.props.format === FormatEnum.SingleSelect
+    fieldProjection?.props.format === FormatEnum.SingleSelect ||
+    fieldProjection?.props.format === FormatEnum.Ref
     // TODO(thure): Support `FormatEnum.MultiSelect`
   ) {
     return (
@@ -87,6 +91,8 @@ export const TableValueEditor = ({
         schema={schema}
         __gridScope={__gridScope}
         onSave={onSave}
+        client={client}
+        modals={modals}
       />
     );
   }

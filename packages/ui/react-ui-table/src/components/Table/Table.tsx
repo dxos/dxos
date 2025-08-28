@@ -15,10 +15,10 @@ import React, {
   useState,
 } from 'react';
 
-import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
 import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -403,6 +403,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onFocus={handleFocus}
           onQuery={handleQuery}
           onSave={handleSave}
+          client={client}
         />
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
