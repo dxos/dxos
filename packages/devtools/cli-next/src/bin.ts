@@ -40,11 +40,11 @@ run(process.argv).pipe(
   NodeRuntime.runMain({
     teardown: () => {
       const timeout = setTimeout(() => {
-        log.warn('Process did not exit within grace period. There may be a leak.');
+        log.error('Process did not exit within grace period. There may be a leak.');
         if (process.env.DX_TRACK_LEAKS) {
           leaksTracker.dump();
         } else {
-          log.warn('Re-run with DX_TRACK_LEAKS to dump information about leaks.');
+          log.error('Re-run with DX_TRACK_LEAKS to dump information about leaks.');
         }
       }, EXIT_GRACE_PERIOD);
       // Don't block process exit.
