@@ -31,6 +31,9 @@ export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<C
     if (schema) {
       const omit = Schema.omit<any, any, ['id']>('id');
       return omit(schema);
+    } else {
+      // TODO(thure): How are we encountering this?
+      console.warn('[schema not found in space]', state.typename, space.id);
     }
   }, [space, state]);
 

@@ -168,7 +168,7 @@ export const RefField = ({
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             items.map((item) => (
-              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1' style={{ marginInlineEnd: '.25rem' }}>
+              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1'>
                 {item.label}
               </DxRefTag>
             ))
@@ -176,7 +176,7 @@ export const RefField = ({
         ) : (
           <PopoverCombobox.Root>
             <PopoverCombobox.Trigger asChild>
-              <Button variant='ghost' onBlur={onBlur} classNames='is-full text-start gap-2'>
+              <Button variant='ghost' classNames='is-full text-start gap-2'>
                 <div role='none' className='grow'>
                   {items?.length ? (
                     items?.map((item) => (
@@ -186,8 +186,10 @@ export const RefField = ({
                         label={item.label}
                         {...(item.hue ? { hue: item.hue } : {})}
                         removeLabel={t('remove item label')}
-                        onItemClick={() => {
-                          toggleSelect(item.id);
+                        onItemClick={(event) => {
+                          if (event.action === 'remove') {
+                            toggleSelect(item.id);
+                          }
                         }}
                       />
                     ))
@@ -204,7 +206,6 @@ export const RefField = ({
               filter={(value, search) =>
                 value === '__create__' || labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
               }
-              classNames='is-[--radix-popover-trigger-width]'
             >
               <PopoverCombobox.Input
                 placeholder={'Search...'}
@@ -212,17 +213,23 @@ export const RefField = ({
                 onValueChange={(v) => setQuery(v)}
                 autoFocus
               />
-              <PopoverCombobox.List constrainBlock={false}>
+              <PopoverCombobox.List>
                 {availableOptions.map((option) => (
-                  <PopoverCombobox.Item key={option.id} value={option.label} onSelect={() => toggleSelect(option.id)}>
-                    {option.label}
+                  <PopoverCombobox.Item
+                    key={option.id}
+                    value={option.label}
+                    onSelect={() => toggleSelect(option.id)}
+                    classNames='flex items-center gap-2'
+                  >
+                    <span className='grow'>{option.label}</span>
+                    {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
                   </PopoverCombobox.Item>
                 ))}
                 {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
                   <PopoverCombobox.Item
                     value='__create__'
                     onSelect={() => onCreateFromQuery?.(refTypeInfo, query)}
-                    classNames='inline-flex items-center gap-2'
+                    classNames='flex items-center gap-2'
                   >
                     <Icon icon={createOptionIcon} />
                     {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
