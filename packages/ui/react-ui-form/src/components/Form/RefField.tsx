@@ -138,7 +138,11 @@ export const RefField = ({
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
   const labelById = useMemo(
-    () => Object.fromEntries(availableOptions.map((o) => [o.id, o.label ?? o.id])),
+    () =>
+      availableOptions.reduce((acc: Record<string, string>, option) => {
+        acc[option.id.toLowerCase()] = option.label.toLowerCase();
+        return acc;
+      }, {}),
     [availableOptions],
   );
   const [query, setQuery] = useState('');
@@ -204,7 +208,7 @@ export const RefField = ({
             </PopoverCombobox.Trigger>
             <PopoverCombobox.Content
               filter={(value, search) =>
-                value === '__create__' || labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+                value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0
               }
             >
               <PopoverCombobox.Input
@@ -217,7 +221,7 @@ export const RefField = ({
                 {availableOptions.map((option) => (
                   <PopoverCombobox.Item
                     key={option.id}
-                    value={option.label}
+                    value={option.id}
                     onSelect={() => toggleSelect(option.id)}
                     classNames='flex items-center gap-2'
                   >

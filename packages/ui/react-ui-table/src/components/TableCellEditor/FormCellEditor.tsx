@@ -102,6 +102,7 @@ export const FormCellEditor = ({
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);
+      contextEditing?.cellElement?.focus();
       setEditing(null);
       setLocalEditing(false);
       onSave?.();
