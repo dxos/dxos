@@ -30,7 +30,7 @@
     "@dxos/blueprints": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

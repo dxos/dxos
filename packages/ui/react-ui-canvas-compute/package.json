@@ -34,7 +34,7 @@
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/graph": "workspace:*",
