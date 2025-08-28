@@ -12,6 +12,7 @@ import { Filter, type Space, type SpaceId, getMeta } from '@dxos/client/echo';
 import { type Identity } from '@dxos/client/halo';
 import { Obj, Ref } from '@dxos/echo';
 import {
+  FUNCTIONS_META_KEY,
   FUNCTIONS_PRESET_META_KEY,
   FunctionType,
   ScriptType,
@@ -291,15 +292,17 @@ const safeJsonParse = (value: unknown): any => {
   }
 };
 
-const invokeFunction = async (
+export const invokeFunction = async (
   edgeClient: EdgeHttpClient,
   fn: FunctionType,
   input: unknown,
-  { spaceId }: { spaceId?: SpaceId },
+  { spaceId }: { spaceId?: SpaceId } = {},
 ) => {
-  const functionId = Obj.getMeta(fn).keys.find((key) => key.source === FUNCTIONS_PRESET_META_KEY)?.id;
+  const functionId = Obj.getMeta(fn).keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
   if (!functionId) {
     throw new Error('No identifier for the function at the EDGE service');
   }
-  return await edgeClient.invokeFunction({ functionId, spaceId }, input);
+  // Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
+  const cleanedId = functionId.replace(/^\//, '');
+  return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId }, input);
 };

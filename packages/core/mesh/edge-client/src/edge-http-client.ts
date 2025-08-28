@@ -34,7 +34,7 @@ import {
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
-  type UploadFunctionResponseBody
+  type UploadFunctionResponseBody,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
@@ -67,6 +67,10 @@ type EdgeHttpRequestArgs = {
   context?: Context;
   retry?: RetryConfig;
   body?: any;
+  /**
+   * Do not expect a standard EDGE JSON response with a `success` field.
+   */
+  rawResponse?: boolean;
 };
 
 export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
@@ -274,6 +278,7 @@ export class EdgeHttpClient {
       ...args,
       body: JSON.stringify(input),
       method: 'POST',
+      rawResponse: true,
     });
   }
 
@@ -350,6 +355,11 @@ export class EdgeHttpClient {
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
         if (response.ok) {
           const body = (await response.json()) as EdgeHttpResponse<T>;
+
+          if (args.rawResponse) {
+            return body as any;
+          }
+
           if (body.success) {
             return body.data;
           }
