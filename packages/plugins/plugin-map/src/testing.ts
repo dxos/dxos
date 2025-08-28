@@ -4,7 +4,6 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/react-client';
 
 export const createLocationSchema = () =>
   Schema.Struct({

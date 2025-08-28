@@ -3,7 +3,7 @@
 //
 
 import { isNotNullable } from 'effect/Predicate';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -12,13 +12,13 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
+import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
 
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
 import { type GeoControlProps } from './types';
-import { getDeep } from '@dxos/util';
 
 export type MapControlType = 'globe' | 'map';
 

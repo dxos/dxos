@@ -5,7 +5,7 @@
 import { type Schema, SchemaAST } from 'effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type BaseObject, getValue, setValue, toJsonSchema } from '@dxos/echo-schema';
+import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
