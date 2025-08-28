@@ -5,6 +5,7 @@
 export * from './Flex';
 export * from './MarkdownViewer';
 export * from './NumericTabs';
+export * from './Progress';
 export * from './ScrollContainer';
 export * from './StatusRoll';
 export * from './TextBlock';
