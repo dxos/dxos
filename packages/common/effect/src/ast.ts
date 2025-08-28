@@ -27,6 +27,8 @@ export const getSimpleType = (node: SchemaAST.AST): SimpleType | undefined => {
     SchemaAST.isDeclaration(node) ||
     SchemaAST.isObjectKeyword(node) ||
     SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    SchemaAST.isTupleType(node) ||
     isDiscriminatedUnion(node)
   ) {
     return 'object';

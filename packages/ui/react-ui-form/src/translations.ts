@@ -61,9 +61,9 @@ export const translations = [
         'format url': 'URL',
         'format uuid': 'UUID',
 
-        // Placeholders.
-        'placeholder latitude': 'Latitude',
-        'placeholder longitude': 'Longitude',
+        // GeoPointInput.
+        'latitude label': 'Latitude',
+        'longitude label': 'Longitude',
 
         // SelectOptionsInput.
         'select option label': 'Label',

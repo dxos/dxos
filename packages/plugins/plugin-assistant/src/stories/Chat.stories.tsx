@@ -260,8 +260,13 @@ export const WithMap = {
     types: [DataType.View, Map.Map, Table.Table],
     onInit: async ({ space, binder }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await Table.makeView({ space, typename: schema.typename });
-      const { view: mapView } = await Map.makeView({ space, typename: schema.typename });
+      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
+      const { view: mapView } = await Map.makeView({
+        name: 'Map',
+        space,
+        typename: schema.typename,
+        pivotFieldName: 'location',
+      });
       space.db.add(tableView);
       space.db.add(mapView);
       await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });

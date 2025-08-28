@@ -141,7 +141,7 @@ export const createView = ({
     }
 
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (property.type === 'object') {
+    if (property.type === 'object' && !property.format) {
       continue;
     }
 
@@ -204,6 +204,7 @@ export const createViewWithReferences = async ({
   overrideSchema,
   presentation,
   fields,
+  pivotFieldName,
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
@@ -214,6 +215,7 @@ export const createViewWithReferences = async ({
     overrideSchema,
     presentation,
     fields,
+    pivotFieldName,
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);

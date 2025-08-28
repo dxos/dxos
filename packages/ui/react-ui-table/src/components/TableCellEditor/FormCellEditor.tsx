@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getSnapshot } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSnapshot } from '@dxos/live-object';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
@@ -60,12 +60,8 @@ export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridS
     return undefined;
   }, [model, contextEditing]);
 
-  const formValues = useMemo(() => {
-    if (originalRow) {
-      // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
-      return getSnapshot(originalRow);
-    }
-  }, [originalRow]);
+  // NOTE: Important to get a snapshot to eject from the live object.
+  const formValues = useMemo(() => (originalRow ? getSnapshot(originalRow) : {}), [originalRow]);
 
   const handleSave = useCallback(
     (values: any) => {
@@ -94,12 +90,14 @@ export const FormCellEditor = ({ fieldProjection, model, schema, onSave, __gridS
   return (
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
-      <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
-        <Popover.Arrow />
-        <Popover.Viewport>
-          <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
-        </Popover.Viewport>
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
+          <Popover.Arrow />
+          <Popover.Viewport>
+            <Form values={formValues} schema={narrowedSchema as any} onSave={handleSave} />
+          </Popover.Viewport>
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };

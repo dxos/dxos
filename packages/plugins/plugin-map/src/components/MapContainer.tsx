@@ -18,6 +18,7 @@ import { type Map } from '../types';
 import { GlobeControl } from './Globe';
 import { MapControl } from './Map';
 import { type GeoControlProps } from './types';
+import { getDeep } from '@dxos/util';
 
 export type MapControlType = 'globe' | 'map';
 
@@ -31,7 +32,6 @@ export type MapContainerProps = {
 
 export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
-  const [markers, setMarkers] = useState<GeoMarker[]>([]);
   const client = useClient();
   const space = getSpace(view);
   const map = _map ?? (view?.presentation.target as Map.Map | undefined);
@@ -39,37 +39,30 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
   const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 
-  useEffect(() => {
-    if (!map) {
-      return;
-    }
+  const markers = objects
+    .map((row) => {
+      if (!view?.projection.pivotFieldId) {
+        return undefined;
+      }
 
-    const newMarkers: GeoMarker[] = (objects ?? [])
-      .map((row) => {
-        if (!view?.projection.pivotFieldId) {
-          return undefined;
-        }
+      const field = view.projection.fields?.find((f) => f.id === view.projection.pivotFieldId);
+      const geopoint = field?.path && getDeep(row, field.path.split('.'));
+      if (!geopoint) {
+        return undefined;
+      }
 
-        const geopoint = row[view.projection.pivotFieldId];
-        if (!geopoint) {
-          return undefined;
-        }
+      if (!Array.isArray(geopoint) || geopoint.length < 2) {
+        return undefined;
+      }
 
-        if (!Array.isArray(geopoint) || geopoint.length < 2) {
-          return undefined;
-        }
+      const [lng, lat] = geopoint;
+      if (typeof lng !== 'number' || typeof lat !== 'number') {
+        return undefined;
+      }
 
-        const [lng, lat] = geopoint;
-        if (typeof lng !== 'number' || typeof lat !== 'number') {
-          return undefined;
-        }
-
-        return { id: row.id, location: { lat, lng } };
-      })
-      .filter(isNotNullable);
-
-    setMarkers(newMarkers);
-  }, [objects, view?.projection.pivotFieldId]);
+      return { id: row.id, location: { lat, lng } } as GeoMarker;
+    })
+    .filter(isNotNullable);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
   const selected = useSelected(view?.query.typename, 'multi');
