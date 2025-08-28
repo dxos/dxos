@@ -9,18 +9,24 @@ import React from 'react';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type ProgressProps = ThemedClassName<{
-  nodes?: { id: string }[];
-  active?: boolean;
-  classes?: NodeProps['classes'];
-}>;
+// TODO(burdon): Show predicted nodes faded out.
+// TODO(burdon): Allow controlled index (like TextBlock).
+// TODO(burdon): Handle error.
+
+export type ProgressProps = ThemedClassName<
+  {
+    nodes?: { id: string }[];
+    active?: boolean;
+    classes?: NodeProps['classes'];
+  } & Pick<NodeProps, 'radius' | 'width' | 'duration'>
+>;
 
 /**
  * Dynamic progress bar.
  *
  * ---O---O---O---((O))
  */
-export const Progress = ({ nodes, active, classNames, classes = defaultSlots }: ProgressProps) => {
+export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ...props }: ProgressProps) => {
   const [_, setCurrent, currentRef] = useStateWithRef<number>(nodes?.length ?? 0);
   useEffect(() => {
     setCurrent(nodes?.length ?? 0);
@@ -33,6 +39,8 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots }: 
           {nodes?.map((node, i) => (
             <Node
               key={node.id}
+              {...props}
+              classes={classes}
               state={
                 i === currentRef.current! - 1
                   ? active
@@ -42,7 +50,6 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots }: 
                     ? 'open'
                     : 'closed'
               }
-              classes={classes}
             />
           ))}
         </div>
@@ -51,14 +58,15 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots }: 
   );
 };
 
-type NodeState = 'closed' | 'open' | 'active' | 'terminal';
+type NodeState = 'closed' | 'open' | 'active' | 'terminal' | 'error';
 
 type Slots = Partial<Record<NodeState | 'default', string>>;
 
 const defaultSlots = {
-  default: 'bg-baseSurface',
-  active: 'bg-rose-500',
-  terminal: 'bg-green-500',
+  default: 'bg-baseSurface border-subduedSeparator',
+  active: 'bg-amber-500 border-transparent',
+  terminal: 'bg-green-500 border-transparent',
+  error: 'bg-rose-500 border-transparent',
 };
 
 type NodeProps = {
@@ -66,7 +74,7 @@ type NodeProps = {
   width?: number;
   radius?: number;
   duration?: number;
-  classes: Slots;
+  classes?: Slots;
   onClick?: () => void;
 };
 
@@ -77,7 +85,7 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
   return (
     <motion.div
       transition={{
-        duration: duration / 1000,
+        duration: duration / 1_000,
       }}
       animate={state}
       initial={{
@@ -134,15 +142,15 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
         >
           <div
             className={mx(
-              'absolute inset-0 border border-separator box-border rounded-full',
-              state === 'active' && 'animate-ping',
+              'absolute inset-0 border-2 border-separator box-border rounded-full',
+              state === 'active' && ['animate-[ping_2s_ease-in-out_infinite]', classes?.active],
             )}
           />
           <div
             className={mx(
-              'absolute inset-0 border border-subduedSeparator box-border rounded-full transition-background duration-500',
+              'absolute inset-0 border rounded-full transition-all duration-500',
               onClick && 'cursor-pointer',
-              classes[state] ?? classes.default,
+              classes?.[state] ?? classes?.default,
             )}
             onClick={onClick}
           />
