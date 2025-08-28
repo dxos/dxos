@@ -31,7 +31,7 @@ describe('properties', () => {
       'boolean',
       'string',
       'number',
-      'number',
+      'object',
       'object',
       'number',
     ]);
