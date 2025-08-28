@@ -15,6 +15,7 @@ import {
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { DxRefTag } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
@@ -190,7 +191,7 @@ export const RefField = ({
                         label={item.label}
                         {...(item.hue ? { hue: item.hue } : {})}
                         removeLabel={t('remove item label')}
-                        onItemClick={(event) => {
+                        onItemClick={(event: DxTagPickerItemClick) => {
                           if (event.action === 'remove') {
                             toggleSelect(item.id);
                           }
