@@ -3,7 +3,7 @@
 //
 
 import { Args, Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import { Console, Effect, Schema } from 'effect';
 
 import { ClientService } from '../../../services';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from './util';
@@ -12,7 +12,10 @@ export const invoke = Command.make(
   'invoke',
   {
     key: Args.text({ name: 'key' }).pipe(Args.withDescription('The key of the function to invoke.')),
-    data: Args.text({ name: 'data' }).pipe(Args.withDescription('The data to pass to the function.')),
+    data: Args.text({ name: 'data' }).pipe(
+      Args.withDescription('The data to pass to the function.'),
+      Args.withSchema(Schema.parseJson(Schema.Unknown)),
+    ),
   },
   Effect.fn(function* ({ key, data }) {
     const client = yield* ClientService;
@@ -28,7 +31,7 @@ export const invoke = Command.make(
     }
 
     const edgeClient = createEdgeClient(client);
-    const result = yield* Effect.promise(() => invokeFunction(edgeClient, fn, JSON.parse(data)));
+    const result = yield* Effect.promise(() => invokeFunction(edgeClient, fn, data));
     yield* Console.log(JSON.stringify(result, null, 2));
   }),
 ).pipe(Command.withDescription('Invoke a function deployed to EDGE.'));

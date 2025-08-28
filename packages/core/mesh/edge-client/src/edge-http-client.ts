@@ -68,6 +68,11 @@ type EdgeHttpRequestArgs = {
   retry?: RetryConfig;
   body?: any;
   /**
+   * @default true
+   */
+  json?: boolean;
+
+  /**
    * Do not expect a standard EDGE JSON response with a `success` field.
    */
   rawResponse?: boolean;
@@ -276,7 +281,7 @@ export class EdgeHttpClient {
 
     return this._call(url, {
       ...args,
-      body: JSON.stringify(input),
+      body: input,
       method: 'POST',
       rawResponse: true,
     });
@@ -400,16 +405,30 @@ export class EdgeHttpClient {
   }
 }
 
-const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
-  const bodyString = body && JSON.stringify(body);
-  if (bodyString && bodyString.length > WARNING_BODY_SIZE) {
-    log.warn('Request with large body', { bodySize: bodyString.length });
+const createRequest = (
+  { method, body, json = true }: EdgeHttpRequestArgs,
+  authHeader: string | undefined,
+): RequestInit => {
+  let requestBody: BodyInit | undefined;
+  const headers: HeadersInit = {};
+  if (!json) {
+    throw new Error('Not implemented');
+  } else {
+    requestBody = body && JSON.stringify(body);
+    headers['Content-Type'] = 'application/json';
+  }
+  if (typeof requestBody === 'string' && requestBody.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: requestBody.length });
+  }
+
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
   }
 
   return {
     method,
-    body: bodyString,
-    headers: authHeader ? { Authorization: authHeader } : undefined,
+    body: requestBody,
+    headers,
   };
 };
 
