@@ -78,4 +78,15 @@ export default (context: PluginContext) =>
         }
       },
     }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
+      //  but the filter is not being applied correctly.
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      resolve: ({ subject }) => {
+        const layout = context.getCapability(LayoutState);
+        layout.workspace = subject;
+      },
+    }),
   ]);
