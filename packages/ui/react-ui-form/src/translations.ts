@@ -26,6 +26,8 @@ export const translations = [
         'boolean input true value': 'Yes',
         'boolean input false value': 'No',
         'delete field label': 'Delete field',
+        'ref field placeholder_one': 'Select…',
+        'ref field placeholder_other': 'Select items…',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',

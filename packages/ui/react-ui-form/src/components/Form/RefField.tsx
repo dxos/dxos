@@ -16,7 +16,7 @@ import {
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxRefTag } from '@dxos/lit-ui/react';
-import { Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { TagPickerItem } from '@dxos/react-ui-tag-picker';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -35,6 +35,11 @@ export type RefFieldProps = InputProps & {
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
   onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
+};
+
+// TODO(thure): Is this a standard that should be better canonized?
+const isRefSnapShot = (val: any): val is { '/': string } => {
+  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
 export const RefField = ({
@@ -74,8 +79,9 @@ export const RefField = ({
     const formValue = getValue();
 
     const unknownToRefOption = (val: unknown) => {
-      if (Ref.isRef(val)) {
-        const dxnString = val.dxn.toString();
+      const isRef = Ref.isRef(val);
+      if (isRef || isRefSnapShot(val)) {
+        const dxnString = isRef ? val.dxn.toString() : val['/'];
         const matchingOption = availableOptions.find((option) => option.id === dxnString);
         if (matchingOption) {
           return matchingOption;
@@ -168,23 +174,31 @@ export const RefField = ({
             ))
           )
         ) : (
-          <PopoverCombobox.Root placeholder={placeholder ?? t('empty readonly ref field label')}>
-            <PopoverCombobox.Trigger
-              classNames='bg-inputSurface p-1.5 rounded-sm w-full justify-between'
-              onBlur={onBlur}
-            >
-              {items?.map((item) => (
-                <TagPickerItem
-                  key={item.id}
-                  itemId={item.id}
-                  label={item.label}
-                  {...(item.hue ? { hue: item.hue } : {})}
-                  removeLabel={t('remove item label')}
-                  onItemClick={() => {
-                    toggleSelect(item.id);
-                  }}
-                />
-              ))}
+          <PopoverCombobox.Root>
+            <PopoverCombobox.Trigger asChild>
+              <Button variant='ghost' onBlur={onBlur} classNames='is-full text-start gap-2'>
+                <div role='none' className='grow'>
+                  {items?.length ? (
+                    items?.map((item) => (
+                      <TagPickerItem
+                        key={item.id}
+                        itemId={item.id}
+                        label={item.label}
+                        {...(item.hue ? { hue: item.hue } : {})}
+                        removeLabel={t('remove item label')}
+                        onItemClick={() => {
+                          toggleSelect(item.id);
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <span className='text-description'>
+                      {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
+                    </span>
+                  )}
+                </div>
+                <Icon size={3} icon='ph--caret-down--bold' />
+              </Button>
             </PopoverCombobox.Trigger>
             <PopoverCombobox.Content
               filter={(value, search) => (labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
@@ -195,18 +209,16 @@ export const RefField = ({
                 onValueChange={(v) => setQuery(v)}
                 autoFocus
               />
-              <PopoverCombobox.List constrainInline constrainBlock>
+              <PopoverCombobox.List constrainBlock={false}>
                 {availableOptions.map((option) => (
-                  <PopoverCombobox.Item key={option.id} value={option.id} onSelect={() => toggleSelect(option.id)}>
+                  <PopoverCombobox.Item key={option.id} value={option.label} onSelect={() => toggleSelect(option.id)}>
                     {option.label}
                   </PopoverCombobox.Item>
                 ))}
                 {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
                   <PopoverCombobox.Item
                     key='__create__'
-                    onSelect={() => {
-                      void onCreateFromQuery?.(refTypeInfo, query);
-                    }}
+                    onSelect={() => onCreateFromQuery?.(refTypeInfo, query)}
                     classNames='inline-flex items-center gap-2'
                   >
                     <Icon icon={createOptionIcon} />

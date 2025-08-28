@@ -7,8 +7,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Filter } from '@dxos/echo';
 import { getDXN } from '@dxos/echo/Obj';
-import { type TypeAnnotation, getSnapshot, getValue } from '@dxos/echo-schema';
+import { type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
@@ -135,8 +136,10 @@ export const FormCellEditor = ({
     if (originalRow) {
       // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
       return getSnapshot(originalRow);
+    } else {
+      return {};
     }
-  }, [originalRow]);
+  }, [originalRow, editing]);
 
   const handleSave = useCallback(
     (values: any) => {
