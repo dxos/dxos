@@ -39,6 +39,12 @@
       "browser": "./dist/lib/browser/Ref.mjs",
       "node": "./dist/lib/node-esm/Ref.mjs"
     },
+    "./internal": {
+      "source": "./src/internal/index.ts",
+      "types": "./dist/types/src/internal/index.d.ts",
+      "browser": "./dist/lib/browser/internal/index.mjs",
+      "node": "./dist/lib/node-esm/internal/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/types.ts",
       "types": "./dist/types/src/testing/types.d.ts",
@@ -73,7 +79,6 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
