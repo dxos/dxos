@@ -13,6 +13,7 @@ export type FlexProps = ThemedClassName<
   }>
 >;
 
+// TODO(burdon): Move to react-ui.
 export const Flex = ({ classNames, children, column }: FlexProps) => {
   return (
     <div role='none' className={mx('flex', column && 'flex-col', classNames)}>

@@ -8,22 +8,20 @@ import { useEffect } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-// import { faker } from '@dxos/random';
-// import { DataType } from '@dxos/schema';
-// import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Flex } from '../experimental';
+import { Flex } from '../Flex';
 import { StatusRoll } from '../StatusRoll';
 
 import { Progress, type ProgressProps } from './Progress';
 
+// import { faker } from '@dxos/random';
+// import { DataType } from '@dxos/schema';
+// import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
 // faker.seed(1);
-
 // const generator = faker as any as ValueGenerator;
-
 // const objectGenerator = createGenerator(generator, DataType.Organization, { force: true });
 
 const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: faker.lorem.sentences(1) });
@@ -69,7 +67,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
       </Toolbar.Root>
       <Flex column classNames='gap-1'>
         <Progress nodes={nodes} active={!!running} {...props} />
-        <StatusRoll lines={lines} autoAdvance classNames='pis-4' />
+        <StatusRoll lines={lines} autoAdvance classNames='pis-4 text-sm text-subdued' />
       </Flex>
     </Flex>
   );

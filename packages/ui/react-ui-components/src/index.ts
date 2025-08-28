@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './Flex';
 export * from './MarkdownViewer';
 export * from './NumericTabs';
 export * from './ScrollContainer';
