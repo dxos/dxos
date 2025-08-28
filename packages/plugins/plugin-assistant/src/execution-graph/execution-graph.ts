@@ -9,6 +9,7 @@ import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
+import { isNotFalsy } from '@dxos/util';
 
 enum IconType {
   // General status.
@@ -42,7 +43,7 @@ export class ExecutionGraph {
   addEvents(events: Obj.Any[]) {
     for (const event of events) {
       if (Obj.instanceOf(DataType.Message, event)) {
-        const messageCommits = chatMessageToCommit(event);
+        const messageCommits = messageToCommit(event);
         this._commits.push(...messageCommits);
         messageCommits.map((c) => c.branch).forEach((branch) => this._branchNames.add(branch));
       } else if (Obj.instanceOf(AgentStatus, event)) {
@@ -56,7 +57,7 @@ export class ExecutionGraph {
           parents:
             event.parentMessage && event.toolCallId
               ? [getToolCallId(event.parentMessage, event.toolCallId)]
-              : undefined,
+              : undefined, // TODO(burdon): Fix.
         });
       }
     }
@@ -102,72 +103,76 @@ const getParentId = (message: DataType.Message) => {
   }
 };
 
-const chatMessageToCommit = (message: DataType.Message): Commit[] => {
-  return message.blocks.map((block, idx) => {
-    const branch = getMessageBranch(message);
-    const parent = getParentId(message);
-    const parents = parent ? [parent] : [];
-    switch (block._tag) {
-      case 'toolCall':
-        return {
-          id: getToolCallId(message.id, block.toolCallId),
-          branch,
-          parents,
-          icon: IconType.TOOL,
-          level: LogLevel.INFO,
-          message: block.name,
-        } satisfies Commit;
-      case 'toolResult':
-        return {
-          id: getToolResultId(message.id, block.toolCallId),
-          branch,
-          parents,
-          icon: block.error ? IconType.X : IconType.CHECK,
-          level: block.error ? LogLevel.ERROR : LogLevel.INFO,
-          message: block.error ? block.error : block.name,
-        } satisfies Commit;
-      case 'status':
-        return {
-          id: getGenericBlockId(message.id, idx),
-          branch,
-          parents,
-          message: block.statusText,
-          level: LogLevel.INFO,
-          icon: IconType.FLAG,
-        } satisfies Commit;
-      case 'reasoning':
-        return {
-          id: getGenericBlockId(message.id, idx),
-          branch,
-          parents,
-          message: block.reasoningText ?? 'Thinking...',
-          icon: IconType.THINK,
-        } satisfies Commit;
-      case 'text':
-        return {
-          id: getGenericBlockId(message.id, idx),
-          branch,
-          parents,
-          icon: message.sender.role === 'user' ? IconType.USER : IconType.AGENT,
-          message: ellipsisEnd(block.text, 64),
-        } satisfies Commit;
-      case 'reference':
-        return {
-          id: getGenericBlockId(message.id, idx),
-          branch,
-          parents,
-          icon: IconType.LINK,
-          message: stringifyRef(block.reference),
-        } satisfies Commit;
-      default:
-        return {
-          id: getGenericBlockId(message.id, idx),
-          branch,
-          parents,
-          message: block._tag,
-        } satisfies Commit;
-    }
-  });
+const messageToCommit = (message: DataType.Message): Commit[] => {
+  console.log(message.blocks);
+  return message.blocks
+    .map((block, idx) => {
+      const branch = getMessageBranch(message);
+      const parent = getParentId(message);
+      const parents = parent ? [parent] : [];
+      switch (block._tag) {
+        case 'toolCall':
+          return {
+            id: getToolCallId(message.id, block.toolCallId),
+            branch,
+            parents,
+            icon: IconType.TOOL,
+            level: LogLevel.INFO,
+            message: block.name,
+          } satisfies Commit;
+        case 'toolResult':
+          return {
+            id: getToolResultId(message.id, block.toolCallId),
+            branch,
+            parents,
+            icon: block.error ? IconType.X : IconType.CHECK,
+            level: block.error ? LogLevel.ERROR : LogLevel.INFO,
+            message: block.error ? block.error : block.name,
+          } satisfies Commit;
+        case 'status':
+          return {
+            id: getGenericBlockId(message.id, idx),
+            branch,
+            parents,
+            message: block.statusText,
+            level: LogLevel.INFO,
+            icon: IconType.FLAG,
+          } satisfies Commit;
+        case 'reasoning':
+          return {
+            id: getGenericBlockId(message.id, idx),
+            branch,
+            parents,
+            message: block.reasoningText ?? 'Thinking...',
+            icon: IconType.THINK,
+          } satisfies Commit;
+        case 'text':
+          return {
+            id: getGenericBlockId(message.id, idx),
+            branch,
+            parents,
+            icon: message.sender.role === 'user' ? IconType.USER : IconType.AGENT,
+            message: ellipsisEnd(block.text, 64),
+          } satisfies Commit;
+        case 'reference':
+          return {
+            id: getGenericBlockId(message.id, idx),
+            branch,
+            parents,
+            icon: IconType.LINK,
+            message: stringifyRef(block.reference),
+          } satisfies Commit;
+        default:
+          return null;
+        // return {
+        //   id: getGenericBlockId(message.id, idx),
+        //   branch,
+        //   parents,
+        //   message: block._tag,
+        // } satisfies Commit;
+      }
+    })
+    .filter(isNotFalsy);
 };
 
 const ellipsisEnd = (str: string, length: number) => {

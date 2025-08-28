@@ -44,14 +44,11 @@ export const StatusRoll = ({
 }: StatusRollProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastRoll = useRef(Date.now());
-
+  const linesLength = useDynamicRef(lines.length);
   const [index, setIndex] = useState(index$);
   useEffect(() => {
-    console.log(index$);
     setIndex(index$ === -1 ? lines.length - 1 : index$);
   }, [lines, index$]);
-
-  const linesLength = useDynamicRef(lines.length);
 
   useEffect(() => {
     if (!autoAdvance) {

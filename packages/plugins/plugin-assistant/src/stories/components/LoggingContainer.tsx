@@ -17,9 +17,9 @@ import { type ComponentProps } from './types';
 
 export const LoggingContainer = ({ space }: ComponentProps) => {
   const { t } = useTranslation(meta.id);
+  const scrollerRef = useRef<ScrollController>(null);
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
   const { branches, commits } = useExecutionGraph(chat?.traceQueue);
-  const scrollerRef = useRef<ScrollController>(null);
 
   return (
     <div className='flex flex-col h-full'>

@@ -90,6 +90,6 @@ export const Default: Story = {
   args: {
     items: Array.from({ length: 3 }).map(() => createItem()),
     width: 32,
-    radius: 6,
+    radius: 5.5,
   },
 };

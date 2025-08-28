@@ -81,7 +81,7 @@ type NodeProps = {
 /**
  * ---(O)
  */
-const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes, onClick }: NodeProps) => {
+const Node = ({ state = 'open', width = 32, radius = 5.5, duration = 250, classes, onClick }: NodeProps) => {
   return (
     <motion.div
       transition={{
@@ -117,7 +117,7 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-b border-subduedSeparator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{
