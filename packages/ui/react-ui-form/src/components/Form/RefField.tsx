@@ -201,7 +201,10 @@ export const RefField = ({
               </Button>
             </PopoverCombobox.Trigger>
             <PopoverCombobox.Content
-              filter={(value, search) => (labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
+              filter={(value, search) =>
+                value === '__create__' || labelById[value]?.toLowerCase().includes(search.toLowerCase()) ? 1 : 0
+              }
+              classNames='is-[--radix-popover-trigger-width]'
             >
               <PopoverCombobox.Input
                 placeholder={'Search...'}
@@ -217,7 +220,7 @@ export const RefField = ({
                 ))}
                 {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
                   <PopoverCombobox.Item
-                    key='__create__'
+                    value='__create__'
                     onSelect={() => onCreateFromQuery?.(refTypeInfo, query)}
                     classNames='inline-flex items-center gap-2'
                   >

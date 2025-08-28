@@ -85,6 +85,30 @@ export const FormCellEditor = ({
     [client, model],
   );
 
+  const originalRow = useMemo(() => {
+    if (model && contextEditing) {
+      const cell = parseCellIndex(contextEditing.index);
+      const row = model.getRowAt(cell.row);
+      invariant(row);
+
+      return row;
+    }
+
+    return undefined;
+  }, [model, contextEditing]);
+
+  const handleSave = useCallback(
+    (values: any) => {
+      const path = fieldProjection.field.path;
+      const value = getDeep(values, [path]);
+      setDeep(originalRow, [path], value);
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, originalRow],
+  );
+
   const handleCreateFromQuery = useCallback(
     async (typeAnnotation: TypeAnnotation, query: string) => {
       if (model && modals && contextEditing?.index) {
@@ -98,7 +122,7 @@ export const FormCellEditor = ({
         );
       }
     },
-    [model, client],
+    [model, modals, client, contextEditing?.index, gridId, fieldProjection, handleSave],
   );
 
   useEffect(() => {
@@ -120,18 +144,6 @@ export const FormCellEditor = ({
     return narrowSchema(schema, [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
-  const originalRow = useMemo(() => {
-    if (model && contextEditing) {
-      const cell = parseCellIndex(contextEditing.index);
-      const row = model.getRowAt(cell.row);
-      invariant(row);
-
-      return row;
-    }
-
-    return undefined;
-  }, [model, contextEditing]);
-
   const formValues = useMemo(() => {
     if (originalRow) {
       // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
@@ -140,18 +152,6 @@ export const FormCellEditor = ({
       return {};
     }
   }, [originalRow, editing]);
-
-  const handleSave = useCallback(
-    (values: any) => {
-      const path = fieldProjection.field.path;
-      const value = getDeep(values, [path]);
-      setDeep(originalRow, [path], value);
-      setEditing(null);
-      setLocalEditing(false);
-      onSave?.();
-    },
-    [fieldProjection.field.path, originalRow],
-  );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
