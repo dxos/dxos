@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config, Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
 import { Client } from '@dxos/client';
 
+import { CommandConfig } from './command-config';
 import { ConfigService } from './config-service';
 
 // TODO(wittjosiah): Factor out.
@@ -13,7 +14,7 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
   static layer = Layer.scoped(
     ClientService,
     Effect.gen(function* () {
-      const verbose = yield* Config.boolean('VERBOSE').pipe(Config.withDefault(false));
+      const verbose = yield* CommandConfig.isVerbose;
       const config = yield* ConfigService;
       const client = new Client({ config });
       yield* Effect.tryPromise(() => client.initialize());
