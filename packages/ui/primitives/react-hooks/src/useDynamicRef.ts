@@ -3,12 +3,12 @@
 //
 
 import { useCallback } from '@preact-signals/safe-react/react';
-import { type Dispatch, type RefObject, type SetStateAction, useEffect, useRef, useState } from 'react';
+import { type Dispatch, type MutableRefObject, type SetStateAction, useEffect, useRef, useState } from 'react';
 
 /**
  * Like `useState` but with an additional dynamic value.
  */
-export const useStateWithRef = <T>(value$: T): [T, Dispatch<SetStateAction<T>>, RefObject<T>] => {
+export const useStateWithRef = <T>(value$: T): [T, Dispatch<SetStateAction<T>>, MutableRefObject<T>] => {
   const [value, setValue] = useState<T>(value$);
   const valueRef = useRef<T>(value$);
   const setter = useCallback<Dispatch<SetStateAction<T>>>((value) => {
@@ -29,7 +29,7 @@ export const useStateWithRef = <T>(value$: T): [T, Dispatch<SetStateAction<T>>, 
 /**
  * Ref that is updated by a dependency.
  */
-export const useDynamicRef = <T>(value: T): RefObject<T> => {
+export const useDynamicRef = <T>(value: T): MutableRefObject<T> => {
   const valueRef = useRef<T>(value);
   useEffect(() => {
     valueRef.current = value;

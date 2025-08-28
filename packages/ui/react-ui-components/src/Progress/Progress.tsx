@@ -138,7 +138,7 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
               height: radius * 2,
             },
           }}
-          className={mx('absolute right-0', state === 'closed' && 'hidden')}
+          className={mx('flex absolute right-0', state === 'closed' && 'hidden')}
         >
           <div
             className={mx(
@@ -151,9 +151,16 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
               'absolute inset-0 border rounded-full transition-all duration-500',
               onClick && 'cursor-pointer',
               classes?.[state] ?? classes?.default,
+              // state === 'active' && 'inset-2',
             )}
             onClick={onClick}
           />
+          {/* {state === 'active' && (
+            <Icon
+              icon='ph--circle-notch--bold'
+              classNames='absolute inset-0 is-full bs-full animate-spin text-amber-500'
+            />
+          )} */}
         </motion.div>
       </div>
     </motion.div>
