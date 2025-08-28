@@ -14,9 +14,8 @@ import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { type DataType, type ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { computeArrangement } from '../util';
-
-import { KanbanView } from './schema';
+import { Kanban } from './types';
+import { computeArrangement } from './util';
 
 export const UNCATEGORIZED_VALUE = '__uncategorized__' as const;
 export const UNCATEGORIZED_ATTRIBUTES = {
@@ -39,7 +38,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   private readonly _view: DataType.View;
   private readonly _schema: Schema.Schema.AnyNoContext;
   private readonly _projection: ProjectionModel;
-  private _kanban?: KanbanView;
+  private _kanban?: Kanban.Kanban;
 
   private readonly _items = signal<T[]>([]);
   private readonly _cards = signal<ArrangedCards<T>>([]);
@@ -55,13 +54,13 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
     return fullyQualifiedId(this._view);
   }
 
-  get kanban(): KanbanView {
+  get kanban(): Kanban.Kanban {
     invariant(this._kanban, 'Kanban model not initialized');
     return this._kanban;
   }
 
   get columnFieldPath(): JsonProp | undefined {
-    const columnFieldId = this.kanban.columnFieldId;
+    const columnFieldId = this._view.projection.pivotFieldId;
     if (columnFieldId === undefined) {
       return undefined;
     }
@@ -101,7 +100,7 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
 
   protected override async _open(): Promise<void> {
     const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(KanbanView, presentation));
+    invariant(Obj.instanceOf(Kanban.Kanban, presentation));
     this._kanban = presentation;
 
     this._computeArrangement();
@@ -179,11 +178,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
   //
 
   private _getSelectOptions(): { id: string; title: string; color: string }[] {
-    if (this.kanban.columnFieldId === undefined) {
+    if (this._view.projection.pivotFieldId === undefined) {
       return [];
     }
 
-    return this._projection.tryGetFieldProjection(this.kanban.columnFieldId)?.props.options ?? [];
+    return this._projection.tryGetFieldProjection(this._view.projection.pivotFieldId)?.props.options ?? [];
   }
 
   private _computeArrangement(): ArrangedCards<T> {
@@ -231,11 +230,11 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       return;
     }
 
-    if (!this.kanban.columnFieldId) {
+    if (!this._view.projection.pivotFieldId) {
       return;
     }
 
-    const fieldProjection = this._projection.getFieldProjection(this.kanban.columnFieldId);
+    const fieldProjection = this._projection.getFieldProjection(this._view.projection.pivotFieldId);
     const options = [...(fieldProjection.props.options ?? [])];
     const sourceIndex = options.findIndex((opt) => opt.id === source.id);
     const targetIndex = options.findIndex((opt) => opt.id === target.id);

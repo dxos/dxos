@@ -45,11 +45,11 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
 
     const newMarkers: GeoMarker[] = (objects ?? [])
       .map((row) => {
-        if (!map.locationFieldId) {
+        if (!view?.projection.pivotFieldId) {
           return undefined;
         }
 
-        const geopoint = row[map.locationFieldId];
+        const geopoint = row[view.projection.pivotFieldId];
         if (!geopoint) {
           return undefined;
         }
@@ -68,7 +68,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapC
       .filter(isNotNullable);
 
     setMarkers(newMarkers);
-  }, [objects, map?.locationFieldId]);
+  }, [objects, view?.projection.pivotFieldId]);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
   const selected = useSelected(view?.query.typename, 'multi');

@@ -9,7 +9,7 @@ import { EchoSchema, FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { KanbanSettingsSchema, type KanbanView } from '@dxos/react-ui-kanban';
+import { Kanban } from '@dxos/react-ui-kanban/types';
 import { type DataType, ProjectionModel } from '@dxos/schema';
 
 type KanbanViewEditorProps = { view: DataType.View };
@@ -17,7 +17,6 @@ type KanbanViewEditorProps = { view: DataType.View };
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
-  const kanban = view.presentation.target as KanbanView;
   const currentTypename = useMemo(() => view.query.typename, [view.query.typename]);
   const schema = useSchema(client, space, currentTypename);
 
@@ -35,12 +34,15 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
 
   const handleSave = useCallback(
     (values: Partial<{ columnFieldId: string }>) => {
-      kanban.columnFieldId = values.columnFieldId;
+      view.projection.pivotFieldId = values.columnFieldId;
     },
-    [kanban],
+    [view],
   );
 
-  const initialValues = useMemo(() => ({ columnFieldId: kanban.columnFieldId }), [kanban.columnFieldId]);
+  const initialValues = useMemo(
+    () => ({ columnFieldId: view.projection.pivotFieldId }),
+    [view.projection.pivotFieldId],
+  );
   const custom: CustomInputMap = useMemo(
     () => ({ columnFieldId: (props) => <SelectInput {...props} options={selectFields} /> }),
     [selectFields],
@@ -49,7 +51,7 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   return (
     <Form
       Custom={custom}
-      schema={KanbanSettingsSchema}
+      schema={Kanban.SettingsSchema}
       values={initialValues}
       onSave={handleSave}
       autoSave

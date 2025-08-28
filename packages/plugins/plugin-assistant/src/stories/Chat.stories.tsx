@@ -257,7 +257,7 @@ export const WithMap = {
     config: config.remote,
     types: [Map.Map],
     onInit: async ({ space, binder }) => {
-      const object = space.db.add(Map.makeMap());
+      const object = space.db.add(Map.make());
       await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
@@ -274,7 +274,7 @@ export const WithTrip = {
     onInit: async ({ space, binder }) => {
       // TODO(burdon): Table.
       {
-        const object = space.db.add(Map.makeMap({ name: 'Trip' }));
+        const object = space.db.add(Map.make({ name: 'Trip' }));
         await binder.bind({ objects: [Ref.make(object)] });
       }
       {
