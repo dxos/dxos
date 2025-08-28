@@ -30,14 +30,11 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
               // Effect.repeat(Console.log('action...'), Schedule.fixed('1 second')),
 
               // Try to cleanly exit.
+              // TODO(burdon): Sometimes hangs evem after logging OK.
+              // Cloudflare socket? (detected via `lsof -i`)
+              // 192.168.1.150:56747 -> 172.67.201.139:443
               Effect.tryPromise(() => client.destroy()).pipe(
                 Effect.tap(() => {
-                  // TODO(burdon): Sometimes hangs evem after logging OK.
-                  // Cloudflare socket? (detected via `lsof -i`)
-                  // 192.168.1.150:56747 -> 172.67.201.139:443
-                  if (process.env.DX_TRACK_LEAKS) {
-                    (globalThis as any).wtf.dump();
-                  }
                   if (verbose) {
                     return Effect.log('OK');
                   }
