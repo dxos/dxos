@@ -2,15 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-/* eslint-disable no-console */
-
 import { type DependencyList, useEffect, useRef } from 'react';
 
 /**
  * Util to log deps that have changed.
  */
-// TODO(burdon): Move to react-hooks.
-export const useDebugReactDeps = (deps: DependencyList = []) => {
+export const useDebugDeps = (deps: DependencyList = []) => {
   const lastDeps = useRef<DependencyList>([]);
   useEffect(() => {
     console.group('deps changed', { old: lastDeps.current.length, new: deps.length });

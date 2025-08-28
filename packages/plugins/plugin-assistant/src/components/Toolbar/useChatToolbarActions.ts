@@ -35,7 +35,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
     useMemo(
       () =>
         Rx.make(() => {
-          const base = MenuBuilder.make()
+          const builder = MenuBuilder.make()
             .root({
               label: ['chat toolbar title', { ns: meta.id }],
             })
@@ -72,7 +72,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
             });
 
           if (chats.length > 0) {
-            base.group(
+            builder.group(
               'chats',
               {
                 label: ['chat history label', { ns: meta.id }],
@@ -102,14 +102,14 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
           }
 
           if (onReset) {
-            base.action('reset', onReset, {
+            builder.action('reset', onReset, {
               label: ['button reset', { ns: meta.id }],
               icon: 'ph--trash--regular',
               type: 'reset',
             });
           }
 
-          return base.build();
+          return builder.build();
         }),
       [chats],
     ),
