@@ -26,8 +26,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { createTable } from '@dxos/react-ui-table';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
@@ -258,10 +257,10 @@ export const WithMap = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
-    types: [DataType.View, Map.Map, TableView],
+    types: [DataType.View, Map.Map, Table.Table],
     onInit: async ({ space, binder }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView } = await createTable({ space, typename: schema.typename });
+      const { view: tableView } = await Table.makeView({ space, typename: schema.typename });
       const { view: mapView } = await Map.makeView({ space, typename: schema.typename });
       space.db.add(tableView);
       space.db.add(mapView);
