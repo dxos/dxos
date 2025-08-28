@@ -25,15 +25,16 @@ export type MapContainerProps = {
   role?: string;
   type?: MapControlType;
   view?: DataType.View;
+  map?: Map.Map;
 } & GeoControlProps &
   Pick<MapRootProps, 'onChange'>;
 
-export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
   const [markers, setMarkers] = useState<GeoMarker[]>([]);
   const client = useClient();
   const space = getSpace(view);
-  const map = view?.presentation.target as Map.Map | undefined;
+  const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
   const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
