@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { ViewAnnotation } from '@dxos/echo-schema';
+import { ViewAnnotation } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 
 export const TableView = Schema.Struct({

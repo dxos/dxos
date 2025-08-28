@@ -22,8 +22,8 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeReference,
-} from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { getSchema } from '@dxos/echo/internal';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';

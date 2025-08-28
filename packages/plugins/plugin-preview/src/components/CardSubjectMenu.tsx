@@ -7,7 +7,7 @@ import React from 'react';
 
 // import { useIntentDispatcher } from '@dxos/app-framework';
 import { ACTION_TYPE } from '@dxos/app-graph';
-import { type AnyEchoObject } from '@dxos/echo-schema';
+import { type AnyEchoObject } from '@dxos/echo/internal';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
 

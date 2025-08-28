@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { ATTR_META } from '@dxos/echo-schema';
+import { ATTR_META } from '@dxos/echo/internal';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';

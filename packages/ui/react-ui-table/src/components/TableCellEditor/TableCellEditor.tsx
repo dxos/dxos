@@ -6,7 +6,7 @@ import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import { useThemeContext } from '@dxos/react-ui';

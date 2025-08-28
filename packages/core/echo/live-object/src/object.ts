@@ -15,8 +15,8 @@ import {
   attachTypedJsonSerializer,
   defineHiddenProperty,
   getTypeAnnotation,
-} from '@dxos/echo-schema';
-import { MetaId } from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { MetaId } from '@dxos/echo/internal';
 
 import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';

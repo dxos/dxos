@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

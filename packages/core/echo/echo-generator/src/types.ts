@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { type EchoSchema } from '@dxos/echo-schema';
+import { type EchoSchema } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.

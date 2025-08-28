@@ -7,7 +7,7 @@ import { Context, Effect, Layer, Option, type Schema } from 'effect';
 import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
-import type { EchoSchema } from '@dxos/echo-schema';
+import type { EchoSchema } from '@dxos/echo/internal';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';

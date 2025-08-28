@@ -47,7 +47,7 @@ import {
   isInstanceOf,
   requireTypeReference,
   setRefResolver,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import {

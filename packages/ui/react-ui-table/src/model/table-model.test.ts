@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';

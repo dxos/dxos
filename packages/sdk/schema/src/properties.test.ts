@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Format } from '@dxos/echo-schema';
+import { Format } from '@dxos/echo/internal';
 
 import { getSchemaProperties } from './properties';
 

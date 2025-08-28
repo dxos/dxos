@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 
 export class FileType extends TypedObject({
   typename: 'dxos.org/type/File',

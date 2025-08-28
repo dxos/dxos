@@ -3,8 +3,8 @@
 //
 
 import { Obj } from '@dxos/echo';
-import * as EchoSchema$ from '@dxos/echo-schema';
-import { type ObjectId } from '@dxos/echo-schema';
+import * as EchoSchema$ from '@dxos/echo/internal';
+import { type ObjectId } from '@dxos/echo/internal';
 
 import * as View$ from '../view';
 

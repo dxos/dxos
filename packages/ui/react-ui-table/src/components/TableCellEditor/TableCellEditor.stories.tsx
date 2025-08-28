@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type EchoSchema, isMutable } from '@dxos/echo-schema';
+import { type EchoSchema, isMutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';

@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 
 import { Obj } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo-schema';
-import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
+import { getTypename, toJsonSchema } from '@dxos/echo/internal';
+import type { JsonSchemaType, SortDirectionType } from '@dxos/echo/internal';
 import {
   type DataType,
   ProjectionModel,

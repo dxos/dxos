@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
-import { FormatAnnotation, FormatEnum } from '@dxos/echo-schema';
+import { FormatAnnotation, FormatEnum } from '@dxos/echo/internal';
 
 import { type Live, Obj, Ref, Relation, Type } from '../index';
 

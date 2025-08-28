@@ -23,7 +23,7 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';

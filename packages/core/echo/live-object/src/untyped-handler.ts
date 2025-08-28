@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeletedId, TypeId, defineHiddenProperty, getTypename } from '@dxos/echo-schema';
+import { DeletedId, TypeId, defineHiddenProperty, getTypename } from '@dxos/echo/internal';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 

@@ -8,7 +8,7 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, contributes } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { FormatEnum, FormatEnums, SelectOptionSchema } from '@dxos/echo-schema';
+import { FormatEnum, FormatEnums, SelectOptionSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { hues } from '@dxos/react-ui-theme';
 import { getSchemaFromPropertyDefinitions } from '@dxos/schema';

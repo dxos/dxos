@@ -9,7 +9,7 @@ import { Schema } from 'effect';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter } from '@dxos/echo';
-import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
+import { getSchemaTypename, getTypename } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';

@@ -4,7 +4,7 @@
 
 import { describe } from 'vitest';
 
-import { EchoObject, getTypeAnnotation } from '@dxos/echo-schema';
+import { EchoObject, getTypeAnnotation } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo-schema/testing';
 import { live } from '@dxos/live-object';
 

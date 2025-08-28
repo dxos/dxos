@@ -21,7 +21,7 @@ import {
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 

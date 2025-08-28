@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type DataType } from '@dxos/schema';
 
 import { type ExecutableTool, type Tool, type ToolExecutionContext, ToolResult } from './tool';

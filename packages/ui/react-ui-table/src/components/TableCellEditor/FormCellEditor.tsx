@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getSnapshot } from '@dxos/echo-schema';
+import { getSnapshot } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

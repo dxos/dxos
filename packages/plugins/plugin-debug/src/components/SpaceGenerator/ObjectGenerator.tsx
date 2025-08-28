@@ -6,7 +6,7 @@ import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework'
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
-import { type TypedObject } from '@dxos/echo-schema';
+import { type TypedObject } from '@dxos/echo/internal';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { createSheet } from '@dxos/plugin-sheet/types';
 import { type CellValue, SheetType } from '@dxos/plugin-sheet/types';

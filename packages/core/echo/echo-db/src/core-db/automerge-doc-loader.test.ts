@@ -8,7 +8,7 @@ import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

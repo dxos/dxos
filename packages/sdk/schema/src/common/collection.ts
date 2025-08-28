@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { QueryType } from '@dxos/echo-schema';
+import { QueryType } from '@dxos/echo/internal';
 
 export const Collection = Schema.Struct({
   name: Schema.optional(Schema.String),

@@ -5,7 +5,7 @@ var __dxlog_file = "input.ts";
 import { type Schema } from 'effect';
 import { raise } from '@dxos/debug';
 import { type EchoDatabase, Filter, type AnyLiveObject } from '@dxos/echo-db';
-import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo-schema';
+import { getSchema, getSchemaTypename, StoredSchema, toJsonSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import type { DataSource, Node, Relationship } from './query-executor';
 import { formatInferredRelationshipLabel, formatNodeLabel, isReference } from './schema';

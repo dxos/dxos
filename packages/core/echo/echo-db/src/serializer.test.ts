@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Query } from '@dxos/echo';
-import { Expando, Ref, getSchema } from '@dxos/echo-schema';
+import { Expando, Ref, getSchema } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

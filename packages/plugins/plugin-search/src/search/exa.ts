@@ -8,7 +8,7 @@ import { Option, Schema, SchemaAST } from 'effect';
 
 import { Key, Obj } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
-import { ReferenceAnnotationId } from '@dxos/echo-schema';
+import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
