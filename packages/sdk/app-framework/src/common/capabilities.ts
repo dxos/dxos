@@ -176,8 +176,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  // TODO(wittjosiah): Clone instead of function?
-  export const BlueprintDefinition = defineCapability<() => Blueprint.Blueprint>(
+  export const BlueprintDefinition = defineCapability<Blueprint.Blueprint>(
     'dxos.org/app-framework/capability/blueprint-definition',
   );
 

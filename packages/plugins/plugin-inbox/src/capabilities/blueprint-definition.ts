@@ -15,7 +15,8 @@ const tools: string[] = [];
 export default () => {
   return [
     contributes(Capabilities.Functions, functions),
-    contributes(Capabilities.BlueprintDefinition, () =>
+    contributes(
+      Capabilities.BlueprintDefinition,
       Blueprint.make({
         key: 'dxos.org/blueprint/inbox',
         name: 'Inbox',
