@@ -6,6 +6,7 @@ import { Args, Command, Options } from '@effect/cli';
 import { Console, Effect, Option, Schema } from 'effect';
 
 import { ClientService } from '../../../services';
+
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from './util';
 
 export const invoke = Command.make(

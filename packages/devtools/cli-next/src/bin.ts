@@ -8,9 +8,9 @@ import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Effect, Layer, Logger } from 'effect';
 
+import { unrefTimeout } from '@dxos/async';
 import { LogLevel, levels, log } from '@dxos/log';
 
-import { unrefTimeout } from '@dxos/async';
 import { dx } from './commands';
 import { DXOS_VERSION } from './version';
 

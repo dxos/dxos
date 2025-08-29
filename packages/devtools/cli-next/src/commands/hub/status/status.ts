@@ -3,7 +3,8 @@
 //
 
 import { Command } from '@effect/cli';
-import { Config, Console, Effect } from 'effect';
+import { Console, Effect } from 'effect';
+
 import { CommandConfig } from '../../../services';
 
 export const status = Command.make(

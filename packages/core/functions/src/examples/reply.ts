@@ -1,4 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
+
 import { defineFunction } from '../handler';
 
 export default defineFunction({

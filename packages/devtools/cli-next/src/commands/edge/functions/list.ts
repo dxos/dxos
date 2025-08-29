@@ -6,6 +6,7 @@ import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
 import { ClientService } from '../../../services';
+
 import { getDeployedFunctions } from './util';
 
 export const list = Command.make(

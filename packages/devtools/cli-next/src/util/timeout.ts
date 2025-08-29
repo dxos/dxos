@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config, ConfigError, Duration, Effect, Option } from 'effect';
+import { Config, type ConfigError, Duration, Effect, Option } from 'effect';
 import type { TimeoutException } from 'effect/Cause';
 
 export const withTimeout: <A, E, R>(

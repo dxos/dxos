@@ -5,8 +5,8 @@
 import { Command } from '@effect/cli';
 
 import { deploy } from './deploy';
-import { list } from './list';
 import { invoke } from './invoke';
+import { list } from './list';
 
 export const fn = Command.make('function').pipe(
   Command.withDescription('Manage EDGE functions.'),

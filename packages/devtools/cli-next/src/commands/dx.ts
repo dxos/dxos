@@ -3,13 +3,13 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Config, Effect, Layer } from 'effect';
+import { Config, Layer } from 'effect';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
 import { ClientService, ConfigService } from '../services';
-
 import { CommandConfig } from '../services';
+
 import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';

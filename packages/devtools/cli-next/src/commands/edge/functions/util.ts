@@ -9,8 +9,10 @@ import { Effect } from 'effect';
 
 import { type Client, type PublicKey } from '@dxos/client';
 import { Filter, type Space, type SpaceId, getMeta } from '@dxos/client/echo';
+import { createEdgeIdentity } from '@dxos/client/edge';
 import { type Identity } from '@dxos/client/halo';
 import { Obj, Ref } from '@dxos/echo';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import {
   FUNCTIONS_META_KEY,
   FunctionType,
@@ -24,8 +26,6 @@ import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
-import { createEdgeIdentity } from '@dxos/client/edge';
-import { EdgeHttpClient } from '@dxos/edge-client';
 import { ClientService } from '../../../services';
 import { waitForSync } from '../../../util';
 

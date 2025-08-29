@@ -1,5 +1,10 @@
-import { defineFunction } from '../handler';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect, Schema } from 'effect';
+
+import { defineFunction } from '../handler';
 
 export default defineFunction({
   name: 'example.org/function/sleep',
