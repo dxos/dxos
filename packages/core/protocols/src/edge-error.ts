@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
 import { BaseError } from '@dxos/errors';
+
+import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
 
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
