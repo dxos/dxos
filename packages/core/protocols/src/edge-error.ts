@@ -3,6 +3,7 @@
 //
 
 import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
+import { BaseError } from '@dxos/errors';
 
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
@@ -13,11 +14,12 @@ export class EdgeCallFailedError extends Error {
     });
   }
 
-  public static fromHttpFailure(response: Response): EdgeCallFailedError {
+  public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
     return new EdgeCallFailedError({
       reason: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
+      cause: await parseErrorBody(response),
     });
   }
 
@@ -76,4 +78,42 @@ const isRetryableCode = (status: number) => {
     return false;
   }
   return !(status >= 400 && status < 500);
+};
+
+const parseErrorBody = async (response: Response): Promise<Error | undefined> => {
+  if (response.headers.get('Content-Type') !== 'application/json') {
+    return undefined;
+  }
+
+  const body = await response.json();
+  if (!('error' in body)) {
+    return undefined;
+  }
+  console.log({ body });
+
+  return parseSerializedError(body.error);
+};
+
+type SerializedError = {
+  code?: string;
+  message?: string;
+  context?: Record<string, unknown>;
+  stack?: string;
+  cause?: SerializedError;
+};
+
+const parseSerializedError = (serializedError: SerializedError): Error => {
+  let err: Error;
+  if (typeof serializedError.code === 'string') {
+    err = new BaseError(serializedError.code, serializedError.message ?? 'Unknown error', {
+      cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
+      context: serializedError.context,
+    });
+  } else {
+    err = new Error(serializedError.message ?? 'Unknown error', {
+      cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
+    });
+  }
+
+  return err;
 };

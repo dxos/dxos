@@ -384,7 +384,7 @@ export class EdgeHttpClient {
           log.warn('unsuccessful edge response', { url, body });
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else {
+          } else if (body.errorData) {
             processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
@@ -392,16 +392,16 @@ export class EdgeHttpClient {
           handledAuth = true;
           continue;
         } else {
-          processingError = EdgeCallFailedError.fromHttpFailure(response);
+          processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log('retrying edge request', { url, processingError });
+      if (processingError!.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+        log('retrying edge request', { url, processingError: processingError! });
       } else {
-        throw processingError;
+        throw processingError!;
       }
     }
   }
@@ -409,7 +409,7 @@ export class EdgeHttpClient {
   private async _handleUnauthorized(response: Response): Promise<string> {
     if (!this._edgeIdentity) {
       log.warn('unauthorized response received before identity was set');
-      throw EdgeCallFailedError.fromHttpFailure(response);
+      throw await EdgeCallFailedError.fromHttpFailure(response);
     }
 
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
