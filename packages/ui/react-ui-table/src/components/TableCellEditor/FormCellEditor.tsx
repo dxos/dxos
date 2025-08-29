@@ -183,6 +183,7 @@ export const FormCellEditor = ({
           <Popover.Arrow />
           <Popover.Viewport>
             <Form
+              autoFocus
               values={formValues}
               schema={narrowedSchema as any}
               onSave={handleSave}
