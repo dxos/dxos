@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Filter } from '@dxos/echo';
 import { getDXN } from '@dxos/echo/Obj';
-import { type TypeAnnotation, getValue } from '@dxos/echo-schema';
+import { Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
@@ -99,6 +99,7 @@ export const FormCellEditor = ({
 
   const handleSave = useCallback(
     (values: any) => {
+      console.log('[form cell editor]', 'handle save', values);
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);
@@ -107,19 +108,33 @@ export const FormCellEditor = ({
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, originalRow],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow],
+  );
+
+  const handleCreate = useCallback(
+    (object: any) => {
+      const ref = Ref.make(object);
+      const path = fieldProjection.field.path;
+      setDeep(originalRow, [path], ref);
+      contextEditing?.cellElement?.focus();
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, onSave, contextEditing, originalRow],
   );
 
   const handleCreateFromQuery = useCallback(
     async (typeAnnotation: TypeAnnotation, query: string) => {
       if (model && modals && contextEditing?.index) {
+        setLocalEditing(false);
         modals.openCreateRef(
           typeAnnotation.typename,
           document.querySelector(cellQuery(contextEditing.index, gridId)),
           {
             [fieldProjection.field.referencePath!]: query,
           },
-          handleSave,
+          handleCreate,
         );
       }
     },
