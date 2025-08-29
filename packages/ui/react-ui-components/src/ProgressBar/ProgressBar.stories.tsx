@@ -15,20 +15,13 @@ import { withTheme } from '@dxos/storybook-utils';
 import { Flex } from '../Flex';
 import { StatusRoll } from '../StatusRoll';
 
-import { Progress, type ProgressProps } from './Progress';
-
-// import { faker } from '@dxos/random';
-// import { DataType } from '@dxos/schema';
-// import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
-// faker.seed(1);
-// const generator = faker as any as ValueGenerator;
-// const objectGenerator = createGenerator(generator, DataType.Organization, { force: true });
+import { ProgressBar, type ProgressBarProps } from './ProgressBar';
 
 const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: faker.lorem.sentences(1) });
 
 type TestItem = { id: string; text: string };
 
-type StoryProps = Partial<ProgressProps> & {
+type StoryProps = Partial<ProgressBarProps> & {
   items?: TestItem[];
 };
 
@@ -36,6 +29,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
   const [running, setRunning] = useState(false);
   const [nodes, setNodes] = useState<TestItem[]>(items ?? []);
   const lines = useMemo(() => nodes.map((item) => item.text), [nodes]);
+  const [index, setIndex] = useState<number | undefined>(undefined);
   useEffect(() => {
     if (!running) {
       return;
@@ -65,16 +59,23 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
         <div className='flex-1' />
         <div className='p-2 text-subdued'>{nodes.length}</div>
       </Toolbar.Root>
+
       <Flex column classNames='gap-1'>
-        <Progress nodes={nodes} active={!!running} {...props} />
-        <StatusRoll lines={lines} autoAdvance classNames='pis-4 text-sm text-subdued' />
+        <ProgressBar
+          nodes={nodes}
+          index={index}
+          active={!!running}
+          onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
+          {...props}
+        />
+        <StatusRoll lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
       </Flex>
     </Flex>
   );
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-components/Progress',
+  title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
@@ -89,7 +90,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     items: Array.from({ length: 3 }).map(() => createItem()),
-    width: 32,
-    radius: 6,
   },
 };
