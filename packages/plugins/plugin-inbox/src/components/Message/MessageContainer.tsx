@@ -14,7 +14,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
 import { INBOX_PLUGIN } from '../../meta';
-import { InboxAction, type MailboxType } from '../../types';
+import { InboxAction, type Mailbox } from '../../types';
 
 import { Message } from './Message';
 import { type ViewMode } from './MessageHeader';
@@ -23,7 +23,7 @@ import { useMessageToolbarActions } from './toolbar';
 export type MessageContainerProps = {
   space?: Space;
   message?: DataType.Message;
-  inMailbox: MailboxType;
+  inMailbox: Mailbox.Mailbox;
 };
 
 export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
