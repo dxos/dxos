@@ -11,28 +11,25 @@ import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 /**
- * Summarize a transcript of a meeting.
+ * Summarize a mailbox.
  */
 export default defineFunction({
-  name: 'dxos.org/function/transcription/summarize',
-  description: 'Summarize a transcript of a meeting.',
+  name: 'dxos.org/function/inbox/summarize',
+  description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
-    transcript: Schema.String.annotations({
-      description: 'The transcript of the meeting.',
-    }),
-    notes: Schema.optional(Schema.String).annotations({
-      description: 'Additional notes from the participants.',
+    messages: Schema.String.annotations({
+      description: 'The contents of the mailbox.',
     }),
   }),
   outputSchema: Schema.Struct({
     summary: Schema.String.annotations({
-      description: 'The summary of the transcript.',
+      description: 'The summary of the mailbox.',
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { transcript, notes } }) {
+    function* ({ data: { messages } }) {
       const result = yield* new AiSession().run({
-        prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
+        prompt: messages,
         history: [],
         system: systemPrompt,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
@@ -58,21 +55,15 @@ export default defineFunction({
 });
 
 const systemPrompt = trim`
-  You are a helpful assistant that summarizes transcripts of meetings.
+  You are a helpful assistant that summarizes mailboxes.
 
   # Goal
-  Create a markdown summary of the meeting transcript with text notes provided.
-  Notes are very important so make sure to include them in the summary if they contain meaningful information.
+  Create a markdown summary of the mailbox with text notes provided.
 
   # Formatting
-  - Format the summary as a markdown document without extra comments like "Here is the summary of the transcript:".
+  - Format the summary as a markdown document without extra comments like "Here is the summary of the mailbox:".
   - Use markdown formatting for headings and bullet points.
   - Format the summary as a list of key points and takeaways.
-  - All names of people should be in bold.
-
-  # Note Taking
-  - Correlate items in the summary with the person of origin to build a coherent narrative.
-  - Include short quotes verbatim where appropriate. Especially when concerned with design decisions and problem descriptions.
 
   # Tasks
   At the end of the summary include tasks.
