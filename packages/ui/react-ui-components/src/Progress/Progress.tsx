@@ -16,8 +16,10 @@ import { mx } from '@dxos/react-ui-theme';
 export type ProgressProps = ThemedClassName<
   {
     nodes?: { id: string }[];
+    index?: number;
     active?: boolean;
     classes?: NodeProps['classes'];
+    onSelect?: (node: { index: number; id: string }) => void;
   } & Pick<NodeProps, 'radius' | 'width' | 'duration'>
 >;
 
@@ -26,7 +28,15 @@ export type ProgressProps = ThemedClassName<
  *
  * ---O---O---O---((O))
  */
-export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ...props }: ProgressProps) => {
+export const Progress = ({
+  nodes,
+  index,
+  active,
+  classNames,
+  classes = defaultSlots,
+  onSelect,
+  ...props
+}: ProgressProps) => {
   const [_, setCurrent, currentRef] = useStateWithRef<number>(nodes?.length ?? 0);
   useEffect(() => {
     setCurrent(nodes?.length ?? 0);
@@ -38,8 +48,9 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ..
         <div className='flex'>
           {nodes?.map((node, i) => (
             <Node
-              key={node.id}
               {...props}
+              key={node.id}
+              selected={index === i}
               classes={classes}
               state={
                 i === currentRef.current! - 1
@@ -50,6 +61,7 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ..
                     ? 'open'
                     : 'closed'
               }
+              onClick={() => onSelect?.({ index: i, id: node.id })}
             />
           ))}
         </div>
@@ -60,17 +72,19 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ..
 
 type NodeState = 'closed' | 'open' | 'active' | 'terminal' | 'error';
 
-type Slots = Partial<Record<NodeState | 'default', string>>;
+type Slots = Partial<Record<NodeState | 'default' | 'selected', string>>;
 
 const defaultSlots = {
   default: 'bg-baseSurface border-subduedSeparator',
   active: 'bg-amber-500 border-transparent',
   terminal: 'bg-green-500 border-transparent',
+  selected: 'bg-primary-500 border-transparent',
   error: 'bg-rose-500 border-transparent',
 };
 
 type NodeProps = {
   state?: NodeState;
+  selected?: boolean;
   width?: number;
   radius?: number;
   duration?: number;
@@ -81,7 +95,7 @@ type NodeProps = {
 /**
  * ---(O)
  */
-const Node = ({ state = 'open', width = 32, radius = 5.5, duration = 250, classes, onClick }: NodeProps) => {
+const Node = ({ state = 'open', selected, width = 32, radius = 5.5, duration = 250, classes, onClick }: NodeProps) => {
   return (
     <motion.div
       transition={{
@@ -150,7 +164,7 @@ const Node = ({ state = 'open', width = 32, radius = 5.5, duration = 250, classe
             className={mx(
               'absolute inset-0 border rounded-full transition-all duration-500',
               onClick && 'cursor-pointer',
-              classes?.[state] ?? classes?.default,
+              selected ? classes?.selected : (classes?.[state] ?? classes?.default),
               // state === 'active' && 'inset-2',
             )}
             onClick={onClick}
