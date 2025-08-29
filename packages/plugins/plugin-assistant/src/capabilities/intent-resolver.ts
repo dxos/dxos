@@ -33,7 +33,7 @@ export default (context: PluginContext) => [
           rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
-          space.db.add(BLUEPRINT);
+          space.db.add(BLUEPRINT());
         }),
     }),
     createResolver({
