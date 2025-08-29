@@ -17,7 +17,6 @@ import React, {
 
 import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
-import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -30,11 +29,11 @@ import {
   gridSeparatorBlockEnd,
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
+import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { safeParseInt } from '@dxos/util';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
-import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
 import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
@@ -93,10 +92,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(
   ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
-    const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
     const draftRowCount = model?.getDraftRowCount() ?? 0;
+
+    const handleSave = useCallback(() => {
+      dxGrid?.updateCells(true);
+      dxGrid?.requestUpdate();
+    }, [dxGrid]);
 
     const frozen = useMemo(() => {
       const noActionColumn =
@@ -292,6 +295,57 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return;
         }
 
+        // Handle Meta+C (Copy) and Meta+V (Paste) commands
+        if (event.metaKey || event.ctrlKey) {
+          switch (event.key) {
+            case 'c': {
+              // Copy focused cell's text content to clipboard
+              try {
+                const cellData = model.getCellData(cell);
+                const textContent = cellData?.toString() ?? '';
+                void navigator.clipboard.writeText(textContent);
+                event.preventDefault();
+              } catch (error) {
+                console.warn('Failed to copy cell content:', error);
+              }
+              break;
+            }
+            case 'v': {
+              // Paste clipboard content to focused cell
+              event.preventDefault();
+              void navigator.clipboard.readText().then((clipboardText) => {
+                try {
+                  // Attempt to set the cell's content to clipboard content
+                  model.setCellData(cell, clipboardText);
+                  handleSave();
+                } catch {
+                  // If validation fails, emit a DxEditRequest event with initialContent from clipboard
+                  // TODO(thure): Should `dx-grid` expose a method like this?
+                  const cellElement = (event.target as HTMLElement).closest(
+                    '[data-dx-grid-action="cell"]',
+                  ) as HTMLElement;
+                  if (cellElement) {
+                    const rect = cellElement.getBoundingClientRect();
+                    const editRequest = new DxEditRequest({
+                      cellIndex: `${cell.plane},${cell.col},${cell.row}`,
+                      cellBox: {
+                        insetInlineStart: rect.left,
+                        insetBlockStart: rect.top,
+                        inlineSize: rect.width,
+                        blockSize: rect.height,
+                      },
+                      cellElement,
+                      initialContent: clipboardText,
+                    });
+                    cellElement.dispatchEvent(editRequest);
+                  }
+                }
+              });
+              break;
+            }
+          }
+        }
+
         switch (event.key) {
           case 'Backspace':
           case 'Delete': {
@@ -305,7 +359,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           }
         }
       },
-      [model],
+      [model, dxGrid, handleSave],
     );
 
     const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -333,11 +387,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         dxGrid.scrollToColumn(columns - 1);
       }
     }, [model, dxGrid]);
-
-    const handleSave = useCallback(() => {
-      dxGrid?.updateCells(true);
-      dxGrid?.requestUpdate();
-    }, [dxGrid]);
 
     if (!model || !modals) {
       return <span role='none' className='attention-surface' />;
