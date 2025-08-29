@@ -21,12 +21,8 @@ import { FormatAnnotation, FormatEnum } from './types';
  * Note: optional third element for altitude.
  */
 export const GeoPoint = Schema.Tuple(
-  Schema.Number.pipe(Schema.clamp(-180, 180), Schema.multipleOf(0.00001)).annotations({
-    title: 'Longitude',
-  }),
-  Schema.Number.pipe(Schema.clamp(-90, 90), Schema.multipleOf(0.00001)).annotations({
-    title: 'Latitude',
-  }),
+  Schema.Number.pipe(Schema.annotations({ title: 'Longitude' }), Schema.clamp(-180, 180), Schema.multipleOf(0.00001)),
+  Schema.Number.pipe(Schema.annotations({ title: 'Latitude' }), Schema.clamp(-90, 90), Schema.multipleOf(0.00001)),
   Schema.optionalElement(Schema.Number).annotations({
     title: 'Height ASL (m)',
   }),

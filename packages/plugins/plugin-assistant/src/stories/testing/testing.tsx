@@ -9,10 +9,13 @@ import {
   Capabilities,
   Events,
   IntentPlugin,
+  LayoutAction,
   type Plugin,
   type PluginContext,
   SettingsPlugin,
+  allOf,
   contributes,
+  createIntent,
   createResolver,
   defineModule,
   definePlugin,
@@ -35,7 +38,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckAction } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -175,9 +178,9 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           id: 'example.com/plugin/testing/module/testing',
           activatesOn: Events.SetupArtifactDefinition,
           activate: () => [
-            contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, () => DESIGN_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, () => PLANNING_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, () => RESEARCH_BLUEPRINT),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
@@ -190,6 +193,17 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Toolkit, TestingToolkit),
             contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
           ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/set-workspace',
+          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+          activate: async (context) => {
+            const client = context.getCapability(ClientCapabilities.Client);
+            const space = client.spaces.default;
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+            return [];
+          },
         }),
         defineModule({
           id: 'example.com/plugin/testing/module/intent-resolver',

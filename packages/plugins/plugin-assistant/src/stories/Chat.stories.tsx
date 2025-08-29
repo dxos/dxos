@@ -16,6 +16,7 @@ import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Map, MapPlugin } from '@dxos/plugin-map';
+import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
@@ -25,6 +26,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
@@ -253,12 +255,21 @@ export const WithChess = {
 
 export const WithMap = {
   decorators: getDecorators({
-    plugins: [MapPlugin()],
+    plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
-    types: [Map.Map],
+    types: [DataType.View, Map.Map, Table.Table],
     onInit: async ({ space, binder }) => {
-      const object = space.db.add(Map.makeMap());
-      await binder.bind({ objects: [Ref.make(object)] });
+      const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
+      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
+      const { view: mapView } = await Map.makeView({
+        name: 'Map',
+        space,
+        typename: schema.typename,
+        pivotFieldName: 'location',
+      });
+      space.db.add(tableView);
+      space.db.add(mapView);
+      await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });
     },
   }),
   args: {
@@ -274,7 +285,7 @@ export const WithTrip = {
     onInit: async ({ space, binder }) => {
       // TODO(burdon): Table.
       {
-        const object = space.db.add(Map.makeMap({ name: 'Trip' }));
+        const object = space.db.add(Map.make({ name: 'Trip' }));
         await binder.bind({ objects: [Ref.make(object)] });
       }
       {

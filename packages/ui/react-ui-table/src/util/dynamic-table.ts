@@ -15,7 +15,7 @@ import {
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
-import { TableView } from '../types';
+import { Table } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
@@ -62,7 +62,7 @@ export const makeDynamicTable = ({
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; view: DataType.View } => {
-  const table = Obj.make(TableView, { sizes: {} });
+  const table = Obj.make(Table.Table, { sizes: {} });
   const view = createView({
     typename,
     jsonSchema,
@@ -81,7 +81,7 @@ export const makeDynamicTable = ({
 const setProperties = (
   view: DataType.View,
   projection: ProjectionModel,
-  table: TableView,
+  table: Table.Table,
   properties: TablePropertyDefinition[],
 ) => {
   for (const property of properties) {

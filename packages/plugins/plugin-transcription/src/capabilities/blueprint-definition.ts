@@ -14,8 +14,7 @@ const functions: FunctionDefinition[] = [open, summarize];
 export default () => {
   return [
     contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
+    contributes(Capabilities.BlueprintDefinition, () =>
       Blueprint.make({
         key: 'dxos.org/blueprint/transcription',
         name: 'Transcription',
