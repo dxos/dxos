@@ -15,12 +15,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Client } from '@dxos/client';
-import { Filter } from '@dxos/echo';
-import { getValue } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
-import { getSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -35,12 +31,12 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy, safeParseInt } from '@dxos/util';
+import { safeParseInt } from '@dxos/util';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { translationKey } from '../../translations';
 import { tableButtons, tableControls } from '../../util';
-import { type TableCellEditorProps, TableValueEditor, createOption } from '../TableCellEditor';
+import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -338,53 +334,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       }
     }, [model, dxGrid]);
 
-    // TODO(burdon): Factor out?
-    // TODO(burdon): Generalize to handle other value types (e.g., enums).
-    const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
-      async ({ field, props }, text) => {
-        if (model && props.referenceSchema && field.referencePath) {
-          const space = getSpace(model.view);
-          invariant(space);
-
-          let schema;
-          if (client) {
-            schema = client.graph.schemaRegistry.getSchema(props.referenceSchema);
-          }
-          if (!schema) {
-            schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
-          }
-
-          if (schema) {
-            const { objects } = await space.db.query(Filter.type(schema)).run();
-            const options = objects
-              .map((obj) => {
-                const value = getValue(obj, field.referencePath!);
-                if (!value || typeof value !== 'string') {
-                  return undefined;
-                }
-
-                return {
-                  label: value,
-                  data: obj,
-                };
-              })
-              .filter(isNotFalsy);
-
-            return [
-              ...options,
-              {
-                label: t('create new object label', { text }),
-                data: createOption(text),
-              },
-            ];
-          }
-        }
-
-        return [];
-      },
-      [model, client, t],
-    );
-
     const handleSave = useCallback(() => {
       dxGrid?.updateCells(true);
       dxGrid?.requestUpdate();
@@ -401,8 +350,8 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           modals={modals}
           schema={schema}
           onFocus={handleFocus}
-          onQuery={handleQuery}
           onSave={handleSave}
+          client={client}
         />
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}

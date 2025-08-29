@@ -6,6 +6,7 @@ import { type Completion } from '@codemirror/autocomplete';
 import { type Schema } from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -18,7 +19,6 @@ import {
   GridCellEditor,
   type GridCellEditorProps,
   type GridScopedProps,
-  cellQuery,
   editorKeys,
   parseCellIndex,
   useGridContext,
@@ -29,18 +29,11 @@ import { type FieldProjection } from '@dxos/schema';
 import { type ModalController, type TableModel } from '../../model';
 
 import { CellValidationMessage } from './CellValidationMessage';
-import { completion } from './extension';
 import { FormCellEditor } from './FormCellEditor';
-
-const newValue = Symbol.for('newValue');
 
 /**
  * Option to create new object/value.
  */
-export const createOption = (text: string) => ({ [newValue]: true, text });
-
-const isCreateOption = (data: any) => typeof data === 'object' && data[newValue];
-
 export type QueryResult = Pick<Completion, 'label'> & { data: any };
 
 export type TableCellEditorProps = {
@@ -49,7 +42,7 @@ export type TableCellEditorProps = {
   schema?: Schema.AnyNoContext;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
-  onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+  client?: Client;
 };
 
 export const TableValueEditor = ({
@@ -58,7 +51,7 @@ export const TableValueEditor = ({
   schema,
   onFocus,
   onSave,
-  onQuery,
+  client,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
@@ -77,7 +70,8 @@ export const TableValueEditor = ({
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
-    fieldProjection?.props.format === FormatEnum.SingleSelect
+    fieldProjection?.props.format === FormatEnum.SingleSelect ||
+    fieldProjection?.props.format === FormatEnum.Ref
     // TODO(thure): Support `FormatEnum.MultiSelect`
   ) {
     return (
@@ -87,21 +81,14 @@ export const TableValueEditor = ({
         schema={schema}
         __gridScope={__gridScope}
         onSave={onSave}
+        client={client}
+        modals={modals}
       />
     );
   }
 
   // For all other types, use the existing cell editor
-  return (
-    <TableCellEditor
-      model={model}
-      modals={modals}
-      onFocus={onFocus}
-      onQuery={onQuery}
-      onSave={onSave}
-      __gridScope={__gridScope}
-    />
-  );
+  return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
 const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
@@ -110,7 +97,6 @@ export const TableCellEditor = ({
   model,
   modals,
   onFocus,
-  onQuery,
   onSave,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
@@ -300,40 +286,6 @@ export const TableCellEditor = ({
           },
         }),
       );
-    }
-
-    if (onQuery) {
-      switch (fieldProjection.props.format) {
-        case FormatEnum.Ref: {
-          extension.push([
-            completion({
-              onQuery: (text) => onQuery(fieldProjection, text),
-              onMatch: (data) => {
-                if (model && editing && modals) {
-                  if (isCreateOption(data)) {
-                    const { field, props } = fieldProjection;
-                    if (props.referenceSchema) {
-                      modals.openCreateRef(
-                        props.referenceSchema,
-                        document.querySelector(cellQuery(editing.index, gridId)),
-                        {
-                          [field.referencePath!]: data.text,
-                        },
-                        (data) => {
-                          void handleEnter(data);
-                        },
-                      );
-                    }
-                  } else {
-                    void handleEnter(data);
-                  }
-                }
-              },
-            }),
-          ]);
-          break;
-        }
-      }
     }
 
     return extension;
