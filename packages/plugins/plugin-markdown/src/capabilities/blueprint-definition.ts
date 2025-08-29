@@ -16,7 +16,8 @@ export const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.BlueprintDefinition, () =>
+  contributes(
+    Capabilities.BlueprintDefinition,
     Blueprint.make({
       key: BLUEPRINT_KEY,
       name: 'Markdown',

@@ -26,13 +26,12 @@ const tools = [
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
-export const BLUEPRINT = () =>
-  Blueprint.make({
-    key: BLUEPRINT_KEY,
-    name: 'Assistant',
-    tools: Blueprint.toolDefinitions({ functions, tools }),
-    instructions: templates.system,
-  });
+export const BLUEPRINT = Blueprint.make({
+  key: BLUEPRINT_KEY,
+  name: 'Assistant',
+  tools: Blueprint.toolDefinitions({ functions, tools }),
+  instructions: templates.system,
+});
 
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
