@@ -28,7 +28,7 @@ export type ChatProgressProps = {
 };
 
 export const ChatProgress = ({ chat }: ChatProgressProps) => {
-  const { commits } = useExecutionGraph(chat.traceQueue);
+  const { commits } = useExecutionGraph(chat.traceQueue, true);
   const nodes = useMemo(() => commits.map((commit) => ({ id: commit.id, message: commit.message })), [commits]);
   const lines = useMemo(() => commits.map((commit) => commit.message), [commits]);
 

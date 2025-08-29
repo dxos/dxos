@@ -15,7 +15,7 @@ import { type ComponentProps } from './types';
 
 export const LoggingContainer = ({ space }: ComponentProps) => {
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
-  const { branches, commits } = useExecutionGraph(chat?.traceQueue);
+  const { branches, commits } = useExecutionGraph(chat?.traceQueue, true);
 
   return <Timeline branches={branches} commits={commits} />;
 };

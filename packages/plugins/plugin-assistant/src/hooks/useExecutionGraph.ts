@@ -10,11 +10,11 @@ import { useQueue } from '@dxos/react-client/echo';
 
 import { ExecutionGraph } from '../execution-graph';
 
-export const useExecutionGraph = (traceQueueRef?: Ref.Ref<Queue>) => {
-  const queue = useQueue(traceQueueRef?.dxn);
+export const useExecutionGraph = (queueRef?: Ref.Ref<Queue>, lastRequest = false) => {
+  const queue = useQueue(queueRef?.dxn);
   return useMemo(() => {
     const graph = new ExecutionGraph();
     graph.addEvents(queue?.objects.filter(Obj.isObject) ?? []);
-    return graph.getGraph();
-  }, [queue?.objects]);
+    return graph.getGraph(lastRequest);
+  }, [queue?.objects, lastRequest]);
 };

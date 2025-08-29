@@ -12,7 +12,6 @@ export const useStateWithRef = <T>(value$: T): [T, Dispatch<SetStateAction<T>>, 
   const [value, setValue] = useState<T>(value$);
   const valueRef = useRef<T>(value$);
   const setter = useCallback<Dispatch<SetStateAction<T>>>((value) => {
-    console.log(value, typeof value);
     if (typeof value === 'function') {
       setValue((current) => {
         valueRef.current = (value as Function)(current);

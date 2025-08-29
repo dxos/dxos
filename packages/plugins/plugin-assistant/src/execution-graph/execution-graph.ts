@@ -66,10 +66,13 @@ export class ExecutionGraph {
   /**
    * Returns the current state of the graph.
    */
-  getGraph(): { branches: string[]; commits: Commit[] } {
+  getGraph(lastRequest = false): { branches: string[]; commits: Commit[] } {
+    const idx = lastRequest ? this._commits.findLastIndex((c) => c.tags?.includes('user')) : -1;
+    const commits = idx === -1 ? this._commits : this._commits.slice(idx);
+
     return {
       branches: Array.from(this._branchNames),
-      commits: this._commits,
+      commits: commits,
     };
   }
 }
@@ -78,11 +81,11 @@ const getToolCallId = (messageId: ObjectId, toolCallId: string) => `${messageId}
 const getToolResultId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolResult_${toolCallId}`;
 const getGenericBlockId = (messageId: ObjectId, idx: number) => `${messageId}_block_${idx}`;
 
-const getBranchName = (opts: { parentMessage?: ObjectId; toolCallId?: string }) => {
-  if (opts.parentMessage && opts.toolCallId) {
-    return `${opts.parentMessage}_${opts.toolCallId}`;
-  } else if (opts.parentMessage) {
-    return opts.parentMessage;
+const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string }) => {
+  if (options.parentMessage && options.toolCallId) {
+    return `${options.parentMessage}_${options.toolCallId}`;
+  } else if (options.parentMessage) {
+    return options.parentMessage;
   } else {
     return 'main';
   }
@@ -117,7 +120,7 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
             parents,
             icon: IconType.TOOL,
             level: LogLevel.INFO,
-            message: block.name,
+            message: 'Calling ' + block.name,
           } satisfies Commit;
         case 'toolResult':
           return {
@@ -126,7 +129,7 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
             parents,
             icon: block.error ? IconType.X : IconType.CHECK,
             level: block.error ? LogLevel.ERROR : LogLevel.INFO,
-            message: block.error ? block.error : block.name,
+            message: block.error ? 'Error: ' + block.error : 'Result: ' + block.name,
           } satisfies Commit;
         case 'status':
           return {
@@ -146,11 +149,15 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
             icon: IconType.THINK,
           } satisfies Commit;
         case 'text':
+          if (!block.text.trim().length) {
+            return null;
+          }
           return {
             id: getGenericBlockId(message.id, idx),
             branch,
             parents,
             icon: message.sender.role === 'user' ? IconType.USER : IconType.AGENT,
+            tags: message.sender.role === 'user' ? ['user'] : undefined,
             message: ellipsisEnd(block.text, 64),
           } satisfies Commit;
         case 'reference':
@@ -163,12 +170,6 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
           } satisfies Commit;
         default:
           return null;
-        // return {
-        //   id: getGenericBlockId(message.id, idx),
-        //   branch,
-        //   parents,
-        //   message: block._tag,
-        // } satisfies Commit;
       }
     })
     .filter(isNotFalsy);
@@ -178,6 +179,7 @@ const ellipsisEnd = (str: string, length: number) => {
   if (str.length > length) {
     return str.slice(0, length - 1) + '…';
   }
+
   return str;
 };
 
@@ -185,6 +187,7 @@ const stringifyRef = (ref: Ref.Any) => {
   if (ref.target) {
     return stringifyObject(ref.target);
   }
+
   return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
 };
 
