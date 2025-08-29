@@ -63,6 +63,7 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
     <Flex column tabIndex={0} ref={ref}>
       <Progress nodes={nodes} index={index} onSelect={handleSelect} />
       <StatusRoll lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
+      <Flex classNames='text-small justify-center'>{JSON.stringify({ commits: commits.length })}</Flex>
     </Flex>
   );
 };
