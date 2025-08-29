@@ -9,7 +9,9 @@ import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { AiContextBinder } from '@dxos/assistant';
 import { RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
@@ -30,7 +32,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
-import { trim } from '@dxos/util';
+import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { createTestMailbox, createTestTranscription } from '../testing';
@@ -75,17 +77,18 @@ const DefaultStory = ({
       return;
     }
 
-    // TODO(burdon): Active should be ephemeral state of AiProcessor; write on edit/prompt.
-    // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
     // Add blueprints to context.
-    // const binder = new AiContextBinder(await chat.queue.load());
-    // for (const key of blueprints) {
-    //   const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
-    //   if (blueprint) {
-    //     const obj = space.db.add(Obj.clone(blueprint));
-    //     await binder.bind({ blueprints: [Ref.make(obj)] });
-    //   }
-    // }
+    const binder = new AiContextBinder(await chat.queue.load());
+    const registry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintObjects = blueprints
+      .map((key) => {
+        const blueprint = registry.getByKey(key);
+        if (blueprint) {
+          return space.db.add(Obj.clone(blueprint));
+        }
+      })
+      .filter(isNonNullable);
+    await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
