@@ -165,6 +165,20 @@ const MARKDOWN_DOCUMENT = trim`
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
 `;
 
+const STYLE_GUIDE = trim`
+  # Style Guide
+
+  ## Clear Communication
+
+  - Use short, simple sentences.
+  - Organize content with headings and bullet points.
+  - Avoid jargon and explain technical terms.
+  - Use active voice whenever possible.
+  - Highlight key points in bold.
+  - Keep paragraphs brief and focused on one idea.
+  - Proofread for clarity and correctness.
+`;
+
 const addSpellingMistakes = (text: string, n: number): string => {
   const words = text.split(' ');
   for (let i = 0; i < n; i++) {
@@ -188,23 +202,30 @@ export const Default = {
   },
 } satisfies Story;
 
+// Test with prompt: Propose changes to my document based on the style guide.
 export const WithDocument = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     onInit: async ({ space, binder }) => {
-      const object = space.db.add(
+      const doc = space.db.add(
         Markdown.makeDocument({
-          name: 'Document',
+          name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
+      const styleGuide = space.db.add(
+        Markdown.makeDocument({
+          name: 'Style Guide',
+          content: STYLE_GUIDE,
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(doc), Ref.make(styleGuide)] });
     },
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
-    blueprints: [BLUEPRINT_KEY],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 } satisfies Story;
 
@@ -259,6 +280,7 @@ export const WithChess = {
   },
 } satisfies Story;
 
+// Test with prompt: Summarize my mailbox and write the summary in a new document.
 export const WithMail = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
@@ -278,6 +300,7 @@ export const WithMail = {
   },
 } satisfies Story;
 
+// Test with prompt: Create 10 locations.
 export const WithMap = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
