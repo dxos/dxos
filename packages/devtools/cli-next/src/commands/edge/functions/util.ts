@@ -14,7 +14,11 @@ import { Obj, Ref } from '@dxos/echo';
 import {
   FUNCTIONS_META_KEY,
   FUNCTIONS_PRESET_META_KEY,
-  FunctionType, ScriptType, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+  FunctionType,
+  ScriptType,
+  getUserFunctionIdInMetadata,
+  setUserFunctionIdInMetadata,
+} from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
@@ -270,7 +274,7 @@ export const getDeployedFunctions = async (client: Client): Promise<FunctionType
       inputSchema: versionMeta?.inputSchema,
       outputSchema: versionMeta?.outputSchema,
     });
-    setUserFunctionUrlInMetadata(Obj.getMeta(fn), makeFunctionUrl({ functionId: record.id }));
+    setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id);
 
     return fn;
   });
@@ -296,7 +300,7 @@ export const invokeFunction = async (
   if (!functionId) {
     throw new Error('No identifier for the function at the EDGE service');
   }
-  // Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
+  // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
   return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId }, input);
 };
