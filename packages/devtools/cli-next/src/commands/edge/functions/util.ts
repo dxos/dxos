@@ -13,7 +13,6 @@ import { type Identity } from '@dxos/client/halo';
 import { Obj, Ref } from '@dxos/echo';
 import {
   FUNCTIONS_META_KEY,
-  FUNCTIONS_PRESET_META_KEY,
   FunctionType,
   ScriptType,
   getUserFunctionIdInMetadata,
