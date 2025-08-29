@@ -31,7 +31,7 @@ export default defineFunction({
       const result = yield* new AiSession().run({
         prompt: messages,
         history: [],
-        system: SUMMARIZE_PROMPT,
+        system: systemPrompt,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
       });
 
@@ -54,7 +54,7 @@ export default defineFunction({
   ),
 });
 
-const SUMMARIZE_PROMPT = trim`
+const systemPrompt = trim`
   You are a helpful assistant that summarizes mailboxes.
 
   # Goal

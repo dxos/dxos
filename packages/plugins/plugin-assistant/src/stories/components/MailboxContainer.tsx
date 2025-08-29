@@ -17,7 +17,7 @@ export const MailboxContainer = ({ space }: ComponentProps) => {
 
   // TODO(wittjosiah): Fix styles to fill the container.
   return (
-    <div className=''>
+    <div className='flex h-[30rem]'>
       <Surface role='article' data={data} limit={1} />
     </div>
   );

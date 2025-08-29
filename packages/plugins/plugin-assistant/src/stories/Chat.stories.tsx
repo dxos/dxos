@@ -33,7 +33,7 @@ import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
-import { testMailboxMessages, testTranscriptMessages } from '../testing';
+import { createTestMailbox, createTestTranscription } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -264,7 +264,7 @@ export const WithMail = {
     types: [Mailbox.Mailbox],
     onInit: async ({ space, binder }) => {
       const queue = space.queues.create();
-      const messages = testMailboxMessages();
+      const messages = createTestMailbox();
       await queue.append(messages);
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
       await binder.bind({ objects: [Ref.make(mailbox)] });
@@ -404,7 +404,7 @@ export const WithTranscription = {
     types: [Transcript.Transcript],
     onInit: async ({ space, binder }) => {
       const queue = space.queues.create();
-      const messages = testTranscriptMessages();
+      const messages = createTestTranscription();
       await queue.append(messages);
       const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
       await binder.bind({ objects: [Ref.make(transcript)] });

@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
-export const testTranscriptMessages = (): DataType.Message[] => {
+export const createTestTranscription = (): DataType.Message[] => {
   const timeInterval = 1000;
   const transcription: DataType.Message[] = [
     {
@@ -57,7 +57,7 @@ export const testTranscriptMessages = (): DataType.Message[] => {
 };
 
 // TODO(wittjosiah): Find way to use data generator to generate substantive messages that could be summarized.
-export const testMailboxMessages = (): DataType.Message[] => {
+export const createTestMailbox = (): DataType.Message[] => {
   const timeInterval = 1000;
   const messages: DataType.Message[] = [
     {
