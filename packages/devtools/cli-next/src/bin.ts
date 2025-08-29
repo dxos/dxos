@@ -44,7 +44,7 @@ run(process.argv).pipe(
         if (process.env.DX_TRACK_LEAKS) {
           leaksTracker.dump();
         } else {
-          log.error('Re-run with DX_TRACK_LEAKS to dump information about leaks.');
+          log.error('Re-run with DX_TRACK_LEAKS=1 to dump information about leaks.');
         }
       }, EXIT_GRACE_PERIOD);
       // Don't block process exit.
