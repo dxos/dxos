@@ -5,9 +5,15 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { memo, useMemo } from 'react';
 
-import { type NodeArg, rxFromSignal } from '@dxos/app-graph';
+import { rxFromSignal } from '@dxos/app-graph';
 import { ElevationProvider } from '@dxos/react-ui';
-import { MenuProvider, ToolbarMenu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  MenuProvider,
+  ToolbarMenu,
+  createGapSeparator,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
@@ -18,62 +24,66 @@ import { createSearch } from './search';
 import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags, type EditorToolbarProps } from './util';
 import { createViewMode } from './view-mode';
 
-const createToolbar = ({
+const createToolbarActions = ({
   getView,
   state,
   customActions,
   ...features
-}: EditorToolbarFeatureFlags & Pick<EditorToolbarActionGraphProps, 'getView' | 'state' | 'customActions'>): Rx.Rx<{
-  nodes: NodeArg<any>[];
-  edges: { source: string; target: string }[];
-}> => {
+}: EditorToolbarFeatureFlags &
+  Pick<EditorToolbarActionGraphProps, 'getView' | 'state' | 'customActions'>): Rx.Rx<ActionGraphProps> => {
   return Rx.make((get) => {
-    const nodes = [];
-    const edges = [];
+    const graph: ActionGraphProps = {
+      nodes: [],
+      edges: [],
+    };
+
     if (features.headings ?? true) {
       const headings = get(rxFromSignal(() => createHeadings(state, getView)));
-      nodes.push(...headings.nodes);
-      edges.push(...headings.edges);
+      graph.nodes.push(...headings.nodes);
+      graph.edges.push(...headings.edges);
     }
     if (features.formatting ?? true) {
       const formatting = get(rxFromSignal(() => createFormatting(state, getView)));
-      nodes.push(...formatting.nodes);
-      edges.push(...formatting.edges);
+      graph.nodes.push(...formatting.nodes);
+      graph.edges.push(...formatting.edges);
     }
     if (features.lists ?? true) {
       const lists = get(rxFromSignal(() => createLists(state, getView)));
-      nodes.push(...lists.nodes);
-      edges.push(...lists.edges);
+      graph.nodes.push(...lists.nodes);
+      graph.edges.push(...lists.edges);
     }
     if (features.blocks ?? true) {
       const blocks = get(rxFromSignal(() => createBlocks(state, getView)));
-      nodes.push(...blocks.nodes);
-      edges.push(...blocks.edges);
+      graph.nodes.push(...blocks.nodes);
+      graph.edges.push(...blocks.edges);
     }
     if (features.image) {
       const image = get(rxFromSignal(() => createImageUpload(features.image!)));
-      nodes.push(...image.nodes);
-      edges.push(...image.edges);
+      graph.nodes.push(...image.nodes);
+      graph.edges.push(...image.edges);
     }
-    const editorToolbarGap = createGapSeparator();
-    nodes.push(...editorToolbarGap.nodes);
-    edges.push(...editorToolbarGap.edges);
+    {
+      const gap = createGapSeparator();
+      graph.nodes.push(...gap.nodes);
+      graph.edges.push(...gap.edges);
+    }
     if (customActions) {
       const custom = get(customActions);
-      nodes.push(...custom.nodes);
-      edges.push(...custom.edges);
+      graph.nodes.push(...custom.nodes);
+      graph.edges.push(...custom.edges);
     }
     if (features.search ?? true) {
       const search = get(rxFromSignal(() => createSearch(getView)));
-      nodes.push(...search.nodes);
-      edges.push(...search.edges);
+      graph.nodes.push(...search.nodes);
+      graph.edges.push(...search.edges);
     }
     if (features.viewMode) {
       const viewMode = get(rxFromSignal(() => createViewMode(state, features.viewMode!)));
-      nodes.push(...viewMode.nodes);
-      edges.push(...viewMode.edges);
+      graph.nodes.push(...viewMode.nodes);
+      graph.edges.push(...viewMode.edges);
     }
-    return { nodes, edges };
+
+    return graph;
   });
 };
 
@@ -83,7 +93,7 @@ const createToolbar = ({
 const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
   const menuCreator = useMemo(
     () =>
-      createToolbar({
+      createToolbarActions({
         getView: props.getView,
         state: props.state,
         customActions: props.customActions,

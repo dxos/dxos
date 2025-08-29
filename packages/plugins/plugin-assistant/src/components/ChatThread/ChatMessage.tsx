@@ -273,7 +273,7 @@ export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
     <>
       <MessageItem>
         <ToggleContainer title={error.message || t('error label')} classNames={[panelClasses, 'bg-warningSurface']}>
-          <div className='p-2'>{String(error.cause)}</div>
+          <div className='p-2 text-small text-subdued'>{String(error.cause)}</div>
         </ToggleContainer>
       </MessageItem>
       <MessageItem>
