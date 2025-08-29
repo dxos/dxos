@@ -267,7 +267,13 @@ export class EdgeHttpClient {
   }
 
   public async invokeFunction(
-    params: { functionId: string; version?: string; spaceId?: SpaceId },
+    params: {
+      functionId: string;
+      version?: string;
+      spaceId?: SpaceId;
+      cpuTimeLimit?: number;
+      subrequestsLimit?: number;
+    },
     input: unknown,
     args?: EdgeHttpGetArgs,
   ): Promise<any> {
@@ -277,6 +283,12 @@ export class EdgeHttpClient {
     }
     if (params.spaceId) {
       url.searchParams.set('spaceId', params.spaceId.toString());
+    }
+    if (params.cpuTimeLimit) {
+      url.searchParams.set('cpuTimeLimit', params.cpuTimeLimit.toString());
+    }
+    if (params.subrequestsLimit) {
+      url.searchParams.set('subrequestsLimit', params.subrequestsLimit.toString());
     }
 
     return this._call(url, {

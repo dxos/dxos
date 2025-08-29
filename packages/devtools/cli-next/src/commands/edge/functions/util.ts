@@ -293,7 +293,11 @@ export const invokeFunction = async (
   edgeClient: EdgeHttpClient,
   fn: FunctionType,
   input: unknown,
-  { spaceId }: { spaceId?: SpaceId } = {},
+  {
+    spaceId,
+    cpuTimeLimit,
+    subrequestsLimit,
+  }: { spaceId?: SpaceId; cpuTimeLimit?: number; subrequestsLimit?: number } = {},
 ) => {
   const functionId = Obj.getMeta(fn).keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
   if (!functionId) {
@@ -301,5 +305,5 @@ export const invokeFunction = async (
   }
   // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
-  return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId }, input);
+  return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit }, input);
 };

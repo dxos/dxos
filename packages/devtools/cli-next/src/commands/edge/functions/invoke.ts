@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Args, Command } from '@effect/cli';
-import { Console, Effect, Schema } from 'effect';
+import { Args, Command, Options } from '@effect/cli';
+import { Console, Effect, Option, Schema } from 'effect';
 
 import { ClientService } from '../../../services';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from './util';
@@ -16,8 +16,16 @@ export const invoke = Command.make(
       Args.withDescription('The data to pass to the function.'),
       Args.withSchema(Schema.parseJson(Schema.Unknown)),
     ),
+    cpuTimeLimit: Options.integer('cpuTimeLimit').pipe(
+      Options.withDescription('The CPU time limit in seconds.'),
+      Options.optional,
+    ),
+    subrequestsLimit: Options.integer('subrequestsLimit').pipe(
+      Options.withDescription('The subrequests limit for the function.'),
+      Options.optional,
+    ),
   },
-  Effect.fn(function* ({ key, data }) {
+  Effect.fn(function* ({ key, data, cpuTimeLimit, subrequestsLimit }) {
     const client = yield* ClientService;
 
     // Produce normalized in-memory FunctionType objects for display.
@@ -31,7 +39,12 @@ export const invoke = Command.make(
     }
 
     const edgeClient = createEdgeClient(client);
-    const result = yield* Effect.promise(() => invokeFunction(edgeClient, fn, data));
+    const result = yield* Effect.promise(() =>
+      invokeFunction(edgeClient, fn, data, {
+        cpuTimeLimit: cpuTimeLimit.pipe(Option.getOrUndefined),
+        subrequestsLimit: subrequestsLimit.pipe(Option.getOrUndefined),
+      }),
+    );
     yield* Console.log(JSON.stringify(result, null, 2));
   }),
 ).pipe(Command.withDescription('Invoke a function deployed to EDGE.'));
