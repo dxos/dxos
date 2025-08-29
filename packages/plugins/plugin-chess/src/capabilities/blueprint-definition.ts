@@ -16,7 +16,8 @@ const functions: FunctionDefinition[] = [create, move, play];
 export default () => {
   return [
     contributes(Capabilities.Functions, functions),
-    contributes(Capabilities.BlueprintDefinition, () =>
+    contributes(
+      Capabilities.BlueprintDefinition,
       Blueprint.make({
         key: BLUEPRINT_KEY,
         name: 'Chess',
