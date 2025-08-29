@@ -178,9 +178,9 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           id: 'example.com/plugin/testing/module/testing',
           activatesOn: Events.SetupArtifactDefinition,
           activate: () => [
-            contributes(Capabilities.BlueprintDefinition, () => DESIGN_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, () => PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, () => RESEARCH_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
