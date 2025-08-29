@@ -90,10 +90,22 @@ const DefaultStory = () => {
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
-        <TableComponent.Main model={orgModel} presentation={orgPresentation} client={client} ignoreAttention />
+        <TableComponent.Main
+          model={orgModel}
+          schema={DataType.Organization}
+          presentation={orgPresentation}
+          client={client}
+          ignoreAttention
+        />
       </TableComponent.Root>
       <TableComponent.Root>
-        <TableComponent.Main model={contactModel} presentation={contactPresentation} client={client} ignoreAttention />
+        <TableComponent.Main
+          model={contactModel}
+          schema={DataType.Person}
+          presentation={contactPresentation}
+          client={client}
+          ignoreAttention
+        />
       </TableComponent.Root>
     </div>
   );
