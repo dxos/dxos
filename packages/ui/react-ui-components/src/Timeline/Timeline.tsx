@@ -247,6 +247,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             );
           })}
         </ScrollContainer.Content>
+        <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );
   },
