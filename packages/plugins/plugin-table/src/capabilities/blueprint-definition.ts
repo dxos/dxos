@@ -13,8 +13,7 @@ const tools: string[] = [];
 export default () => {
   return [
     contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
+    contributes(Capabilities.BlueprintDefinition, () =>
       Blueprint.make({
         key: 'dxos.org/blueprint/table',
         name: 'Table',
