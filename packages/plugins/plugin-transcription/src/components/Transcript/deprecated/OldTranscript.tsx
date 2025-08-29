@@ -115,7 +115,7 @@ const measureRows = async (
   return result;
 };
 
-export type TranscriptProps = ThemedClassName<{
+export type TranscriptViewProps = ThemedClassName<{
   blocks?: TranscriptBlock[];
   attendableId?: string;
   ignoreAttention?: boolean;
@@ -124,7 +124,7 @@ export type TranscriptProps = ThemedClassName<{
 /**
  * @@deprecated
  */
-export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
+export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
   const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);

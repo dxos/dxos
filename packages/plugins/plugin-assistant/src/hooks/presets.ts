@@ -31,6 +31,10 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'dxos-remote' as const,
+    model: '@anthropic/claude-sonnet-4-0' as const,
+  },
+  {
+    provider: 'dxos-remote' as const,
     model: '@anthropic/claude-3-5-haiku-20241022' as const,
   },
   {

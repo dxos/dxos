@@ -38,6 +38,7 @@ export type AiSessionRunRequirements<Tools extends AiTool.Any> =
   | ToolExecutionService
   | TracingService;
 
+// TODO(burdon): Remove.
 export type AiSessionRunEffect<Tools extends AiTool.Any> = Effect.Effect<
   DataType.Message[],
   AiSessionRunError,

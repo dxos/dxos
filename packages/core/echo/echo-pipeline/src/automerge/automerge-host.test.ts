@@ -31,7 +31,6 @@ describe('AutomergeHost', () => {
 
   test('changes are preserved in storage', async () => {
     const level = await createLevel();
-
     const host = await setupAutomergeHost({ level });
     const handle = host.repo.create();
     handle.change((doc: any) => {

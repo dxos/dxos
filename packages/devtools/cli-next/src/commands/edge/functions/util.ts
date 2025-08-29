@@ -14,12 +14,7 @@ import { Obj, Ref } from '@dxos/echo';
 import {
   FUNCTIONS_META_KEY,
   FUNCTIONS_PRESET_META_KEY,
-  FunctionType,
-  ScriptType,
-  getUserFunctionUrlInMetadata,
-  makeFunctionUrl,
-  setUserFunctionUrlInMetadata,
-} from '@dxos/functions';
+  FunctionType, ScriptType, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
@@ -166,10 +161,9 @@ const findFunctionByDeploymentId = Effect.fn(function* (space: Space, functionId
   if (!functionId) {
     return undefined;
   }
-  const invocationUrl = makeFunctionUrl({ functionId });
   // TODO(wittjosiah): Derive DatabaseService from ClientService.
   const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(FunctionType)).run());
-  return functions.objects.find((fn) => getUserFunctionUrlInMetadata(getMeta(fn)) === invocationUrl);
+  return functions.objects.find((fn) => getUserFunctionIdInMetadata(getMeta(fn)) === functionId);
 });
 
 const loadFunctionObject = Effect.fn(function* (space: Space, functionId?: string) {
@@ -208,7 +202,7 @@ const upsertFunctionObject = Effect.fn(function* ({
   functionObject.description = uploadResult.meta.description;
   functionObject.inputSchema = uploadResult.meta.inputSchema;
   functionObject.outputSchema = uploadResult.meta.outputSchema;
-  setUserFunctionUrlInMetadata(Obj.getMeta(functionObject), makeFunctionUrl(uploadResult));
+  setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId);
   yield* Effect.log('Upserted function object', functionObject.id);
   return functionObject;
 });

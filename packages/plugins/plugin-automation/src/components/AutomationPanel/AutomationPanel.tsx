@@ -156,9 +156,5 @@ const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigg
   //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
   const functionObject = functions.find((fn) => fn === trigger.function?.target);
-  if (!functionObject) {
-    return shortId;
-  }
-
-  return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
+  return functionObject?.name ?? shortId;
 };

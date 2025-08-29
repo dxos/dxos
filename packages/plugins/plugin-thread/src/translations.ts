@@ -44,6 +44,7 @@ export const translations = [
         'save message label': 'Save',
         'edit message label': 'Edit',
         'delete message label': 'Delete message',
+        'accept proposal label': 'Accept proposal',
         'open comments panel label': 'Show Comments',
         'comments label': 'Comments',
         'show all label': 'All comments',

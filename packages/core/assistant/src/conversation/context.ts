@@ -3,7 +3,7 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Schema } from 'effect';
+import { Context, Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
@@ -84,14 +84,20 @@ export class AiContextBinder {
       return;
     }
 
+    const blueprints =
+      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
+      [];
+    const objects =
+      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
-          added: props.blueprints ?? [],
+          added: blueprints,
           removed: [],
         },
         objects: {
-          added: props.objects ?? [],
+          added: objects,
           removed: [],
         },
       }),
@@ -137,3 +143,10 @@ export class AiContextBinder {
     );
   }
 }
+
+export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
+  AiContextService,
+  {
+    binder: AiContextBinder;
+  }
+>() {}

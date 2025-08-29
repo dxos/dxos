@@ -15,3 +15,6 @@ export const meta: PluginMeta = {
   tags: ['labs'],
   screenshots: [],
 };
+
+// TODO(burdon): Workaround for suspected vitest bug? Update vitest?
+export const not_meta = meta;

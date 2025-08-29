@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { getMeta, getSpace } from '@dxos/react-client/echo';
 
@@ -19,13 +19,13 @@ export const getFunctionUrl = ({
   edgeUrl: string;
 }): string | undefined => {
   const space = getSpace(script);
-  const existingFunctionUrl = fn && getUserFunctionUrlInMetadata(getMeta(fn));
+  const existingFunctionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
 
-  if (!existingFunctionUrl) {
+  if (!existingFunctionId) {
     return undefined;
   }
 
-  return getInvocationUrl(existingFunctionUrl, edgeUrl, {
+  return getInvocationUrl(existingFunctionId, edgeUrl, {
     spaceId: space?.id,
   });
 };

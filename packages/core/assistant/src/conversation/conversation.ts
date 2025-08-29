@@ -3,7 +3,7 @@
 //
 
 import { type AiTool, type AiToolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
@@ -13,7 +13,7 @@ import { DataType } from '@dxos/schema';
 
 import { type AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
-import { AiContextBinder, type ContextBinding } from './context';
+import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
   session: AiSession;
@@ -63,8 +63,14 @@ export class AiConversation {
 
       // Context.
       const context = yield* Effect.promise(() => this.context.query());
-      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.load);
-      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.load);
+      const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((o) => o.value)),
+      );
+      const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadOption).pipe(
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((o) => o.value)),
+      );
       log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
@@ -73,7 +79,11 @@ export class AiConversation {
 
       // Process request.
       const start = Date.now();
-      const messages = yield* session.run({ ...params, history, objects, blueprints });
+      const messages = yield* session.run({ ...params, history, objects, blueprints }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+      );
       log.info('result', {
         messages: messages,
         duration: Date.now() - start,

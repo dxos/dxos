@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer, type Schema } from 'effect';
+import { Context, Effect, Layer, Option, type Schema } from 'effect';
 
 import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
 import type { EchoSchema } from '@dxos/echo-schema';
+import { promiseWithCauseCapture } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
@@ -53,7 +54,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> =>
     Effect.gen(function* () {
       const { db } = yield* DatabaseService;
-      const object = yield* Effect.promise(() =>
+      const object = yield* promiseWithCauseCapture(() =>
         db.graph
           .createRefResolver({
             context: {
@@ -73,8 +74,22 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Loads an object reference.
    */
-  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, never, never> = Effect.fn(function* (ref) {
-    return yield* Effect.promise(() => ref.load());
+  static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, ObjectNotFoundError, never> = Effect.fn(function* (ref) {
+    const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
+    if (!object) {
+      return yield* Effect.fail(new ObjectNotFoundError({ dxn: ref.dxn }));
+    }
+    return object;
+  });
+
+  /**
+   * Loads an object reference option.
+   */
+  static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
+    const object = yield* DatabaseService.load(ref).pipe(
+      Effect.catchTag('OBJECT_NOT_FOUND', () => Effect.succeed(undefined)),
+    );
+    return Option.fromNullable(object);
   });
 
   /**
@@ -97,7 +112,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     <F extends Filter.Any>(filter: F): Effect.Effect<OneShotQueryResult<Live<Filter.Type<F>>>, never, DatabaseService>;
   } = (queryOrFilter: Query.Any | Filter.Any) =>
     DatabaseService.query(queryOrFilter as any).pipe(
-      Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
+      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
 
   static schemaQuery = <Q extends SchemaRegistryQuery>(
@@ -111,7 +126,9 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   static runSchemaQuery = <Q extends SchemaRegistryQuery>(
     query: Q,
   ): Effect.Effect<EchoSchema[], never, DatabaseService> =>
-    DatabaseService.schemaQuery(query).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
+    DatabaseService.schemaQuery(query).pipe(
+      Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
+    );
 
   /**
    * Adds an object to the database.
@@ -120,7 +137,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   static flush = (opts?: FlushOptions) =>
-    DatabaseService.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.flush(opts))));
+    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
 }
 
 // TODO(burdon): Move to echo/errors.

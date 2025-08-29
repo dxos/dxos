@@ -243,6 +243,7 @@ export namespace ContentBlock {
    * Proposed content to be added to an artifact.
    */
   // TODO(dmaretskyi): Consider handling this via a tool call.
+  //   Though even if it's also a tool call, we probably still want to render the proposal in the chat.
   export const Proposal = Schema.TaggedStruct('proposal', {
     text: Schema.String,
 

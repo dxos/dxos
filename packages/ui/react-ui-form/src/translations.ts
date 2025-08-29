@@ -74,7 +74,8 @@ export const translations = [
 
         // System schema message.
         'system schema title': 'System record type',
-        'system schema description': 'This is a system record type and cannot be modified.',
+        'system schema description':
+          'This is a system record type and cannot be modified, though the view can still be configured.',
       },
     },
   },

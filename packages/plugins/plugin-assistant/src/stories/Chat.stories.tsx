@@ -19,6 +19,9 @@ import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
+import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -26,12 +29,14 @@ import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
+import { testTranscriptMessages } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
   ChatContainer,
+  CommentsContainer,
   type ComponentProps,
   GraphContainer,
   LoggingContainer,
@@ -167,16 +172,17 @@ const addSpellingMistakes = (text: string, n: number): string => {
 
 export const Default = {
   decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
     config: config.remote,
   }),
   args: {
-    components: [ChatContainer],
+    components: [ChatContainer, SurfaceContainer],
   },
 } satisfies Story;
 
 export const WithDocument = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
+    plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     onInit: async ({ space, binder }) => {
       const object = space.db.add(
@@ -189,7 +195,7 @@ export const WithDocument = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
     blueprints: ['dxos.org/blueprint/assistant'],
   },
 } satisfies Story;
@@ -353,5 +359,24 @@ export const WithSearch = {
   }),
   args: {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
+  },
+} satisfies Story;
+
+export const WithTranscription = {
+  decorators: getDecorators({
+    plugins: [TranscriptionPlugin()],
+    config: config.remote,
+    types: [Transcript.Transcript],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const messages = testTranscriptMessages();
+      await queue.append(messages);
+      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
+      await binder.bind({ objects: [Ref.make(transcript)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/transcription'],
   },
 } satisfies Story;

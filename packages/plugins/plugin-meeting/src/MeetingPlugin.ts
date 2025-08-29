@@ -2,8 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, allOf, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
+import {
+  Capabilities,
+  Events,
+  allOf,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+  oneOf,
+} from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
@@ -15,7 +25,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { MeetingType } from './types';
+import { Meeting, MeetingAction } from './types';
 
 export const MeetingPlugin = () =>
   definePlugin(meta, [
@@ -42,9 +52,9 @@ export const MeetingPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: MeetingType.typename,
+          id: Meeting.Meeting.typename,
           metadata: {
-            label: (object: MeetingType) => object.name || new Date(object.created).toLocaleString(),
+            label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
             icon: 'ph--note--regular',
           },
         }),
@@ -53,7 +63,15 @@ export const MeetingPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schemas`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [MeetingType]),
+      activate: () => contributes(ClientCapabilities.Schema, [Meeting.Meeting]),
+    }),
+    defineModule({
+      id: `${meta.id}/module/on-space-created`,
+      activatesOn: SpaceEvents.SpaceCreated,
+      activate: () =>
+        contributes(SpaceCapabilities.OnSpaceCreated, ({ rootCollection, space }) =>
+          createIntent(MeetingAction.OnSpaceCreated, { rootCollection, space }),
+        ),
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,

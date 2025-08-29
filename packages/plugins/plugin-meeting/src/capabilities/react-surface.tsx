@@ -10,29 +10,29 @@ import { SettingsStore } from '@dxos/local-storage';
 import { ChannelType } from '@dxos/plugin-thread/types';
 
 import { MeetingContainer, MeetingSettings, MeetingsList } from '../components';
-import { meta } from '../meta';
-import { type MeetingSettingsProps, MeetingType } from '../types';
+import { not_meta } from '../meta';
+import { Meeting } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${meta.id}/plugin-settings`,
+      id: `${not_meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<MeetingSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
+      filter: (data): data is { subject: SettingsStore<Meeting.Settings> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === not_meta.id,
       component: ({ data: { subject } }) => <MeetingSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${meta.id}/meeting`,
+      id: `${not_meta.id}/meeting`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType } => Obj.instanceOf(MeetingType, data.subject),
+      filter: (data): data is { subject: Meeting.Meeting } => Obj.instanceOf(Meeting.Meeting, data.subject),
       component: ({ data }) => <MeetingContainer meeting={data.subject} />,
     }),
     createSurface({
-      id: `${meta.id}/meeting-companion`,
+      id: `${not_meta.id}/meeting-companion`,
       role: 'article',
-      filter: (data): data is { subject: MeetingType | 'meeting'; companionTo: ChannelType } =>
-        (Obj.instanceOf(MeetingType, data.subject) || data.subject === 'meeting') &&
+      filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: ChannelType } =>
+        (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
         Obj.instanceOf(ChannelType, data.companionTo),
       component: ({ data }) => {
         return data.subject === 'meeting' ? (
