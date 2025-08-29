@@ -18,8 +18,8 @@ import {
   cardStackHeading,
 } from '@dxos/react-ui-stack';
 
+import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../model';
 import { translationKey } from '../translations';
-import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../types';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;

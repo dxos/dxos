@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, Option, Schema, SchemaAST, type Types } from 'effect';
+import { Array, JSONSchema, Option, Schema, SchemaAST, type Types, pipe } from 'effect';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
@@ -290,12 +290,17 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
       case 'array': {
         if (Array.isArray(root.items)) {
-          result = Schema.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
+          const [required, optional] = pipe(
+            root.items,
+            Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
+            Array.splitAt(root.minItems ?? root.items.length),
+          );
+          result = Schema.Tuple(...required, ...optional.map(Schema.optionalElement));
         } else {
           invariant(root.items);
           const items = root.items;
           result = Array.isArray(items)
-            ? Schema.Tuple(...items.map((v) => toEffectSchema(v, defs)))
+            ? Schema.Tuple(...items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))
             : Schema.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;

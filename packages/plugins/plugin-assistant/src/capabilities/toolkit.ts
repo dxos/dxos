@@ -117,7 +117,7 @@ class Toolkit extends AiToolkit.make(
             );
           }
 
-          return schemas.map((schema) => schema.typename);
+          return schemas;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)));
       },
 
