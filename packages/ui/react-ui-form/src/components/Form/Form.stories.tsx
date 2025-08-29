@@ -195,6 +195,25 @@ export const Arrays: StoryObj<FormProps<ArraysType>> = {
   },
 };
 
+// TODO(wittjosiah): Only GeoPoint is works currently.
+const TupleSchema = Schema.Struct({
+  tuple: Schema.Tuple(Schema.Number, Schema.String, Schema.Boolean),
+  geopoint: Format.GeoPoint,
+}).pipe(Schema.mutable);
+
+type TupleType = Schema.Schema.Type<typeof TupleSchema>;
+
+export const Tuple: StoryObj<FormProps<TupleType>> = {
+  args: {
+    schema: TupleSchema,
+    readonly: false,
+    values: {
+      tuple: [1, 'a', true],
+      geopoint: [-122.41941, 37.77492],
+    },
+  },
+};
+
 const ColorSchema = Schema.Struct({
   color: Schema.Union(Schema.Literal('red'), Schema.Literal('green'), Schema.Literal('blue')).annotations({
     title: 'Color',

@@ -10,6 +10,7 @@ import { trim } from '@dxos/util';
 const functions: FunctionDefinition[] = [];
 const tools: string[] = [];
 
+// TODO(wittjosiah): Remove? All table ops other than resizing columns are more generically handled as schema ops.
 export default () => {
   return [
     contributes(Capabilities.Functions, functions),

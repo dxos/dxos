@@ -20,8 +20,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
-import { TableView } from '../../types';
-import { createTable } from '../../util';
+import { Table } from '../../types';
 
 import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
 
@@ -87,12 +86,12 @@ const meta: Meta<StoryProps> = {
   parameters: { translations, layout: 'centered' },
   decorators: [
     withClientProvider({
-      types: [DataType.View, TableView],
+      types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
         const schema = createDefaultSchema();
-        const { view } = await createTable({ client, space, typename: schema.typename });
+        const { view } = await Table.makeView({ client, space, typename: schema.typename });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
