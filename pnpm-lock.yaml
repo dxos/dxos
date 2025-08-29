@@ -10165,8 +10165,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
       react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       wavefile:
         specifier: ^11.0.0
         version: 11.0.0
@@ -12928,6 +12928,9 @@ importers:
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -30353,11 +30356,6 @@ packages:
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
-
-  react-resize-detector@12.0.2:
-    resolution: {integrity: sha512-aAI4WxWAysWLhA8wKDpsS+PnnxQ0lWCkTlk2t+2ijalWvoSa7vPxmcKRLURkH+PU84QE4KP4dO58oVP3ypWkKA==}
-    peerDependencies:
-      react: ~18.2.0
 
   react-router-dom@6.4.2:
     resolution: {integrity: sha512-yM1kjoTkpfjgczPrcyWrp+OuQMyB1WleICiiGfstnQYo/S8hPEEnVjr/RdmlH6yKK4Tnj1UGXFSa7uwAtmDoLQ==}
@@ -52119,11 +52117,6 @@ snapshots:
       lodash: 4.17.21
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-
-  react-resize-detector@12.0.2(react@18.2.0):
-    dependencies:
-      lodash: 4.17.21
-      react: 18.2.0
 
   react-router-dom@6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:

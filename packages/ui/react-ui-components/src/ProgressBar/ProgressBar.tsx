@@ -5,6 +5,7 @@
 import { useEffect } from '@preact-signals/safe-react/react';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,14 +14,13 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Allow controlled index (like TextBlock).
 // TODO(burdon): Handle error.
 
-export type ProgressProps = ThemedClassName<
+export type ProgressBarProps = ThemedClassName<
   {
     nodes?: { id: string }[];
     index?: number;
     active?: boolean;
-    classes?: NodeProps['classes'];
     onSelect?: (node: { index: number; id: string }) => void;
-  } & Pick<NodeProps, 'radius' | 'width' | 'duration'>
+  } & Partial<Pick<NodeProps, 'classes' | 'options'>>
 >;
 
 /**
@@ -28,32 +28,38 @@ export type ProgressProps = ThemedClassName<
  *
  * ---O---O---O---((O))
  */
-export const Progress = ({
+export const ProgressBar = ({
   nodes,
   index,
   active,
   classNames,
   classes = defaultSlots,
+  options = defaultOptions,
   onSelect,
   ...props
-}: ProgressProps) => {
+}: ProgressBarProps) => {
+  const { ref, width } = useResizeDetector();
   const [_, setCurrent, currentRef] = useStateWithRef<number>(nodes?.length ?? 0);
   useEffect(() => {
     setCurrent(nodes?.length ?? 0);
   }, [nodes?.length]);
 
+  const maxNodes = Math.floor((width ?? 0) / options.width);
+  const visibleNodes = nodes?.slice(-maxNodes);
+  const baseIndex = (nodes?.length ?? 0) - (visibleNodes?.length ?? 0);
+
   return (
     <AnimatePresence>
-      <div role='none' className={mx('flex items-center is-full bs-[32px] overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex items-center is-full bs-[32px] overflow-hidden', classNames)} ref={ref}>
         <div className='flex'>
-          {nodes?.map((node, i) => (
+          {visibleNodes?.map((node, i) => (
             <Node
               {...props}
               key={node.id}
-              selected={index === i}
               classes={classes}
+              selected={baseIndex + i === index}
               state={
-                i === currentRef.current! - 1
+                baseIndex + i === currentRef.current! - 1
                   ? active
                     ? 'active'
                     : 'terminal'
@@ -61,7 +67,7 @@ export const Progress = ({
                     ? 'open'
                     : 'closed'
               }
-              onClick={() => onSelect?.({ index: i, id: node.id })}
+              onClick={() => onSelect?.({ index: baseIndex + i, id: node.id })}
             />
           ))}
         </div>
@@ -82,20 +88,31 @@ const defaultSlots = {
   error: 'bg-rose-500 border-transparent',
 };
 
+type NodeOptions = {
+  width: number;
+  radius: number;
+  duration: number;
+};
+
+const defaultOptions: NodeOptions = {
+  width: 32,
+  radius: 5.5,
+  duration: 250,
+};
+
 type NodeProps = {
   state?: NodeState;
   selected?: boolean;
-  width?: number;
-  radius?: number;
-  duration?: number;
   classes?: Slots;
+  options?: NodeOptions;
   onClick?: () => void;
 };
 
 /**
  * ---(O)
  */
-const Node = ({ state = 'open', selected, width = 32, radius = 5.5, duration = 250, classes, onClick }: NodeProps) => {
+const Node = ({ state = 'open', selected, classes, options = defaultOptions, onClick }: NodeProps) => {
+  const { width, radius, duration } = options;
   return (
     <motion.div
       transition={{

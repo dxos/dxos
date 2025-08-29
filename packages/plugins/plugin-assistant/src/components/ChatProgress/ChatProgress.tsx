@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { useStateWithRef } from '@dxos/react-ui';
-import { Flex, Progress, type ProgressProps, StatusRoll } from '@dxos/react-ui-components';
+import { Flex, ProgressBar, type ProgressBarProps, StatusRoll } from '@dxos/react-ui-components';
 
 import { useExecutionGraph } from '../../hooks';
 import { type Assistant } from '../../types';
@@ -32,10 +32,9 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
   const { commits } = useExecutionGraph(chat.traceQueue);
   const nodes = useMemo(() => commits.map((commit) => ({ id: commit.id, message: commit.message })), [commits]);
   const lines = useMemo(() => commits.map((commit) => commit.message), [commits]);
-  console.log(JSON.stringify(commits, null, 2));
 
   const [index, setIndex] = useStateWithRef<number | undefined>(undefined);
-  const handleSelect = useCallback<NonNullable<ProgressProps['onSelect']>>(({ index }) => {
+  const handleSelect = useCallback<NonNullable<ProgressBarProps['onSelect']>>(({ index }) => {
     setIndex((current) => (index === current ? undefined : index));
   }, []);
 
@@ -61,9 +60,8 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
 
   return (
     <Flex column tabIndex={0} ref={ref}>
-      <Progress nodes={nodes} index={index} onSelect={handleSelect} />
+      <ProgressBar nodes={nodes} index={index} onSelect={handleSelect} />
       <StatusRoll lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
-      <Flex classNames='text-small justify-center'>{JSON.stringify({ commits: commits.length })}</Flex>
     </Flex>
   );
 };

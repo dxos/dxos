@@ -16,5 +16,5 @@ export const useExecutionGraph = (traceQueueRef?: Ref.Ref<Queue>) => {
     const graph = new ExecutionGraph();
     graph.addEvents(queue?.objects.filter(Obj.isObject) ?? []);
     return graph.getGraph();
-  }, [queue]);
+  }, [queue?.objects]);
 };

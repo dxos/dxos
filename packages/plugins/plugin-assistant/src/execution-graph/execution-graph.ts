@@ -104,7 +104,6 @@ const getParentId = (message: DataType.Message) => {
 };
 
 const messageToCommit = (message: DataType.Message): Commit[] => {
-  console.log(message.blocks);
   return message.blocks
     .map((block, idx) => {
       const branch = getMessageBranch(message);
