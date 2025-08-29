@@ -85,7 +85,7 @@ export const upload = Effect.fn(function* ({
       name,
       source: bundledSource,
     }),
-  ).pipe(Effect.timeout(10_000));
+  ).pipe(Effect.timeout(20_000));
   invariant(result.functionId, 'Upload failed.');
   yield* Effect.log('Uploaded function', {
     functionId: result.functionId,

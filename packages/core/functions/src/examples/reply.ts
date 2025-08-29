@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Console, Effect, Schema } from 'effect';
 
 import { defineFunction } from '../handler';
 
@@ -12,7 +12,7 @@ export default defineFunction({
   inputSchema: Schema.Any,
   outputSchema: Schema.Any,
   handler: Effect.fn(function* ({ data }) {
-    console.log('reply', { data });
+    yield* Console.log('reply', { data });
     return data;
   }),
 });
