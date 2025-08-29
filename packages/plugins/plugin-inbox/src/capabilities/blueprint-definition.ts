@@ -7,7 +7,9 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-const functions: FunctionDefinition[] = [];
+import { open, summarize } from '../functions';
+
+const functions: FunctionDefinition[] = [open, summarize];
 const tools: string[] = [];
 
 export default () => {

@@ -4,8 +4,6 @@
 
 import { lazy } from '@dxos/app-framework';
 
-export * from './capabilities';
-
 export const AiService = lazy(() => import('./ai-service'));
 export const AppGraphBuilder = lazy(() => import('./app-graph-builder'));
 export const BlueprintDefinition = lazy(() => import('./blueprint-definition'));
@@ -15,3 +13,6 @@ export const ReactSurface = lazy(() => import('./react-surface'));
 export const Settings = lazy(() => import('./settings'));
 export const AssistantState = lazy(() => import('./state'));
 export const Toolkit = lazy(() => import('./toolkit'));
+
+export * from './blueprint-definition';
+export * from './capabilities';

@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
@@ -31,7 +32,8 @@ import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { testTranscriptMessages } from '../testing';
+import { BLUEPRINT_KEY } from '../capabilities';
+import { testMailboxMessages, testTranscriptMessages } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -42,6 +44,8 @@ import {
   type ComponentProps,
   GraphContainer,
   LoggingContainer,
+  MailboxContainer,
+  MessageContainer,
   SurfaceContainer,
   TasksContainer,
 } from './components';
@@ -198,7 +202,7 @@ export const WithDocument = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
-    blueprints: ['dxos.org/blueprint/assistant'],
+    blueprints: [BLUEPRINT_KEY],
   },
 } satisfies Story;
 
@@ -249,7 +253,26 @@ export const WithChess = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
-    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/chess'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
+  },
+} satisfies Story;
+
+export const WithMail = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin()],
+    config: config.remote,
+    types: [Mailbox.Mailbox],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const messages = testMailboxMessages();
+      await queue.append(messages);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      await binder.bind({ objects: [Ref.make(mailbox)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [MailboxContainer, MessageContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 } satisfies Story;
 
@@ -274,6 +297,7 @@ export const WithMap = {
   }),
   args: {
     components: [ChatContainer, SurfaceContainer],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 } satisfies Story;
 
@@ -388,6 +412,6 @@ export const WithTranscription = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
-    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/transcription'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 } satisfies Story;

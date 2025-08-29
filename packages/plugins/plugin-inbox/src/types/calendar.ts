@@ -2,9 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TypedObject } from '@dxos/echo-schema';
+import { Schema } from 'effect';
 
-export class CalendarType extends TypedObject({
-  typename: 'dxos.org/type/Calendar',
-  version: '0.1.0',
-})({}) {}
+import { Obj, Type } from '@dxos/echo';
+import { type MakeProps } from '@dxos/echo/Obj';
+
+export const Calendar = Schema.Struct({}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Calendar',
+    version: '0.1.0',
+  }),
+);
+export type Calendar = Schema.Schema.Type<typeof Calendar>;
+
+/**
+ * Make a calendar object.
+ */
+export const make = (props: MakeProps<typeof Calendar> = {}) => Obj.make(Calendar, props);
