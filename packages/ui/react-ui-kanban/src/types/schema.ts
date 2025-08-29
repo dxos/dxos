@@ -4,40 +4,52 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { ViewAnnotation } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { type MakeProps } from '@dxos/echo/Obj';
+import { type JsonSchemaType, ViewAnnotation } from '@dxos/echo-schema';
+import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
-export const KanbanView = Schema.Struct({
-  /**
-   * The field the values by which to pivot into columns of the kanban. This should be an enum field on the referred
-   * objects, can that be enforced?
-   */
-  columnFieldId: Schema.optional(Schema.String),
+export const Kanban = Schema.Struct({
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
    * inferred here? Or is this a preference that should apply first, then kanban should continue rendering what it
    * finds regardless.
    */
-  arrangement: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        columnValue: Schema.String,
-        ids: Schema.Array(Type.ObjectId),
-        hidden: Schema.optional(Schema.Boolean),
-      }).pipe(Schema.mutable),
-    ).pipe(Schema.mutable),
-  ),
+  arrangement: Schema.Array(
+    Schema.Struct({
+      columnValue: Schema.String,
+      ids: Schema.Array(Type.ObjectId),
+      hidden: Schema.optional(Schema.Boolean),
+    }).pipe(Schema.mutable),
+  ).pipe(Schema.mutable, Schema.optional),
+
+  // TODO(wittjosiah): Consider Kanban supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
   Type.Obj({
-    typename: 'dxos.org/type/KanbanView',
+    typename: 'dxos.org/type/Kanban',
     version: '0.1.0',
   }),
   ViewAnnotation.set(true),
 );
-export type KanbanView = Schema.Schema.Type<typeof KanbanView>;
+export type Kanban = Schema.Schema.Type<typeof Kanban>;
 
-export const KanbanSettingsSchema = Schema.Struct({
+/**
+ * Make a kanban object.
+ */
+export const make = (props: MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
+
+export const SettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
     title: 'Column field identifier',
   }),
 });
+
+type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'>;
+
+/**
+ * Make a kanban as a view of a data set.
+ */
+export const makeView = async (props: MakeViewProps): Promise<{ jsonSchema: JsonSchemaType; view: DataType.View }> => {
+  const kanban = Obj.make(Kanban, {});
+  return createViewFromSpace({ ...props, presentation: kanban });
+};

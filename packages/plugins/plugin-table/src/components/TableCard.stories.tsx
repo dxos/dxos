@@ -14,9 +14,9 @@ import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { createTable, translations as tableTranslations } from '@dxos/react-ui-table';
+import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -45,7 +45,7 @@ const meta: Meta<StoryProps> = {
   decorators: [
     // TODO(burdon): Should not require space.
     withClientProvider({
-      types: [DataType.View, TableView],
+      types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -75,7 +75,7 @@ const meta: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view } = await createTable({ client, space, typename });
+        const { view } = await Table.makeView({ client, space, typename });
         space.db.add(view);
 
         // Populate.
