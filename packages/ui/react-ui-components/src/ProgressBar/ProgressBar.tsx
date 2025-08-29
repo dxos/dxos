@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { Icon, type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
+import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Show predicted nodes faded out.
@@ -82,7 +82,7 @@ type Slots = Partial<Record<NodeState | 'default' | 'selected', string>>;
 
 const defaultSlots = {
   default: 'bg-baseSurface border-subduedSeparator',
-  active: 'bg-amber-500 border-transparent',
+  active: 'bg-amber-500 border-transparent text-amber-500',
   terminal: 'bg-green-500 border-transparent',
   selected: 'bg-primary-500 border-transparent',
   error: 'bg-rose-500 border-transparent',
@@ -174,20 +174,30 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
           <div
             className={mx(
               'absolute border rounded-full transition-all duration-500',
-              state === 'active' ? 'inset-[4px]' : 'inset-0',
+              state === 'active' ? 'inset-[6px]' : 'inset-0',
               onClick && 'cursor-pointer',
               selected ? classes?.selected : (classes?.[state] ?? classes?.default),
             )}
             onClick={onClick}
           />
           {state === 'active' && (
-            <Icon
-              icon='ph--circle-notch--bold'
-              classNames='absolute inset-0 is-full bs-full animate-spin text-amber-500'
-            />
+            <Notch classNames={['absolute inset-0 is-full bs-full animate-spin', classes?.active, '!bg-transparent']} />
           )}
         </motion.div>
       </div>
     </motion.div>
   );
 };
+
+const Notch = ({ classNames }: ThemedClassName) => (
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' className={mx(classNames)}>
+    <path
+      d='M168,40a97,97,0,0,1,56,88,96,96,0,0,1-192,0A97,97,0,0,1,88,40'
+      fill='none'
+      stroke='currentColor'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      strokeWidth='48'
+    />
+  </svg>
+);

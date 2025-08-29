@@ -59,6 +59,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
         <div className='flex-1' />
         <div className='p-2 text-subdued'>{nodes.length}</div>
       </Toolbar.Root>
+
       <Flex column classNames='gap-1'>
         <ProgressBar
           nodes={nodes}
