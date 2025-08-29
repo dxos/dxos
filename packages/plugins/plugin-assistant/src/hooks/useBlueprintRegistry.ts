@@ -18,7 +18,7 @@ import { isNonNullable } from '@dxos/util';
 // TODO(burdon): Reconcile with eventual public registry.
 export const useBlueprintRegistry = () => {
   const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
-  return useMemo(() => new Blueprint.Registry(blueprints.map((blueprint) => blueprint())), [blueprints]);
+  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
 export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Blueprint.Registry }) =>
