@@ -5504,12 +5504,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
-      '@dxos/plugin-board':
-        specifier: workspace:*
-        version: link:../plugin-board
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -5522,36 +5516,15 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-inbox':
-        specifier: workspace:*
-        version: link:../plugin-inbox
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@dxos/plugin-sketch':
-        specifier: workspace:*
-        version: link:../plugin-sketch
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
-      '@dxos/plugin-wnfs':
-        specifier: workspace:*
-        version: link:../plugin-wnfs
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -5664,9 +5637,33 @@ importers:
       '@dxos/assistant-testing':
         specifier: workspace:*
         version: link:../../core/assistant-testing
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
+      '@dxos/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
@@ -5676,12 +5673,18 @@ importers:
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../plugin-thread
+      '@dxos/plugin-wnfs':
+        specifier: workspace:*
+        version: link:../plugin-wnfs
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
@@ -12919,10 +12922,16 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
+      motion:
+        specifier: ^12.0.6
+        version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
     devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -12932,6 +12941,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -13282,9 +13294,6 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
-      '@dxos/react-ui-searchlist':
-        specifier: workspace:*
-        version: link:../react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack

@@ -5,10 +5,10 @@
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { Filter } from '@dxos/echo';
 import { getDXN } from '@dxos/echo/Obj';
 import { type TypeAnnotation, getValue } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -145,14 +145,32 @@ export const FormCellEditor = ({
     return narrowSchema(schema, [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
-  const formValues = useMemo(() => {
-    if (originalRow) {
-      // NOTE(ZaymonFC): Important to get a snapshot to eject from the live object.
-      return getSnapshot(originalRow);
-    } else {
-      return {};
+  const originalRow = useMemo(() => {
+    if (model && contextEditing) {
+      const cell = parseCellIndex(contextEditing.index);
+      const row = model.getRowAt(cell.row);
+      invariant(row);
+
+      return row;
     }
-  }, [originalRow, editing]);
+
+    return undefined;
+  }, [model, contextEditing]);
+
+  // NOTE: Important to get a snapshot to eject from the live object.
+  const formValues = useMemo(() => (originalRow ? getSnapshot(originalRow) : {}), [originalRow]);
+
+  const handleSave = useCallback(
+    (values: any) => {
+      const path = fieldProjection.field.path;
+      const value = getDeep(values, [path]);
+      setDeep(originalRow, [path], value);
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, originalRow],
+  );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
@@ -169,10 +187,11 @@ export const FormCellEditor = ({
   return (
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
-      <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
-        <Popover.Arrow />
-        <Popover.Viewport>
-          <Form
+      <Popover.Portal>
+        <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
+          <Popover.Arrow />
+          <Popover.Viewport>
+            <Form
             values={formValues}
             schema={narrowedSchema as any}
             onSave={handleSave}
@@ -182,8 +201,9 @@ export const FormCellEditor = ({
             createOptionIcon='ph--plus--regular'
             createOptionLabel={createOptionLabel}
           />
-        </Popover.Viewport>
-      </Popover.Content>
+          </Popover.Viewport>
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 };

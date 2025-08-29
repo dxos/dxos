@@ -9,7 +9,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
 
 import { InboxPlugin } from '../InboxPlugin';
-import { MailboxType } from '../types';
+import { Mailbox } from '../types';
 
 const ContactItem = ({ contact }: { contact: DataType.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -127,7 +127,7 @@ const meta: Meta = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
+          types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -137,7 +137,7 @@ const meta: Meta = {
             const queueDxn = space.queues.create().dxn;
             const queue = space.queues.get<DataType.Message>(queueDxn);
             await queue.append(emails);
-            const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });
+            const mailbox = Mailbox.make({ queue: queueDxn });
             space.db.add(mailbox);
           },
         }),

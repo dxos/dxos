@@ -10,11 +10,11 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
 import { INBOX_PLUGIN } from '../../../meta';
-import { InboxAction, type MailboxType } from '../../../types';
+import { InboxAction, type Mailbox } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';
 
 export const useMailboxToolbarActions = (
-  mailbox: MailboxType,
+  mailbox: Mailbox.Mailbox,
   model: MailboxModel,
   tagFilterVisible: Signal<boolean>,
   setTagFilterVisible: (visible: boolean) => void,

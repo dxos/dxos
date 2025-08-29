@@ -4,7 +4,6 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
 import { EditorViewMode } from '@dxos/react-ui-editor/types';
 
 import { not_meta } from '../meta';
@@ -13,7 +12,6 @@ import { Document } from './Markdown';
 
 export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/create`, {
   input: Schema.Struct({
-    spaceId: Type.SpaceId,
     name: Schema.optional(Schema.String),
     content: Schema.optional(Schema.String),
   }),

@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { CalendarType, MailboxType } from './types';
+import { Calendar, Mailbox } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [MailboxType.typename]: {
+      [Mailbox.Mailbox.typename]: {
         'typename label': 'Mailbox',
         'typename label_zero': 'Mailboxes',
         'typename label_one': 'Mailbox',
@@ -19,7 +19,7 @@ export const translations = [
         'rename object label': 'Rename mailbox',
         'delete object label': 'Delete mailbox',
       },
-      [CalendarType.typename]: {
+      [Calendar.Calendar.typename]: {
         'typename label': 'Calendar',
         'typename label_zero': 'Calendars',
         'typename label_one': 'Calendar',

@@ -8,7 +8,7 @@ import { type DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { MessageState } from '../../../types';
+import { Mailbox } from '../../../types';
 
 import { MailboxModel, type SortDirection } from './mailbox-model';
 
@@ -27,7 +27,8 @@ export const useMailboxModel = (queueDxn: DXN, sortDirection: SortDirection = 'd
     () =>
       items.filter(
         (message) =>
-          message.properties?.state !== MessageState.ARCHIVED && message.properties?.state !== MessageState.DELETED,
+          message.properties?.state !== Mailbox.MessageState.ARCHIVED &&
+          message.properties?.state !== Mailbox.MessageState.DELETED,
       ),
     [items],
   );

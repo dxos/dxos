@@ -19,7 +19,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue, trim } from '@dxos/util';
 
-import { type MailboxType } from '../../types';
 import { formatDate, hashString } from '../util';
 
 import { type Tag } from './model';
@@ -96,7 +95,7 @@ export type MailboxAction =
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
-export type MailboxProps = Pick<MailboxType, 'name'> & {
+export type MailboxProps = {
   id: string;
   messages: DataType.Message[];
   ignoreAttention?: boolean;

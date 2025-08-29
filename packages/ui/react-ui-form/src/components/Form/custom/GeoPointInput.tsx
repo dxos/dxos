@@ -48,24 +48,32 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
     <Input.Root validationValence={status}>
       <InputHeader error={error} label={label} />
       <div role='none' className='grid grid-cols-2 gap-2'>
-        <Input.TextInput
-          type='text'
-          pattern='^-?[0-9]*\.?[0-9]*$'
-          disabled={disabled}
-          placeholder={t('placeholder latitude')}
-          value={latitudeText}
-          onChange={handleCoordinateChange('latitude', setLatitudeText)}
-          onBlur={onBlur}
-        />
-        <Input.TextInput
-          type='text'
-          pattern='^-?[0-9]*\.?[0-9]*$'
-          disabled={disabled}
-          placeholder={t('placeholder longitude')}
-          value={longitudeText}
-          onChange={handleCoordinateChange('longitude', setLongitudeText)}
-          onBlur={onBlur}
-        />
+        <div role='none'>
+          <Input.Label>{t('latitude label')}</Input.Label>
+          <Input.TextInput
+            type='number'
+            step='0.00001'
+            min='-90'
+            max='90'
+            disabled={disabled}
+            value={latitudeText}
+            onChange={handleCoordinateChange('latitude', setLatitudeText)}
+            onBlur={onBlur}
+          />
+        </div>
+        <div role='none'>
+          <Input.Label>{t('longitude label')}</Input.Label>
+          <Input.TextInput
+            type='number'
+            step='0.00001'
+            min='-180'
+            max='180'
+            disabled={disabled}
+            value={longitudeText}
+            onChange={handleCoordinateChange('longitude', setLongitudeText)}
+            onBlur={onBlur}
+          />
+        </div>
       </div>
     </Input.Root>
   );
