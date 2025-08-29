@@ -24,22 +24,21 @@ import { DataType } from '@dxos/schema';
 import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
-import { CalendarType, InboxAction, MailboxType } from '../types';
+import { Calendar, InboxAction, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${INBOX_PLUGIN}/mailbox`,
-      role: 'article',
-      filter: (data): data is { subject: MailboxType; variant: undefined } =>
-        Obj.instanceOf(MailboxType, data.subject) && !data.variant,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
       role: 'article',
-      filter: (data): data is { companionTo: MailboxType; subject: DataType.Message | 'message' } =>
-        Obj.instanceOf(MailboxType, data.companionTo) &&
+      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
+        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
       component: ({ data: { companionTo, subject: message } }) => {
         const space = getSpace(companionTo);
@@ -55,13 +54,13 @@ export default () =>
     createSurface({
       id: `${INBOX_PLUGIN}/calendar`,
       role: 'article',
-      filter: (data): data is { subject: CalendarType } => Obj.instanceOf(CalendarType, data.subject),
+      filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
       component: ({ data }) => <EventsContainer calendar={data.subject} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/mailbox/companion/settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MailboxType } => Obj.instanceOf(MailboxType, data.subject),
+      filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
     }),
 
@@ -73,7 +72,7 @@ export default () =>
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.type(MailboxType));
+        const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
         const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
         const messages = queue?.objects ?? [];
         const related = messages

@@ -74,7 +74,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
 };
 
 const meta: Meta<StoryProps> = {
-  title: 'ui/react-ui-components/Progress',
+  title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
@@ -89,7 +89,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     items: Array.from({ length: 3 }).map(() => createItem()),
-    width: 32,
-    radius: 5.5,
   },
 };

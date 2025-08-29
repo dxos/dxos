@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 // TODO(burdon): Show predicted nodes faded out.
@@ -96,7 +96,7 @@ type NodeOptions = {
 
 const defaultOptions: NodeOptions = {
   width: 32,
-  radius: 5.5,
+  radius: 7.5,
   duration: 250,
 };
 
@@ -173,25 +173,19 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
         >
           <div
             className={mx(
-              'absolute inset-0 border-2 border-separator box-border rounded-full',
-              state === 'active' && ['animate-[ping_2s_ease-in-out_infinite]', classes?.active],
-            )}
-          />
-          <div
-            className={mx(
-              'absolute inset-0 border rounded-full transition-all duration-500',
+              'absolute border rounded-full transition-all duration-500',
+              state === 'active' ? 'inset-[4px]' : 'inset-0',
               onClick && 'cursor-pointer',
               selected ? classes?.selected : (classes?.[state] ?? classes?.default),
-              // state === 'active' && 'inset-2',
             )}
             onClick={onClick}
           />
-          {/* {state === 'active' && (
+          {state === 'active' && (
             <Icon
               icon='ph--circle-notch--bold'
               classNames='absolute inset-0 is-full bs-full animate-spin text-amber-500'
             />
-          )} */}
+          )}
         </motion.div>
       </div>
     </motion.div>
