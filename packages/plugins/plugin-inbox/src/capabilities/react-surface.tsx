@@ -30,7 +30,7 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${INBOX_PLUGIN}/mailbox`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
     }),

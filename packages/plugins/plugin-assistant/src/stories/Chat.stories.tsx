@@ -44,7 +44,6 @@ import {
   type ComponentProps,
   GraphContainer,
   LoggingContainer,
-  MailboxContainer,
   MessageContainer,
   SurfaceContainer,
   TasksContainer,
@@ -259,7 +258,7 @@ export const WithChess = {
 
 export const WithMail = {
   decorators: getDecorators({
-    plugins: [InboxPlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space, binder }) => {
@@ -271,7 +270,7 @@ export const WithMail = {
     },
   }),
   args: {
-    components: [ChatContainer, [MailboxContainer, MessageContainer]],
+    components: [ChatContainer, [SurfaceContainer, MessageContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 } satisfies Story;
