@@ -32,6 +32,17 @@ export interface ScriptType extends Schema.Schema.Type<typeof ScriptType> {}
  * Function deployment.
  */
 export const FunctionType = Schema.Struct({
+  /**
+   * Global registry ID.
+   * NOTE: The `key` property refers to the original registry entry.
+   */
+  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
+  // TODO(dmaretskyi): Consider making it part of ECHO meta.
+  // TODO(dmaretskyi): Make required.
+  key: Schema.optional(Schema.String).annotations({
+    description: 'Unique registration key for the blueprint',
+  }),
+
   // TODO(burdon): Rename to id/uri?
   name: Schema.NonEmptyString,
   version: Schema.String,

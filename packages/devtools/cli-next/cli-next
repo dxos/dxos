@@ -1,0 +1,3 @@
+#/bin/bash
+
+pnpm --silent vite-node src/bin.ts "$@"

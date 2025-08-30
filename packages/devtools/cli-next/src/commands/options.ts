@@ -10,5 +10,6 @@ import { Options } from '@effect/cli';
 //
 
 export const Common = {
+  functionId: Options.text('function-id').pipe(Options.withDescription('EDGE Function ID.')),
   spaceId: Options.text('space-id').pipe(Options.withDescription('Space ID.')),
 };

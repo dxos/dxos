@@ -10,7 +10,7 @@ import { Config, Console, Effect, pipe } from 'effect';
 
 import { withRetry } from '@dxos/edge-client';
 
-import { ConfigService } from '../../../../services';
+import { CommandConfig, ConfigService } from '../../../../services';
 
 export const list = Command.make(
   'list',
@@ -19,8 +19,7 @@ export const list = Command.make(
     const config = yield* ConfigService;
     const baseUrl = config.values?.runtime?.services?.hub?.url ?? 'https://hub.dxos.network';
     const url = path.join(baseUrl, '/api/user/profile');
-    const verbose = yield* Config.boolean('VERBOSE').pipe(Config.withDefault(false));
-    if (verbose) {
+    if (yield* CommandConfig.isVerbose) {
       yield* Effect.log(`Calling: ${url}`);
     }
 
@@ -37,8 +36,7 @@ export const list = Command.make(
       Effect.withSpan('EdgeHttpClient'),
     );
 
-    const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
-    if (json) {
+    if (yield* CommandConfig.isJson) {
       return yield* Console.log(result);
     } else {
       // TODO(burdon): Output table. Look at @effect/printer.

@@ -3,14 +3,15 @@
 //
 
 import { Command } from '@effect/cli';
-import { Config, Console, Effect } from 'effect';
+import { Console, Effect } from 'effect';
+
+import { CommandConfig } from '../../../services';
 
 export const status = Command.make(
   'status',
   {},
   Effect.fn(function* () {
-    const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
-    if (json) {
+    if (yield* CommandConfig.isJson) {
       return yield* Console.log({ status: 'ok' });
     } else {
       return yield* Console.log('ok');

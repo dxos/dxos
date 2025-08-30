@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config, Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer } from 'effect';
 
 import { Client } from '@dxos/client';
 
+import { CommandConfig } from './command-config';
 import { ConfigService } from './config-service';
 
 // TODO(wittjosiah): Factor out.
@@ -13,7 +14,7 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
   static layer = Layer.scoped(
     ClientService,
     Effect.gen(function* () {
-      const verbose = yield* Config.boolean('VERBOSE').pipe(Config.withDefault(false));
+      const verbose = yield* CommandConfig.isVerbose;
       const config = yield* ConfigService;
       const client = new Client({ config });
       yield* Effect.tryPromise(() => client.initialize());
@@ -29,14 +30,11 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
               // Effect.repeat(Console.log('action...'), Schedule.fixed('1 second')),
 
               // Try to cleanly exit.
+              // TODO(burdon): Sometimes hangs evem after logging OK.
+              // Cloudflare socket? (detected via `lsof -i`)
+              // 192.168.1.150:56747 -> 172.67.201.139:443
               Effect.tryPromise(() => client.destroy()).pipe(
                 Effect.tap(() => {
-                  // TODO(burdon): Sometimes hangs evem after logging OK.
-                  // Cloudflare socket? (detected via `lsof -i`)
-                  // 192.168.1.150:56747 -> 172.67.201.139:443
-                  if (process.env.DX_TRACK_LEAKS) {
-                    (globalThis as any).wtf.dump();
-                  }
                   if (verbose) {
                     return Effect.log('OK');
                   }
