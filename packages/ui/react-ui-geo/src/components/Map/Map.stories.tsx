@@ -28,15 +28,16 @@ const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-geo/Map',
+  component: Map.Root as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 

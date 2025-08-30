@@ -109,16 +109,24 @@ const DefaultStory = (props: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withLayout({ fullscreen: true }), withTheme],
+  decorators: [
+    withClientProvider({
+      createSpace: true,
+    }),
+    withLayout({
+      fullscreen: true,
+    }),
+    withTheme,
+  ],
   parameters: { translations },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 

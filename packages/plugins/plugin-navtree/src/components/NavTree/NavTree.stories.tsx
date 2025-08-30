@@ -116,7 +116,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof NavTreeContainer> = {
+const meta = {
   title: 'plugins/plugin-navtree/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
@@ -152,7 +152,7 @@ const meta: Meta<typeof NavTreeContainer> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof NavTreeContainer>;
 
 export default meta;
 

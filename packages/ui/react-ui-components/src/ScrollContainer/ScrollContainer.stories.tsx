@@ -11,51 +11,59 @@ import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ScrollContainer, type ScrollController } from './ScrollContainer';
+import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
-const meta: Meta<typeof ScrollContainer.Root> = {
+const DefaultStory = (props: ScrollContainerRootProps) => {
+  const [lines, setLines] = useState<string[]>([]);
+  const [running, setRunning] = useState(true);
+  const scroller = useRef<ScrollController>(null);
+  useEffect(() => {
+    if (!running) {
+      return;
+    }
+
+    const i = setInterval(() => {
+      setLines((lines) => [...lines, faker.lorem.paragraph()]);
+    }, 500);
+
+    return () => {
+      clearInterval(i);
+    };
+  }, [running]);
+
+  return (
+    <div className='flex flex-col w-[30rem] overflow-hidden'>
+      <Toolbar.Root>
+        <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
+        <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
+        <div className='flex-1' />
+        <div>{lines.length}</div>
+      </Toolbar.Root>
+      <ScrollContainer.Root {...props} ref={scroller}>
+        <ScrollContainer.Content>
+          {lines.map((line, index) => (
+            <div key={index} className='p-2'>
+              {line}
+            </div>
+          ))}
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
+    </div>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-components/ScrollContainer',
   component: ScrollContainer.Root,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-  render: (args) => {
-    const [lines, setLines] = useState<string[]>([]);
-    const [running, setRunning] = useState(true);
-    const scroller = useRef<ScrollController>(null);
-    useEffect(() => {
-      if (!running) {
-        return;
-      }
-
-      const i = setInterval(() => {
-        setLines((lines) => [...lines, faker.lorem.paragraph()]);
-      }, 500);
-
-      return () => {
-        clearInterval(i);
-      };
-    }, [running]);
-
-    return (
-      <div className='flex flex-col w-[30rem] overflow-hidden'>
-        <Toolbar.Root>
-          <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
-          <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
-          <div className='flex-1' />
-          <div>{lines.length}</div>
-        </Toolbar.Root>
-        <ScrollContainer.Root {...args} ref={scroller}>
-          <ScrollContainer.Content>
-            {lines.map((line, index) => (
-              <div key={index} className='p-2'>
-                {line}
-              </div>
-            ))}
-          </ScrollContainer.Content>
-        </ScrollContainer.Root>
-      </div>
-    );
-  },
-};
+  render: DefaultStory,
+  decorators: [
+    withTheme,
+    withLayout({
+      fullscreen: true,
+      classNames: 'justify-center',
+    }),
+  ],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

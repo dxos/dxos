@@ -266,10 +266,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
+export const Default: Story = {};
 
-export const Delayed = {
+export const Delayed: Story = {
   args: {
     delay: 2_000,
   },
-} satisfies Story;
+};

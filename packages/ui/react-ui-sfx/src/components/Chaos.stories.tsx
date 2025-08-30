@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
@@ -19,7 +19,7 @@ import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './C
 
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
 
-const DefaultStory = (args: ChaosProps) => {
+const DefaultStory = (props: ChaosProps) => {
   const [{ preset, audio, ...options }, setProps] = useControls<ControlsOptions, () => ControlsOptions, any>(
     () =>
       defaultsDeep(
@@ -61,22 +61,22 @@ const DefaultStory = (args: ChaosProps) => {
         <Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button>
       </div>
       <div className='w-[256px] h-[256px]'>
-        <Chaos {...args} options={options} getValue={getAverage} />
+        <Chaos {...props} options={options} getValue={getAverage} />
       </div>
     </div>
   );
 };
 
-const meta: Meta<ChaosProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Chaos',
   component: Chaos,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Chaos>;
 
 export default meta;
 
-type Story = StoryObj<ChaosProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

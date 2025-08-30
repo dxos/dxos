@@ -14,14 +14,14 @@ import { VideoObject as VideoObjectComponent } from '../Media';
 
 import { ResponsiveContainer } from './ResponsiveContainer';
 
-const meta: Meta<typeof ResponsiveContainer> = {
+const meta = {
   title: 'plugins/plugin-thread/ResponsiveContainer',
   component: ResponsiveContainer,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ResponsiveContainer>;
 
 export default meta;
 

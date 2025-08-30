@@ -17,9 +17,9 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { DeckStateFactory } from '../../capabilities';
 import { translations } from '../../translations';
 
-import { Plank, type PlankProps } from './Plank';
+import { Plank } from './Plank';
 
-const meta: Meta<PlankProps> = {
+const meta = {
   title: 'plugins/plugin-deck/Plank',
   component: Plank,
   render: (args) => {
@@ -40,11 +40,11 @@ const meta: Meta<PlankProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof Plank>;
 
 export default meta;
 
-type Story = StoryObj<PlankProps>;
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Need to define surface provider?
 export const Default: Story = {

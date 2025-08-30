@@ -39,7 +39,7 @@ const menuActions = faker.helpers.multiple(
   { count: 20 },
 );
 
-const meta: Meta<typeof NavTreeItemAction> = {
+const meta = {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
   decorators: [withTheme, withLayout()],
@@ -52,7 +52,7 @@ const meta: Meta<typeof NavTreeItemAction> = {
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof NavTreeItemAction>;
 
 export default meta;
 

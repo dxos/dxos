@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -24,9 +24,9 @@ const DefaultStory = () => {
   return <SpaceGenerator space={space} />;
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-debug/SpaceGenerator',
-  component: SpaceGenerator,
+  component: SpaceGenerator as any,
   render: render(DefaultStory),
   decorators: [
     withPluginManager({
@@ -45,8 +45,10 @@ const meta: Meta = {
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

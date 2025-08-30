@@ -17,7 +17,6 @@ import { Card, CardDragPreview } from '../Card';
 
 import { CardStack } from './CardStack';
 
-// Set a seed for reproducible random values
 faker.seed(0);
 
 type CardItem = {
@@ -160,11 +159,11 @@ const CardStackStory = () => {
   );
 };
 
-const meta: Meta<typeof CardStackStory> = {
+const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof CardStackStory>;
 
 export default meta;
 

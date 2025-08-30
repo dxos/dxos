@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
@@ -25,17 +25,19 @@ const DefaultStory = (props: IconButtonProps) => {
   );
 };
 
-const meta: Meta<typeof IconButton> = {
+const meta = {
   title: 'ui/react-ui-core/IconButton',
   component: IconButton,
   render: DefaultStory as any,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof IconButton>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     label: 'Bold',
     icon: 'ph--text-b--regular',
