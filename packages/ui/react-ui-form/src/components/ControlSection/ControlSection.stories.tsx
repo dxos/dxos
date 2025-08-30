@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
-import { ControlPage, ControlSection, type ControlSectionProps } from './ControlSection';
+import { ControlPage, ControlSection } from './ControlSection';
 
 const meta = {
   title: 'ui/react-ui-form/ControlSection',
