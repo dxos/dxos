@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Schema } from 'effect';
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
@@ -61,12 +62,14 @@ export const Form = <T extends BaseObject>({
   // TODO(burdon): Rename.
   const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
 
-  // Focus the first input element within this form.
+  const { findFirstFocusable } = useFocusFinders();
+
+  // Focus the first focusable element within this form.
   useEffect(() => {
     if (autoFocus && formRef.current) {
-      const input = formRef.current.querySelector('input');
-      if (input) {
-        input.focus();
+      const firstFocusable = findFirstFocusable(formRef.current);
+      if (firstFocusable) {
+        firstFocusable.focus();
       }
     }
   }, [autoFocus]);
