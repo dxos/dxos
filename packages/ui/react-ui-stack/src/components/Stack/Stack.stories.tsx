@@ -130,12 +130,12 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-stack/Stack',
   component: DefaultStory,
   decorators: [withTheme],
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

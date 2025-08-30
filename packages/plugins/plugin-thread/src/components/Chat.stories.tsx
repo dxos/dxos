@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
@@ -18,7 +18,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Thread } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
@@ -27,7 +27,7 @@ import { ChatContainer } from './ChatContainer';
 
 faker.seed(1);
 
-const Story = () => {
+const DefaultStory = () => {
   const client = useClient();
   const identity = useIdentity();
   const [space, setSpace] = useState<Space>();
@@ -58,12 +58,10 @@ const Story = () => {
   );
 };
 
-export const Default = {};
-
-const meta: Meta<typeof Thread.Root> = {
+const meta = {
   title: 'plugins/plugin-thread/Chat',
-  component: Thread.Root,
-  render: () => <Story />,
+  component: Thread.Root as any,
+  render: render(DefaultStory),
   decorators: [
     withPluginManager({
       plugins: [IntentPlugin()],
@@ -83,6 +81,10 @@ const meta: Meta<typeof Thread.Root> = {
     withClientProvider({ createSpace: true, types: [ThreadType, ChannelType, DataType.Message] }),
   ],
   parameters: { translations },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -24,8 +24,6 @@ export type FieldEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type StoryProps = FieldEditorProps;
-
 const DefaultStory = (props: FieldEditorProps) => {
   const handleComplete: FieldEditorProps['onSave'] = () => {
     log.info('onClose', { props });
@@ -56,19 +54,19 @@ const DefaultStory = (props: FieldEditorProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-form/FieldEditor',
-  component: FieldEditor,
+  component: FieldEditor as any,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

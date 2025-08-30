@@ -104,11 +104,11 @@ export const Default: StoryObj<typeof WelcomeTour> = {
 /**
  * IMPORTANT: Run in separate tab.
  */
-const meta: Meta<typeof WelcomeTour> = {
+const meta = {
   title: 'plugins/plugin-help/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

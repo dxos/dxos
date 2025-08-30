@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import './mailbox.css';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin, Surface, useCapability } from '@dxos/app-framework';
@@ -61,18 +61,20 @@ const WithCompanionStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
-  component: MailboxComponent,
+  component: MailboxComponent as any,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withAttention],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
 
-export const WithCompanion = {
+export const Default: Story = {};
+
+export const WithCompanion: Story = {
   render: WithCompanionStory,
   decorators: [
     withPluginManager({

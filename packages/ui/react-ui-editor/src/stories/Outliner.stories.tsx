@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import { type EditorView } from '@codemirror/view';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
 import { DropdownMenu } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { RefDropdownMenu } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
@@ -18,7 +19,7 @@ import { str } from '../testing';
 import { EditorStory } from './components';
 
 type StoryProps = {
-  text: string;
+  text?: string;
 };
 
 const DefaultStory = ({ text }: StoryProps) => {
@@ -59,20 +60,22 @@ const DefaultStory = ({ text }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
   decorators: [withAttention, withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Empty = {
+type Story = StoryObj<typeof meta>;
+
+export const Empty: Story = {
   args: {},
 };
 
-export const Basic = {
+export const Basic: Story = {
   args: {
     text: str(
       //
@@ -87,7 +90,7 @@ export const Basic = {
   },
 };
 
-export const Nested = {
+export const Nested: Story = {
   args: {
     text: str(
       //
@@ -102,7 +105,7 @@ export const Nested = {
   },
 };
 
-export const Continuation = {
+export const Continuation: Story = {
   args: {
     text: str(
       //

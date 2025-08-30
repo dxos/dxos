@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
@@ -40,7 +41,7 @@ const noOpProps: IdentityPanelImplProps = {
   onManageCredentials: async () => console.log('manage credentials'),
 };
 
-export default {
+const meta = {
   title: 'sdk/shell/IdentityPanel',
   decorators: [withTheme],
   parameters: {
@@ -49,7 +50,11 @@ export default {
       disableSnapshot: false,
     },
   },
-};
+} satisfies Meta<typeof IdentityDid>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const IdentityActionChooser = () => {
   return (

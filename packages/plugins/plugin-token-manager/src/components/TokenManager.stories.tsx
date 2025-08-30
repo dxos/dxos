@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
@@ -26,9 +26,9 @@ const generator = new TestObjectGenerator(
   },
 );
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-token-manager/TokenManager',
   component: TokenManager,
   decorators: [withTheme, withLayout()],
@@ -36,6 +36,8 @@ const meta: Meta = {
     tokens: await Promise.all([...Array(10)].map(() => generator.createObject())),
     onDelete: console.log,
   },
-};
+} satisfies Meta<typeof TokenManager>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

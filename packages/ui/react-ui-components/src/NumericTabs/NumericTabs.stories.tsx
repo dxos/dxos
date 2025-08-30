@@ -19,11 +19,11 @@ const content = Array.from({ length: 15 }, (_, i) => ({
   content: faker.lorem.paragraphs(3),
 }));
 
-const meta: Meta<typeof NumericTabs> = {
+const meta = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
+} satisfies Meta<typeof NumericTabs>;
 
 export default meta;
 

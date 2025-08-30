@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
-import { ControlPage, ControlSection, type ControlSectionProps } from './ControlSection';
+import { ControlPage, ControlSection } from './ControlSection';
 
-const meta: Meta<ControlSectionProps> = {
+const meta = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
   render: (args) => (
@@ -28,11 +28,11 @@ const meta: Meta<ControlSectionProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ControlSection>;
 
 export default meta;
 
-type Story = StoryObj<ControlSectionProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

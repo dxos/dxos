@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -11,22 +12,30 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { CompoundButton, type CompoundButtonProps } from './CompoundButton';
 
-export default {
+const DefaultStory = (props: CompoundButtonProps) => {
+  return (
+    <Container>
+      <CompoundButton {...props} />
+      <CompoundButton {...props} disabled />
+    </Container>
+  );
+};
+
+const meta = {
   title: 'sdk/shell/CompoundButton',
   component: CompoundButton,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof CompoundButton>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const Container = ({ children }: PropsWithChildren<{}>) => <div className='flex gap-4'>{children}</div>;
 
-export const Default = {
-  render: (args: Omit<CompoundButtonProps, 'ref'>) => (
-    <Container>
-      <CompoundButton {...args} />
-      <CompoundButton {...args} disabled />
-    </Container>
-  ),
+export const Default: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',
@@ -36,8 +45,7 @@ export const Default = {
   },
 };
 
-export const Primary = {
-  ...Default,
+export const Primary: Story = {
   args: {
     children: 'Hello',
     description: 'This is a compound button',

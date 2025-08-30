@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -14,7 +14,7 @@ import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Pulsar } from '../../fx';
 import {
@@ -323,18 +323,18 @@ const Debug = ({
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     controls: { disable: true },
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -450,14 +450,12 @@ export const WithPopover: Story = {
   },
 };
 
-export const Empty: Story = {
-  render: () => (
-    <SVG.Root>
-      <SVG.Markers />
-      <SVG.Grid axis />
-      <SVG.Zoom extent={[1 / 4, 4]}>
-        <GraphComponent />
-      </SVG.Zoom>
-    </SVG.Root>
-  ),
-};
+export const Empty = () => (
+  <SVG.Root>
+    <SVG.Markers />
+    <SVG.Grid axis />
+    <SVG.Zoom extent={[1 / 4, 4]}>
+      <GraphComponent />
+    </SVG.Zoom>
+  </SVG.Root>
+);

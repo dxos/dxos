@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useRef, useState } from 'react';
@@ -138,7 +138,7 @@ type StoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
     xAxis?: boolean;
   };
 
-const Story = ({
+const DefaultStory = ({
   zoom: _zoom = 1,
   translation,
   rotation = [0, 0, 0],
@@ -159,6 +159,7 @@ const Story = ({
   });
   const [topology] = useTopology();
   const [airports] = useAsyncState(async () => (await import('../../../data/airports.ts')).default);
+
   const features = useMemo(() => {
     return airports ? createTrip(airports, routes, (dots?.objects.dots as any)?.geometries[0].coordinates) : undefined;
   }, [airports, routes, dots]);
@@ -224,11 +225,12 @@ const Story = ({
 
 const initialRotation: Vector = [0, -40, 0];
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
-};
+} satisfies Meta;
 
 export default meta;
 
@@ -295,26 +297,66 @@ export const Mercator = () => {
   );
 };
 
-export const Globe1 = () => {
-  return <Story drag projection='mercator' zoom={0.8} rotation={initialRotation} styles={defaultStyles} />;
+type Story = StoryObj<typeof DefaultStory>;
+
+export const Globe1: Story = {
+  args: {
+    drag: true,
+    projection: 'mercator',
+    zoom: 0.8,
+    rotation: initialRotation,
+    styles: defaultStyles,
+  },
 };
 
-export const Globe2 = () => {
-  return <Story drag projection='transverse-mercator' zoom={0.8} rotation={initialRotation} styles={defaultStyles} />;
+export const Globe2: Story = {
+  args: {
+    drag: true,
+    projection: 'transverse-mercator',
+    zoom: 0.8,
+    rotation: initialRotation,
+    styles: defaultStyles,
+  },
 };
 
-export const Globe3 = () => {
-  return <Story drag spin zoom={1.5} rotation={initialRotation} styles={defaultStyles} />;
+export const Globe3: Story = {
+  args: {
+    drag: true,
+    spin: true,
+    zoom: 1.5,
+    rotation: initialRotation,
+    styles: defaultStyles,
+  },
 };
 
-export const Globe4 = () => {
-  return <Story drag tour zoom={2} rotation={initialRotation} styles={defaultStyles} />;
+export const Globe4: Story = {
+  args: {
+    drag: true,
+    tour: true,
+    zoom: 2,
+    rotation: initialRotation,
+    styles: defaultStyles,
+  },
 };
 
-export const Globe5 = () => {
-  return <Story drag tour zoom={0.9} rotation={initialRotation} styles={dotStyles} />;
+export const Globe5: Story = {
+  args: {
+    drag: true,
+    tour: true,
+    zoom: 0.9,
+    rotation: initialRotation,
+    styles: dotStyles,
+  },
 };
 
-export const Globe6 = () => {
-  return <Story drag xAxis tour zoom={2} translation={{ x: 0, y: 600 }} rotation={[0, -20, 0]} styles={dotStyles} />;
+export const Globe6: Story = {
+  args: {
+    drag: true,
+    xAxis: true,
+    tour: true,
+    zoom: 2,
+    translation: { x: 0, y: 600 },
+    rotation: [0, -20, 0],
+    styles: dotStyles,
+  },
 };

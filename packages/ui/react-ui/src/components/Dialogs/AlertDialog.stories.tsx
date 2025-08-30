@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
@@ -16,12 +17,12 @@ type StoryProps = Partial<{
   title: string;
   description: string;
   body: string;
+  openTrigger: string;
   cancelTrigger: string;
   actionTrigger: string;
-  openTrigger: string;
 }>;
 
-const DefaultStory = ({ title, openTrigger, description, body, cancelTrigger, actionTrigger }: StoryProps) => {
+const DefaultStory = ({ title, description, body, openTrigger, cancelTrigger, actionTrigger }: StoryProps) => {
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Trigger asChild>
@@ -47,15 +48,19 @@ const DefaultStory = ({ title, openTrigger, description, body, cancelTrigger, ac
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/AlertDialog',
-  component: AlertDialog,
-  render: DefaultStory,
+  component: AlertDialog.Root as any,
+  render: DefaultStory as any,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     title: 'AlertDialog title',
     openTrigger: 'Open AlertDialog',

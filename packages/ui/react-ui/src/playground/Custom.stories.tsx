@@ -120,13 +120,13 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   );
 };
 
-const meta: Meta<typeof Button> = {
+const meta = {
   title: 'ui/react-ui-core/Playground/Custom',
   component: Button,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { layout: 'centered' },
-};
+} satisfies Meta<typeof Button>;
 
 export default meta;
 

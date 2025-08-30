@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
@@ -17,16 +18,20 @@ import { type MenuAction } from '../types';
 
 faker.seed(1234);
 
-export default {
+const meta = {
   title: 'ui/react-ui-menu/Menus',
   component: ToolbarMenu,
   decorators: [withTheme],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ToolbarMenu>;
 
-export const DropdownMenu = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const DropdownMenu: Story = {
   render: () => {
     const menuActions = useMemo(() => createActions() as MenuAction[], []);
     const resolveGroupItems = useCallback(() => menuActions, [menuActions]);
@@ -44,7 +49,7 @@ export const DropdownMenu = {
   },
 };
 
-export const Toolbar = {
+export const Toolbar: Story = {
   render: () => {
     const nestedMenuActions = useMemo(() => createNestedActionsResolver(), []);
 
@@ -56,7 +61,7 @@ export const Toolbar = {
   },
 };
 
-export const UseMenuActionsToolbar = {
+export const UseMenuActionsToolbar: Story = {
   render: () => {
     const menu = useMenuActions(createNestedActions);
 

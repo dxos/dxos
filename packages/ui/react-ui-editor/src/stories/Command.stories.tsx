@@ -4,11 +4,12 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
 import { Button, DropdownMenu, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
@@ -65,7 +66,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
   );
 };
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Command',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
@@ -91,8 +92,10 @@ const meta: Meta<typeof EditorStory> = {
     </RefDropdownMenu.Provider>
   ),
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof Button>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

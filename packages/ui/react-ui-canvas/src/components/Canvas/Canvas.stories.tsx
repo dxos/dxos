@@ -89,16 +89,16 @@ const Item = (p: Point) => {
   );
 };
 
-const meta: Meta<GridProps> = {
+const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Grid>;
 
 export default meta;
 
-type Story = StoryObj<GridProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { size: 16 },

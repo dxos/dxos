@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -43,9 +43,9 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-automation/TriggerEditor',
-  component: TriggerEditor,
+  component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -72,8 +72,10 @@ const meta: Meta = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

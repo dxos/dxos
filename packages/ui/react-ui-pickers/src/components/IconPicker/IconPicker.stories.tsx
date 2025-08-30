@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IconPicker, type IconPickerProps } from './IconPicker';
 
-const ToolbarStory = (props: IconPickerProps) => {
+const DefaultStory = (props: IconPickerProps) => {
   const [icon, setIcon] = useState<string | undefined>(props.value ?? props.defaultValue);
   console.log(icon);
 
@@ -23,17 +23,20 @@ const ToolbarStory = (props: IconPickerProps) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-pickers/IconPicker',
+  component: IconPicker,
+  render: DefaultStory,
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof IconPicker>;
 
 export default meta;
 
-export const Default: StoryObj<IconPickerProps> = {
-  render: ToolbarStory,
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };
