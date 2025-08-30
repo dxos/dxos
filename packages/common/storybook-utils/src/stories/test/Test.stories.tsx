@@ -11,7 +11,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TEST_ID, Test, type TestProps } from './Test';
+import { TEST_ID, Test } from './Test';
 
 /**
  * Storybook sanity test.

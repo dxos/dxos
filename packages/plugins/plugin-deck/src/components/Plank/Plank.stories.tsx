@@ -17,7 +17,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { DeckStateFactory } from '../../capabilities';
 import { translations } from '../../translations';
 
-import { Plank, type PlankProps } from './Plank';
+import { Plank } from './Plank';
 
 const meta = {
   title: 'plugins/plugin-deck/Plank',

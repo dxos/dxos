@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Blob, type BlobProps } from './Blob';
+import { Blob } from './Blob';
 
 const meta = {
   title: 'ui/react-ui-sfx/Blob',

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
-import { PluginDetail, type PluginDetailProps } from './PluginDetail';
+import { PluginDetail } from './PluginDetail';
 
 const meta = {
   title: 'plugins/plugin-registry/PluginDetail',
