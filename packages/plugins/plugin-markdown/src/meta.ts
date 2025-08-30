@@ -17,6 +17,3 @@ export const meta: PluginMeta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
   screenshots: ['https://dxos.network/plugin-details-markdown-dark.png'],
 };
-
-// TODO(burdon): Workaround for suspected vitest bug? Update vitest?
-export const not_meta = meta;

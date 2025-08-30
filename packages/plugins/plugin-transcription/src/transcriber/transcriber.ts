@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 import { trace } from '@dxos/tracing';
 
-import { not_meta } from '../meta';
+import { meta } from '../meta';
 import { mergeFloat64Arrays } from '../util';
 
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
@@ -196,7 +196,7 @@ export class Transcriber extends Resource {
       throw new Error('No audio to send for transcribing');
     }
 
-    const response = await fetch(`${not_meta.id}/transcribe`, {
+    const response = await fetch(`${meta.id}/transcribe`, {
       method: 'POST',
       body: JSON.stringify({ audio }),
       headers: {
