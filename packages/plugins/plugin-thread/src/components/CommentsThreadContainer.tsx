@@ -20,10 +20,7 @@ import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
-import { MessageContainer } from './MessageContainer';
-
-// TODO(burdon): Remove need for p-1.
-export const commentControlClassNames = '!p-1 transition-opacity';
+import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
 
 export type CommentsThreadContainerProps = {
   anchor: AnchoredTo;
@@ -116,7 +113,7 @@ export const CommentsThreadContainer = ({
         ) : (
           <Thread.Header>{thread.name}</Thread.Header>
         )}
-        <div className='flex flex-row items-center gap-0.5'>
+        <div role='none' className={buttonGroupClassNames}>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <IconButton
@@ -125,7 +122,7 @@ export const CommentsThreadContainer = ({
               icon={thread?.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
               iconOnly
               label={t('resolve thread label')}
-              classNames={[commentControlClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
+              classNames={[buttonClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
               onClick={handleResolve}
             />
           )}
@@ -136,7 +133,7 @@ export const CommentsThreadContainer = ({
               icon='ph--x--regular'
               iconOnly
               label={t('delete thread label')}
-              classNames={[commentControlClassNames, hoverableControlItem]}
+              classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleThreadDelete}
             />
           )}
