@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
@@ -15,10 +16,14 @@ import { useSpace } from '../echo';
 
 import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepeater';
 
-export default {
+const meta = {
   title: 'sdk/react-client/ClientRepeater',
   decorators: [withTheme],
-};
+} satisfies Meta<typeof Input>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const JsonPanel = ({ value }: { value: any }) => (
   <SyntaxHighlighter language='json'>{JSON.stringify(value, undefined, 2)}</SyntaxHighlighter>
@@ -50,10 +55,10 @@ const ClientSpace = ({ spaceKey }: ClientRepeatedComponentProps) => {
   );
 };
 
-export const Default = {
+export const Default: Story = {
   render: () => <ClientRepeater component={ClientStory} count={2} />,
 };
 
-export const Space = {
+export const Space: Story = {
   render: () => <ClientRepeater component={ClientSpace} count={2} createSpace />,
 };

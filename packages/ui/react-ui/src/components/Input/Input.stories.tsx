@@ -89,13 +89,13 @@ const DefaultStory = (props: BaseProps) => {
   );
 };
 
-const meta: Meta<BaseProps> = {
+const meta = {
   title: 'ui/react-ui-core/Input',
-  component: Input.Root,
+  component: Input.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -222,10 +222,10 @@ export const Checkbox: Story = {
   },
 };
 
-export const Switch = {
+export const Switch: Story = {
   args: {
     kind: 'switch',
     label: 'This is a switch',
-    description: 'It’s either off... or on.',
+    description: "It's either off... or on.",
   },
 };

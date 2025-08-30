@@ -135,14 +135,14 @@ const DefaultStory = ({
   );
 };
 
-const storybook = {
+const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
   parameters: {
     translations,
     controls: { disable: true },
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default storybook;
 
@@ -192,7 +192,7 @@ const addSpellingMistakes = (text: string, n: number): string => {
   return words.join(' ');
 };
 
-export const Default = {
+export const Default: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
@@ -200,10 +200,10 @@ export const Default = {
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
 // Test with prompt: Propose changes to my document based on the style guide.
-export const WithDocument = {
+export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
@@ -227,9 +227,9 @@ export const WithDocument = {
     components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
-} satisfies Story;
+};
 
-export const WithBlueprints = {
+export const WithBlueprints: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
@@ -241,9 +241,9 @@ export const WithBlueprints = {
   args: {
     components: [ChatContainer, [TasksContainer, BlueprintContainer]],
   },
-} satisfies Story;
+};
 
-export const WithChess = {
+export const WithChess: Story = {
   decorators: getDecorators({
     plugins: [ChessPlugin()],
     config: config.remote,
@@ -278,10 +278,10 @@ export const WithChess = {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
-} satisfies Story;
+};
 
 // Test with prompt: Summarize my mailbox and write the summary in a new document.
-export const WithMail = {
+export const WithMail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
@@ -298,10 +298,10 @@ export const WithMail = {
     components: [ChatContainer, [SurfaceContainer, MessageContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
-} satisfies Story;
+};
 
 // Test with prompt: Create 10 locations.
-export const WithMap = {
+export const WithMap: Story = {
   decorators: getDecorators({
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
@@ -324,9 +324,9 @@ export const WithMap = {
     components: [ChatContainer, SurfaceContainer],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
-} satisfies Story;
+};
 
-export const WithTrip = {
+export const WithTrip: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
@@ -378,9 +378,9 @@ export const WithTrip = {
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
-export const WithBoard = {
+export const WithBoard: Story = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
     config: config.remote,
@@ -394,9 +394,9 @@ export const WithBoard = {
     debug: true,
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
-export const WithResearch = {
+export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     config: config.persistent,
@@ -407,9 +407,9 @@ export const WithResearch = {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
-} satisfies Story;
+};
 
-export const WithSearch = {
+export const WithSearch: Story = {
   decorators: getDecorators({
     config: config.remote,
     types: testTypes,
@@ -420,9 +420,9 @@ export const WithSearch = {
   args: {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
   },
-} satisfies Story;
+};
 
-export const WithTranscription = {
+export const WithTranscription: Story = {
   decorators: getDecorators({
     plugins: [TranscriptionPlugin()],
     config: config.remote,
@@ -439,4 +439,4 @@ export const WithTranscription = {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
-} satisfies Story;
+};

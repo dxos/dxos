@@ -4,10 +4,10 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVG, type SVGRootProps } from '../SVG';
 
@@ -36,15 +36,15 @@ const DefaultStory = (props: SVGRootProps) => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-graph/Mesh',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

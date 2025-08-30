@@ -142,7 +142,7 @@ type StoryProps = {
 // Story definitions.
 //
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
@@ -180,10 +180,10 @@ const meta: Meta<StoryProps> = {
       ],
     }),
   ],
-};
+} satisfies Meta<typeof StorybookKanban>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

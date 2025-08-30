@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import '@fontsource/k2d/100-italic.css';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
@@ -20,11 +21,15 @@ import { type AnimationController, ComposerLogo, ComposerSpinner } from './Compo
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
-export default {
+const meta = {
   title: 'ui/brand/Logo',
   component: ComposerLogo,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof ComposerLogo>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Get from theme?
 const colors = {
@@ -35,7 +40,7 @@ const colors = {
   blue: '#539ACD',
 };
 
-export const Default = {
+export const Default: Story = {
   render: () => {
     const controller = useRef<AnimationController>(null);
     const [logo, setLogo] = useState(false);
@@ -76,7 +81,7 @@ export const Default = {
 };
 
 // TODO(burdon): Camo.
-export const Colors = {
+export const Colors: Story = {
   render: () => {
     const colors = [
       ['fill-teal-400', 'fill-teal-500', 'fill-teal-600'],
@@ -104,7 +109,7 @@ export const Colors = {
   },
 };
 
-export const Pacman = {
+export const Pacman: Story = {
   render: () => {
     return (
       <div className='absolute inset-0 flex flex-col justify-center'>
@@ -179,7 +184,7 @@ const SpinnerContainer = () => {
   );
 };
 
-export const Spinner = {
+export const Spinner: Story = {
   render: () => {
     return (
       <div className='absolute inset-0 flex items-center justify-center'>
@@ -190,7 +195,7 @@ export const Spinner = {
 };
 
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/LoadingBar/LoadingBar.tsx
-export const Linear = {
+export const Linear: Story = {
   render: () => {
     return (
       <div className='absolute flex flex-col inset-0 bg-black'>

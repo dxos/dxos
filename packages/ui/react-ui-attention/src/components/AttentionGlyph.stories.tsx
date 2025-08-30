@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@dxos/react-ui';
@@ -12,7 +13,7 @@ import { range } from '@dxos/util';
 
 import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
 
-const Story = (props: AttentionGlyphProps) => {
+const DefaultStory = (props: AttentionGlyphProps) => {
   return (
     <ul className='flex gap-2 mbe-2'>
       <li>
@@ -28,26 +29,30 @@ const Story = (props: AttentionGlyphProps) => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
-  component: AttentionGlyph,
-  render: Story,
+  component: AttentionGlyph as any,
+  render: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };
 
-export const Attention = {
+export const Attention: Story = {
   args: { attended: true },
 };
 
-export const Contains = {
+export const Contains: Story = {
   args: { containsAttended: true },
 };
 
-export const Syncing = {
+export const Syncing: Story = {
   render: () => {
     const [spaces, setSpaces] = useState(
       new Map<string, boolean>(range(8).map((i) => [`space-${i + 1}`, Math.random() > 0.5])),

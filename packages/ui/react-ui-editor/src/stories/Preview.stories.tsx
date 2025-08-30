@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorView } from '@codemirror/view';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -14,7 +15,7 @@ import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { PreviewProvider, useRefPopover } from '../components';
@@ -165,16 +166,18 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
   );
 };
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
     const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);

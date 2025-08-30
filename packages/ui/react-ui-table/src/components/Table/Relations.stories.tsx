@@ -111,7 +111,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
   parameters: { translations, controls: { disable: true } },
@@ -124,10 +124,10 @@ const meta: Meta<typeof DefaultStory> = {
     withTheme,
     withLayout({ fullscreen: true }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

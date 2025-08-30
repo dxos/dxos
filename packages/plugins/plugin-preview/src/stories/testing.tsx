@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Meta } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -27,7 +26,7 @@ export type DefaultstoryProps = {
   cards: CardProps<any>[];
 };
 
-export const Defaultstory: Meta<DefaultstoryProps>['render'] = ({ role, cards }) => {
+export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
     <div className='grid grid-cols-3'>
       {cards.map(({ Component, icon, image, subject }, i) => (

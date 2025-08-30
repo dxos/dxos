@@ -15,7 +15,7 @@ import { translations } from '../translations';
 
 import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
@@ -36,10 +36,10 @@ const meta: Meta = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof RecoveryCredentialsContainer>;
 
 export default meta;
 
-type Story = StoryObj<typeof RecoveryCredentialsContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

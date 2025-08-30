@@ -16,7 +16,7 @@ import { translations } from '../translations';
 
 import { DevicesContainer } from './DevicesContainer';
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-client/DevicesContainer',
   component: DevicesContainer,
   decorators: [
@@ -37,11 +37,11 @@ const meta: Meta = {
     layout: 'fullscreen',
     translations: [...translations, ...shellTranslations],
   },
-};
+} satisfies Meta<typeof DevicesContainer>;
 
 export default meta;
 
-type Story = StoryObj<typeof DevicesContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

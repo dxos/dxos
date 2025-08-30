@@ -41,11 +41,11 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof Accordion> = {
+const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex justify-center' })],
-};
+} satisfies Meta<typeof Accordion>;
 
 export default meta;
 

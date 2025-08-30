@@ -11,8 +11,8 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
 
-const DefaultStory = (args: CellEditorProps) => {
-  const [value, setValue] = useState(args.value || 'Edit me');
+const DefaultStory = (props: CellEditorProps) => {
+  const [value, setValue] = useState(props.value || 'Edit me');
   const [lastAction, setLastAction] = useState<string>('');
 
   const handleBlur = (newValue?: string) => {
@@ -32,7 +32,7 @@ const DefaultStory = (args: CellEditorProps) => {
   };
 
   // Create an extension with editor keys
-  const extension = args.extension || [
+  const extension = props.extension || [
     editorKeys({
       onClose: handleKeyEvent,
       onNav: (value, event) => {
@@ -53,7 +53,7 @@ const DefaultStory = (args: CellEditorProps) => {
         <CellEditor
           value={value}
           extension={extension}
-          autoFocus={args.autoFocus}
+          autoFocus={props.autoFocus}
           onBlur={handleBlur}
           box={{
             insetInlineStart: 10,
@@ -68,7 +68,7 @@ const DefaultStory = (args: CellEditorProps) => {
   );
 };
 
-const meta: Meta<CellEditorProps> = {
+const meta = {
   title: 'ui/react-ui-grid/CellEditor',
   component: CellEditor,
   render: DefaultStory,
@@ -76,11 +76,11 @@ const meta: Meta<CellEditorProps> = {
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof CellEditor>;
 
 export default meta;
 
-type Story = StoryObj<CellEditorProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

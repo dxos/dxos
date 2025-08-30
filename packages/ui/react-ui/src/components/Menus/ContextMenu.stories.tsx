@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
@@ -92,15 +93,19 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/ContextMenu',
-  component: ContextMenu,
+  component: ContextMenu.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
   parameters: {
     chromatic: { delay: 1600 },
