@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 import { Match } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo-schema';
 import { ViewAnnotation } from '@dxos/echo-schema';
 import { type SimpleType } from '@dxos/effect';
@@ -24,12 +23,13 @@ export const Table = Schema.Struct({
   }),
   ViewAnnotation.set(true),
 );
+
 export type Table = Schema.Schema.Type<typeof Table>;
 
 /**
  * Make a table view.
  */
-export const make = (props: Partial<MakeProps<typeof Table>> = {}) => Obj.make(Table, { sizes: {}, ...props });
+export const make = (props: Partial<Obj.MakeProps<typeof Table>> = {}) => Obj.make(Table, { sizes: {}, ...props });
 
 type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
   sizes?: Record<string, number>;

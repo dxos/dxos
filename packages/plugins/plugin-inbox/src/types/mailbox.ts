@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 
 import { Queue } from '@dxos/client/echo';
 import { type DXN, Obj, Ref, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 
 export enum MessageState {
   NONE = 0,
@@ -26,7 +25,7 @@ export const Mailbox = Schema.Struct({
 );
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
-type MailboxProps = Omit<MakeProps<typeof Mailbox>, 'queue'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {
   queue: DXN;
 };
 
