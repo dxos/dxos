@@ -14,7 +14,7 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { not_meta } from '../meta';
+import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
@@ -28,7 +28,7 @@ const MeetingItem = ({
   meeting: Meeting.Meeting;
   getLabel: (meeting: Meeting.Meeting) => string;
 }) => {
-  const { t } = useTranslation(not_meta.id);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSelectMeeting = useCallback(
@@ -51,7 +51,7 @@ const MeetingItem = ({
 };
 
 export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
-  const { t } = useTranslation(not_meta.id);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(channel);
   const meetings = useQuery(space, Query.type(Meeting.Meeting));

@@ -17,7 +17,7 @@ import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ChannelType } from '@dxos/plugin-thread/types';
 import { SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
-import { not_meta } from '../meta';
+import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
@@ -26,7 +26,7 @@ export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     createExtension({
-      id: `${not_meta.id}/share-call-link`,
+      id: `${meta.id}/share-call-link`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['share call link label', { ns: not_meta.id }],
+                  label: ['share call link label', { ns: meta.id }],
                   icon: 'ph--share-network--regular',
                 },
               },
@@ -66,7 +66,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${not_meta.id}/call-thread`,
+      id: `${meta.id}/call-thread`,
       connector: (node) => {
         return Rx.make((get) =>
           pipe(
@@ -93,7 +93,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.thread.target)),
                   properties: {
-                    label: ['meeting thread label', { ns: not_meta.id }],
+                    label: ['meeting thread label', { ns: meta.id }],
                     icon: 'ph--chat-text--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -108,7 +108,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${not_meta.id}/call-companion`,
+      id: `${meta.id}/call-companion`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -131,7 +131,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data,
                   properties: {
-                    label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: not_meta.id }],
+                    label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: meta.id }],
                     icon: 'ph--note--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -145,7 +145,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${not_meta.id}/call-transcript`,
+      id: `${meta.id}/call-transcript`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -195,8 +195,8 @@ export default (context: PluginContext) =>
                   },
                   properties: {
                     label: enabled
-                      ? ['stop transcription label', { ns: not_meta.id }]
-                      : ['start transcription label', { ns: not_meta.id }],
+                      ? ['stop transcription label', { ns: meta.id }]
+                      : ['start transcription label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     disposition: 'toolbar',
                     classNames: enabled ? 'bg-callAlert' : '',
@@ -224,7 +224,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {
-                    label: ['transcript companion label', { ns: not_meta.id }],
+                    label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -238,7 +238,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${not_meta.id}/meeting-transcript-companion`,
+      id: `${meta.id}/meeting-transcript-companion`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -253,7 +253,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {
-                    label: ['transcript companion label', { ns: not_meta.id }],
+                    label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     position: 'hoist',
                     disposition: 'hidden',
