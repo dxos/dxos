@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, pipe } from 'effect';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -247,7 +247,7 @@ const Controls = ({ children }: PropsWithChildren) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
     withClientProvider({
@@ -259,11 +259,13 @@ const meta: Meta = {
     }),
     withTheme,
   ],
-};
+} satisfies Meta<typeof Registry>;
 
 export default meta;
 
-export const JsonView = {
+type Story = StoryObj<typeof meta>;
+
+export const JsonView: Story = {
   render: () => {
     const client = useClient();
     const registry = useContext(RegistryContext);
@@ -279,7 +281,7 @@ export const JsonView = {
   },
 };
 
-export const TreeView = {
+export const TreeView: Story = {
   render: () => {
     const client = useClient();
     const registry = useContext(RegistryContext);

@@ -57,46 +57,48 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 
 type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean; autoHideGallery?: boolean };
 
-const meta: Meta<StoryProps> = {
+const DefaultStory = (props: StoryProps) => {
+  const [pinned, setPinned] = useState<string | undefined>(
+    (props.pinned ?? props.items.length > 1) ? props.items[0]?.id : undefined,
+  );
+  const [items, setItems] = useState<TestItem[]>(props.items);
+  useEffect(() => {
+    if (!props.random) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setItems((items) => {
+        const p = Math.random();
+        if (p < 0.5) {
+          return items;
+        } else if (p < 0.99 && items.length > 1) {
+          return items.slice(0, -1);
+        } else {
+          return [...items, createItem(items[0]?.type)];
+        }
+      });
+    }, 3_000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className='grid grow p-4'>
+      <ResponsiveGrid {...props} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />
+    </div>
+  );
+};
+
+const meta = {
   title: 'plugins/plugin-thread/ResponsiveGrid',
-  component: ResponsiveGrid,
-  render: (args) => {
-    const [pinned, setPinned] = useState<string | undefined>(
-      (args.pinned ?? args.items.length > 1) ? args.items[0]?.id : undefined,
-    );
-    const [items, setItems] = useState<TestItem[]>(args.items);
-    useEffect(() => {
-      if (!args.random) {
-        return;
-      }
-
-      const interval = setInterval(() => {
-        setItems((items) => {
-          const p = Math.random();
-          if (p < 0.5) {
-            return items;
-          } else if (p < 0.99 && items.length > 1) {
-            return items.slice(0, -1);
-          } else {
-            return [...items, createItem(items[0]?.type)];
-          }
-        });
-      }, 3_000);
-
-      return () => clearInterval(interval);
-    }, []);
-
-    return (
-      <div className='grid grow p-4'>
-        <ResponsiveGrid {...args} Cell={TestCell} items={items} pinned={pinned} onPinnedChange={setPinned} />
-      </div>
-    );
-  },
+  component: ResponsiveGrid as any,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 const videoUrls = [
   'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
@@ -118,7 +120,7 @@ const createItem = (type?: 'image' | 'video') => {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Story to join/leave repeatedly to test stable position.
 

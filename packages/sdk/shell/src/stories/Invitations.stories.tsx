@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -22,9 +23,13 @@ import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
 
-export default {
+const meta = {
   title: 'sdk/shell/Invitations',
-};
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
@@ -218,7 +223,7 @@ const Invitations = () => {
 // TODO(wittjosiah): This story fails to start in Safari/Webkit.
 //   The issue appears to be related to dynamic imports during client initialization.
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
-export const Default = {
+export const Default: Story = {
   render: () => {
     return (
       // TODO(wittjosiah): Include Clipboard.Provider in layout decorator.

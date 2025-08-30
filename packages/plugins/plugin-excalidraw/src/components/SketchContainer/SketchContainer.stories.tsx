@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -31,16 +31,18 @@ const DefaultStory = () => {
   );
 };
 
-export const Default = {};
-
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
-  component: SketchContainer,
+  component: SketchContainer as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

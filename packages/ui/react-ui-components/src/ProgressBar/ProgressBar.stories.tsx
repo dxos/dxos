@@ -74,14 +74,14 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

@@ -5,12 +5,13 @@
 import '@dxos-theme';
 
 import { effect, useSignal } from '@preact/signals-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';
@@ -19,20 +20,22 @@ import { createRenderer } from '../util';
 
 import { EditorStory, content, longText } from './components';
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 //
 // Comments
 //
 
-export const Comments = {
+export const Comments: Story = {
   render: () => {
     const _comments = useSignal<Comment[]>([]);
     return (
@@ -92,7 +95,7 @@ const CommentTooltip: FC<{ shortcut: string }> = ({ shortcut }) => {
 // Annotations
 //
 
-export const Annotations = {
+export const Annotations: Story = {
   render: () => (
     <EditorStory text={str('# Annotations', '', longText)} extensions={[annotations({ match: /volup/gi })]} />
   ),

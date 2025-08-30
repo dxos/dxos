@@ -8,17 +8,17 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { Sine } from './Sine';
 
-const meta: Meta<typeof Sine> = {
+const meta = {
   title: 'ui/react-ui-sfx/Sine',
   component: Sine,
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof Sine>;
 
 export default meta;
 
-type Story = StoryObj<typeof Sine>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

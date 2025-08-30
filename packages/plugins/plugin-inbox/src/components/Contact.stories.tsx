@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -90,37 +90,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
   );
 };
 
-export const Contacts = {
-  render: () => {
-    const space = useSpace();
-    const contacts = useQuery(space, Filter.type(DataType.Person));
-
-    return (
-      <List>
-        {contacts.map((contact) => (
-          <ContactItem key={contact.id} contact={contact} />
-        ))}
-      </List>
-    );
-  },
-};
-
-export const Organizations = {
-  render: () => {
-    const space = useSpace();
-    const organizations = useQuery(space, Filter.type(DataType.Organization));
-
-    return (
-      <List>
-        {organizations.map((organization) => (
-          <OrganizationItem key={organization.id} organization={organization} />
-        ))}
-      </List>
-    );
-  },
-};
-
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-inbox/Related',
   decorators: [
     withPluginManager({
@@ -150,6 +120,38 @@ const meta: Meta = {
       ],
     }),
   ],
-};
+} satisfies Meta;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Contacts: Story = {
+  render: () => {
+    const space = useSpace();
+    const contacts = useQuery(space, Filter.type(DataType.Person));
+
+    return (
+      <List>
+        {contacts.map((contact) => (
+          <ContactItem key={contact.id} contact={contact} />
+        ))}
+      </List>
+    );
+  },
+};
+
+export const Organizations: Story = {
+  render: () => {
+    const space = useSpace();
+    const organizations = useQuery(space, Filter.type(DataType.Organization));
+
+    return (
+      <List>
+        {organizations.map((organization) => (
+          <OrganizationItem key={organization.id} organization={organization} />
+        ))}
+      </List>
+    );
+  },
+};

@@ -179,7 +179,7 @@ const QueueStoryWrapper = () => {
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
-const meta: Meta<typeof QueueStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
     withPluginManager({
@@ -203,13 +203,11 @@ const meta: Meta<typeof QueueStory> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof QueueStory>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof BasicStory> = {
   render: BasicStory,
   args: {
     ignoreAttention: true,
@@ -218,7 +216,7 @@ export const Default: Story = {
   },
 };
 
-export const Empty: Story = {
+export const Empty: StoryObj<typeof BasicStory> = {
   render: BasicStory,
   args: {
     ignoreAttention: true,
@@ -226,7 +224,7 @@ export const Empty: Story = {
   },
 };
 
-export const WithQueue: Story = {
+export const WithQueue: StoryObj<typeof QueueStoryWrapper> = {
   render: QueueStoryWrapper,
   args: {
     ignoreAttention: true,
@@ -234,7 +232,7 @@ export const WithQueue: Story = {
   },
 };
 
-export const WithEntityExtractionQueue: Story = {
+export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
   render: EntityExtractionQueueStory,
   args: {
     ignoreAttention: true,

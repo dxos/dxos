@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -33,9 +33,7 @@ export const DefaultStory = () => (
   </div>
 );
 
-export const Default = {};
-
-const meta: Meta<typeof StatusBar> = {
+const meta = {
   title: 'plugins/plugin-status/StatusBar',
   component: StatusBar as any,
   render: DefaultStory,
@@ -43,6 +41,10 @@ const meta: Meta<typeof StatusBar> = {
   parameters: {
     chromatic: { disableSnapshot: false },
   },
-};
+} satisfies Meta<typeof StatusBar>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

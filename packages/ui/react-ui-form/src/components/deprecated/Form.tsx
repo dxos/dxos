@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, type Schema, SchemaAST, pipe } from 'effect';
+import { Option, SchemaAST, pipe } from 'effect';
 import React, { useState } from 'react';
 
+import { type Type } from '@dxos/echo';
 import { findProperty } from '@dxos/effect';
 import { Input, type TextInputProps as NativeTextInputProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,7 +14,7 @@ import { type Projection, getFieldValue, setFieldValue } from '@dxos/schema';
 export type DeprecatedFormProps<T extends {} = {}> = ThemedClassName<{
   projection: Projection;
   object: T;
-  schema?: Schema.Schema<T>;
+  schema?: Type.Obj.Any;
   readonly?: boolean;
 }>;
 

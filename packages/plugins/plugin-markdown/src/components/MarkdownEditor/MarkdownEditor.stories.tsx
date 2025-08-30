@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -31,9 +31,9 @@ const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   return <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />;
 };
 
-const meta: Meta<typeof MarkdownEditor> = {
+const meta = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
-  component: MarkdownEditor,
+  component: MarkdownEditor as any,
   render: DefaultStory,
   decorators: [
     withPluginManager({ plugins: [IntentPlugin()] }),
@@ -44,17 +44,19 @@ const meta: Meta<typeof MarkdownEditor> = {
   parameters: {
     translations: [...translations, ...editorTranslations],
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     content,
   },
 };
 
-export const WithToolbar = {
+export const WithToolbar: Story = {
   args: {
     toolbar: true,
     content,

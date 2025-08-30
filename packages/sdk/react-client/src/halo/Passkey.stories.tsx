@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
@@ -126,10 +127,14 @@ const Test = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'sdk/react-client/Passkeys',
   render: Test,
-};
+} satisfies Meta<typeof Config>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const config = new Config({
   runtime: {
@@ -151,6 +156,6 @@ const config = new Config({
   },
 });
 
-export const Default = {
+export const Default: Story = {
   decorators: [withClientProvider({ config }), withTheme],
 };
