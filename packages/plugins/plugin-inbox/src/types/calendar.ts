@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 
 export const Calendar = Schema.Struct({}).pipe(
   Type.Obj({
@@ -18,4 +17,4 @@ export type Calendar = Schema.Schema.Type<typeof Calendar>;
 /**
  * Make a calendar object.
  */
-export const make = (props: MakeProps<typeof Calendar> = {}) => Obj.make(Calendar, props);
+export const make = (props: Obj.MakeProps<typeof Calendar> = {}) => Obj.make(Calendar, props);
