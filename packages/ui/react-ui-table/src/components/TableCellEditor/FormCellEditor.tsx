@@ -5,8 +5,7 @@
 import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
-import { getDXN } from '@dxos/echo/Obj';
+import { Filter, Obj } from '@dxos/echo';
 import { Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
@@ -73,7 +72,7 @@ export const FormCellEditor = ({
         return objects
           .map((obj) => {
             return {
-              dxn: getDXN(obj),
+              dxn: Obj.getDXN(obj),
               label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
             };
           })

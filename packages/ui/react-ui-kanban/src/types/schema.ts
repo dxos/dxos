@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 import { type JsonSchemaType, ViewAnnotation } from '@dxos/echo-schema';
 import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
@@ -36,7 +35,7 @@ export type Kanban = Schema.Schema.Type<typeof Kanban>;
 /**
  * Make a kanban object.
  */
-export const make = (props: MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
+export const make = (props: Obj.MakeProps<typeof Kanban> = {}) => Obj.make(Kanban, props);
 
 export const SettingsSchema = Schema.Struct({
   columnFieldId: Schema.String.annotations({
