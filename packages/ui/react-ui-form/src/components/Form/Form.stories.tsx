@@ -121,6 +121,7 @@ export const Default: Story = {
 
 export const Organization: Story = {
   args: {
+    debug: true,
     schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
@@ -132,6 +133,7 @@ export const Organization: Story = {
 
 export const OrganizationAutoSave: Story = {
   args: {
+    debug: true,
     schema: Testing.OrganizationSchema,
     values: {
       name: 'DXOS',
