@@ -23,7 +23,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -50,12 +50,12 @@ export default () =>
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
             view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
             view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.

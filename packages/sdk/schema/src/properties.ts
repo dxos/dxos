@@ -163,6 +163,7 @@ const processProperty = <T extends BaseObject>(
         invariant(SchemaAST.isTransformation(baseType));
         type = getSimpleType(baseType.from);
       } else {
+        // TODO(wittjosiah): Can this ever happen?
         // Tuples.
         // https://effect.website/docs/schema/basic-usage/#rest-element
         baseType = findNode(prop.type, SchemaAST.isTupleType);

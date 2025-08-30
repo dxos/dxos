@@ -20,10 +20,9 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
 import { translations } from '../../translations';
-import { TableView } from '../../types';
-import { createTable } from '../../util';
+import { Table } from '../../types';
 
-import { Table } from './Table';
+import { Table as TableComponent } from './Table';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
@@ -52,7 +51,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       jsonSchema,
       schema: effectSchema,
       view,
-    } = await createTable({ client, space, typename: Type.getTypename(schema) });
+    } = await Table.makeView({ client, space, typename: Type.getTypename(schema) });
     setJsonSchema(jsonSchema);
     setView(view);
     space.db.add(view);
@@ -90,12 +89,24 @@ const DefaultStory = () => {
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
-      <Table.Root>
-        <Table.Main model={orgModel} presentation={orgPresentation} client={client} ignoreAttention />
-      </Table.Root>
-      <Table.Root>
-        <Table.Main model={contactModel} presentation={contactPresentation} client={client} ignoreAttention />
-      </Table.Root>
+      <TableComponent.Root>
+        <TableComponent.Main
+          model={orgModel}
+          schema={DataType.Organization}
+          presentation={orgPresentation}
+          client={client}
+          ignoreAttention
+        />
+      </TableComponent.Root>
+      <TableComponent.Root>
+        <TableComponent.Main
+          model={contactModel}
+          schema={DataType.Person}
+          presentation={contactPresentation}
+          client={client}
+          ignoreAttention
+        />
+      </TableComponent.Root>
     </div>
   );
 };
@@ -106,7 +117,7 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
-      types: [DataType.View, DataType.Organization, DataType.Person, TableView],
+      types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),

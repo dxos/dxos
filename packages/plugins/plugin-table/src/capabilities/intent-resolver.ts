@@ -17,7 +17,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { createTable } from '@dxos/react-ui-table';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
 import { TableAction } from '../types';
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await createTable({ client, space, typename, name });
+        const { view } = await Table.makeView({ client, space, typename, name });
         return { data: { object: view } };
       },
     }),

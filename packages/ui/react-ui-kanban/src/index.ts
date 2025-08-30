@@ -4,5 +4,5 @@
 
 export * from './components';
 export * from './hooks';
-export * from './types';
+export * from './model';
 export * from './translations';

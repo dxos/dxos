@@ -32,16 +32,16 @@ class MenuBuilderImpl implements MenuBuilder {
     private readonly _rootId: string,
   ) {}
 
-  action<P extends {} = {}>(id: string, invoke: () => void, properties: P & MenuActionProperties): this {
-    this._data.nodes.push(createMenuAction(id, invoke, properties));
-    this._data.edges.push({ source: this._rootId, target: id });
-    return this;
-  }
-
   root(props: MenuItemGroupProperties): this {
     invariant(this._rootId === 'root', 'Root group can only be at the top level');
     invariant(this._data.nodes.find((node) => node.id === 'root') === undefined, 'Root group can only be created once');
     this._data.nodes.push(createMenuItemGroup('root', props));
+    return this;
+  }
+
+  action<P extends {} = {}>(id: string, invoke: () => void, properties: P & MenuActionProperties): this {
+    this._data.nodes.push(createMenuAction(id, invoke, properties));
+    this._data.edges.push({ source: this._rootId, target: id });
     return this;
   }
 

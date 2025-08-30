@@ -96,6 +96,40 @@ export default (context: PluginContext) =>
       },
     }),
     createResolver({
+      intent: ThreadAction.AddProposal,
+      resolve: ({ text, anchor, sender, subject }) => {
+        console.log('add-proposal', text, anchor, sender, subject);
+        const space = getSpace(subject);
+        invariant(space, 'Space not found');
+
+        const subjectId = fullyQualifiedId(subject);
+        const proposal = Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender,
+          blocks: [{ _tag: 'proposal', text }],
+        });
+        const thread = Obj.make(ThreadType, { name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
+
+        return {
+          intents: [
+            createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }),
+            createIntent(SpaceAction.AddRelation, {
+              space,
+              schema: AnchoredTo,
+              source: thread,
+              target: subject,
+              fields: { anchor },
+            }),
+            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: subjectId,
+              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            }),
+          ],
+        };
+      },
+    }),
+    createResolver({
       intent: ThreadAction.Select,
       resolve: ({ current }) => {
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
@@ -198,7 +232,6 @@ export default (context: PluginContext) =>
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');
-        const intents = [];
 
         const message = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
@@ -209,6 +242,7 @@ export default (context: PluginContext) =>
         });
         thread.messages.push(Ref.make(message));
 
+        const intents = [];
         const draft = state.drafts[subjectId]?.find((a) => a.id === anchor.id);
         if (draft) {
           // Move draft to document.

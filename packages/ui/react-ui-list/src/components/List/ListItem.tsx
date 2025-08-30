@@ -170,12 +170,7 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
-      <div
-        ref={ref}
-        role='listitem'
-        className={mx('flex overflow-hidden relative', classNames, stateStyles[state.type])}
-        {...props}
-      >
+      <div ref={ref} role='listitem' className={mx('flex relative', classNames, stateStyles[state.type])} {...props}>
         {children}
         {state.type === 'is-dragging-over' && state.closestEdge && (
           <NaturalListItem.DropIndicator edge={state.closestEdge} />

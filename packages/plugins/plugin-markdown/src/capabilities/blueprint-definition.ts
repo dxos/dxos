@@ -10,15 +10,18 @@ import { trim } from '@dxos/util';
 import { create, diff, open } from '../functions';
 
 const functions: FunctionDefinition[] = [create, diff, open];
+const tools = ['add-proposals'];
+
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
   contributes(
     Capabilities.BlueprintDefinition,
     Blueprint.make({
-      key: 'dxos.org/blueprint/markdown',
+      key: BLUEPRINT_KEY,
       name: 'Markdown',
-      tools: Blueprint.toolDefinitions({ functions }),
+      tools: Blueprint.toolDefinitions({ functions, tools }),
       instructions: Template.make({
         source: trim`
             You can create and update markdown documents.

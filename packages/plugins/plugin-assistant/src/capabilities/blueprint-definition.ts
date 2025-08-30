@@ -15,7 +15,7 @@ const tools = [
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
   'add-schema',
-  'create-object',
+  'create-record',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
   // TODO(burdon): Anthropic only.
@@ -24,15 +24,16 @@ const tools = [
   // 'str_replace_based_edit_tool',
 ];
 
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
+
+export const BLUEPRINT = Blueprint.make({
+  key: BLUEPRINT_KEY,
+  name: 'Assistant',
+  tools: Blueprint.toolDefinitions({ functions, tools }),
+  instructions: templates.system,
+});
+
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
-  contributes(
-    Capabilities.BlueprintDefinition,
-    Blueprint.make({
-      key: 'dxos.org/blueprint/assistant',
-      name: 'Assistant',
-      tools: Blueprint.toolDefinitions({ functions, tools }),
-      instructions: templates.system,
-    }),
-  ),
+  contributes(Capabilities.BlueprintDefinition, BLUEPRINT),
 ];

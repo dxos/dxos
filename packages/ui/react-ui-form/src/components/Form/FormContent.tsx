@@ -21,7 +21,7 @@ import { getInputComponent } from './factory';
 import { type ComponentLookup } from './Form';
 import { useFormValues, useInputProps } from './FormContext';
 import { type InputComponent } from './Input';
-import { RefField } from './RefField';
+import { RefField, type RefFieldProps } from './RefField';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
@@ -29,10 +29,9 @@ export type FormFieldProps = {
   readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
-};
+} & Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>;
 
 export const FormField = ({
   property,
@@ -40,6 +39,9 @@ export const FormField = ({
   readonly,
   inline,
   onQueryRefOptions,
+  createOptionLabel,
+  createOptionIcon,
+  onCreateFromQuery,
   lookupComponent,
   Custom,
 }: FormFieldProps) => {
@@ -106,6 +108,9 @@ export const FormField = ({
         disabled={readonly}
         inputOnly={inline}
         onQueryRefOptions={onQueryRefOptions}
+        createOptionLabel={createOptionLabel}
+        createOptionIcon={createOptionIcon}
+        onCreateFromQuery={onCreateFromQuery}
         {...inputProps}
       />
     );
@@ -176,6 +181,9 @@ export const FormField = ({
             path={path}
             readonly={readonly}
             onQueryRefOptions={onQueryRefOptions}
+            createOptionLabel={createOptionLabel}
+            createOptionIcon={createOptionIcon}
+            onCreateFromQuery={onCreateFromQuery}
             Custom={Custom}
             lookupComponent={lookupComponent}
           />
@@ -187,28 +195,30 @@ export const FormField = ({
   return null;
 };
 
-export type FormFieldsProps = ThemedClassName<{
-  testId?: string;
-  readonly?: boolean;
-  schema: Schema.Schema.All;
-  /**
-   * Path to the current object from the root. Used with nested forms.
-   */
-  path?: (string | number)[];
-  filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-  sort?: string[];
-  lookupComponent?: ComponentLookup;
-  /**
-   * Map of custom renderers for specific properties.
-   * Prefer lookupComponent for plugin specific input surfaces.
-   */
-  Custom?: Partial<Record<string, InputComponent>>;
-  onQueryRefOptions?: QueryRefOptions;
-}>;
+export type FormFieldsProps = ThemedClassName<
+  {
+    testId?: string;
+    readonly?: boolean;
+    schema: Schema.Schema.All;
+    /**
+     * Path to the current object from the root. Used with nested forms.
+     */
+    path?: (string | number)[];
+    filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    sort?: string[];
+    lookupComponent?: ComponentLookup;
+    /**
+     * Map of custom renderers for specific properties.
+     * Prefer lookupComponent for plugin specific input surfaces.
+     */
+    Custom?: Partial<Record<string, InputComponent>>;
+    onQueryRefOptions?: QueryRefOptions;
+  } & Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>
+>;
 
 export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
   (
-    { classNames, testId, schema, path, filter, sort, readonly, lookupComponent, Custom, onQueryRefOptions },
+    { classNames, schema, path, filter, sort, readonly, lookupComponent, Custom, onQueryRefOptions, ...props },
     forwardRef,
   ) => {
     const values = useFormValues(path);
@@ -231,6 +241,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
                 onQueryRefOptions={onQueryRefOptions}
                 lookupComponent={lookupComponent}
                 Custom={Custom}
+                {...props}
               />
             );
           })

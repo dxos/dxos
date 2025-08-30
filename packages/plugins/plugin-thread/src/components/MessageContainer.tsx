@@ -28,9 +28,16 @@ export type MessageContainerProps = {
   members: SpaceMember[];
   editable?: boolean;
   onDelete?: (id: string) => void;
+  onAcceptProposal?: (id: string) => void;
 };
 
-export const MessageContainer = ({ message, members, editable = false, onDelete }: MessageContainerProps) => {
+export const MessageContainer = ({
+  message,
+  members,
+  editable = false,
+  onDelete,
+  onAcceptProposal,
+}: MessageContainerProps) => {
   const { t } = useTranslation(meta.id);
   const senderIdentity = members.find(
     (member) =>
@@ -40,8 +47,11 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
   const messageMetadata = getMessageMetadata(message.id, senderIdentity);
   const userIsAuthor = useIdentity()?.did === messageMetadata.authorId;
   const [editing, setEditing] = useState(false);
+  const handleEdit = useCallback(() => setEditing((editing) => !editing), []);
   const handleDelete = useCallback(() => onDelete?.(message.id), [message, onDelete]);
+  const handleAcceptProposal = useCallback(() => onAcceptProposal?.(message.id), [message, onAcceptProposal]);
   const textBlock = message.blocks.find((block) => block._tag === 'text');
+  const proposalBlock = message.blocks.find((block) => block._tag === 'proposal');
   const references = message.blocks.filter((block) => block._tag === 'reference').map((block) => block.reference);
 
   useOnEditAnalytics(message, textBlock, !!editing);
@@ -58,7 +68,19 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
               iconOnly
               label={t(editing ? 'save message label' : 'edit message label')}
               classNames={[commentControlClassNames, hoverableControlItem]}
-              onClick={() => setEditing((editing) => !editing)}
+              onClick={handleEdit}
+            />
+          )}
+          {/* TODO(wittjosiah): Proposal controls should probably be hoisted to thread level. */}
+          {proposalBlock && onAcceptProposal && (
+            <IconButton
+              data-testid='thread.message.accept'
+              variant='ghost'
+              icon='ph--check--regular'
+              iconOnly
+              label={t('accept proposal label')}
+              classNames={[commentControlClassNames, hoverableControlItem]}
+              onClick={handleAcceptProposal}
             />
           )}
           {onDelete && (
@@ -69,12 +91,13 @@ export const MessageContainer = ({ message, members, editable = false, onDelete 
               iconOnly
               label={t('delete message label')}
               classNames={[commentControlClassNames, hoverableControlItem]}
-              onClick={() => handleDelete()}
+              onClick={handleDelete}
             />
           )}
         </div>
       </MessageHeading>
       {textBlock && <TextboxBlock block={textBlock} isAuthor={userIsAuthor} editing={editing} />}
+      {proposalBlock && <ProposalBlock block={proposalBlock} />}
       {Ref.Array.targets(references).map((reference, index) => (
         <MessagePart key={index} part={reference} />
       ))}
@@ -131,6 +154,14 @@ const TextboxBlock = ({
   }, [editing, view]);
 
   return <div role='none' ref={parentRef} className='mie-4' {...focusAttributes} />;
+};
+
+const ProposalBlock = ({ block }: { block: DataType.MessageBlock.Proposal }) => {
+  return (
+    <div role='none' className='mie-4 italic'>
+      {block.text}
+    </div>
+  );
 };
 
 const MessageBlockObjectTile = forwardRef<HTMLDivElement, { subject: Obj.Any }>(({ subject }, forwardedRef) => {

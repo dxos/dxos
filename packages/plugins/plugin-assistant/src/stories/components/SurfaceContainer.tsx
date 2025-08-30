@@ -7,12 +7,14 @@ import '@dxos-theme';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { useContextBinder } from '../../hooks';
+import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
 
@@ -20,7 +22,8 @@ import { type ComponentProps } from './types';
  * Shows the surface relating to the first bound object to the curent chat.
  */
 export const SurfaceContainer = ({ space, debug }: ComponentProps) => {
-  const binder = useContextBinder(space);
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const binder = useContextBinder(chats.at(-1));
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
     [binder],

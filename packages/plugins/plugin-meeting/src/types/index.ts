@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './schema';
-export * from './types';
+export * as MeetingAction from './MeetingAction';
+export * as Meeting from './Meeting';

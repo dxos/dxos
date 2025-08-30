@@ -14,6 +14,7 @@ import { type DataType } from '@dxos/schema';
 
 import { type Map } from '../types';
 
+// TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
   coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
@@ -70,15 +71,15 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
       if (map && values.coordinateColumn) {
-        map.locationFieldId = values.coordinateColumn;
+        view.projection.pivotFieldId = values.coordinateColumn;
       }
     },
     [map],
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: view.query.typename, coordinateColumn: map?.locationFieldId }),
-    [map],
+    () => ({ coordinateSource: view.query.typename, coordinateColumn: view.projection.pivotFieldId }),
+    [view],
   );
 
   const custom: CustomInputMap = useMemo(

@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './Flex';
 export * from './MarkdownViewer';
 export * from './NumericTabs';
+export * from './ProgressBar';
 export * from './ScrollContainer';
 export * from './StatusRoll';
 export * from './TextBlock';

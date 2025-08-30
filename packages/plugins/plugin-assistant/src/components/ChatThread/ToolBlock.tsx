@@ -112,8 +112,10 @@ export const ToolContainer: FC<ThemedClassName<{ items: { title: string; block: 
 
   return (
     <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
-      <div className='w-full grid grid-cols-[32px_1fr]'>
-        <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
+      <div className='is-full grid grid-cols-[32px_1fr]'>
+        <div className='flex justify-center'>
+          <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
+        </div>
         <Json data={items[selected].block} />
       </div>
     </ToggleContainer>

@@ -7,10 +7,11 @@ import React, { useEffect, useState } from 'react';
 import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type TextBlockProps = ThemedClassName<{ text: string; delay?: number }>;
+export type TextBlockProps = ThemedClassName<{
+  text: string;
+  delay?: number;
+}>;
 
-// TODO(burdon): Handle markdown?
-// TODO(burdon): Smooth out periods between updates.
 export const TextBlock = ({ classNames, text, delay = 0 }: TextBlockProps) => {
   const [current, setCurrent] = useState('');
   const currentRef = useDynamicRef(current);

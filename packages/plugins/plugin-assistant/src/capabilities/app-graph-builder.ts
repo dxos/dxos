@@ -18,13 +18,15 @@ import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
-import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, Query, type QueryResult, type Space, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { Query, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
+
+import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -79,44 +81,36 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/object-chat-companion`,
+      id: `${meta.id}/companion-chat`,
       connector: (node) => {
-        let query: QueryResult<Assistant.Chat> | undefined;
-        return Rx.make((get) => {
-          const nodeOption = get(node);
-          if (Option.isNone(nodeOption)) {
-            return [];
-          }
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((object) => {
+              const currentChat = get(
+                rxFromSignal(
+                  () => context.getCapability(AssistantCapabilities.State).currentChat[fullyQualifiedId(object)],
+                ),
+              );
 
-          const object = nodeOption.value.data;
-          if (!Obj.isObject(object)) {
-            return [];
-          }
-
-          const space = getSpace(object);
-          if (!space) {
-            return [];
-          }
-
-          if (!query) {
-            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
-          }
-
-          const chat = get(rxFromQuery(query))[0];
-          return [
-            {
-              id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
-              type: PLANK_COMPANION_TYPE,
-              data: chat ?? 'assistant-chat',
-              properties: {
-                label: ['assistant chat label', { ns: meta.id }],
-                icon: 'ph--sparkle--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
-          ];
-        });
+              return [
+                {
+                  id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                  type: PLANK_COMPANION_TYPE,
+                  data: currentChat ?? 'assistant-chat',
+                  properties: {
+                    label: ['assistant chat label', { ns: meta.id }],
+                    icon: 'ph--sparkle--regular',
+                    position: 'hoist',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
       },
     }),
 

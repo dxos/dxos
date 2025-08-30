@@ -6,4 +6,6 @@
 // - Channels smart collection
 // - Assistant smart collection
 // - Blueprint smart collection
-export const INITIAL_OBJECT_COUNT = 4;
+// - Meetings smart collection (no object form)
+export const INITIAL_OBJECT_COUNT = 5;
+export const INITIAL_CREATE_ACTION_COUNT = 4;

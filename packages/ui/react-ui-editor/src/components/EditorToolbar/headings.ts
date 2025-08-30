@@ -35,10 +35,14 @@ const createHeadingActions = (getView: () => EditorView) =>
     '6': 'ph--text-h-six--regular',
   }).map(([levelStr, icon]) => {
     const level = parseInt(levelStr);
-    return createEditorAction(`heading--${levelStr}`, () => setHeading(level)(getView()), {
-      label: ['heading level label', { count: level, ns: translationKey }],
-      icon,
-    });
+    return createEditorAction(
+      `heading--${levelStr}`,
+      {
+        label: ['heading level label', { count: level, ns: translationKey }],
+        icon,
+      },
+      () => setHeading(level)(getView()),
+    );
   });
 
 const computeHeadingValue = (state: EditorToolbarState) => {

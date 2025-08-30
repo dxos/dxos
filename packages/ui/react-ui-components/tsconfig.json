@@ -33,6 +33,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../react-ui"
     },
     {

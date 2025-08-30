@@ -9,10 +9,14 @@ import {
   Capabilities,
   Events,
   IntentPlugin,
+  LayoutAction,
   type Plugin,
   type PluginContext,
   SettingsPlugin,
+  allOf,
   contributes,
+  createIntent,
+  createResolver,
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
@@ -34,8 +38,9 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -187,6 +192,29 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           activate: (context) => [
             contributes(Capabilities.Toolkit, TestingToolkit),
             contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/set-workspace',
+          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+          activate: async (context) => {
+            const client = context.getCapability(ClientCapabilities.Client);
+            const space = client.spaces.default;
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+            return [];
+          },
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/intent-resolver',
+          activatesOn: Events.SetupIntentResolver,
+          activate: () => [
+            contributes(Capabilities.IntentResolver, [
+              createResolver({
+                intent: DeckAction.ChangeCompanion,
+                resolve: () => ({}),
+              }),
+            ]),
           ],
         }),
       ]),

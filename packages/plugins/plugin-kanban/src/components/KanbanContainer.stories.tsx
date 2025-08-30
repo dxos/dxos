@@ -21,14 +21,14 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban, KanbanView, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
-import { createKanban } from '../types';
 
 faker.seed(0);
 
@@ -115,7 +115,7 @@ const StorybookKanban = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
+      {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
@@ -153,16 +153,16 @@ const meta: Meta<StoryProps> = {
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, DataType.View, KanbanView],
+          types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { view } = await createKanban({
+            const { view } = await Kanban.makeView({
               client,
               space,
               typename: DataType.Organization.typename,
-              initialPivotColumn: 'status',
+              pivotFieldName: 'status',
             });
             space.db.add(view);
 
