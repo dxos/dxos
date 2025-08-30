@@ -153,7 +153,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames='overflow-hidden'>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
@@ -171,8 +171,10 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
             {t('show all label')}
           </Tabs.Tab>
         </Tabs.Tablist>
-        <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-        <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+        <div className='overflow-y-auto'>
+          <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+          <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+        </div>
       </Tabs.Root>
     </StackItem.Content>
   );
