@@ -44,13 +44,15 @@ const DefaultStory = () => {
   return (
     <>
       <style>
-        {trim`html {
+        {trim`
+        html {
           background-color: #888;
           background-image: linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777),
           linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
           background-size: 32px 32px;
           background-position: 0 0, 16px 16px;
-        }`}
+        }
+        `}
       </style>
 
       <div className='flex'>
@@ -70,7 +72,6 @@ const DefaultStory = () => {
 
       {Object.entries(colorAudit).map(([seriesId, audits], i) => (
         <Fragment key={i}>
-          <div>{seriesId}</div>
           <h2 className='mbs-12 mbe-4'>
             <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
           </h2>
