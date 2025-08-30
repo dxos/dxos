@@ -51,7 +51,7 @@ const DefaultStory = <T extends BaseObject = any>({
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const RefStory = <T extends BaseObject = any>(props: FormProps<T>) => {
+const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
   const onQueryRefOptions = useCallback((typeInfo: TypeAnnotation) => {
     switch (typeInfo.typename) {
       case ContactType.typename:
@@ -85,8 +85,6 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps<any>>;
-
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),
@@ -94,7 +92,7 @@ const AddressSchema = Schema.Struct({
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
 }).annotations({ title: 'Address' });
 
-const TestSchema = Schema.Struct({
+const ContactSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
   rank: Schema.optional(Schema.Number.annotations({ title: 'Rank' })),
@@ -102,12 +100,14 @@ const TestSchema = Schema.Struct({
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
-type TestSchema = Schema.Schema.Type<typeof TestSchema>;
+type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
+
+type Story = StoryObj<StoryProps<any>>;
 
 export const Default: Story = {
   decorators: [withSurfaceVariantsLayout(), withTheme],
   args: {
-    schema: TestSchema,
+    schema: ContactSchema,
     values: {
       name: 'DXOS',
       active: true,
@@ -144,15 +144,16 @@ export const OrganizationAutoSave: Story = {
 
 // TODO(burdon): Type issue with employer reference.
 // TODO(burdon): Test table/form with compound values (e.g., address).
-// export const Contact: Story<Testing.ContactSchemaType> = {
-//   args: {
-//     // Property name is missing in type EncodedReference but required in type
-//     schema: Testing.ContactSchema,
-//     values: {
-//       name: 'Bot',
-//     },
-//   },
-// };
+// Property name is missing in type EncodedReference but required in type
+export const Contact: Story = {
+  args: {
+    debug: true,
+    schema: Testing.ContactSchema,
+    values: {
+      name: 'Bot',
+    },
+  },
+};
 
 //
 // Union
@@ -173,10 +174,11 @@ const ShapeSchema = Schema.Struct({
   ),
 }).pipe(Schema.mutable);
 
-type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
+type ShapeSchema = Schema.Schema.Type<typeof ShapeSchema>;
 
-export const DiscriminatedShape: StoryObj<FormProps<ShapeType>> = {
+export const DiscriminatedShape: StoryObj<StoryProps<ShapeSchema>> = {
   args: {
+    debug: true,
     schema: ShapeSchema,
     readonly: false,
     values: {
@@ -208,10 +210,11 @@ const ArraysSchema = Schema.Struct({
   addresses: Schema.Array(AddressSchema),
 }).pipe(Schema.mutable);
 
-type ArraysType = Schema.Schema.Type<typeof ArraysSchema>;
+type ArraysSchema = Schema.Schema.Type<typeof ArraysSchema>;
 
-export const Arrays: StoryObj<FormProps<ArraysType>> = {
+export const Arrays: StoryObj<StoryProps<ArraysSchema>> = {
   args: {
+    debug: true,
     schema: ArraysSchema,
     readonly: false,
     values: {
@@ -231,10 +234,11 @@ const TupleSchema = Schema.Struct({
   geopoint: Format.GeoPoint,
 }).pipe(Schema.mutable);
 
-type TupleType = Schema.Schema.Type<typeof TupleSchema>;
+type TupleSchema = Schema.Schema.Type<typeof TupleSchema>;
 
-export const Tuple: StoryObj<FormProps<TupleType>> = {
+export const Tuple: StoryObj<StoryProps<TupleSchema>> = {
   args: {
+    debug: true,
     schema: TupleSchema,
     readonly: false,
     values: {
@@ -256,8 +260,9 @@ const ColorSchema = Schema.Struct({
 
 type ColorType = Schema.Schema.Type<typeof ColorSchema>;
 
-export const Enum: StoryObj<FormProps<ColorType>> = {
+export const Enum: StoryObj<StoryProps<ColorType>> = {
   args: {
+    debug: true,
     schema: ColorSchema,
     readonly: false,
     values: {
@@ -282,13 +287,14 @@ type RefSchema = Schema.Schema.Type<typeof RefSchema>;
 const contact1 = live(ContactType, { identifiers: [] });
 const contact2 = live(ContactType, { identifiers: [] });
 
-export const Refs: StoryObj<FormProps<RefSchema>> = {
+export const Refs: StoryObj<StoryProps<RefSchema>> = {
   render: RefStory,
   args: {
+    debug: true,
     schema: RefSchema,
     readonly: false,
     values: {
       refArray: [Ref.make(contact1), Ref.make(contact2)],
-    } as any,
+    },
   },
 };
