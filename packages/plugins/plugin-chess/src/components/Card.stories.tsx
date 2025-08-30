@@ -10,7 +10,7 @@ import React from 'react';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { meta } from '../meta';
+import { meta as pluginMeta } from '../meta';
 import { Chess } from '../types';
 
 import { Chessboard } from './Chessboard';
@@ -20,10 +20,10 @@ type DefaultStoryProps = {
   game: Chess.Game;
 };
 
-const storybook: Meta<DefaultStoryProps> = {
+const meta: Meta<DefaultStoryProps> = {
   title: 'plugins/plugin-chess/Card',
   render: ({ role, game }) => (
-    <CardContainer icon={meta.icon} role={role}>
+    <CardContainer icon={pluginMeta.icon} role={role}>
       <Chessboard.Root game={game}>
         <Chessboard.Content role={role}>
           <Chessboard.Board />
@@ -38,31 +38,31 @@ const storybook: Meta<DefaultStoryProps> = {
   tags: ['cards'],
 };
 
-export default storybook;
+export default meta;
 
 const game = Chess.makeGame({
   pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. d5 Qg5 15. dxe6 Qg4 16. e7 Kf7 17. bxc3 Kg6 *',
 });
 
-type Story = StoryObj<DefaultStoryProps>;
+type Story = StoryObj<typeof meta>;
 
-export const Popover = {
+export const Popover: Story = {
   args: {
     role: 'card--popover',
     game: game,
   },
-} satisfies Story;
+};
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
     game: game,
   },
-} satisfies Story;
+};
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
     game: game,
   },
-} satisfies Story;
+};

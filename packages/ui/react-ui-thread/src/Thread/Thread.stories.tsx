@@ -4,13 +4,14 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';
@@ -82,14 +83,16 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof Thread.Root> = {
+const meta = {
   title: 'ui/react-ui-thread/Thread',
   component: Thread.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
-};
+} satisfies Meta<typeof Thread.Root>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

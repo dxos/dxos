@@ -9,6 +9,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
+import { type Type } from '@dxos/echo';
 import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
@@ -28,7 +29,6 @@ const AddressSchema = Schema.Struct({
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
 }).annotations({ title: 'Address' });
 
-// TODO(burdon): Translations?
 const TestSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   active: Schema.optional(Schema.Boolean.annotations({ title: 'Active' })),
@@ -37,11 +37,13 @@ const TestSchema = Schema.Struct({
   address: Schema.optional(AddressSchema),
 }).pipe(Schema.mutable);
 
-type TestType = Schema.Schema.Type<typeof TestSchema>;
+type TestSchema = Schema.Schema.Type<typeof TestSchema>;
 
-type StoryProps<T extends BaseObject> = { schema: Schema.Schema<T> } & FormProps<T>;
+type StoryProps<T extends BaseObject> = {
+  schema: Type.Obj.Any;
+} & FormProps<T>;
 
-const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
+const DefaultStory = <T extends BaseObject = any>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
@@ -50,14 +52,14 @@ const DefaultStory = <T extends BaseObject>({ schema, values: initialValues, ...
   return <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />;
 };
 
-const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
+const DebugStory = <T extends BaseObject = any>({ schema, values: initialValues, ...props }: StoryProps<T>) => {
   const [values, setValues] = useState(initialValues);
   const handleSave = useCallback<NonNullable<FormProps<T>['onSave']>>((values) => {
     setValues(values);
   }, []);
 
   return (
-    <TestLayout json={{ values, schema: schema.ast.toJSON() }}>
+    <TestLayout json={{ values, schema: schema.ast }}>
       <TestPanel>
         <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
       </TestPanel>
@@ -65,10 +67,10 @@ const DebugStory = <T extends BaseObject>({ schema, values: initialValues, ...pr
   );
 };
 
-const meta: Meta<StoryProps<any>> = {
+const meta = {
   title: 'ui/react-ui-form/Form',
-  component: Form<any>,
-  render: DebugStory,
+  component: Form<any> as any,
+  render: DefaultStory<any>,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
@@ -79,14 +81,13 @@ const meta: Meta<StoryProps<any>> = {
       description: 'Readonly',
     },
   },
-};
+} satisfies Meta<StoryProps<any>>;
 
 export default meta;
 
-type Story<T extends BaseObject> = StoryObj<StoryProps<T>>;
+type Story = StoryObj<StoryProps<any>>;
 
-export const Default: Story<TestType> = {
-  render: DefaultStory,
+export const Default: Story = {
   decorators: [withSurfaceVariantsLayout(), withTheme],
   args: {
     schema: TestSchema,
@@ -101,7 +102,7 @@ export const Default: Story<TestType> = {
   },
 };
 
-export const Organization: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
+export const Organization: Story = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {
@@ -112,7 +113,7 @@ export const Organization: Story<Schema.Schema.Type<typeof Testing.OrganizationS
   },
 };
 
-export const OrganizationAutoSave: Story<Schema.Schema.Type<typeof Testing.OrganizationSchema>> = {
+export const OrganizationAutoSave: Story = {
   args: {
     schema: Testing.OrganizationSchema,
     values: {
@@ -153,7 +154,7 @@ const ShapeSchema = Schema.Struct({
 
 type ShapeType = Schema.Schema.Type<typeof ShapeSchema>;
 
-export const DiscriminatedShape: Story<ShapeType> = {
+export const DiscriminatedShape: Story = {
   args: {
     schema: ShapeSchema,
     readonly: false,

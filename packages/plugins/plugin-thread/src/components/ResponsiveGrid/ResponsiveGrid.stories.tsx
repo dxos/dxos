@@ -57,7 +57,7 @@ const TestCell = ({ item, ...props }: ResponsiveGridItemProps<TestItem>) => {
 
 type StoryProps = ResponsiveGridProps<TestItem> & { random?: boolean; autoHideGallery?: boolean };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'plugins/plugin-thread/ResponsiveGrid',
   component: ResponsiveGrid,
   render: (args) => {
@@ -96,7 +96,7 @@ const meta: Meta<StoryProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ResponsiveGrid>;
 
 const videoUrls = [
   'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
@@ -118,7 +118,7 @@ const createItem = (type?: 'image' | 'video') => {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Story to join/leave repeatedly to test stable position.
 

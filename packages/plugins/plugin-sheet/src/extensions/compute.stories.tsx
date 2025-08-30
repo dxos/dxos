@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -100,7 +100,7 @@ const GraphStory = (props: EditorProps) => {
 };
 
 // TODO(burdon): Inline formulae.
-export const Default = {
+export const Default: Story = {
   render: EditorStory,
   args: {
     text: str(
@@ -124,7 +124,7 @@ export const Default = {
   },
 };
 
-export const Graph = {
+export const Graph: Story = {
   render: GraphStory,
   args: {
     text: str(
@@ -142,7 +142,7 @@ export const Graph = {
   },
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
@@ -151,6 +151,8 @@ const meta: Meta = {
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof PublicKey>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

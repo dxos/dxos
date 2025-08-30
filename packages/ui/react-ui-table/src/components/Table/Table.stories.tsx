@@ -157,7 +157,7 @@ type StoryProps = { rows?: number };
 
 // TODO(burdon): Need super simple story.
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   parameters: {
@@ -191,11 +191,13 @@ const meta: Meta<StoryProps> = {
       },
     }),
   ],
-};
+} satisfies Meta<typeof TableComponent>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
 
 export const StaticSchema: StoryObj = {
   render: DefaultStory,

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosity } from '@ch-ui/tokens';
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { tokenSet } from './index';
@@ -36,11 +36,13 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-theme/Tokens',
-};
+} satisfies Meta<any>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Tokens = () => {
   if (typeof colorAudit === 'string') {

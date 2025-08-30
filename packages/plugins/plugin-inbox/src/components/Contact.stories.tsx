@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -90,7 +90,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
   );
 };
 
-export const Contacts = {
+export const Contacts: Story = {
   render: () => {
     const space = useSpace();
     const contacts = useQuery(space, Filter.type(DataType.Person));
@@ -105,7 +105,7 @@ export const Contacts = {
   },
 };
 
-export const Organizations = {
+export const Organizations: Story = {
   render: () => {
     const space = useSpace();
     const organizations = useQuery(space, Filter.type(DataType.Organization));
@@ -120,7 +120,7 @@ export const Organizations = {
   },
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-inbox/Related',
   decorators: [
     withPluginManager({
@@ -150,6 +150,8 @@ const meta: Meta = {
       ],
     }),
   ],
-};
+} satisfies Meta<typeof IntentPlugin>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

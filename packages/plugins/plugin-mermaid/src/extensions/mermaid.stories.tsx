@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -45,7 +45,23 @@ const DefaultStory = ({ text }: StoryProps) => {
   return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
-export const Default = {
+const meta = {
+  title: 'plugins/plugin-mermaid/extensions',
+  render: DefaultStory,
+  decorators: [
+    withTheme,
+    withLayout({
+      fullscreen: true,
+      classNames: 'justify-center',
+    }),
+  ],
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     text: str(
       '# Mermaid',
@@ -68,7 +84,7 @@ export const Default = {
   },
 };
 
-export const Error = {
+export const Error: Story = {
   args: {
     text: str(
       '# Mermaid',
@@ -85,11 +101,3 @@ export const Error = {
     ),
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-mermaid/extensions',
-  render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
-
-export default meta;

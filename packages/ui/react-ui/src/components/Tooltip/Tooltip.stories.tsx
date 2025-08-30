@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -29,15 +30,19 @@ const DefaultStory = ({ tooltips, defaultOpen }: StoryProps) => (
   </Tooltip.Provider>
 );
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Tooltip',
-  component: Tooltip,
+  component: Tooltip as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     tooltips: [
       {
@@ -51,9 +56,9 @@ export const Default = {
   },
 };
 
-export const DefaultOpen = {
+export const DefaultOpen: Story = {
   args: {
-    defaultOption: true,
+    defaultOpen: true,
     tooltips: [
       {
         label: 'Tooltip trigger',
@@ -66,9 +71,9 @@ export const DefaultOpen = {
   },
 };
 
-export const StressTest = {
+export const StressTest: Story = {
   args: {
-    defaultOption: true,
+    defaultOpen: true,
     tooltips: faker.helpers.multiple(
       () => ({
         label: faker.lorem.words(2),

@@ -13,14 +13,14 @@ import { translations } from '../../translations';
 
 import { SequenceEditor } from './SequenceEditor';
 
-const meta: Meta<typeof SequenceEditor> = {
+const meta = {
   title: 'plugins/plugin-assistant/SequenceEditor',
   component: SequenceEditor,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'mli-auto max-is-[50rem] justify-center' })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof SequenceEditor>;
 
 export default meta;
 

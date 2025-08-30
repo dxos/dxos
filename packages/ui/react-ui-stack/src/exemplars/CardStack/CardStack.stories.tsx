@@ -160,11 +160,11 @@ const CardStackStory = () => {
   );
 };
 
-const meta: Meta<typeof CardStackStory> = {
+const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof CardStackStory>;
 
 export default meta;
 

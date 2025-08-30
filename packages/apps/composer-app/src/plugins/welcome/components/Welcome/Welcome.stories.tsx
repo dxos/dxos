@@ -5,6 +5,7 @@
 import '@dxos-theme';
 import '@fontsource/poiret-one';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useIdentity } from '@dxos/react-client/halo';
@@ -36,7 +37,7 @@ const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partia
   );
 };
 
-export const Default = {
+export const Default: Story = {
   args: {
     onPasskey: () => console.log('passkey'),
     onJoinIdentity: () => console.log('join identity'),
@@ -45,12 +46,12 @@ export const Default = {
   decorators: [withClientProvider()],
 };
 
-export const WithIdentity = {
+export const WithIdentity: Story = {
   args: {},
   decorators: [withClientProvider({ createIdentity: true })],
 };
 
-export const SpaceInvitation = {
+export const SpaceInvitation: Story = {
   args: {
     state: WelcomeState.SPACE_INVITATION,
     onPasskey: () => console.log('passkey'),
@@ -61,7 +62,7 @@ export const SpaceInvitation = {
   decorators: [withClientProvider()],
 };
 
-export default {
+const meta = {
   title: 'apps/composer-app/Welcome',
   component: Welcome,
   render: Container,
@@ -72,4 +73,8 @@ export default {
       disableSnapshot: false,
     },
   },
-};
+} satisfies Meta<typeof Welcome>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;

@@ -67,7 +67,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
@@ -95,11 +95,11 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout(),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

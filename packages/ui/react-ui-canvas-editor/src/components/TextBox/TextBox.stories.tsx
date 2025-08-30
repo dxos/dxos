@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -19,7 +19,7 @@ const DefaultStory = (props: TextBoxProps) => {
   );
 };
 
-const meta: Meta<TextBoxProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
   render: DefaultStory,
@@ -27,11 +27,11 @@ const meta: Meta<TextBoxProps> = {
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof TextBox>;
 
 export default meta;
 
-type Story = StoryObj<TextBoxProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Wrapping: Story = {
   args: {

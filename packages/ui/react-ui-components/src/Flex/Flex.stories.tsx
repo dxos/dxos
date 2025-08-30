@@ -29,7 +29,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof Flex> = {
+const meta = {
   title: 'ui/react-ui-components/Flex',
   component: Flex,
   render: DefaultStory,
@@ -40,7 +40,7 @@ const meta: Meta<typeof Flex> = {
       Container: ColumnContainer,
     }),
   ],
-};
+} satisfies Meta<typeof Flex>;
 
 export default meta;
 

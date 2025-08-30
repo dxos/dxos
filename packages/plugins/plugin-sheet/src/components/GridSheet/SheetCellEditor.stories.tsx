@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -61,32 +61,32 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
   return <CellEditor {...props} value={value} extension={extension} />;
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-export const AutoComplete = {
+export const AutoComplete: Story = {
   args: {
     value: '=SUM',
   },
-};
 
-export const Formatting = {
+export const Formatting: Story = {
   args: {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
-};
 
-export const Automerge = {
+export const Automerge: Story = {
   render: (args: StoryProps) => <AutomergeStory {...args} />,
   args: {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
   component: CellEditor,
   decorators: [withTheme],
   render: (args: StoryProps) => <Story {...args} />,
-};
+} satisfies Meta<typeof CellEditor>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

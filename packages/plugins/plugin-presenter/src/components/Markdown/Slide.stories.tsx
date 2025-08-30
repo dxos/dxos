@@ -4,29 +4,31 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { createSlide } from '../../testing';
 
 import { Slide } from './Slide';
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-presenter/Slide',
   component: Slide,
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof Slide>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     content: createSlide(),
   },
 };
 
-export const Code = {
+export const Code: Story = {
   args: {
     content: createSlide({ code: true }),
   },

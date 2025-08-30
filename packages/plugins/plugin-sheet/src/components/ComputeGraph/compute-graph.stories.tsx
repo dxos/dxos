@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
@@ -83,9 +83,9 @@ const Story = () => {
   );
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/functions',
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
@@ -93,6 +93,8 @@ const meta: Meta = {
     withTheme,
   ],
   render: (args: any) => <Story {...args} />,
-};
+} satisfies Meta<typeof FunctionPlugins>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

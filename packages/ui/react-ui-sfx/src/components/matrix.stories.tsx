@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -27,16 +27,16 @@ const DefaultStory = (props: MatrixProps) => {
   );
 };
 
-const meta: Meta<MatrixProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Matrix',
   component: Matrix,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Matrix>;
 
 export default meta;
 
-type Story = StoryObj<MatrixProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

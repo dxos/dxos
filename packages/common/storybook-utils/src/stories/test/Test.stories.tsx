@@ -16,17 +16,17 @@ import { TEST_ID, Test, type TestProps } from './Test';
 /**
  * Storybook sanity test.
  */
-const meta: Meta<TestProps> = {
+const meta = {
   title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
   tags: ['test'],
-};
+} satisfies Meta<typeof Test>;
 
 export default meta;
 
-type Story = StoryObj<TestProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   // Interactions tab.

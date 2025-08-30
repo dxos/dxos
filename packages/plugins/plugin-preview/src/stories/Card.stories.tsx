@@ -10,44 +10,50 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
-import { Defaultstory, type DefaultstoryProps, createCards } from './testing';
+import { Defaultstory, createCards } from './testing';
 
-const meta: Meta<DefaultstoryProps> = {
+const meta = {
   title: 'plugins/plugin-preview/Card',
   render: Defaultstory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex flex-col justify-center' })],
+  decorators: [
+    withTheme,
+    withLayout({
+      fullscreen: true,
+      classNames: 'flex flex-col justify-center',
+    }),
+  ],
   parameters: { translations },
   tags: ['cards'],
-};
+} satisfies Meta<typeof Defaultstory>;
 
 export default meta;
 
-type Story = StoryObj<DefaultstoryProps>;
+type Story = StoryObj<typeof meta>;
 
-export const Popover = {
+export const Popover: Story = {
   args: {
     role: 'card--popover',
     cards: createCards(),
   },
-} satisfies Story;
+};
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
     cards: createCards(),
   },
-} satisfies Story;
+};
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
     cards: createCards(),
   },
-} satisfies Story;
+};
 
-export const ExtrinsicNoImage = {
+export const ExtrinsicNoImage: Story = {
   args: {
     role: 'card--extrinsic',
     cards: createCards(false),
   },
-} satisfies Story;
+};

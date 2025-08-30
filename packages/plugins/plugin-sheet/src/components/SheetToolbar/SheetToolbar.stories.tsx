@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -17,14 +17,16 @@ const DefaultStory = () => {
   return <SheetToolbar id='test' />;
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/Toolbar',
   component: SheetToolbar,
   render: DefaultStory,
   decorators: [withTheme, withLayout()],
   parameters: { translations, layout: 'fullscreen' },
-};
+} satisfies Meta<typeof SheetToolbar>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

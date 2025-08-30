@@ -25,7 +25,7 @@ const DefaultStory = (props: ToolboxProps) => {
   return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
 };
 
-const meta: Meta<typeof Toolbox> = {
+const meta = {
   title: 'plugins/plugin-assistant/Toolbox',
   component: Toolbox,
   render: DefaultStory,
@@ -53,10 +53,10 @@ const meta: Meta<typeof Toolbox> = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof Toolbox>;
 
 export default meta;
 
-type Story = Meta<typeof Toolbox>;
+type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
+export const Default: Story = {};

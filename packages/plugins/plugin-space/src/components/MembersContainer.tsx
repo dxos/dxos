@@ -41,13 +41,12 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
   }
 };
 
-export const MembersContainer = ({
-  space,
-  createInvitationUrl,
-}: {
+export type MembersContainerProps = {
   space: Space;
   createInvitationUrl: (invitationCode: string) => string;
-}) => {
+};
+
+export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const config = useConfig();
   const { dispatchPromise: dispatch } = useIntentDispatcher();

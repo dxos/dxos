@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Plugin, definePlugin } from '@dxos/app-framework';
@@ -62,7 +62,7 @@ const DefaultStory = ({ classNames }: ThemedClassName<{}>) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
@@ -70,13 +70,15 @@ const meta: Meta = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof PluginList>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
 
-export const Column = {
+export const Default: Story = {};
+
+export const Column: Story = {
   args: {
     classNames: 'w-[30rem]',
   },

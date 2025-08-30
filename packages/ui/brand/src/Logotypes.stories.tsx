@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, type ReactNode } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -13,11 +14,15 @@ import { DXOSHorizontalType, DXOSType, DXOSVerticalType } from './logotypes';
 
 const Icon = () => null;
 
-export default {
+const meta = {
   title: 'ui/brand/LogoTypes',
   component: Icon,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof Icon>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) => (
   <div className={mx('flex p-4 justify-center rounded-md', dark ? 'bg-zinc-800 fill-zinc-50' : 'bg-white')}>
@@ -25,7 +30,7 @@ const Cell: FC<{ children: ReactNode; dark?: boolean }> = ({ children, dark }) =
   </div>
 );
 
-export const Default = {
+export const Default: Story = {
   render: () => {
     return (
       <div className='absolute flex w-full h-full items-center justify-center'>

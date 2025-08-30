@@ -179,7 +179,7 @@ const QueueStoryWrapper = () => {
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
-const meta: Meta<typeof QueueStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
     withPluginManager({
@@ -203,11 +203,11 @@ const meta: Meta<typeof QueueStory> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<any>;
 
 export default meta;
 
-type Story = StoryObj<typeof QueueStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: BasicStory,

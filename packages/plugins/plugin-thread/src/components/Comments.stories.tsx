@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -64,7 +64,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
@@ -87,8 +87,10 @@ const meta: Meta = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof IntentPlugin>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

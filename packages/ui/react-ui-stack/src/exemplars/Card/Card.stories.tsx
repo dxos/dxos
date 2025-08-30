@@ -23,7 +23,7 @@ type CardStoryProps = {
   showIcon: boolean;
 };
 
-const meta: Meta<CardStoryProps> = {
+const meta = {
   title: 'ui/react-ui-stack/Card',
   decorators: [withTheme],
   argTypes: {
@@ -55,9 +55,11 @@ const meta: Meta<CardStoryProps> = {
     showImage: true,
     showIcon: true,
   },
-};
+} satisfies Meta<any>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: StoryObj<CardStoryProps> = {
   render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (

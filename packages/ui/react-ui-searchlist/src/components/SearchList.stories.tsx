@@ -4,7 +4,8 @@
 
 import '@dxos-theme';
 
-import React, { type FC } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/storybook-utils';
@@ -21,7 +22,11 @@ const defaultItems: StoryItems = faker.helpers
     return acc;
   }, {});
 
-const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) => {
+type StoryProps = {
+  items: StoryItems;
+};
+
+const DefaultStory = ({ items = defaultItems }: StoryProps) => {
   return (
     <SearchList.Root filter={(value, search) => (items[value].includes(search) ? 1 : 0)}>
       <SearchList.Input placeholder='Search...' />
@@ -36,12 +41,17 @@ const SearchListStory: FC<{ items: StoryItems }> = ({ items = defaultItems }) =>
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
-  component: SearchListStory,
+  component: SearchList.Root as any,
+  render: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

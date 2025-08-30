@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { live } from '@dxos/live-object';
-import { TestSchema, type TestType, testData, testView } from '@dxos/schema/testing';
+import { TestSchema, testData, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -24,7 +24,7 @@ const DefaultStory = (props: DeprecatedFormProps) => (
   </TestLayout>
 );
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-form/DeprecatedForm',
   component: DeprecatedForm,
   render: DefaultStory,
@@ -32,22 +32,15 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DeprecatedForm>;
 
 export default meta;
 
-type Story = StoryObj<DeprecatedFormProps<TestType>>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     object: live(testData),
-    projection: live(testView).projection,
-    schema: TestSchema,
-  },
-};
-
-export const Empty: Story = {
-  args: {
     projection: live(testView).projection,
     schema: TestSchema,
   },

@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -28,12 +29,16 @@ const noOpProps: SpacePanelImplProps = {
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
-export default {
+const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof SpacePanelImpl>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const SpaceManager = () => {
   return (

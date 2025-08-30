@@ -13,7 +13,7 @@ import { translations } from '../translations';
 
 import { ProfileContainer } from './ProfileContainer';
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-client/ProfileContainer',
   component: ProfileContainer,
   decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
@@ -21,10 +21,10 @@ const meta: Meta = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof ProfileContainer>;
 
 export default meta;
 
-type Story = StoryObj<typeof ProfileContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

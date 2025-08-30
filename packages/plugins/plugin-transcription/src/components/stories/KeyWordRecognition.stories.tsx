@@ -113,12 +113,14 @@ const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
   );
 };
 
-const meta: Meta<typeof SpeechRecognition> = {
+const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
+} satisfies Meta<typeof Meta>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const SpeechRecognitionAPI: StoryObj<typeof SpeechRecognition> = {
   render: SpeechRecognition,

@@ -13,7 +13,7 @@ import { Item } from '../data';
 
 import { Main } from './Main';
 
-const meta: Meta<typeof Main> = {
+const meta = {
   title: 'apps/testbench-app/Main',
   component: Main,
   decorators: [
@@ -29,7 +29,7 @@ const meta: Meta<typeof Main> = {
     }),
     withTheme,
   ],
-};
+} satisfies Meta<typeof Main>;
 
 export default meta;
 

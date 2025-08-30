@@ -28,7 +28,7 @@ faker.seed(1234);
 
 type StoryProps = { role: string };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'plugins/plugin-table/Card',
   render: ({ role }) => {
     const { schema, view } = useTestTableModel();
@@ -100,26 +100,23 @@ const meta: Meta<StoryProps> = {
     translations: [...translations, ...tableTranslations],
   },
   tags: ['cards'],
-};
+} satisfies Meta<any>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover = {
+export const Popover: Story = {
   args: {
     role: 'card--popover',
   },
-} satisfies Story;
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
   },
-} satisfies Story;
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
   },
-} satisfies Story;

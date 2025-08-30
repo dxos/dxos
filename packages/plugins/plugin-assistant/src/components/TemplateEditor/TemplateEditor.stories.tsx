@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
@@ -50,7 +50,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-assistant/TemplateEditor',
   component: TemplateEditor,
   render: DefaultStory,
@@ -66,9 +66,11 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof TemplateEditor>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 type Story = Meta<typeof DefaultStory>;
 

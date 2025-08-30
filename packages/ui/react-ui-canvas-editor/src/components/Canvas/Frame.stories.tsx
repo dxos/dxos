@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Canvas } from '@dxos/react-ui-canvas';
@@ -25,15 +25,16 @@ const DefaultStory = ({ layout }: ShapesProps) => {
   );
 };
 
-const meta: Meta<ShapesProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',
+  component: Canvas,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<ShapesProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
