@@ -17,16 +17,16 @@ const DefaultStory = () => {
   return <SheetToolbar id='test' />;
 };
 
-export const Default: Story = {};
-
 const meta = {
   title: 'plugins/plugin-sheet/Toolbar',
-  component: SheetToolbar,
+  component: SheetToolbar as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout()],
   parameters: { translations, layout: 'fullscreen' },
-} satisfies Meta<typeof SheetToolbar>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

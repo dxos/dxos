@@ -52,7 +52,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
 
 const meta = {
   title: 'plugins/plugin-assistant/TemplateEditor',
-  component: TemplateEditor,
+  component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -66,13 +66,11 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof TemplateEditor>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-type Story = Meta<typeof DefaultStory>;
 
 export const Default: Story = {
   args: {

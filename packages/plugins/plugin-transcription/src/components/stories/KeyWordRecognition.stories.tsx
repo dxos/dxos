@@ -17,7 +17,11 @@ type Word = {
   matched: boolean;
 };
 
-const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
+type StoryProps = {
+  keywords: string[];
+};
+
+const DefaultStory = ({ keywords }: StoryProps) => {
   const [running, setRunning] = useState(false);
   const [matchingWords, setMatchingWords] = useState<Word[]>(keywords.map((word) => ({ text: word, matched: false })));
 
@@ -115,15 +119,15 @@ const SpeechRecognition = ({ keywords }: { keywords: string[] }) => {
 
 const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-} satisfies Meta<typeof Meta>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const SpeechRecognitionAPI: StoryObj<typeof SpeechRecognition> = {
-  render: SpeechRecognition,
+export const SpeechRecognitionAPI: Story = {
   args: {
     keywords: ['kai', 'computer', 'hello'],
   },

@@ -28,20 +28,22 @@ faker.seed(1234);
 
 type StoryProps = { role: string };
 
+const DefaultStory = ({ role }: StoryProps) => {
+  const { schema, view } = useTestTableModel();
+  if (!schema || !view) {
+    return <div />;
+  }
+
+  return (
+    <CardContainer icon='ph--text-aa--regular' role={role}>
+      <TableCard role={role} view={view} />
+    </CardContainer>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-table/Card',
-  render: ({ role }) => {
-    const { schema, view } = useTestTableModel();
-    if (!schema || !view) {
-      return <div />;
-    }
-
-    return (
-      <CardContainer icon='ph--text-aa--regular' role={role}>
-        <TableCard role={role} view={view} />
-      </CardContainer>
-    );
-  },
+  render: DefaultStory,
   decorators: [
     // TODO(burdon): Should not require space.
     withClientProvider({
@@ -100,7 +102,7 @@ const meta = {
     translations: [...translations, ...tableTranslations],
   },
   tags: ['cards'],
-} satisfies Meta<any>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -110,13 +112,16 @@ export const Popover: Story = {
   args: {
     role: 'card--popover',
   },
+};
 
 export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
   },
+};
 
 export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
   },
+};

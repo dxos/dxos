@@ -87,7 +87,7 @@ const meta = {
   parameters: {
     translations,
   },
-} satisfies Meta<typeof IntentPlugin>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

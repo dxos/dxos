@@ -99,8 +99,21 @@ const GraphStory = (props: EditorProps) => {
   );
 };
 
+const meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+} satisfies Meta;
+
+export default meta;
+
 // TODO(burdon): Inline formulae.
-export const Default: Story = {
+export const Default: StoryObj<typeof EditorStory> = {
   render: EditorStory,
   args: {
     text: str(
@@ -124,7 +137,7 @@ export const Default: Story = {
   },
 };
 
-export const Graph: Story = {
+export const Graph: StoryObj<typeof GraphStory> = {
   render: GraphStory,
   args: {
     text: str(
@@ -141,18 +154,3 @@ export const Graph: Story = {
     ),
   },
 };
-
-const meta = {
-  title: 'plugins/plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-} satisfies Meta<typeof PublicKey>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;

@@ -200,6 +200,7 @@ export const Default: Story = {
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
+};
 
 // Test with prompt: Propose changes to my document based on the style guide.
 export const WithDocument: Story = {
@@ -226,6 +227,7 @@ export const WithDocument: Story = {
     components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
+};
 
 export const WithBlueprints: Story = {
   decorators: getDecorators({
@@ -239,6 +241,7 @@ export const WithBlueprints: Story = {
   args: {
     components: [ChatContainer, [TasksContainer, BlueprintContainer]],
   },
+};
 
 export const WithChess: Story = {
   decorators: getDecorators({
@@ -275,6 +278,7 @@ export const WithChess: Story = {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
+};
 
 // Test with prompt: Summarize my mailbox and write the summary in a new document.
 export const WithMail: Story = {
@@ -294,6 +298,7 @@ export const WithMail: Story = {
     components: [ChatContainer, [SurfaceContainer, MessageContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
+};
 
 // Test with prompt: Create 10 locations.
 export const WithMap: Story = {
@@ -319,6 +324,7 @@ export const WithMap: Story = {
     components: [ChatContainer, SurfaceContainer],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
+};
 
 export const WithTrip: Story = {
   decorators: getDecorators({
@@ -372,6 +378,7 @@ export const WithTrip: Story = {
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
+};
 
 export const WithBoard: Story = {
   decorators: getDecorators({
@@ -387,6 +394,7 @@ export const WithBoard: Story = {
     debug: true,
     components: [ChatContainer, SurfaceContainer],
   },
+};
 
 export const WithResearch: Story = {
   decorators: getDecorators({
@@ -399,6 +407,7 @@ export const WithResearch: Story = {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
+};
 
 export const WithSearch: Story = {
   decorators: getDecorators({
@@ -411,6 +420,7 @@ export const WithSearch: Story = {
   args: {
     components: [ChatContainer, [GraphContainer, LoggingContainer]],
   },
+};
 
 export const WithTranscription: Story = {
   decorators: getDecorators({
@@ -429,3 +439,4 @@ export const WithTranscription: Story = {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
+};

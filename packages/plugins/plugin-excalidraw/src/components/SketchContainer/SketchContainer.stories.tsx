@@ -31,18 +31,18 @@ const DefaultStory = () => {
   );
 };
 
-export const Default: Story = {};
-
 const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
-  component: SketchContainer,
+  component: SketchContainer as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SketchContainer>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

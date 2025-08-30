@@ -26,7 +26,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-debug/SpaceGenerator',
-  component: SpaceGenerator,
+  component: SpaceGenerator as any,
   render: render(DefaultStory),
   decorators: [
     withPluginManager({
@@ -45,7 +45,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof SpaceGenerator>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

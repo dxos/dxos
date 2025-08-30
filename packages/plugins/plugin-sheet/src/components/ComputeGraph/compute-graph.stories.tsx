@@ -24,7 +24,7 @@ import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
-const Story = () => {
+const DefaultStory = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
@@ -87,13 +87,13 @@ export const Default: Story = {};
 
 const meta = {
   title: 'plugins/plugin-sheet/functions',
+  render: DefaultStory,
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withTheme,
   ],
-  render: (args: any) => <Story {...args} />,
-} satisfies Meta<typeof FunctionPlugins>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

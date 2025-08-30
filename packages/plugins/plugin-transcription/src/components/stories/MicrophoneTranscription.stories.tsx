@@ -234,7 +234,7 @@ const meta = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-} satisfies Meta<any>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

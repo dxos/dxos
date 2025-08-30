@@ -90,36 +90,6 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
   );
 };
 
-export const Contacts: Story = {
-  render: () => {
-    const space = useSpace();
-    const contacts = useQuery(space, Filter.type(DataType.Person));
-
-    return (
-      <List>
-        {contacts.map((contact) => (
-          <ContactItem key={contact.id} contact={contact} />
-        ))}
-      </List>
-    );
-  },
-};
-
-export const Organizations: Story = {
-  render: () => {
-    const space = useSpace();
-    const organizations = useQuery(space, Filter.type(DataType.Organization));
-
-    return (
-      <List>
-        {organizations.map((organization) => (
-          <OrganizationItem key={organization.id} organization={organization} />
-        ))}
-      </List>
-    );
-  },
-};
-
 const meta = {
   title: 'plugins/plugin-inbox/Related',
   decorators: [
@@ -150,8 +120,38 @@ const meta = {
       ],
     }),
   ],
-} satisfies Meta<typeof IntentPlugin>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Contacts: Story = {
+  render: () => {
+    const space = useSpace();
+    const contacts = useQuery(space, Filter.type(DataType.Person));
+
+    return (
+      <List>
+        {contacts.map((contact) => (
+          <ContactItem key={contact.id} contact={contact} />
+        ))}
+      </List>
+    );
+  },
+};
+
+export const Organizations: Story = {
+  render: () => {
+    const space = useSpace();
+    const organizations = useQuery(space, Filter.type(DataType.Organization));
+
+    return (
+      <List>
+        {organizations.map((organization) => (
+          <OrganizationItem key={organization.id} organization={organization} />
+        ))}
+      </List>
+    );
+  },
+};

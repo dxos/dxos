@@ -66,13 +66,13 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-sketch/Sketch',
-  component: Sketch,
+  component: Sketch as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Sketch>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

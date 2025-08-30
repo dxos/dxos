@@ -13,7 +13,7 @@ import { useAsyncEffect } from './useAsyncEffect';
 
 const meta = {
   title: 'ui/react-hooks/useAsyncEffect',
-} satisfies Meta<any>;
+} satisfies Meta;
 
 export default meta;
 

@@ -17,7 +17,6 @@ import { Card, CardDragPreview } from '../Card';
 
 import { CardStack } from './CardStack';
 
-// Set a seed for reproducible random values
 faker.seed(0);
 
 type CardItem = {

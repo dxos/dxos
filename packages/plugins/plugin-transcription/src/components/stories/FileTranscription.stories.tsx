@@ -206,7 +206,7 @@ const meta = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-} satisfies Meta<any>;
+} satisfies Meta;
 
 export default meta;
 

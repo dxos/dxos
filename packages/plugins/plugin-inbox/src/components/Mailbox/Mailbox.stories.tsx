@@ -63,10 +63,10 @@ const WithCompanionStory = () => {
 
 const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
-  component: MailboxComponent,
+  component: MailboxComponent as any,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withAttention],
-} satisfies Meta<typeof MailboxComponent>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

@@ -18,7 +18,7 @@ import { translations } from '../../translations';
 import { type WelcomeScreenProps, WelcomeState } from './types';
 import { OVERLAY_CLASSES, OVERLAY_STYLE, Welcome } from './Welcome';
 
-const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
+const DefaultStory = ({ state: initialState = WelcomeState.INIT, ...props }: Partial<WelcomeScreenProps>) => {
   const identity = useIdentity();
   const [state, setState] = useState(initialState);
 
@@ -37,35 +37,10 @@ const Container = ({ state: initialState = WelcomeState.INIT, ...props }: Partia
   );
 };
 
-export const Default: Story = {
-  args: {
-    onPasskey: () => console.log('passkey'),
-    onJoinIdentity: () => console.log('join identity'),
-    onRecoverIdentity: () => console.log('recover identity'),
-  },
-  decorators: [withClientProvider()],
-};
-
-export const WithIdentity: Story = {
-  args: {},
-  decorators: [withClientProvider({ createIdentity: true })],
-};
-
-export const SpaceInvitation: Story = {
-  args: {
-    state: WelcomeState.SPACE_INVITATION,
-    onPasskey: () => console.log('passkey'),
-    onJoinIdentity: () => console.log('join identity'),
-    onRecoverIdentity: () => console.log('recover identity'),
-    onSpaceInvitation: () => console.log('space invitation'),
-  },
-  decorators: [withClientProvider()],
-};
-
 const meta = {
   title: 'apps/composer-app/Welcome',
-  component: Welcome,
-  render: Container,
+  component: Welcome as any,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     translations,
@@ -73,8 +48,33 @@ const meta = {
       disableSnapshot: false,
     },
   },
-} satisfies Meta<typeof Welcome>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    onPasskey: () => console.log('passkey'),
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
+  },
+};
+
+export const WithIdentity: Story = {
+  decorators: [withClientProvider({ createIdentity: true })],
+  args: {},
+};
+
+export const SpaceInvitation: Story = {
+  decorators: [withClientProvider()],
+  args: {
+    state: WelcomeState.SPACE_INVITATION,
+    onPasskey: () => console.log('passkey'),
+    onJoinIdentity: () => console.log('join identity'),
+    onRecoverIdentity: () => console.log('recover identity'),
+    onSpaceInvitation: () => console.log('space invitation'),
+  },
+};
