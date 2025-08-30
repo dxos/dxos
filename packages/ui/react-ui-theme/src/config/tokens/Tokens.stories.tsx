@@ -6,9 +6,9 @@ import '@dxos-theme';
 
 import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { Fragment } from 'react';
 
-import { render } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { tokenSet } from './index';
 
@@ -16,6 +16,7 @@ const colorAudit = auditFacet(tokenSet.colors, { condition: 'p3' });
 
 const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalArcSeries>) => {
   const [luminosity, alpha] = parseAlphaLuminosity(value);
+
   return (
     <div className='shrink-0 is-40 flex flex-col rounded overflow-hidden'>
       <dd className='aspect-video' style={{ background: `var(${variableName})` }}></dd>
@@ -40,19 +41,17 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
 };
 
 const DefaultStory = () => {
-  if (typeof colorAudit === 'string') {
-    return null;
-  }
-
   return (
     <>
-      <style>{`html{
-        background-color: #888;
-        background-image: linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777),
-        linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
-        background-size: 32px 32px;
-        background-position: 0 0, 16px 16px;
-      }`}</style>
+      <style>
+        {trim`html {
+          background-color: #888;
+          background-image: linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777),
+          linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
+          background-size: 32px 32px;
+          background-position: 0 0, 16px 16px;
+        }`}
+      </style>
 
       <div className='flex'>
         <div className='p-2 bg-baseSurface rounded'>
@@ -68,33 +67,33 @@ const DefaultStory = () => {
           </pre>
         </div>
       </div>
-      {Object.entries(colorAudit).map(([seriesId, audits]) => {
-        return (
-          <>
-            <h2 className='mbs-12 mbe-4'>
-              <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
-            </h2>
-            <dl className='flex flex-wrap gap-2'>
-              {audits
-                .sort((a, b) => {
-                  const [aL, aA] = parseAlphaLuminosity(a.value);
-                  const [bL, bA] = parseAlphaLuminosity(b.value);
-                  return aL - bL - (Number.isFinite(aA) && Number.isFinite(bA) ? aA! - bA! : 0);
-                })
-                .map((audit) => (
-                  <Swatch key={audit.variableName} {...audit} />
-                ))}
-            </dl>
-          </>
-        );
-      })}
+
+      {Object.entries(colorAudit).map(([seriesId, audits], i) => (
+        <Fragment key={i}>
+          <div>{seriesId}</div>
+          <h2 className='mbs-12 mbe-4'>
+            <span className='pli-2 plb-1 bg-baseSurface rounded'>{seriesId}</span>
+          </h2>
+          <dl className='flex flex-wrap gap-2'>
+            {audits
+              .sort((a, b) => {
+                const [aL, aA] = parseAlphaLuminosity(a.value);
+                const [bL, bA] = parseAlphaLuminosity(b.value);
+                return aL - bL - (Number.isFinite(aA) && Number.isFinite(bA) ? aA! - bA! : 0);
+              })
+              .map((audit, i) => (
+                <Swatch key={i} {...audit} />
+              ))}
+          </dl>
+        </Fragment>
+      ))}
     </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-theme/Tokens',
-  render: render(DefaultStory),
+  render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
