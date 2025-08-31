@@ -155,21 +155,15 @@ type Story = StoryObj<typeof storybook>;
 const MARKDOWN_DOCUMENT = trim`
   # Hello, world!
 
-  This is a test document that contains Markdown content.
-  Markdown is a lightweight markup language for writing formatted text in plain text form. 
-  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+  This is a test document that contains Markdown content. Markdown is a lightweight markup language for writing formatted text in plain text form. Its goal is to be easy to read and write in raw form, easy to convert to HTML.
 
-  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
-  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
 `;
 
 const STYLE_GUIDE = trim`
   # Style Guide
-
-  ## Clear Communication
-
   - Use short, simple sentences.
   - Organize content with headings and bullet points.
   - Avoid jargon and explain technical terms.

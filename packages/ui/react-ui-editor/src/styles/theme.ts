@@ -64,7 +64,7 @@ export const defaultTheme: ThemeStyles = {
     fontFamily: fontBody,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
-    lineHeight: 1.5,
+    lineHeight: '24px',
     color: 'unset',
   },
 
@@ -88,16 +88,25 @@ export const defaultTheme: ThemeStyles = {
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    fontSize: '12px',
     lineHeight: '24px',
+    fontSize: '12px',
   },
 
   /**
    * Line.
    */
   '.cm-line': {
+    lineHeight: '24px',
     paddingInline: 0,
   },
+  // '.cm-line > span': {
+  //   boxDecorationBreak: 'clone',
+  //   padding: '4px 3px',
+  // },
+  // '.cm-line > span:empty': {
+  //   boxDecorationBreak: 'unset',
+  //   padding: '0px',
+  // },
   '.cm-activeLine': {
     background: 'var(--dx-cmActiveLine)',
   },

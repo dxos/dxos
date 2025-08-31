@@ -245,7 +245,6 @@ export class AiChatProcessor {
   /**
    * Cancel pending requests.
    */
-  // TODO(burdon): Populate prompt.
   async cancel(): Promise<void> {
     log.info('cancelling...');
     if (this._currentRequest) {

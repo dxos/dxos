@@ -76,6 +76,8 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
 
+  const lastPrompt = useRef<string | undefined>(undefined);
+
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
     return Result.match(pending, {
@@ -101,6 +103,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
         case 'submit': {
           if (!streaming) {
+            lastPrompt.current = event.text;
             void processor.request({ message: event.text });
           }
           break;
