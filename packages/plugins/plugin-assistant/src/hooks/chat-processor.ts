@@ -6,7 +6,6 @@ import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Cause, Effect, Exit, Fiber, type Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
-import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
   type AiConversationRunParams,
@@ -19,18 +18,20 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
+import { Filter, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
+
+import { type Assistant } from '../types';
 
 import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Remove?
-declare global {
-  interface ToolContextExtensions {
-    space?: Space;
-    dispatch?: PromiseIntentDispatcher;
-  }
-}
+// TODO(burdon): Move to @dxos/assistant
+const CHAT_NAME_PROMPT = trim`
+  Suggest a single short title for this chat.
+  It is extermely important that you respond only with the title and nothing else.
+  If you cannot do this effectively respond with "New Chat".
+`;
 
 export type AiRequestOptions = {};
 
@@ -253,6 +254,37 @@ export class AiChatProcessor {
     }
 
     this._observableRegistry.set(this._session, Option.none());
+  }
+
+  /**
+   * Update the current chat's name;
+   */
+  async updateName(chat: Assistant.Chat): Promise<void> {
+    const request = this._conversation
+      .raw({
+        session: new AiSession(),
+        prompt: CHAT_NAME_PROMPT,
+      })
+      .pipe(
+        // @effect-diagnostics-next-line multipleEffectProvide:off
+        Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+        Effect.provide(this._services),
+        Effect.tap((message) => {
+          const title = message?.blocks.find((b) => b._tag === 'text')?.text;
+          chat.name = title;
+        }),
+        Effect.tapErrorCause((cause) => {
+          log.error('error', { cause });
+          return Effect.void;
+        }),
+        Effect.asVoid,
+        Effect.runFork,
+      );
+
+    const exit = await request.pipe(Fiber.join, Effect.runPromiseExit);
+    if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+      throwCause(exit.cause);
+    }
   }
 
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {

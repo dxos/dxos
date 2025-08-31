@@ -11,7 +11,7 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
+import { AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
@@ -57,19 +57,22 @@ export class AiConversation {
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run = <Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
-    Effect.gen(this, function* () {
+  run = <Tools extends AiTool.Any>({
+    session,
+    ...params
+  }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> => {
+    return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 
       // Context.
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((o) => o.value)),
+        Effect.map(Array.map((option) => option.value)),
       );
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((o) => o.value)),
+        Effect.map(Array.map((option) => option.value)),
       );
       log.info('run', {
         history: history.length,
@@ -88,7 +91,27 @@ export class AiConversation {
         messages: messages,
         duration: Date.now() - start,
       });
+
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));
+  };
+
+  /**
+   * Raw request without updating chat.
+   */
+  raw = (params: AiConversationRunParams<AiTool.Any>) => {
+    return Effect.gen(this, function* () {
+      const session = new AiSession();
+      const history = yield* Effect.promise(() => this.getHistory());
+      const messages = yield* session.run({ ...params, history }).pipe(
+        Effect.provideService(AiContextService, {
+          binder: this.context,
+        }),
+      );
+
+      const message = messages.find((m) => m.sender.role === 'assistant');
+      return message;
+    }).pipe(Effect.withSpan('AiConversation.raw'));
+  };
 }

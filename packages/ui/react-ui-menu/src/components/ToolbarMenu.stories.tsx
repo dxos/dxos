@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
@@ -19,7 +20,7 @@ import { type MenuAction } from '../types';
 faker.seed(1234);
 
 const meta = {
-  title: 'ui/react-ui-menu/Menus',
+  title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
   decorators: [withTheme],
   parameters: {
