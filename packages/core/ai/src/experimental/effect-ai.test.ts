@@ -214,7 +214,7 @@ describe('AiLanguageModel', () => {
       function* ({ expect: _ }) {
         const system = trim`
           Before you answer emit your current status (what are you doing?) inside <status></status> XML tags.
-          After your answer emit your suggestions for follow-up user prompts inside <suggest></suggest> XML tags.
+          After your answer emit your suggestions for follow-up user prompts inside <suggestion></suggestion> XML tags.
         `;
 
         const chat = yield* AiChat.empty;

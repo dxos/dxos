@@ -348,7 +348,7 @@ describe('preprocessor', () => {
         sender: { role: 'assistant' },
         blocks: [
           { _tag: 'status', statusText: 'Processing...' },
-          { _tag: 'suggest', text: 'Try this approach' },
+          { _tag: 'suggestion', text: 'Try this approach' },
           { _tag: 'select', options: ['Option A', 'Option B'] },
           { _tag: 'proposal', text: 'I propose we do this' },
           { _tag: 'toolkit' },
@@ -367,7 +367,7 @@ describe('preprocessor', () => {
       );
       expect(assistantMessage.parts[1]).toEqual(
         new AiInput.TextPart({
-          text: '<suggest>Try this approach</suggest>',
+          text: '<suggestion>Try this approach</suggestion>',
         }),
       );
       expect(assistantMessage.parts[2]).toEqual(
