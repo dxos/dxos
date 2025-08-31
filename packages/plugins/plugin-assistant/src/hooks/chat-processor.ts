@@ -260,6 +260,7 @@ export class AiChatProcessor {
    * Update the current chat's name;
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
+    // TODO(burdon): Select a simple/quick/cheap model for this.
     const request = this._conversation
       .raw({
         session: new AiSession(),
