@@ -104,7 +104,7 @@ const styles = EditorView.theme({
   },
   '.cm-comment > span, .cm-comment-current > span': {
     boxDecorationBreak: 'clone',
-    boxShadow: '0 0 0 3px var(--dx-cmCommentSurface)',
+    boxShadow: '0 0 1px 3px var(--dx-cmCommentSurface)',
     backgroundColor: 'var(--dx-cmCommentSurface)',
     color: 'var(--dx-cmComment)',
     cursor: 'pointer',
