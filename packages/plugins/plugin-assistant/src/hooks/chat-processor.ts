@@ -260,7 +260,6 @@ export class AiChatProcessor {
    * Update the current chat's name;
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
-    // TODO(burdon): Select a simple/quick/cheap model for this.
     const request = this._conversation
       .raw({
         session: new AiSession(),
@@ -269,6 +268,7 @@ export class AiChatProcessor {
       .pipe(
         // @effect-diagnostics-next-line multipleEffectProvide:off
         Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+        // TODO(burdon): Switch to a simple/quick/cheap model for this.
         Effect.provide(this._services),
         Effect.tap((message) => {
           const title = message?.blocks.find((b) => b._tag === 'text')?.text;
