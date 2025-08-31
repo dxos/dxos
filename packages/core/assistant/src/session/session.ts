@@ -191,8 +191,7 @@ export class AiSession {
           break;
         }
 
-        // TODO(burdon): Potential retry?
-        // TODO(burdon): Report errors to user; with proposed actions.
+        // TODO(burdon): Retry backend errors (with backoff)?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
           callTool(toolkitHandlers, toolCall).pipe(
             Effect.provide(
@@ -232,6 +231,7 @@ export class AiSession {
           },
         ],
       });
+      // TODO(burdon):
       this._pending.push(summaryMessage);
       yield* this.messageQueue.offer(summaryMessage);
       yield* observer.onMessage(summaryMessage);
