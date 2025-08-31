@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useDebugDeps, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   type UseTextEditorProps,
@@ -18,8 +18,6 @@ import { isNonNullable } from '@dxos/util';
 
 import { type AutocompleteOptions, autocomplete } from './autocomplete';
 import { type ReferencesOptions, references as referencesExtension } from './references';
-
-// TODO(burdon): Handle object references.
 
 export interface ChatEditorController {
   focus(): void;
@@ -42,8 +40,11 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
+
+    // TODO(burdon): onSubmit changed.
+    useDebugDeps([themeMode, extensions, onSubmit, onSuggest, onCancel]);
     const { parentRef, view } = useTextEditor(
-      {
+      () => ({
         debug: true,
         autoFocus,
         extensions: [
@@ -57,8 +58,8 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
           }),
           extensions,
         ].filter(isNonNullable),
-      },
-      [themeMode, extensions, onSubmit, onSuggest],
+      }),
+      [themeMode, extensions, onSubmit, onSuggest, onCancel],
     );
 
     // Expose editor view.

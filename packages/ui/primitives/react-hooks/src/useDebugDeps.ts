@@ -10,14 +10,16 @@ import { type DependencyList, useEffect, useRef } from 'react';
 export const useDebugDeps = (deps: DependencyList = []) => {
   const lastDeps = useRef<DependencyList>([]);
   useEffect(() => {
-    console.group('deps changed', { old: lastDeps.current.length, new: deps.length });
+    console.group('deps changed', { previous: lastDeps.current.length, current: deps.length });
     for (let i = 0; i < Math.max(lastDeps.current.length ?? 0, deps.length ?? 0); i++) {
-      console.log(i, lastDeps.current[i] === deps[i] ? 'SAME' : 'CHANGED', {
-        previous: lastDeps.current[i],
-        current: deps[i],
-      });
+      if (lastDeps.current[i] !== deps[i]) {
+        console.log('changed', {
+          index: i,
+          previous: lastDeps.current[i],
+          current: deps[i],
+        });
+      }
     }
-
     console.groupEnd();
     lastDeps.current = deps;
   }, deps);

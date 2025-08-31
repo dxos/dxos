@@ -97,7 +97,7 @@ export class AiChatProcessor {
           acc.pipe(
             Option.match({
               onNone: () => [block],
-              onSome: (message) => [...message.blocks.filter((b) => !b.pending), block],
+              onSome: (message) => [...message.blocks.filter((block) => !block.pending), block],
             }),
             Option.some,
             Option.map((blocks) =>
@@ -147,12 +147,12 @@ export class AiChatProcessor {
     return Result.map(get(this._pending), (pending) =>
       Result.match(streaming, {
         onInitial: () => pending,
+        onFailure: () => pending,
         onSuccess: (streaming) =>
           Option.match(streaming.value, {
             onNone: () => pending,
             onSome: (message) => [...pending, message],
           }),
-        onFailure: () => pending,
       }),
     );
   });
@@ -181,15 +181,6 @@ export class AiChatProcessor {
 
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
-  }
-
-  /**
-   * Retry last request.
-   */
-  async retry(): Promise<void> {
-    if (this._lastRequest) {
-      return this.request(this._lastRequest);
-    }
   }
 
   /**
@@ -248,6 +239,15 @@ export class AiChatProcessor {
       this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
       this._currentRequest = undefined;
+    }
+  }
+
+  /**
+   * Retry last request.
+   */
+  async retry(): Promise<void> {
+    if (this._lastRequest) {
+      return this.request(this._lastRequest);
     }
   }
 
