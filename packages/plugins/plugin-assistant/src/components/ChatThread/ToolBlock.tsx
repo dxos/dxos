@@ -6,7 +6,7 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus, type Tool } from '@dxos/ai';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
+import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
 import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
@@ -107,7 +107,7 @@ export const ToolContainer: FC<ThemedClassName<{ items: { title: string; block: 
 
   const title = useMemo(() => {
     const lines = items.map((item) => item.title).filter(isNotFalsy);
-    return <StatusRoll key='status-roll' lines={lines} duration={1_000} autoAdvance />;
+    return <TextCrawl key='status-roll' lines={lines} autoAdvance />;
   }, [items]);
 
   return (

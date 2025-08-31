@@ -179,9 +179,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<status>${block.statusText}</status>`,
         });
-      case 'suggest':
+      case 'suggestion':
         return new AiInput.TextPart({
-          text: `<suggest>${block.text}</suggest>`,
+          text: `<suggestion>${block.text}</suggestion>`,
         });
       case 'select':
         return new AiInput.TextPart({

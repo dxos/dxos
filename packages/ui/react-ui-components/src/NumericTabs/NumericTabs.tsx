@@ -14,9 +14,8 @@ export type NumericTabsProps = ThemedClassName<{
 }>;
 
 /**
- * @deprecated
+ * @deprecated Use Timeline.
  */
-// TODO(burdon): Integrate with react-ui-tabs.
 export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
   ({ classNames, length, selected = 0, onSelect }, forwardedRef) => {
     return (
