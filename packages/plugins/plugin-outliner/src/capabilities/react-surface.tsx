@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
+import { Capabilities, type Capability, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { JournalContainer, OutlinerContainer } from '../components';
 import { OUTLINER_PLUGIN } from '../meta';
 import { JournalType, OutlineType } from '../types';
 
-export default () => [
+export default (): Capability<any>[] => [
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${OUTLINER_PLUGIN}/article/journal`,

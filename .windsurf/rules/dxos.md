@@ -25,8 +25,9 @@ When writing code:
 
 Variable names:
 
-- Use \_ as a prefix if the variable is not used.
-- Use $ as a prefix to disambiguate with local variables.
+- Use \_ as a prefix for class variables.
+- Use \_ as a prefix if a function variable is not used.
+- Use \$ as a prefix to disambiguate with local variables.
 
 Technologies to consider:
 

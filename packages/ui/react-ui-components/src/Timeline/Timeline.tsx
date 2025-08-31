@@ -92,7 +92,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
         return branches;
       }, [] as string[]);
-    }, [_branches, commits]);
+    }, [$branches, commits]);
 
     // NOTE: Assumes commits are in topological order.
     const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);

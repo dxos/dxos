@@ -165,8 +165,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Suggest
   //
-  ['suggest' as const]: ({ block, onEvent }) => {
-    invariant(block._tag === 'suggest');
+  ['suggestion' as const]: ({ block, onEvent }) => {
+    invariant(block._tag === 'suggestion');
     return (
       <IconButton
         icon='ph--lightning--regular'

@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
+import { Capabilities, type Capability, contributes, createResolver } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 
 import { Board } from '../types';
 
-export default () => [
+export default (): Capability<any>[] => [
   contributes(
     Capabilities.IntentResolver,
     createResolver({
