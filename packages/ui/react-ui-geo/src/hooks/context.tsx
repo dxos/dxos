@@ -35,15 +35,15 @@ export type GlobeContextProviderProps = PropsWithChildren<
 export const GlobeContextProvider = ({
   children,
   size,
-  center: _center,
-  zoom: _zoom,
-  translation: _translation,
-  rotation: _rotation,
+  center: $center,
+  zoom: $zoom,
+  translation: $translation,
+  rotation: $rotation,
 }: GlobeContextProviderProps) => {
-  const [center, setCenter] = useControlledState(_center);
-  const [zoom, setZoom] = useControlledState(_zoom);
-  const [translation, setTranslation] = useControlledState<Point>(_translation);
-  const [rotation, setRotation] = useControlledState<Vector>(_rotation);
+  const [center, setCenter] = useControlledState($center);
+  const [zoom, setZoom] = useControlledState($zoom);
+  const [translation, setTranslation] = useControlledState<Point>($translation);
+  const [rotation, setRotation] = useControlledState<Vector>($rotation);
 
   return (
     <GlobeContext.Provider

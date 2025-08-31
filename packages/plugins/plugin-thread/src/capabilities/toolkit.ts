@@ -33,7 +33,7 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
-      'add-proposals': ({ id, diffs: _diffs }) =>
+      'add-proposals': ({ id, diffs: $diffs }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -41,7 +41,6 @@ class Toolkit extends AiToolkit.make(
           const state = context.getCapability(Capabilities.Layout);
 
           const dxn = ArtifactId.toDXN(id, state.workspace as SpaceId);
-
           const echoDxn = dxn.asEchoDXN();
           if (!echoDxn) {
             throw new Error(`Invalid object ID: ${id}`);
@@ -56,7 +55,7 @@ class Toolkit extends AiToolkit.make(
           const content = yield* Effect.promise(() => object.content.load());
           const accessor = createDocAccessor(content, ['content']);
           yield* pipe(
-            computeDiffsWithCursors(accessor, _diffs),
+            computeDiffsWithCursors(accessor, $diffs),
             Array.map(({ cursor, text }) =>
               createIntent(ThreadAction.AddProposal, {
                 subject: object,

@@ -63,14 +63,14 @@ export const ResizeHandle = ({
   iconPosition = 'start',
   defaultSize,
   fallbackSize,
-  size: _size,
+  size: $size,
   minSize,
   maxSize,
   onSizeChange,
 }: ResizeHandleProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [size = 'min-content', setSize] = useControllableState({
-    prop: _size,
+    prop: $size,
     defaultProp: defaultSize,
     onChange: onSizeChange,
   });

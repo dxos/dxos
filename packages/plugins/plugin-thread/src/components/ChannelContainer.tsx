@@ -35,10 +35,10 @@ export type ChannelContainerProps = {
 /**
  * Renders a call when active, otherwise renders the channel chat.
  */
-export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
+export const ChannelContainer = ({ channel, roomId: $roomId, role, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
-  const roomId = _roomId ?? (channel ? fullyQualifiedId(channel) : failUndefined());
+  const roomId = $roomId ?? (channel ? fullyQualifiedId(channel) : failUndefined());
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');

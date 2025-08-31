@@ -47,15 +47,15 @@ type ChatDialogRootProps = PropsWithChildren<{
 
 const ChatDialogRoot = ({
   children,
-  open: _open = false,
-  expanded: _expanded = false,
+  open: $open = false,
+  expanded: $expanded = false,
   onOpenChange,
   onExpandedChange,
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
-  const [open, setOpen] = useControlledState<boolean>(_open, onOpenChange);
-  const [expanded, setExpanded] = useControlledState<boolean>(_expanded, onExpandedChange);
+  const [open, setOpen] = useControlledState<boolean>($open, onOpenChange);
+  const [expanded, setExpanded] = useControlledState<boolean>($expanded, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.

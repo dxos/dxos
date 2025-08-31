@@ -7,12 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type TextBlockProps = ThemedClassName<{
+export type TypewriterProps = ThemedClassName<{
   text: string;
   delay?: number;
 }>;
 
-export const TextBlock = ({ classNames, text, delay = 0 }: TextBlockProps) => {
+export const Typewriter = ({ classNames, text, delay = 0 }: TypewriterProps) => {
   const [current, setCurrent] = useState('');
   const currentRef = useDynamicRef(current);
 

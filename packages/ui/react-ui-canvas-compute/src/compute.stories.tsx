@@ -62,7 +62,7 @@ const DefaultStory = ({
   graph,
   controller = null,
   init,
-  sidebar: _sidebar,
+  sidebar: $sidebar,
   registry,
   ...props
 }: RenderProps) => {
@@ -81,7 +81,7 @@ const DefaultStory = ({
   };
 
   // Sidebar.
-  const [sidebar, setSidebar] = useState(_sidebar);
+  const [sidebar, setSidebar] = useState($sidebar);
   const json = useMemo(() => {
     switch (sidebar) {
       case 'canvas':

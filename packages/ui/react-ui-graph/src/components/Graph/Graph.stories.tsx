@@ -70,8 +70,8 @@ const DefaultStory = ({
   grid,
   inspect,
   singleSelect,
-  graph: _graph,
-  projectorType: _projectorType = 'force',
+  graph: $graph,
+  projectorType: $projectorType = 'force',
   projectorOptions,
   ...props
 }: StoryProps) => {
@@ -79,11 +79,11 @@ const DefaultStory = ({
   const context = useRef<SVGContext>(null);
 
   // Models.
-  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel(_graph?.()));
+  const [model, setModel] = useState<GraphModel | undefined>(() => new TestGraphModel($graph?.()));
   const selection = useMemo(() => new SelectionModel(singleSelect), [singleSelect]);
 
   // Projector.
-  const [projectorType, setProjectorType] = useState<ProjectorType>(_projectorType);
+  const [projectorType, setProjectorType] = useState<ProjectorType>($projectorType);
   const [projector, setProjector] = useState<GraphProjector<TestNode>>();
   useEffect(() => {
     if (!context.current) {
@@ -157,8 +157,8 @@ const DefaultStory = ({
   }, [model]);
 
   const handleRegenerate = useCallback(() => {
-    setModel(new TestGraphModel(_graph?.()));
-  }, [_graph]);
+    setModel(new TestGraphModel($graph?.()));
+  }, [$graph]);
 
   const handleClear = useCallback(() => {
     setModel(undefined);

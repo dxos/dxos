@@ -70,7 +70,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const _commandMenu = useMemo(() => {
+  const $commandMenu = useMemo(() => {
     return commandMenu({
       trigger,
       placeholder,
@@ -107,7 +107,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, [handleOpenChange, getMenu, serializedTrigger, placeholder]);
 
   return {
-    commandMenu: _commandMenu,
+    commandMenu: $commandMenu,
     currentItem,
     groupsRef,
     ref: triggerRef,

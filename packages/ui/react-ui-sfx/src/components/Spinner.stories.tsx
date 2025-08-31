@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Spinner, type SpinnerProps } from './Spinner';
 
-const DefaultStory = ({ state: _state }: SpinnerProps) => {
-  const [state, setState] = useState(_state);
+const DefaultStory = ({ state: $state }: SpinnerProps) => {
+  const [state, setState] = useState($state);
 
   return (
     <div className='flex flex-col grow'>

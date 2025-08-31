@@ -19,29 +19,29 @@ const sizeClassNames: Record<Size, { height: number; className: string }> = {
   lg: { height: 28, className: 'h-[28px] text-lg' },
 };
 
-export type StatusRollProps = ThemedClassName<{
+export type TextCrawlProps = ThemedClassName<{
   size?: Size;
   index?: number;
   lines?: string[];
   autoAdvance?: boolean;
   cyclic?: boolean;
   transition?: number;
-  duration?: number;
+  minDuration?: number;
 }>;
 
 /**
  * Single line of text that scrolls.
  */
-export const StatusRoll = ({
+export const TextCrawl = ({
   classNames,
   size = 'md',
   index: index$ = -1,
   lines = emptyLines,
   cyclic,
   autoAdvance,
-  transition = 300,
-  duration = 1_000,
-}: StatusRollProps) => {
+  transition = 250,
+  minDuration = 1_000,
+}: TextCrawlProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastRoll = useRef(Date.now());
   const linesLength = useDynamicRef(lines.length);
@@ -67,13 +67,13 @@ export const StatusRoll = ({
       });
     };
 
-    if (Date.now() - lastRoll.current > duration) {
+    if (Date.now() - lastRoll.current > minDuration) {
       next();
     }
 
-    const i = setInterval(next, duration);
+    const i = setInterval(next, minDuration);
     return () => clearInterval(i);
-  }, [lines.length, autoAdvance, duration]);
+  }, [lines.length, autoAdvance, minDuration]);
 
   const { className, height } = sizeClassNames[size];
   useEffect(() => {

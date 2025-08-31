@@ -30,11 +30,10 @@ export type MapContainerProps = {
 } & GeoControlProps &
   Pick<MapRootProps, 'onChange'>;
 
-export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...props }: MapContainerProps) => {
-  const [type, setType] = useControlledState(_type);
+export const MapContainer = ({ role, type: $type = 'map', view, ...props }: MapContainerProps) => {
+  const [type, setType] = useControlledState($type);
   const client = useClient();
   const space = getSpace(view);
-  const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
   const schema = useSchema(client, space, view?.query.typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());

@@ -156,16 +156,16 @@ type GlobeCanvasProps = {
  */
 // TODO(burdon): Move controller to root.
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
+  ({ projection: $projection, topology, features, styles: $styles }, forwardRef) => {
     const { themeMode } = useThemeContext();
-    const styles = useMemo(() => _styles ?? defaultStyles[themeMode], [_styles, themeMode]);
+    const styles = useMemo(() => $styles ?? defaultStyles[themeMode], [$styles, themeMode]);
 
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
     // Projection.
-    const projection = useMemo(() => getProjection(_projection), [_projection]);
+    const projection = useMemo(() => getProjection($projection), [$projection]);
 
     // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.

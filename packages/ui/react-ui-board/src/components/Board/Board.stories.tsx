@@ -22,9 +22,9 @@ type TestItem = {
 
 type StoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
 
-const DefaultStory = ({ layout: _layout, items: _items, ...props }: StoryProps) => {
-  const [items, setItems] = useState(_items ?? []);
-  const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
+const DefaultStory = ({ layout: $layout, items: $items, ...props }: StoryProps) => {
+  const [items, setItems] = useState($items ?? []);
+  const [layout, setLayout] = useState<BoardLayout>($layout ?? { size: { width: 4, height: 4 }, cells: {} });
 
   const controller = useRef<BoardController>(null);
 

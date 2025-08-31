@@ -67,33 +67,33 @@ const EditorRootWithType = <S extends Shape = Shape>(
     children,
     classNames,
     id,
-    options: _options = defaultEditorOptions,
-    debug: _debug = false,
-    showGrid: _showGrid = false,
-    snapToGrid: _snapToGrid = false,
-    graph: _graph,
+    options: $options = defaultEditorOptions,
+    debug: $debug = false,
+    showGrid: $showGrid = false,
+    snapToGrid: $snapToGrid = false,
+    graph: $graph,
     graphMonitor,
-    selection: _selection,
-    registry: _registry,
-    layout: _layout,
+    selection: $selection,
+    registry: $registry,
+    layout: $layout,
     autoZoom,
   }: EditorRootProps<S>,
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
-  const options = useMemo(() => Object.assign({}, defaultEditorOptions, _options), [_options]);
+  const options = useMemo(() => Object.assign({}, defaultEditorOptions, $options), [$options]);
 
   // External state.
-  const graph = useMemo<CanvasGraphModel<S>>(() => _graph ?? CanvasGraphModel.create(), [_graph]);
+  const graph = useMemo<CanvasGraphModel<S>>(() => $graph ?? CanvasGraphModel.create(), [$graph]);
   const clipboard = useMemo(() => CanvasGraphModel.create(), []);
-  const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
-  const registry = useMemo(() => _registry ?? new ShapeRegistry(defaultShapes), [_registry]);
-  const layout = useMemo(() => _layout ?? new ShapeLayout(registry), [_layout, registry]);
+  const selection = useMemo(() => $selection ?? new SelectionModel(), [$selection]);
+  const registry = useMemo(() => $registry ?? new ShapeRegistry(defaultShapes), [$registry]);
+  const layout = useMemo(() => $layout ?? new ShapeLayout(registry), [$layout, registry]);
 
   // Canvas state.
-  const [debug, setDebug] = useState(_debug);
+  const [debug, setDebug] = useState($debug);
   const [gridSize, setGridSize] = useState({ width: options.gridSize, height: options.gridSize });
-  const [showGrid, setShowGrid] = useState(_showGrid);
-  const [snapToGrid, setSnapToGrid] = useState(_snapToGrid);
+  const [showGrid, setShowGrid] = useState($showGrid);
+  const [snapToGrid, setSnapToGrid] = useState($snapToGrid);
 
   // Repaint.
   const [, forceUpdate] = useState({});

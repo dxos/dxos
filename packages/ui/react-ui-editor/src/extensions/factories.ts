@@ -187,15 +187,15 @@ export const defaultThemeSlots = grow;
 export const createThemeExtensions = ({
   themeMode,
   styles,
-  syntaxHighlighting: _syntaxHighlighting,
-  slots: _slots,
+  syntaxHighlighting: $syntaxHighlighting,
+  slots: $slots,
 }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, _slots, defaultThemeSlots);
+  const slots = defaultsDeep({}, $slots, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
     // https://github.com/codemirror/theme-one-dark
-    _syntaxHighlighting &&
+    $syntaxHighlighting &&
       (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),

@@ -64,7 +64,7 @@ export default (context: PluginContext) =>
     // TODO(wittjosiah): Break this up into more composable pieces.
     createResolver({
       intent: ThreadAction.Create,
-      resolve: ({ name, anchor: _anchor, subject }) => {
+      resolve: ({ name, anchor: $anchor, subject }) => {
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
@@ -74,7 +74,7 @@ export default (context: PluginContext) =>
         const anchor = Relation.make(AnchoredTo, {
           [Relation.Source]: thread,
           [Relation.Target]: subject,
-          anchor: _anchor,
+          anchor: $anchor,
         });
 
         const draft = state.drafts[subjectId];
@@ -164,8 +164,8 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: ThreadAction.Delete,
-      resolve: async ({ subject, anchor, thread: _thread }, undo) => {
-        const thread = _thread ?? (Relation.getSource(anchor) as ThreadType);
+      resolve: async ({ subject, anchor, thread: $thread }, undo) => {
+        const thread = $thread ?? (Relation.getSource(anchor) as ThreadType);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const draft = state.drafts[subjectId];

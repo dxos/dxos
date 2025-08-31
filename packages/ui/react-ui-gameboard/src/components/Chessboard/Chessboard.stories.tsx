@@ -19,9 +19,9 @@ type DefaultStoryProps = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'd
   pgn?: string;
 };
 
-const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStoryProps) => {
+const DefaultStory = ({ orientation: $orientation, pgn, ...props }: DefaultStoryProps) => {
   const model = useMemo(() => new ChessModel(pgn), [pgn]);
-  const [orientation, setOrientation] = useState<Player | undefined>(_orientation);
+  const [orientation, setOrientation] = useState<Player | undefined>($orientation);
 
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
     (move: Move) => {

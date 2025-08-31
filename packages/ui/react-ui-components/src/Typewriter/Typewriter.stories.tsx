@@ -11,7 +11,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { TextBlock } from './TextBlock';
+import { Typewriter } from './Typewriter';
 
 const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: number }) => {
   const [text, setText] = useState('');
@@ -47,13 +47,13 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
           Restart
         </Toolbar.Button>
       </Toolbar.Root>
-      <TextBlock classNames='p-2' text={text} />
+      <Typewriter classNames='p-2' text={text} />
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-components/TextBlock',
+  title: 'ui/react-ui-components/Typewriter',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
   parameters: {

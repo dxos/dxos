@@ -65,8 +65,8 @@ export const RefField = ({
     () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
     [ast],
   );
-  const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
 
+  const { options: availableOptions } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
   if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
     return (

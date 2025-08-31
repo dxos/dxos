@@ -20,12 +20,12 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
   const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-  const { actions: _actions, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
+  const { actions: $actions, groupedActions } = useActions(item);
+  const [primaryAction, ...secondaryActions] = $actions.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 
-  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
+  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : $actions)
     .flatMap((action) => (isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 

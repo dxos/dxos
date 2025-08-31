@@ -25,7 +25,7 @@ export const PluginItem = ({
   enabled = [],
   onClick,
   onChange,
-  hasSettings: _hasSettings,
+  hasSettings: $hasSettings,
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(REGISTRY_PLUGIN);
@@ -44,7 +44,7 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = _hasSettings?.(id) ?? false;
+  const hasSettings = $hasSettings?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
 
   return (

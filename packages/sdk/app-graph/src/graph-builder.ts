@@ -68,31 +68,31 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
     id,
     position = 'static',
     relation = 'outbound',
-    resolver: _resolver,
-    connector: _connector,
-    actions: _actions,
-    actionGroups: _actionGroups,
+    resolver: $resolver,
+    connector: $connector,
+    actions: $actions,
+    actionGroups: $actionGroups,
   } = extension;
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    _resolver && Rx.family((id: string) => _resolver(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
+    $resolver && Rx.family((id: string) => $resolver(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
-    _connector &&
+    $connector &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _connector(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
+      $connector(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
-    _actionGroups &&
+    $actionGroups &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      _actionGroups(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
+      $actionGroups(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
-    _actions &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) => _actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
+    $actions &&
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) => $actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
 
   return [
     resolver ? { id: getId('resolver'), position, resolver } : undefined,
@@ -312,7 +312,7 @@ export class GraphBuilder {
         Record.values,
         // TODO(wittjosiah): Sort on write rather than read.
         Array.sortBy(byPosition),
-        Array.filter(({ relation: _relation = 'outbound' }) => _relation === relation),
+        Array.filter(({ relation: $relation = 'outbound' }) => $relation === relation),
         Array.map(({ connector }) => connector?.(node)),
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),

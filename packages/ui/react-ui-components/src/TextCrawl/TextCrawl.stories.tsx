@@ -11,20 +11,20 @@ import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { StatusRoll, sizes } from './StatusRoll';
+import { TextCrawl, sizes } from './TextCrawl';
 
 const meta = {
-  title: 'ui/react-ui-components/StatusRoll',
-  component: StatusRoll,
+  title: 'ui/react-ui-components/TextCrawl',
+  component: TextCrawl,
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof StatusRoll>;
+} satisfies Meta<typeof TextCrawl>;
 
 export default meta;
 
-type Story = StoryObj<typeof StatusRoll>;
+type Story = StoryObj<typeof TextCrawl>;
 
 export const Default: Story = {
   args: {
@@ -40,7 +40,7 @@ export const Demo: Story = {
 
     return (
       <div className='flex flex-col w-96 gap-4'>
-        <StatusRoll classNames='px-2 border border-separator rounded-md' lines={lines} autoAdvance duration={1_000} />
+        <TextCrawl classNames='px-2 border border-separator rounded-md' lines={lines} autoAdvance />
         <div>
           <Button onClick={() => setLines((lines) => [...lines, `${lines.length + 1}. ${faker.lorem.paragraph()}`])}>
             Add
@@ -68,7 +68,7 @@ export const Numbers: Story = {
         {sizes.map((size) => (
           <div className='flex' key={size}>
             {Array.from({ length: n }).map((_, i) => (
-              <StatusRoll
+              <TextCrawl
                 key={i}
                 classNames={['font-mono', i === n - 1 && 'text-red-500']}
                 size={size}

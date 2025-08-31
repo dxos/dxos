@@ -46,14 +46,14 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
   };
 
 export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
-  ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
+  ({ debug, debugCustom, text, extensions: $extensions, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
     const [object] = useState(createObject(live(Expando, { content: text ?? '' })));
     const viewRef = useForwardedRef(forwardedRef);
     const extensions = useMemo(
-      () => (debug ? [_extensions, debugTree(setTree)].filter(isNonNullable) : _extensions),
-      [debug, _extensions],
+      () => (debug ? [$extensions, debugTree(setTree)].filter(isNonNullable) : $extensions),
+      [debug, $extensions],
     );
 
     const view = viewRef.current;
