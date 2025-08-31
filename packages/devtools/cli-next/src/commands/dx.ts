@@ -14,6 +14,7 @@ import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
 import { spaces } from './spaces';
+import { config } from './config';
 
 // TODO(wittjosiah): Env vars.
 
@@ -45,14 +46,16 @@ export const command = Command.make('dx', {
 export const dx = command.pipe(
   Command.withSubcommands([
     //
-    halo,
-    spaces,
-    edge,
+    config,
+
+    // Only providing client to commands that require it.
+    halo.pipe(Command.provide(ClientService.layer)),
+    spaces.pipe(Command.provide(ClientService.layer)),
+    edge.pipe(Command.provide(ClientService.layer)),
     // TODO(burdon): Admin-only (separate dynamic module?)
-    hub,
+    hub.pipe(Command.provide(ClientService.layer)),
   ]),
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
-  Command.provide(ClientService.layer),
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
   Command.provide(({ json, verbose }) =>
     Layer.succeed(CommandConfig, {

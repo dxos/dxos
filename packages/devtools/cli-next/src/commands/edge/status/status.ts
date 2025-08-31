@@ -11,13 +11,9 @@ import { ClientService, CommandConfig } from '../../../services';
 
 export const getStatus = () =>
   Effect.gen(function* () {
+    consol.log('status');
     const client = yield* ClientService;
-    const identity = yield* Effect.try({
-      try: () => createEdgeIdentity(client),
-      catch: (err) => {
-        return err;
-      },
-    });
+    const identity = createEdgeIdentity(client);
     client.edge.setIdentity(identity);
     const status = yield* Effect.tryPromise(() => client.edge.getStatus());
 

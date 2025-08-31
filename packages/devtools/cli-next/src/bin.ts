@@ -6,7 +6,7 @@
 
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
-import { Effect, Layer, Logger } from 'effect';
+import { Cause, Effect, Exit, Layer, Logger } from 'effect';
 
 import { unrefTimeout } from '@dxos/async';
 import { LogLevel, levels, log } from '@dxos/log';
@@ -33,12 +33,14 @@ const run = Command.run(dx, {
 });
 
 const EXIT_GRACE_PERIOD = 1_000;
+const FORCE_EXIT = true;
 
 run(process.argv).pipe(
   Effect.provide(Layer.mergeAll(NodeContext.layer, Logger.pretty)),
   Effect.scoped,
   NodeRuntime.runMain({
-    teardown: () => {
+    teardown: (exit, onExit) => {
+      onExit(Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0);
       const timeout = setTimeout(() => {
         log.error('Process did not exit within grace period. There may be a leak.');
         if (process.env.DX_TRACK_LEAKS) {
