@@ -46,14 +46,14 @@ export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<
  */
 export const Surface = memo(
   forwardRef<HTMLElement, SurfaceProps>(
-    ({ id: _id, role, data: $data, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+    ({ id: _id, role, data: dataParam, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
       //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
       //   This should be fine for now because it's how it worked prior to capabilities api anyways.
       //   In the future, it would be nice to be able to bucket the surface contributions by role.
       const surfaces = useSurfaces();
-      const data = useDefaultValue($data, () => ({}));
+      const data = useDefaultValue(dataParam, () => ({}));
 
       // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
       const definitions = findCandidates(surfaces, { role, data });

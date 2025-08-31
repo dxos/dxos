@@ -68,31 +68,33 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
     id,
     position = 'static',
     relation = 'outbound',
-    resolver: $resolver,
-    connector: $connector,
-    actions: $actions,
-    actionGroups: $actionGroups,
+    resolver: resolverParam,
+    connector: connectorParam,
+    actions: actionsParam,
+    actionGroups: actionGroupsParam,
   } = extension;
   const getId = (key: string) => `${id}/${key}`;
 
   const resolver =
-    $resolver && Rx.family((id: string) => $resolver(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
+    resolverParam && Rx.family((id: string) => resolverParam(id).pipe(Rx.withLabel(`graph-builder:_resolver:${id}`)));
 
   const connector =
-    $connector &&
+    connectorParam &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      $connector(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
+      connectorParam(node).pipe(Rx.withLabel(`graph-builder:_connector:${id}`)),
     );
 
   const actionGroups =
-    $actionGroups &&
+    actionGroupsParam &&
     Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
-      $actionGroups(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
+      actionGroupsParam(node).pipe(Rx.withLabel(`graph-builder:_actionGroups:${id}`)),
     );
 
   const actions =
-    $actions &&
-    Rx.family((node: Rx.Rx<Option.Option<Node>>) => $actions(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)));
+    actionsParam &&
+    Rx.family((node: Rx.Rx<Option.Option<Node>>) =>
+      actionsParam(node).pipe(Rx.withLabel(`graph-builder:_actions:${id}`)),
+    );
 
   return [
     resolver ? { id: getId('resolver'), position, resolver } : undefined,
@@ -312,7 +314,7 @@ export class GraphBuilder {
         Record.values,
         // TODO(wittjosiah): Sort on write rather than read.
         Array.sortBy(byPosition),
-        Array.filter(({ relation: $relation = 'outbound' }) => $relation === relation),
+        Array.filter(({ relation: relationParam = 'outbound' }) => relationParam === relation),
         Array.map(({ connector }) => connector?.(node)),
         Array.filter(isNonNullable),
         Array.flatMap((result) => get(result)),

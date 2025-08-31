@@ -64,9 +64,9 @@ export type TreeItemProps<T extends HasId = any> = {
 
 const RawTreeItem = <T extends HasId = any>({
   item,
-  path: $path,
+  path: pathParam,
   last,
-  draggable: $draggable,
+  draggable: draggableParam,
   renderColumns: Columns,
   canDrop,
   onOpenChange,
@@ -83,8 +83,8 @@ const RawTreeItem = <T extends HasId = any>({
 
   const { useItems, getProps, isOpen, isCurrent } = useTree();
   const items = useItems(item);
-  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, $path);
-  const path = useMemo(() => [...$path, id], [$path, id]);
+  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, pathParam);
+  const path = useMemo(() => [...pathParam, id], [pathParam, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
   const level = path.length - levelOffset;
@@ -99,7 +99,7 @@ const RawTreeItem = <T extends HasId = any>({
   }, []);
 
   useEffect(() => {
-    if (!$draggable) {
+    if (!draggableParam) {
       return;
     }
 
@@ -176,7 +176,7 @@ const RawTreeItem = <T extends HasId = any>({
         },
       }),
     );
-  }, [$draggable, item, id, mode, path, open, canDrop]);
+  }, [draggableParam, item, id, mode, path, open, canDrop]);
 
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
@@ -272,7 +272,7 @@ const RawTreeItem = <T extends HasId = any>({
             item={item}
             path={path}
             last={index === items.length - 1}
-            draggable={$draggable}
+            draggable={draggableParam}
             renderColumns={Columns}
             canDrop={canDrop}
             onOpenChange={onOpenChange}

@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Waveform, type WaveformProps } from './Waveform';
 
-const DefaultStory = ({ active: $active }: WaveformProps) => {
-  const [active, setActive] = useState($active);
+const DefaultStory = ({ active: activeParam }: WaveformProps) => {
+  const [active, setActive] = useState(activeParam);
 
   return (
     <div className='flex flex-col grow'>

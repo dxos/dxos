@@ -21,10 +21,10 @@ import { PluginList } from './PluginList';
 
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin, { meta: { name: b = '' } }: Plugin) => a.localeCompare(b);
 
-export const RegistryContainer = ({ id, plugins: $plugins }: { id: string; plugins: Plugin[] }) => {
+export const RegistryContainer = ({ id, plugins: pluginsParam }: { id: string; plugins: Plugin[] }) => {
   const manager = usePluginManager();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const plugins = useMemo(() => $plugins.sort(sortByPluginMeta), [$plugins]);
+  const plugins = useMemo(() => pluginsParam.sort(sortByPluginMeta), [pluginsParam]);
   const settingsStore = useCapability(Capabilities.SettingsStore);
 
   // TODO(wittjosiah): Factor out to an intent?

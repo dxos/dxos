@@ -104,13 +104,13 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
                 }),
           } satisfies Commit;
         case 'toolCall':
-          // TODO(burdon): Lookup tool name.
           return {
             id: getToolCallId(message.id, block.toolCallId),
             branch,
             parents,
             icon: IconType.TOOL,
             level: LogLevel.INFO,
+            // TODO(burdon): Lookup tool name/description?
             message: `Calling tool (${block.name})`,
           } satisfies Commit;
         case 'toolResult':

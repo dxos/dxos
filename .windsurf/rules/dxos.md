@@ -27,7 +27,8 @@ Variable names:
 
 - Use \_ as a prefix for class variables.
 - Use \_ as a prefix if a function variable is not used.
-- Use \$ as a prefix to disambiguate with local variables.
+- Use \$ as a prefix for variables that are signals.
+- Use Param as a suffix to disambiguate with local variables (e.g., fooParam).
 
 Technologies to consider:
 

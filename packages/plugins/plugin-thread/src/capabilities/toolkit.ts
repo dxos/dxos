@@ -33,7 +33,7 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
-      'add-proposals': ({ id, diffs: $diffs }) =>
+      'add-proposals': ({ id, diffs: diffsParam }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -55,7 +55,7 @@ class Toolkit extends AiToolkit.make(
           const content = yield* Effect.promise(() => object.content.load());
           const accessor = createDocAccessor(content, ['content']);
           yield* pipe(
-            computeDiffsWithCursors(accessor, $diffs),
+            computeDiffsWithCursors(accessor, diffsParam),
             Array.map(({ cursor, text }) =>
               createIntent(ThreadAction.AddProposal, {
                 subject: object,

@@ -22,9 +22,9 @@ import { Outliner } from './Outliner';
 const meta = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner,
-  render: render(({ text: $text }) => {
+  render: render(({ text: textParam }) => {
     const space = useSpace();
-    const text = useMemo(() => space?.db.add($text), [space, $text]);
+    const text = useMemo(() => space?.db.add(textParam), [space, textParam]);
     if (text) {
       return <Outliner id={text.id} text={text} />;
     }

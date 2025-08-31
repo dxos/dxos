@@ -56,29 +56,29 @@ export type CreateAppOptions = {
  */
 export const useApp = ({
   pluginManager,
-  pluginLoader: $pluginLoader,
-  plugins: $plugins,
-  core: $core,
-  defaults: $defaults,
+  pluginLoader: pluginLoaderParam,
+  plugins: pluginsParam,
+  core: coreParam,
+  defaults: defaultsParam,
   placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
   safeMode = false,
 }: CreateAppOptions) => {
-  const plugins = useDefaultValue($plugins, () => []);
-  const core = useDefaultValue($core, () => plugins.map(({ meta }) => meta.id));
-  const defaults = useDefaultValue($defaults, () => []);
+  const plugins = useDefaultValue(pluginsParam, () => []);
+  const core = useDefaultValue(coreParam, () => plugins.map(({ meta }) => meta.id));
+  const defaults = useDefaultValue(defaultsParam, () => []);
 
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader = useMemo(
     () =>
-      $pluginLoader ??
+      pluginLoaderParam ??
       ((id: string) => {
         const plugin = plugins.find((plugin) => plugin.meta.id === id);
         invariant(plugin, `Plugin not found: ${id}`);
         return plugin;
       }),
-    [$pluginLoader, plugins],
+    [pluginLoaderParam, plugins],
   );
 
   const state = useMemo(() => live({ ready: false, error: null }), []);
@@ -93,10 +93,10 @@ export const useApp = ({
   );
 
   useEffect(() => {
-    return manager.activation.on(({ event, state: $state, error }) => {
+    return manager.activation.on(({ event, state: stateParam, error }) => {
       // Once the app is ready the first time, don't show the fallback again.
       if (!state.ready && event === Events.Startup.id) {
-        state.ready = $state === 'activated';
+        state.ready = stateParam === 'activated';
       }
 
       if (error && !state.ready && !state.error) {

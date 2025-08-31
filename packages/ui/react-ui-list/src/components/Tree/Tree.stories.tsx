@@ -95,13 +95,13 @@ const meta = {
         </div>
       );
     },
-    onOpenChange: ({ path: $path, open }) => {
-      const path = Path.create(...$path);
+    onOpenChange: ({ path: pathParam, open }) => {
+      const path = Path.create(...pathParam);
       const object = state.get(path);
       object!.open = open;
     },
-    onSelect: ({ path: $path, current }) => {
-      const path = Path.create(...$path);
+    onSelect: ({ path: pathParam, current }) => {
+      const path = Path.create(...pathParam);
       const object = state.get(path);
       object!.current = current;
     },

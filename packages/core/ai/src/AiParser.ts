@@ -29,9 +29,9 @@ enum ModelTags {
    * Used by DeepSeek.
    */
   THINK = 'think',
-
   STATUS = 'status',
   ARTIFACT = 'artifact',
+
   /**
    * Block reference to an object.
    */
@@ -131,7 +131,7 @@ export const parseResponse =
           input,
           Effect.fnUntraced(function* (response) {
             for (const part of response.parts) {
-              log('part', { part });
+              log.info('part', { part });
               yield* onPart(part);
               switch (part._tag) {
                 case 'TextPart': {
@@ -258,8 +258,9 @@ export const parseResponse =
 
                 case 'FinishPart': {
                   yield* flushText();
+                  // TODO(burdon): Get part.usage and create summary message.
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
-                  log('finish', { finish: part });
+                  log.info('finish', { finish: part });
                   break;
                 }
               }

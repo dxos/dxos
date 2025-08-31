@@ -98,7 +98,7 @@ export type TagPickerOptions = {
  */
 export const tagPicker = ({
   debug,
-  keymap: $keymap = true,
+  keymap: keymapParam = true,
   removeLabel,
   mode = 'multi-select',
   onSelect,
@@ -125,7 +125,7 @@ export const tagPicker = ({
   const extensions: Extension[] = [
     keymap.of(completionKeymap),
 
-    $keymap &&
+    keymapParam &&
       Prec.highest(
         keymap.of([
           {

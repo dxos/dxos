@@ -40,7 +40,7 @@ export const CreateObjectPanel = ({
   typename,
   target,
   views,
-  initialFormValues: $initialFormValues,
+  initialFormValues: initialFormValuesParam,
   defaultSpaceId,
   resolve,
   onTargetChange,
@@ -48,7 +48,7 @@ export const CreateObjectPanel = ({
   onCreateObject,
 }: CreateObjectPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  const initialFormValues = useDefaultValue($initialFormValues, () => ({}));
+  const initialFormValues = useDefaultValue(initialFormValuesParam, () => ({}));
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
     .filter((form) => {

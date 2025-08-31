@@ -90,9 +90,9 @@ type ComposerLogoProps = { animate?: boolean; size?: number; classNames?: string
 >;
 
 export const ComposerLogo = forwardRef<AnimationController, ComposerLogoProps>(
-  ({ animate: $animate = false, size = 32, classNames = defaultClassNames, ...props }: ComposerLogoProps, ref) => {
+  ({ animate: animateParam = false, size = 32, classNames = defaultClassNames, ...props }: ComposerLogoProps, ref) => {
     const layers = useMemo(() => getLayers(size, classNames), [size, classNames]);
-    const [animate, setAnimate] = useState($animate);
+    const [animate, setAnimate] = useState(animateParam);
     useImperativeHandle(
       ref,
       () => ({

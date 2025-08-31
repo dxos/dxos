@@ -29,7 +29,13 @@ export type D3ForceGraphProps = ThemedClassName<
   } & Pick<GraphProps, 'drag'>
 >;
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: $selection, grid, ...props }) => {
+export const D3ForceGraph: FC<D3ForceGraphProps> = ({
+  classNames,
+  model,
+  selection: selectionParam,
+  grid,
+  ...props
+}) => {
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(() => {
     if (context.current) {
@@ -51,7 +57,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
   }, [context.current]);
 
   const graph = useRef<GraphController>(null);
-  const selection = useMemo(() => $selection ?? new SelectionModel(), [$selection]);
+  const selection = useMemo(() => selectionParam ?? new SelectionModel(), [selectionParam]);
   useEffect(() => graph.current?.repaint(), [selection.selected.value]);
 
   const handleSelect = useCallback<NonNullable<GraphProps['onSelect']>>(

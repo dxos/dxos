@@ -43,8 +43,8 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   {
     classNames,
     model,
-    projector: $projector,
-    renderer: $renderer,
+    projector: projectorParam,
+    renderer: rendererParam,
     drag,
     arrows,
     onSelect,
@@ -57,12 +57,12 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   const graphRef = useRef<SVGGElement>();
 
   const { projector, renderer } = useMemo(() => {
-    let projector = $projector;
+    let projector = projectorParam;
     if (!projector) {
       projector = new GraphForceProjector<Node>(context);
     }
 
-    let renderer = $renderer;
+    let renderer = rendererParam;
     if (!renderer) {
       renderer = new GraphRenderer<Node>(context, graphRef, {
         ...props,
@@ -75,7 +75,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
     }
 
     return { projector, renderer };
-  }, [context, $projector, $renderer, drag]);
+  }, [context, projectorParam, rendererParam, drag]);
 
   // External API.
   useImperativeHandle(

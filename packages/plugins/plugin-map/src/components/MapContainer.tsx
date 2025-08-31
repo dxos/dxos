@@ -30,8 +30,8 @@ export type MapContainerProps = {
 } & GeoControlProps &
   Pick<MapRootProps, 'onChange'>;
 
-export const MapContainer = ({ role, type: $type = 'map', view, ...props }: MapContainerProps) => {
-  const [type, setType] = useControlledState($type);
+export const MapContainer = ({ role, type: typeParam = 'map', view, ...props }: MapContainerProps) => {
+  const [type, setType] = useControlledState(typeParam);
   const client = useClient();
   const space = getSpace(view);
 

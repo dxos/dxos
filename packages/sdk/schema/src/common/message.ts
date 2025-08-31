@@ -4,12 +4,12 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 import { Unit, isNotFalsy } from '@dxos/util';
 
-import { Actor } from './actor';
+import { Actor, type ActorRole } from './actor';
 
 /**
  * Messages are made of typed content blocks.
@@ -129,8 +129,14 @@ export namespace ContentBlock {
   export const Summary = Schema.TaggedStruct('summary', {
     mimeType: Schema.optional(Schema.String),
     message: Schema.String,
-    model: Schema.optional(Schema.String),
-    tokens: Schema.optional(Schema.Number),
+    usage: Schema.optional(
+      Schema.Struct({
+        model: Schema.optional(Schema.String),
+        input: Schema.optional(Schema.Number),
+        output: Schema.optional(Schema.Number),
+        total: Schema.optional(Schema.Number),
+      }),
+    ),
     duration: Schema.optional(Schema.Number).annotations({
       description: 'Duration in ms.',
     }),
@@ -143,10 +149,10 @@ export namespace ContentBlock {
    * Claude-like message
    * ⎿ Done (15 tool uses · 21.5k tokens · 1m 13.5s)
    */
-  export const createSummaryMessage = ({ message, model, tokens, toolCalls, duration }: Summary) => {
+  export const createSummaryMessage = ({ message, usage, toolCalls, duration }: Summary) => {
     const parts = [
-      model,
-      tokens && `${Unit.Thousand(tokens)} tokens`,
+      usage?.model,
+      usage?.total && `${Unit.Thousand(usage.total)} tokens`,
       toolCalls && `${toolCalls} tool uses`,
       duration && Unit.Duration(duration),
     ].filter(isNotFalsy);
@@ -362,6 +368,14 @@ export const Message = MessageSchema.pipe(
 );
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
+
+export const makeMessage = (sender: Actor | ActorRole, blocks: ContentBlock.Any[]) => {
+  return Obj.make(Message, {
+    created: new Date().toISOString(),
+    sender: typeof sender === 'string' ? { role: sender } : sender,
+    blocks,
+  });
+};
 
 /** @deprecated */
 export enum MessageV1State {

@@ -345,8 +345,8 @@ export const TreeView: Story = {
     );
 
     const onOpenChange = useCallback(
-      ({ path: $path, open }: { path: string[]; open: boolean }) => {
-        const path = Path.create(...$path);
+      ({ path: pathParam, open }: { path: string[]; open: boolean }) => {
+        const path = Path.create(...pathParam);
         const object = state.get(path);
         object!.open = open;
       },
@@ -354,8 +354,8 @@ export const TreeView: Story = {
     );
 
     const onSelect = useCallback(
-      ({ path: $path, current }: { path: string[]; current: boolean }) => {
-        const path = Path.create(...$path);
+      ({ path: pathParam, current }: { path: string[]; current: boolean }) => {
+        const path = Path.create(...pathParam);
         const object = state.get(path);
         object!.current = current;
       },

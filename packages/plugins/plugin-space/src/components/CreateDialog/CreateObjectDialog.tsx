@@ -35,8 +35,8 @@ export type CreateObjectDialogProps = Pick<
   CreateObjectPanelProps,
   'target' | 'views' | 'typename' | 'initialFormValues'
 > & {
-  onCreateObject?: (object: Obj.Any) => void;
   shouldNavigate?: (object: Obj.Any) => boolean;
+  onCreateObject?: (object: Obj.Any) => void;
 };
 
 export const CreateObjectDialog = ({
@@ -44,8 +44,8 @@ export const CreateObjectDialog = ({
   typename: initialTypename,
   views,
   initialFormValues,
+  shouldNavigate: shouldNavigateParam,
   onCreateObject,
-  shouldNavigate: $shouldNavigate,
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const manager = usePluginManager();
@@ -84,7 +84,7 @@ export const CreateObjectDialog = ({
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
           const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
-          const shouldNavigate = $shouldNavigate ?? (() => true);
+          const shouldNavigate = shouldNavigateParam ?? (() => true);
           if (shouldNavigate(object)) {
             yield* dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
           } else {
@@ -94,7 +94,7 @@ export const CreateObjectDialog = ({
           onCreateObject?.(object);
         }
       }).pipe(Effect.runPromise),
-    [dispatch, target, resolve, hiddenTypenames, $shouldNavigate],
+    [dispatch, target, resolve, hiddenTypenames, shouldNavigateParam],
   );
 
   return (

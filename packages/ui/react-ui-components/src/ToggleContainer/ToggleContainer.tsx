@@ -24,14 +24,14 @@ export const ToggleContainer = ({
   classNames,
   title,
   icon,
-  open: $open,
+  open: openParam,
   defaultOpen,
   duration = 250,
   shrinkX = false,
   children,
   onChangeOpen,
 }: ToggleContainerProps) => {
-  const [open, setOpen] = useControlledState($open ?? defaultOpen);
+  const [open, setOpen] = useControlledState(openParam ?? defaultOpen);
   const [expandX, setExpandX] = useState(shrinkX ? open : true);
   const [expandY, setExpandY] = useState(open);
 
