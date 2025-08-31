@@ -258,6 +258,7 @@ export const parseResponse =
 
                 case 'FinishPart': {
                   yield* flushText();
+                  // TODO(burdon): Get part.usage and create summary message.
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
                   log.info('finish', { finish: part });
                   break;
