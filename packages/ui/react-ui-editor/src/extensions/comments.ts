@@ -99,10 +99,12 @@ export const commentsState = StateField.define<CommentsState>({
  */
 const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
-    // margin: '0 -3px',
-    // padding: '3px 3px',
-    // borderRadius: '3px',
     padding: '3px 0',
+    backgroundColor: 'var(--dx-cmCommentSurface)',
+  },
+  '.cm-comment > span, .cm-comment-current > span': {
+    boxDecorationBreak: 'clone',
+    boxShadow: '0 0 0 3px var(--dx-cmCommentSurface)',
     backgroundColor: 'var(--dx-cmCommentSurface)',
     color: 'var(--dx-cmComment)',
     cursor: 'pointer',

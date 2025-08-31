@@ -99,14 +99,6 @@ export const defaultTheme: ThemeStyles = {
     lineHeight: '24px',
     paddingInline: 0,
   },
-  // '.cm-line > span': {
-  //   boxDecorationBreak: 'clone',
-  //   padding: '4px 3px',
-  // },
-  // '.cm-line > span:empty': {
-  //   boxDecorationBreak: 'unset',
-  //   padding: '0px',
-  // },
   '.cm-activeLine': {
     background: 'var(--dx-cmActiveLine)',
   },
