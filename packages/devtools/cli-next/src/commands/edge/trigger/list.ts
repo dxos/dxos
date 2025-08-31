@@ -5,6 +5,8 @@
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
+import { colorize } from 'json-colorizer';
+
 import { Filter } from '@dxos/echo';
 import { DatabaseService, FunctionTrigger } from '@dxos/functions';
 
@@ -19,6 +21,6 @@ export const list = Command.make(
   ({ spaceId }) =>
     Effect.gen(function* () {
       const { objects: triggers } = yield* DatabaseService.runQuery(Filter.type(FunctionTrigger));
-      yield* Console.log(JSON.stringify(triggers, null, 2));
+      yield* Console.log(colorize(triggers));
     }).pipe(withDatabase(spaceId)),
 ).pipe(Command.withDescription('List functions deployed to EDGE.'));

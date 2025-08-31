@@ -4,6 +4,7 @@
 
 import { Command, Options } from '@effect/cli';
 import { Console, Effect } from 'effect';
+import { colorize } from 'json-colorizer';
 
 import { Filter } from '@dxos/client/echo';
 
@@ -16,7 +17,7 @@ export const handler = Effect.fn(function* ({ spaceId, typename }: { spaceId: st
   const filter = typename?.length ? Filter.typename(typename) : Filter.nothing();
   // TODO(wittjosiah): Use DatabaseService?
   const { objects } = yield* Effect.tryPromise(() => space.db.query(filter).run());
-  yield* Console.log(JSON.stringify(objects, null, 2));
+  yield* Console.log(colorize(objects));
 });
 
 export const query = Command.make(
