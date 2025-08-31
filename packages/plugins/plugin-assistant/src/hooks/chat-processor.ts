@@ -6,6 +6,7 @@ import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Cause, Effect, Exit, Fiber, type Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
   type AiConversationRunParams,
@@ -18,13 +19,21 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Filter, getVersion } from '@dxos/react-client/echo';
+import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { type Assistant } from '../types';
 
 import { type AiChatServices } from './useChatServices';
+
+// TODO(burdon): Standardize.
+declare global {
+  interface ToolContextExtensions {
+    space?: Space;
+    dispatch?: PromiseIntentDispatcher;
+  }
+}
 
 // TODO(burdon): Move to @dxos/assistant
 const CHAT_NAME_PROMPT = trim`
