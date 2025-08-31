@@ -36,7 +36,7 @@ enum ModelTags {
    * Block reference to an object.
    */
   OBJECT = 'object',
-  SUGGEST = 'suggest',
+  SUGGESTION = 'suggestion',
   PROPOSAL = 'proposal',
   SELECT = 'select',
   TOOLKIT = 'toolkit',
@@ -353,12 +353,12 @@ const makeContentBlock = (
           return undefined;
         }
 
-        case ModelTags.SUGGEST: {
+        case ModelTags.SUGGESTION: {
           if (block.content.length === 1 && block.content[0].type === 'text') {
             return {
-              _tag: 'suggest',
+              _tag: 'suggestion',
               text: block.content[0].content,
-            } satisfies ContentBlock.Suggest;
+            } satisfies ContentBlock.Suggestion;
           }
 
           return undefined;

@@ -135,15 +135,15 @@ const visitNode = (
   path: Path = [],
   depth = 0,
 ): VisitResult | undefined => {
-  const _result = test?.(node, path, depth);
+  const $result = test?.(node, path, depth);
   const result: VisitResult =
-    _result === undefined
+    $result === undefined
       ? VisitResult.CONTINUE
-      : typeof _result === 'boolean'
-        ? _result
+      : typeof $result === 'boolean'
+        ? $result
           ? VisitResult.CONTINUE
           : VisitResult.SKIP
-        : _result;
+        : $result;
 
   if (result === VisitResult.EXIT) {
     return result;

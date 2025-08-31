@@ -8,7 +8,7 @@ import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
-import { DataType } from '@dxos/schema';
+import { ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 enum IconType {
@@ -121,6 +121,15 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
             icon: block.error ? IconType.ERROR : IconType.SUCCESS,
             level: block.error ? LogLevel.ERROR : LogLevel.INFO,
             message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
+          } satisfies Commit;
+        case 'summary':
+          return {
+            id: getGenericBlockId(message.id, idx),
+            branch,
+            parents,
+            icon: IconType.ROCKET,
+            level: LogLevel.INFO,
+            message: ContentBlock.createSummaryMessage(block),
           } satisfies Commit;
         case 'status':
           return {

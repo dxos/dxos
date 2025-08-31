@@ -13,7 +13,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Flex } from '../Flex';
-import { StatusRoll } from '../StatusRoll';
+import { TextCrawl } from '../TextCrawl';
 
 import { ProgressBar, type ProgressBarProps } from './ProgressBar';
 
@@ -68,7 +68,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
           onSelect={(node) => setIndex((index) => (index === node.index ? undefined : node.index))}
           {...props}
         />
-        <StatusRoll lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
+        <TextCrawl lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
       </Flex>
     </Flex>
   );
