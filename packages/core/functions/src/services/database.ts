@@ -136,6 +136,12 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
+  /**
+   * Removes an object from the database.
+   */
+  static remove = (obj: Obj.Any | Relation.Any): Effect.Effect<void, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
+
   static flush = (opts?: FlushOptions) =>
     DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
 }

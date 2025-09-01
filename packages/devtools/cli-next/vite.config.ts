@@ -6,7 +6,4 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 
 import { baseConfig } from '../../../vitest.base.config';
 
-export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
-  defineConfig({}),
-);
+export default mergeConfig(baseConfig({ cwd: __dirname }), defineConfig({}));
