@@ -63,7 +63,7 @@ export const useChatProcessor = ({
       settings,
     });
 
-    return new AiChatProcessor(services, conversation, {
+    return new AiChatProcessor(conversation, services, {
       extensions,
       blueprintRegistry,
       observableRegistry,

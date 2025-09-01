@@ -32,8 +32,8 @@ import { GenerationObserver } from './observer';
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 export type AiSessionRunRequirements<Tools extends AiTool.Any> =
-  | AiTool.ToHandler<Tools>
   | AiLanguageModel.AiLanguageModel
+  | AiTool.ToHandler<Tools>
   | ToolResolverService
   | ToolExecutionService
   | TracingService;

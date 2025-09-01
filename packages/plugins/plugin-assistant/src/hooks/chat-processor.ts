@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool } from '@effect/ai';
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
-import { Cause, Effect, Exit, Fiber, type Layer, Option, Stream, pipe } from 'effect';
+import { Cause, Effect, Exit, Fiber, Layer, Option, Stream, pipe } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
+  type AiConversationRequest,
   type AiConversationRunParams,
   AiSession,
   ArtifactDiffResolver,
@@ -76,7 +78,7 @@ export class AiChatProcessor {
   /** Rx registry. */
   private readonly _observableRegistry: Registry.Registry;
 
-  // TODO(burdon): Unify.
+  // TODO(burdon): Replace with AiConversationRequest.
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
   /** Current request fiber. */
@@ -87,6 +89,7 @@ export class AiChatProcessor {
   /**
    * Current streaming message (from the AI service).
    */
+  // TODO(burdon): Move util into AiConversationRequest?
   private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
     return pipe(
       get(this._session),
@@ -114,17 +117,6 @@ export class AiChatProcessor {
   });
 
   /**
-   * Streaming state.
-   */
-  readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
-    return pipe(
-      get(this._streaming),
-      Result.map((streaming) => Option.isSome(streaming)),
-      Result.getOrElse(() => false),
-    );
-  });
-
-  /**
    * Pending messages (incl. the current user request).
    */
   private readonly _pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
@@ -137,6 +129,17 @@ export class AiChatProcessor {
           Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => [...acc, message]),
         )
       : Stream.make();
+  });
+
+  /**
+   * Streaming state.
+   */
+  readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
+    return pipe(
+      get(this._streaming),
+      Result.map((streaming) => Option.isSome(streaming)),
+      Result.getOrElse(() => false),
+    );
   });
 
   /**
@@ -158,9 +161,9 @@ export class AiChatProcessor {
   });
 
   constructor(
+    private readonly _conversation: AiConversation,
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
     private readonly _services: Layer.Layer<AiChatServices>,
-    private readonly _conversation: AiConversation,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     // Initialize registries and defaults before using in other logic.
@@ -183,12 +186,36 @@ export class AiChatProcessor {
     return this._options.blueprintRegistry;
   }
 
+  //
+  // TODO(burdon): New request/cancel moves move plumbing downstream to assistant.
+  // TODO(burdon): Create test.
+  //
+
+  private _request: AiConversationRequest<AiTool.Any> | undefined;
+
+  async request2({ message }: AiRequest) {
+    if (this._request) {
+      await this.cancel2();
+    }
+
+    this._request = this._conversation.createRequest({
+      system: this._options.system,
+      prompt: message,
+    });
+
+    await this._request.run(
+      Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
+    );
+  }
+
+  async cancel2() {
+    await this._request?.cancel();
+    this._request = undefined;
+  }
+
   /**
    * Make GPT request.
    */
-  // TODO(burdon): Return AiSession and move observability to here.
-  //  Allow multiple requests in parallel.
-  // TODO(burdon): Create test.
   async request(request: AiRequest): Promise<void> {
     if (this._currentRequest) {
       throw new Error('Request already in progress');
@@ -221,10 +248,13 @@ export class AiChatProcessor {
           system: this._options.system,
         })
         .pipe(
-          Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
+          Effect.provide(
+            Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
+          ),
+
           // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
           Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-          Effect.provide(this._services),
+
           Effect.tapErrorCause((cause) => {
             log.error('error', { cause });
             return Effect.void;
@@ -246,15 +276,6 @@ export class AiChatProcessor {
   }
 
   /**
-   * Retry last request.
-   */
-  async retry(): Promise<void> {
-    if (this._lastRequest) {
-      return this.request(this._lastRequest);
-    }
-  }
-
-  /**
    * Cancel pending requests.
    */
   async cancel(): Promise<void> {
@@ -265,6 +286,15 @@ export class AiChatProcessor {
     }
 
     this._observableRegistry.set(this._session, Option.none());
+  }
+
+  /**
+   * Retry last request.
+   */
+  async retry(): Promise<void> {
+    if (this._lastRequest) {
+      return this.request(this._lastRequest);
+    }
   }
 
   /**

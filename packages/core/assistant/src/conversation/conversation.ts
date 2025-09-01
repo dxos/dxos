@@ -14,6 +14,7 @@ import { DataType } from '@dxos/schema';
 import { AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
+import { AiConversationRequest } from './request';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
   session: AiSession;
@@ -53,14 +54,21 @@ export class AiConversation {
     return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
 
+  // TODO(burdon): Replace run/raw; remove session from params.
+  createRequest<Tools extends AiTool.Any>(params: Omit<AiConversationRunParams<Tools>, 'session'>) {
+    return new AiConversationRequest<Tools>(
+      this.run<Tools>({
+        session: new AiSession(),
+        ...params,
+      }),
+    );
+  }
+
   /**
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run = <Tools extends AiTool.Any>({
-    session,
-    ...params
-  }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> => {
+  run<Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 
@@ -82,7 +90,7 @@ export class AiConversation {
 
       // Process request.
       const start = Date.now();
-      const messages = yield* session.run({ ...params, history, objects, blueprints }).pipe(
+      const messages = yield* session.run({ ...params, history, blueprints, objects }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
@@ -95,14 +103,14 @@ export class AiConversation {
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
     }).pipe(Effect.withSpan('AiConversation.run'));
-  };
+  }
 
   /**
    * Raw request without updating chat.
    */
-  raw = (params: AiConversationRunParams<AiTool.Any>) => {
+  // TODO(burdon): Reconcile with run.
+  raw({ session, ...params }: AiConversationRunParams<AiTool.Any>) {
     return Effect.gen(this, function* () {
-      const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());
       const messages = yield* session.run({ ...params, history }).pipe(
         Effect.provideService(AiContextService, {
@@ -110,8 +118,8 @@ export class AiConversation {
         }),
       );
 
-      const message = messages.find((m) => m.sender.role === 'assistant');
-      return message;
+      // TODO(burdon): Util to extract assistant message.
+      return messages.find((message) => message.sender.role === 'assistant');
     }).pipe(Effect.withSpan('AiConversation.raw'));
-  };
+  }
 }

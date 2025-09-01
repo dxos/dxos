@@ -59,7 +59,7 @@ describe('Chat processor', () => {
         const services = TestLayer;
         const queue = yield* QueueService.createQueue<DataType.Message>();
         const conversation = new AiConversation({ queue });
-        const processor = new AiChatProcessor(services, conversation);
+        const processor = new AiChatProcessor(conversation, services);
         expect(processor).to.exist;
       },
       Effect.provide(TestLayer),
