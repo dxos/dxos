@@ -4,7 +4,6 @@
 
 import { Command } from '@effect/cli';
 import { Effect } from 'effect';
-import { colorize } from 'json-colorizer';
 
 import { ConfigService } from '../../services';
 
