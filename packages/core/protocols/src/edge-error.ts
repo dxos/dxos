@@ -90,7 +90,6 @@ const parseErrorBody = async (response: Response): Promise<Error | undefined> =>
   if (!('error' in body)) {
     return undefined;
   }
-  console.log({ body });
 
   return parseSerializedError(body.error);
 };
