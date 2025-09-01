@@ -30,6 +30,7 @@ export default (context: PluginContext) =>
             ),
             Option.map((node) => {
               const space = get(rxFromSignal(() => getActiveSpace(context)));
+              const [graph] = get(context.capabilities(Capabilities.AppGraph));
 
               return [
                 {
@@ -56,6 +57,15 @@ export default (context: PluginContext) =>
                           },
                         ]
                       : []),
+                    {
+                      id: `app-graph-${node.id}`,
+                      type: 'dxos.org/plugin/debug/app-graph',
+                      data: { graph: graph?.graph, root: space ? space.id : ROOT_ID },
+                      properties: {
+                        label: ['debug app graph label', { ns: DEBUG_PLUGIN }],
+                        icon: 'ph--graph--regular',
+                      },
+                    },
                     {
                       id: `${Devtools.Client.id}-${node.id}`,
                       data: null,
@@ -361,43 +371,6 @@ export default (context: PluginContext) =>
                 },
               ];
             }),
-            Option.getOrElse(() => []),
-          ),
-        ),
-    }),
-
-    // Debug node.
-    createExtension({
-      id: 'dxos.org/plugin/debug/debug',
-      connector: (node) =>
-        Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
-            Option.flatMap(() => {
-              const [graph] = get(context.capabilities(Capabilities.AppGraph));
-              return graph ? Option.some(graph) : Option.none();
-            }),
-            Option.flatMap((graph) => {
-              // TODO(wittjosiah): Plank is currently blank. Remove?
-              // const settings = context
-              //   .requestCapabilities(Capabilities.SettingsStore)[0]
-              //   ?.getStore<DebugSettingsProps>(DEBUG_PLUGIN)?.value;
-              // return !!settings?.debug && node.id === 'root';
-              return Option.none();
-            }),
-            Option.map((graph) => [
-              {
-                id: 'dxos.org/plugin/debug/debug',
-                type: 'dxos.org/plugin/debug/debug',
-                data: { graph },
-                properties: {
-                  label: ['debug label', { ns: DEBUG_PLUGIN }],
-                  disposition: 'navigation',
-                  icon: 'ph--bug--regular',
-                },
-              },
-            ]),
             Option.getOrElse(() => []),
           ),
         ),
