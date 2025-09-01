@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -25,7 +25,7 @@ export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) =
     invariant(space);
 
     const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.kind === TriggerKind.Timer && trigger.input?.mailboxId === object.id,
+      (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === object.id,
     );
     if (syncTrigger) {
       void dispatch(
@@ -53,7 +53,7 @@ export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) =
     invariant(space);
 
     const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.kind === TriggerKind.Queue) {
+      if (trigger.spec?.kind === 'queue') {
         if (trigger.spec.queue === object.queue.dxn.toString()) {
           return true;
         }

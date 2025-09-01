@@ -50,6 +50,7 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   Layer.orDie,
 );
 
+// TODO(burdon): Create actual test.
 describe('Chat processor', () => {
   it.effect(
     'basic',
