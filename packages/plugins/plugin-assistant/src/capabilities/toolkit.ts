@@ -60,6 +60,7 @@ class Toolkit extends AiToolkit.make(
   }),
 
   AiTool.make('create-record', {
+    // TODO(burdon): How does the model know what "record" schemas are?
     description: trim`
       Creates a new record and adds it to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.

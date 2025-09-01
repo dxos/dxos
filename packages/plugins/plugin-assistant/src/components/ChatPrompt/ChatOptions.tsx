@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
@@ -154,7 +154,7 @@ const ModelsPanel = ({
 
 const ANY = '__any__';
 
-const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>): React.JSX.Element => {
+const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'context'>): JSX.Element => {
   const { t } = useTranslation(meta.id);
 
   // Item types sorted by label.
