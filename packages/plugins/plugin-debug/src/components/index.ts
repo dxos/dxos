@@ -4,7 +4,7 @@
 
 import { lazy } from 'react';
 
-export const DebugApp = lazy(() => import('./DebugApp'));
+export const DebugGraph = lazy(() => import('./DebugGraph'));
 export const DevtoolsOverviewContainer = lazy(() => import('./DevtoolsOverviewContainer'));
 export const SpaceGenerator = lazy(() => import('./SpaceGenerator'));
 
