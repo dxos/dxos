@@ -138,6 +138,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>

@@ -52,6 +52,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -75,6 +76,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -98,6 +100,7 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>

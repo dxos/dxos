@@ -63,6 +63,7 @@ export const SpaceToolbar = ({
                   </Select.Option>
                 ))}
               </Select.Viewport>
+              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>

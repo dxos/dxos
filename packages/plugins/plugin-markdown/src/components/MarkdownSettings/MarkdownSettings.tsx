@@ -36,6 +36,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -58,6 +59,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
                       </Select.Option>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>

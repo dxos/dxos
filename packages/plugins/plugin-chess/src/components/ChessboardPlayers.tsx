@@ -89,6 +89,7 @@ const PlayerSelect = ({
                 );
               })}
             </Select.Viewport>
+            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
