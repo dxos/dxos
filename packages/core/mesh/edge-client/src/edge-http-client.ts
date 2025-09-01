@@ -365,7 +365,7 @@ export class EdgeHttpClient {
 
     let handledAuth = false;
     while (true) {
-      let processingError: EdgeCallFailedError;
+      let processingError: EdgeCallFailedError | undefined = undefined;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
         const request = createRequest(args, this._authHeader);
