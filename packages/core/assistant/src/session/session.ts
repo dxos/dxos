@@ -75,6 +75,7 @@ export class AiSession {
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
   /** Blocks streaming from the model during the session. */
+  // TODO(burdon): Why Option?
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
@@ -168,7 +169,6 @@ export class AiSession {
           Effect.map(Chunk.toArray),
         );
 
-        // TODO(burdon): Check new version.
         // Signal to stream consumers that message blocks are complete.
         // Allows for coordination between the block and message queues
         //   to prevent the streaming blocks from being rendered twice when the message is produced.
