@@ -17,9 +17,9 @@ import {
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
-  type AiConversationRequest,
   type AiConversationRunParams,
   AiSession,
+  type AiSessionRequest,
   ArtifactDiffResolver,
   createSystemPrompt,
 } from '@dxos/assistant';
@@ -81,16 +81,14 @@ export type AiRequest = {
 
 /**
  * Handles interactions with the AI service.
- * Maintains a queue of messages and handles streaming responses from the AI service.
- * Executes tools based on AI responses.
- * Supports cancellation of in-progress requests.
+ * Handles streaming responses from the conversation.
  */
 export class AiChatProcessor {
   // TODO(burdon): Comment required.
   private readonly _observableRegistry: Registry.Registry;
 
   /** Currently active request. */
-  private _request: AiConversationRequest<AiTool.Any> | undefined;
+  private _request: AiSessionRequest<AiTool.Any> | undefined;
 
   /** Last request for retries. */
   private _lastRequest: AiRequest | undefined;
@@ -104,7 +102,7 @@ export class AiChatProcessor {
   /**
    * Current streaming message (from the AI service).
    */
-  // TODO(burdon): Move util into AiConversationRequest?
+  // TODO(burdon): Move util into @dxos/assistant (e.g., AiConversationRequest)?
   private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
     return pipe(
       get(this._session),
@@ -248,7 +246,7 @@ export class AiChatProcessor {
   }
 
   /**
-   * Retry last request.
+   * Retry last failed request.
    */
   async retry(): Promise<void> {
     if (this._lastRequest) {
@@ -340,11 +338,12 @@ export class AiChatProcessor {
       If you cannot do this effectively respond with "New Chat".
     `;
 
-    const session = new AiSession();
     const history = await this._conversation.getHistory();
-    const request = Effect.gen(this, function* () {
+    const fiber = Effect.gen(this, function* () {
+      const session = new AiSession();
       return yield* session.run({ prompt, history });
     }).pipe(
+      // TODO(burdon): Use simpler model.
       Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
       Effect.tap((messages) => {
         const message = messages.find((message) => message.sender.role === 'assistant');
@@ -353,10 +352,10 @@ export class AiChatProcessor {
           chat.name = title;
         }
       }),
-      Effect.runFork,
+      Effect.runFork, // Run in the background.
     );
 
-    const response = await request.pipe(Fiber.join, Effect.runPromiseExit);
+    const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
     if (!Exit.isSuccess(response)) {
       throwCause(response.cause);
     }

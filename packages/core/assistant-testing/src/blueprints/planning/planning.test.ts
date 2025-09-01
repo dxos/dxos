@@ -10,6 +10,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   AiSession,
+  type ContextBinding,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -33,11 +34,8 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
         const session = new AiSession();
@@ -58,11 +56,14 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           ),
         );
 
-        db.add(blueprint);
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
+        yield* DatabaseService.add(blueprint);
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(blueprint)],
+          }),
+        );
 
-        const artifact = db.add(Markdown.makeDocument());
-
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument());
         let prevContent = artifact.content;
         const matchList =
           ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>
@@ -114,7 +115,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           },
         ];
 
-        const run = runSteps({ conversation, steps });
+        const run = runSteps(conversation, steps);
         yield* Effect.all([run, messageQueue, blockQueue]);
       },
       Effect.provide(

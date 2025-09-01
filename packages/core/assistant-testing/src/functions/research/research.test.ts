@@ -69,7 +69,10 @@ describe('Research', { timeout: 600_000 }, () => {
     Effect.fnUntraced(
       function* ({ expect: _ }) {
         yield* DatabaseService.add(
-          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
+          Obj.make(DataType.Organization, {
+            name: 'Notion',
+            website: 'https://www.notion.com',
+          }),
         );
         yield* DatabaseService.flush({ indexes: true });
 
@@ -96,24 +99,23 @@ describe('Research', { timeout: 600_000 }, () => {
     'research blueprint',
     Effect.fn(
       function* ({ expect: _ }) {
-        yield* DatabaseService.add(
-          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
-        );
-        yield* DatabaseService.flush({ indexes: true });
-
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+
+        const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+        yield* DatabaseService.add(org);
+        yield* DatabaseService.flush({ indexes: true });
 
         const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
+        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         const session = new AiSession();
-        yield* conversation.run({
+        yield* conversation.exec({
+          observer,
           session,
           prompt: `Research notion founders.`,
-          observer,
         });
       },
       Effect.provide(TestLayer),

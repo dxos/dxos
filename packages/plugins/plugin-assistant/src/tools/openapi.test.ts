@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { log } from '@dxos/log';
 
-import { AiChatProcessor } from '../hooks';
+import { AiChatProcessor } from '../processor';
 import { type ApiAuthorization } from '../types';
 
 import { createToolsFromApi, resolveAuthorization } from './openapi';

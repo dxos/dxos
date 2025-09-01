@@ -22,8 +22,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
+import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
+import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
 import {
   ChatActions,

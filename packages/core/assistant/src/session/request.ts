@@ -10,13 +10,12 @@ import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type DataType } from '@dxos/schema';
 
-import { type AiSession, type AiSessionRunError, type AiSessionRunRequirements } from '../session';
+import { type AiSession, type AiSessionRunError, type AiSessionRunRequirements } from './session';
 
 /**
- * Request handle.
+ * Request handle wraps a session and provides a cancelable run method.
  */
-export class AiConversationRequest<Tools extends AiTool.Any> {
-  // Execution fiber.
+export class AiSessionRequest<Tools extends AiTool.Any> {
   private _fiber?: Fiber.Fiber<void, any>;
 
   constructor(
@@ -36,11 +35,11 @@ export class AiConversationRequest<Tools extends AiTool.Any> {
       this._fiber = this._request.pipe(
         Effect.provide(services),
         Effect.tapErrorCause((cause) => {
-          log.error('error', { cause });
+          log.error('request failed', { cause });
           return Effect.void;
         }),
         Effect.asVoid,
-        Effect.runFork,
+        Effect.runFork, // Run in the background.
       );
 
       const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);

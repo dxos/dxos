@@ -11,10 +11,15 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { AiSession, type AiSessionRunError, type AiSessionRunRequirements, type GenerationObserver } from '../session';
+import {
+  AiSession,
+  AiSessionRequest,
+  type AiSessionRunError,
+  type AiSessionRunRequirements,
+  type GenerationObserver,
+} from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-import { AiConversationRequest } from './request';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
   prompt: string;
@@ -29,6 +34,7 @@ export type AiConversationOptions = {
 
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
+ * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class AiConversation {
   /**
@@ -60,7 +66,7 @@ export class AiConversation {
    */
   public createRequest<Tools extends AiTool.Any>(params: AiConversationRunParams<Tools>) {
     const session = new AiSession();
-    return new AiConversationRequest<Tools>(this.exec<Tools>({ session, ...params }), session);
+    return new AiSessionRequest<Tools>(this.exec<Tools>({ session, ...params }), session);
   }
 
   /**

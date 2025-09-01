@@ -15,21 +15,12 @@ export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> &
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* ({
-  conversation,
-  steps,
-}: {
-  conversation: AiConversation;
-  steps: TestStep[];
-}) {
+export const runSteps = Effect.fn(function* (conversation: AiConversation, steps: TestStep[]) {
   for (const { test, ...props } of steps) {
     const session = new AiSession();
-    yield* conversation.run({
-      session,
-      ...props,
-    });
-
-    log.info('conv', { messages: yield* Effect.promise(() => conversation.getHistory()) });
+    yield* conversation.exec({ session, ...props });
+    const messages = yield* Effect.promise(() => conversation.getHistory());
+    log.info('conversation', { messages });
     if (test) {
       yield* Effect.promise(() => test());
     }

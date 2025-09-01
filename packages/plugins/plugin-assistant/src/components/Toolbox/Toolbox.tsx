@@ -14,8 +14,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
+import { type AiChatProcessor } from '../../processor';
 import { createToolsFromService } from '../../tools';
 import { ServiceType } from '../../types';
 
