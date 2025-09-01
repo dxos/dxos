@@ -69,29 +69,34 @@ export type AiSessionOptions = {};
  * Could be personal or shared.
  */
 export class AiSession {
-  // TODO(dmaretskyi): Remove the queues and convert everything to observer.
-  //  Unifiy to a single stream.
+  // 1. merge queues.
+  // 2. merge observer/tracing.
+  // 3. conversation.request should return a cancelable session. conversation otherwise stateless.
+  // 4. get token metrics.
 
+  // TODO(dmaretskyi): Unify queues into a single stream.
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
   /** Blocks streaming from the model during the session. */
-  // TODO(burdon): Why Option?
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
+  // TODO(burdon): Merge these.
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
-
-  // TODO(burdon): Unify these? Support multiple consumers?
-  // yield* this.messageQueue.offer(summaryMessage);
   // yield* observer.onMessage(summaryMessage);
   // yield* TracingService.emitConverationMessage(summaryMessage);
 
   /** Prevents concurrent execution of session. */
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
-  /** Prior history from queue. */
+  /**
+   * Prior history from queue.
+   * NOTE: The conversation should evolve into supporting a git-like graph of messages.
+   */
   private _history: DataType.Message[] = [];
 
-  /** Pending messages (incl. the current user request). */
+  /**
+   * Pending messages for this session (incl. the current prompt).
+   */
   private _pending: DataType.Message[] = [];
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
@@ -116,22 +121,28 @@ export class AiSession {
       const now = Date.now();
       let toolCount = 0;
 
+      // Reset.
+      this._history = [...history];
+      this._pending = [];
+
       // Create toolkit.
-      // TODO(burdon): Provided toolkit is undefined.
       const toolkitHandlers = yield* createToolkit({ toolkit, toolIds, blueprints });
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables here.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
 
-      // Generate user prompt.
-      const promptMessage = yield* formatUserPrompt({ prompt, history });
-      yield* this.messageQueue.offer(promptMessage);
-      yield* observer.onMessage(promptMessage);
-      yield* TracingService.emitConverationMessage(promptMessage);
+      const pending = this._pending;
+      const messageQueue = this.messageQueue;
+      const submitMessage = Effect.fnUntraced(function* (message: DataType.Message) {
+        pending.push(message);
+        yield* messageQueue.offer(message);
+        yield* observer.onMessage(message);
+        yield* TracingService.emitConverationMessage(message);
+        return message;
+      });
 
-      this._history = [...history];
-      this._pending = [promptMessage];
+      const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
       //
       // Tool call loop.
@@ -155,6 +166,7 @@ export class AiSession {
           prompt,
           system,
           toolkit: toolkitHandlers,
+          // TODO(burdon): Check if this bug has been fixed and update deps/patches?
           // TODO(burdon): Despite this flag, the model still calls tools.
           //  Flag is only used in generateText (not streamText); patch and submit bug.
           //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
@@ -162,8 +174,13 @@ export class AiSession {
         }).pipe(
           AiParser.parseResponse({
             onBlock: (block) =>
-              Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], { discard: true }),
-            onPart: (part) => Effect.all([this.eventQueue.offer(part), observer.onPart(part)], { discard: true }),
+              Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], {
+                discard: true,
+              }),
+            onPart: (part) =>
+              Effect.all([this.eventQueue.offer(part), observer.onPart(part)], {
+                discard: true,
+              }),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
@@ -172,19 +189,16 @@ export class AiSession {
         // Signal to stream consumers that message blocks are complete.
         // Allows for coordination between the block and message queues
         //   to prevent the streaming blocks from being rendered twice when the message is produced.
-        // TODO(wittjosiah): The block queue should probably be drained at this point in the case that there is no consumer.
         yield* this.blockQueue.offer(Option.none());
 
         // Create response message.
-        const response = Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'assistant' },
-          blocks,
-        });
-        this._pending.push(response);
-        yield* this.messageQueue.offer(response);
-        yield* observer.onMessage(response);
-        yield* TracingService.emitConverationMessage(response);
+        const response = yield* submitMessage(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'assistant' },
+            blocks,
+          }),
+        );
 
         // Parse response for tool calls.
         const toolCalls = getToolCalls(response);
@@ -205,38 +219,33 @@ export class AiSession {
           ),
         );
 
-        const toolResultsMessage = Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'user' },
-          blocks: toolResults,
-        });
+        yield* submitMessage(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'user' },
+            blocks: toolResults,
+          }),
+        );
 
-        this._pending.push(toolResultsMessage);
-        yield* this.messageQueue.offer(toolResultsMessage);
-        yield* observer.onMessage(toolResultsMessage);
-        yield* TracingService.emitConverationMessage(toolResultsMessage);
         toolCount++;
       } while (true); // Tool loop.
 
       // Summary.
       // TODO(burdon): Get token count.
-      const summaryMessage = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'assistant' },
-        blocks: [
-          {
-            _tag: 'summary',
-            message: 'Done',
-            duration: Date.now() - now,
-            toolCalls: toolCount,
-          },
-        ],
-      });
-      // TODO(burdon):
-      this._pending.push(summaryMessage);
-      yield* this.messageQueue.offer(summaryMessage);
-      yield* observer.onMessage(summaryMessage);
-      yield* TracingService.emitConverationMessage(summaryMessage);
+      yield* submitMessage(
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: { role: 'assistant' },
+          blocks: [
+            {
+              _tag: 'summary',
+              message: 'Done',
+              duration: Date.now() - now,
+              toolCalls: toolCount,
+            },
+          ],
+        }),
+      );
 
       // Signals to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.messageQueue);

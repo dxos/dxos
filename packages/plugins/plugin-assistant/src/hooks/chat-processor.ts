@@ -76,12 +76,11 @@ export class AiChatProcessor {
   /** Rx registry. */
   private readonly _observableRegistry: Registry.Registry;
 
+  // TODO(burdon): Unify.
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
-
   /** Current request fiber. */
   private _currentRequest?: Fiber.Fiber<void, any> = undefined;
-
   /** Last request for retries. */
   private _lastRequest?: AiRequest;
 

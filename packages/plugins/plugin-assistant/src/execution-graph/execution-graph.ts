@@ -13,6 +13,7 @@ import { isNotFalsy } from '@dxos/util';
 
 // TODO(burdon): Move to assistant.
 
+// TODO(burdon): Add colors?
 enum IconType {
   // General status.
   SUCCESS = 'ph--check-circle--regular',
