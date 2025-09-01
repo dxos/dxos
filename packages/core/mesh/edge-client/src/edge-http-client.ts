@@ -399,8 +399,8 @@ export class EdgeHttpClient {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError!.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log('retrying edge request', { url, processingError: processingError! });
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+        log('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }
