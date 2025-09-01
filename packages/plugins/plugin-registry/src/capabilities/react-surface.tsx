@@ -5,7 +5,6 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Plugin, contributes, createSurface, usePluginManager } from '@dxos/app-framework';
-import { StackItem } from '@dxos/react-ui-stack';
 
 import { PluginDetail, RegistryContainer } from '../components';
 import { REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
@@ -80,11 +79,7 @@ export default () =>
           [manager, subject.meta.id, enabled],
         );
 
-        return (
-          <StackItem.Content>
-            <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />
-          </StackItem.Content>
-        );
+        return <PluginDetail plugin={subject} enabled={enabled} onEnable={handleEnable} />;
       },
     }),
   ]);
