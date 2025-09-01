@@ -11,12 +11,10 @@ import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../../services';
 
-const invitationCode = Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.'));
-
 export const join = Command.make(
   'join',
   {
-    invitationCode,
+    invitationCode: Args.text({ name: 'invitationCode' }).pipe(Args.withDescription('The invitation code.')),
   },
   Effect.fn(function* ({ invitationCode }) {
     const client = yield* ClientService;

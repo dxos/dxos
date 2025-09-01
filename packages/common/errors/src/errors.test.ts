@@ -31,6 +31,11 @@ describe('errors', () => {
       expect(stackLines?.[2]).toMatch(/^ {4}at one \(.*$/);
     }
   });
+
+  test('is', () => {
+    const error = new SystemError('Test message');
+    expect(SystemError.is(error)).toBe(true);
+  });
 });
 
 const throwError = () => {

@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Console, Effect, Logger, Option } from 'effect';
+import { Console, Effect, Logger, Option, type Schema } from 'effect';
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
+import { DatabaseService } from '@dxos/functions';
 import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
@@ -16,11 +18,45 @@ export const getSpace = (rawSpaceId: string) =>
     const client = yield* ClientService;
     const spaceId = yield* SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
     return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new Error('Space not found'))));
+  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError())));
+
+export const withDatabase: (
+  rawSpaceId: string,
+) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | Exclude<R, DatabaseService>> = (
+  rawSpaceId,
+) =>
+  Effect.fnUntraced(function* (effect) {
+    const client = yield* ClientService;
+    const spaceId = SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
+    // TODO(wittjosiah): Is waitUntilReady needed?
+    // const db = spaceId.pipe(
+    //   Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+    //   Option.map((space) => DatabaseService.layer(space.db)),
+    //   Option.getOrElse(() => DatabaseService.notAvailable),
+    // );
+    const db = yield* spaceId.pipe(
+      Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
+      Option.map((space) => Effect.promise(() => space.waitUntilReady())),
+      Option.map((space) => Effect.map(space, (space) => DatabaseService.layer(space.db))),
+      Option.getOrElse(() => Effect.succeed(DatabaseService.notAvailable)),
+    );
+
+    return yield* effect.pipe(Effect.provide(db));
+  });
+
+export const withTypes: (
+  types: Schema.Schema.AnyNoContext[],
+) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, ClientService | R> = (types) =>
+  Effect.fnUntraced(function* (effect) {
+    const client = yield* ClientService;
+    client.addTypes(types);
+    return yield* effect;
+  });
 
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
   peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
 
+// TODO(dmaretsky): there a race condition with edge connection not showing up
 export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This should probably be prompted for.
   if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
@@ -33,7 +69,7 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const handleSyncState = ({ peers = [] }: SpaceSyncState) =>
     Effect.gen(function* () {
       const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
-      yield* Console.log('syncing', syncState);
+      yield* Console.log('syncing:', syncState ?? 'no connection to edge');
 
       if (
         syncState &&
@@ -50,4 +86,12 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
   yield* handleSyncState(syncState);
   yield* synced.await;
+  yield* Console.log('Sync complete');
 });
+
+// TODO(burdon): Move to echo/errors.
+class SpaceNotFoundError extends BaseError.extend('SPACE_NOT_FOUND') {
+  constructor(context?: Record<string, unknown>) {
+    super('Space not found', { context });
+  }
+}

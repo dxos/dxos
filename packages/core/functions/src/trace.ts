@@ -9,7 +9,7 @@ import { Queue } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { FunctionTrigger, type FunctionTriggerType } from './types';
+import { FunctionTrigger } from './types';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -121,7 +121,7 @@ export type InvocationSpan = {
   durationMs: number;
   invocationTraceQueue: Ref.Ref<Queue>;
   invocationTarget: Ref.Ref<Type.Expando>;
-  trigger?: Ref.Ref<FunctionTriggerType>;
+  trigger?: Ref.Ref<FunctionTrigger>;
   exception?: TraceEventException;
 };
 

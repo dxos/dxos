@@ -6,8 +6,9 @@
 
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
-import { Effect, Layer, Logger } from 'effect';
+import { Cause, Effect, Exit, Layer, Logger } from 'effect';
 
+import { unrefTimeout } from '@dxos/async';
 import { LogLevel, levels, log } from '@dxos/log';
 
 import { dx } from './commands';
@@ -20,9 +21,10 @@ if (level) {
 }
 log.config({ filter });
 
+let leaksTracker: any;
 if (process.env.DX_TRACK_LEAKS) {
   const wtf = await import('wtfnode');
-  (globalThis as any).wtf = wtf;
+  leaksTracker = wtf;
 }
 
 const run = Command.run(dx, {
@@ -30,8 +32,30 @@ const run = Command.run(dx, {
   version: DXOS_VERSION,
 });
 
+const EXIT_GRACE_PERIOD = 1_000;
+const FORCE_EXIT = true;
+
 run(process.argv).pipe(
   Effect.provide(Layer.mergeAll(NodeContext.layer, Logger.pretty)),
   Effect.scoped,
-  NodeRuntime.runMain,
+  NodeRuntime.runMain({
+    teardown: (exit, onExit) => {
+      const exitCode = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0;
+      onExit(exitCode);
+      if (FORCE_EXIT) {
+        process.exit(exitCode);
+      } else {
+        const timeout = setTimeout(() => {
+          log.error('Process did not exit within grace period. There may be a leak.');
+          if (process.env.DX_TRACK_LEAKS) {
+            leaksTracker.dump();
+          } else {
+            log.error('Re-run with DX_TRACK_LEAKS=1 to dump information about leaks.');
+          }
+        }, EXIT_GRACE_PERIOD);
+        // Don't block process exit.
+        unrefTimeout(timeout);
+      }
+    },
+  }),
 );
