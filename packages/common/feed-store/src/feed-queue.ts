@@ -161,7 +161,6 @@ export class FeedQueue<T extends {}> {
    */
   async close(): Promise<void> {
     if (this.isOpen) {
-      this.isOpen = false;
       invariant(this._feedConsumer);
       invariant(!this._feed.properties.closed);
 
