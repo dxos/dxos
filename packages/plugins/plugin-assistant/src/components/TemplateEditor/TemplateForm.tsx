@@ -68,6 +68,7 @@ export const TemplateForm = ({ id, template, commandEditable = true }: TemplateF
                           </Select.Option>
                         ))}
                       </Select.Viewport>
+                      <Select.Arrow />
                     </Select.Content>
                   </Select.Portal>
                 </Select.Root>

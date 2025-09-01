@@ -31,6 +31,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
               <Select.Option value={'b'}>B</Select.Option>
               <Select.Option value={'c'}>C</Select.Option>
             </Select.Viewport>
+            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>

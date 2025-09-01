@@ -8,7 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { ControlPage, ControlSection, DeprecatedFormInput, controlItemClasses } from '@dxos/react-ui-form';
+import { ControlGroup, ControlItemInput, ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 
 import { SPACE_PLUGIN } from '../meta';
 import { SpaceAction, type SpaceSettingsProps } from '../types';
@@ -20,18 +20,17 @@ export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps
   const spaces = useSpaces({ all: settings.showHidden });
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  // TODO(wittjosiah): Migrate to new form container.
   return (
     <ControlPage>
       <ControlSection title={t('space settings label')} description={t('space settings description')}>
-        <div className='pli-trimMd container-max-width'>
-          <DeprecatedFormInput label={t('show hidden spaces label')}>
+        <ControlGroup>
+          <ControlItemInput title={t('show hidden spaces label')}>
             <Input.Switch
               checked={settings.showHidden}
               onCheckedChange={(checked) => (settings.showHidden = !!checked)}
             />
-          </DeprecatedFormInput>
-        </div>
+          </ControlItemInput>
+        </ControlGroup>
         <List classNames={[controlItemClasses, 'flex flex-col gap-trimSm']}>
           {spaces.map((space) => (
             <ListItem.Root key={space.id} classNames='is-full items-center'>

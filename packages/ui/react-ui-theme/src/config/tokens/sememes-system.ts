@@ -101,9 +101,9 @@ export const systemSememes = {
   textInputSurfaceGroup: contrastCadence(0, 0.5),
   textInputSurfaceModal: contrastCadence(0, 1),
 
-  inputSurfaceBase: contrastCadence(1, 0.5),
-  inputSurfaceGroup: contrastCadence(1, 1),
-  inputSurfaceModal: contrastCadence(1, 1.5),
+  inputSurfaceBase: contrastCadence(0.8, 0.33),
+  inputSurfaceGroup: contrastCadence(0.8, 0.66),
+  inputSurfaceModal: contrastCadence(0.8, 1),
 
   hoverSurfaceBase: contrastCadence(2, 1.5),
   hoverSurfaceGroup: contrastCadence(2, 2),
@@ -178,8 +178,8 @@ export const systemSememes = {
     dark: ['neutral', 1000],
   },
   description: {
-    light: ['neutral', 500],
-    dark: ['neutral', 400],
+    light: ['neutral', 550],
+    dark: ['neutral', 350],
   },
   subdued: {
     light: ['neutral', 700],

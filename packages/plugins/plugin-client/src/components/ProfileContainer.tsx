@@ -18,7 +18,6 @@ import {
   type InputComponent,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
-import { StackItem } from '@dxos/react-ui-stack';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { CLIENT_PLUGIN } from '../meta';
@@ -143,23 +142,21 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
-      <ControlPage>
-        <Clipboard.Provider>
-          <ControlSection title={t('profile label')} description={t('profile description')}>
-            <Form
-              schema={ProfileSchema}
-              values={values}
-              autoSave
-              onSave={handleSave}
-              Custom={customElements}
-              classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
-              outerSpacing={false}
-            />
-          </ControlSection>
-        </Clipboard.Provider>
-      </ControlPage>
-    </StackItem.Content>
+    <ControlPage>
+      <Clipboard.Provider>
+        <ControlSection title={t('profile label')} description={t('profile description')}>
+          <Form
+            schema={ProfileSchema}
+            values={values}
+            autoSave
+            onSave={handleSave}
+            Custom={customElements}
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
+            outerSpacing={false}
+          />
+        </ControlSection>
+      </Clipboard.Provider>
+    </ControlPage>
   );
 };
 

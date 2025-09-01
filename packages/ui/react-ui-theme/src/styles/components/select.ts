@@ -7,7 +7,6 @@ import { type ComponentFunction, type Elevation, type Theme } from '@dxos/react-
 import { mx } from '../../util';
 import {
   blockSeparator,
-  getSize,
   ghostHighlighted,
   modalSurface,
   separatorBorderColor,
@@ -50,8 +49,6 @@ export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...
 export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(modalSurface, 'flex items-center justify-center cursor-default bs-6 is-full', ...etc);
 
-export const selectTriggerIcon: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(getSize(2), ...etc);
-
 export const selectTheme: Theme<SelectStyleProps> = {
   content: selectContent,
   viewport: selectViewport,
@@ -60,5 +57,4 @@ export const selectTheme: Theme<SelectStyleProps> = {
   arrow: selectArrow,
   separator: selectSeparator,
   scrollButton: selectScrollButton,
-  triggerIcon: selectTriggerIcon,
 };

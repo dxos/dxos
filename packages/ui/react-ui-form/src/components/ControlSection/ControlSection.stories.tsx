@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -18,11 +17,9 @@ const meta = {
   title: 'ui/react-ui-form/ControlSection',
   component: ControlSection,
   render: (args) => (
-    <StackItem.Content classNames='w-[40rem]'>
-      <ControlPage>
-        <ControlSection {...args} />
-      </ControlPage>
-    </StackItem.Content>
+    <ControlPage classNames='w-[40rem]'>
+      <ControlSection {...args} />
+    </ControlPage>
   ),
   decorators: [withLayout({ fullscreen: true, classNames: 'justify-center' }), withTheme],
   parameters: {
