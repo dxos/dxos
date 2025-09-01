@@ -11,6 +11,8 @@ import { type Commit } from '@dxos/react-ui-components';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
+// TODO(burdon): Move to assistant.
+
 enum IconType {
   // General status.
   SUCCESS = 'ph--check-circle--regular',

@@ -70,18 +70,19 @@ export type AiSessionOptions = {};
  */
 export class AiSession {
   // TODO(dmaretskyi): Remove the queues and convert everything to observer.
+  //  Unifiy to a single stream.
 
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
-
-  /**
-   * Blocks streaming from the model during the session.
-   * @deprecated Use `observer.onBlock` instead.
-   */
+  /** Blocks streaming from the model during the session. */
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
-
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
+
+  // TODO(burdon): Unify.
+  // yield* this.messageQueue.offer(summaryMessage);
+  // yield* observer.onMessage(summaryMessage);
+  // yield* TracingService.emitConverationMessage(summaryMessage);
 
   /** Prevents concurrent execution of session. */
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));

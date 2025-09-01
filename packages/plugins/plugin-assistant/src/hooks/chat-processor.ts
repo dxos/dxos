@@ -27,6 +27,8 @@ import { type Assistant } from '../types';
 
 import { type AiChatServices } from './useChatServices';
 
+// TODO(burdon): Move to @dxos/assistant
+
 // TODO(burdon): Standardize.
 declare global {
   interface ToolContextExtensions {
@@ -35,7 +37,6 @@ declare global {
   }
 }
 
-// TODO(burdon): Move to @dxos/assistant
 const CHAT_NAME_PROMPT = trim`
   Suggest a single short title for this chat.
   It is extermely important that you respond only with the title and nothing else.
@@ -186,6 +187,9 @@ export class AiChatProcessor {
   /**
    * Make GPT request.
    */
+  // TODO(burdon): Return AiSession and move observability to here.
+  //  Allow multiple requests in parallel.
+  // TODO(burdon): Create test.
   async request(request: AiRequest): Promise<void> {
     if (this._currentRequest) {
       throw new Error('Request already in progress');

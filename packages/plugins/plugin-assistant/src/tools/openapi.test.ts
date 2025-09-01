@@ -11,6 +11,8 @@ import { type ApiAuthorization } from '../types';
 
 import { createToolsFromApi, resolveAuthorization } from './openapi';
 
+// TODO(burdon): FIX.
+
 describe.skip('openapi', () => {
   describe.skip('mapping', () => {
     test('amadeus flight availabilities', async () => {

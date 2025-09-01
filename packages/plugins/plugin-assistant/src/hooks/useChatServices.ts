@@ -21,7 +21,7 @@ import {
 } from '@dxos/functions';
 
 import { AssistantCapabilities } from '../capabilities';
-import type { Assistant } from '../types';
+import { type Assistant } from '../types';
 
 // TODO(burdon): Deconstruct into separate layers?
 export type AiChatServices =
@@ -53,6 +53,7 @@ export const useChatServices = ({ space, chat }: UseChatServicesProps): Layer.La
     // TODO(wittjosiah): Don't cast.
     const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
     const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
+
     return Layer.mergeAll(
       serviceLayer,
       makeToolResolverFromFunctions(allFunctions, toolkit),
