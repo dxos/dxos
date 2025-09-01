@@ -16,6 +16,7 @@ import { type AiSession, type AiSessionRunError, type AiSessionRunRequirements }
  * Request handle.
  */
 export class AiConversationRequest<Tools extends AiTool.Any> {
+  // Execution fiber.
   private _fiber?: Fiber.Fiber<void, any>;
 
   constructor(

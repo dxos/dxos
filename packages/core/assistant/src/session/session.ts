@@ -2,32 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiResponse, type AiTool, AiToolkit } from '@effect/ai';
-import { Chunk, type Context, Effect, Option, Queue, type Schema, Stream } from 'effect';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool } from '@effect/ai';
+import { Chunk, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
-import { type ToolId } from '@dxos/ai';
 import {
   type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
-  ToolExecutionService,
-  ToolResolverService,
+  type ToolExecutionService,
+  type ToolResolverService,
   callTool,
   getToolCalls,
 } from '@dxos/ai';
-import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
 
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
+import { type ToolkitParams, createToolkit } from './toolkit';
 
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -38,14 +36,11 @@ export type AiSessionRunRequirements<Tools extends AiTool.Any> =
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends AiTool.Any> = {
+export type AiSessionRunParams<Tools extends AiTool.Any> = ToolkitParams<Tools> & {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
-  blueprints?: Blueprint.Blueprint[];
   objects?: Obj.Any[];
-  toolIds?: ToolId[];
-  toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
 };
 
@@ -62,11 +57,6 @@ export type AiSessionOptions = {};
  * Could be personal or shared.
  */
 export class AiSession {
-  // 1. merge queues.
-  // 2. merge observer/tracing.
-  // 3. conversation.request should return a cancelable session. conversation otherwise stateless.
-  // 4. get token metrics.
-
   // TODO(dmaretskyi): Unify queues into a single stream.
   /** Complete messages fired during the session, both from the model and from the user. */
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
@@ -267,29 +257,6 @@ export class AiSession {
     // return parser.getResult(result);
   }
 }
-
-/**
- * Build a combined toolkit from the blueprint tools and the provided toolkit.
- */
-const createToolkit = <Tools extends AiTool.Any>({
-  toolkit,
-  toolIds = [],
-  blueprints = [],
-}: Pick<AiSessionRunParams<Tools>, 'toolkit' | 'toolIds' | 'blueprints'>) =>
-  Effect.gen(function* () {
-    console.log('createToolkit', toolkit, toolIds, blueprints);
-    const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
-      ...blueprints.flatMap(({ tools }) => tools),
-      ...toolIds,
-    ]);
-    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
-      ToolExecutionService.handlersFor(blueprintToolkit),
-    );
-
-    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
-      Effect.provide(blueprintToolkitHandler),
-    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
-  });
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');

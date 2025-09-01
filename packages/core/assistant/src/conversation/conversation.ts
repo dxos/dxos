@@ -32,6 +32,9 @@ export type AiConversationOptions = {
  * Durable conversation state (initiated by users and agents) backed by a Queue.
  */
 export class AiConversation {
+  /**
+   * Message and binding queue.
+   */
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
@@ -44,7 +47,6 @@ export class AiConversation {
     this._context = new AiContextBinder(this._queue);
   }
 
-  // TODO(burdon): Add Space to context?
   get context() {
     return this._context;
   }
@@ -61,7 +63,7 @@ export class AiConversation {
   }
 
   /**
-   * Executes a prompt.
+   * @deprecated Move into createRequest.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
   run<Tools extends AiTool.Any>({
@@ -109,9 +111,9 @@ export class AiConversation {
   }
 
   /**
+   * @deprecated
    * Raw request without updating chat.
    */
-  // TODO(burdon): Reconcile with run.
   raw({ session, ...params }: AiConversationRunParams<AiTool.Any>) {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
