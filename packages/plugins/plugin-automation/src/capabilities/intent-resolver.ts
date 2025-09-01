@@ -11,7 +11,7 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';

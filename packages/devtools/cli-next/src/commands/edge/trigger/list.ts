@@ -4,7 +4,6 @@
 
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
-
 import { colorize } from 'json-colorizer';
 
 import { Filter } from '@dxos/echo';

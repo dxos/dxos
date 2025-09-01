@@ -6,6 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
 import { TestLayer } from '../testing';
+
 import { ClientService } from './client-service';
 
 describe('ClientService', () => {

@@ -6,6 +6,7 @@ import { Schema } from 'effect';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
+import { Obj } from '@dxos/echo';
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
@@ -17,20 +18,19 @@ import {
   SubscriptionTriggerOutput,
   type TimerTrigger,
   TimerTriggerOutput,
-  TriggerKind,
+  type TriggerKind,
   TriggerKinds,
   type TriggerType,
   type WebhookTrigger,
   WebhookTriggerOutput,
 } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
 import { FunctionBody, createFunctionAnchors, getHeight } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-import { Obj } from '@dxos/echo';
 
 export const TriggerShape = Schema.extend(
   ComputeShape,

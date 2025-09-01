@@ -10,11 +10,11 @@ import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 import { ClientService, ConfigService } from '../services';
 import { CommandConfig } from '../services';
 
+import { config } from './config';
 import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
 import { spaces } from './spaces';
-import { config } from './config';
 
 // TODO(wittjosiah): Env vars.
 

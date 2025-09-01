@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type FunctionTrigger, TriggerKind, TriggerKinds, type TriggerType } from '@dxos/functions';
+import { type FunctionTrigger, TriggerKinds, type TriggerType } from '@dxos/functions';
 import { useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
 

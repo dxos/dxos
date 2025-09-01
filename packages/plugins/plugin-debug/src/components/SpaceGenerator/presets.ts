@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
-import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions';
+import { FunctionTrigger, type TriggerKind, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
 import {

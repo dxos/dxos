@@ -1,7 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Command } from '@effect/cli';
 import { Effect } from 'effect';
-import { ConfigService } from '../../services';
 import { colorize } from 'json-colorizer';
+
+import { ConfigService } from '../../services';
 
 export const view = Command.make(
   'view',
