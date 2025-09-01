@@ -6,7 +6,6 @@ import { type AiTool, AiToolkit } from '@effect/ai';
 import { Layer } from 'effect';
 import { useMemo } from 'react';
 
-import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
@@ -21,17 +20,8 @@ import {
 } from '@dxos/functions';
 
 import { AssistantCapabilities } from '../capabilities';
+import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
-
-export type AiChatServices =
-  | CredentialsService
-  | DatabaseService
-  | QueueService
-  | RemoteFunctionExecutionService
-  | AiService.AiService
-  | ToolExecutionService
-  | ToolResolverService
-  | TracingService;
 
 export type UseChatServicesProps = {
   space?: Space;

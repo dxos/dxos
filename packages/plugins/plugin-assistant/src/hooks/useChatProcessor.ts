@@ -12,7 +12,7 @@ import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
 import { type Queue, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../hooks';
+import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
 import { type Assistant } from '../types';
 
 export type UseChatProcessorProps = {

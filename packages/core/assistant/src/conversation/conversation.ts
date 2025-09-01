@@ -17,7 +17,6 @@ import { AiContextBinder, AiContextService, type ContextBinding } from './contex
 import { AiConversationRequest } from './request';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
-  session: AiSession;
   prompt: string;
   system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
@@ -40,36 +39,37 @@ export class AiConversation {
   /**
    * Blueprints bound to the conversation.
    */
-  public readonly _context: AiContextBinder;
+  private readonly _context: AiContextBinder;
 
-  constructor(options: AiConversationOptions) {
+  public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
     this._context = new AiContextBinder(this._queue);
   }
 
-  get context() {
+  public get context() {
     return this._context;
   }
 
-  async getHistory(): Promise<DataType.Message[]> {
+  public async getHistory(): Promise<DataType.Message[]> {
     const queueItems = await this._queue.queryObjects();
     return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
 
-  // TODO(burdon): Replace run/raw; remove session from params.
-  createRequest<Tools extends AiTool.Any>(params: Omit<AiConversationRunParams<Tools>, 'session'>) {
+  /**
+   * Creates a new cancelable request.
+   */
+  public createRequest<Tools extends AiTool.Any>(params: AiConversationRunParams<Tools>) {
     const session = new AiSession();
-    return new AiConversationRequest<Tools>(this.run<Tools>({ session, ...params }), session);
+    return new AiConversationRequest<Tools>(this.exec<Tools>({ session, ...params }), session);
   }
 
   /**
-   * @deprecated Move into createRequest.
-   * Each invocation creates a new `AiSession`, which handles potential tool calls.
+   * Executes a request.
    */
-  run<Tools extends AiTool.Any>({
+  exec<Tools extends AiTool.Any>({
     session,
     ...params
-  }: AiConversationRunParams<Tools>): Effect.Effect<
+  }: AiConversationRunParams<Tools> & { session: AiSession }): Effect.Effect<
     DataType.Message[],
     AiSessionRunError,
     AiSessionRunRequirements<Tools>
@@ -77,7 +77,7 @@ export class AiConversation {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 
-      // Context.
+      // Get context objects.
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
@@ -87,6 +87,8 @@ export class AiConversation {
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
+
+      const start = Date.now();
       log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
@@ -94,37 +96,17 @@ export class AiConversation {
       });
 
       // Process request.
-      const start = Date.now();
       const messages = yield* session.run({ ...params, history, blueprints, objects }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
       );
-      log.info('result', {
-        messages: messages,
-        duration: Date.now() - start,
-      });
 
+      log.info('result', { messages: messages.length, duration: Date.now() - start });
+
+      // Append to queue.
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.run'));
-  }
-
-  /**
-   * @deprecated
-   * Raw request without updating chat.
-   */
-  raw({ session, ...params }: AiConversationRunParams<AiTool.Any>) {
-    return Effect.gen(this, function* () {
-      const history = yield* Effect.promise(() => this.getHistory());
-      const messages = yield* session.run({ ...params, history }).pipe(
-        Effect.provideService(AiContextService, {
-          binder: this.context,
-        }),
-      );
-
-      // TODO(burdon): Util to extract assistant message.
-      return messages.find((message) => message.sender.role === 'assistant');
-    }).pipe(Effect.withSpan('AiConversation.raw'));
+    }).pipe(Effect.withSpan('AiConversation.exec'));
   }
 }

@@ -6,7 +6,14 @@ import { type AiTool } from '@effect/ai';
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Cause, Effect, Exit, Fiber, Layer, Option, Stream, pipe } from 'effect';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import {
+  AiService,
+  DEFAULT_EDGE_MODEL,
+  type ModelName,
+  type ModelRegistry,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
@@ -20,6 +27,13 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors, throwCause } from '@dxos/effect';
+import {
+  type CredentialsService,
+  type DatabaseService,
+  type QueueService,
+  type RemoteFunctionExecutionService,
+  type TracingService,
+} from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
@@ -27,9 +41,7 @@ import { trim } from '@dxos/util';
 
 import { type Assistant } from '../types';
 
-import { type AiChatServices } from './useChatServices';
-
-// TODO(burdon): Standardize.
+// TODO(burdon): Standardize/remove?
 declare global {
   interface ToolContextExtensions {
     space?: Space;
@@ -37,11 +49,15 @@ declare global {
   }
 }
 
-const CHAT_NAME_PROMPT = trim`
-  Suggest a single short title for this chat.
-  It is extermely important that you respond only with the title and nothing else.
-  If you cannot do this effectively respond with "New Chat".
-`;
+export type AiChatServices =
+  | CredentialsService
+  | DatabaseService
+  | QueueService
+  | RemoteFunctionExecutionService
+  | AiService.AiService
+  | ToolExecutionService
+  | ToolResolverService
+  | TracingService;
 
 export type AiChatProcessorOptions = {
   model?: ModelName;
@@ -192,7 +208,7 @@ export class AiChatProcessor {
   /**
    * Initiates a new request.
    */
-  async request(requestParam: AiRequest) {
+  async request(requestParam: AiRequest): Promise<void> {
     if (this._request) {
       await this.cancel();
     }
@@ -212,8 +228,9 @@ export class AiChatProcessor {
       );
 
       this._observableRegistry.set(this.error, Option.none());
+      this._lastRequest = undefined;
     } catch (err) {
-      log.catch(err);
+      log.error('request failed', { err });
       this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
       this._observableRegistry.set(this._session, Option.none());
@@ -224,9 +241,19 @@ export class AiChatProcessor {
   /**
    * Cancels the current request.
    */
-  async cancel() {
+  async cancel(): Promise<void> {
     await this._request?.cancel();
+    this._observableRegistry.set(this._session, Option.none());
     this._request = undefined;
+  }
+
+  /**
+   * Retry last request.
+   */
+  async retry(): Promise<void> {
+    if (this._lastRequest) {
+      return this.request(this._lastRequest);
+    }
   }
 
   /**
@@ -256,7 +283,7 @@ export class AiChatProcessor {
     try {
       this._lastRequest = request;
       this._currentRequest = this._conversation
-        .run({
+        .exec({
           session,
           prompt: request.message,
           system: this._options.system,
@@ -304,46 +331,38 @@ export class AiChatProcessor {
   }
 
   /**
-   * Retry last request.
-   */
-  async retry(): Promise<void> {
-    if (this._lastRequest) {
-      return this.request(this._lastRequest);
-    }
-  }
-
-  /**
-   * Update the current chat's name;
+   * Update the current chat's name.
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
-    const request = this._conversation
-      .raw({
-        session: new AiSession(),
-        prompt: CHAT_NAME_PROMPT,
-      })
-      .pipe(
-        // @effect-diagnostics-next-line multipleEffectProvide:off
-        Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-        // TODO(burdon): Switch to a simple/quick/cheap model for this.
-        Effect.provide(this._services),
-        Effect.tap((message) => {
-          const title = message?.blocks.find((b) => b._tag === 'text')?.text;
-          chat.name = title;
-        }),
-        Effect.tapErrorCause((cause) => {
-          log.error('error', { cause });
-          return Effect.void;
-        }),
-        Effect.asVoid,
-        Effect.runFork,
-      );
+    const prompt = trim`
+      Suggest a single short title for this chat.
+      It is extremely important that you respond only with the title and nothing else.
+      If you cannot do this effectively respond with "New Chat".
+    `;
 
-    const exit = await request.pipe(Fiber.join, Effect.runPromiseExit);
-    if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
-      throwCause(exit.cause);
+    const session = new AiSession();
+    const history = await this._conversation.getHistory();
+    const request = Effect.gen(this, function* () {
+      return yield* session.run({ prompt, history });
+    }).pipe(
+      Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
+      Effect.tap((messages) => {
+        const message = messages.find((message) => message.sender.role === 'assistant');
+        const title = message?.blocks.find((b) => b._tag === 'text')?.text;
+        if (title) {
+          chat.name = title;
+        }
+      }),
+      Effect.runFork,
+    );
+
+    const response = await request.pipe(Fiber.join, Effect.runPromiseExit);
+    if (!Exit.isSuccess(response)) {
+      throwCause(response.cause);
     }
   }
 
+  // TODO(burdon): Document.
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {
     resolve: async (artifacts) => {
       const space = this._options.extensions?.space;

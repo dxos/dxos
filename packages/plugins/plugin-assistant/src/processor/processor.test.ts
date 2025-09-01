@@ -21,8 +21,7 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { type DataType } from '@dxos/schema';
 
-import { AiChatProcessor } from './chat-processor';
-import { type AiChatServices } from './useChatServices';
+import { AiChatProcessor, type AiChatServices } from './processor';
 
 // TODO(burdon): Minimal toolkit.
 const toolkit = AiToolkit.merge() as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;

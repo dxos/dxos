@@ -43,10 +43,9 @@ export class AiConversationRequest<Tools extends AiTool.Any> {
         Effect.runFork,
       );
 
-      //
-      const exit = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
-      if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
-        throwCause(exit.cause);
+      const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
+      if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+        throwCause(response.cause);
       }
     } finally {
       this._fiber = undefined;
