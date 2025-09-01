@@ -103,6 +103,12 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
 
   /**
+   * @link EchoDatabase.remove
+   */
+  static remove = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
+
+  /**
    * @link EchoDatabase.flush
    */
   static flush = (opts?: FlushOptions) =>
