@@ -28,7 +28,7 @@ const DefaultStory = () => {
       return;
     }
 
-    const trigger = space.db.add(Obj.make(FunctionTrigger, { spec: { kind: TriggerKind.Timer, cron: '' } }));
+    const trigger = space.db.add(Obj.make(FunctionTrigger, { spec: { kind: 'timer', cron: '' } }));
     setTrigger(trigger);
   }, [space]);
 

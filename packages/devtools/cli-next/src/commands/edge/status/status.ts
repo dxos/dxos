@@ -11,7 +11,7 @@ import { ClientService, CommandConfig } from '../../../services';
 
 export const getStatus = () =>
   Effect.gen(function* () {
-    consol.log('status');
+    console.log('status');
     const client = yield* ClientService;
     const identity = createEdgeIdentity(client);
     client.edge.setIdentity(identity);

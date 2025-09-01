@@ -35,6 +35,7 @@ import {
   type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type QueryResult
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 

@@ -43,11 +43,11 @@ export default (context: PluginContext) =>
 
         switch (template.type) {
           case 'timer': {
-            trigger.spec = { kind: TriggerKind.Timer, cron: template.cron };
+            trigger.spec = { kind: 'timer', cron: template.cron };
             break;
           }
           case 'queue': {
-            trigger.spec = { kind: TriggerKind.Queue, queue: (template.queueDXN as DXN).toString() };
+            trigger.spec = { kind: 'queue', queue: (template.queueDXN as DXN).toString() };
             break;
           }
           default: {

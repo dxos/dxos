@@ -62,7 +62,7 @@ export const generator = () => ({
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
               spaceId: space.id,
-              triggerKind: TriggerKind.Webhook,
+              triggerKind: 'webhook',
               ...position({ x: -18, y: -2 }),
             });
             const trigger = canvasModel.createNode(triggerShape);
@@ -96,7 +96,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
-            TriggerKind.Subscription,
+            'subscription',
             (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
             'type',
           );
@@ -113,7 +113,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
-            TriggerKind.Timer,
+            'timer',
             (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
             'result',
           );
@@ -147,7 +147,7 @@ export const generator = () => ({
     //       canvasModel.builder.call((builder) => {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Email,
+    //           triggerKind: 'email',
     //           ...position({ x: -18, y: -2 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);
@@ -254,7 +254,7 @@ export const generator = () => ({
     //         );
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Email,
+    //           triggerKind: 'email',
     //           ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);
@@ -358,7 +358,7 @@ export const generator = () => ({
           canvasModel.builder.call((builder) => {
             const triggerShape = createTrigger({
               spaceId: space.id,
-              triggerKind: TriggerKind.Timer,
+              triggerKind: 'timer',
               ...position({ x: -10, y: -5 }),
             });
             const trigger = canvasModel.createNode(triggerShape);
@@ -416,7 +416,7 @@ export const generator = () => ({
     //       canvasModel.builder.call((builder) => {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Queue,
+    //           triggerKind: 'queue',
     //           ...position({ x: -10, y: -5 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);
