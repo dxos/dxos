@@ -6,6 +6,7 @@ import { Schema } from 'effect';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
+import { Obj } from '@dxos/echo';
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
@@ -17,13 +18,14 @@ import {
   SubscriptionTriggerOutput,
   type TimerTrigger,
   TimerTriggerOutput,
-  TriggerKind,
+  type TriggerKind,
+  TriggerKinds,
   type TriggerType,
   type WebhookTrigger,
   WebhookTriggerOutput,
 } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 
@@ -45,7 +47,7 @@ export type CreateTriggerProps = CreateShapeProps<Omit<TriggerShape, 'functionTr
 };
 
 export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
-  const functionTrigger = live(FunctionTrigger, {
+  const functionTrigger = Obj.make(FunctionTrigger, {
     enabled: true,
     spec: createTriggerSpec(props),
   });
@@ -65,12 +67,12 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 
   useEffect(() => {
     if (functionTrigger && !functionTrigger.spec) {
-      functionTrigger.spec = createTriggerSpec({ triggerKind: TriggerKind.Email, spaceId: space?.id });
+      functionTrigger.spec = createTriggerSpec({ triggerKind: 'email', spaceId: space?.id });
     }
   }, [functionTrigger, functionTrigger?.spec]);
 
   useEffect(() => {
-    shape.size.height = getHeight(getOutputSchema(functionTrigger?.spec?.kind ?? TriggerKind.Email));
+    shape.size.height = getHeight(getOutputSchema(functionTrigger?.spec?.kind ?? 'email'));
   }, [functionTrigger?.spec?.kind]);
 
   const setKind = (kind: TriggerKind) => {
@@ -104,7 +106,7 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
         <Select.Content>
           <Select.ScrollUpButton />
           <Select.Viewport>
-            {Object.values(TriggerKind).map((kind) => (
+            {TriggerKinds.map((kind) => (
               <Select.Option key={kind} value={kind}>
                 {kind}
               </Select.Option>
@@ -119,30 +121,30 @@ const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'valu
 };
 
 const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId }): TriggerType => {
-  const kind = props.triggerKind ?? TriggerKind.Email;
+  const kind = props.triggerKind ?? 'email';
   switch (kind) {
-    case TriggerKind.Timer:
-      return { kind: TriggerKind.Timer, cron: '*/10 * * * * *' } satisfies TimerTrigger;
-    case TriggerKind.Webhook:
-      return { kind: TriggerKind.Webhook, method: 'POST' } satisfies WebhookTrigger;
-    case TriggerKind.Subscription:
-      return { kind: TriggerKind.Subscription, filter: {} } satisfies SubscriptionTrigger;
-    case TriggerKind.Email:
-      return { kind: TriggerKind.Email } satisfies EmailTrigger;
-    case TriggerKind.Queue: {
+    case 'timer':
+      return { kind: 'timer', cron: '*/10 * * * * *' } satisfies TimerTrigger;
+    case 'webhook':
+      return { kind: 'webhook', method: 'POST' } satisfies WebhookTrigger;
+    case 'subscription':
+      return { kind: 'subscription', filter: {} } satisfies SubscriptionTrigger;
+    case 'email':
+      return { kind: 'email' } satisfies EmailTrigger;
+    case 'queue': {
       const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), ObjectId.random()]).toString();
-      return { kind: TriggerKind.Queue, queue: dxn } satisfies QueueTrigger;
+      return { kind: 'queue', queue: dxn } satisfies QueueTrigger;
     }
   }
 };
 
 const getOutputSchema = (kind: TriggerKind) => {
   const kindToSchema: Record<TriggerKind, Schema.Schema<any>> = {
-    [TriggerKind.Email]: EmailTriggerOutput,
-    [TriggerKind.Subscription]: SubscriptionTriggerOutput,
-    [TriggerKind.Timer]: TimerTriggerOutput,
-    [TriggerKind.Webhook]: WebhookTriggerOutput,
-    [TriggerKind.Queue]: QueueTriggerOutput,
+    ['email']: EmailTriggerOutput,
+    ['subscription']: SubscriptionTriggerOutput,
+    ['timer']: TimerTriggerOutput,
+    ['webhook']: WebhookTriggerOutput,
+    ['queue']: QueueTriggerOutput,
   };
   return kindToSchema[kind];
 };
@@ -154,9 +156,5 @@ export const triggerShape: ShapeDef<TriggerShape> = {
   component: TriggerComponent,
   createShape: createTrigger,
   getAnchors: (shape) =>
-    createFunctionAnchors(
-      shape,
-      VoidInput,
-      getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? TriggerKind.Email),
-    ),
+    createFunctionAnchors(shape, VoidInput, getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? 'email')),
 };

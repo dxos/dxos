@@ -3,26 +3,21 @@
 //
 
 import { Command } from '@effect/cli';
-import { Config, Console, Effect, Option } from 'effect';
+import { Console, Effect, Option } from 'effect';
 
 import { createEdgeIdentity } from '@dxos/client/edge';
 
-import { ClientService } from '../../../services';
+import { ClientService, CommandConfig } from '../../../services';
 
 export const getStatus = () =>
   Effect.gen(function* () {
+    console.log('status');
     const client = yield* ClientService;
-    const identity = yield* Effect.try({
-      try: () => createEdgeIdentity(client),
-      catch: (err) => {
-        return err;
-      },
-    });
+    const identity = createEdgeIdentity(client);
     client.edge.setIdentity(identity);
     const status = yield* Effect.tryPromise(() => client.edge.getStatus());
 
-    const json = yield* Config.boolean('JSON').pipe(Config.withDefault(false));
-    if (json) {
+    if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(status, null, 2));
     } else if (status.problems.length > 0) {
       for (const problem of status.problems) {
