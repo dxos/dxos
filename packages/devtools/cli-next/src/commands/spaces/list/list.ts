@@ -4,6 +4,7 @@
 
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
+import { colorize } from 'json-colorizer';
 
 import { ClientService } from '../../../services';
 
@@ -14,7 +15,7 @@ export const handler = Effect.fn(function* () {
   const client = yield* ClientService;
   const spaces = client.spaces.get();
   const formattedSpaces = yield* Effect.all(spaces.map(formatSpace));
-  yield* Console.log(JSON.stringify(formattedSpaces, null, 2));
+  yield* Console.log(colorize(formattedSpaces));
 });
 
 export const list = Command.make('list', {}, handler).pipe(
