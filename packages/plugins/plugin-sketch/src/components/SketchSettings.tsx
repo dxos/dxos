@@ -15,7 +15,7 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
 
   return (
     <ControlPage>
-      <ControlSection title={t('sketch settings title', { ns: SKETCH_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: SKETCH_PLUGIN })}>
         <ControlGroup>
           <ControlItemInput title={t('settings grid')}>
             <Input.Switch

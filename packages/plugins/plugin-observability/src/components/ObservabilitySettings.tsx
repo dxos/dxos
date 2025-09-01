@@ -30,7 +30,7 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
 
   return (
     <ControlPage>
-      <ControlSection title={t('observability enabled label')}>
+      <ControlSection title={t('settings title', { ns: OBSERVABILITY_PLUGIN })}>
         <Message.Root valence='info' classNames='container-max-width mbe-cardSpacingBlock'>
           <Message.Content>{t('observability description')}</Message.Content>
         </Message.Root>

@@ -21,6 +21,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin name': 'Meeting',
+        'settings title': 'Meeting plugin settings',
         'meetings label': 'All Meetings',
         'meeting label': 'Meeting',
 

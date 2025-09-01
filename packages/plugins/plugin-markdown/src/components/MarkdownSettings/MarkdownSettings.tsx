@@ -17,7 +17,7 @@ export const MarkdownSettings = ({ settings }: { settings: Markdown.Settings }) 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <ControlPage>
-      <ControlSection title={t('markdown settings title', { ns: meta.id })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('default view mode label')}>
             <Select.Root

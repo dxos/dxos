@@ -23,7 +23,7 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
 
   return (
     <ControlPage>
-      <ControlSection title={t('deck settings title', { ns: DECK_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: DECK_PLUGIN })}>
         <ControlGroup>
           <ControlItemInput title={t('settings enable deck label')}>
             <Input.Switch

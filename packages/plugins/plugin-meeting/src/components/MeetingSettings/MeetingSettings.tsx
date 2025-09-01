@@ -15,7 +15,7 @@ export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) =>
 
   return (
     <ControlPage>
-      <ControlSection title={t('meeting settings title', { ns: meta.id })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('settings entity extraction label')}>
             <Input.Switch

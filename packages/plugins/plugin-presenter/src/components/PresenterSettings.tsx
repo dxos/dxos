@@ -15,7 +15,7 @@ export const PresenterSettings = ({ settings }: { settings: PresenterSettingsPro
 
   return (
     <ControlPage>
-      <ControlSection title={t('presenter settings title', { ns: PRESENTER_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: PRESENTER_PLUGIN })}>
         <ControlGroup>
           <ControlItemInput title={t('present collections label')}>
             <Input.Switch

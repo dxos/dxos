@@ -15,7 +15,7 @@ export const StackSettings = ({ settings }: { settings: StackSettingsProps }) =>
 
   return (
     <ControlPage>
-      <ControlSection title={t('stack settings title', { ns: STACK_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: STACK_PLUGIN })}>
         <ControlGroup>
           <ControlItemInput title={t('settings separation label')}>
             <Input.Switch

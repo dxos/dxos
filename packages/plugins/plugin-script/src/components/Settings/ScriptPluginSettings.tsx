@@ -40,7 +40,7 @@ export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettingsPro
 
   return (
     <ControlPage>
-      <ControlSection title={t('script settings title', { ns: meta.id })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           {/* TODO(wittjosiah): Hide outside of dev environments. */}
           <ControlItemInput title={t('authenticate action label')}>

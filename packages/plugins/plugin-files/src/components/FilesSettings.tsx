@@ -17,7 +17,7 @@ export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProp
 
   return (
     <ControlPage>
-      <ControlSection title={t('files settings title', { ns: FILES_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: FILES_PLUGIN })}>
         <Message.Root valence='warning' classNames='container-max-width'>
           <Message.Content>{t('save files to directory description')}</Message.Content>
         </Message.Root>

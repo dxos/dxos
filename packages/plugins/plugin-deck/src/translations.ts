@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin name': 'Deck',
+        'settings title': 'Deck settings',
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open sidebar',
         'collapse navigation sidebar label': 'Minimize sidebar',

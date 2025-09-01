@@ -78,7 +78,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   return (
     <ControlPage>
-      <ControlSection title={t('debug settings title', { ns: DEBUG_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: DEBUG_PLUGIN })}>
         <ControlGroup>
           <ControlItemInput title={t('settings wireframe')}>
             <Input.Switch
