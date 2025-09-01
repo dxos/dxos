@@ -109,10 +109,20 @@ const parseSerializedError = (serializedError: SerializedError): Error => {
       cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
       context: serializedError.context,
     });
+    if (serializedError.stack) {
+      Object.defineProperty(err, 'stack', {
+        value: serializedError.stack,
+      });
+    }
   } else {
     err = new Error(serializedError.message ?? 'Unknown error', {
       cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
     });
+    if (serializedError.stack) {
+      Object.defineProperty(err, 'stack', {
+        value: serializedError.stack,
+      });
+    }
   }
 
   return err;
