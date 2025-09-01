@@ -32,5 +32,9 @@ describe('smoke tests', () => {
         yield* run(args('dx --json hub status'));
         assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
       }
-    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, Effect.runPromise) as Promise<void>);
+    }).pipe(
+      Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)),
+      Effect.scoped,
+      Effect.runPromise,
+    ) as Promise<void>);
 });
