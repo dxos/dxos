@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { activeSurface, baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
+import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
 import { withTheme } from '../../testing';
@@ -76,10 +76,10 @@ const Wrapper = ({
 const DefaultStory = (props: BaseProps) => {
   return (
     <div className='space-b-4'>
-      <div className={mx(baseSurface, 'p-4')}>
+      <div className={mx(baseSurface, 'p-4 rounded-md')}>
         <Wrapper {...props} />
       </div>
-      <div className={mx(activeSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
         <Wrapper {...props} />
       </div>
       <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
