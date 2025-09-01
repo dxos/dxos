@@ -221,11 +221,10 @@ export class AiChatProcessor {
       throw new Error('Request already in progress');
     }
 
-    // TODO(burdon): Retain session for retry?
-    const session = new AiSession();
-    this._observableRegistry.set(this._session, Option.some(session));
     this._lastRequest = request;
 
+    const session = new AiSession();
+    this._observableRegistry.set(this._session, Option.some(session));
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
