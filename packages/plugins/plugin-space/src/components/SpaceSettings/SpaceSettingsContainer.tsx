@@ -162,7 +162,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto pli-2'>
+    <StackItem.Content classNames='block overflow-y-auto'>
       <ControlPage>
         <ControlSection
           title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
@@ -175,7 +175,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             onSave={handleSave}
             Custom={customElements}
             outerSpacing={false}
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd'
           />
         </ControlSection>
       </ControlPage>

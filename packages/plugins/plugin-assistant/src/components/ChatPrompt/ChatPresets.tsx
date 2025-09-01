@@ -22,6 +22,7 @@ export const ChatPresets = ({ presets, preset, onChange }: ChatPresetsProps) => 
             {label}
           </Select.Option>
         ))}
+        <Select.Arrow />
       </Select.Content>
     </Select.Root>
   );
