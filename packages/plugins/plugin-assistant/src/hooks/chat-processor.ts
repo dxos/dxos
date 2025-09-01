@@ -29,8 +29,6 @@ import { type Assistant } from '../types';
 
 import { type AiChatServices } from './useChatServices';
 
-// TODO(burdon): Move to @dxos/assistant
-
 // TODO(burdon): Standardize.
 declare global {
   interface ToolContextExtensions {

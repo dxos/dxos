@@ -23,15 +23,14 @@ import {
 import { AssistantCapabilities } from '../capabilities';
 import { type Assistant } from '../types';
 
-// TODO(burdon): Deconstruct into separate layers?
 export type AiChatServices =
-  | AiService.AiService
   | CredentialsService
   | DatabaseService
   | QueueService
   | RemoteFunctionExecutionService
-  | ToolResolverService
+  | AiService.AiService
   | ToolExecutionService
+  | ToolResolverService
   | TracingService;
 
 export type UseChatServicesProps = {

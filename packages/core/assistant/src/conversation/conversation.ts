@@ -11,7 +11,7 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
+import { AiSession, type AiSessionRunError, type AiSessionRunRequirements, type GenerationObserver } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 import { AiConversationRequest } from './request';
@@ -64,7 +64,14 @@ export class AiConversation {
    * Executes a prompt.
    * Each invocation creates a new `AiSession`, which handles potential tool calls.
    */
-  run<Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> {
+  run<Tools extends AiTool.Any>({
+    session,
+    ...params
+  }: AiConversationRunParams<Tools>): Effect.Effect<
+    DataType.Message[],
+    AiSessionRunError,
+    AiSessionRunRequirements<Tools>
+  > {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 

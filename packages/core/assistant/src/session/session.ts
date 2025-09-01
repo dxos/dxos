@@ -34,23 +34,16 @@ export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | Ai
 export type AiSessionRunRequirements<Tools extends AiTool.Any> =
   | AiLanguageModel.AiLanguageModel
   | AiTool.ToHandler<Tools>
-  | ToolResolverService
   | ToolExecutionService
+  | ToolResolverService
   | TracingService;
-
-// TODO(burdon): Remove.
-export type AiSessionRunEffect<Tools extends AiTool.Any> = Effect.Effect<
-  DataType.Message[],
-  AiSessionRunError,
-  AiSessionRunRequirements<Tools>
->;
 
 export type AiSessionRunParams<Tools extends AiTool.Any> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
-  objects?: Obj.Any[]; // TODO(burdon): Meta only is required (typename and id -- write to binder).
   blueprints?: Blueprint.Blueprint[];
+  objects?: Obj.Any[];
   toolIds?: ToolId[];
   toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
@@ -116,7 +109,11 @@ export class AiSession {
     toolIds = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): AiSessionRunEffect<Tools> =>
+  }: AiSessionRunParams<Tools>): Effect.Effect<
+    DataType.Message[],
+    AiSessionRunError,
+    AiSessionRunRequirements<Tools>
+  > =>
     Effect.gen(this, function* () {
       const now = Date.now();
       let toolCount = 0;

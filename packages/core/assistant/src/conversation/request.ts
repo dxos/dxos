@@ -8,8 +8,9 @@ import { Cause, Effect, Exit, Fiber, type Layer } from 'effect';
 import { type AiModelNotAvailableError } from '@dxos/ai';
 import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { type DataType } from '@dxos/schema';
 
-import { type AiSession, type AiSessionRunEffect, type AiSessionRunRequirements } from '../session';
+import { type AiSession, type AiSessionRunError, type AiSessionRunRequirements } from '../session';
 
 /**
  * Request handle.
@@ -18,7 +19,7 @@ export class AiConversationRequest<Tools extends AiTool.Any> {
   private _fiber?: Fiber.Fiber<void, any>;
 
   constructor(
-    private readonly _request: AiSessionRunEffect<Tools>,
+    private readonly _request: Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements<Tools>>,
     private readonly _session: AiSession,
   ) {}
 
