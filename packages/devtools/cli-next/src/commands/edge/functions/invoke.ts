@@ -4,7 +4,6 @@
 
 import { Args, Command, Options } from '@effect/cli';
 import { Console, Effect, Option, Schema } from 'effect';
-import { colorize } from 'json-colorizer';
 
 import { ClientService } from '../../../services';
 
@@ -47,6 +46,6 @@ export const invoke = Command.make(
         subrequestsLimit: subrequestsLimit.pipe(Option.getOrUndefined),
       }),
     );
-    yield* Console.log(colorize(result));
+    yield* Console.log(JSON.stringify(result, null, 2));
   }),
 ).pipe(Command.withDescription('Invoke a function deployed to EDGE.'));

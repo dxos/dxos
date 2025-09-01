@@ -4,7 +4,6 @@
 
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
-import { colorize } from 'json-colorizer';
 
 import { ClientService } from '../../../services';
 
@@ -18,6 +17,6 @@ export const list = Command.make(
 
     // Produce normalized in-memory FunctionType objects for display.
     const fns = yield* Effect.promise(() => getDeployedFunctions(client));
-    yield* Console.log(colorize(fns));
+    yield* Console.log(JSON.stringify(fns, null, 2));
   }),
 ).pipe(Command.withDescription('List functions deployed to EDGE.'));

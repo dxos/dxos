@@ -4583,9 +4583,6 @@ importers:
       effect:
         specifier: 3.17.7
         version: 3.17.7
-      json-colorizer:
-        specifier: ^3.0.1
-        version: 3.0.1
       wtfnode:
         specifier: ^0.10.0
         version: 0.10.0
@@ -27674,9 +27671,6 @@ packages:
   json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
 
-  json-colorizer@3.0.1:
-    resolution: {integrity: sha512-4YyRAbD6eHeRnJD9vo0zjiU5fyY9QR6T+iYuH5DpO0XPThKWozpD4MaeY/8nLZIkHC3yEQMFLL+6P94E+JekDw==}
-
   json-parse-better-errors@1.0.2:
     resolution: {integrity: sha512-mrqyZKfX5EhL7hvqcV6WG1yYjnjeuYDzDhhcAAUrq8Po85NBQBJP+ZDUT75qZQ98IkUoBqdkExkukOU7Ts2wrw==}
 
@@ -48757,10 +48751,6 @@ snapshots:
       bignumber.js: 9.1.2
 
   json-buffer@3.0.1: {}
-
-  json-colorizer@3.0.1:
-    dependencies:
-      colorette: 2.0.20
 
   json-parse-better-errors@1.0.2: {}
 

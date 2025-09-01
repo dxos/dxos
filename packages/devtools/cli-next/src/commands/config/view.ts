@@ -13,6 +13,6 @@ export const view = Command.make(
   {},
   Effect.fnUntraced(function* () {
     const config = yield* ConfigService;
-    console.log(colorize(config.values));
+    console.log(JSON.stringify(config.values, null, 2));
   }),
 );
