@@ -20,7 +20,7 @@ export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
 //  - Only take an array of templateIds and get the name from the data.
 //  - Pending / onError states.
 
-type DeploymentDialogProps = {
+export type DeploymentDialogProps = {
   accessToken: DataType.AccessToken;
   scriptTemplates: Template[];
 };

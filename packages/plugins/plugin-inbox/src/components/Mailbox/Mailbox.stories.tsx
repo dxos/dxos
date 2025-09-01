@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import './mailbox.css';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin, Surface, useCapability } from '@dxos/app-framework';
@@ -26,19 +26,19 @@ import { withLayout } from '@dxos/storybook-utils';
 import { InboxCapabilities } from '../../capabilities/capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
 import { createMessages } from '../../testing';
-import { MailboxType } from '../../types';
+import { Mailbox } from '../../types';
 
-import { Mailbox } from './Mailbox';
+import { Mailbox as MailboxComponent } from './Mailbox';
 import { initializeMailbox } from './testing';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
-  return <Mailbox id='story' messages={messages} ignoreAttention />;
+  return <MailboxComponent id='story' messages={messages} ignoreAttention />;
 };
 
 const WithCompanionStory = () => {
   const space = useSpace();
-  const [mailbox] = useQuery(space, Filter.type(MailboxType));
+  const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
   const state = useCapability(InboxCapabilities.MailboxState);
 
   const message = mailbox && state[fullyQualifiedId(mailbox)];
@@ -61,25 +61,27 @@ const WithCompanionStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
-  component: Mailbox,
+  component: MailboxComponent as any,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withAttention],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
 
-export const WithCompanion = {
+export const Default: Story = {};
+
+export const WithCompanion: Story = {
   render: WithCompanionStory,
   decorators: [
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [MailboxType, DataType.Message, DataType.Person],
+          types: [Mailbox.Mailbox, DataType.Message, DataType.Person],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

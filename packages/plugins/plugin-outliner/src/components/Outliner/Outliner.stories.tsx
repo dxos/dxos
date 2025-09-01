@@ -19,7 +19,7 @@ import { Outliner } from './Outliner';
 
 // TODO(burdon): Can we create a storybook for the Outliner without the database?
 
-const meta: Meta<typeof Outliner> = {
+const meta = {
   title: 'plugins/plugin-outliner/Outliner',
   component: Outliner,
   render: render(({ text: _text }) => {
@@ -37,7 +37,7 @@ const meta: Meta<typeof Outliner> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof Outliner>;
 
 export default meta;
 

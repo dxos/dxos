@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
@@ -59,7 +59,7 @@ export const Spec = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
   decorators: [
@@ -85,6 +85,8 @@ const meta: Meta = {
     }),
   ],
   parameters: { translations },
-};
+} satisfies Meta<typeof SheetContainer>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

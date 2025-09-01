@@ -5,6 +5,7 @@
 import { useEffect } from '@preact-signals/safe-react/react';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -13,12 +14,13 @@ import { mx } from '@dxos/react-ui-theme';
 // TODO(burdon): Allow controlled index (like TextBlock).
 // TODO(burdon): Handle error.
 
-export type ProgressProps = ThemedClassName<
+export type ProgressBarProps = ThemedClassName<
   {
     nodes?: { id: string }[];
+    index?: number;
     active?: boolean;
-    classes?: NodeProps['classes'];
-  } & Pick<NodeProps, 'radius' | 'width' | 'duration'>
+    onSelect?: (node: { index: number; id: string }) => void;
+  } & Partial<Pick<NodeProps, 'classes' | 'options'>>
 >;
 
 /**
@@ -26,23 +28,38 @@ export type ProgressProps = ThemedClassName<
  *
  * ---O---O---O---((O))
  */
-export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ...props }: ProgressProps) => {
+export const ProgressBar = ({
+  nodes,
+  index,
+  active,
+  classNames,
+  classes = defaultSlots,
+  options = defaultOptions,
+  onSelect,
+  ...props
+}: ProgressBarProps) => {
+  const { ref, width } = useResizeDetector();
   const [_, setCurrent, currentRef] = useStateWithRef<number>(nodes?.length ?? 0);
   useEffect(() => {
     setCurrent(nodes?.length ?? 0);
   }, [nodes?.length]);
 
+  const maxNodes = Math.floor((width ?? 0) / options.width);
+  const visibleNodes = nodes?.slice(-maxNodes);
+  const baseIndex = (nodes?.length ?? 0) - (visibleNodes?.length ?? 0);
+
   return (
     <AnimatePresence>
-      <div role='none' className={mx('flex items-center is-full bs-[32px] overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex items-center is-full bs-[32px] overflow-hidden', classNames)} ref={ref}>
         <div className='flex'>
-          {nodes?.map((node, i) => (
+          {visibleNodes?.map((node, i) => (
             <Node
-              key={node.id}
               {...props}
+              key={node.id}
               classes={classes}
+              selected={baseIndex + i === index}
               state={
-                i === currentRef.current! - 1
+                baseIndex + i === currentRef.current! - 1
                   ? active
                     ? 'active'
                     : 'terminal'
@@ -50,6 +67,7 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ..
                     ? 'open'
                     : 'closed'
               }
+              onClick={() => onSelect?.({ index: baseIndex + i, id: node.id })}
             />
           ))}
         </div>
@@ -60,28 +78,41 @@ export const Progress = ({ nodes, active, classNames, classes = defaultSlots, ..
 
 type NodeState = 'closed' | 'open' | 'active' | 'terminal' | 'error';
 
-type Slots = Partial<Record<NodeState | 'default', string>>;
+type Slots = Partial<Record<NodeState | 'default' | 'selected', string>>;
 
 const defaultSlots = {
   default: 'bg-baseSurface border-subduedSeparator',
-  active: 'bg-amber-500 border-transparent',
-  terminal: 'bg-green-500 border-transparent',
+  active: 'bg-amber-500 border-transparent text-amber-500',
+  terminal: 'bg-primary-500 border-transparent',
+  selected: 'bg-neutral-500 border-transparent',
   error: 'bg-rose-500 border-transparent',
+};
+
+type NodeOptions = {
+  width: number;
+  radius: number;
+  duration: number;
+};
+
+const defaultOptions: NodeOptions = {
+  width: 32,
+  radius: 7.5,
+  duration: 250,
 };
 
 type NodeProps = {
   state?: NodeState;
-  width?: number;
-  radius?: number;
-  duration?: number;
+  selected?: boolean;
   classes?: Slots;
+  options?: NodeOptions;
   onClick?: () => void;
 };
 
 /**
  * ---(O)
  */
-const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes, onClick }: NodeProps) => {
+const Node = ({ state = 'open', selected, classes, options = defaultOptions, onClick }: NodeProps) => {
+  const { width, radius, duration } = options;
   return (
     <motion.div
       transition={{
@@ -117,7 +148,7 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
               width: width - radius,
             },
           }}
-          className={mx('absolute left-0 border border-subduedSeparator box-border', state === 'closed' && 'hidden')}
+          className={mx('absolute left-0 border-b border-subduedSeparator box-border', state === 'closed' && 'hidden')}
         />
         <motion.div
           transition={{
@@ -142,27 +173,33 @@ const Node = ({ state = 'open', width = 32, radius = 8, duration = 250, classes,
         >
           <div
             className={mx(
-              'absolute inset-0 border-2 border-separator box-border rounded-full',
-              state === 'active' && ['animate-[ping_2s_ease-in-out_infinite]', classes?.active],
-            )}
-          />
-          <div
-            className={mx(
-              'absolute inset-0 border rounded-full transition-all duration-500',
+              'absolute border rounded-full transition-all duration-500',
+              state === 'active' ? 'inset-[4px]' : 'inset-0',
               onClick && 'cursor-pointer',
-              classes?.[state] ?? classes?.default,
-              // state === 'active' && 'inset-2',
+              selected ? classes?.selected : (classes?.[state] ?? classes?.default),
             )}
             onClick={onClick}
           />
-          {/* {state === 'active' && (
-            <Icon
-              icon='ph--circle-notch--bold'
-              classNames='absolute inset-0 is-full bs-full animate-spin text-amber-500'
-            />
-          )} */}
+          {state === 'active' && (
+            <Notch classNames={['absolute inset-0 is-full bs-full animate-spin', classes?.active, '!bg-transparent']} />
+          )}
         </motion.div>
       </div>
     </motion.div>
   );
 };
+
+const Notch = ({ classNames }: ThemedClassName) => (
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' className={mx(classNames)}>
+    <circle
+      cx='128'
+      cy='128'
+      r='108'
+      strokeDasharray='500 800'
+      strokeDashoffset='0'
+      fill='none'
+      strokeWidth='40'
+      stroke='currentColor'
+    />
+  </svg>
+);

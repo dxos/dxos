@@ -13,9 +13,9 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { INBOX_PLUGIN } from '../../meta';
-import { type MailboxType } from '../../types';
+import { type Mailbox } from '../../types';
 
-export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
+export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
   const { t } = useTranslation(INBOX_PLUGIN);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);

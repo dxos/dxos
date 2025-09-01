@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 
 import { SyncStatusIndicator } from './SyncStatus';
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
   decorators: [withTheme],
@@ -20,11 +20,11 @@ const meta: Meta = {
     translations,
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof SyncStatusIndicator>;
 
 export default meta;
 
-type Story = StoryObj<typeof SyncStatusIndicator>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

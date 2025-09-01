@@ -11,7 +11,7 @@ import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-de
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 
 import { INBOX_PLUGIN } from '../meta';
-import { MailboxType } from '../types';
+import { Mailbox } from '../types';
 
 import { InboxCapabilities } from './capabilities';
 
@@ -23,7 +23,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(MailboxType, node.data) ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (Obj.instanceOf(Mailbox.Mailbox, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => {
               const state = get(context.capabilities(InboxCapabilities.MailboxState))[0];
               const message = get(rxFromSignal(() => state?.[node.id]));

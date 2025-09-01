@@ -131,7 +131,7 @@ const generateCommit = (
   return { commit, branch };
 };
 
-const meta: Meta<typeof Timeline> = {
+const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
   decorators: [
@@ -141,7 +141,7 @@ const meta: Meta<typeof Timeline> = {
       fullscreen: true,
     }),
   ],
-};
+} satisfies Meta<typeof Timeline>;
 
 export default meta;
 

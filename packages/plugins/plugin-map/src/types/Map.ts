@@ -5,7 +5,6 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 import { LabelAnnotation, ViewAnnotation } from '@dxos/echo-schema';
 import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
 
@@ -30,10 +29,10 @@ export type Map = Schema.Schema.Type<typeof Map>;
 /**
  * Make a map object.
  */
-export const make = (props: MakeProps<typeof Map> = {}) => Obj.make(Map, props);
+export const make = (props: Obj.MakeProps<typeof Map> = {}) => Obj.make(Map, props);
 
 type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
-  presentation?: Omit<MakeProps<typeof Map>, 'name'>;
+  presentation?: Omit<Obj.MakeProps<typeof Map>, 'name'>;
 };
 
 /**

@@ -56,9 +56,9 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-  AiTool.make('create-object', {
+  AiTool.make('create-record', {
     description: trim`
-      Adds a new object or record to the current space.
+      Creates a new record and adds it to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
       Note that only record schemas are supported.
     `,
@@ -132,7 +132,7 @@ class Toolkit extends AiToolkit.make(
         }).pipe(Effect.orDie);
       },
 
-      'create-object': ({ typename, data }) => {
+      'create-record': ({ typename, data }) => {
         const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
         invariant(space, 'No active space');

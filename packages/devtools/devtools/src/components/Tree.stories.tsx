@@ -4,20 +4,25 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Tree } from './Tree';
 
-export default {
+const meta = {
   title: 'devtools/devtools/Tree',
   component: Tree,
   decorators: [withTheme],
   argTypes: {},
-};
+} satisfies Meta<typeof Tree>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: () => {
     return (
       <div>

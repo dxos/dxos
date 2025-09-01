@@ -101,12 +101,12 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   );
 };
 
-const meta: Meta<GridStoryProps> = {
+const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof GridStory>;
 
 export default meta;
 

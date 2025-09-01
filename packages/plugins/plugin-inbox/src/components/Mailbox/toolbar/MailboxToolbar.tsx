@@ -10,11 +10,11 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
 import { INBOX_PLUGIN } from '../../../meta';
-import { InboxAction, type MailboxType } from '../../../types';
+import { InboxAction, type Mailbox } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';
 
 export const useMailboxToolbarActions = (
-  mailbox: MailboxType,
+  mailbox: Mailbox.Mailbox,
   model: MailboxModel,
   tagFilterVisible: Signal<boolean>,
   setTagFilterVisible: (visible: boolean) => void,
@@ -31,10 +31,6 @@ export const useMailboxToolbarActions = (
             })
             .action(
               'sort',
-              () => {
-                const newDirection = model.sortDirection === 'asc' ? 'desc' : 'asc';
-                model.sortDirection = newDirection;
-              },
               {
                 label: get(
                   rxFromSignal(() =>
@@ -50,25 +46,33 @@ export const useMailboxToolbarActions = (
                 ),
                 type: 'sort',
               },
+              () => {
+                const newDirection = model.sortDirection === 'asc' ? 'desc' : 'asc';
+                model.sortDirection = newDirection;
+              },
             )
             .action(
               'filter',
-              () => {
-                const newVisibility = !tagFilterVisible.value;
-                setTagFilterVisible(newVisibility);
-              },
               {
                 label: ['mailbox toolbar filter by tags', { ns: INBOX_PLUGIN }],
                 icon: 'ph--tag--regular',
                 type: 'filter',
                 classNames: get(rxFromSignal(() => (tagFilterVisible.value ? 'text-accentText' : undefined))),
               },
+              () => {
+                const newVisibility = !tagFilterVisible.value;
+                setTagFilterVisible(newVisibility);
+              },
             )
-            .action('assistant', () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })), {
-              label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
-              icon: 'ph--sparkle--regular',
-              type: 'assistant',
-            })
+            .action(
+              'assistant',
+              {
+                label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
+                icon: 'ph--sparkle--regular',
+                type: 'assistant',
+              },
+              () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+            )
             .build(),
         ),
       [model, tagFilterVisible, setTagFilterVisible],

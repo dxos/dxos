@@ -13,14 +13,14 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StatusRoll, sizes } from './StatusRoll';
 
-const meta: Meta<typeof StatusRoll> = {
+const meta = {
   title: 'ui/react-ui-components/StatusRoll',
   component: StatusRoll,
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof StatusRoll>;
 
 export default meta;
 

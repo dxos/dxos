@@ -15,6 +15,3 @@ export const meta: PluginMeta = {
   // TODO(wittjosiah): Needs new screenshots.
   screenshots: ['https://dxos.network/plugin-details-calls-dark.png'],
 };
-
-// TODO(burdon): Workaround for suspected vitest bug? Update vitest?
-export const not_meta = meta;

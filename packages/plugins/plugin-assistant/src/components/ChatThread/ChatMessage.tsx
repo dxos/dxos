@@ -165,8 +165,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Suggest
   //
-  ['suggest' as const]: ({ block, onEvent }) => {
-    invariant(block._tag === 'suggest');
+  ['suggestion' as const]: ({ block, onEvent }) => {
+    invariant(block._tag === 'suggestion');
     return (
       <IconButton
         icon='ph--lightning--regular'
@@ -273,7 +273,7 @@ export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
     <>
       <MessageItem>
         <ToggleContainer title={error.message || t('error label')} classNames={[panelClasses, 'bg-warningSurface']}>
-          <div className='p-2'>{String(error.cause)}</div>
+          <div className='p-2 text-small text-subdued'>{String(error.cause)}</div>
         </ToggleContainer>
       </MessageItem>
       <MessageItem>

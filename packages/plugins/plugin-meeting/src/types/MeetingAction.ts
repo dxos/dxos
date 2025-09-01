@@ -8,11 +8,11 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { ChannelType } from '@dxos/plugin-thread/types';
 import { DataType } from '@dxos/schema';
 
-import { not_meta } from '../meta';
+import { meta } from '../meta';
 
 import { Meeting } from './Meeting';
 
-export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${not_meta.id}/on-space-created`, {
+export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
     rootCollection: DataType.Collection,
@@ -20,7 +20,7 @@ export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${not_
   output: Schema.Void,
 }) {}
 
-export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/create`, {
+export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     channel: ChannelType,
@@ -30,7 +30,7 @@ export class Create extends Schema.TaggedClass<Create>()(`${not_meta.id}/action/
   }),
 }) {}
 
-export class SetActive extends Schema.TaggedClass<SetActive>()(`${not_meta.id}/action/set-active`, {
+export class SetActive extends Schema.TaggedClass<SetActive>()(`${meta.id}/action/set-active`, {
   input: Schema.Struct({
     object: Schema.optional(Meeting),
   }),
@@ -39,7 +39,7 @@ export class SetActive extends Schema.TaggedClass<SetActive>()(`${not_meta.id}/a
   }),
 }) {}
 
-export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${not_meta.id}/action/handle-payload`, {
+export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${meta.id}/action/handle-payload`, {
   input: Schema.Struct({
     meetingId: Schema.optional(Schema.String),
     transcriptDxn: Schema.optional(Schema.String),
@@ -48,7 +48,7 @@ export class HandlePayload extends Schema.TaggedClass<HandlePayload>()(`${not_me
   output: Schema.Void,
 }) {}
 
-export class Summarize extends Schema.TaggedClass<Summarize>()(`${not_meta.id}/action/summarize`, {
+export class Summarize extends Schema.TaggedClass<Summarize>()(`${meta.id}/action/summarize`, {
   input: Schema.Struct({
     meeting: Meeting,
   }),

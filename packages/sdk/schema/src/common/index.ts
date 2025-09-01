@@ -49,6 +49,7 @@ export namespace DataType {
   export const ActorRoles = Actor$.ActorRoles;
   export const ActorRole = Actor$.ActorRole;
   export type ActorRole = Actor$.ActorRole;
+
   export const Actor = Actor$.Actor;
   export type Actor = Actor$.Actor;
 
@@ -65,6 +66,7 @@ export namespace DataType {
 
   export const Collection = Collection$.Collection;
   export type Collection = Collection$.Collection;
+
   export const QueryCollection = Collection$.QueryCollection;
   export type QueryCollection = Collection$.QueryCollection;
 
@@ -90,6 +92,7 @@ export namespace DataType {
 
   export const Organization = Organization$.Organization;
   export type Organization = Organization$.Organization;
+
   // TODO(burdon): Remove.
   export const OrganizationStatusOptions = Organization$.OrganizationStatusOptions;
 
@@ -129,6 +132,7 @@ export namespace DataType {
 
   export const Text = Text$.Text;
   export type Text = Text$.Text;
+
   export const makeText = (content = '', id?: ObjectId) =>
     id ? Obj.make(Text, { content, id }) : Obj.make(Text, { content });
 

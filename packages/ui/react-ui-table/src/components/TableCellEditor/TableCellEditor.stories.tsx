@@ -22,7 +22,7 @@ import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
 import { Table } from '../../types';
 
-import { TableCellEditor, type TableCellEditorProps } from './TableCellEditor';
+import { TableCellEditor } from './TableCellEditor';
 
 type StoryProps = {
   editing: GridEditing;
@@ -54,18 +54,6 @@ const DefaultStory = ({ editing }: StoryProps) => {
 
   const model = useTableModel({ view, schema: schema?.jsonSchema, features });
 
-  const handleQuery: TableCellEditorProps['onQuery'] = async ({ field }) => {
-    // TODO(dmaretskyi): If no schema query nothing
-    const { objects } = await space.db.query(schema ? Filter.type(schema) : Filter.everything()).run();
-    return objects.map((obj) => {
-      const label = obj[field.referencePath ?? 'id'];
-      return {
-        label,
-        data: obj,
-      };
-    });
-  };
-
   if (!model || !schema || !view) {
     return <div />;
   }
@@ -73,13 +61,13 @@ const DefaultStory = ({ editing }: StoryProps) => {
   return (
     <div className='flex w-[300px] border border-separator' style={{ height: defaultRowSize }}>
       <Grid.Root id='test' editing={editing}>
-        <TableCellEditor model={model} onQuery={handleQuery} />
+        <TableCellEditor model={model} schema={schema} />
       </Grid.Root>
     </div>
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
@@ -107,11 +95,11 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout(),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

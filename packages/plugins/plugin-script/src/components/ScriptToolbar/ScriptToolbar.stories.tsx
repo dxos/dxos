@@ -4,28 +4,32 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { Obj, Ref } from '@dxos/echo';
+import { ScriptType } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-
-import { templates } from '../../templates';
 
 import { ScriptToolbar } from './ScriptToolbar';
 
-export const Default = {
-  args: {
-    binding: 'example',
-    deployed: true,
-    templates,
-    onFormat: () => console.log('Format'),
-    onTogglePanel: () => {},
-  },
-};
-
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-script/Toolbar',
   component: ScriptToolbar,
   decorators: [withTheme, withLayout()],
-};
+} satisfies Meta<typeof ScriptToolbar>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    script: Obj.make(ScriptType, {
+      name: 'test',
+      description: 'test',
+      source: Ref.make(DataType.makeText('test')),
+    }),
+    state: {},
+  },
+};

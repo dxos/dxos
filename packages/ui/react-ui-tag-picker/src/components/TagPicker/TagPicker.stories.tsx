@@ -23,7 +23,7 @@ const allItems: TagPickerItemData[] = [
   { id: 'socket-supply', label: 'Socket Supply', hue: 'indigo' },
 ];
 
-const meta: Meta<typeof TagPicker> = {
+const meta = {
   title: 'ui/react-ui-tag-picker/TagPicker',
   component: TagPicker,
   render: ({ items: initialItems, mode }) => {
@@ -66,7 +66,7 @@ const meta: Meta<typeof TagPicker> = {
   },
   decorators: [withTheme, withLayout()],
   parameters: { layout: 'centered' },
-};
+} satisfies Meta<typeof TagPicker>;
 
 export default meta;
 

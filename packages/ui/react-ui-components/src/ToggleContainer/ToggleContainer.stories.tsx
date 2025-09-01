@@ -86,12 +86,12 @@ const DefaultStory = ({ shrinkX, ...props }: ToggleContainerProps) => {
   );
 };
 
-const meta: Meta<typeof ToggleContainer> = {
+const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
-};
+} satisfies Meta<typeof ToggleContainer>;
 
 export default meta;
 

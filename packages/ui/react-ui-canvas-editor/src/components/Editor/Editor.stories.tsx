@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
@@ -98,9 +98,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   );
 };
 
-const meta: Meta<EditorRootProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/Editor',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -132,11 +132,11 @@ const meta: Meta<EditorRootProps> = {
     withAttention,
     withLayout({ fullscreen: true }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolean }>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

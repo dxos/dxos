@@ -26,7 +26,7 @@ const Render = (props: ResetDialogProps) => {
   );
 };
 
-const meta: Meta<ResetDialogProps> = {
+const meta = {
   title: 'plugins/plugin-client/ResetDialog',
   component: ResetDialog,
   render: Render,
@@ -41,11 +41,11 @@ const meta: Meta<ResetDialogProps> = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof ResetDialog>;
 
 export default meta;
 
-type Story = StoryObj<ResetDialogProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: { mode: 'reset storage' } };
 

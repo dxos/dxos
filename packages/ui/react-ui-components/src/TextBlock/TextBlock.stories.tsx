@@ -52,14 +52,14 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-components/TextBlock',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

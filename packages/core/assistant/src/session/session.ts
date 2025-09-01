@@ -111,6 +111,9 @@ export class AiSession {
     observer = GenerationObserver.noop(),
   }: AiSessionRunParams<Tools>): AiSessionRunEffect<Tools> =>
     Effect.gen(this, function* () {
+      const now = Date.now();
+      let toolCount = 0;
+
       // Create toolkit.
       // TODO(burdon): Provided toolkit is undefined.
       const toolkitHandlers = yield* createToolkit({ toolkit, toolIds, blueprints });
@@ -188,8 +191,7 @@ export class AiSession {
           break;
         }
 
-        // TODO(burdon): Potential retry?
-        // TODO(burdon): Report errors to user; with proposed actions.
+        // TODO(burdon): Retry backend errors (with backoff)?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) =>
           callTool(toolkitHandlers, toolCall).pipe(
             Effect.provide(
@@ -212,7 +214,28 @@ export class AiSession {
         yield* this.messageQueue.offer(toolResultsMessage);
         yield* observer.onMessage(toolResultsMessage);
         yield* TracingService.emitConverationMessage(toolResultsMessage);
-      } while (true);
+        toolCount++;
+      } while (true); // Tool loop.
+
+      // Summary.
+      // TODO(burdon): Get token count.
+      const summaryMessage = Obj.make(DataType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'assistant' },
+        blocks: [
+          {
+            _tag: 'summary',
+            message: 'Done',
+            duration: Date.now() - now,
+            toolCalls: toolCount,
+          },
+        ],
+      });
+      // TODO(burdon):
+      this._pending.push(summaryMessage);
+      yield* this.messageQueue.offer(summaryMessage);
+      yield* observer.onMessage(summaryMessage);
+      yield* TracingService.emitConverationMessage(summaryMessage);
 
       // Signals to stream consumers that the session has completed and no more messages are coming.
       yield* Queue.shutdown(this.messageQueue);

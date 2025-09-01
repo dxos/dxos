@@ -179,7 +179,7 @@ const AudioFile = ({
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
 };
 
-const meta: Meta<typeof AudioFile> = {
+const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withPluginManager({
@@ -206,9 +206,11 @@ const meta: Meta<typeof AudioFile> = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 100,

@@ -5534,12 +5534,6 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-inbox':
-        specifier: workspace:*
-        version: link:../plugin-inbox
-      '@dxos/plugin-map':
-        specifier: workspace:*
-        version: link:../plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -5679,6 +5673,12 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../plugin-inbox
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
@@ -7915,6 +7915,9 @@ importers:
       '@effect/platform':
         specifier: ^0.90.2
         version: 0.90.2(effect@3.17.7)
+      '@tauri-apps/api':
+        specifier: ^2.3.0
+        version: 2.7.0
       '@tauri-apps/plugin-os':
         specifier: ^2.3.0
         version: 2.3.0
@@ -10177,8 +10180,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0
       react-resize-detector:
-        specifier: ^12.0.2
-        version: 12.0.2(react@18.2.0)
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       wavefile:
         specifier: ^11.0.0
         version: 11.0.0
@@ -12943,6 +12946,9 @@ importers:
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -13309,6 +13315,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
@@ -13324,6 +13333,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@fluentui/react-tabster':
+        specifier: ^9.24.2
+        version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -30371,11 +30383,6 @@ packages:
     peerDependencies:
       react: ~18.2.0
       react-dom: ~18.2.0
-
-  react-resize-detector@12.0.2:
-    resolution: {integrity: sha512-aAI4WxWAysWLhA8wKDpsS+PnnxQ0lWCkTlk2t+2ijalWvoSa7vPxmcKRLURkH+PU84QE4KP4dO58oVP3ypWkKA==}
-    peerDependencies:
-      react: ~18.2.0
 
   react-router-dom@6.4.2:
     resolution: {integrity: sha512-yM1kjoTkpfjgczPrcyWrp+OuQMyB1WleICiiGfstnQYo/S8hPEEnVjr/RdmlH6yKK4Tnj1UGXFSa7uwAtmDoLQ==}
@@ -52142,11 +52149,6 @@ snapshots:
       lodash: 4.17.21
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-
-  react-resize-detector@12.0.2(react@18.2.0):
-    dependencies:
-      lodash: 4.17.21
-      react: 18.2.0
 
   react-router-dom@6.4.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:

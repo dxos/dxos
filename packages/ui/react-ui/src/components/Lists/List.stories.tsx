@@ -8,6 +8,7 @@ import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/cor
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
 import {
@@ -24,12 +25,16 @@ import { Icon } from '../Icon';
 
 import { List, ListItem, type ListScopedProps } from './List';
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof List>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const UniformListItem = ({ id, text }: { id: string; text: string }) => {
   const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
@@ -52,7 +57,7 @@ const UniformListItem = ({ id, text }: { id: string; text: string }) => {
   );
 };
 
-export const UniformSizeDraggable = {
+export const UniformSizeDraggable: Story = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -116,7 +121,7 @@ const ManySizesDraggableListItem = ({
   );
 };
 
-export const ManySizesDraggable = {
+export const ManySizesDraggable: Story = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -164,7 +169,7 @@ export const ManySizesDraggable = {
   args: {},
 };
 
-export const Collapsible = {
+export const Collapsible: Story = {
   render: ({ ...args }) => {
     const [items, _setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -197,7 +202,7 @@ export const Collapsible = {
   },
 };
 
-export const SelectableListbox = {
+export const SelectableListbox: Story = {
   render: () => {
     const [selectedId, setSelectedId] = useState<string>();
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' });

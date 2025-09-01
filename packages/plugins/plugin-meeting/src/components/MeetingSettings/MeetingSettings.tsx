@@ -7,11 +7,11 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
 
-import { not_meta } from '../../meta';
+import { meta } from '../../meta';
 import { type Meeting } from '../../types';
 
 export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) => {
-  const { t } = useTranslation(not_meta.id);
+  const { t } = useTranslation(meta.id);
 
   return (
     <DeprecatedFormContainer>

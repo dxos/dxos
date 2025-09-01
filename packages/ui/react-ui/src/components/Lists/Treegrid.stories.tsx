@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -87,7 +88,7 @@ const content = {
       icon: 'ph--planet--regular',
     },
   ],
-} satisfies StorybookNode;
+} as StorybookNode;
 
 function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean): Generator<StorybookIteratorNode> {
   const stack: StorybookIteratorNode[] = [
@@ -142,11 +143,15 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Treegrid',
-  component: Treegrid.Root,
+  component: Treegrid.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

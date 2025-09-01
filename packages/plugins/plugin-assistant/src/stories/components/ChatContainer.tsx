@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { Chat, Toolbar } from '../../components';
+import { Chat, ChatProgress, Toolbar } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
 import { Assistant } from '../../types';
@@ -33,6 +33,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
       <Toolbar chat={chat} onReset={() => onEvent?.('reset')} />
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
+        <ChatProgress chat={chat} />
         <div className='p-4'>
           <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
         </div>
