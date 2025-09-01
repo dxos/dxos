@@ -56,12 +56,8 @@ export class AiConversation {
 
   // TODO(burdon): Replace run/raw; remove session from params.
   createRequest<Tools extends AiTool.Any>(params: Omit<AiConversationRunParams<Tools>, 'session'>) {
-    return new AiConversationRequest<Tools>(
-      this.run<Tools>({
-        session: new AiSession(),
-        ...params,
-      }),
-    );
+    const session = new AiSession();
+    return new AiConversationRequest<Tools>(this.run<Tools>({ session, ...params }), session);
   }
 
   /**

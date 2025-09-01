@@ -9,17 +9,18 @@ import { type AiModelNotAvailableError } from '@dxos/ai';
 import { runAndForwardErrors, throwCause } from '@dxos/effect';
 import { log } from '@dxos/log';
 
-import { AiSession, type AiSessionRunEffect, type AiSessionRunRequirements } from '../session';
+import { type AiSession, type AiSessionRunEffect, type AiSessionRunRequirements } from '../session';
 
 /**
  * Request handle.
  */
 export class AiConversationRequest<Tools extends AiTool.Any> {
-  private readonly _session = new AiSession();
-
   private _fiber?: Fiber.Fiber<void, any>;
 
-  constructor(private readonly _request: AiSessionRunEffect<Tools>) {}
+  constructor(
+    private readonly _request: AiSessionRunEffect<Tools>,
+    private readonly _session: AiSession,
+  ) {}
 
   get session() {
     return this._session;

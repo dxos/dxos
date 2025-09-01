@@ -45,8 +45,6 @@ const CHAT_NAME_PROMPT = trim`
   If you cannot do this effectively respond with "New Chat".
 `;
 
-export type AiRequestOptions = {};
-
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
@@ -55,13 +53,16 @@ export type AiChatProcessorOptions = {
   extensions?: ToolContextExtensions;
 } & Pick<AiConversationRunParams<any>, 'system'>;
 
+const defaultOptions: Partial<AiChatProcessorOptions> = {
+  model: DEFAULT_EDGE_MODEL,
+};
+
+// TODO(burdon): Retry options?
+export type AiRequestOptions = {};
+
 export type AiRequest = {
   message: string;
   options?: AiRequestOptions;
-};
-
-const defaultOptions: Partial<AiChatProcessorOptions> = {
-  model: DEFAULT_EDGE_MODEL,
 };
 
 /**
@@ -71,20 +72,20 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
  * Supports cancellation of in-progress requests.
  */
 export class AiChatProcessor {
-  /** Last error. */
-  // TODO(wittjosiah): Error should come from the message stream.
-  public readonly error = Rx.make<Option.Option<Error>>(Option.none());
-
-  /** Rx registry. */
+  // TODO(burdon): Comment required.
   private readonly _observableRegistry: Registry.Registry;
 
-  // TODO(burdon): Replace with AiConversationRequest.
+  /** Currently active request. */
+  private _request: AiConversationRequest<AiTool.Any> | undefined;
+
+  /** Last request for retries. */
+  private _lastRequest: AiRequest | undefined;
+
+  /** @deprecated */
+  private _currentRequest?: Fiber.Fiber<void, any> = undefined;
+
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
-  /** Current request fiber. */
-  private _currentRequest?: Fiber.Fiber<void, any> = undefined;
-  /** Last request for retries. */
-  private _lastRequest?: AiRequest;
 
   /**
    * Current streaming message (from the AI service).
@@ -134,7 +135,7 @@ export class AiChatProcessor {
   /**
    * Streaming state.
    */
-  readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
+  public readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
     return pipe(
       get(this._streaming),
       Result.map((streaming) => Option.isSome(streaming)),
@@ -145,7 +146,7 @@ export class AiChatProcessor {
   /**
    * Array of Messages (incl. the current message being streamed).
    */
-  readonly messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
+  public readonly messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
     const streaming = get(this._streaming);
     return Result.map(get(this._pending), (pending) =>
       Result.match(streaming, {
@@ -159,6 +160,10 @@ export class AiChatProcessor {
       }),
     );
   });
+
+  /** Last error. */
+  // TODO(wittjosiah): Error should come from the message stream.
+  public readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
   constructor(
     private readonly _conversation: AiConversation,
@@ -186,45 +191,57 @@ export class AiChatProcessor {
     return this._options.blueprintRegistry;
   }
 
-  //
-  // TODO(burdon): New request/cancel moves move plumbing downstream to assistant.
-  // TODO(burdon): Create test.
-  //
-
-  private _request: AiConversationRequest<AiTool.Any> | undefined;
-
-  async request2({ message }: AiRequest) {
+  /**
+   * Initiates a new request.
+   */
+  async request(requestParam: AiRequest) {
     if (this._request) {
-      await this.cancel2();
+      await this.cancel();
     }
 
-    this._request = this._conversation.createRequest({
-      system: this._options.system,
-      prompt: message,
-    });
+    try {
+      this._lastRequest = requestParam;
+      this._request = this._conversation.createRequest({
+        system: this._options.system,
+        prompt: requestParam.message,
+      });
 
-    await this._request.run(
-      Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
-    );
+      this._observableRegistry.set(this._session, Option.some(this._request.session));
+      this._observableRegistry.set(this.error, Option.none());
+
+      await this._request.run(
+        Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
+      );
+
+      this._observableRegistry.set(this.error, Option.none());
+    } catch (err) {
+      log.catch(err);
+      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+    } finally {
+      this._observableRegistry.set(this._session, Option.none());
+      this._request = undefined;
+    }
   }
 
-  async cancel2() {
+  /**
+   * Cancels the current request.
+   */
+  async cancel() {
     await this._request?.cancel();
     this._request = undefined;
   }
 
   /**
-   * Make GPT request.
+   * @deprecated
    */
-  async request(request: AiRequest): Promise<void> {
+  async _oldRequest(request: AiRequest): Promise<void> {
     if (this._currentRequest) {
       throw new Error('Request already in progress');
     }
 
-    this._lastRequest = request;
-
     const session = new AiSession();
     this._observableRegistry.set(this._session, Option.some(session));
+    this._observableRegistry.set(this.error, Option.none());
     await using ctx = Context.default(); // Auto-disposed at the end of this block.
     ctx.onDispose(() => {
       log.info('onDispose', { session, isDisposed: ctx.disposed });
@@ -239,7 +256,7 @@ export class AiChatProcessor {
     });
 
     try {
-      this._observableRegistry.set(this.error, Option.none());
+      this._lastRequest = request;
       this._currentRequest = this._conversation
         .run({
           session,
@@ -251,6 +268,7 @@ export class AiChatProcessor {
             Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
           ),
 
+          // TODO(burdon): What is this for???
           // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
           Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
 
@@ -275,9 +293,9 @@ export class AiChatProcessor {
   }
 
   /**
-   * Cancel pending requests.
+   * @deprecated
    */
-  async cancel(): Promise<void> {
+  async _oldCancel(): Promise<void> {
     log.info('cancelling...');
     if (this._currentRequest) {
       await this._currentRequest.pipe(Fiber.interrupt, runAndForwardErrors);
