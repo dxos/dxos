@@ -71,7 +71,7 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
 };
 
-// TODO(burdon): Retry options?
+// TODO(burdon): Retry, timeout?
 export type AiRequestOptions = {};
 
 export type AiRequest = {
