@@ -42,7 +42,7 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
-const columnDefault = { grid: { minSize: 42 } };
+const columnDefault = { grid: { minSize: 128, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //

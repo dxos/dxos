@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin name': 'Telemetry',
+        'settings title': 'Telemetry settings',
         'observability toast label': 'Privacy Notice',
         'observability toast description':
           'Composer collects usage and performance metrics to improve the product. No user data is collected.',

@@ -156,6 +156,7 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>

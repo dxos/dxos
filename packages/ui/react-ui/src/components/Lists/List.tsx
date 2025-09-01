@@ -107,7 +107,6 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
     const { tx } = useThemeContext();
     const density = useDensityContext();
     const { open } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const iconName = open ? 'ph--caret-down--bold' : 'ph--caret-right--bold';
     return (
       <ListPrimitiveItemOpenTrigger
         {...props}
@@ -115,7 +114,11 @@ const ListItemOpenTrigger = forwardRef<HTMLButtonElement, ListItemOpenTriggerPro
         ref={forwardedRef}
       >
         {children || (
-          <Icon icon={iconName} classNames={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})} />
+          <Icon
+            size={3}
+            icon={open ? 'ph--caret-down--bold' : 'ph--caret-right--bold'}
+            classNames={tx('list.item.openTriggerIcon', 'list__listItem__openTrigger__icon', {})}
+          />
         )}
       </ListPrimitiveItemOpenTrigger>
     );
