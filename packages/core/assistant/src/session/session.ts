@@ -80,7 +80,7 @@ export class AiSession {
   /** Unparsed events from the underlying generation stream. */
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
 
-  // TODO(burdon): Unify.
+  // TODO(burdon): Unify these? Support multiple consumers?
   // yield* this.messageQueue.offer(summaryMessage);
   // yield* observer.onMessage(summaryMessage);
   // yield* TracingService.emitConverationMessage(summaryMessage);
