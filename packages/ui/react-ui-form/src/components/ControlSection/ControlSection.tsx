@@ -13,6 +13,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
@@ -21,9 +22,11 @@ export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
   return (
-    <div role='none' className={mx('pli-cardSpacingInline', classNames)} {...props}>
-      {children}
-    </div>
+    <StackItem.Content classNames='block overflow-y-auto [--control-spacing:var(--dx-trimMd)]'>
+      <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
+        {children}
+      </div>
+    </StackItem.Content>
   );
 };
 
@@ -64,7 +67,10 @@ export type ControlGroupProps = ThemedClassName<PropsWithChildren<{}>>;
 export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
     role='none'
-    className={mx('group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd', classNames)}
+    className={mx(
+      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd [--control-spacing:0px] [&_input]:justify-self-end [&_button]:justify-self-end',
+      classNames,
+    )}
   >
     {children}
   </div>
@@ -85,9 +91,9 @@ export type ControlItemProps = PropsWithChildren<{
 }>;
 
 export const controlItemClasses =
-  'pli-trimMd plb-trimMd container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-trimSm border border-separator rounded-md *:first:!mbs-0 *:last:!mbe-0';
+  'mlb-[--control-spacing] pli-trimMd plb-trimMd container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-trimSm border border-separator rounded-md *:first:!mbs-0 *:last:!mbe-0';
 
-const controlItemTitleClasses = 'text-lg font-normal';
+const controlItemTitleClasses = 'text-lg font-normal text-baseText mbe-0';
 const controlItemDescriptionClasses = 'text-base mlb-trimSm md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { OBSERVABILITY_PLUGIN } from '../meta';
 import { ObservabilityAction } from '../types';
@@ -29,20 +29,20 @@ export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySet
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
-    <DeprecatedFormContainer>
-      <DeprecatedFormInput
-        label={t('observability enabled label')}
-        secondary={
-          <Message.Root valence='info'>
-            <Message.Content>{t('observability description')}</Message.Content>
-          </Message.Root>
-        }
-      >
-        <Input.Switch
-          checked={settings.enabled}
-          onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
-        />
-      </DeprecatedFormInput>
-    </DeprecatedFormContainer>
+    <ControlPage>
+      <ControlSection title={t('settings title', { ns: OBSERVABILITY_PLUGIN })}>
+        <Message.Root valence='info' classNames='container-max-width mbe-cardSpacingBlock'>
+          <Message.Content>{t('observability description')}</Message.Content>
+        </Message.Root>
+        <ControlGroup>
+          <ControlItemInput title={t('observability enabled label')}>
+            <Input.Switch
+              checked={settings.enabled}
+              onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
+            />
+          </ControlItemInput>
+        </ControlGroup>
+      </ControlSection>
+    </ControlPage>
   );
 };
