@@ -17,6 +17,7 @@ export const translations = [
         'devtools label': 'DevTools',
         'devtools overview label': 'DevTools Stats',
         'debug label': 'Debug',
+        'debug app graph label': 'App Graph',
         'settings show debug panel': 'Show Debug panel.',
         'settings show devtools panel': 'Show DevTools panel.',
         'settings wireframe': 'Show wireframes.',
