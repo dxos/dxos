@@ -40,6 +40,9 @@ export const translations = [
 
         'meeting thread label': 'Meeting Chat',
         'transcript companion label': 'Meeting Transcript',
+        'entity extraction label': 'Entity extraction',
+        'entity extraction description':
+          'While transcribing, use the Assistant to detect and annotate mentions of known records such as people or organizations.',
       },
     },
   },

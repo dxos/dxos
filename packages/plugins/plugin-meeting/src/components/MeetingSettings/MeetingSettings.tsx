@@ -17,7 +17,7 @@ export const MeetingSettings = ({ settings }: { settings: Meeting.Settings }) =>
     <ControlPage>
       <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
-          <ControlItemInput title={t('settings entity extraction label')}>
+          <ControlItemInput title={t('entity extraction label')} description={t('entity extraction description')}>
             <Input.Switch
               checked={!!settings.entityExtraction}
               onCheckedChange={(checked) => (settings.entityExtraction = checked)}
