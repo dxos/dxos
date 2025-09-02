@@ -3,6 +3,7 @@
 //
 
 import { type Completion } from '@codemirror/autocomplete';
+import { EditorView } from '@codemirror/view';
 import { type Schema } from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -44,6 +45,9 @@ export type TableCellEditorProps = {
   onSave?: () => void;
   client?: Client;
 };
+
+const adaptValidationMessage = (message: string | null) =>
+  message ? (message.endsWith('is missing') ? 'Can’t be blank' : message) : null;
 
 export const TableValueEditor = ({
   model,
@@ -138,7 +142,7 @@ export const TableCellEditor = ({
           const draftRow = draftRows[row];
           const validationError = draftRow.validationErrors?.find((error) => error.path === field.path);
           if (validationError) {
-            setValidationError(validationError.message);
+            setValidationError(adaptValidationMessage(validationError.message));
             setValidationVariant('warning');
           }
         }
@@ -166,7 +170,7 @@ export const TableCellEditor = ({
         setEditing(null);
         onSave?.();
       } else {
-        setValidationError(validationResult.error);
+        setValidationError(adaptValidationMessage(validationResult.error));
         setValidationVariant('error');
       }
     },
@@ -288,8 +292,30 @@ export const TableCellEditor = ({
       );
     }
 
+    // Add validation extension to handle content changes
+    if (model && editing) {
+      extension.push(
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            const content = update.state.doc.toString();
+            const cell = parseCellIndex(editing.index);
+
+            // Perform validation on content change
+            void model.validateCellData(cell, content).then((result) => {
+              if (result.valid) {
+                setValidationError(null);
+              } else {
+                setValidationError(result.error);
+                setValidationVariant('error');
+              }
+            });
+          }
+        }),
+      );
+    }
+
     return extension;
-  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
+  }, [model, modals, editing, fieldProjection, handleClose, themeMode, setValidationError, setValidationVariant]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
