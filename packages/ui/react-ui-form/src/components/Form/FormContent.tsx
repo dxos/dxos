@@ -9,7 +9,7 @@ import React, { forwardRef, useMemo } from 'react';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
+import { type ProjectionModel, type SchemaProperty, getSchemaProperties } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { type QueryRefOptions } from '../../hooks';
@@ -29,6 +29,7 @@ export type FormFieldProps = {
   readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
+  projection?: ProjectionModel;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
 } & Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>;
@@ -38,6 +39,7 @@ export const FormField = ({
   path,
   readonly,
   inline,
+  projection,
   onQueryRefOptions,
   createOptionLabel,
   createOptionIcon,
@@ -180,6 +182,7 @@ export const FormField = ({
             schema={Schema.make(typeLiteral)}
             path={path}
             readonly={readonly}
+            projection={projection}
             onQueryRefOptions={onQueryRefOptions}
             createOptionLabel={createOptionLabel}
             createOptionIcon={createOptionIcon}
@@ -206,6 +209,10 @@ export type FormFieldsProps = ThemedClassName<
     path?: (string | number)[];
     filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
     sort?: string[];
+    /**
+     * Optional projection for projection-based field management
+     */
+    projection?: ProjectionModel;
     lookupComponent?: ComponentLookup;
     /**
      * Map of custom renderers for specific properties.
@@ -218,15 +225,64 @@ export type FormFieldsProps = ThemedClassName<
 
 export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
   (
-    { classNames, schema, path, filter, sort, readonly, lookupComponent, Custom, onQueryRefOptions, ...props },
+    {
+      classNames,
+      schema,
+      path,
+      filter,
+      sort,
+      projection,
+      readonly,
+      lookupComponent,
+      Custom,
+      onQueryRefOptions,
+      ...props
+    },
     forwardRef,
   ) => {
     const values = useFormValues(path);
     const properties = useMemo(() => {
       const props = getSchemaProperties(schema.ast, values);
+
+      // Use projection-based field management when view and projection are available
+      if (projection) {
+        const fieldProjections = projection.getFieldProjections();
+        const hiddenProperties = new Set(projection.getHiddenProperties());
+
+        // Filter properties to only include visible ones and order by projection
+        const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name));
+        const orderedProps: SchemaProperty<any>[] = [];
+
+        // Add properties in projection field order
+        for (const fieldProjection of fieldProjections) {
+          const fieldPath = String(fieldProjection.field.path);
+          const prop = visibleProps.find((p) => p.name === fieldPath);
+          if (prop) {
+            orderedProps.push(prop);
+          }
+        }
+
+        // Add any remaining properties not in projection
+        const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
+        const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
+        orderedProps.push(...remainingProps);
+
+        return orderedProps;
+      }
+
+      // Fallback to legacy filter/sort behavior
       const filtered = filter ? filter(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, values, filter, sort]);
+    }, [
+      schema,
+      values,
+      filter,
+      sort,
+      projection
+        ?.getFieldProjections()
+        .map(({ field }) => field.id)
+        .join(' '),
+    ]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
@@ -238,6 +294,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
                 property={property}
                 path={[...(path ?? []), property.name]}
                 readonly={readonly}
+                projection={projection}
                 onQueryRefOptions={onQueryRefOptions}
                 lookupComponent={lookupComponent}
                 Custom={Custom}
