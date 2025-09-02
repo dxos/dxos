@@ -10,4 +10,5 @@ export const IntentResolver = lazy(() => import('./intent-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const InboxState = lazy(() => import('./state'));
 
+export * from './blueprint-definition';
 export * from './capabilities';

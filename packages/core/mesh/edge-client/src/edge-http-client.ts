@@ -365,7 +365,7 @@ export class EdgeHttpClient {
 
     let handledAuth = false;
     while (true) {
-      let processingError: EdgeCallFailedError;
+      let processingError: EdgeCallFailedError | undefined = undefined;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
         const request = createRequest(args, this._authHeader);
@@ -399,8 +399,8 @@ export class EdgeHttpClient {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError!.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
-        log('retrying edge request', { url, processingError: processingError! });
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+        log('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
       }
