@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiTool } from '@effect/ai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
@@ -18,21 +18,24 @@ export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 
+export type AiToolProvider = () => readonly AiTool.Any[];
+
 export type ToolBlockProps = ThemedClassName<{
   message: DataType.Message;
-  toolkit: AiToolkit.AiToolkit<AiTool.Any>;
+  toolProvider: AiToolProvider;
 }>;
 
-export const ToolBlock = ({ classNames, message, toolkit }: ToolBlockProps) => {
+export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
   const { blocks = [] } = message;
 
+  const tools = toolProvider();
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
       return t('calling tool label');
     }
 
-    return status?.message ?? [t('calling label') + tool.name].join(' ');
+    return status?.message ?? tool.description ?? [t('calling label'), tool.name].join(' ');
   };
 
   let request: { tool: AiTool.Any | undefined; block: any } | undefined;
@@ -43,11 +46,11 @@ export const ToolBlock = ({ classNames, message, toolkit }: ToolBlockProps) => {
       switch (block._tag) {
         case 'toolCall': {
           // TODO(burdon): Skip these updates?
-          if (!toolkit || (block.pending && request?.block.toolCallId === block.toolCallId)) {
+          if (!toolProvider || (block.pending && request?.block.toolCallId === block.toolCallId)) {
             return null;
           }
 
-          const tool = toolkit.tools[block.name];
+          const tool = tools.find((tool) => tool.name === block.name);
           request = { tool, block };
           return {
             title: getToolCaption(request.tool, request.block.status),
