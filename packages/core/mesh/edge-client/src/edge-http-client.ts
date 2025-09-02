@@ -318,6 +318,14 @@ export class EdgeHttpClient {
   }
 
   //
+  // Triggers
+  //
+
+  public async getCronTriggers(spaceId: SpaceId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  }
+
+  //
   // Import/Export space.
   //
 
@@ -376,6 +384,10 @@ export class EdgeHttpClient {
 
           if (args.rawResponse) {
             return body as any;
+          }
+
+          if (!('success' in body)) {
+            return body;
           }
 
           if (body.success) {
