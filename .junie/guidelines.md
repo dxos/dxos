@@ -76,7 +76,6 @@ moon <package>:build         # Build a package
 
 ### Unit Tests
 ```bash
-moon :test                # Run all unit tests
 moon <package>:test       # Test specific package
 moon <package>:test-watch # Watch mode for package
 ```
@@ -94,12 +93,6 @@ moon storybook:serve     # Launch component documentation
 
 ## Key Scripts & Tools
 
-### Useful Scripts
-- `scripts/changed` - Find changed packages
-- `scripts/check-cycles.mjs` - Detect circular dependencies
-- `scripts/pkg-inspect.mjs` - Package analysis
-- `scripts/pre-ci.mjs` - Pre-commit checks
-
 ### Development Tools
 - `tools/toolbox/` - Development utilities
 - `tools/dx-build/` - Custom build system
@@ -115,13 +108,12 @@ moon storybook:serve     # Launch component documentation
 - Maintain clear separation between UI, core, and plugins
 
 ### Development
-- Always run `pnpm i` and `pnpm build` when switching branches
+- Always run `pnpm i` and `moon :build` when switching branches
 - Use `pnpm watch` during development for hot reloading
 - Run tests before committing changes
 - Check the REPOSITORY_GUIDE.md for detailed workflows
 
 ### Dependencies
-- Manually edit package.json files (no automatic tools)
 - Use `npm-check-updates` for updates, not `pnpm up`
 - Re-run `pnpm i` after dependency changes
 
@@ -129,27 +121,3 @@ moon storybook:serve     # Launch component documentation
 - Write unit tests with Vitest
 - Use Playwright for e2e tests following tools/executors/test/PLAYWRIGHT.md
 - Test components in Storybook
-
-## Quick Reference
-
-| Command                | Purpose |
-|------------------------|---------|
-| `pnpm i`               | Install dependencies |
-| `moon :build`          | Build all packages |
-| `moon :test`           | Run all tests |
-| `moon <package>:serve` | Start dev server |
-| `moon <package>:test`  | Test package |
-
-## Documentation
-
-- [SDK Documentation](https://docs.dxos.org/)
-- [Composer Documentation](https://docs.dxos.org/composer/introduction/)
-- [API Reference](https://docs.dxos.org/additional-resources/api-reference/)
-- [Repository Guide](./REPOSITORY_GUIDE.md) - Detailed development guide
-- [Contributing Guide](./CONTRIBUTING.md) - Contribution guidelines
-
-## Support
-
-- [Discord Community](https://dxos.org/discord)
-- [GitHub Issues](https://github.com/dxos/dxos/issues)
-- [Website](https://dxos.org)
