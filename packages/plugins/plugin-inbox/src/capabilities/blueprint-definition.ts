@@ -9,6 +9,8 @@ import { trim } from '@dxos/util';
 
 import { open, summarize } from '../functions';
 
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
+
 const functions: FunctionDefinition[] = [open, summarize];
 const tools: string[] = [];
 
@@ -18,7 +20,7 @@ export default () => {
     contributes(
       Capabilities.BlueprintDefinition,
       Blueprint.make({
-        key: 'dxos.org/blueprint/inbox',
+        key: BLUEPRINT_KEY,
         name: 'Inbox',
         tools: Blueprint.toolDefinitions({ functions, tools }),
         instructions: Template.make({
