@@ -5,14 +5,14 @@
 import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
-  createToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
+import { createToolkit } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import {
   ContextQueueService,
@@ -56,39 +56,42 @@ export default defineFunction({
       description: 'A note from the research agent.',
     }),
   }),
-  handler: ({ data: { query, mockSearch } }) =>
-    Effect.gen(function* () {
-      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+  handler: ({ data: { query, mockSearch } }) => {
+    return Effect.gen(function* () {
       yield* DatabaseService.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
-      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
-      const newObjectDXNs: DXN[] = [];
+      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
+      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
 
-      const toolIds = [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)];
-      const toolkit = yield* createToolkit({
-        toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
-        toolIds,
-      });
+      const newObjectDXNs: DXN[] = [];
+      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
+      const toolkit = yield* Effect.gen(function* () {
+        const toolkit = AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit);
+        const toolIds = [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)];
+        return yield* createToolkit({
+          toolkit,
+          toolIds,
+        });
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            LocalSearchHandler,
+            ContextQueueService.layer(researchQueue),
+            makeGraphWriterHandler(GraphWriterToolkit, {
+              onAppend: (dxns) => newObjectDXNs.push(...dxns),
+            }),
+          ),
+        ),
+      );
 
       const session = new AiSession();
-      const result = yield* session
-        .run({
-          prompt: query,
-          system: PROMPT,
-          toolkit,
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
-        })
-        .pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              LocalSearchHandler,
-              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
-              ContextQueueService.layer(researchQueue),
-            ),
-          ),
-        );
+      const result = yield* session.run({
+        prompt: query,
+        system: PROMPT,
+        toolkit,
+        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
+      });
 
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
@@ -96,10 +99,7 @@ export default defineFunction({
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 
-      return {
-        note,
-        objects,
-      };
+      return { objects, note };
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
@@ -113,5 +113,6 @@ export default defineFunction({
           ),
         ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
       ),
-    ),
+    );
+  },
 });
