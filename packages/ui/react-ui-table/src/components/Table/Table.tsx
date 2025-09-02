@@ -94,7 +94,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
 
-    const draftRowCount = model?.getDraftRowCount() ?? 0;
+    const draftRowCount = Math.max(1, model?.getDraftRowCount() ?? 0);
 
     const handleSave = useCallback(() => {
       dxGrid?.updateCells(true);

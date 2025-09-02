@@ -130,6 +130,18 @@
         }
       }
     }
+
+    .dx-grid__row--cta__cell {
+      transition: background-color 100ms linear;
+      & > .dx-grid__cell__content {
+        cursor: pointer;
+        background: transparent !important;
+      }
+    }
+
+    &:has(.dx-grid__row--cta__cell:hover) .dx-grid__row--cta__cell {
+      background: var(--dx-hoverSurface);
+    }
   }
 
   /* Editor and focused cell styles; be sure to keep these two blocks in-sync. */
