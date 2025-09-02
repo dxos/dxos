@@ -9,7 +9,14 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, BlueprintDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  BLUEPRINT_KEY,
+  BlueprintDefinition,
+  InboxState,
+  IntentResolver,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Calendar, InboxAction, Mailbox } from './types';
@@ -37,6 +44,7 @@ export const InboxPlugin = () =>
           id: Mailbox.Mailbox.typename,
           metadata: {
             icon: 'ph--tray--regular',
+            blueprints: [BLUEPRINT_KEY],
           },
         }),
         contributes(Capabilities.Metadata, {
