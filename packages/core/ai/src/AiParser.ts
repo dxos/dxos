@@ -29,14 +29,14 @@ enum ModelTags {
    * Used by DeepSeek.
    */
   THINK = 'think',
-
   STATUS = 'status',
   ARTIFACT = 'artifact',
+
   /**
    * Block reference to an object.
    */
   OBJECT = 'object',
-  SUGGEST = 'suggest',
+  SUGGESTION = 'suggestion',
   PROPOSAL = 'proposal',
   SELECT = 'select',
   TOOLKIT = 'toolkit',
@@ -258,8 +258,9 @@ export const parseResponse =
 
                 case 'FinishPart': {
                   yield* flushText();
+                  // TODO(burdon): Get part.usage and create summary message.
                   // TODO(dmaretskyi): Handling these would involve changing the signature of this transformer to emit a whole message.
-                  log('finish', { finish: part });
+                  log.info('finish', { finish: part });
                   break;
                 }
               }
@@ -353,12 +354,12 @@ const makeContentBlock = (
           return undefined;
         }
 
-        case ModelTags.SUGGEST: {
+        case ModelTags.SUGGESTION: {
           if (block.content.length === 1 && block.content[0].type === 'text') {
             return {
-              _tag: 'suggest',
+              _tag: 'suggestion',
               text: block.content[0].content,
-            } satisfies ContentBlock.Suggest;
+            } satisfies ContentBlock.Suggestion;
           }
 
           return undefined;

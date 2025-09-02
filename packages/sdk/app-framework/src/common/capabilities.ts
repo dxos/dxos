@@ -7,7 +7,6 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type ExecutableTool } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
@@ -159,7 +158,7 @@ export namespace Capabilities {
    * @category Capability
    * @deprecated
    */
-  export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
+  // export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
 
   /**
    * @category Capability

@@ -88,11 +88,11 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
       queue.append([
         createMessage('assistant', [
           {
-            _tag: 'suggest',
+            _tag: 'suggestion',
             text: 'Search...',
           },
           {
-            _tag: 'suggest',
+            _tag: 'suggestion',
             text: faker.lorem.paragraphs(1),
           },
         ]),

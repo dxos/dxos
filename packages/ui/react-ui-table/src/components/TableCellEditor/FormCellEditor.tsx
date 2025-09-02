@@ -87,10 +87,17 @@ export const FormCellEditor = ({
   const originalRow = useMemo(() => {
     if (model && contextEditing) {
       const cell = parseCellIndex(contextEditing.index);
-      const row = model.getRowAt(cell.row);
-      invariant(row);
 
-      return row;
+      // Check if this is a draft cell and get the appropriate row data
+      if (model.isDraftCell(cell)) {
+        const draftRow = model.draftRows.value[cell.row];
+        invariant(draftRow);
+        return draftRow.data;
+      } else {
+        const row = model.getRowAt(cell.row);
+        invariant(row);
+        return row;
+      }
     }
 
     return undefined;
@@ -98,7 +105,6 @@ export const FormCellEditor = ({
 
   const handleSave = useCallback(
     (values: any) => {
-      console.log('[form cell editor]', 'handle save', values);
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);

@@ -50,8 +50,8 @@ export const Form = <T extends BaseObject>({
   readonly,
   autoSave,
   outerSpacing = true,
-  onCancel,
   schema,
+  onCancel,
   onValuesChanged,
   onValidate,
   onSave,
@@ -59,12 +59,8 @@ export const Form = <T extends BaseObject>({
 }: FormProps<T>) => {
   const formRef = useRef<HTMLDivElement>(null);
 
-  // TODO(burdon): Rename.
-  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
-
-  const { findFirstFocusable } = useFocusFinders();
-
   // Focus the first focusable element within this form.
+  const { findFirstFocusable } = useFocusFinders();
   useEffect(() => {
     if (autoFocus && formRef.current) {
       const firstFocusable = findFirstFocusable(formRef.current);
@@ -73,6 +69,9 @@ export const Form = <T extends BaseObject>({
       }
     }
   }, [autoFocus]);
+
+  // TODO(burdon): Name?
+  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
 
   return (
     <FormProvider

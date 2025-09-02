@@ -51,5 +51,6 @@ export * from './tracer';
 export * from './tree';
 export * from './types';
 export * from './uint8array';
+export * from './unit';
 export * from './url';
 export * from './weak';

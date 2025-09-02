@@ -24,7 +24,9 @@ tasks:
     outputs:
       - dist/node-esm/
   dev:
-    command: pnpm tsx ./src/bin.ts
+    command: ./cli-next
+    deps:
+      - ^:compile
     local: true
   prebuild:
     script: pnpm tsx ./scripts/copy-package-json.ts

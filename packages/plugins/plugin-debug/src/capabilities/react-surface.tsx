@@ -55,7 +55,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
 import {
-  DebugApp,
+  DebugGraph,
   DebugObjectPanel,
   DebugSettings,
   DebugStatus,
@@ -73,10 +73,11 @@ type SpaceDebug = {
 
 type GraphDebug = {
   graph: Graph;
+  root: string;
 };
 
 const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
-const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph;
+const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph && typeof data?.root === 'string';
 
 // TODO(wittjosiah): Factor out?
 const useCurrentSpace = () => {
@@ -134,7 +135,7 @@ export default (context: PluginContext) =>
       id: `${DEBUG_PLUGIN}/graph`,
       role: 'article',
       filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
-      component: ({ data }) => <DebugApp graph={data.subject.graph} />,
+      component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
     }),
     createSurface({
       id: `${DEBUG_PLUGIN}/wireframe`,

@@ -6,11 +6,10 @@ import { Rx } from '@effect-rx/rx-react';
 import { type Signal } from '@preact/signals-core';
 import { useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
 import { INBOX_PLUGIN } from '../../../meta';
-import { InboxAction, type Mailbox } from '../../../types';
+import { type Mailbox } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';
 
 export const useMailboxToolbarActions = (
@@ -19,8 +18,6 @@ export const useMailboxToolbarActions = (
   tagFilterVisible: Signal<boolean>,
   setTagFilterVisible: (visible: boolean) => void,
 ) => {
-  const { dispatchPromise } = useIntentDispatcher();
-
   return useMenuActions(
     useMemo(
       () =>
@@ -64,15 +61,16 @@ export const useMailboxToolbarActions = (
                 setTagFilterVisible(newVisibility);
               },
             )
-            .action(
-              'assistant',
-              {
-                label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
-                icon: 'ph--sparkle--regular',
-                type: 'assistant',
-              },
-              () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
-            )
+            // TODO(wittjosiah): Not implemented.
+            // .action(
+            //   'assistant',
+            //   {
+            //     label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
+            //     icon: 'ph--sparkle--regular',
+            //     type: 'assistant',
+            //   },
+            //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+            // )
             .build(),
         ),
       [model, tagFilterVisible, setTagFilterVisible],

@@ -11,9 +11,12 @@ import { TABLE_PLUGIN } from '../meta';
 
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Schema.String.annotations({
-    [TypenameAnnotationId]: ['used-static', 'dynamic'],
-  }),
+  typename: Schema.String.pipe(
+    Schema.annotations({
+      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+    }),
+    Schema.optional,
+  ),
 });
 
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;

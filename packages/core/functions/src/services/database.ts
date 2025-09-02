@@ -85,12 +85,43 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Loads an object reference option.
    */
+  // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* DatabaseService.load(ref).pipe(
       Effect.catchTag('OBJECT_NOT_FOUND', () => Effect.succeed(undefined)),
     );
     return Option.fromNullable(object);
   });
+
+  // TODO(burdon): Can we create a proxy for the following methods on EchoDatabase? Use @inheritDoc?
+  // TODO(burdon): Figure out how to chain query().run();
+
+  /**
+   * @link EchoDatabase.add
+   */
+  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
+
+  /**
+   * @link EchoDatabase.remove
+   */
+  static remove = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
+
+  /**
+   * @link EchoDatabase.flush
+   */
+  static flush = (opts?: FlushOptions) =>
+    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
+
+  /**
+   * @link EchoDatabase.getObjectById
+   */
+  static getObjectById = <T extends Obj.Any | Relation.Any>(
+    id: string,
+  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> => {
+    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
+  };
 
   /**
    * Creates a `QueryResult` object that can be subscribed to.
@@ -129,15 +160,6 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.schemaQuery(query).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
-
-  /**
-   * Adds an object to the database.
-   */
-  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
-    DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
-
-  static flush = (opts?: FlushOptions) =>
-    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
 }
 
 // TODO(burdon): Move to echo/errors.

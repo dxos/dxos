@@ -31,7 +31,6 @@ import {
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { safeParseInt } from '@dxos/util';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
@@ -42,7 +41,7 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
-const columnDefault = { grid: { minSize: 42 } };
+const columnDefault = { grid: { minSize: 128, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //
@@ -94,7 +93,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
 
-    const draftRowCount = model?.getDraftRowCount() ?? 0;
+    const draftRowCount = Math.max(1, model?.getDraftRowCount() ?? 0);
 
     const handleSave = useCallback(() => {
       dxGrid?.updateCells(true);
@@ -181,11 +180,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
-        if (rowIndex != null) {
+        const cell = closestCell(event.target as HTMLElement);
+        if (cell) {
+          const { row: rowIndex, plane } = cell;
           if (onRowClick) {
-            const row = model?.getRowAt(rowIndex);
-            row && onRowClick(row);
+            if (plane === 'grid') {
+              const row = model?.getRowAt(rowIndex);
+              row && onRowClick(row);
+            } else {
+              onRowClick(cell);
+            }
           }
 
           if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {

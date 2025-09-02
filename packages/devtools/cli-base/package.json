@@ -67,7 +67,7 @@
     "undici": "*",
     "uuid": "^9.0.0",
     "ws": "^8.14.2",
-    "wtfnode": "^0.9.1"
+    "wtfnode": "^0.10.0"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.0",
