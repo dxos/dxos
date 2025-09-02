@@ -17,6 +17,7 @@ import { hub } from './hub';
 import { spaces } from './spaces';
 import { debug } from './debug';
 import { object } from './object';
+import { queue } from './queue';
 
 // TODO(wittjosiah): Env vars.
 
@@ -54,6 +55,7 @@ export const dx = command.pipe(
     halo.pipe(Command.provide(ClientService.layer)),
     spaces.pipe(Command.provide(ClientService.layer)),
     object.pipe(Command.provide(ClientService.layer)),
+    queue.pipe(Command.provide(ClientService.layer)),
     edge.pipe(Command.provide(ClientService.layer)),
     // TODO(burdon): Admin-only (separate dynamic module?)
     hub.pipe(Command.provide(ClientService.layer)),
