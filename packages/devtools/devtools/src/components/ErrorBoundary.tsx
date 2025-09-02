@@ -3,7 +3,7 @@
 //
 
 // import { Clipboard } from '@phosphor-icons/react';
-import React, { Component, type PropsWithChildren } from 'react';
+import React, { Component, type JSX, type PropsWithChildren, type ReactNode } from 'react';
 // import { useNavigate } from 'react-router-dom';
 
 // import { Button, Message } from '@dxos/react-ui';
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
-  override render(): string | number | boolean | React.JSX.Element | Iterable<React.ReactNode> | null | undefined {
+  override render(): string | number | boolean | JSX.Element | Iterable<ReactNode> | null | undefined {
     if (this.state.hasError) {
       return (
         <ErrorPopup
