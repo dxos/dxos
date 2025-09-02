@@ -6,17 +6,15 @@ import { RegistryContext } from '@effect-rx/rx-react';
 import { type Layer } from 'effect';
 import { useContext, useMemo } from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
-import { type Queue, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { type Queue } from '@dxos/react-client/echo';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
 import { type Assistant } from '../types';
 
 export type UseChatProcessorProps = {
-  space?: Space;
   chat?: Assistant.Chat;
   preset?: AiServicePreset;
   services?: Layer.Layer<AiChatServices>;
@@ -28,7 +26,6 @@ export type UseChatProcessorProps = {
  * Configure and create AiChatProcessor.
  */
 export const useChatProcessor = ({
-  space,
   chat,
   preset,
   services,
@@ -36,12 +33,8 @@ export const useChatProcessor = ({
   settings,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
 
-  // Tools and context.
-  const chatId = useMemo(() => (chat ? fullyQualifiedId(chat) : undefined), [chat]);
-  const extensions = useMemo(() => ({ space, dispatch, pivotId: chatId }), [dispatch, space, chatId]);
-
+  // Create conversation from chat queue.
   const conversation = useMemo(() => {
     if (!chat?.queue.target) {
       return;
@@ -51,7 +44,6 @@ export const useChatProcessor = ({
   }, [chat?.queue.target]);
 
   // Create processor.
-  // TODO(burdon): Updated on each query update above; should just update current processor?
   const processor = useMemo(() => {
     if (!services || !conversation) {
       return undefined;
@@ -64,18 +56,11 @@ export const useChatProcessor = ({
     });
 
     return new AiChatProcessor(conversation, services, {
-      extensions,
-      blueprintRegistry,
       observableRegistry,
+      blueprintRegistry,
       model: preset?.model,
     });
-  }, [services, conversation, blueprintRegistry, extensions, preset]);
+  }, [services, conversation, blueprintRegistry, preset]);
 
   return processor;
 };
-
-// TODO(dmaretskyi): Extract.
-export const Stable = Object.freeze({
-  array: [] as readonly never[],
-  object: {} as {},
-});

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Cause, Effect, Exit, Fiber, Layer, Option, Stream, pipe } from 'effect';
 
@@ -52,7 +53,7 @@ export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
-} & Pick<AiConversationRunParams<any>, 'system'>;
+} & Pick<AiConversationRunParams, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
@@ -185,6 +186,20 @@ export class AiChatProcessor {
 
   get blueprintRegistry() {
     return this._options.blueprintRegistry;
+  }
+
+  // TODO(burdon): Get from conversation since potentially expensive.
+  async getToolkit(): Promise<AiToolkit.AiToolkit<AiTool.Any> | undefined> {
+    return undefined;
+    // const toolIds = this._options.blueprintRegistry?.blueprints.flatMap(({ tools }) => tools) ?? [];
+    // const toolkitHandlers = yield * createToolkit({ toolIds, blueprints });
+    // const effect = Effect.gen(this, function* () {
+    //   // Get tool IDs from blueprints if available
+    //   const toolIds = this._options.blueprintRegistry?.blueprints.flatMap(({ tools }) => tools) ?? [];
+    //   // Resolve toolkit using the ToolResolverService from the services layer.
+    //   return yield* ToolResolverService.resolveToolkit(toolIds);
+    // });
+    // return Effect.runPromise(effect.pipe(Effect.provide(this._services)));
   }
 
   /**

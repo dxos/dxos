@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiTool } from '@effect/ai';
 import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -20,11 +20,10 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunParams<Tools extends AiTool.Any> {
+export interface AiConversationRunParams {
   session: AiSession;
   prompt: string;
   system?: string;
-  toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
 }
 
@@ -64,13 +63,13 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest<Tools extends AiTool.Any>({
+  createRequest({
     session,
     ...params
-  }: AiConversationRunParams<Tools>): Effect.Effect<
+  }: AiConversationRunParams): Effect.Effect<
     DataType.Message[],
     AiSessionRunError,
-    AiSessionRunRequirements<Tools>
+    AiSessionRunRequirements<AiTool.Any>
   > {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());

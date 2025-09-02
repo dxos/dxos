@@ -27,7 +27,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space, chat });
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry });
 
   const handleUpdateName = useCallback(() => {
     if (chat) {

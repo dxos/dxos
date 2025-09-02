@@ -29,7 +29,7 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
 
   if (!processor) {
     return null;

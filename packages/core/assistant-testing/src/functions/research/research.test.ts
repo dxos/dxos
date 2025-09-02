@@ -112,7 +112,7 @@ describe('Research', { timeout: 600_000 }, () => {
 
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         const session = new AiSession();
-        yield* conversation.exec({
+        yield* conversation.createRequest({
           observer,
           session,
           prompt: `Research notion founders.`,
