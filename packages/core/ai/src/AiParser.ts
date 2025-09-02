@@ -131,7 +131,7 @@ export const parseResponse =
           input,
           Effect.fnUntraced(function* (response) {
             for (const part of response.parts) {
-              log.info('part', { part });
+              log('part', { part });
               yield* onPart(part);
               switch (part._tag) {
                 case 'TextPart': {

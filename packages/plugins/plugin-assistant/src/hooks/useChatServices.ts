@@ -6,7 +6,6 @@ import { type AiTool, AiToolkit } from '@effect/ai';
 import { Layer } from 'effect';
 import { useMemo } from 'react';
 
-import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
@@ -21,18 +20,8 @@ import {
 } from '@dxos/functions';
 
 import { AssistantCapabilities } from '../capabilities';
-import type { Assistant } from '../types';
-
-// TODO(burdon): Deconstruct into separate layers?
-export type AiChatServices =
-  | AiService.AiService
-  | CredentialsService
-  | DatabaseService
-  | QueueService
-  | RemoteFunctionExecutionService
-  | ToolResolverService
-  | ToolExecutionService
-  | TracingService;
+import { type AiChatServices } from '../processor';
+import { type Assistant } from '../types';
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -53,6 +42,7 @@ export const useChatServices = ({ space, chat }: UseChatServicesProps): Layer.La
     // TODO(wittjosiah): Don't cast.
     const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
     const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
+
     return Layer.mergeAll(
       serviceLayer,
       makeToolResolverFromFunctions(allFunctions, toolkit),

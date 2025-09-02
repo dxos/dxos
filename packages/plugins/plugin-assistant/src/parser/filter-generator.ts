@@ -4,6 +4,8 @@
 
 import { Filter } from '@dxos/echo';
 
+// TODO(burdon): Factor out.
+
 import { type Expression, type Identifier, type Literal, type RelationalOperator } from './types';
 
 const relationalOperators: Record<RelationalOperator, (value: any) => Filter<any>> = {
