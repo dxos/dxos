@@ -14328,6 +14328,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.34.1
         version: 6.34.1
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
