@@ -105,7 +105,6 @@ export const FormCellEditor = ({
 
   const handleSave = useCallback(
     (values: any) => {
-      console.log('[form cell editor]', 'handle save', values);
       const path = fieldProjection.field.path;
       const value = getDeep(values, [path]);
       setDeep(originalRow, [path], value);
