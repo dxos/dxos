@@ -4,11 +4,12 @@ import { withDatabase } from '../../util';
 import { Console, Effect, Option } from 'effect';
 import { Filter, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
+import { Common } from '../options';
 
 export const remove = Command.make(
   'remove',
   {
-    spaceId: Options.text('spaceId').pipe(Options.withDescription('The space ID.')),
+    spaceId: Common.spaceId,
     typename: Options.text('typename').pipe(Options.withDescription('The typename to query.'), Options.optional),
     id: Options.text('id').pipe(Options.withDescription('The object ID.'), Options.optional),
   },
