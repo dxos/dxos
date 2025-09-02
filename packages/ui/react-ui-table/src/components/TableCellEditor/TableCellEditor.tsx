@@ -5,7 +5,7 @@
 import { type Completion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import type { Client } from '@dxos/client';
@@ -122,38 +122,6 @@ export const TableCellEditor = ({
     invariant(fieldProjection);
     return fieldProjection;
   }, [model, editing]);
-
-  useEffect(() => {
-    // Check for existing validation errors when editing starts (for draft rows).
-    if (!model || !editing || !fieldProjection) {
-      setValidationError(null);
-      return;
-    }
-
-    const cell = parseCellIndex(editing.index);
-    const { row, col } = cell;
-
-    if (model.isDraftCell(cell)) {
-      const field = model.projection.fields[col];
-      const hasValidationError = model.hasDraftRowValidationError(row, field.path);
-
-      if (hasValidationError) {
-        const draftRows = model.draftRows.value;
-        if (row >= 0 && row < draftRows.length) {
-          const draftRow = draftRows[row];
-          const validationError = draftRow.validationErrors?.find((error) => error.path === field.path);
-          if (validationError) {
-            setValidationError(adaptValidationMessage(validationError.message));
-            setValidationVariant('warning');
-          }
-        }
-      } else {
-        setValidationError(null);
-      }
-    } else {
-      setValidationError(null);
-    }
-  }, [model, editing, fieldProjection]);
 
   const handleEnter = useCallback(
     async (value: any) => {
@@ -310,13 +278,13 @@ export const TableCellEditor = ({
                 setValidationVariant('error');
               }
             });
-          }, 1),
+          }, 10),
         ),
       );
     }
 
     return extension;
-  }, [model, modals, editing, fieldProjection, handleClose, themeMode, setValidationError, setValidationVariant]);
+  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
