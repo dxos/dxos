@@ -7,6 +7,7 @@ import { EditorView } from '@codemirror/view';
 import { type Schema } from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { debounce } from '@dxos/async';
 import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -295,8 +296,8 @@ export const TableCellEditor = ({
     // Add validation extension to handle content changes
     if (model && editing) {
       extension.push(
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
+        EditorView.updateListener.of(
+          debounce((update) => {
             const content = update.state.doc.toString();
             const cell = parseCellIndex(editing.index);
 
@@ -309,8 +310,8 @@ export const TableCellEditor = ({
                 setValidationVariant('error');
               }
             });
-          }
-        }),
+          }, 1),
+        ),
       );
     }
 
