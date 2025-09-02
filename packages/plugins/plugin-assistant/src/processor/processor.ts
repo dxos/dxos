@@ -198,6 +198,7 @@ export class AiChatProcessor {
     try {
       this._lastRequest = requestParam;
 
+      // TODO(burdon): If we pass in a callback we can move session creation into the conversation.
       const session = new AiSession();
       this._observableRegistry.set(this._session, Option.some(session));
       this._observableRegistry.set(this.error, Option.none());

@@ -5,10 +5,11 @@
 import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
+  createToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -55,8 +56,8 @@ export default defineFunction({
       description: 'A note from the research agent.',
     }),
   }),
-  handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch } }) {
+  handler: ({ data: { query, mockSearch } }) =>
+    Effect.gen(function* () {
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
       yield* DatabaseService.flush({ indexes: true });
@@ -64,13 +65,19 @@ export default defineFunction({
 
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
       const newObjectDXNs: DXN[] = [];
-      const result = yield* new AiSession()
+
+      const toolIds = [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)];
+      const toolkit = yield* createToolkit({
+        toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
+        toolIds,
+      });
+
+      const session = new AiSession();
+      const result = yield* session
         .run({
           prompt: query,
-          history: [],
           system: PROMPT,
-          toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
-          toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+          toolkit,
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
         })
         .pipe(
@@ -93,18 +100,18 @@ export default defineFunction({
         note,
         objects,
       };
-    },
-    Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'),
-        // TODO(dmaretskyi): Extract those out.
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
-        makeToolExecutionServiceFromFunctions(
-          [exaFunction, exaMockFunction],
-          AiToolkit.make() as any,
-          Layer.empty as any,
-        ),
-      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('@anthropic/claude-sonnet-4-0'),
+          // TODO(dmaretskyi): Extract those out.
+          makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
+          makeToolExecutionServiceFromFunctions(
+            [exaFunction, exaMockFunction],
+            AiToolkit.make() as any,
+            Layer.empty as any,
+          ),
+        ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
+      ),
     ),
-  ),
 });

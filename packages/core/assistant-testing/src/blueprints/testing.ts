@@ -8,7 +8,7 @@ import { Effect } from 'effect';
 import { type AiConversation, type AiConversationRunParams, AiSession } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiConversationRunParams, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 

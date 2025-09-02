@@ -62,41 +62,40 @@ const toolkitLayer = TestToolkit.toLayer({
 });
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
-  it.effect(
-    'no tools',
-    Effect.fn(
-      function* ({ expect: _ }) {
-        const session = new AiSession({ operationModel: 'configured' });
-        const response = yield* session.run({
-          toolkit: TestToolkit,
-          prompt: 'Hello world!',
-          history: [],
-        });
-        log.info('response', { response });
-      },
+  it.effect('no tools', () =>
+    Effect.gen(function* () {
+      const session = new AiSession({ operationModel: 'configured' });
+      const response = yield* session.run({
+        prompt: 'Hello world!',
+        history: [],
+      });
+      log.info('response', { response });
+    }).pipe(
       Effect.provide(
-        AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-          Layer.provideMerge(ToolResolverService.layerEmpty),
-          Layer.provideMerge(ToolExecutionService.layerEmpty),
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(TracingService.layerNoop),
+        Layer.mergeAll(
+          toolkitLayer,
+          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
+            Layer.provideMerge(ToolResolverService.layerEmpty),
+            Layer.provideMerge(ToolExecutionService.layerEmpty),
+            Layer.provideMerge(AiServiceTestingPreset('direct')),
+            Layer.provideMerge(TracingService.layerNoop),
+          ),
         ),
       ),
     ),
   );
 
-  it.effect(
-    'calculator',
-    Effect.fn(
-      function* ({ expect: _ }) {
-        const session = new AiSession({ operationModel: 'configured' });
-        const response = yield* session.run({
-          toolkit: TestToolkit,
-          prompt: 'What is 10 + 20?',
-          history: [],
-        });
-        log.info('response', { response });
-      },
+  it.effect('calculator', () =>
+    Effect.gen(function* () {
+      const session = new AiSession({ operationModel: 'configured' });
+      const toolkit = yield* TestToolkit;
+      const response = yield* session.run({
+        toolkit,
+        prompt: 'What is 10 + 20?',
+        history: [],
+      });
+      log.info('response', { response });
+    }).pipe(
       Effect.provide(
         Layer.mergeAll(
           toolkitLayer,
