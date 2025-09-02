@@ -382,10 +382,6 @@ export class QueryExecutor extends Resource {
     step: QueryPlan.FilterDeletedStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
-    if (workingSet.length === 6) {
-      log('filter deleted step', { step, workingSet });
-    }
-
     const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
     return {
