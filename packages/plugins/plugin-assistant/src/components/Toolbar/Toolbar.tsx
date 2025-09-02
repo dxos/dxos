@@ -11,6 +11,7 @@ import { type ChatToolbarActionsProps, useChatToolbarActions } from './useChatTo
 
 export const Toolbar = ({ chat, companionTo, onReset }: ChatToolbarActionsProps) => {
   const menu = useChatToolbarActions({ chat, companionTo, onReset });
+
   return (
     <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>
       <ToolbarMenu />

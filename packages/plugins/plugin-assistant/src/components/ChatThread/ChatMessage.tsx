@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
-import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { resolveRef } from '@dxos/client';
 import { Obj } from '@dxos/echo';
@@ -37,23 +37,22 @@ export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
   message: DataType.Message;
-  tools?: Tool[];
+  toolkit?: AiToolkit.AiToolkit<AiTool.Any>;
   onEvent?: (event: ChatEvent) => void;
   onDelete?: () => void;
 }>;
 
-export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent, onDelete }: ChatMessageProps) => {
+export const ChatMessage = ({ classNames, debug, space, message, toolkit, onEvent, onDelete }: ChatMessageProps) => {
   const { t } = useTranslation(meta.id);
   const {
     sender: { role },
     blocks,
   } = message;
 
-  // TODO(burdon): Consolidate tools upstream?
-  if (isToolMessage(message)) {
+  if (toolkit && isToolMessage(message)) {
     return (
       <MessageItem classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
-        <ToolBlock classNames={panelClasses} message={message} tools={tools} />
+        <ToolBlock classNames={panelClasses} message={message} toolkit={toolkit} />
       </MessageItem>
     );
   }

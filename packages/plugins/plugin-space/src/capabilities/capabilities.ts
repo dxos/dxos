@@ -25,5 +25,6 @@ export namespace SpaceCapabilities {
   export type OnSchemaAdded = (params: { space: Space; schema: Schema.Schema.AnyNoContext }) => AnyIntentChain;
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${SPACE_PLUGIN}/capability/on-schema-added`);
 
+  // TODO(burdon): Should this be view? Forms are UI concepts? (associated with a View/schema).
   export const ObjectForm = defineCapability<ObjectForm<any>>(`${SPACE_PLUGIN}/capability/object-form`);
 }

@@ -4,7 +4,6 @@
 
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 
-import { type Tool } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Ref } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
@@ -14,13 +13,12 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type AiChatProcessor } from '../../hooks';
 import { meta } from '../../meta';
-import { createToolsFromService } from '../../tools';
+import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
-  services?: { service: ServiceType; tools: Tool[] }[];
+  services?: { service: ServiceType }[];
   functions?: FunctionType[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
@@ -57,10 +55,10 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
       {services && services.length > 0 && (
         <Section
           title='Services'
-          items={services.map(({ service: { serviceId, name, description }, tools }) => ({
+          items={services.map(({ service: { serviceId, name, description } }) => ({
             name: name ?? serviceId,
             description,
-            subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+            // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
           }))}
         />
       )}
@@ -118,15 +116,15 @@ export type ToolboxContainerProps = ThemedClassName<{
 export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContainerProps) => {
   // Registered services.
   const services = useQuery(space, Filter.type(ServiceType));
-  const [serviceTools, setServiceTools] = useState<{ service: ServiceType; tools: Tool[] }[]>([]);
+  const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);
   useEffect(() => {
     log('creating service tools...', { services: services.length });
     queueMicrotask(async () => {
-      const tools = await Promise.all(
-        services.map(async (service) => ({ service, tools: await createToolsFromService(service) })),
-      );
-
-      setServiceTools(tools);
+      // TODO(burdon): Fix.
+      // const tools = await Promise.all(
+      //   services.map(async (service) => ({ service, tools: await createToolsFromService(service) })),
+      // );
+      // setServiceTools(tools);
     });
   }, [services]);
 

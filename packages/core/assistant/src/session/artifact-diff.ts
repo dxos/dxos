@@ -15,7 +15,6 @@ import { type ObjectId } from '@dxos/echo-schema';
  *
  * Can be optionally provided to the session run call.
  */
-// TODO(burdon): Move.
 // TODO(dmaretskyi): Convert to Context.Reference
 export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactDiffResolver')<
   ArtifactDiffResolver,
@@ -24,7 +23,12 @@ export class ArtifactDiffResolver extends Context.Tag('@dxos/assistant/ArtifactD
 
 export namespace ArtifactDiffResolver {
   export type Service = {
-    resolve: (artifacts: { id: ObjectId; lastVersion: ObjectVersion }[]) => Promise<
+    resolve: (
+      artifacts: {
+        id: ObjectId;
+        lastVersion: ObjectVersion;
+      }[],
+    ) => Promise<
       Map<
         ObjectId,
         {
