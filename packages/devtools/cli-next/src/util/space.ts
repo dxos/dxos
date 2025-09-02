@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Console, Effect, Logger, Option, type Schema } from 'effect';
+import { Console, Effect, Logger, Option, Schedule, Fiber, type Schema } from 'effect';
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
@@ -88,8 +88,15 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This is not yet foolproof. Needs to wait for connection to edge to be established.
   const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
   yield* handleSyncState(syncState);
+
+  const fiber = yield* Effect.gen(function* () {
+    const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
+    yield* handleSyncState(syncState);
+  }).pipe(Effect.repeat({ schedule: Schedule.fixed('5 seconds') }), Effect.fork);
+
   yield* synced.await;
   yield* Console.log('Sync complete');
+  yield* Fiber.interrupt(fiber);
 });
 
 // TODO(burdon): Move to echo/errors.
