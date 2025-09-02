@@ -83,7 +83,8 @@ const isRetryableCode = (status: number) => {
 
 const parseErrorBody = async (response: Response): Promise<Error | undefined> => {
   if (response.headers.get('Content-Type') !== 'application/json') {
-    return undefined;
+    const body = await response.text();
+    return new Error(body.slice(0, 256));
   }
 
   const body = await response.json();
