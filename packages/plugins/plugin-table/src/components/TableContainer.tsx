@@ -135,6 +135,15 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
 
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model],
+  );
+
   return (
     <StackItem.Content toolbar>
       <TableToolbar
@@ -151,6 +160,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
           model={model}
           presentation={presentation}
           schema={schema}
+          onRowClick={handleRowClick}
         />
       </Table.Root>
     </StackItem.Content>
