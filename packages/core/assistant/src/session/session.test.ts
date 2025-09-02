@@ -68,6 +68,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
       function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
         const response = yield* session.run({
+          toolkit: TestToolkit,
           prompt: 'Hello world!',
           history: [],
         });
@@ -90,9 +91,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
       function* ({ expect: _ }) {
         const session = new AiSession({ operationModel: 'configured' });
         const response = yield* session.run({
+          toolkit: TestToolkit,
           prompt: 'What is 10 + 20?',
           history: [],
-          toolkit: TestToolkit,
         });
         log.info('response', { response });
       },

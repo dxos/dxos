@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool } from '@effect/ai';
+import { type AiTool, type AiToolkit } from '@effect/ai';
 import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -16,6 +16,7 @@ import {
   type AiSessionRunError,
   type AiSessionRunRequirements,
   type GenerationObserver,
+  createToolkit,
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
@@ -46,6 +47,11 @@ export class AiConversation {
    */
   private readonly _context: AiContextBinder;
 
+  /**
+   * Toolkit from the current session request.
+   */
+  private _toolkit: AiToolkit.ToHandler<AiTool.Any> | undefined;
+
   public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
     this._context = new AiContextBinder(this._queue);
@@ -53,6 +59,10 @@ export class AiConversation {
 
   public get context() {
     return this._context;
+  }
+
+  public get toolkit() {
+    return this._toolkit;
   }
 
   public async getHistory(): Promise<DataType.Message[]> {
@@ -63,14 +73,10 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest({
+  createRequest<Tools extends AiTool.Any>({
     session,
     ...params
-  }: AiConversationRunParams): Effect.Effect<
-    DataType.Message[],
-    AiSessionRunError,
-    AiSessionRunRequirements<AiTool.Any>
-  > {
+  }: AiConversationRunParams): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements<Tools>> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 
@@ -85,15 +91,20 @@ export class AiConversation {
         Effect.map(Array.map((option) => option.value)),
       );
 
+      // Create toolkit.
+      const toolkit = yield* createToolkit<Tools>({ blueprints });
+      this._toolkit = toolkit;
+
       const start = Date.now();
       log.info('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
+        tools: this._toolkit?.tools.length ?? 0,
       });
 
       // Process request.
-      const messages = yield* session.run({ history, blueprints, objects, ...params }).pipe(
+      const messages = yield* session.run<Tools>({ history, blueprints, objects, toolkit, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),

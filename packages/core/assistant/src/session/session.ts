@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiResponse, type AiTool } from '@effect/ai';
+import { type AiError, AiLanguageModel, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
 import { Chunk, Effect, Option, Queue, type Schema, Stream } from 'effect';
 
 import {
@@ -15,6 +15,7 @@ import {
   callTool,
   getToolCalls,
 } from '@dxos/ai';
+import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
@@ -25,7 +26,6 @@ import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
-import { type ToolkitParams, createToolkit } from './toolkit';
 
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -36,11 +36,13 @@ export type AiSessionRunRequirements<Tools extends AiTool.Any> =
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends AiTool.Any> = ToolkitParams<Tools> & {
+export type AiSessionRunParams<Tools extends AiTool.Any> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[];
+  blueprints?: Blueprint.Blueprint[];
+  toolkit?: AiToolkit.ToHandler<Tools>;
   observer?: GenerationObserver;
 };
 
@@ -90,7 +92,6 @@ export class AiSession {
     history = [],
     objects = [],
     blueprints = [],
-    toolIds = [],
     toolkit,
     observer = GenerationObserver.noop(),
   }: AiSessionRunParams<Tools>): Effect.Effect<
@@ -105,9 +106,6 @@ export class AiSession {
       // Reset.
       this._history = [...history];
       this._pending = [];
-
-      // Create toolkit.
-      const toolkitHandlers = yield* createToolkit({ toolkit, toolIds, blueprints });
 
       // Generate system prompt.
       // TODO(budon): Dynamically resolve template variables here.
@@ -132,11 +130,9 @@ export class AiSession {
         log.info('request', {
           prompt: promptMessage,
           system: { snippet: createSnippet(system), length: system.length },
-          toolkit: Object.values(toolkitHandlers.tools).map((tool: AiTool.Any) => tool.name),
           pending: this._pending.length,
           history: this._history.length,
           objects: objects?.length ?? 0,
-          blueprints: blueprints?.length ?? 0,
         });
 
         //
@@ -146,7 +142,7 @@ export class AiSession {
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
-          toolkit: toolkitHandlers,
+          toolkit,
           // TODO(burdon): Check if this bug has been fixed and update deps/patches?
           // TODO(burdon): Despite this flag, the model still calls tools.
           //  Flag is only used in generateText (not streamText); patch and submit bug.
@@ -186,11 +182,14 @@ export class AiSession {
         if (toolCalls.length === 0) {
           break;
         }
+        if (!toolkit) {
+          throw new Error('No toolkit provided'); // TODO(burdon): Throw user error?
+        }
 
         // TODO(burdon): Retry backend errors?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
           toolCount++;
-          return callTool(toolkitHandlers, toolCall).pipe(
+          return callTool(toolkit, toolCall).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
                 ...context,
