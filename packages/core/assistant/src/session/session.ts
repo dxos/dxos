@@ -29,9 +29,8 @@ import { GenerationObserver } from './observer';
 
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
-export type AiSessionRunRequirements<Tools extends AiTool.Any> =
+export type AiSessionRunRequirements =
   | AiLanguageModel.AiLanguageModel
-  | AiTool.ToHandler<Tools>
   | ToolExecutionService
   | ToolResolverService
   | TracingService;
@@ -94,11 +93,7 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
-  }: AiSessionRunParams<Tools>): Effect.Effect<
-    DataType.Message[],
-    AiSessionRunError,
-    AiSessionRunRequirements<Tools>
-  > =>
+  }: AiSessionRunParams<Tools>): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       const now = Date.now();
       let toolCount = 0;

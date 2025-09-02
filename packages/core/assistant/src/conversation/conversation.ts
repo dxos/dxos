@@ -21,6 +21,10 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
+export type AiConversationRunRequirements<Tools extends AiTool.Any> =
+  | AiSessionRunRequirements
+  | AiTool.ToHandler<Tools>;
+
 export interface AiConversationRunParams {
   session: AiSession;
   prompt: string;
@@ -76,7 +80,11 @@ export class AiConversation {
   createRequest<Tools extends AiTool.Any>({
     session,
     ...params
-  }: AiConversationRunParams): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements<Tools>> {
+  }: AiConversationRunParams): Effect.Effect<
+    DataType.Message[],
+    AiSessionRunError,
+    AiConversationRunRequirements<Tools>
+  > {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
 
