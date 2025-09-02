@@ -12,8 +12,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import {
-  AiSession,
-  AiSessionRequest,
+  type AiSession,
   type AiSessionRunError,
   type AiSessionRunRequirements,
   type GenerationObserver,
@@ -22,6 +21,7 @@ import {
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
 export interface AiConversationRunParams<Tools extends AiTool.Any> {
+  session: AiSession;
   prompt: string;
   system?: string;
   toolkit?: AiToolkit.AiToolkit<Tools>;
@@ -62,20 +62,12 @@ export class AiConversation {
   }
 
   /**
-   * Creates a new cancelable request.
+   * Creates a new cancelable request effect.
    */
-  public createRequest<Tools extends AiTool.Any>(params: AiConversationRunParams<Tools>) {
-    const session = new AiSession();
-    return new AiSessionRequest<Tools>(this.exec<Tools>({ session, ...params }), session);
-  }
-
-  /**
-   * Executes a request.
-   */
-  exec<Tools extends AiTool.Any>({
+  createRequest<Tools extends AiTool.Any>({
     session,
     ...params
-  }: AiConversationRunParams<Tools> & { session: AiSession }): Effect.Effect<
+  }: AiConversationRunParams<Tools>): Effect.Effect<
     DataType.Message[],
     AiSessionRunError,
     AiSessionRunRequirements<Tools>
@@ -102,7 +94,7 @@ export class AiConversation {
       });
 
       // Process request.
-      const messages = yield* session.run({ ...params, history, blueprints, objects }).pipe(
+      const messages = yield* session.run({ history, blueprints, objects, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
@@ -113,6 +105,6 @@ export class AiConversation {
       // Append to queue.
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.exec'));
+    }).pipe(Effect.withSpan('AiConversation.request'));
   }
 }

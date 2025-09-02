@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool } from '@effect/ai';
 import { Registry, Result, Rx } from '@effect-rx/rx-react';
 import { Cause, Effect, Exit, Fiber, Layer, Option, Stream, pipe } from 'effect';
 
@@ -14,19 +13,16 @@ import {
   type ToolExecutionService,
   type ToolResolverService,
 } from '@dxos/ai';
-import { type PromiseIntentDispatcher } from '@dxos/app-framework';
 import {
   type AiConversation,
   type AiConversationRunParams,
   AiSession,
-  type AiSessionRequest,
   ArtifactDiffResolver,
   createSystemPrompt,
 } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { runAndForwardErrors, throwCause } from '@dxos/effect';
+import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type DatabaseService,
@@ -35,19 +31,10 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { Filter, type Space, getVersion } from '@dxos/react-client/echo';
 import { type ContentBlock, DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { type Assistant } from '../types';
-
-// TODO(burdon): Standardize/remove?
-declare global {
-  interface ToolContextExtensions {
-    space?: Space;
-    dispatch?: PromiseIntentDispatcher;
-  }
-}
 
 export type AiChatServices =
   | CredentialsService
@@ -87,14 +74,11 @@ export class AiChatProcessor {
   // TODO(burdon): Comment required.
   private readonly _observableRegistry: Registry.Registry;
 
-  /** Currently active request. */
-  private _request: AiSessionRequest<AiTool.Any> | undefined;
+  /** Currently active request fiber. */
+  private _fiber: Fiber.Fiber<void, any> | undefined;
 
-  /** Last request for retries. */
+  /** Last request (for retries). */
   private _lastRequest: AiRequest | undefined;
-
-  /** @deprecated */
-  private _currentRequest?: Fiber.Fiber<void, any> = undefined;
 
   /** Current session. */
   private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
@@ -102,7 +86,7 @@ export class AiChatProcessor {
   /**
    * Current streaming message (from the AI service).
    */
-  // TODO(burdon): Move util into @dxos/assistant (e.g., AiConversationRequest)?
+  // TODO(burdon): Move util into @dxos/assistant (e.g., AiConversationRequest) using Observer instead of stream.
   private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
     return pipe(
       get(this._session),
@@ -207,32 +191,54 @@ export class AiChatProcessor {
    * Initiates a new request.
    */
   async request(requestParam: AiRequest): Promise<void> {
-    if (this._request) {
+    if (this._fiber) {
       await this.cancel();
     }
 
     try {
       this._lastRequest = requestParam;
-      this._request = this._conversation.createRequest({
+
+      const session = new AiSession();
+      this._observableRegistry.set(this._session, Option.some(session));
+      this._observableRegistry.set(this.error, Option.none());
+
+      // Create request.
+      const request = this._conversation.createRequest({
+        session,
         system: this._options.system,
         prompt: requestParam.message,
       });
 
-      this._observableRegistry.set(this._session, Option.some(this._request.session));
-      this._observableRegistry.set(this.error, Option.none());
+      // Create fiber.
+      this._fiber = request.pipe(
+        Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
 
-      await this._request.run(
-        Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
+        // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
+        Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
+
+        Effect.asVoid,
+        Effect.tapErrorCause((cause) => {
+          log.error('request failed', { cause });
+          return Effect.void;
+        }),
+        Effect.runFork, // Runs in the background.
       );
+
+      // Execute request.
+      const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
+      if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+        throwCause(response.cause);
+      }
 
       this._observableRegistry.set(this.error, Option.none());
       this._lastRequest = undefined;
+      this._fiber = undefined;
     } catch (err) {
       log.error('request failed', { err });
       this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
       this._observableRegistry.set(this._session, Option.none());
-      this._request = undefined;
+      this._fiber = undefined;
     }
   }
 
@@ -240,9 +246,16 @@ export class AiChatProcessor {
    * Cancels the current request.
    */
   async cancel(): Promise<void> {
-    await this._request?.cancel();
+    await Effect.runPromise(
+      Effect.gen(this, function* () {
+        if (this._fiber) {
+          yield* this._fiber.pipe(Fiber.interrupt);
+        }
+      }),
+    );
+
+    this._fiber = undefined;
     this._observableRegistry.set(this._session, Option.none());
-    this._request = undefined;
   }
 
   /**
@@ -252,80 +265,6 @@ export class AiChatProcessor {
     if (this._lastRequest) {
       return this.request(this._lastRequest);
     }
-  }
-
-  /**
-   * @deprecated
-   */
-  async _oldRequest(request: AiRequest): Promise<void> {
-    if (this._currentRequest) {
-      throw new Error('Request already in progress');
-    }
-
-    const session = new AiSession();
-    this._observableRegistry.set(this._session, Option.some(session));
-    this._observableRegistry.set(this.error, Option.none());
-    await using ctx = Context.default(); // Auto-disposed at the end of this block.
-    ctx.onDispose(() => {
-      log.info('onDispose', { session, isDisposed: ctx.disposed });
-      Option.match(this._observableRegistry.get(this._session), {
-        onNone: () => {},
-        onSome: (s) => {
-          if (s === session) {
-            this._observableRegistry.set(this._session, Option.none());
-          }
-        },
-      });
-    });
-
-    try {
-      this._lastRequest = request;
-      this._currentRequest = this._conversation
-        .exec({
-          session,
-          prompt: request.message,
-          system: this._options.system,
-        })
-        .pipe(
-          Effect.provide(
-            Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services),
-          ),
-
-          // TODO(burdon): What is this for???
-          // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
-          Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-
-          Effect.tapErrorCause((cause) => {
-            log.error('error', { cause });
-            return Effect.void;
-          }),
-          Effect.asVoid,
-          Effect.runFork,
-        );
-
-      const exit = await this._currentRequest.pipe(Fiber.join, Effect.runPromiseExit);
-      if (!Exit.isSuccess(exit) && !Cause.isInterruptedOnly(exit.cause)) {
-        throwCause(exit.cause);
-      }
-    } catch (err) {
-      log.catch(err);
-      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
-    } finally {
-      this._currentRequest = undefined;
-    }
-  }
-
-  /**
-   * @deprecated
-   */
-  async _oldCancel(): Promise<void> {
-    log.info('cancelling...');
-    if (this._currentRequest) {
-      await this._currentRequest.pipe(Fiber.interrupt, runAndForwardErrors);
-      this._currentRequest = undefined;
-    }
-
-    this._observableRegistry.set(this._session, Option.none());
   }
 
   /**
@@ -361,30 +300,25 @@ export class AiChatProcessor {
     }
   }
 
-  // TODO(burdon): Document.
+  // TODO(burdon): Fix/factor out.
   private _artifactDiffResolver: ArtifactDiffResolver.Service = {
-    resolve: async (artifacts) => {
-      const space = this._options.extensions?.space;
-      if (!space) {
-        return new Map();
-      }
-
+    resolve: async (_artifacts) => {
       const versions = new Map();
-      await Promise.all(
-        artifacts.map(async (artifact) => {
-          const {
-            objects: [object],
-          } = await space.db.query(Filter.ids(artifact.id)).run();
-          if (!object) {
-            return;
-          }
+      // await Promise.all(
+      //   artifacts.map(async (artifact) => {
+      //     const {
+      //       objects: [object],
+      //     } = await space.db.query(Filter.ids(artifact.id)).run();
+      //     if (!object) {
+      //       return;
+      //     }
 
-          versions.set(artifact.id, {
-            version: getVersion(object),
-            diff: `Current state: ${JSON.stringify(object)}`,
-          });
-        }),
-      );
+      //     versions.set(artifact.id, {
+      //       version: getVersion(object),
+      //       diff: `Current state: ${JSON.stringify(object)}`,
+      //     });
+      //   }),
+      // );
 
       return versions;
     },

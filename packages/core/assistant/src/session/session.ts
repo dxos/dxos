@@ -57,7 +57,8 @@ export type AiSessionOptions = {};
  * Could be personal or shared.
  */
 export class AiSession {
-  // TODO(dmaretskyi): Unify with observer and merge queues into a single stream.
+  // TODO(dmaretskyi): Replace queues with (optional) GenerationObserver (not a stream), which feeds the Rx.
+  //  NOTE: The Observable is composible and reduces the memory load.
   public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
   public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
   public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());

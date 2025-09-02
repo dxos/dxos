@@ -9,7 +9,6 @@ import { Schema } from 'effect';
 import jsonpointer from 'jsonpointer';
 import { type OpenAPIV2, type OpenAPIV3_1 } from 'openapi-types';
 
-import { type ExecutableTool, ToolResult, createRawTool } from '@dxos/ai';
 import { Type } from '@dxos/echo';
 import { normalizeSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -105,18 +104,17 @@ export const createToolsFromApi = async (
         authorization: options?.authorization,
       };
 
-      tools.push(
-        // TODO(burdon): Namespace?
-        createRawTool('openapi', {
-          name: getToolName(path, method, methodItem),
-          description: options?.instructions ? `${options.instructions}\n\n${description}` : description,
-          parameters: inputSchema,
-          execute: async (input) => {
-            const response = await callApiEndpoint(endpoint, input);
-            return ToolResult.Success(response);
-          },
-        }),
-      );
+      // tools.push(
+      //   createRawTool('openapi', {
+      //     name: getToolName(path, method, methodItem),
+      //     description: options?.instructions ? `${options.instructions}\n\n${description}` : description,
+      //     parameters: inputSchema,
+      //     execute: async (input) => {
+      //       const response = await callApiEndpoint(endpoint, input);
+      //       return ToolResult.Success(response);
+      //     },
+      //   }),
+      // );
     }
   }
 

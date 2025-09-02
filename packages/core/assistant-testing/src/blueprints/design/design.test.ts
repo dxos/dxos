@@ -65,7 +65,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           `;
 
           const session = new AiSession();
-          yield* conversation.exec({ prompt, observer, session });
+          yield* conversation.createRequest({ prompt, observer, session });
           log.info('spec', { doc: artifact });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
@@ -78,8 +78,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           `;
 
           const session = new AiSession();
-          yield* conversation.exec({ prompt, observer, session });
-          log.info('spec', { doc: artifact });
+          yield* conversation.createRequest({ observer, session, prompt });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
         }

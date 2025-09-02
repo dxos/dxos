@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, structuredOutputParser } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -128,12 +128,6 @@ describe('misc', () => {
   it('createExtractionSchema', () => {
     const _schema = createExtractionSchema(ResearchDataTypes);
     // log.info('schema', { schema });
-  });
-
-  it('extract schema json schema', () => {
-    const schema = createExtractionSchema(ResearchDataTypes);
-    const _parser = structuredOutputParser(schema);
-    // log.info('schema', { json: parser.tool.parameters });
   });
 
   it('getSanitizedSchemaName', () => {

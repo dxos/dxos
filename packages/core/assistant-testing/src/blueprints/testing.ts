@@ -18,7 +18,7 @@ export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> &
 export const runSteps = Effect.fn(function* (conversation: AiConversation, steps: TestStep[]) {
   for (const { test, ...props } of steps) {
     const session = new AiSession();
-    yield* conversation.exec({ session, ...props });
+    yield* conversation.createRequest({ session, ...props });
     const messages = yield* Effect.promise(() => conversation.getHistory());
     log.info('conversation', { messages });
     if (test) {
