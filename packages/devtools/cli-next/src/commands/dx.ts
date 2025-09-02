@@ -15,6 +15,7 @@ import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
 import { spaces } from './spaces';
+import { debug } from './debug';
 
 // TODO(wittjosiah): Env vars.
 
@@ -54,6 +55,7 @@ export const dx = command.pipe(
     edge.pipe(Command.provide(ClientService.layer)),
     // TODO(burdon): Admin-only (separate dynamic module?)
     hub.pipe(Command.provide(ClientService.layer)),
+    debug.pipe(Command.provide(ClientService.layer)),
   ]),
   // TODO(wittjosiah): Create separate command path for clients that don't need the client.
   Command.provideEffect(ConfigService, (args) => ConfigService.load(args)),
