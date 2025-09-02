@@ -245,13 +245,13 @@ export class ServiceContext extends Resource {
     await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
-    await this.feedStore.close();
-    await this.metadataStore.close();
-
     await this.echoHost.close(ctx);
+
     await this.networkManager.close();
     await this.signalManager.close();
     await this._edgeConnection?.close();
+    await this.feedStore.close();
+    await this.metadataStore.close();
 
     log('closed');
   }
