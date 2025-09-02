@@ -19,7 +19,7 @@ export type ToolkitParams<Tools extends AiTool.Any> = {
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
 export const createToolkit = <Tools extends AiTool.Any>({
-  toolkit,
+  toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
 }: ToolkitParams<Tools>) =>
@@ -33,7 +33,10 @@ export const createToolkit = <Tools extends AiTool.Any>({
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
-    return yield* AiToolkit.merge(...[toolkit, blueprintToolkit].filter(isNotFalsy)).pipe(
-      Effect.provide(blueprintToolkitHandler),
-    ) as Effect.Effect<AiToolkit.ToHandler<any>, never, AiTool.ToHandler<Tools>>;
+    const toolkit = AiToolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
+    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
+      AiToolkit.ToHandler<any>,
+      never,
+      AiTool.ToHandler<Tools>
+    >;
   });

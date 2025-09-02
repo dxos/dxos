@@ -348,6 +348,11 @@ const ChatThread = (props: ChatThreadProps) => {
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
+  const toolProvider = useCallback<NonNullable<ChatThreadProps['toolProvider']>>(
+    () => processor.conversation.toolkit?.tools ?? [],
+    [processor],
+  );
+
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
     return event.on((event) => {
@@ -373,6 +378,7 @@ const ChatThread = (props: ChatThreadProps) => {
       space={space}
       messages={messages}
       error={error}
+      toolProvider={toolProvider}
       onEvent={(ev) => event.emit(ev)}
     />
   );
