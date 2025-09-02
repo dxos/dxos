@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
-import { type ThemedClassName, useDebugDeps, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type BasicExtensionsOptions,
   type UseTextEditorProps,
@@ -41,8 +41,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   ) => {
     const { themeMode } = useThemeContext();
 
-    // TODO(burdon): onSubmit changed.
-    useDebugDeps([themeMode, extensions, onSubmit, onSuggest, onCancel]);
     const { parentRef, view } = useTextEditor(
       () => ({
         debug: true,
