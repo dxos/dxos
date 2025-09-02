@@ -45,7 +45,8 @@ export class ClientService extends Context.Tag('ClientService')<ClientService, C
               // Timeout.
               Effect.gen(function* () {
                 yield* Effect.sleep(5_000);
-                return yield* Effect.die(new Error('Shutdown timeout reached'));
+
+                return yield* Effect.die(new Error('Client did not shutdown in time.'));
               }).pipe(Effect.orDie),
             ]),
           );
