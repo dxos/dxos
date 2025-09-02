@@ -298,8 +298,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
             cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
           }
         }
-
-        cells[cellIndex].className += ' !bg-toolbarSurface';
       }
     }
 
@@ -413,7 +411,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
         readonly: true,
         accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
-        className: '!bg-toolbarSurface',
       };
     }
 
@@ -428,7 +425,6 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        className: '!bg-toolbarSurface',
       };
     }
 
