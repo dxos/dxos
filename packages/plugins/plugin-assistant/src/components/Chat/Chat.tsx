@@ -4,7 +4,7 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { Result, useRxValue } from '@effect-rx/rx-react';
+import { useRxValue } from '@effect-rx/rx-react';
 import { createContext } from '@radix-ui/react-context';
 import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -81,11 +81,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
-    return Result.match(pending, {
-      onInitial: () => queueMessages,
-      onFailure: () => queueMessages,
-      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
-    });
+    return Array.dedupeWith([...queueMessages, ...pending], (a, b) => a.id === b.id);
   }, [queue?.objects, pending]);
 
   // Events.
