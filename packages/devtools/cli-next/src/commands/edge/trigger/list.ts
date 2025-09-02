@@ -5,7 +5,7 @@
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionTrigger } from '@dxos/functions';
 
 import { withDatabase } from '../../../util';

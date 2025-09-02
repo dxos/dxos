@@ -25,9 +25,6 @@ export const create = Command.make(
   },
   ({ spaceId, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
-      // TODO(wittjosiah): Factor out to withDatabase.
-      yield* Effect.addFinalizer(() => DatabaseService.flush());
-
       const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(FunctionType));
       const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
       if (!fn) {

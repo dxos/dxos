@@ -41,7 +41,10 @@ export const withDatabase: (
       Option.getOrElse(() => Effect.succeed(DatabaseService.notAvailable)),
     );
 
-    return yield* effect.pipe(Effect.provide(db));
+    return yield* Effect.gen(function* () {
+      yield* Effect.addFinalizer(() => DatabaseService.flush({ indexes: true }));
+      return yield* effect;
+    }).pipe(Effect.scoped, Effect.provide(db));
   });
 
 export const withTypes: (
