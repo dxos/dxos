@@ -31,7 +31,6 @@ import {
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { safeParseInt } from '@dxos/util';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
@@ -181,11 +180,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
-        if (rowIndex != null) {
+        const cell = closestCell(event.target as HTMLElement);
+        if (cell) {
+          const { row: rowIndex, plane } = cell;
           if (onRowClick) {
-            const row = model?.getRowAt(rowIndex);
-            row && onRowClick(row);
+            if (plane === 'grid') {
+              const row = model?.getRowAt(rowIndex);
+              row && onRowClick(row);
+            } else {
+              onRowClick(cell);
+            }
           }
 
           if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {
