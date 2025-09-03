@@ -144,6 +144,21 @@ export const getKeys: {
   return meta.keys.filter((key) => key.source === source);
 });
 
+/**
+ * Delete all keys from the object for the specified source.
+ * @param obj
+ * @param source
+ */
+export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
+  const meta = EchoSchema.getMeta(obj);
+  for (let i = 0; i < meta.keys.length; i++) {
+    if (meta.keys[i].source === source) {
+      meta.keys.splice(i, 1);
+      i--;
+    }
+  }
+};
+
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (obj: Any | Relation.Any): boolean => {
   const deleted = EchoSchema.isDeleted(obj);

@@ -3280,6 +3280,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../echo/live-object

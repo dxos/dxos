@@ -1,1 +1,1 @@
-export { default as fetchLinearIssues } from './fetch-issues';
+export { default as syncLinearIssues } from './sync-issues';
