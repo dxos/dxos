@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiResponse, type AiTool, type AiToolkit } from '@effect/ai';
-import { Chunk, Effect, Option, Queue, type Schema, Stream } from 'effect';
+import { type AiError, AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
   type AiInputPreprocessingError,
@@ -20,7 +20,7 @@ import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
@@ -58,12 +58,6 @@ export type AiSessionOptions = {};
  * Could be personal or shared.
  */
 export class AiSession {
-  // TODO(dmaretskyi): Replace queues with (optional) GenerationObserver (not a stream), which feeds the Rx.
-  //  NOTE: The Observable is composible and reduces the memory load.
-  public readonly messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
-  public readonly blockQueue = Effect.runSync(Queue.unbounded<Option.Option<ContentBlock.Any>>());
-  public readonly eventQueue = Effect.runSync(Queue.unbounded<AiResponse.Part>());
-
   /** Prevents concurrent execution of session. */
   private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
 
@@ -107,10 +101,8 @@ export class AiSession {
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
 
       const pending = this._pending;
-      const messageQueue = this.messageQueue;
       const submitMessage = Effect.fnUntraced(function* (message: DataType.Message) {
         pending.push(message);
-        yield* messageQueue.offer(message);
         yield* observer.onMessage(message);
         yield* TracingService.emitConverationMessage(message);
         return message;
@@ -145,23 +137,12 @@ export class AiSession {
           disableToolCallResolution: true,
         }).pipe(
           AiParser.parseResponse({
-            onBlock: (block) =>
-              Effect.all([this.blockQueue.offer(Option.some(block)), observer.onBlock(block)], {
-                discard: true,
-              }),
-            onPart: (part) =>
-              Effect.all([this.eventQueue.offer(part), observer.onPart(part)], {
-                discard: true,
-              }),
+            onBlock: (block) => observer.onBlock(block),
+            onPart: (part) => observer.onPart(part),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
-
-        // Signal to stream consumers that message blocks are complete.
-        // Allows for coordination between the block and message queues
-        //   to prevent the streaming blocks from being rendered twice when the message is produced.
-        yield* this.blockQueue.offer(Option.none());
 
         // Create response message.
         const response = yield* submitMessage(
@@ -221,11 +202,6 @@ export class AiSession {
           ],
         }),
       );
-
-      // Signals to stream consumers that the session has completed and no more messages are coming.
-      yield* Queue.shutdown(this.messageQueue);
-      yield* Queue.shutdown(this.blockQueue);
-      yield* Queue.shutdown(this.eventQueue);
 
       log('done', { pending: this._pending.length });
       return this._pending;

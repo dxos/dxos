@@ -99,7 +99,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                               </>
                             )}
                           </Card.Toolbar>
-                          <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
+                          <Surface
+                            role='card--intrinsic'
+                            limit={1}
+                            data={{ subject: card, projection: model.projection }}
+                          />
                         </Card.StaticRoot>
                         <StackItem.DragPreview>
                           {({ item }) => (
@@ -108,7 +112,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 <Card.Toolbar>
                                   <Card.DragHandle toolbarItem />
                                 </Card.Toolbar>
-                                <Surface role='card--intrinsic' limit={1} data={{ subject: item }} />
+                                <Surface
+                                  role='card--intrinsic'
+                                  limit={1}
+                                  data={{ subject: item, projection: model.projection }}
+                                />
                               </CardDragPreview.Content>
                             </CardDragPreview.Root>
                           )}
@@ -171,7 +179,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
                           <Card.StaticRoot key={card.id}>
-                            <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
+                            <Surface
+                              role='card--intrinsic'
+                              limit={1}
+                              data={{ subject: card, projection: model.projection }}
+                            />
                           </Card.StaticRoot>
                         ))}
                       </CardStackDragPreview.Content>
