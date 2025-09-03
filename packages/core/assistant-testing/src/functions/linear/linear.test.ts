@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         // indexing: { vector: true },
         types: [DataType.Task, DataType.Person],
-        storagePath: testStoragePath({ name: 'feed-test' }),
+        storagePath: testStoragePath({ name: 'feed-test-3' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
       LocalFunctionExecutionService.layer,
@@ -52,27 +52,19 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
-        // yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
-        //   team: '1127c63a-6f77-4725-9229-50f6cd47321c',
-        // });
+        yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+          team: '1127c63a-6f77-4725-9229-50f6cd47321c',
+        });
 
         const { objects: persons } = yield* DatabaseService.runQuery(Query.type(DataType.Person));
         console.log('people', {
           count: persons.length,
-          people: persons.map((_) => ({
-            id: _.id,
-            label: Obj.getLabel(_),
-            foreignKeys: Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id,
-          })),
+          people: persons.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
         const { objects: tasks } = yield* DatabaseService.runQuery(Query.type(DataType.Task));
         console.log('tasks', {
           count: tasks.length,
-          tasks: tasks.map((_) => ({
-            id: _.id,
-            label: Obj.getLabel(_),
-            assignee: Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id,
-          })),
+          tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
 
         yield* DatabaseService.flush({ indexes: true });

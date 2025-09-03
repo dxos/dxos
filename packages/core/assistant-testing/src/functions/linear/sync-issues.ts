@@ -80,13 +80,13 @@ export default defineFunction({
     const tasks = json.data.team.issues.edges.map((edge: any) => mapLinearIssue(edge.node as LinearIssue));
     log.info('Fetched tasks', { count: tasks.length });
 
-    for (const task of tasks) {
-      if (task.assignee?.target) {
-        // TODO(dmaretskyi): Handle refs inside `syncObjects`.
-        const [assignee] = yield* syncObjects([task.assignee.target], { foreignKeyId: LINEAR_ID_KEY });
-        task.assignee = Ref.make(assignee);
-      }
-    }
+    // for (const task of tasks) {
+    //   if (task.assignee?.target) {
+    //     // TODO(dmaretskyi): Handle refs inside `syncObjects`.
+    //     const [assignee] = yield* syncObjects([task.assignee.target], { foreignKeyId: LINEAR_ID_KEY });
+    //     task.assignee = Ref.make(assignee);
+    //   }
+    // }
     return yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY });
   }, Effect.provide(FetchHttpClient.layer)),
 });
@@ -106,7 +106,7 @@ const syncObjects: (
       } = yield* DatabaseService.runQuery(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
       );
-      log.info('sync object', { type: Obj.getTypename(obj), foreignId, existing: existing?.id });
+      log('sync object', { type: Obj.getTypename(obj), foreignId, existing: existing?.id });
       if (!existing) {
         yield* DatabaseService.add(obj);
         return obj;
@@ -121,16 +121,19 @@ const syncObjects: (
 
 const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
   for (const key of Object.keys(newObj)) {
+    if (typeof key !== 'string' || key === 'id') continue;
     (existing as any)[key] = (newObj as any)[key];
   }
   for (const key of Object.keys(existing)) {
+    if (typeof key !== 'string' || key === 'id') continue;
     if (!(key in newObj)) {
       delete (existing as any)[key];
     }
   }
   for (const foreignKey of Obj.getMeta(newObj).keys) {
     Obj.deleteKeys(existing, foreignKey.source);
-    Obj.getMeta(existing).keys.push(foreignKey);
+    // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
+    Obj.getMeta(existing).keys.push({ ...foreignKey });
   }
 };
 
@@ -163,7 +166,7 @@ const mapLinearIssue = (issue: LinearIssue): DataType.Task =>
     },
     title: issue.title ?? undefined,
     description: issue.description ?? undefined,
-    assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee)),
+    // assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee)),
     // state: issue.state.name,
     // project: issue.project.name,
   });
