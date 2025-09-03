@@ -804,4 +804,12 @@ describe('Reactive Object with ECHO database', () => {
     const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
     expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
   });
+
+  test('set id throws', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(() => {
+      (obj as any).id = '123';
+    }).to.throw();
+  });
 });
