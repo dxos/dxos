@@ -1,5 +1,6 @@
 @layer utilities {
-  .dx-focus-ring, .dx-focus-ring-inset {
+  .dx-focus-ring,
+  .dx-focus-ring-inset {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
@@ -9,7 +10,7 @@
       &:focus-visible {
         @apply ring-focusLine ring-offset-focusOffset z-[1] ring-neutralFocusIndicator;
 
-        &[data-variant="primary"] {
+        &[data-variant='primary'] {
           @apply ring-accentFocusIndicator;
         }
 
@@ -24,7 +25,9 @@
     }
   }
 
-  .dx-focus-ring-group, .dx-focus-ring-group-x, .dx-focus-ring-group-y {
+  .dx-focus-ring-group,
+  .dx-focus-ring-group-x,
+  .dx-focus-ring-group-y {
     &:not([disabled]),
     &[disabled='false'] {
       &:focus {
@@ -38,7 +41,7 @@
   .dx-focus-ring-group-y:focus-visible .dx-focus-ring-group-y-indicator {
     @apply ring-focusLine ring-offset-focusOffset ring-neutralFocusIndicator;
 
-    &[data-variant="primary"] {
+    &[data-variant='primary'] {
       @apply ring-accentFocusIndicator;
     }
 
@@ -60,11 +63,12 @@
     }
   }
 
-  .dx-focus-ring-inset-over-all, .dx-focus-ring-main[data-handles-focus="true"] {
+  .dx-focus-ring-inset-over-all,
+  .dx-focus-ring-main[data-handles-focus='true'] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
-        content: "";
+        content: '';
         @apply z-20 pointer-events-none;
       }
 
@@ -77,7 +81,7 @@
           @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-neutralFocusIndicator;
         }
 
-        &[data-variant="primary"]::after {
+        &[data-variant='primary']::after {
           @apply ring-accentFocusIndicator;
         }
 
@@ -101,7 +105,7 @@
     }
   }
 
-  .dx-focus-ring-main[data-handles-focus="true"] {
+  .dx-focus-ring-main[data-handles-focus='true'] {
     &:not([disabled]),
     &[disabled='false'] {
       &::after {
@@ -110,17 +114,17 @@
       }
 
       @media screen(lg) {
-        &[data-sidebar-inline-start-state="expanded"]::after {
+        &[data-sidebar-inline-start-state='expanded']::after {
           inset-inline-start: var(--nav-sidebar-size);
         }
-        &[data-sidebar-inline-start-state="collapsed"]::after {
+        &[data-sidebar-inline-start-state='collapsed']::after {
           inset-inline-start: var(--l0-size);
         }
 
-        &[data-sidebar-inline-end-state="expanded"]::after {
+        &[data-sidebar-inline-end-state='expanded']::after {
           inset-inline-end: var(--complementary-sidebar-size);
         }
-        &[data-sidebar-inline-end-state="collapsed"]::after {
+        &[data-sidebar-inline-end-state='collapsed']::after {
           inset-inline-end: var(--r0-size);
         }
       }

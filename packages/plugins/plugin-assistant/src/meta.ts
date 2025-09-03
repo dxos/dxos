@@ -11,7 +11,7 @@ export const ASSISTANT_DIALOG = `${ASSISTANT_PLUGIN}/assistant/dialog`;
 export const meta: PluginMeta = {
   id: ASSISTANT_PLUGIN,
   name: 'Assistant',
-  description: 'The Assistant tab allows you to chat with your spaces inside of Composer.',
+  description: 'The Assistant plugin allows you to chat with your spaces inside of Composer.',
   icon: 'ph--atom--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
   tags: ['labs'],

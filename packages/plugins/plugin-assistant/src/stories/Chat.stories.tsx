@@ -200,7 +200,7 @@ export const Default: Story = {
 export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
-    config: config.remote,
+    config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space, binder }) => {
       const doc = space.db.add(
         Markdown.makeDocument({

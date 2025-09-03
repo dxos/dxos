@@ -26,6 +26,9 @@
     "plugin.js",
     "plugin.d.ts"
   ],
+  "scripts": {
+    "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
+  },
   "dependencies": {
     "@ch-ui/tailwind-tokens": "2.7.0",
     "@ch-ui/tokens": "2.4.0",

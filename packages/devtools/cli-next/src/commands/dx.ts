@@ -48,7 +48,6 @@ export const command = Command.make('dx', {
 
 export const dx = command.pipe(
   Command.withSubcommands([
-    //
     config,
 
     // Only providing client to commands that require it.
@@ -57,6 +56,7 @@ export const dx = command.pipe(
     object.pipe(Command.provide(ClientService.layer)),
     queue.pipe(Command.provide(ClientService.layer)),
     edge.pipe(Command.provide(ClientService.layer)),
+
     // TODO(burdon): Admin-only (separate dynamic module?)
     hub.pipe(Command.provide(ClientService.layer)),
     debug.pipe(Command.provide(ClientService.layer)),
