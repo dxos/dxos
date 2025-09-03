@@ -1486,7 +1486,7 @@ export class DxGrid extends LitElement {
   private updateIntrinsicInlineSize(): void {
     this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
       ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid'), 0) +
-        gap * (this.limitColumns - 1)
+        gap * Math.max(0, this.limitColumns - 1)
       : Infinity;
     this.totalIntrinsicInlineSize =
       this.intrinsicInlineSize +
@@ -1504,7 +1504,7 @@ export class DxGrid extends LitElement {
   private updateIntrinsicBlockSize(): void {
     this.intrinsicBlockSize = Number.isFinite(this.limitRows)
       ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid'), 0) +
-        gap * (this.limitRows - 1)
+        gap * Math.max(0, this.limitRows - 1)
       : Infinity;
     this.totalIntrinsicBlockSize =
       this.intrinsicBlockSize +
