@@ -10,6 +10,7 @@ import { CommandConfig } from './command-config';
 import { ConfigService } from './config-service';
 
 // TODO(wittjosiah): Factor out.
+// TODO(dmaretskyi): For CLI its better to make this lazy to not load client in commands that do not require it.
 export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
   static layer = Layer.scoped(
     ClientService,
