@@ -27,7 +27,8 @@ if (process.env.DX_TRACK_LEAKS) {
   leaksTracker = wtf;
 }
 
-const run = Command.run(dx, {
+// TODO(wittjosiah): `repl` causes this to lose a bunch of type information due to the cycle.
+export const run = Command.run(dx, {
   name: 'DXOS CLI',
   version: DXOS_VERSION,
 });

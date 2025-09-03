@@ -17,9 +17,8 @@ import { halo } from './halo';
 import { hub } from './hub';
 import { object } from './object';
 import { queue } from './queue';
+import { repl } from './repl';
 import { spaces } from './spaces';
-
-// TODO(wittjosiah): Env vars.
 
 export const command = Command.make('dx', {
   config: Options.file('config', { exists: 'yes' }).pipe(
@@ -48,8 +47,8 @@ export const command = Command.make('dx', {
 
 export const dx = command.pipe(
   Command.withSubcommands([
-    //
     config,
+    repl,
 
     // Only providing client to commands that require it.
     halo.pipe(Command.provide(ClientService.layer)),
