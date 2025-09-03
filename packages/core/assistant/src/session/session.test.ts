@@ -98,13 +98,13 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
     }).pipe(
       Effect.provide(
         Layer.mergeAll(
-          toolkitLayer,
-          ToolResolverService.layerEmpty,
-          ToolExecutionService.layerEmpty,
+          TracingService.layerNoop,
           AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
             Layer.provideMerge(AiServiceTestingPreset('direct')),
           ),
-          TracingService.layerNoop,
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          toolkitLayer,
         ),
       ),
     ),
