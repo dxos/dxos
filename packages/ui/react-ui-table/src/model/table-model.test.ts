@@ -72,7 +72,6 @@ describe('TableModel', () => {
   describe('reactivity', () => {
     it('pure signals should nest', () => {
       const signal$ = live({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
-
       const computed$ = computed(() => {
         return signal$.arr.map((row) =>
           computed(() => {
