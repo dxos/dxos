@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Console, Effect, Logger, Option, type Schema } from 'effect';
+import { Console, Effect, Fiber, Logger, Option, Schedule, type Schema } from 'effect';
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
@@ -41,7 +41,10 @@ export const withDatabase: (
       Option.getOrElse(() => Effect.succeed(DatabaseService.notAvailable)),
     );
 
-    return yield* effect.pipe(Effect.provide(db));
+    return yield* Effect.gen(function* () {
+      yield* Effect.addFinalizer(() => DatabaseService.flush({ indexes: true }));
+      return yield* effect;
+    }).pipe(Effect.scoped, Effect.provide(db));
   });
 
 export const withTypes: (
@@ -85,8 +88,15 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   // TODO(wittjosiah): This is not yet foolproof. Needs to wait for connection to edge to be established.
   const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
   yield* handleSyncState(syncState);
+
+  const fiber = yield* Effect.gen(function* () {
+    const syncState = yield* Effect.tryPromise(() => space.db.getSyncState());
+    yield* handleSyncState(syncState);
+  }).pipe(Effect.repeat({ schedule: Schedule.fixed('5 seconds') }), Effect.fork);
+
   yield* synced.await;
   yield* Console.log('Sync complete');
+  yield* Fiber.interrupt(fiber);
 });
 
 // TODO(burdon): Move to echo/errors.

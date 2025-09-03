@@ -26,4 +26,4 @@ export const query = Command.make(
     typename: Options.text('typename').pipe(Options.withDescription('The typename to query.')),
   },
   handler,
-).pipe(Command.withDescription('Query a space for objects.'));
+).pipe(Command.withDescription('Query objects.'));
