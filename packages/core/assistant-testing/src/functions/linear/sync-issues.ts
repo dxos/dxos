@@ -1,10 +1,10 @@
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Array, Effect, Order, pipe, Predicate, Schema } from 'effect';
+import { Array, Effect, pipe, Schema } from 'effect';
+import { syncObjects } from '../../sync';
 import { apiKeyAuth, graphqlRequestBody } from '../../util';
 
 const query = `
@@ -74,17 +74,11 @@ export default defineFunction({
   handler: Effect.fnUntraced(function* ({ data }) {
     const client = yield* HttpClient.HttpClient.pipe(Effect.map(apiKeyAuth({ service: 'linear.app' })));
 
-    const { objects: existingTasks } = yield* DatabaseService.runQuery(Query.type(DataType.Task));
-    log.info('existing tasks', { count: existingTasks.length });
-    const after = pipe(
-      existingTasks,
-      Array.filter((task) => Obj.getKeys(task, LINEAR_TEAM_ID_KEY).at(0)?.id === data.team),
-      Array.map((task) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
-      Array.filter((x) => x !== undefined),
-      Array.reduce('2025-01-01T00:00:00.000Z', (acc: string, x: string) => (x > acc ? x : acc)),
-    );
+    // Get the timestamp that was previosly synced.
+    const after = yield* getLatestUpdateTimestamp(data.team);
     log.info('will fetch', { after });
 
+    // Fetch the issues that have changed since the last sync.
     const response = yield* client.post('https://api.linear.app/graphql', {
       body: yield* graphqlRequestBody(query, {
         teamId: data.team,
@@ -97,80 +91,23 @@ export default defineFunction({
     );
     log.info('Fetched tasks', { count: tasks.length });
 
+    // Synchronize new objects with ECHO.
     return yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY });
   }, Effect.provide(FetchHttpClient.layer)),
 });
 
-// TODO(dmaretskyi): Extract as a generic sync function.
-/**
- * Syncs objects to the database.
- * If there's an object with a matching foreign key in the database, it will be updated.
- * Otherwise, a new object will be added.
- * Recursively syncs top-level refs.
- *
- * @param opts.foreignKeyId - The key to use for matching objects.
- */
-const syncObjects: (
-  objs: Obj.Any[],
-  opts: { foreignKeyId: string },
-) => Effect.Effect<Obj.Any[], never, DatabaseService> = Effect.fn('syncObjects')(function* (objs, { foreignKeyId }) {
-  return yield* Effect.forEach(
-    objs,
-    Effect.fnUntraced(function* (obj) {
-      // Sync referenced objects.
-      for (const key of Object.keys(obj)) {
-        if (typeof key !== 'string' || key === 'id') continue;
-        if (!Ref.isRef((obj as any)[key])) continue;
-        const ref: Ref.Any = (obj as any)[key];
-        if (!ref.target) continue;
-        if (Obj.getDXN(ref.target).isLocalObjectId()) {
-          // obj not persisted to db.
-          const [target] = yield* syncObjects([ref.target], { foreignKeyId });
-          (obj as any)[key] = Ref.make(target);
-        }
-      }
-
-      const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
-      const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
-      const {
-        objects: [existing],
-      } = yield* DatabaseService.runQuery(
-        Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
-      );
-      log('sync object', {
-        type: Obj.getTypename(obj),
-        foreignId,
-        existing: existing ? Obj.getDXN(existing) : undefined,
-      });
-      if (!existing) {
-        yield* DatabaseService.add(obj);
-        return obj;
-      } else {
-        copyObjectData(existing, obj);
-        return existing;
-      }
-    }),
-    { concurrency: 1 },
-  );
-});
-
-const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
-  for (const key of Object.keys(newObj)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    (existing as any)[key] = (newObj as any)[key];
-  }
-  for (const key of Object.keys(existing)) {
-    if (typeof key !== 'string' || key === 'id') continue;
-    if (!(key in newObj)) {
-      delete (existing as any)[key];
-    }
-  }
-  for (const foreignKey of Obj.getMeta(newObj).keys) {
-    Obj.deleteKeys(existing, foreignKey.source);
-    // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
-    Obj.getMeta(existing).keys.push({ ...foreignKey });
-  }
-};
+const getLatestUpdateTimestamp: (teamId: string) => Effect.Effect<string, never, DatabaseService> = Effect.fnUntraced(
+  function* (teamId) {
+    const { objects: existingTasks } = yield* DatabaseService.runQuery(Query.type(DataType.Task));
+    return pipe(
+      existingTasks,
+      Array.filter((task) => Obj.getKeys(task, LINEAR_TEAM_ID_KEY).at(0)?.id === teamId),
+      Array.map((task) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
+      Array.filter((x) => x !== undefined),
+      Array.reduce('2025-01-01T00:00:00.000Z', (acc: string, x: string) => (x > acc ? x : acc)),
+    );
+  },
+);
 
 const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): DataType.Person =>
   Obj.make(DataType.Person, {
@@ -210,6 +147,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Dat
     title: issue.title ?? undefined,
     description: issue.description ?? undefined,
     assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee, { teamId })),
+    // TODO(dmaretskyi): Sync those (+ linear team as org?).
     // state: issue.state.name,
     // project: issue.project.name,
   });
