@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { AiService, ToolRegistry } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
