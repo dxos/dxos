@@ -20,12 +20,11 @@ export const isToolMessage = (message: DataType.Message) => {
 
 export type ToolBlockProps = ThemedClassName<{
   message: DataType.Message;
-  toolkit: AiToolkit.AiToolkit<AiTool.Any>;
+  toolkit?: AiToolkit.AiToolkit<AiTool.Any>;
 }>;
 
 export const ToolBlock = ({ classNames, message, toolkit }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
-  const { blocks = [] } = message;
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
@@ -36,18 +35,18 @@ export const ToolBlock = ({ classNames, message, toolkit }: ToolBlockProps) => {
   };
 
   let request: { tool: AiTool.Any | undefined; block: any } | undefined;
-
+  const { blocks = [] } = message;
   const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
   const items = toolBlocks
     .map((block) => {
       switch (block._tag) {
         case 'toolCall': {
           // TODO(burdon): Skip these updates?
-          if (!toolkit || (block.pending && request?.block.toolCallId === block.toolCallId)) {
+          if (block.pending && request?.block.toolCallId === block.toolCallId) {
             return null;
           }
 
-          const tool = toolkit.tools[block.name];
+          const tool = toolkit?.tools[block.name];
           request = { tool, block };
           return {
             title: getToolCaption(request.tool, request.block.status),

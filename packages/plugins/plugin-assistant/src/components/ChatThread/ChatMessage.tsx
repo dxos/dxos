@@ -19,7 +19,7 @@ import {
   type ToggleContainerProps,
 } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -49,7 +49,7 @@ export const ChatMessage = ({ classNames, debug, space, message, toolkit, onEven
     blocks,
   } = message;
 
-  if (toolkit && isToolMessage(message)) {
+  if (isToolMessage(message)) {
     return (
       <MessageItem classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
         <ToolBlock classNames={panelClasses} message={message} toolkit={toolkit} />
@@ -124,6 +124,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['text' as const]: ({ space, block }) => {
     invariant(block._tag === 'text');
+
     return (
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
@@ -166,6 +167,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['suggestion' as const]: ({ block, onEvent }) => {
     invariant(block._tag === 'suggestion');
+
     return (
       <IconButton
         icon='ph--lightning--regular'
@@ -180,6 +182,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['select' as const]: ({ block, onEvent }) => {
     invariant(block._tag === 'select');
+
     return (
       <div className='flex flex-wrap gap-1'>
         {block.options.map((option, idx) => (
@@ -207,6 +210,16 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
         <Toolbox classNames={marginClasses} />
       </ToggleContainer>
     );
+  },
+
+  //
+  // Summary
+  //
+  ['summary' as const]: ({ block }) => {
+    invariant(block._tag === 'summary');
+
+    const summary = ContentBlock.createSummaryMessage(block);
+    return <div className='text-subdued'>{summary}</div>;
   },
 
   //

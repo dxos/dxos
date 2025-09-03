@@ -72,10 +72,9 @@ export type AiRequest = {
  * Handles streaming responses from the conversation.
  */
 export class AiChatProcessor {
-  // TODO(burdon): Comment required.
-  // TODO(wittjosiah): Rename.
-  private readonly _observableRegistry: Registry.Registry;
+  private readonly _rx: Registry.Registry;
 
+  /** External observer. */
   private readonly _observer: GenerationObserver;
 
   /** Currently active request fiber. */
@@ -85,14 +84,14 @@ export class AiChatProcessor {
   private _lastRequest: AiRequest | undefined;
 
   /**
-   * Current streaming message (from the AI service).
-   */
-  private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
-
-  /**
    * Pending messages (incl. the current user request).
    */
   private readonly _pending = Rx.make<DataType.Message[]>([]);
+
+  /**
+   * Currently streaming message (from the AI service).
+   */
+  private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
 
   /**
    * Streaming state.
@@ -119,7 +118,7 @@ export class AiChatProcessor {
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     // Initialize registries and defaults before using in other logic.
-    this._observableRegistry = this._options.observableRegistry ?? Registry.make();
+    this._rx = this._options.observableRegistry ?? Registry.make();
     this._observer = GenerationObserver.make({
       onBlock: this._onBlock,
       onMessage: this._onMessage,
@@ -128,6 +127,10 @@ export class AiChatProcessor {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
     }
+  }
+
+  get isRunning() {
+    return !!this._fiber;
   }
 
   get context() {
@@ -152,7 +155,7 @@ export class AiChatProcessor {
 
     try {
       this._lastRequest = requestParam;
-      this._observableRegistry.set(this.error, Option.none());
+      this._rx.set(this.error, Option.none());
 
       // Create request.
       const request = this._conversation.createRequest({
@@ -182,12 +185,12 @@ export class AiChatProcessor {
         throwCause(response.cause);
       }
 
-      this._observableRegistry.set(this.error, Option.none());
+      this._rx.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
     } catch (err) {
       log.error('request failed', { err });
-      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
       this._fiber = undefined;
     }
@@ -221,8 +224,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
-    const prompt = trim`
-      Suggest a single short title for this chat.
+    const system = trim`
       It is extremely important that you respond only with the title and nothing else.
       If you cannot do this effectively respond with "New Chat".
     `;
@@ -230,7 +232,7 @@ export class AiChatProcessor {
     const history = await this._conversation.getHistory();
     const fiber = Effect.gen(this, function* () {
       const session = new AiSession();
-      return yield* session.run({ prompt, history });
+      return yield* session.run({ system, prompt: 'Suggest a name for this chat', history });
     }).pipe(
       // TODO(burdon): Use simpler model.
       Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
@@ -274,9 +276,16 @@ export class AiChatProcessor {
     },
   };
 
+  private _onMessage = Effect.fn(
+    function* (this: AiChatProcessor, message: DataType.Message) {
+      this._rx.set(this._streaming, Option.none());
+      this._rx.update(this._pending, (pending) => [...pending, message]);
+    }.bind(this),
+  );
+
   private _onBlock = Effect.fn(
     function* (this: AiChatProcessor, block: ContentBlock.Any) {
-      this._observableRegistry.update(this._streaming, (streaming) => {
+      this._rx.update(this._streaming, (streaming) => {
         const blocks = streaming.pipe(
           Option.map((streaming) => streaming.blocks.filter((b) => !b.pending)),
           Option.getOrElse(() => []),
@@ -290,13 +299,6 @@ export class AiChatProcessor {
           }),
         );
       });
-    }.bind(this),
-  );
-
-  private _onMessage = Effect.fn(
-    function* (this: AiChatProcessor, message: DataType.Message) {
-      this._observableRegistry.set(this._streaming, Option.none());
-      this._observableRegistry.update(this._pending, (pending) => [...pending, message]);
     }.bind(this),
   );
 }
