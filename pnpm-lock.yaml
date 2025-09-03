@@ -2437,6 +2437,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2464,6 +2467,12 @@ importers:
       '@effect/ai':
         specifier: 0.25.2
         version: 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      '@effect/platform':
+        specifier: ^0.90.2
+        version: 0.90.2(effect@3.17.7)
+      dfx:
+        specifier: ^0.124.1
+        version: 0.124.1(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
@@ -2480,9 +2489,6 @@ importers:
       '@effect/experimental':
         specifier: 0.54.5
         version: 0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2)
-      '@effect/platform':
-        specifier: 0.90.2
-        version: 0.90.2(effect@3.17.7)
       '@effect/platform-node':
         specifier: 0.95.0
         version: 0.95.0(@effect/cluster@0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.3(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
@@ -3274,6 +3280,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../echo/live-object
@@ -25104,6 +25113,12 @@ packages:
   dfa@1.2.0:
     resolution: {integrity: sha512-ED3jP8saaweFTjeGX8HQPjeC1YYyZs98jGNZx6IiBvxW7JG5v492kamAQB3m2wop07CvU/RQmzcKr6bgcC5D/Q==}
 
+  dfx@0.124.1:
+    resolution: {integrity: sha512-s22n0qTBmmAEHsnTjMwG4SAZO2oqNE/EHVV0NfKYRW+J08thYKnbyJTgJh4ZUMqGPRBPKMPDfSBpwcvH7AgFLQ==}
+    peerDependencies:
+      '@effect/platform': ^0.90
+      effect: ^3.17
+
   did-resolver@4.1.0:
     resolution: {integrity: sha512-S6fWHvCXkZg2IhS4RcVHxwuyVejPR7c+a4Go0xbQ9ps5kILa8viiYQgrM4gfTyeTjJ0ekgJH9gk/BawTpmkbZA==}
 
@@ -25135,6 +25150,13 @@ packages:
 
   discord-api-types@0.37.61:
     resolution: {integrity: sha512-o/dXNFfhBpYHpQFdT6FWzeO7pKc838QeeZ9d91CfVAtpr5XLK4B/zYxQbYgPdoMiTDvJfzcsLW5naXgmHGDNXw==}
+
+  discord-api-types@0.38.22:
+    resolution: {integrity: sha512-2gnYrgXN3yTlv2cKBISI/A8btZwsSZLwKpIQXeI1cS8a7W7wP3sFVQOm3mPuuinTD8jJCKGPGNH399zE7Un1kA==}
+
+  discord-verify@1.2.0:
+    resolution: {integrity: sha512-8qlrMROW8DhpzWWzgNq9kpeLDxKanWa4EDVoj/ASVv2nr+dSr4JPmu2tFSydf3hAGI/OIJTnZyD0JulMYIxx4w==}
+    engines: {node: '>=16'}
 
   discord.js@14.14.1:
     resolution: {integrity: sha512-/hUVzkIerxKHyRKopJy5xejp4MYKDPTszAnpYxzVVv4qJYf+Tkt+jnT2N29PIPschicaEEpXwF2ARrTYHYwQ5w==}
@@ -45416,6 +45438,14 @@ snapshots:
 
   dfa@1.2.0: {}
 
+  dfx@0.124.1(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7):
+    dependencies:
+      '@effect/platform': 0.90.2(effect@3.17.7)
+      discord-api-types: 0.38.22
+      effect: 3.17.7
+    optionalDependencies:
+      discord-verify: 1.2.0
+
   did-resolver@4.1.0: {}
 
   didyoumean@1.2.2: {}
@@ -45439,6 +45469,13 @@ snapshots:
   direction@2.0.1: {}
 
   discord-api-types@0.37.61: {}
+
+  discord-api-types@0.38.22: {}
+
+  discord-verify@1.2.0:
+    dependencies:
+      '@types/express': 4.17.21
+    optional: true
 
   discord.js@14.14.1:
     dependencies:

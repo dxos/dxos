@@ -36,6 +36,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -45,6 +46,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.25.2",
+    "@effect/platform": "^0.90.2",
+    "dfx": "^0.124.1",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {

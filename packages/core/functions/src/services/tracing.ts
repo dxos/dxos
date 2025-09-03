@@ -8,6 +8,7 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import type { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -42,6 +43,16 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   };
 
   static layerConsole = Layer.succeed(TracingService, TracingService.console);
+
+  static layerLogInfo = () =>
+    Layer.succeed(TracingService, {
+      write: (event) => {
+        if (Obj.instanceOf(AgentStatus, event)) {
+          log.info('status', { message: event.message });
+        }
+      },
+      getTraceContext: () => ({}),
+    });
 
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
