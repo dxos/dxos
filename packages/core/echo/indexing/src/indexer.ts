@@ -224,7 +224,7 @@ export class Indexer extends Resource {
     while (this._run.scheduled) {
       await this._run.join();
       iterations++;
-      if (iterations > 10) {
+      if (iterations > 25) {
         log.warn('Indexer: updateIndexes is stuck');
         break;
       }
