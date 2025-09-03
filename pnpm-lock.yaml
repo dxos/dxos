@@ -4550,6 +4550,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -56071,3 +56074,5 @@ snapshots:
   zwitch@2.0.4: {}
 
   zx@8.5.4: {}
+
+# First generated on 2025-09-03T14:55:53.482Z by dmaretskyi

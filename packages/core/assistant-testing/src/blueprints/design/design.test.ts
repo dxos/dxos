@@ -9,7 +9,6 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
   type ContextBinding,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
@@ -64,8 +63,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Let's capture the key design decisions in our spec in ${Obj.getDXN(artifact)}
           `;
 
-          const session = new AiSession();
-          yield* conversation.createRequest({ prompt, observer, session });
+          yield* conversation.createRequest({ prompt, observer });
           log.info('spec', { doc: artifact });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
@@ -77,8 +75,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
             Adjust the spec to reflect this.
           `;
 
-          const session = new AiSession();
-          yield* conversation.createRequest({ observer, session, prompt });
+          yield* conversation.createRequest({ observer, prompt });
           expect(artifact.content).not.toBe(prevContent);
           prevContent = artifact.content;
         }

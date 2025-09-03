@@ -50,7 +50,6 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       artifacts: [],
       prompt: '',
       tools: [],
-      toolResolver: new ToolRegistry([]),
     } as any); // TODO(burdon): Rewrite test.
 
     return {

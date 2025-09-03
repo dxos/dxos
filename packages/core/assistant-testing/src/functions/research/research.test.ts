@@ -11,7 +11,6 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
   type ContextBinding,
   GenerationObserver,
   makeToolExecutionServiceFromFunctions,
@@ -111,10 +110,8 @@ describe('Research', { timeout: 600_000 }, () => {
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const session = new AiSession();
         yield* conversation.createRequest({
           observer,
-          session,
           prompt: `Research notion founders.`,
         });
       },
