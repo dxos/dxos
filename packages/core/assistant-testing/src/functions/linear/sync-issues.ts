@@ -97,18 +97,19 @@ export default defineFunction({
     );
     log.info('Fetched tasks', { count: tasks.length });
 
-    for (const task of tasks) {
-      if (task.assigned?.target) {
-        // TODO(dmaretskyi): Handle refs inside `syncObjects`.
-        const [assignee] = yield* syncObjects([task.assigned.target], { foreignKeyId: LINEAR_ID_KEY });
-        task.assigned = Ref.make(assignee);
-      }
-    }
     return yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY });
   }, Effect.provide(FetchHttpClient.layer)),
 });
 
 // TODO(dmaretskyi): Extract as a generic sync function.
+/**
+ * Syncs objects to the database.
+ * If there's an object with a matching foreign key in the database, it will be updated.
+ * Otherwise, a new object will be added.
+ * Recursively syncs top-level refs.
+ *
+ * @param opts.foreignKeyId - The key to use for matching objects.
+ */
 const syncObjects: (
   objs: Obj.Any[],
   opts: { foreignKeyId: string },
@@ -116,6 +117,19 @@ const syncObjects: (
   return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
+      // Sync referenced objects.
+      for (const key of Object.keys(obj)) {
+        if (typeof key !== 'string' || key === 'id') continue;
+        if (!Ref.isRef((obj as any)[key])) continue;
+        const ref: Ref.Any = (obj as any)[key];
+        if (!ref.target) continue;
+        if (Obj.getDXN(ref.target).isLocalObjectId()) {
+          // obj not persisted to db.
+          const [target] = yield* syncObjects([ref.target], { foreignKeyId });
+          (obj as any)[key] = Ref.make(target);
+        }
+      }
+
       const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
       const {

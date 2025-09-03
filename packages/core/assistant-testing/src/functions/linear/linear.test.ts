@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         // indexing: { vector: true },
         types: [DataType.Task, DataType.Person],
-        storagePath: testStoragePath({ name: 'feed-test-12' }),
+        storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
       LocalFunctionExecutionService.layer,
