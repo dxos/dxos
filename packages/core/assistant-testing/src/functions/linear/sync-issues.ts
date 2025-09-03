@@ -14,7 +14,7 @@ query Team($teamId: String!, $after: DateTimeOrDuration!) {
     name
 
 
-   issues(last: 50, orderBy: updatedAt, filter: {
+   issues(last: 150, orderBy: updatedAt, filter: {
     updatedAt: { gt: $after }
    }) {
     edges {
@@ -24,7 +24,7 @@ query Team($teamId: String!, $after: DateTimeOrDuration!) {
             createdAt
             updatedAt
             description
-            assignee { name }
+            assignee { id, name }
             state { 
                 name
             }
@@ -92,18 +92,18 @@ export default defineFunction({
       }),
     });
     const json: any = yield* response.json;
-    const tasks = json.data.team.issues.edges.map((edge: any) =>
+    const tasks = (json.data.team.issues.edges as any[]).map((edge: any) =>
       mapLinearIssue(edge.node as LinearIssue, { teamId: data.team }),
     );
     log.info('Fetched tasks', { count: tasks.length });
 
-    // for (const task of tasks) {
-    //   if (task.assignee?.target) {
-    //     // TODO(dmaretskyi): Handle refs inside `syncObjects`.
-    //     const [assignee] = yield* syncObjects([task.assignee.target], { foreignKeyId: LINEAR_ID_KEY });
-    //     task.assignee = Ref.make(assignee);
-    //   }
-    // }
+    for (const task of tasks) {
+      if (task.assigned?.target) {
+        // TODO(dmaretskyi): Handle refs inside `syncObjects`.
+        const [assignee] = yield* syncObjects([task.assigned.target], { foreignKeyId: LINEAR_ID_KEY });
+        task.assigned = Ref.make(assignee);
+      }
+    }
     return yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY });
   }, Effect.provide(FetchHttpClient.layer)),
 });
@@ -123,7 +123,11 @@ const syncObjects: (
       } = yield* DatabaseService.runQuery(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
       );
-      log('sync object', { type: Obj.getTypename(obj), foreignId, existing: existing?.id });
+      log('sync object', {
+        type: Obj.getTypename(obj),
+        foreignId,
+        existing: existing ? Obj.getDXN(existing) : undefined,
+      });
       if (!existing) {
         yield* DatabaseService.add(obj);
         return obj;
@@ -191,7 +195,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Dat
     },
     title: issue.title ?? undefined,
     description: issue.description ?? undefined,
-    // assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee)),
+    assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee, { teamId })),
     // state: issue.state.name,
     // project: issue.project.name,
   });
