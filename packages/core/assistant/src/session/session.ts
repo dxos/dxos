@@ -233,7 +233,7 @@ export class AiSession {
 
   // TODO(dmaretskyi): Replace queues with (optional) GenerationObserver (not a stream), which feeds the Rx.
   //  NOTE: The Observable is composible and reduces the memory load.
-  blockQueue = Effect.runSync(Queue.unbounded<Option.Option<Schema.Schema.Type<typeof DataType.MessageBlock>>>());
+  blockQueue = Effect.runSync(Queue.unbounded<Option.Option<any>>());
   eventQueue = Effect.runSync(Queue.unbounded<any>());
 
   /** Prevents concurrent execution of session. */
