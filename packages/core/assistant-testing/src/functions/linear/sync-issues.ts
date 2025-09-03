@@ -4,17 +4,19 @@ import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Effect, Schema } from 'effect';
+import { Array, Effect, Order, pipe, Predicate, Schema } from 'effect';
 import { apiKeyAuth, graphqlRequestBody } from '../../util';
 
 const query = `
-query Team($teamId: String!) {
+query Team($teamId: String!, $after: DateTimeOrDuration!) {
   team(id: $teamId) {
     id
     name
 
 
-   issues(first: 50, orderBy: updatedAt) {
+   issues(last: 50, orderBy: updatedAt, filter: {
+    updatedAt: { gt: $after }
+   }) {
     edges {
         node {
             id
@@ -22,7 +24,7 @@ query Team($teamId: String!) {
             createdAt
             updatedAt
             description
-            assignee { id, name }
+            assignee { name }
             state { 
                 name
             }
@@ -31,11 +33,11 @@ query Team($teamId: String!) {
             }
         }
         cursor
-        }
-        pageInfo {
-            hasNextPage
-            endCursor
-        }
+    }
+    pageInfo {
+        hasNextPage
+        endCursor
+    }
     }
   }
 }
@@ -58,6 +60,7 @@ type LinearPerson = {
 };
 
 export const LINEAR_ID_KEY = 'linear.app/id';
+export const LINEAR_TEAM_ID_KEY = 'linear.app/teamId';
 export const LINEAR_UPDATED_AT_KEY = 'linear.app/updatedAt';
 
 export default defineFunction({
@@ -71,13 +74,27 @@ export default defineFunction({
   handler: Effect.fnUntraced(function* ({ data }) {
     const client = yield* HttpClient.HttpClient.pipe(Effect.map(apiKeyAuth({ service: 'linear.app' })));
 
+    const { objects: existingTasks } = yield* DatabaseService.runQuery(Query.type(DataType.Task));
+    log.info('existing tasks', { count: existingTasks.length });
+    const after = pipe(
+      existingTasks,
+      Array.filter((task) => Obj.getKeys(task, LINEAR_TEAM_ID_KEY).at(0)?.id === data.team),
+      Array.map((task) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
+      Array.filter((x) => x !== undefined),
+      Array.reduce('2025-01-01T00:00:00.000Z', (acc: string, x: string) => (x > acc ? x : acc)),
+    );
+    log.info('will fetch', { after });
+
     const response = yield* client.post('https://api.linear.app/graphql', {
       body: yield* graphqlRequestBody(query, {
         teamId: data.team,
+        after,
       }),
     });
     const json: any = yield* response.json;
-    const tasks = json.data.team.issues.edges.map((edge: any) => mapLinearIssue(edge.node as LinearIssue));
+    const tasks = json.data.team.issues.edges.map((edge: any) =>
+      mapLinearIssue(edge.node as LinearIssue, { teamId: data.team }),
+    );
     log.info('Fetched tasks', { count: tasks.length });
 
     // for (const task of tasks) {
@@ -137,7 +154,7 @@ const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
   }
 };
 
-const mapLinearPerson = (person: LinearPerson): DataType.Person =>
+const mapLinearPerson = (person: LinearPerson, { teamId }: { teamId: string }): DataType.Person =>
   Obj.make(DataType.Person, {
     [Obj.Meta]: {
       keys: [
@@ -145,12 +162,16 @@ const mapLinearPerson = (person: LinearPerson): DataType.Person =>
           id: person.id,
           source: LINEAR_ID_KEY,
         },
+        {
+          id: teamId,
+          source: LINEAR_TEAM_ID_KEY,
+        },
       ],
     },
     nickname: person.name,
   });
 
-const mapLinearIssue = (issue: LinearIssue): DataType.Task =>
+const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): DataType.Task =>
   Obj.make(DataType.Task, {
     [Obj.Meta]: {
       keys: [
@@ -161,6 +182,10 @@ const mapLinearIssue = (issue: LinearIssue): DataType.Task =>
         {
           id: issue.updatedAt,
           source: LINEAR_UPDATED_AT_KEY,
+        },
+        {
+          id: teamId,
+          source: LINEAR_TEAM_ID_KEY,
         },
       ],
     },

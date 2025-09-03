@@ -28,4 +28,57 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
       }).pipe(Effect.provide(DbLayer));
     }),
   );
+
+  it.effect(
+    'reload database -- save index before restart',
+    Effect.fnUntraced(function* ({ expect: _ }) {
+      const NUM_OBJECTS = 500;
+      const DbLayer = TestDatabaseLayer({
+        types: [DataType.Person],
+        storagePath: testStoragePath({ name: `reload-test-${Date.now()}` }),
+      });
+
+      yield* Effect.gen(function* () {
+        for (let i = 0; i < NUM_OBJECTS; i++) {
+          yield* DatabaseService.add(Obj.make(DataType.Person, { nickname: `Person ${i}` }));
+        }
+        yield* DatabaseService.flush({ indexes: true });
+      }).pipe(Effect.provide(DbLayer));
+
+      yield* Effect.gen(function* () {
+        const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person)));
+        expect(objects.length).toEqual(NUM_OBJECTS);
+      }).pipe(Effect.provide(DbLayer));
+    }),
+  );
+
+  it.effect.skip(
+    'reload database -- save index before restart [manual]',
+    Effect.fnUntraced(
+      function* ({ expect: _ }) {
+        const NUM_OBJECTS = 500;
+
+        {
+          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person)));
+          console.log({ count: objects.length });
+        }
+
+        for (let i = 0; i < NUM_OBJECTS; i++) {
+          yield* DatabaseService.add(Obj.make(DataType.Person, { nickname: `Person ${i}` }));
+        }
+        yield* DatabaseService.flush({ indexes: true });
+
+        {
+          const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person)));
+          console.log({ count: objects.length });
+        }
+      },
+      Effect.provide(
+        TestDatabaseLayer({
+          types: [DataType.Person],
+          storagePath: testStoragePath({ name: `reload-test` }),
+        }),
+      ),
+    ),
+  );
 });

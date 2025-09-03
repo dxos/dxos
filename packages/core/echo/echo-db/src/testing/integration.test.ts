@@ -7,8 +7,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
+import { Obj } from '@dxos/echo';
 import {
   TestReplicationNetwork,
+  TestSchema,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
@@ -103,6 +105,22 @@ describe('Integration tests', () => {
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
+  });
+
+  test('reload peer -- save index before restart', async () => {
+    const NUM_OBJECTS = 500;
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+
+    await using db = await peer.createDatabase();
+    for (let i = 0; i < NUM_OBJECTS; i++) {
+      db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
+    }
+    await db.flush({ indexes: true });
+
+    await peer.reload();
+    await using db2 = await peer.openLastDatabase();
+    const { objects } = await db2.query(Query.select(Filter.type(TestSchema.Person))).run();
+    expect(objects.length).to.eq(NUM_OBJECTS);
   });
 
   test('client restart with open host', async () => {

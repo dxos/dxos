@@ -14,6 +14,7 @@ import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { DatabaseService, QueueService } from '../services';
+import { log } from '@dxos/log';
 
 const testBuilder = accuireReleaseResource(() => new EchoTestBuilder());
 
@@ -35,6 +36,9 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabase
       let kv: LevelDB | undefined;
       if (storagePath) {
         kv = createTestLevel(storagePath);
+        yield* Effect.promise(() => kv!.open());
+        // const keyCount = yield* Effect.promise(async () => (await kv!.iterator({ values: false }).all()).length);
+        // log.info('opened test db', { storagePath, keyCount });
       }
       const peer = yield* Effect.promise(() => builder.createPeer({ indexing, types, kv }));
 
@@ -52,6 +56,7 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabase
             throw e;
           }
         });
+        log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
           const key = PublicKey.random();
           db = yield* Effect.promise(() => peer.createDatabase(key));
@@ -70,6 +75,19 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabase
         db = yield* Effect.promise(() => peer.createDatabase());
         queues = peer.client.constructQueueFactory(db.spaceId);
       }
+
+      yield* Effect.addFinalizer(() =>
+        Effect.promise(async () => {
+          if (kv) {
+            // {
+            //   const keyCount = (await kv.iterator({ values: false }).all()).length;
+            //   log.info('closing persistant test db', { storagePath, keyCount });
+            // }
+
+            await kv.close();
+          }
+        }),
+      );
 
       return Context.mergeAll(
         Context.make(DatabaseService, DatabaseService.make(db)),

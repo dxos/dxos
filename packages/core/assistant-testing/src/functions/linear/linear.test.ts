@@ -36,7 +36,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         // indexing: { vector: true },
         types: [DataType.Task, DataType.Person],
-        storagePath: testStoragePath({ name: 'feed-test-3' }),
+        storagePath: testStoragePath({ name: 'feed-test-5' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
       LocalFunctionExecutionService.layer,
@@ -47,11 +47,13 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Feed', { timeout: 600_000 }, () => {
+describe('Linear', { timeout: 600_000 }, () => {
   it.effect(
-    'fetch discord messages',
+    'sync',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
+        yield* DatabaseService.flush({ indexes: true });
+
         yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
