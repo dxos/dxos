@@ -9,7 +9,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import type * as LiveObject from '@dxos/live-object';
 import { live } from '@dxos/live-object';
-import { assumeType } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
@@ -34,10 +34,18 @@ type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
 export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>>;
 
+// TODO(dmaretskyi): Expose Meta = EchoSchema.MetaId.
+
 /**
  * Creates new object.
+ *
+ * Meta can be passed as a symbol in `props`.
+ *
+ * Example:
+ * ```ts
+ * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
+ * ```
  */
-// TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
@@ -189,9 +197,21 @@ export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions)
   const { id, ...data } = obj;
   const schema = getSchema(obj);
   invariant(schema != null, 'Object should have a schema');
-  const props: any = { ...data };
+  const props: any = deepMapValues(data, (value, recurse) => {
+    if (EchoSchema.Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
   if (opts?.retainId) {
     props.id = id;
   }
+  const meta = getMeta(obj);
+  props[EchoSchema.MetaId] = deepMapValues(meta, (value, recurse) => {
+    if (EchoSchema.Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
   return make(schema, props);
 };
