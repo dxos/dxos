@@ -30,6 +30,7 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Void,
     failure: Schema.Never,
   }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
+
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -42,6 +43,7 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
+
   AiTool.make('add-schema', {
     description: trim`
       Adds a schema to the space.
@@ -56,6 +58,7 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
+
   AiTool.make('create-record', {
     description: trim`
       Creates a new record and adds it to the current space.

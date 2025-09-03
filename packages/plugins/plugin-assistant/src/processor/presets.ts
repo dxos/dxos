@@ -39,7 +39,7 @@ export const AiServicePresets: AiServicePreset[] = [
   },
   {
     provider: 'lm-studio' as const,
-    model: '@google/gemma-3-12b' as const,
+    model: '@google/gemma-3-27b' as const,
   },
   {
     provider: 'lm-studio' as const,

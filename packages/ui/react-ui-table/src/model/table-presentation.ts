@@ -69,7 +69,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = this.getDraftRowCells(range);
         break;
       case 'fixedEndStart':
-        cells = this.getDraftSelectCells(range);
+        cells = this.getDraftIconCells(range);
         break;
       case 'fixedEndEnd':
         cells = this.getDraftActionCells(range);
@@ -279,27 +279,36 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const fields = this.model.projection?.fields ?? [];
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const cellIndex = toPlaneCellIndex({ col, row });
-        const field = fields[col];
-        if (!field) {
-          continue;
-        }
+        cells[toPlaneCellIndex({ col, row: 0 })] = {
+          value: '',
+          readonly: true,
+          className: 'dx-grid__row--cta__cell',
+        };
+      }
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+          const cellIndex = toPlaneCellIndex({ col, row });
+          const field = fields[col];
+          if (!field) {
+            continue;
+          }
 
-        this.createDataCell(cells, draftRow.data, field, col, row);
+          this.createDataCell(cells, draftRow.data, field, col, row);
 
-        if (this.model.hasDraftRowValidationError(row, field.path)) {
-          const cellValue = cells[cellIndex];
-          if (cellValue) {
-            const existingClasses = cellValue.className || '';
-            const draftClasses = 'dx-grid__cell--flagged';
-            cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+          if (this.model.hasDraftRowValidationError(row, field.path)) {
+            const cellValue = cells[cellIndex];
+            if (cellValue) {
+              const existingClasses = cellValue.className || '';
+              const draftClasses = 'dx-grid__cell--flagged';
+              cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+            }
           }
         }
-
-        cells[cellIndex].className += ' !bg-toolbarSurface';
       }
     }
 
@@ -405,30 +414,39 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
-      const disabled = !draftRow.valid;
-
-      cells[toPlaneCellIndex({ col: 0, row })] = {
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
+      cells[toPlaneCellIndex({ col: 0, row: 0 })] = {
         value: '',
+        className: 'dx-grid__row--cta__cell',
         readonly: true,
-        accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
-        className: '!bg-toolbarSurface',
       };
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        const disabled = !draftRow.valid;
+
+        cells[toPlaneCellIndex({ col: 0, row })] = {
+          value: '',
+          readonly: true,
+          accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+        };
+      }
     }
 
     return cells;
   }
 
-  private getDraftSelectCells(range: DxGridPlaneRange): DxGridPlaneCells {
+  private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+    for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        className: '!bg-toolbarSurface',
+        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="block m-1"></dx-icon>',
+        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell' }),
       };
     }
 

@@ -32,7 +32,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.resolver(
       Effect.gen(function* () {
-        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-12b' as any).pipe(
+        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b' as any).pipe(
           Effect.provide(
             OpenAiClient.layer({
               apiUrl: LMSTUDIO_ENDPOINT,
@@ -42,7 +42,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
 
         return (name) => {
           switch (name) {
-            case '@google/gemma-3-12b':
+            case '@google/gemma-3-27b':
               return gemma;
             default:
               return Layer.fail(new AiModelNotAvailableError(name));
@@ -74,7 +74,7 @@ describe('AiServiceRouter', () => {
         const model = yield* AiLanguageModel.AiLanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model('@google/gemma-3-12b').pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model('@google/gemma-3-27b').pipe(Layer.provide(TestRouter))),
     ),
   );
 });
