@@ -27,7 +27,6 @@ export type ToolBlockProps = ThemedClassName<{
 
 export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
-  const { blocks = [] } = message;
 
   const tools = toolProvider();
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
@@ -39,14 +38,14 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
   };
 
   let request: { tool: AiTool.Any | undefined; block: any } | undefined;
-
+  const { blocks = [] } = message;
   const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
   const items = toolBlocks
     .map((block) => {
       switch (block._tag) {
         case 'toolCall': {
           // TODO(burdon): Skip these updates?
-          if (!toolProvider || (block.pending && request?.block.toolCallId === block.toolCallId)) {
+          if (block.pending && request?.block.toolCallId === block.toolCallId) {
             return null;
           }
 

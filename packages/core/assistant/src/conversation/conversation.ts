@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import {
-  type AiSession,
+  AiSession,
   type AiSessionRunError,
   type AiSessionRunRequirements,
   type GenerationObserver,
@@ -26,7 +26,6 @@ export type AiConversationRunRequirements<Tools extends AiTool.Any> =
   | AiTool.ToHandler<Tools>;
 
 export interface AiConversationRunParams {
-  session: AiSession;
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
@@ -77,15 +76,11 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest<Tools extends AiTool.Any>({
-    session,
-    ...params
-  }: AiConversationRunParams): Effect.Effect<
-    DataType.Message[],
-    AiSessionRunError,
-    AiConversationRunRequirements<Tools>
-  > {
+  createRequest<Tools extends AiTool.Any>(
+    params: AiConversationRunParams,
+  ): Effect.Effect<DataType.Message[], AiSessionRunError, AiConversationRunRequirements<Tools>> {
     return Effect.gen(this, function* () {
+      const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());
 
       // Get context objects.
