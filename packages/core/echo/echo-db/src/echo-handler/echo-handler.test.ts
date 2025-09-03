@@ -815,29 +815,29 @@ describe('Reactive Object with ECHO database', () => {
 
   test('foreign key copying from new object to existing object', async () => {
     const { db } = await builder.createDatabase();
-    
+
     // Create an object in the database
     const existing = db.add(Obj.make(Type.Expando, { title: 'Existing object' }));
     expect(Obj.getMeta(existing).keys).to.deep.eq([]);
-    
+
     // Create a new object with foreign keys
-    const newObj = live(Expando, { title: 'New object' });
+    const newObj = Obj.make(Type.Expando, { title: 'New object' });
     const foreignKey1 = { source: 'example.com', id: 'key-1' };
     const foreignKey2 = { source: 'another.com', id: 'key-2' };
-    getMeta(newObj).keys.push(foreignKey1);
-    getMeta(newObj).keys.push(foreignKey2);
-    
+    Obj.getMeta(newObj).keys.push(foreignKey1);
+    Obj.getMeta(newObj).keys.push(foreignKey2);
+
     // Copy foreign keys from new object to existing object
-    for (const foreignKey of getMeta(newObj).keys) {
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
       Obj.deleteKeys(existing, foreignKey.source);
       // Using spread operator to copy the foreign key object
       Obj.getMeta(existing).keys.push({ ...foreignKey });
     }
-    
+
     // Verify foreign keys were copied
     expect(Obj.getMeta(existing).keys).to.have.length(2);
     expect(Obj.getMeta(existing).keys).to.deep.eq([foreignKey1, foreignKey2]);
-    
+
     // Verify the original object still has its keys
     expect(getMeta(newObj).keys).to.have.length(2);
   });
