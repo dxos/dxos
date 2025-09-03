@@ -2,6 +2,9 @@
   window.global = window;
 </script>
 <style>
+  @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
+</style>
+<style>
   @media (prefers-color-scheme: dark) {
     html {
       color-scheme: dark;
@@ -10,27 +13,13 @@
      * Minimizes white flash while story loads.
      * https://github.com/storybookjs/storybook/discussions/32392
      */
-    html,
-    body {
-      background: #181818 !important;
-    }
     .sb-preparing-story,
     .sb-preparing-docs {
-      background: #181818 !important;
+      background: #1e1e1e !important;
     }
   }
 </style>
 <style>
-  html,
-  body,
-  #root,
-  #storybook-root {
-    background: #1e1e1e !important;
-  }
-  iframe {
-    background: #1e1e1e !important;
-  }</style
-><style>
   :root {
     --cube-a: #e2e2e2;
     --cube-b: #c26d6d;
@@ -73,7 +62,4 @@
       0 0,
       40px 70px;
   }
-</style>
-<style>
-  @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
 </style>

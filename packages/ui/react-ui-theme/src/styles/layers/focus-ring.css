@@ -8,7 +8,7 @@
       }
 
       &:focus-visible {
-        @apply ring-focusLine ring-offset-focusOffset z-10 ring-neutralFocusIndicator;
+        @apply ring-focusLine ring-offset-focusOffset z-[1] ring-neutralFocusIndicator;
 
         &[data-variant='primary'] {
           @apply ring-accentFocusIndicator;
@@ -78,7 +78,7 @@
 
       &:focus-visible {
         &::after {
-          @apply ring-focusLine ring-offset-focusOffset ring-inset z-10 ring-neutralFocusIndicator;
+          @apply ring-focusLine ring-offset-focusOffset ring-inset z-[1] ring-neutralFocusIndicator;
         }
 
         &[data-variant='primary']::after {
