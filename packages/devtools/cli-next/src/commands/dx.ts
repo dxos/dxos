@@ -11,13 +11,13 @@ import { ClientService, ConfigService } from '../services';
 import { CommandConfig } from '../services';
 
 import { config } from './config';
+import { debug } from './debug';
 import { edge } from './edge';
 import { halo } from './halo';
 import { hub } from './hub';
-import { spaces } from './spaces';
-import { debug } from './debug';
 import { object } from './object';
 import { queue } from './queue';
+import { spaces } from './spaces';
 
 // TODO(wittjosiah): Env vars.
 

@@ -1,7 +1,14 @@
-import { mountDevtoolsHooks } from '@dxos/client/devtools';
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Inspector from 'node:inspector/promises';
+
 import { Command } from '@effect/cli';
 import { Duration, Effect } from 'effect';
-import * as Inspector from 'node:inspector/promises';
+
+import { mountDevtoolsHooks } from '@dxos/client/devtools';
+
 import { ClientService } from '../../services';
 
 export const inspector = Command.make(

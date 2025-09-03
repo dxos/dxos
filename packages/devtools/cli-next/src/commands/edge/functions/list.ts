@@ -1,7 +1,13 @@
-import { Filter } from '@dxos/echo';
-import { DatabaseService, FunctionType } from '@dxos/functions';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Command } from '@effect/cli';
 import { Effect } from 'effect';
+
+import { Filter } from '@dxos/echo';
+import { DatabaseService, FunctionType } from '@dxos/functions';
+
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
 

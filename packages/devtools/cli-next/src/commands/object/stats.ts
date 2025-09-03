@@ -1,7 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Command } from '@effect/cli';
+import { Array, Console, Effect, Record, pipe } from 'effect';
+
 import { Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
-import { Command } from '@effect/cli';
-import { Array, Console, Effect, pipe, Record } from 'effect';
+
 import { withDatabase } from '../../util';
 import { Common } from '../options';
 

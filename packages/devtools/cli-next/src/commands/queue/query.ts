@@ -1,8 +1,14 @@
-import { DXN } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Command, Options } from '@effect/cli';
 import { Console, Effect, Schema } from 'effect';
+
+import { type Queue } from '@dxos/client/echo';
+import { DXN } from '@dxos/keys';
+
 import { ClientService } from '../../services';
-import { Queue } from '@dxos/client/echo';
 
 // TODO(dmaretskyi): Extract
 const DXNSchema = Schema.String.pipe(

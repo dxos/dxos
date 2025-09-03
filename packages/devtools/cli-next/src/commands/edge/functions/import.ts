@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Args, Command, Options } from '@effect/cli';
+import { Args, Command } from '@effect/cli';
 import { Effect } from 'effect';
 
-import { ClientService } from '../../../services';
-
+import { Obj } from '@dxos/echo';
 import { DatabaseService, FunctionType } from '@dxos/functions';
-import { getDeployedFunctions } from './util';
+
+import { ClientService } from '../../../services';
 import { withDatabase } from '../../../util';
 import { Common } from '../../options';
-import { Obj } from '@dxos/echo';
+
+import { getDeployedFunctions } from './util';
 
 export const importCommand = Command.make(
   'import',

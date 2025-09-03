@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Command } from '@effect/cli';
 import { Options } from '@effect/cli';
-import { withDatabase } from '../../util';
 import { Console, Effect, Option } from 'effect';
+
 import { Filter, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
+
+import { withDatabase } from '../../util';
 import { Common } from '../options';
 
 export const remove = Command.make(

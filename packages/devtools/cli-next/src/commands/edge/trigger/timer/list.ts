@@ -1,11 +1,15 @@
-import { Command } from '@effect/cli';
+//
+// Copyright 2025 DXOS.org
+//
 
+import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
-import { EdgeClient } from '@dxos/edge-client';
-import { ClientService } from '../../../../services';
-import { Common } from '../../../options';
+
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
+
+import { ClientService } from '../../../../services';
+import { Common } from '../../../options';
 
 export const list = Command.make(
   'list',

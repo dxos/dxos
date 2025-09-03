@@ -5,10 +5,10 @@
 import { Command } from '@effect/cli';
 
 import { deploy } from './deploy';
-import { invoke } from './invoke';
-import { search } from './search';
-import { list } from './list';
 import { importCommand } from './import';
+import { invoke } from './invoke';
+import { list } from './list';
+import { search } from './search';
 
 export const fn = Command.make('function').pipe(
   Command.withDescription('Manage EDGE functions.'),
