@@ -26,9 +26,6 @@ export const update = Command.make(
   },
   ({ spaceId, id, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
-      // TODO(wittjosiah): Factor out to withDatabase.
-      yield* Effect.addFinalizer(() => DatabaseService.flush());
-
       const dxn = DXN.fromLocalObjectId(id);
       const trigger = yield* DatabaseService.resolve(dxn, FunctionTrigger);
       if (trigger.spec?.kind !== 'timer') {
