@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DXOS } from '@dxos/brand';
@@ -13,25 +13,27 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Ghost, type GhostProps } from './Ghost';
 
-const meta: Meta<GhostProps> = {
+const DefaultStory = (props: Partial<GhostProps>) => {
+  return (
+    <>
+      <Ghost {...props} />
+      <div className='inset-0 absolute grid place-content-center'>
+        <DXOS className='w-[40rem] h-[40rem] opacity-5' />
+      </div>
+    </>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
-  render: (props: GhostProps) => {
-    return (
-      <>
-        <Ghost {...props} />
-        <div className='inset-0 absolute grid place-content-center'>
-          <DXOS className='w-[40rem] h-[40rem] opacity-5' />
-        </div>
-      </>
-    );
-  },
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-black' })],
-};
+} satisfies Meta<GhostProps>;
 
 export default meta;
 
-type Story = StoryObj<GhostProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   play: async () => {

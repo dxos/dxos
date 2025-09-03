@@ -4,8 +4,8 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -14,6 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { AnchoredTo, DataType } from '@dxos/schema';
 import { layoutCentered, render, withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -21,7 +22,7 @@ import { translations } from '../translations';
 import { ThreadType } from '../types';
 
 import { CommentsContainer } from './CommentsContainer';
-import { createCommentThread } from './testing';
+import { createCommentThread, createProposalThread } from './testing';
 
 faker.seed(1);
 
@@ -30,27 +31,25 @@ const DefaultStory = () => {
   const space = useSpace();
   const anchors = useQuery(space, Query.type(AnchoredTo));
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (identity && space) {
-      const t = setTimeout(async () => {
-        const object = space.db.add(Obj.make(Type.Expando, {}));
-        const thread1 = space.db.add(createCommentThread(identity));
-        const thread2 = space.db.add(createCommentThread(identity));
-        space.db.add(
-          Relation.make(AnchoredTo, {
-            [Relation.Source]: thread1,
-            [Relation.Target]: object,
-          }),
-        );
-        space.db.add(
-          Relation.make(AnchoredTo, {
-            [Relation.Source]: thread2,
-            [Relation.Target]: object,
-          }),
-        );
-      });
-
-      return () => clearTimeout(t);
+      const object = space.db.add(Obj.make(Type.Expando, {}));
+      const thread1 = space.db.add(createCommentThread(identity));
+      const thread2 = space.db.add(createProposalThread(identity));
+      space.db.add(
+        Relation.make(AnchoredTo, {
+          [Relation.Source]: thread1,
+          [Relation.Target]: object,
+          anchor: 'test',
+        }),
+      );
+      space.db.add(
+        Relation.make(AnchoredTo, {
+          [Relation.Source]: thread2,
+          [Relation.Target]: object,
+          anchor: 'test',
+        }),
+      );
     }
   }, [identity, space]);
 
@@ -60,17 +59,19 @@ const DefaultStory = () => {
 
   return (
     <div className='w-[30rem] overflow-y-auto bg-baseSurface'>
-      <CommentsContainer anchors={anchors} onThreadDelete={console.log} />
+      <CommentsContainer anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />
     </div>
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
     withTheme,
     withLayout({ fullscreen: true, classNames: layoutCentered }),
+    // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
+    //   Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
         IntentPlugin(),
@@ -86,8 +87,10 @@ const meta: Meta = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

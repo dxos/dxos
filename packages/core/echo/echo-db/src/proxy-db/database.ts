@@ -68,7 +68,7 @@ export interface EchoDatabase {
 
   toJSON(): object;
 
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
 
   /**
    * Query objects.

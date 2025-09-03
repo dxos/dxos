@@ -72,6 +72,9 @@
       "path": "../react-ui-pickers"
     },
     {
+      "path": "../react-ui-searchlist"
+    },
+    {
       "path": "../react-ui-stack"
     },
     {

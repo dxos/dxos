@@ -54,12 +54,12 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
     return {
       platform: 'nodejs',
       dataGeneration: {
-        documentAmount: 10,
+        documentAmount: 5_000,
         textSize: 100,
         mutationAmount: 0,
-        waitAfterCreation: 1_000,
+        waitAfterCreation: 2_000,
       },
-      maxDocumentsPerInvocation: 500,
+      maxDocumentsPerInvocation: 5_000,
       simultaneousInvocations: false,
       indexing: { enabled: false, indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }] },
       config: {

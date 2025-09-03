@@ -14,6 +14,8 @@ import { DataType } from '@dxos/schema';
 import {
   AnchorSort,
   AppGraphSerializer,
+  BLUEPRINT_KEY,
+  BlueprintDefinition,
   IntentResolver,
   MarkdownSettings,
   MarkdownState,
@@ -54,6 +56,7 @@ export const MarkdownPlugin = () =>
           metadata: {
             label: (object: Markdown.Document) => object.name || object.fallbackName,
             icon: 'ph--text-aa--regular',
+            blueprints: [BLUEPRINT_KEY],
             graphProps: {
               managesAutofocus: true,
             },
@@ -80,7 +83,7 @@ export const MarkdownPlugin = () =>
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
             objectSchema: Markdown.Document,
-            getIntent: (_, { space }) => createIntent(MarkdownAction.Create, { spaceId: space.id }),
+            getIntent: () => createIntent(MarkdownAction.Create, {}),
           }),
         ),
     }),
@@ -111,5 +114,10 @@ export const MarkdownPlugin = () =>
       // TODO(wittjosiah): More relevant event?
       activatesOn: Events.AppGraphReady,
       activate: AnchorSort,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

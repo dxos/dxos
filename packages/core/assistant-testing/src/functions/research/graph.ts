@@ -159,12 +159,17 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
 
 export const makeGraphWriterHandler = (
   toolkit: ReturnType<typeof makeGraphWriterToolkit>,
-  { onAppend }: { onAppend?: (object: DXN[]) => void } = {},
+  {
+    onAppend,
+  }: {
+    onAppend?: (object: DXN[]) => void;
+  } = {},
 ) => {
   const { schema } = Context.get(
     toolkit.tools.graph_writer.annotations as Context.Context<GraphWriterSchema>,
     GraphWriterSchema,
   );
+
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
       const { db } = yield* DatabaseService;
@@ -174,7 +179,6 @@ export const makeGraphWriterHandler = (
 
       const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
-
       return dxns;
     }),
   });

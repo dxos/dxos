@@ -14,16 +14,16 @@ import { translations } from '../../translations';
 
 import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './SpaceSettingsContainer';
 
-const Story = (args: Partial<SpaceSettingsContainerProps>) => {
+const Story = (props: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientProvider();
   return (
     <div role='none' className='p-2 border border-primary-500 rounded'>
-      <SpaceSettingsContainer {...args} space={space!} />
+      <SpaceSettingsContainer {...props} space={space!} />
     </div>
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-space/SpaceSettingsContainer',
   component: SpaceSettingsContainer,
   render: Story,
@@ -32,8 +32,10 @@ const meta: Meta = {
     translations,
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof SpaceSettingsContainer>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: StoryObj<typeof SpaceSettingsContainer> = {};

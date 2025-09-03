@@ -5,16 +5,12 @@
 import '@dxos-theme';
 
 import { type Rive, useRive } from '@rive-app/react-canvas';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
 import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
-export default {
-  title: 'ui/brand/Rive',
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: ['absolute inset-0 bg-black'] })],
-};
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
   useEffect(() => {
@@ -45,7 +41,7 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
   );
 };
 
-export const Default = () => {
+const DefaultStory = () => {
   const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
@@ -82,3 +78,21 @@ export const Default = () => {
     </>
   );
 };
+
+const meta = {
+  title: 'ui/brand/Rive',
+  render: render(DefaultStory),
+  decorators: [
+    withTheme,
+    withLayout({
+      fullscreen: true,
+      classNames: ['absolute inset-0 bg-black'],
+    }),
+  ],
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

@@ -8,9 +8,9 @@ import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 
-import { IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateTableSchema, TableAction } from './types';
@@ -28,7 +28,7 @@ export const TablePlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () =>
         contributes(Capabilities.Metadata, {
-          id: TableView.typename,
+          id: Table.Table.typename,
           metadata: {
             icon: 'ph--table--regular',
             comments: 'unanchored',
@@ -42,7 +42,7 @@ export const TablePlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: TableView,
+            objectSchema: Table.Table,
             formSchema: CreateTableSchema,
             hidden: true,
             getIntent: (props, options) => createIntent(TableAction.Create, { ...props, space: options.space }),
@@ -74,5 +74,10 @@ export const TablePlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

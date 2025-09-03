@@ -25,28 +25,24 @@ const createBlockActions = (value: string, getView: () => EditorView, blankLine?
     table: 'ph--table--regular',
   }).map(([type, icon]) => {
     const checked = type === value;
-    return createEditorAction(
-      type,
-      () => {
-        const view = getView();
-        if (!view) {
-          return;
-        }
+    return createEditorAction(type, { checked, ...(type === 'table' && { disabled: !!blankLine }), icon }, () => {
+      const view = getView();
+      if (!view) {
+        return;
+      }
 
-        switch (type) {
-          case 'blockquote':
-            checked ? removeBlockquote(view) : addBlockquote(view);
-            break;
-          case 'codeblock':
-            checked ? removeCodeblock(view) : addCodeblock(view);
-            break;
-          case 'table':
-            insertTable(view);
-            break;
-        }
-      },
-      { checked, ...(type === 'table' && { disabled: !!blankLine }), icon },
-    );
+      switch (type) {
+        case 'blockquote':
+          checked ? removeBlockquote(view) : addBlockquote(view);
+          break;
+        case 'codeblock':
+          checked ? removeCodeblock(view) : addCodeblock(view);
+          break;
+        case 'table':
+          insertTable(view);
+          break;
+      }
+    });
   });
 
 export const createBlocks = (state: EditorToolbarState, getView: () => EditorView) => {

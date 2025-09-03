@@ -26,6 +26,8 @@ export const translations = [
         'boolean input true value': 'Yes',
         'boolean input false value': 'No',
         'delete field label': 'Delete field',
+        'ref field placeholder_one': 'Select…',
+        'ref field placeholder_other': 'Select items…',
 
         // TODO(burdon): Factor out?
         'button cancel': 'Cancel',
@@ -61,9 +63,9 @@ export const translations = [
         'format url': 'URL',
         'format uuid': 'UUID',
 
-        // Placeholders.
-        'placeholder latitude': 'Latitude',
-        'placeholder longitude': 'Longitude',
+        // GeoPointInput.
+        'latitude label': 'Latitude',
+        'longitude label': 'Longitude',
 
         // SelectOptionsInput.
         'select option label': 'Label',
@@ -74,7 +76,8 @@ export const translations = [
 
         // System schema message.
         'system schema title': 'System record type',
-        'system schema description': 'This is a system record type and cannot be modified.',
+        'system schema description':
+          'This is a system record type and cannot be modified, though the view can still be configured.',
       },
     },
   },

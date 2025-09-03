@@ -2,18 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiTool, AiToolkit } from '@effect/ai';
+import { Console, Schema } from 'effect';
+
 import {
   Capabilities,
   Events,
   IntentPlugin,
+  LayoutAction,
   type Plugin,
+  type PluginContext,
   SettingsPlugin,
+  allOf,
   contributes,
+  createIntent,
+  createResolver,
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
@@ -30,8 +38,9 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -42,6 +51,7 @@ import { Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
@@ -80,6 +90,24 @@ export const config = {
   }),
 };
 
+class TestingToolkit extends AiToolkit.make(
+  AiTool.make('open-item', {
+    description: trim`
+      Opens an item in the application.
+    `,
+    parameters: {
+      id: ArtifactId,
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+) {
+  static layer = (_context: PluginContext) =>
+    TestingToolkit.toLayer({
+      'open-item': ({ id }) => Console.log('Called open-item', { id }),
+    });
+}
+
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   accessTokens?: DataType.AccessToken[];
@@ -101,7 +129,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       ClientPlugin({
         types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
         onClientInitialized: async ({ client }) => {
-          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
@@ -156,6 +184,37 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/toolkit',
+          activatesOn: Events.Startup,
+          activate: (context) => [
+            contributes(Capabilities.Toolkit, TestingToolkit),
+            contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/set-workspace',
+          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+          activate: async (context) => {
+            const client = context.getCapability(ClientCapabilities.Client);
+            const space = client.spaces.default;
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+            return [];
+          },
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/intent-resolver',
+          activatesOn: Events.SetupIntentResolver,
+          activate: () => [
+            contributes(Capabilities.IntentResolver, [
+              createResolver({
+                intent: DeckAction.ChangeCompanion,
+                resolve: () => ({}),
+              }),
+            ]),
           ],
         }),
       ]),

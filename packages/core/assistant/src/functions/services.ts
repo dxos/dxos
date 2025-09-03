@@ -3,9 +3,10 @@
 //
 
 import { AiTool, type AiToolkit } from '@effect/ai';
-import { Context, Effect, Layer, Match, Predicate, Record, Schema } from 'effect';
+import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { todo } from '@dxos/debug';
 import { type FunctionDefinition, LocalFunctionExecutionService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -20,12 +21,12 @@ export const makeToolResolverFromFunctions = (
         return tool;
       }
 
-      const fn = functions.find((f) => f.name === id);
-      if (!fn) {
+      const functionDef = functions.find((fn) => fn.name === id);
+      if (!functionDef) {
         return yield* Effect.fail(new AiToolNotFoundError(id));
       }
 
-      return projectFunctionToTool(fn);
+      return projectFunctionToTool(functionDef);
     }),
   });
 };
@@ -39,8 +40,8 @@ export const makeToolExecutionServiceFromFunctions = (
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
-
       const localFunctionExecutionService = yield* LocalFunctionExecutionService;
+
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
@@ -51,13 +52,13 @@ export const makeToolExecutionServiceFromFunctions = (
               }
 
               const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
-              const fnDef = functions.find((f) => f.name === functionName);
-              if (!fnDef) {
+              const functionDef = functions.find((fn) => fn.name === functionName);
+              if (!functionDef) {
                 return yield* Effect.fail(new AiToolNotFoundError(tool.name));
               }
 
               return yield* localFunctionExecutionService
-                .invokeFunction(fnDef, input)
+                .invokeFunction(functionDef, input)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });
           };
@@ -80,10 +81,12 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assisatnt/FunctionToolAn
 >() {}
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
+
 const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
+
   const tool = AiTool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),
@@ -105,10 +108,12 @@ const makeToolName = (name: string) => {
 
 // TODO(dmaretskyi): Factor out.
 const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<string, Schema.Schema<any, any>> => {
-  return Match.value(schema.ast).pipe(
-    Match.when(Predicate.isTagged('TypeLiteral'), (ast) => {
-      return Object.fromEntries(ast.propertySignatures.map((prop) => [prop.name, Schema.make(prop.type)]));
-    }),
-    Match.orElseAbsurd,
-  );
+  switch (schema.ast._tag) {
+    case 'TypeLiteral':
+      return Object.fromEntries(schema.ast.propertySignatures.map((prop) => [prop.name, Schema.make(prop.type)]));
+    case 'VoidKeyword':
+      return {};
+    default:
+      return todo(`Unsupported schema AST: ${schema.ast._tag}`);
+  }
 };

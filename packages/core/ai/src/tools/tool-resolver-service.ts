@@ -26,7 +26,6 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     ids: ToolId[],
   ) => Effect.Effect<AiToolkit.AiToolkit<AiTool.Any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
-      console.log(JSON.stringify(ids));
       const tools = yield* Effect.all(ids.map(ToolResolverService.resolve));
       return AiToolkit.make(...tools);
     });

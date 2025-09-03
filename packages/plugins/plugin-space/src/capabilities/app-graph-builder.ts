@@ -459,21 +459,25 @@ export default (context: PluginContext) => {
                   ),
                 );
               }
-              return get(rxFromQuery(query))
-                .map((object) =>
-                  get(
-                    rxFromSignal(() =>
-                      createObjectNode({
-                        object,
-                        space,
-                        resolve,
-                        droppable: false, // Cannot rearrange query collections.
-                        navigable: state.navigableCollections,
-                      }),
+              return (
+                get(rxFromQuery(query))
+                  // TODO(wittjosiah): This should be the default sort order.
+                  .toSorted((a, b) => a.id.localeCompare(b.id))
+                  .map((object) =>
+                    get(
+                      rxFromSignal(() =>
+                        createObjectNode({
+                          object,
+                          space,
+                          resolve,
+                          droppable: false, // Cannot rearrange query collections.
+                          navigable: state.navigableCollections,
+                        }),
+                      ),
                     ),
-                  ),
-                )
-                .filter(isNonNullable);
+                  )
+                  .filter(isNonNullable)
+              );
             }),
             Option.getOrElse(() => []),
           ),
@@ -540,8 +544,18 @@ export default (context: PluginContext) => {
               );
               const deletable = filteredViews.length === 0;
 
+              const [dispatcher] = get(context.capabilities(Capabilities.IntentDispatcher));
+              if (!dispatcher) {
+                return [];
+              }
+
               // TODO(wittjosiah): Remove cast.
-              return createStaticSchemaActions({ schema: schema as Type.Obj.Any, space, deletable });
+              return createStaticSchemaActions({
+                schema: schema as Type.Obj.Any,
+                space,
+                dispatch: dispatcher.dispatchPromise,
+                deletable,
+              });
             }),
             Option.getOrElse(() => []),
           ),

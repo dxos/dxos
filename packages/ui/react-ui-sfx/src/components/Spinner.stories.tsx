@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -21,25 +21,24 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
         <Button onClick={() => setState('pulse')}>Pulse</Button>
         <Button onClick={() => setState('spin')}>Spin</Button>
         <Button onClick={() => setState('flash')}>Flash</Button>
+        <Button onClick={() => setState('error')}>Error</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <div className='flex w-6 h-6'>
-          <Spinner state={state} />
-        </div>
+        <Spinner state={state} size={6} />
       </div>
     </div>
   );
 };
 
-const meta: Meta<SpinnerProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Spinner',
   component: Spinner,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Spinner>;
 
 export default meta;
 
-type Story = StoryObj<SpinnerProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

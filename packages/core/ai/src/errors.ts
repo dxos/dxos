@@ -15,3 +15,5 @@ export class AiModelNotAvailableError extends BaseError.extend('AI_MODEL_NOT_AVA
 }
 
 export class AiToolNotFoundError extends BaseError.extend('AI_TOOL_NOT_FOUND') {}
+
+export class AiServiceOverloadedError extends BaseError.extend('AI_SERVICE_OVERLOADED') {}

@@ -3,14 +3,14 @@
 //
 
 import { Octokit } from '@octokit/core';
-import React, { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useState } from 'react';
 
 import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Button, Clipboard, Input, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
 import { SCRIPT_PLUGIN } from '../../meta';
@@ -50,10 +50,10 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const space = getSpace(object);
   const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
 
-  const functionPath = fn && getUserFunctionUrlInMetadata(getMeta(fn));
+  const functionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
   const functionUrl =
-    functionPath &&
-    getInvocationUrl(functionPath, client.config.values.runtime?.services?.edge?.url ?? '', {
+    functionId &&
+    getInvocationUrl(functionId, client.config.values.runtime?.services?.edge?.url ?? '', {
       spaceId: space?.id,
     });
 
@@ -116,7 +116,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const gistKey = getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
-  useEffect(() => {
+  useAsyncEffect(async () => {
     const token = githubToken?.token;
     const gistId = gistKey?.id;
     if (!token || !gistId) {
@@ -124,20 +124,16 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
       return;
     }
 
-    const timeout = setTimeout(async () => {
-      try {
-        const octokit = new Octokit({ auth: githubToken.token });
-        const response = await octokit.request('GET /gists/{gist_id}', {
-          gist_id: gistId,
-        });
-        setGistUrl(response.data.html_url);
-      } catch (err) {
-        log.catch(err);
-        setGistUrl(undefined);
-      }
-    });
-
-    return () => clearTimeout(timeout);
+    try {
+      const octokit = new Octokit({ auth: githubToken.token });
+      const response = await octokit.request('GET /gists/{gist_id}', {
+        gist_id: gistId,
+      });
+      setGistUrl(response.data.html_url);
+    } catch (err) {
+      log.catch(err);
+      setGistUrl(undefined);
+    }
   }, [githubToken, gistKey]);
 
   const handleOpenTokenManager = useCallback(

@@ -9,7 +9,7 @@ import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -65,8 +65,8 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         } else {
           body.args = args.filter(isNonNullable);
         }
-        const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        const response = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
+        const id = getUserFunctionIdInMetadata(getMeta(fn));
+        const response = await fetch(`${this.context.remoteFunctionUrl}/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),

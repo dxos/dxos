@@ -3,9 +3,12 @@
 //
 
 import { type Completion } from '@codemirror/autocomplete';
+import { EditorView } from '@codemirror/view';
 import { type Schema } from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { debounce } from '@dxos/async';
+import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
@@ -18,7 +21,6 @@ import {
   GridCellEditor,
   type GridCellEditorProps,
   type GridScopedProps,
-  cellQuery,
   editorKeys,
   parseCellIndex,
   useGridContext,
@@ -29,38 +31,32 @@ import { type FieldProjection } from '@dxos/schema';
 import { type ModalController, type TableModel } from '../../model';
 
 import { CellValidationMessage } from './CellValidationMessage';
-import { completion } from './extension';
 import { FormCellEditor } from './FormCellEditor';
-
-const newValue = Symbol.for('newValue');
 
 /**
  * Option to create new object/value.
  */
-export const createOption = (text: string) => ({ [newValue]: true, text });
-
-const isCreateOption = (data: any) => typeof data === 'object' && data[newValue];
-
 export type QueryResult = Pick<Completion, 'label'> & { data: any };
 
 export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
-  onEnter?: (cell: DxGridPosition) => void;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onSave?: () => void;
-  onQuery?: (field: FieldProjection, text: string) => Promise<QueryResult[]>;
+  client?: Client;
 };
+
+const adaptValidationMessage = (message: string | null) =>
+  message ? (message.endsWith('is missing') ? 'Can’t be blank' : message) : null;
 
 export const TableValueEditor = ({
   model,
   modals,
   schema,
-  onEnter,
   onFocus,
   onSave,
-  onQuery,
+  client,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing } = useGridContext('TableValueEditor', __gridScope);
@@ -79,7 +75,8 @@ export const TableValueEditor = ({
 
   if (
     fieldProjection?.props.type === TypeEnum.Array ||
-    fieldProjection?.props.format === FormatEnum.SingleSelect
+    fieldProjection?.props.format === FormatEnum.SingleSelect ||
+    fieldProjection?.props.format === FormatEnum.Ref
     // TODO(thure): Support `FormatEnum.MultiSelect`
   ) {
     return (
@@ -89,22 +86,14 @@ export const TableValueEditor = ({
         schema={schema}
         __gridScope={__gridScope}
         onSave={onSave}
+        client={client}
+        modals={modals}
       />
     );
   }
 
   // For all other types, use the existing cell editor
-  return (
-    <TableCellEditor
-      model={model}
-      modals={modals}
-      onEnter={onEnter}
-      onFocus={onFocus}
-      onQuery={onQuery}
-      onSave={onSave}
-      __gridScope={__gridScope}
-    />
-  );
+  return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
 const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
@@ -112,9 +101,7 @@ const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-paddin
 export const TableCellEditor = ({
   model,
   modals,
-  onEnter,
   onFocus,
-  onQuery,
   onSave,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
@@ -136,38 +123,6 @@ export const TableCellEditor = ({
     return fieldProjection;
   }, [model, editing]);
 
-  useEffect(() => {
-    // Check for existing validation errors when editing starts (for draft rows).
-    if (!model || !editing || !fieldProjection) {
-      setValidationError(null);
-      return;
-    }
-
-    const cell = parseCellIndex(editing.index);
-    const { row, col } = cell;
-
-    if (model.isDraftCell(cell)) {
-      const field = model.projection.fields[col];
-      const hasValidationError = model.hasDraftRowValidationError(row, field.path);
-
-      if (hasValidationError) {
-        const draftRows = model.draftRows.value;
-        if (row >= 0 && row < draftRows.length) {
-          const draftRow = draftRows[row];
-          const validationError = draftRow.validationErrors?.find((error) => error.path === field.path);
-          if (validationError) {
-            setValidationError(validationError.message);
-            setValidationVariant('warning');
-          }
-        }
-      } else {
-        setValidationError(null);
-      }
-    } else {
-      setValidationError(null);
-    }
-  }, [model, editing, fieldProjection]);
-
   const handleEnter = useCallback(
     async (value: any) => {
       if (!model || !editing) {
@@ -180,28 +135,34 @@ export const TableCellEditor = ({
       if (validationResult.valid) {
         setValidationError(null);
         model.setCellData(cell, value);
-        onEnter?.(cell);
         onFocus?.();
         setEditing(null);
         onSave?.();
       } else {
-        setValidationError(validationResult.error);
+        setValidationError(adaptValidationMessage(validationResult.error));
         setValidationVariant('error');
       }
     },
-    [model, editing, onEnter, onFocus, setEditing],
+    [model, editing, onFocus, setEditing],
   );
 
   const handleBlur = useCallback<EditorBlurHandler>(
     async (value) => {
-      if (!model || !editing) {
-        return;
-      }
       if (suppressNextBlur.current) {
         suppressNextBlur.current = false;
+      } else if (model && editing) {
+        // Save silently if validation passes
+        const cell = parseCellIndex(editing.index);
+        if (value !== undefined) {
+          const result = await model.validateCellData(cell, value);
+          if (result.valid) {
+            setValidationError(null);
+            model.setCellData(cell, value);
+            setEditing(null);
+            onSave?.();
+          }
+        }
       }
-
-      // Don't save on blur - let handleClose handle validation and saving
     },
     [model, editing],
   );
@@ -219,11 +180,11 @@ export const TableCellEditor = ({
         const result = await model.validateCellData(cell, value);
 
         if (result.valid) {
+          suppressNextBlur.current = true;
           setValidationError(null);
           model.setCellData(cell, value);
           setEditing(null);
           onSave?.();
-          onEnter?.(cell);
           if (event && onFocus) {
             onFocus(determineNavigationAxis(event), determineNavigationDelta(event), cell);
           }
@@ -232,6 +193,7 @@ export const TableCellEditor = ({
           setValidationVariant('error');
         }
       } else {
+        suppressNextBlur.current = true;
         setValidationError(null);
         setEditing(null);
         onSave?.();
@@ -240,7 +202,7 @@ export const TableCellEditor = ({
         }
       }
     },
-    [model, editing, onFocus, onEnter, fieldProjection, setEditing, onSave],
+    [model, editing, onFocus, fieldProjection, setEditing, onSave],
   );
 
   const extension = useMemo(() => {
@@ -299,39 +261,26 @@ export const TableCellEditor = ({
       );
     }
 
-    if (onQuery) {
-      switch (fieldProjection.props.format) {
-        case FormatEnum.Ref: {
-          extension.push([
-            completion({
-              onQuery: (text) => onQuery(fieldProjection, text),
-              onMatch: (data) => {
-                if (model && editing && modals) {
-                  if (isCreateOption(data)) {
-                    const { field, props } = fieldProjection;
-                    if (props.referenceSchema) {
-                      suppressNextBlur.current = true;
-                      modals.openCreateRef(
-                        props.referenceSchema,
-                        document.querySelector(cellQuery(editing.index, gridId)),
-                        {
-                          [field.referencePath!]: data.text,
-                        },
-                        (data) => {
-                          void handleEnter(data);
-                        },
-                      );
-                    }
-                  } else {
-                    void handleEnter(data);
-                  }
-                }
-              },
-            }),
-          ]);
-          break;
-        }
-      }
+    // Add validation extension to handle content changes
+    if (model && editing) {
+      extension.push(
+        EditorView.updateListener.of(
+          debounce((update) => {
+            const content = update.state.doc.toString();
+            const cell = parseCellIndex(editing.index);
+
+            // Perform validation on content change
+            void model.validateCellData(cell, content).then((result) => {
+              if (result.valid) {
+                setValidationError(null);
+              } else {
+                setValidationError(result.error);
+                setValidationVariant('error');
+              }
+            });
+          }, 10),
+        ),
+      );
     }
 
     return extension;

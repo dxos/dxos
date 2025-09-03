@@ -3,14 +3,13 @@
 
 import { Layer, pipe } from 'effect';
 
-import { ClientService, ConfigService } from '../services';
+import { ClientService, CommandConfig, ConfigService } from '../services';
 
-import { TestLogger } from './test-logger';
+import { TestConsole } from './test-console';
 
-export const testLayer = (testLogger: TestLogger) =>
-  // prettier-ignore
-  pipe(
-    ClientService.layer,
-    Layer.provide(ConfigService.layerMemory),
-    Layer.provide(TestLogger.layer(testLogger)),
-  );
+export const TestLayer = pipe(
+  ClientService.layer,
+  Layer.provideMerge(ConfigService.layerMemory),
+  Layer.provideMerge(TestConsole.layer),
+  Layer.provideMerge(CommandConfig.layerTest),
+);

@@ -20,7 +20,6 @@ import { CanvasType, DiagramType, TLDRAW_SCHEMA } from '../../types';
 import { Sketch } from './Sketch';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
-  // TODO(burdon): Remove dependency on echo-db.
   return Obj.make(DiagramType, {
     canvas: Ref.make(Obj.make(CanvasType, { schema: TLDRAW_SCHEMA, content })),
   });
@@ -65,15 +64,15 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof Sketch> = {
+const meta = {
   title: 'plugins/plugin-sketch/Sketch',
-  component: Sketch,
+  component: Sketch as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

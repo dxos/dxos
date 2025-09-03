@@ -26,34 +26,20 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
     <div className={mx('flex items-center mie-1', classNames)}>
       {children}
 
-      {(processing && (
-        <IconButton
-          disabled={!processing}
-          classNames='px-1.5'
-          variant='ghost'
-          size={5}
-          icon='ph--x--regular'
-          iconOnly
-          label={t('button cancel processing')}
-          onClick={() => onEvent?.({ type: 'cancel' })}
-        />
-      )) || (
-        <IconButton
-          disabled
-          classNames='px-1.5'
-          variant='ghost'
-          size={5}
-          icon='ph--arrow-down--regular'
-          iconOnly
-          label={t('button scroll down')}
-          onClick={() => onEvent?.({ type: 'scroll-to-bottom' })}
-        />
-      )}
+      <IconButton
+        disabled={!processing}
+        variant='ghost'
+        size={5}
+        icon='ph--x--regular'
+        iconOnly
+        label={t('button cancel processing')}
+        onClick={() => onEvent?.({ type: 'cancel' })}
+      />
 
       {microphone && (
         <IconButton
           disabled={!processing}
-          classNames={mx('px-1.5', recording && 'bg-primary-500')}
+          classNames={mx(recording && 'bg-primary-500')}
           variant='ghost'
           size={5}
           icon='ph--microphone--regular'

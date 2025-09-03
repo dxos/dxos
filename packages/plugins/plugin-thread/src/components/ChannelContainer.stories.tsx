@@ -31,7 +31,7 @@ const Story = ({ roomId }: ChannelContainerProps) => {
   return <ChannelContainer channel={channel} roomId={roomId} />;
 };
 
-const meta: Meta<ChannelContainerProps> = {
+const meta = {
   title: 'plugins/plugin-thread/ChannelContainer',
   component: ChannelContainer,
   render: (args) => <Story {...args} />,
@@ -45,11 +45,11 @@ const meta: Meta<ChannelContainerProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ChannelContainer>;
 
 export default meta;
 
-type Story = StoryObj<ChannelContainerProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

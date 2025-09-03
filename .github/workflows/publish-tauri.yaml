@@ -223,9 +223,7 @@ jobs:
   build_tauri_ios:
     needs: draft_tauri
 
-    # TODO(wittjosiah): Switch to depot-macos-latest.
-    #   Currently `depot-macos-latest` did not support Xcode 16.1 below which was needed for this to work.
-    runs-on: macos-latest
+    runs-on: depot-macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -271,7 +269,7 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
       - name: Build Tauri app for iOS
-        run: moon run composer-app:tauri-ios-build
+        run: moon run composer-app:tauri-ios-build -- --export-method=app-store-connect
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}

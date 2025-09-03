@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { FunctionType, type ScriptType, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, type ScriptType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { Query, Ref, type Space, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -29,12 +29,12 @@ export type CreateDeployOptions = {
   script: ScriptType;
   fn: FunctionType;
   space?: Space;
-  existingFunctionUrl?: string;
+  existingFunctionId?: string;
   client: Client;
   t: TFunction;
 };
 
-export const createDeploy = ({ state, script, space, fn, client, existingFunctionUrl, t }: CreateDeployOptions) => {
+export const createDeploy = ({ state, script, space, fn, client, existingFunctionId, t }: CreateDeployOptions) => {
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
     label: state.error ?? ['no error label', { ns: SCRIPT_PLUGIN }],
@@ -53,7 +53,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
       state.error = undefined;
       state.deploying = true;
 
-      const result = await deployScript({ script, client, space, fn, existingFunctionUrl });
+      const result = await deployScript({ script, client, space, fn, existingFunctionId });
 
       if (!result.success) {
         log.catch(result.error);
@@ -98,9 +98,9 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 };
 
 export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
-  const { space, client, fn, existingFunctionUrl } = useDeployDeps({ script });
+  const { space, client, fn, existingFunctionId } = useDeployDeps({ script });
   useEffect(() => {
-    if (!existingFunctionUrl) {
+    if (!existingFunctionId) {
       return;
     }
 
@@ -109,17 +109,17 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
       fn,
       edgeUrl: client.config.values.runtime?.services?.edge?.url ?? '',
     });
-  }, [existingFunctionUrl, space, fn, script, client.config.values.runtime?.services?.edge?.url]);
+  }, [existingFunctionId, space, fn, script, client.config.values.runtime?.services?.edge?.url]);
 
   useEffect(() => {
     state.deployed = isScriptDeployed({ script, fn });
-  }, [script.changed, existingFunctionUrl, fn, script]);
+  }, [script.changed, existingFunctionId, fn, script]);
 };
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
   const space = getSpace(script);
   const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
   const client = useClient();
-  const existingFunctionUrl = useMemo(() => fn && getUserFunctionUrlInMetadata(getMeta(fn)), [fn]);
-  return { space, fn, client, existingFunctionUrl };
+  const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
+  return { space, fn, client, existingFunctionId };
 };

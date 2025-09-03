@@ -6,10 +6,11 @@ import { Capabilities, type PluginContext, contributes, createResolver } from '@
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
+import { Kanban } from '@dxos/react-ui-kanban/types';
 import { ProjectionModel } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
-import { KanbanAction, createKanban } from '../types';
+import { KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -17,12 +18,12 @@ export default (context: PluginContext) =>
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await createKanban({
+        const { view } = await Kanban.makeView({
           client,
           space,
           name,
           typename,
-          initialPivotColumn,
+          pivotFieldName: initialPivotColumn,
         });
         return { data: { object: view } };
       },

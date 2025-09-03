@@ -8,7 +8,7 @@ import { type Ref, createRef, ref } from 'lit/directives/ref.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
-import { defaultColSize, defaultRowSize } from './defs';
+import { defaultColSize, defaultRowSize, focusUnfurlDefault } from './defs';
 import './dx-grid-axis-resize-handle';
 import {
   DxAxisResize,
@@ -83,12 +83,12 @@ export class DxGrid extends LitElement {
   gridId: string = 'default-grid-id';
 
   @property({ type: Object })
-  rowDefault: DxGridPlaneRecord<DxGridFrozenRowsPlane, DxGridAxisMetaProps> = {
+  rowDefault: Partial<DxGridPlaneRecord<DxGridFrozenRowsPlane, Partial<DxGridAxisMetaProps>>> = {
     grid: { size: defaultRowSize },
   };
 
   @property({ type: Object })
-  columnDefault: DxGridPlaneRecord<DxGridFrozenColsPlane, DxGridAxisMetaProps> = {
+  columnDefault: Partial<DxGridPlaneRecord<DxGridFrozenColsPlane, Partial<DxGridAxisMetaProps>>> = {
     grid: { size: defaultColSize },
   };
 
@@ -1074,16 +1074,40 @@ export class DxGrid extends LitElement {
       : !!(this.rows[plane]?.[index]?.resizeable ?? this.rowDefault[plane as DxGridFrozenRowsPlane]?.resizeable);
   }
 
+  private clampAxisSize(
+    plane: 'grid' | DxGridFrozenPlane,
+    axis: DxGridAxis,
+    index: number | string,
+    requestedSize: number,
+  ): number {
+    const minSize =
+      axis === 'col'
+        ? (this.columns[plane]?.[index]?.minSize ??
+          this.columnDefault[plane as DxGridFrozenColsPlane]?.minSize ??
+          sizeColMin)
+        : (this.rows[plane]?.[index]?.minSize ??
+          this.rowDefault[plane as DxGridFrozenRowsPlane]?.minSize ??
+          sizeRowMin);
+    const maxSize =
+      axis === 'col'
+        ? (this.columns[plane]?.[index]?.maxSize ??
+          this.columnDefault[plane as DxGridFrozenColsPlane]?.maxSize ??
+          sizeColMax)
+        : (this.rows[plane]?.[index]?.maxSize ??
+          this.rowDefault[plane as DxGridFrozenRowsPlane]?.maxSize ??
+          sizeRowMax);
+    return Math.max(minSize, Math.min(maxSize, requestedSize));
+  }
+
   private handleAxisResizeInternal(event: DxAxisResizeInternal): void {
     event.stopPropagation();
     const { plane, axis, delta, size, index, state } = event;
+    const nextSize = this.clampAxisSize(plane, axis, index, size + delta);
     if (axis === 'col') {
-      const nextSize = Math.max(sizeColMin, Math.min(sizeColMax, size + delta));
       this.colSizes = { ...this.colSizes, [plane]: { ...this.colSizes[plane], [index]: nextSize } };
       this.updateVisInline();
       this.updateIntrinsicInlineSize();
     } else {
-      const nextSize = Math.max(sizeRowMin, Math.min(sizeRowMax, size + delta));
       this.rowSizes = { ...this.colSizes, [plane]: { ...this.rowSizes[plane], [index]: nextSize } };
       this.updateVisBlock();
       this.updateIntrinsicBlockSize();
@@ -1261,6 +1285,23 @@ export class DxGrid extends LitElement {
     return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
   }
 
+  private cellFocusUnfurl(col: number, row: number, plane: DxGridPlane): boolean {
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+
+    // Check cell-specific setting first.
+    const cellUnfurl = this.cell(col, row, plane)?.focusUnfurl;
+    if (cellUnfurl !== undefined) {
+      return cellUnfurl;
+    }
+
+    // Check column/row defaults.
+    const colUnfurl = this.columns?.[colPlane]?.[col]?.focusUnfurl ?? this.columnDefault?.[colPlane]?.focusUnfurl;
+    const rowUnfurl = this.rows?.[rowPlane]?.[row]?.focusUnfurl ?? this.rowDefault?.[rowPlane]?.focusUnfurl;
+
+    return colUnfurl ?? rowUnfurl ?? focusUnfurlDefault;
+  }
+
   /**
    * Determines if the cell's text content should be selectable based on its readonly value.
    * @returns true if the cells text content is selectable, false otherwise.
@@ -1323,6 +1364,7 @@ export class DxGrid extends LitElement {
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const readonly = this.cellReadonly(col, row, plane);
+    const focusUnfurl = this.cellFocusUnfurl(col, row, plane);
     const textSelectable = this.cellTextSelectable(col, row, plane);
     const resizeIndex = cell?.resizeHandle ? (cell.resizeHandle === 'col' ? col : row) : undefined;
     const resizePlane = cell?.resizeHandle ? resolveFrozenPlane(cell.resizeHandle, plane) : undefined;
@@ -1334,6 +1376,7 @@ export class DxGrid extends LitElement {
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
+      data-focus-unfurl=${focusUnfurl ? nothing : 'false'}
       ?data-dx-active=${active}
       data-text-selectable=${textSelectable ? 'true' : 'false'}
       data-dx-grid-action="cell"
@@ -1443,7 +1486,7 @@ export class DxGrid extends LitElement {
   private updateIntrinsicInlineSize(): void {
     this.intrinsicInlineSize = Number.isFinite(this.limitColumns)
       ? [...Array(this.limitColumns)].reduce((acc, _, c0) => acc + this.colSize(c0, 'grid'), 0) +
-        gap * (this.limitColumns - 1)
+        gap * Math.max(0, this.limitColumns - 1)
       : Infinity;
     this.totalIntrinsicInlineSize =
       this.intrinsicInlineSize +
@@ -1461,7 +1504,7 @@ export class DxGrid extends LitElement {
   private updateIntrinsicBlockSize(): void {
     this.intrinsicBlockSize = Number.isFinite(this.limitRows)
       ? [...Array(this.limitRows)].reduce((acc, _, r0) => acc + this.rowSize(r0, 'grid'), 0) +
-        gap * (this.limitRows - 1)
+        gap * Math.max(0, this.limitRows - 1)
       : Infinity;
     this.totalIntrinsicBlockSize =
       this.intrinsicBlockSize +

@@ -28,7 +28,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry, settings });
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -57,8 +57,8 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
         <NativeChatDialog.Content>
           <Chat.Thread />
         </NativeChatDialog.Content>
-        <NativeChatDialog.Footer>
-          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onChangeOnline={setOnline} expandable />
+        <NativeChatDialog.Footer classNames='p-1.5'>
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
         </NativeChatDialog.Footer>
       </NativeChatDialog.Root>
     </Chat.Root>

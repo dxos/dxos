@@ -45,3 +45,5 @@ Include the following steps:
 - Suggested actions should be very concise and start with a verb and be phrased as a command to an agent -- not a question to the user.
 - Suggested actions must be in the form of a user instruction that you can follow.
 - Suggested actions could include actions that create artifacts.
+
+- After creating an artifact use a tool to add it to the chat context.

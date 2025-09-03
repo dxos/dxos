@@ -19,8 +19,11 @@ import {
   type EdgeHttpResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
+  type ExportBundleRequest,
+  type ExportBundleResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
+  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
@@ -43,6 +46,7 @@ import { getEdgeUrlWithProtocol } from './utils';
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
+const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
   /**
@@ -64,6 +68,15 @@ type EdgeHttpRequestArgs = {
   context?: Context;
   retry?: RetryConfig;
   body?: any;
+  /**
+   * @default true
+   */
+  json?: boolean;
+
+  /**
+   * Do not expect a standard EDGE JSON response with a `success` field.
+   */
+  rawResponse?: boolean;
 };
 
 export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
@@ -164,10 +177,6 @@ export class EdgeHttpClient {
   // OAuth and credentials
   //
 
-  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
-    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
-  }
-
   public async initiateOAuthFlow(
     body: InitiateOAuthFlowRequest,
     args?: EdgeHttpGetArgs,
@@ -254,6 +263,43 @@ export class EdgeHttpClient {
     return this._call(new URL(path, this.baseUrl), { ...args, body, method: 'PUT' });
   }
 
+  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
+    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async invokeFunction(
+    params: {
+      functionId: string;
+      version?: string;
+      spaceId?: SpaceId;
+      cpuTimeLimit?: number;
+      subrequestsLimit?: number;
+    },
+    input: unknown,
+    args?: EdgeHttpGetArgs,
+  ): Promise<any> {
+    const url = new URL(`/functions/${params.functionId}`, this.baseUrl);
+    if (params.version) {
+      url.searchParams.set('version', params.version);
+    }
+    if (params.spaceId) {
+      url.searchParams.set('spaceId', params.spaceId.toString());
+    }
+    if (params.cpuTimeLimit) {
+      url.searchParams.set('cpuTimeLimit', params.cpuTimeLimit.toString());
+    }
+    if (params.subrequestsLimit) {
+      url.searchParams.set('subrequestsLimit', params.subrequestsLimit.toString());
+    }
+
+    return this._call(url, {
+      ...args,
+      body: input,
+      method: 'POST',
+      rawResponse: true,
+    });
+  }
+
   //
   // Workflows
   //
@@ -267,6 +313,30 @@ export class EdgeHttpClient {
     return this._call(new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
       ...args,
       body: input,
+      method: 'POST',
+    });
+  }
+
+  //
+  // Import/Export space.
+  //
+
+  public async importBundle(
+    spaceId: SpaceId, //
+    body: ImportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async exportBundle(
+    spaceId: SpaceId,
+    body: ExportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExportBundleResponse> {
+    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+      ...args,
+      body,
       method: 'POST',
     });
   }
@@ -295,7 +365,7 @@ export class EdgeHttpClient {
 
     let handledAuth = false;
     while (true) {
-      let processingError: EdgeCallFailedError;
+      let processingError: EdgeCallFailedError | undefined = undefined;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
         const request = createRequest(args, this._authHeader);
@@ -303,6 +373,11 @@ export class EdgeHttpClient {
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
         if (response.ok) {
           const body = (await response.json()) as EdgeHttpResponse<T>;
+
+          if (args.rawResponse) {
+            return body as any;
+          }
+
           if (body.success) {
             return body.data;
           }
@@ -310,7 +385,7 @@ export class EdgeHttpClient {
           log.warn('unsuccessful edge response', { url, body });
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else {
+          } else if (body.errorData) {
             processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
@@ -318,16 +393,16 @@ export class EdgeHttpClient {
           handledAuth = true;
           continue;
         } else {
-          processingError = EdgeCallFailedError.fromHttpFailure(response);
+          processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
         log('retrying edge request', { url, processingError });
       } else {
-        throw processingError;
+        throw processingError!;
       }
     }
   }
@@ -335,7 +410,7 @@ export class EdgeHttpClient {
   private async _handleUnauthorized(response: Response): Promise<string> {
     if (!this._edgeIdentity) {
       log.warn('unauthorized response received before identity was set');
-      throw EdgeCallFailedError.fromHttpFailure(response);
+      throw await EdgeCallFailedError.fromHttpFailure(response);
     }
 
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
@@ -343,11 +418,30 @@ export class EdgeHttpClient {
   }
 }
 
-const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+const createRequest = (
+  { method, body, json = true }: EdgeHttpRequestArgs,
+  authHeader: string | undefined,
+): RequestInit => {
+  let requestBody: BodyInit | undefined;
+  const headers: HeadersInit = {};
+  if (!json) {
+    throw new Error('Not implemented');
+  } else {
+    requestBody = body && JSON.stringify(body);
+    headers['Content-Type'] = 'application/json';
+  }
+  if (typeof requestBody === 'string' && requestBody.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: requestBody.length });
+  }
+
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
+  }
+
   return {
     method,
-    body: body && JSON.stringify(body),
-    headers: authHeader ? { Authorization: authHeader } : undefined,
+    body: requestBody,
+    headers,
   };
 };
 

@@ -3,3 +3,4 @@
 //
 
 export * from './space';
+export * from './timeout';

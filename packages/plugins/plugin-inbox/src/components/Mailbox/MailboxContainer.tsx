@@ -14,15 +14,15 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
 
 import { InboxCapabilities } from '../../capabilities/capabilities';
-import { InboxAction, type MailboxType } from '../../types';
+import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
-import { Mailbox, type MailboxActionHandler } from './Mailbox';
+import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { useMailboxModel } from './model';
 import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef } from './toolbar';
 
 export type MailboxContainerProps = {
-  mailbox: MailboxType;
+  mailbox: Mailbox.Mailbox;
 };
 
 export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
@@ -133,10 +133,9 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
       )}
 
       {model.messages && model.messages.length > 0 ? (
-        <Mailbox
+        <MailboxComponent
           messages={model.messages}
           id={id}
-          name={mailbox.name}
           onAction={handleAction}
           currentMessageId={currentMessageId}
         />

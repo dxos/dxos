@@ -10,11 +10,13 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   AiSession,
+  type ContextBinding,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
@@ -27,16 +29,13 @@ import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
-  it.effect.only(
+describe('Planning Blueprint', { timeout: 120_000 }, () => {
+  it.effect(
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
         const session = new AiSession();
@@ -57,11 +56,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           ),
         );
 
-        db.add(blueprint);
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
+        yield* DatabaseService.add(blueprint);
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(blueprint)],
+          }),
+        );
 
-        const artifact = db.add(Markdown.makeDocument());
-
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument());
         let prevContent = artifact.content;
         const matchList =
           ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>
@@ -113,7 +115,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           },
         ];
 
-        const run = runSteps({ conversation, steps });
+        const run = runSteps(conversation, steps);
         yield* Effect.all([run, messageQueue, blockQueue]);
       },
       Effect.provide(
@@ -128,6 +130,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           Layer.provideMerge(TracingService.layerNoop),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });

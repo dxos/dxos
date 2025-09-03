@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -36,12 +37,16 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Message',
-  component: MessageRoot,
+  component: MessageRoot as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

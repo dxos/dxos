@@ -8,7 +8,7 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { type CalendarType } from '../../types';
+import { type Calendar } from '../../types';
 
 import { EventList } from './EventtList';
 
@@ -18,7 +18,7 @@ const byDate =
     a < b ? -direction : a > b ? direction : 0;
 
 export type EventsContainerProps = {
-  calendar: CalendarType;
+  calendar: Calendar.Calendar;
 };
 
 export const EventsContainer = ({ calendar }: EventsContainerProps) => {

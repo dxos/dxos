@@ -6,12 +6,14 @@ import { lazy } from 'react';
 
 export * from './AssistantSettings';
 export * from './Chat';
+export * from './ChatProgress';
 export * from './PromptSettings';
 export * from './TemplateEditor';
-export * from './Timeline';
+export * from './Toolbar';
 export * from './Toolbox';
 
 export const BlueprintContainer = lazy(() => import('./BlueprintContainer'));
+export const ChatCompanion = lazy(() => import('./ChatCompanion'));
 export const ChatContainer = lazy(() => import('./ChatContainer'));
 export const ChatDialog = lazy(() => import('./ChatDialog'));
 export const SequenceContainer = lazy(() => import('./SequenceContainer'));

@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Heads } from '@automerge/automerge';
+import { type DocumentId } from '@automerge/automerge-repo';
+
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
@@ -38,7 +41,7 @@ export interface EchoReplicatorContext {
 
 export interface ReplicatorConnection {
   /**
-   * Remove peer id.
+   * Remote peer id.
    */
   get peerId(): string;
 
@@ -62,6 +65,23 @@ export interface ReplicatorConnection {
    * @returns true if the collection should be synced to this peer.
    */
   shouldSyncCollection(params: ShouldSyncCollectionParams): boolean;
+
+  /**
+   * Batch syncing considered enabled if ReplicatorConnection implements `pushBatch` and `pullBatch` methods.
+   * @returns true if the batch syncing is enabled.
+   */
+  get bundleSyncEnabled(): boolean;
+
+  /**
+   * Pushes the batch of documents to the remote peer.
+   */
+  pushBundle?(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
+
+  /**
+   * Pulls the batch of documents from the remote peer.
+   */
+  // TODO(mykola): Use automerge-repo-bundles Bundle type here.
+  pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseParams = {

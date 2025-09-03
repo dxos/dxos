@@ -9,36 +9,50 @@ import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { AiContextBinder } from '@dxos/assistant';
 import { RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import { InboxPlugin } from '@dxos/plugin-inbox';
+import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
+import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { Markdown } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
+import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
-import { trim } from '@dxos/util';
+import { isNonNullable, trim } from '@dxos/util';
 
+import { BLUEPRINT_KEY } from '../capabilities';
+import { createTestMailbox, createTestTranscription } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
   ChatContainer,
+  CommentsContainer,
   type ComponentProps,
   GraphContainer,
   LoggingContainer,
+  MessageContainer,
   SurfaceContainer,
   TasksContainer,
 } from './components';
 import { addTestData, config, getDecorators, testTypes } from './testing';
+
+const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
 
 const DefaultStory = ({
   debug = true,
@@ -63,18 +77,18 @@ const DefaultStory = ({
       return;
     }
 
-    // TODO(burdon): Active should be ephemeral state of AiProcessor; write on edit/prompt.
-
-    // TODO(burdon): RACE CONDITION; must handle concurrently adding multiple blueprints instances with same key.
     // Add blueprints to context.
-    // const binder = new AiContextBinder(await chat.queue.load());
-    // for (const key of blueprints) {
-    //   const blueprint = blueprintsDefinitions.find((blueprint) => blueprint.key === key);
-    //   if (blueprint) {
-    //     const obj = space.db.add(Obj.clone(blueprint));
-    //     await binder.bind({ blueprints: [Ref.make(obj)] });
-    //   }
-    // }
+    const binder = new AiContextBinder(await chat.queue.load());
+    const registry = new Blueprint.Registry(blueprintsDefinitions);
+    const blueprintObjects = blueprints
+      .map((key) => {
+        const blueprint = registry.getByKey(key);
+        if (blueprint) {
+          return space.db.add(Obj.clone(blueprint));
+        }
+      })
+      .filter(isNonNullable);
+    await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
@@ -106,13 +120,13 @@ const DefaultStory = ({
             style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
           >
             {Component.map((Component, index) => (
-              <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+              <div key={index} className={panelClassNames}>
                 <Component space={space} debug={debug} onEvent={handleEvent} />
               </div>
             ))}
           </div>
         ) : (
-          <div key={index} className='flex flex-col overflow-hidden bg-baseSurface rounded border border-separator'>
+          <div key={index} className={panelClassNames}>
             <Component space={space} debug={debug} onEvent={handleEvent} />
           </div>
         ),
@@ -121,14 +135,14 @@ const DefaultStory = ({
   );
 };
 
-const storybook = {
+const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
   parameters: {
     translations,
     controls: { disable: true },
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default storybook;
 
@@ -138,38 +152,78 @@ type Story = StoryObj<typeof storybook>;
 // Stories
 //
 
-export const Default = {
-  decorators: getDecorators({
-    config: config.remote,
-  }),
-  args: {
-    components: [ChatContainer],
-  },
-} satisfies Story;
+const MARKDOWN_DOCUMENT = trim`
+  # Hello, world!
 
-export const WithDocument = {
+  This is a test document that contains Markdown content. Markdown is a lightweight markup language for writing formatted text in plain text form. Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+
+  Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
+const STYLE_GUIDE = trim`
+  # Style Guide
+  - Use short, simple sentences.
+  - Organize content with headings and bullet points.
+  - Avoid jargon and explain technical terms.
+  - Use active voice whenever possible.
+  - Highlight key points in bold.
+  - Keep paragraphs brief and focused on one idea.
+  - Proofread for clarity and correctness.
+`;
+
+const addSpellingMistakes = (text: string, n: number): string => {
+  const words = text.split(' ');
+  for (let i = 0; i < n; i++) {
+    const idx = Math.floor(Math.random() * words.length);
+    const word = words[idx];
+    const charIdx = Math.floor(Math.random() * word.length);
+    const typoChar = String.fromCharCode(word.charCodeAt(charIdx) + 1);
+    words[idx] = word.slice(0, charIdx) + typoChar + word.slice(charIdx + 1);
+  }
+
+  return words.join(' ');
+};
+
+export const Default: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin()],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(
-        Markdown.makeDocument({
-          name: 'Document',
-          content: trim`
-            # Hello, world!
-            This is a test.
-          `,
-        }),
-      );
-      await binder.bind({ objects: [Ref.make(object)] });
-    },
   }),
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
-export const WithBlueprints = {
+// Test with prompt: Propose changes to my document based on the style guide.
+export const WithDocument: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin(), ThreadPlugin()],
+    config: config.remote,
+    onInit: async ({ space, binder }) => {
+      const doc = space.db.add(
+        Markdown.makeDocument({
+          name: 'My Document',
+          content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
+        }),
+      );
+      const styleGuide = space.db.add(
+        Markdown.makeDocument({
+          name: 'Style Guide',
+          content: STYLE_GUIDE,
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(doc), Ref.make(styleGuide)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
+  },
+};
+
+export const WithBlueprints: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
@@ -181,9 +235,9 @@ export const WithBlueprints = {
   args: {
     components: [ChatContainer, [TasksContainer, BlueprintContainer]],
   },
-} satisfies Story;
+};
 
-export const WithChess = {
+export const WithChess: Story = {
   decorators: getDecorators({
     plugins: [ChessPlugin()],
     config: config.remote,
@@ -193,34 +247,80 @@ export const WithChess = {
       const object = space.db.add(
         Chess.makeGame({
           name: 'Challenge',
-          pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
         }),
       );
       await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
-    blueprints: ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/chess'],
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
-} satisfies Story;
+};
 
-export const WithMap = {
+// Test with prompt: Summarize my mailbox and write the summary in a new document.
+export const WithMail: Story = {
   decorators: getDecorators({
-    plugins: [MapPlugin()],
+    plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
-    types: [Map.Map],
+    types: [Mailbox.Mailbox],
     onInit: async ({ space, binder }) => {
-      const object = space.db.add(Map.makeMap());
-      await binder.bind({ objects: [Ref.make(object)] });
+      const queue = space.queues.create();
+      const messages = createTestMailbox();
+      await queue.append(messages);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      await binder.bind({ objects: [Ref.make(mailbox)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, MessageContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+  },
+};
+
+// Test with prompt: Create 10 locations.
+export const WithMap: Story = {
+  decorators: getDecorators({
+    plugins: [MapPlugin(), TablePlugin()],
+    config: config.remote,
+    types: [DataType.View, Map.Map, Table.Table],
+    onInit: async ({ space, binder }) => {
+      const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
+      const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
+      const { view: mapView } = await Map.makeView({
+        name: 'Map',
+        space,
+        typename: schema.typename,
+        pivotFieldName: 'location',
+      });
+      space.db.add(tableView);
+      space.db.add(mapView);
+      await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });
     },
   }),
   args: {
     components: [ChatContainer, SurfaceContainer],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
-} satisfies Story;
+};
 
-export const WithTrip = {
+export const WithTrip: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
@@ -228,7 +328,7 @@ export const WithTrip = {
     onInit: async ({ space, binder }) => {
       // TODO(burdon): Table.
       {
-        const object = space.db.add(Map.makeMap({ name: 'Trip' }));
+        const object = space.db.add(Map.make({ name: 'Trip' }));
         await binder.bind({ objects: [Ref.make(object)] });
       }
       {
@@ -272,9 +372,9 @@ export const WithTrip = {
   args: {
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
-export const WithBoard = {
+export const WithBoard: Story = {
   decorators: getDecorators({
     plugins: [BoardPlugin()],
     config: config.remote,
@@ -288,9 +388,9 @@ export const WithBoard = {
     debug: true,
     components: [ChatContainer, SurfaceContainer],
   },
-} satisfies Story;
+};
 
-export const WithResearch = {
+export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     config: config.persistent,
@@ -298,12 +398,12 @@ export const WithResearch = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [/*GraphContainer, BlueprintContainer,*/ LoggingContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
-} satisfies Story;
+};
 
-export const WithSearch = {
+export const WithSearch: Story = {
   decorators: getDecorators({
     config: config.remote,
     types: testTypes,
@@ -312,6 +412,25 @@ export const WithSearch = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    components: [ChatContainer, [GraphContainer, LoggingContainer]],
   },
-} satisfies Story;
+};
+
+export const WithTranscription: Story = {
+  decorators: getDecorators({
+    plugins: [TranscriptionPlugin()],
+    config: config.remote,
+    types: [Transcript.Transcript],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const messages = createTestTranscription();
+      await queue.append(messages);
+      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
+      await binder.bind({ objects: [Ref.make(transcript)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+  },
+};

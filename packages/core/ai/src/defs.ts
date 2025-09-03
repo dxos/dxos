@@ -48,11 +48,11 @@ export const DEFAULT_OLLAMA_MODEL = 'llama3.2:1b';
  */
 export const DEFAULT_LMSTUDIO_MODELS = [
   //
-  '@google/gemma-3-12b',
+  '@google/gemma-3-27b',
   '@mlx-community/llama-3.2-3b-instruct',
 ] as const;
 
-export const DEFAULT_LMSTUDIO_MODEL = '@google/gemma-3-12b';
+export const DEFAULT_LMSTUDIO_MODEL = '@google/gemma-3-27b';
 
 export const DEFAULT_OPENAI_MODELS = [
   '@openai/gpt-4o',

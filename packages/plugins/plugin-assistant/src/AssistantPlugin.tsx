@@ -13,6 +13,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import {
   AiService,
   AppGraphBuilder,
+  AssistantState,
   BlueprintDefinition,
   EdgeModelResolver,
   IntentResolver,
@@ -36,6 +37,14 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
       activate: Settings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/state`,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
+      activate: AssistantState,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,

@@ -52,7 +52,7 @@ describe.skip('lmstudio', () => {
       },
       Effect.provide(
         Layer.provide(
-          OpenAiLanguageModel.model('google/gemma-3-12b' as any),
+          OpenAiLanguageModel.model('google/gemma-3-27b' as any),
           OpenAiClient.layer({
             apiUrl: LMSTUDIO_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),

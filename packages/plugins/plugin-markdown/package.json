@@ -44,7 +44,9 @@
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
@@ -66,6 +68,7 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/ai": "0.25.2",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.9.0",
     "react-dropzone": "^14.2.3"

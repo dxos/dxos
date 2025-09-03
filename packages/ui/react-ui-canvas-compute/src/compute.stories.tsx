@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -156,6 +156,7 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -175,9 +176,9 @@ const DefaultStory = ({
   );
 };
 
-const meta: Meta<RenderProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-compute/compute',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
     withTheme,
@@ -186,11 +187,11 @@ const meta: Meta<RenderProps> = {
     withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

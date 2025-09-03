@@ -4,36 +4,39 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Icon, Tooltip, useTimeout } from '@dxos/react-ui';
-import { Spinner } from '@dxos/react-ui-sfx';
-import { errorText } from '@dxos/react-ui-theme';
+import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
+import { Spinner, type SpinnerProps } from '@dxos/react-ui-sfx';
+import { mx } from '@dxos/react-ui-theme';
 
-export type ChatStatusIndicatorProps = {
-  preset?: string;
-  error?: Error;
-  processing?: boolean;
-};
+const period = 3_000;
 
-export const ChatStatusIndicator = ({ preset, error, processing }: ChatStatusIndicatorProps) => {
+export type ChatStatusIndicatorProps = ThemedClassName<
+  {
+    preset?: string;
+    processing?: boolean;
+    error?: Error;
+  } & Pick<SpinnerProps, 'size' | 'onClick'>
+>;
+
+export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...props }: ChatStatusIndicatorProps) => {
   const [init, setInit] = useState(false);
-  useEffect(() => {
-    setInit(false);
-  }, [preset]);
+  useEffect(() => setInit(false), [preset]);
   useTimeout(
     async () => {
       setInit(true);
     },
-    1_500,
+    period / 2,
     [preset],
   );
 
-  if (error) {
-    return (
-      <Tooltip.Trigger content={error.message} delayDuration={0}>
-        <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />
-      </Tooltip.Trigger>
-    );
-  }
-
-  return <Spinner state={!init ? 'flash' : processing ? 'spin' : 'pulse'} />;
+  return (
+    <div role='none' className={mx('relative flex', classNames)}>
+      <Spinner duration={period} state={!init ? 'flash' : error ? 'error' : processing ? 'spin' : 'pulse'} {...props} />
+      {error && (
+        <Tooltip.Trigger asChild content={error.message}>
+          <div className='absolute inset-0' />
+        </Tooltip.Trigger>
+      )}
+    </div>
+  );
 };

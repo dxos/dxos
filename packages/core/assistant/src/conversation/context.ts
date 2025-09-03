@@ -3,11 +3,11 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Schema } from 'effect';
+import { Context, Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
@@ -84,14 +84,20 @@ export class AiContextBinder {
       return;
     }
 
+    const blueprints =
+      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
+      [];
+    const objects =
+      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
-          added: props.blueprints ?? [],
+          added: blueprints,
           removed: [],
         },
         objects: {
-          added: props.objects ?? [],
+          added: objects,
           removed: [],
         },
       }),
@@ -122,12 +128,25 @@ export class AiContextBinder {
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),
       Array.reduce(new Bindings(), (context, item) => {
-        item.blueprints.removed.forEach((item) => context.blueprints.delete(item));
-        item.blueprints.added.forEach((item) => context.blueprints.add(item));
-        item.objects.removed.forEach((item) => context.objects.delete(item));
-        item.objects.added.forEach((item) => context.objects.add(item));
+        item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+        item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
+        item.objects.removed.forEach((ref) => {
+          for (const obj of context.objects) {
+            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+              context.objects.delete(obj);
+            }
+          }
+        });
+        item.objects.added.forEach((ref) => context.objects.add(ref));
         return context;
       }),
     );
   }
 }
+
+export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
+  AiContextService,
+  {
+    binder: AiContextBinder;
+  }
+>() {}

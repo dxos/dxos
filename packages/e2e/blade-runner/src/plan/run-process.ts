@@ -1,7 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 
-import { fork } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
@@ -30,29 +30,24 @@ export type RunParams = {
 };
 
 export const runNode = (params: RunParams): ProcessHandle => {
-  const execArgv = process.execArgv;
+  const execArgv = [...process.execArgv];
 
   if (params.options.profile) {
     execArgv.push(
-      '--cpu-prof', //
+      '--cpu-prof',
       '--cpu-prof-dir',
       params.replicantParams.outDir,
       '--cpu-prof-name',
-      'agent.cpuprofile',
+      `replicant-${params.replicantParams.replicantId}.cpuprofile`,
     );
   }
+  if (params.options.debug) {
+    execArgv.push('--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId));
+  }
 
-  const childProcess = fork(process.argv[1], {
-    execArgv: params.options.debug
-      ? [
-          '--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId), //
-          ...execArgv,
-        ]
-      : execArgv,
-    env: {
-      ...process.env,
-      DX_RUN_PARAMS: JSON.stringify(params),
-    },
+  // Node CLI expects options before the script path.
+  const childProcess = spawn(process.execPath, [...execArgv, process.argv[1]], {
+    env: { ...process.env, DX_RUN_PARAMS: JSON.stringify(params) },
   });
   childProcess.on('error', (err) => {
     log.info('child process error', { err });

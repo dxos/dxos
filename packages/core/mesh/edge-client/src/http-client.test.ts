@@ -23,8 +23,9 @@ describe('HttpClient', () => {
     server = undefined;
   });
 
-  // TODO(burdon): Auth headers.
+  // TODO(burdon): Auth headers/API key for admin.
   // TODO(burdon): Add request/response schema type checking.
+  // TODO(burdon): Test swarm.
   it.skipIf(process.env.CI)('should retry', async ({ expect }) => {
     invariant(server);
 

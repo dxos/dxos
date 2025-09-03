@@ -9,7 +9,7 @@ import { type HasId } from '@dxos/echo-schema';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-import type { Services } from './services';
+import { type Services } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -83,7 +83,8 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition<T = {}, O = any> = {
+export type FunctionDefinition<T = any, O = any> = {
+  // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
@@ -91,7 +92,6 @@ export type FunctionDefinition<T = {}, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
-// TODO(dmaretskyi): Bind input type to function handler.
 export const defineFunction = <T, O>({
   name,
   description,

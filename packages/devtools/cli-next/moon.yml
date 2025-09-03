@@ -23,6 +23,11 @@ tasks:
       mergeOutputs: replace
     outputs:
       - dist/node-esm/
+  dev:
+    command: ./cli-next
+    deps:
+      - ^:compile
+    local: true
   prebuild:
     script: pnpm tsx ./scripts/copy-package-json.ts
     deps:

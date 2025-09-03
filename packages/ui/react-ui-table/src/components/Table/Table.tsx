@@ -15,13 +15,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Client } from '@dxos/client';
-import { Filter } from '@dxos/echo';
-import { getValue } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
-import { getSpace } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -34,18 +29,20 @@ import {
   gridSeparatorBlockEnd,
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
+import { DxEditRequest } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy, safeParseInt } from '@dxos/util';
 
-import { ModalController, type TableModel, type TablePresentation } from '../../model';
-import { translationKey } from '../../translations';
+import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
-import { type TableCellEditorProps, TableValueEditor, createOption } from '../TableCellEditor';
+import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
+
+const columnDefault = { grid: { minSize: 128, maxSize: 640 } };
+const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //
 // Table.Root
@@ -77,7 +74,7 @@ const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
 
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
-  focusDraft?: () => void;
+  handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
 export type TableMainProps = {
@@ -94,10 +91,14 @@ const TableMain = forwardRef<TableController, TableMainProps>(
   ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
-    const { t } = useTranslation(translationKey);
     const modals = useMemo(() => new ModalController(), []);
 
-    const draftRowCount = model?.getDraftRowCount() ?? 0;
+    const draftRowCount = Math.max(1, model?.getDraftRowCount() ?? 0);
+
+    const handleSave = useCallback(() => {
+      dxGrid?.updateCells(true);
+      dxGrid?.requestUpdate();
+    }, [dxGrid]);
 
     const frozen = useMemo(() => {
       const noActionColumn =
@@ -125,6 +126,23 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       dxGrid.getCells = getCells;
     }, [presentation, dxGrid, getCells]);
 
+    const handleInsertRowResult = useCallback(
+      (insertResult?: InsertRowResult) => {
+        if (insertResult === 'draft') {
+          requestAnimationFrame(() => {
+            dxGrid?.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            dxGrid?.refocus();
+          });
+        } else {
+          requestAnimationFrame(() => {
+            dxGrid?.setFocus({ plane: 'grid', col: 0, row: model ? model.getRowCount() - 1 : 0 });
+            dxGrid?.refocus();
+          });
+        }
+      },
+      [model, dxGrid],
+    );
+
     /**
      * Provides an external controller that can be called to repaint the table.
      */
@@ -142,14 +160,9 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             dxGrid.requestUpdate();
           }
         },
-        focusDraft: () => {
-          requestAnimationFrame(() => {
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
-            dxGrid.refocus();
-          });
-        },
+        handleInsertRowResult,
       };
-    }, [presentation, dxGrid]);
+    }, [presentation, dxGrid, model]);
 
     const handleSaveDraftRow = useCallback(
       (rowIndex = 0) => {
@@ -167,11 +180,16 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
     const handleGridClick = useCallback(
       (event: MouseEvent) => {
-        const rowIndex = safeParseInt((event.target as HTMLElement).closest('[aria-rowindex]')?.ariaRowIndex ?? '');
-        if (rowIndex != null) {
+        const cell = closestCell(event.target as HTMLElement);
+        if (cell) {
+          const { row: rowIndex, plane } = cell;
           if (onRowClick) {
-            const row = model?.getRowAt(rowIndex);
-            row && onRowClick(row);
+            if (plane === 'grid') {
+              const row = model?.getRowAt(rowIndex);
+              row && onRowClick(row);
+            } else {
+              onRowClick(cell);
+            }
           }
 
           if (model?.features.selection.enabled && model?.selection.selectionMode === 'single') {
@@ -258,14 +276,10 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
           if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
-            if (draftRowCount < 1) {
-              model.insertRow();
-            }
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);
-            model.insertRow();
-            dxGrid.setFocus({ plane: 'frozenRowsEnd', col: 0, row: 0 });
+            handleInsertRowResult(model.insertRow());
           } else {
             dxGrid.refocus(increment, delta);
           }
@@ -285,6 +299,57 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           return;
         }
 
+        // Handle Meta+C (Copy) and Meta+V (Paste) commands
+        if (event.metaKey || event.ctrlKey) {
+          switch (event.key) {
+            case 'c': {
+              // Copy focused cell's text content to clipboard
+              try {
+                const cellData = model.getCellData(cell);
+                const textContent = cellData?.toString() ?? '';
+                void navigator.clipboard.writeText(textContent);
+                event.preventDefault();
+              } catch (error) {
+                console.warn('Failed to copy cell content:', error);
+              }
+              break;
+            }
+            case 'v': {
+              // Paste clipboard content to focused cell
+              event.preventDefault();
+              void navigator.clipboard.readText().then((clipboardText) => {
+                try {
+                  // Attempt to set the cell's content to clipboard content
+                  model.setCellData(cell, clipboardText);
+                  handleSave();
+                } catch {
+                  // If validation fails, emit a DxEditRequest event with initialContent from clipboard
+                  // TODO(thure): Should `dx-grid` expose a method like this?
+                  const cellElement = (event.target as HTMLElement).closest(
+                    '[data-dx-grid-action="cell"]',
+                  ) as HTMLElement;
+                  if (cellElement) {
+                    const rect = cellElement.getBoundingClientRect();
+                    const editRequest = new DxEditRequest({
+                      cellIndex: `${cell.plane},${cell.col},${cell.row}`,
+                      cellBox: {
+                        insetInlineStart: rect.left,
+                        insetBlockStart: rect.top,
+                        inlineSize: rect.width,
+                        blockSize: rect.height,
+                      },
+                      cellElement,
+                      initialContent: clipboardText,
+                    });
+                    cellElement.dispatchEvent(editRequest);
+                  }
+                }
+              });
+              break;
+            }
+          }
+        }
+
         switch (event.key) {
           case 'Backspace':
           case 'Delete': {
@@ -298,7 +363,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           }
         }
       },
-      [model],
+      [model, dxGrid, handleSave],
     );
 
     const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
@@ -327,58 +392,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
       }
     }, [model, dxGrid]);
 
-    // TODO(burdon): Factor out?
-    // TODO(burdon): Generalize to handle other value types (e.g., enums).
-    const handleQuery = useCallback<NonNullable<TableCellEditorProps['onQuery']>>(
-      async ({ field, props }, text) => {
-        if (model && props.referenceSchema && field.referencePath) {
-          const space = getSpace(model.view);
-          invariant(space);
-
-          let schema;
-          if (client) {
-            schema = client.graph.schemaRegistry.getSchema(props.referenceSchema);
-          }
-          if (!schema) {
-            schema = space.db.schemaRegistry.getSchema(props.referenceSchema);
-          }
-
-          if (schema) {
-            const { objects } = await space.db.query(Filter.type(schema)).run();
-            const options = objects
-              .map((obj) => {
-                const value = getValue(obj, field.referencePath!);
-                if (!value || typeof value !== 'string') {
-                  return undefined;
-                }
-
-                return {
-                  label: value,
-                  data: obj,
-                };
-              })
-              .filter(isNotFalsy);
-
-            return [
-              ...options,
-              {
-                label: t('create new object label', { text }),
-                data: createOption(text),
-              },
-            ];
-          }
-        }
-
-        return [];
-      },
-      [model, client, t],
-    );
-
-    const handleSave = useCallback(() => {
-      dxGrid?.updateCells(true);
-      dxGrid?.requestUpdate();
-    }, [dxGrid]);
-
     if (!model || !modals) {
       return <span role='none' className='attention-surface' />;
     }
@@ -390,13 +403,15 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           modals={modals}
           schema={schema}
           onFocus={handleFocus}
-          onQuery={handleQuery}
           onSave={handleSave}
+          client={client}
         />
         <Grid.Content
           className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
           frozen={frozen}
           columns={model.columnMeta.value}
+          columnDefault={columnDefault}
+          rowDefault={rowDefault}
           limitRows={model.getRowCount() ?? 0}
           limitColumns={model.projection.fields.length}
           overscroll='trap'

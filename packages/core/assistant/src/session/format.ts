@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type SessionRunParams } from './session';
+import { type AiSessionRunParams } from './session';
 
 /**
  * Formats the system prompt.
@@ -26,18 +26,19 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
     // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
+      Effect.flatMap(Effect.forEach((template) => DatabaseService.loadOption(template.source))),
+      Effect.map(Array.filter(Option.isSome)),
       Effect.map(
         Array.map(
           (template) => trim`
             <blueprint>
-              ${Template.process(template.content)}
+              ${Template.process(template.value.content)}
             </blueprint>
           `,
         ),
@@ -71,9 +72,9 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
-    const prelude: ContentBlock.Any[] = [];
+    const blocks: ContentBlock.Any[] = [];
 
     // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
     const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
@@ -94,18 +95,18 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams
           continue;
         }
 
-        prelude.push({ _tag: 'anchor', objectId: id, version });
+        blocks.push({ _tag: 'anchor', objectId: id, version });
       }
 
       if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
+        blocks.push(createArtifactUpdateBlock(artifactDiff));
       }
     }
 
     return Obj.make(DataType.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
+      blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
   });
 

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { SpaceSchema } from '@dxos/client/echo';
+import { EchoObjectSchema, SpaceSchema } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { DataType } from '@dxos/schema';
 
@@ -51,4 +51,12 @@ export class CreateSequence extends Schema.TaggedClass<CreateSequence>()(`${meta
   output: Schema.Struct({
     object: Sequence,
   }),
+}) {}
+
+export class SetCurrentChat extends Schema.TaggedClass<SetCurrentChat>()(`${meta.id}/action/set-current-chat`, {
+  input: Schema.Struct({
+    companionTo: EchoObjectSchema,
+    chat: Chat,
+  }),
+  output: Schema.Void,
 }) {}

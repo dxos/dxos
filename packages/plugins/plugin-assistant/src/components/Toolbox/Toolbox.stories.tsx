@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -25,9 +25,9 @@ const DefaultStory = (props: ToolboxProps) => {
   return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
 };
 
-const meta: Meta<typeof Toolbox> = {
+const meta = {
   title: 'plugins/plugin-assistant/Toolbox',
-  component: Toolbox,
+  component: Toolbox as any,
   render: DefaultStory,
   decorators: [
     withPluginManager({
@@ -53,10 +53,10 @@ const meta: Meta<typeof Toolbox> = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = Meta<typeof Toolbox>;
+type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
+export const Default: Story = {};
