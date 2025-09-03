@@ -4541,6 +4541,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
