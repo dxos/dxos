@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 description: Working in the DXOS codebase
 ---
 

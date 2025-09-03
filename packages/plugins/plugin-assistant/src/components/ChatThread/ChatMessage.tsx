@@ -28,7 +28,7 @@ import { Toolbox } from '../Toolbox';
 import { ObjectLink } from './Link';
 import { type AiToolProvider, Json, ToolBlock, isToolMessage } from './ToolBlock';
 
-const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
+const panelClasses = 'flex flex-col is-full bg-groupSurface rounded-sm';
 const marginClasses = 'pie-4 pis-4';
 const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
 
@@ -179,6 +179,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       <IconButton
         icon='ph--lightning--regular'
         label={block.text}
+        classNames='text-description'
         onClick={() => onEvent?.({ type: 'submit', text: block.text })}
       />
     );
@@ -214,7 +215,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
     return (
       <ToggleContainer title={t('toolkit label')} classNames={panelClasses} defaultOpen>
-        <Toolbox classNames={marginClasses} />
+        <Toolbox />
       </ToggleContainer>
     );
   },
@@ -317,7 +318,9 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 
   return (
     <div role='list-item' className={mx('flex is-full', user && 'justify-end', marginClasses, classNames)}>
-      <div className={mx(user ? ['rounded-sm', 'bg-[--user-fill] text-accentSurfaceText', paddingClasses] : 'is-full')}>
+      <div
+        className={mx(user ? ['bg-[--user-fill] text-white dark:text-black rounded-sm', paddingClasses] : 'is-full')}
+      >
         {children}
       </div>
     </div>

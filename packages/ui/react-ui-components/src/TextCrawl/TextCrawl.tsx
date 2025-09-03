@@ -35,7 +35,7 @@ export type TextCrawlProps = ThemedClassName<{
 export const TextCrawl = ({
   classNames,
   size = 'md',
-  index: index$ = -1,
+  index: indexParam = -1,
   lines = emptyLines,
   cyclic,
   autoAdvance,
@@ -43,23 +43,26 @@ export const TextCrawl = ({
   minDuration = 1_000,
 }: TextCrawlProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastRoll = useRef(Date.now());
   const linesLength = useDynamicRef(lines.length);
-  const [index, setIndex] = useState(index$);
-  useEffect(() => {
-    setIndex(index$ === -1 ? lines.length - 1 : index$);
-  }, [lines, index$]);
+  const lastRoll = useRef(Date.now());
+  const [index, setIndex] = useState(indexParam);
 
+  // Index
+  useEffect(() => {
+    setIndex(indexParam);
+  }, [indexParam]);
+
+  // Auto-advance.
   useEffect(() => {
     if (!autoAdvance) {
+      setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
       return;
     }
 
     const next = () => {
       setIndex((prev) => {
         if (prev >= linesLength.current! - 1) {
-          clearInterval(i);
-          return prev;
+          return cyclic ? 0 : prev;
         }
 
         lastRoll.current = Date.now();
@@ -67,13 +70,15 @@ export const TextCrawl = ({
       });
     };
 
+    let i: NodeJS.Timeout | undefined = undefined;
     if (Date.now() - lastRoll.current > minDuration) {
+      clearInterval(i);
       next();
     }
 
-    const i = setInterval(next, minDuration);
+    i = setInterval(next, minDuration);
     return () => clearInterval(i);
-  }, [lines.length, autoAdvance, minDuration]);
+  }, [lines.length, cyclic, autoAdvance, minDuration]);
 
   const { className, height } = sizeClassNames[size];
   useEffect(() => {
@@ -90,7 +95,7 @@ export const TextCrawl = ({
         }, transition);
       }
 
-      containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
+      containerRef.current.style.transition = `transform ${transition}ms cubic-bezier(0.25, 1.25, 0.5, 1.2)`;
       containerRef.current.style.transform = `translateY(-${i * height}px)`;
     }
   }, [height, index]);
