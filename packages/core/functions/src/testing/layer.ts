@@ -5,16 +5,16 @@
 import type { Schema } from 'effect';
 import { Context, Effect, Layer } from 'effect';
 
+import type { EchoDatabaseImpl, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
 import { accuireReleaseResource } from '@dxos/effect';
-
-import type { EchoDatabaseImpl, QueueFactory } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { DatabaseService, QueueService } from '../services';
 import { log } from '@dxos/log';
+
+import { DatabaseService, QueueService } from '../services';
 
 const testBuilder = accuireReleaseResource(() => new EchoTestBuilder());
 

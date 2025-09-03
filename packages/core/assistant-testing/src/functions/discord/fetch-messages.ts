@@ -3,14 +3,14 @@
 //
 
 import { FetchHttpClient } from '@effect/platform';
-import { Array, Effect, Layer, Option, pipe, Schema } from 'effect';
-
-import { Obj } from '@dxos/echo';
-import { CredentialsService, defineFunction, TracingService } from '@dxos/functions';
-import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import type { MessageResponse } from 'dfx/types';
+import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
+
+import { Obj } from '@dxos/echo';
+import { CredentialsService, TracingService, defineFunction } from '@dxos/functions';
+import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 const generateSnowflake = (unixTimestamp: number): bigint => {
   const discordEpoch = 1420070400000n; // Discord Epoch (ms)

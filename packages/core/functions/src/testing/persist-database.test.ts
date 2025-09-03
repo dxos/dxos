@@ -4,10 +4,13 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
-import { TestDatabaseLayer, testStoragePath } from './layer';
-import { DatabaseService } from '../services';
-import { DataType } from '@dxos/schema';
+
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
+import { DatabaseService } from '../services';
+
+import { TestDatabaseLayer, testStoragePath } from './layer';
 
 describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect(

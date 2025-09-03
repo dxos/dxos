@@ -24,8 +24,8 @@ import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
-import { formatSystemPrompt, formatUserPrompt } from './format';
 import { mapAiError } from './error-handling';
+import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
@@ -69,7 +69,7 @@ export class AiSession {
     | ToolExecutionService
     | TracingService
     | AiTool.ToHandler<Tools>
-  > = <Tools extends AiTool.Any>(params: AiSessionRunParams<Tools>) => new AiSession().run(params)
+  > = <Tools extends AiTool.Any>(params: AiSessionRunParams<Tools>) => new AiSession().run(params);
   run = <Tools extends AiTool.Any>({
     prompt,
     system: systemTemplate,
@@ -220,21 +220,13 @@ export class AiSession {
 
       log('done', { pending: this._pending.length });
       return this._pending;
-    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'))
-
-;
+    }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
   /** Complete messages fired during the session, both from the model and from the user. */
 
   // TODO(dmaretskyi): Replace queues with (optional) GenerationObserver (not a stream), which feeds the Rx.
 
   //  NOTE: The Observable is composible and reduces the memory load.
-
-;
-
-;
-
-;
 
   /** Complete messages fired during the session, both from the model and from the user. */
   messageQueue = Effect.runSync(Queue.unbounded<DataType.Message>());
@@ -251,17 +243,13 @@ export class AiSession {
    * Prior history from queue.
    * NOTE: The conversation should evolve into supporting a git-like graph of messages.
    */
-  private _history: DataType.Message[] = []
-
-;
+  private _history: DataType.Message[] = [];
 
   /**
    * Pending messages for this session (incl. the current prompt).
    */
 
-  private _pending: DataType.Message[] = []
-
-;
+  private _pending: DataType.Message[] = [];
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
@@ -272,21 +260,11 @@ export class AiSession {
 
   // TODO(dmaretskyi): Toolkit context doesn't get added to the effect type.
 
-;
-
   // TODO(burdon): Implement.
 
   /** Prevents concurrent execution of session. */
 
-;
-
-;
-
-;
-
   // TODO(dmaretskyi): Toolkit context doesn't get added to the effect type.
-
-;
 
   // TODO(burdon): Implement.
   async runStructured<S extends Schema.Schema.AnyNoContext>(

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer, Redacted, type Config } from 'effect';
+import { type Config, Context, Effect, Layer, Redacted } from 'effect';
 
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

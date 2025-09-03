@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiToolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, Redacted } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
-import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -19,9 +19,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
-import { DataType } from '@dxos/schema';
-import { AiToolkit } from '@effect/ai';
-import { fetchDiscordMessages } from '../functions';
+
 import { syncLinearIssues } from '../functions';
 
 const TestLayer = Layer.mergeAll(

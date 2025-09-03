@@ -1,8 +1,13 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Effect } from 'effect';
+
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Effect } from 'effect';
 
 /**
  * Syncs objects to the database.

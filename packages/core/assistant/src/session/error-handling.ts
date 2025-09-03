@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { AiError } from '@effect/ai';
 import { HttpClientError } from '@effect/platform';
 import { Effect, Schema } from 'effect';
+
 import { AnthropicError } from '../errors';
 
 const AnthropicErrorResponse = Schema.Struct({

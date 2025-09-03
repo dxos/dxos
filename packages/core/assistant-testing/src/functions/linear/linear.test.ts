@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiToolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer, Redacted } from 'effect';
+import { Config, Effect, Layer } from 'effect';
 
 import { AiService } from '@dxos/ai';
-import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -19,10 +21,9 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
-import { AiToolkit } from '@effect/ai';
-import { default as fetchLinearIssues, LINEAR_ID_KEY } from './sync-issues';
-import { Obj, Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
+
+import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),

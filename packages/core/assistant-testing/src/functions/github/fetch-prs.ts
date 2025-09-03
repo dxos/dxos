@@ -1,7 +1,13 @@
-import { defineFunction } from '@dxos/functions';
-import { Effect, Schema } from 'effect';
-import { apiKeyAuth } from '../../util';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { HttpClient } from '@effect/platform';
+import { Effect, Schema } from 'effect';
+
+import { defineFunction } from '@dxos/functions';
+
+import { apiKeyAuth } from '../../util';
 
 export default defineFunction({
   name: 'dxos.org/function/github/fetch-prs',

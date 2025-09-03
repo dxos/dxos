@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { Array, Effect, Schema, pipe } from 'effect';
+
 import { Obj, Query, Ref } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Array, Effect, pipe, Schema } from 'effect';
+
 import { syncObjects } from '../../sync';
 import { apiKeyAuth, graphqlRequestBody } from '../../util';
 

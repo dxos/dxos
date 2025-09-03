@@ -8,8 +8,8 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import type { ObjectId } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
 
 /**
  * Provides a way for compute primitives (functions, workflows, tools)
