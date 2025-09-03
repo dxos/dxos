@@ -80,6 +80,7 @@ export class ExecutionGraph {
   }
 }
 
+// TODO(burdon): Pass in AiToolProvider.
 const messageToCommit = (message: DataType.Message): Commit[] => {
   return message.blocks
     .map((block, idx) => {

@@ -25,7 +25,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { DataType, type ProjectionModel } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
@@ -129,7 +129,7 @@ export default () =>
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
         const { t } = useTranslation(PREVIEW_PLUGIN);
@@ -150,6 +150,7 @@ export default () =>
           <Card.SurfaceRoot role={role}>
             <Form
               schema={schema}
+              projection={data.projection}
               values={data.subject}
               readonly={role === 'card--popover'}
               onSave={handleSave}
