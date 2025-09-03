@@ -46,6 +46,8 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.25.2",
+    "@effect/platform": "^0.90.2",
+    "dfx": "^0.124.1",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
@@ -58,7 +60,6 @@
     "@effect/rpc": "0.68.3",
     "@effect/sql": "0.44.1",
     "@effect/workflow": "0.8.3",
-    "dfx": "^0.124.1",
     "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
