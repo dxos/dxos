@@ -9,6 +9,7 @@ import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 
 import { ClientService, ConfigService } from '../services';
 import { CommandConfig } from '../services';
+import { DXOS_VERSION } from '../version';
 
 import { config } from './config';
 import { debug } from './debug';
@@ -69,3 +70,9 @@ export const dx = command.pipe(
     }),
   ),
 );
+
+// TODO(wittjosiah): `repl` causes this to lose a bunch of type information due to the cycle.
+export const run = Command.run(dx, {
+  name: 'DXOS CLI',
+  version: DXOS_VERSION,
+});

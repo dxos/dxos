@@ -6,8 +6,9 @@ import { NodeContext } from '@effect/platform-node';
 import { assert, describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { run } from '../bin';
 import { TestConsole } from '../testing';
+
+import { run } from './dx';
 
 const args = (cmd: string) => [__filename, ...cmd.split(' ')];
 

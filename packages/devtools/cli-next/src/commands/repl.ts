@@ -5,7 +5,7 @@
 import { Command, Prompt } from '@effect/cli';
 import { Effect } from 'effect';
 
-import { run } from '../bin';
+import { run } from './dx';
 
 const args = (cmd: string) => [__filename, 'dx', ...cmd.split(' ')];
 
