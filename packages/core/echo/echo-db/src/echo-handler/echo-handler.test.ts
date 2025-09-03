@@ -804,4 +804,41 @@ describe('Reactive Object with ECHO database', () => {
     const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
     expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
   });
+
+  test('set id throws', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(() => {
+      (obj as any).id = '123';
+    }).to.throw();
+  });
+
+  test('foreign key copying from new object to existing object', async () => {
+    const { db } = await builder.createDatabase();
+
+    // Create an object in the database
+    const existing = db.add(Obj.make(Type.Expando, { title: 'Existing object' }));
+    expect(Obj.getMeta(existing).keys).to.deep.eq([]);
+
+    // Create a new object with foreign keys
+    const newObj = Obj.make(Type.Expando, { title: 'New object' });
+    const foreignKey1 = { source: 'example.com', id: 'key-1' };
+    const foreignKey2 = { source: 'another.com', id: 'key-2' };
+    Obj.getMeta(newObj).keys.push(foreignKey1);
+    Obj.getMeta(newObj).keys.push(foreignKey2);
+
+    // Copy foreign keys from new object to existing object
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
+      Obj.deleteKeys(existing, foreignKey.source);
+      // Using spread operator to copy the foreign key object
+      Obj.getMeta(existing).keys.push({ ...foreignKey });
+    }
+
+    // Verify foreign keys were copied
+    expect(Obj.getMeta(existing).keys).to.have.length(2);
+    expect(Obj.getMeta(existing).keys).to.deep.eq([foreignKey1, foreignKey2]);
+
+    // Verify the original object still has its keys
+    expect(getMeta(newObj).keys).to.have.length(2);
+  });
 });
