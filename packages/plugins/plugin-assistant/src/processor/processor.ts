@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry, Result, Rx } from '@effect-rx/rx-react';
-import { Cause, Effect, Exit, Fiber, Layer, Option, Stream, pipe } from 'effect';
+import { Registry, Rx } from '@effect-rx/rx-react';
+import { Cause, Effect, Exit, Fiber, Layer, Option } from 'effect';
 
 import {
   AiService,
@@ -18,6 +18,7 @@ import {
   type AiConversationRunParams,
   AiSession,
   ArtifactDiffResolver,
+  GenerationObserver,
   createSystemPrompt,
 } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
@@ -71,8 +72,10 @@ export type AiRequest = {
  * Handles streaming responses from the conversation.
  */
 export class AiChatProcessor {
-  // TODO(burdon): Comment required.
-  private readonly _observableRegistry: Registry.Registry;
+  private readonly _rx: Registry.Registry;
+
+  /** External observer. */
+  private readonly _observer: GenerationObserver;
 
   /** Currently active request fiber. */
   private _fiber: Fiber.Fiber<void, any> | undefined;
@@ -80,85 +83,32 @@ export class AiChatProcessor {
   /** Last request (for retries). */
   private _lastRequest: AiRequest | undefined;
 
-  /** Current session. */
-  private readonly _session = Rx.make<Option.Option<AiSession>>(Option.none());
-
-  /**
-   * Current streaming message (from the AI service).
-   */
-  // TODO(burdon): Move util into @dxos/assistant (e.g., AiConversationRequest) using Observer instead of stream.
-  private readonly _streaming: Rx.Rx<Result.Result<Option.Option<DataType.Message>, Error>> = Rx.make((get) => {
-    return pipe(
-      get(this._session),
-      Option.map((session) => Stream.fromQueue(session.blockQueue)),
-      Option.getOrElse(() => Stream.make()),
-      Stream.scan<Option.Option<DataType.Message>, Option.Option<ContentBlock.Any>>(Option.none(), (acc, blockOption) =>
-        Option.flatMap(blockOption, (block) =>
-          acc.pipe(
-            Option.match({
-              onNone: () => [block],
-              onSome: (message) => [...message.blocks.filter((block) => !block.pending), block],
-            }),
-            Option.some,
-            Option.map((blocks) =>
-              Obj.make(DataType.Message, {
-                created: new Date().toISOString(),
-                sender: { role: 'assistant' },
-                blocks,
-              }),
-            ),
-          ),
-        ),
-      ),
-    );
-  });
-
   /**
    * Pending messages (incl. the current user request).
    */
-  private readonly _pending: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
-    // TODO(wittjosiah): For some reason using Option.map here loses reactivity.
-    const session = get(this._session);
-    return Option.isSome(session)
-      ? pipe(
-          session.value.messageQueue,
-          Stream.fromQueue,
-          Stream.scan<DataType.Message[], DataType.Message>([], (acc, message) => [...acc, message]),
-        )
-      : Stream.make();
-  });
+  private readonly _pending = Rx.make<DataType.Message[]>([]);
+
+  /**
+   * Currently streaming message (from the AI service).
+   */
+  private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
 
   /**
    * Streaming state.
    */
-  public readonly streaming: Rx.Rx<boolean> = Rx.make((get) => {
-    return pipe(
-      get(this._streaming),
-      Result.map((streaming) => Option.isSome(streaming)),
-      Result.getOrElse(() => false),
-    );
-  });
+  public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
 
   /**
    * Array of Messages (incl. the current message being streamed).
    */
-  public readonly messages: Rx.Rx<Result.Result<DataType.Message[], Error>> = Rx.make((get) => {
-    const streaming = get(this._streaming);
-    return Result.map(get(this._pending), (pending) =>
-      Result.match(streaming, {
-        onInitial: () => pending,
-        onFailure: () => pending,
-        onSuccess: (streaming) =>
-          Option.match(streaming.value, {
-            onNone: () => pending,
-            onSome: (message) => [...pending, message],
-          }),
-      }),
-    );
-  });
+  public readonly messages = Rx.make<DataType.Message[]>((get) =>
+    Option.match(get(this._streaming), {
+      onNone: () => get(this._pending),
+      onSome: (streaming) => [...get(this._pending), streaming],
+    }),
+  );
 
   /** Last error. */
-  // TODO(wittjosiah): Error should come from the message stream.
   public readonly error = Rx.make<Option.Option<Error>>(Option.none());
 
   constructor(
@@ -168,11 +118,19 @@ export class AiChatProcessor {
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     // Initialize registries and defaults before using in other logic.
-    this._observableRegistry = this._options.observableRegistry ?? Registry.make();
+    this._rx = this._options.observableRegistry ?? Registry.make();
+    this._observer = GenerationObserver.make({
+      onBlock: this._onBlock,
+      onMessage: this._onMessage,
+    });
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
     }
+  }
+
+  get isRunning() {
+    return !!this._fiber;
   }
 
   get context() {
@@ -197,17 +155,13 @@ export class AiChatProcessor {
 
     try {
       this._lastRequest = requestParam;
-
-      // TODO(burdon): If we pass in a callback we can move session creation into the conversation.
-      const session = new AiSession();
-      this._observableRegistry.set(this._session, Option.some(session));
-      this._observableRegistry.set(this.error, Option.none());
+      this._rx.set(this.error, Option.none());
 
       // Create request.
       const request = this._conversation.createRequest({
-        session,
         system: this._options.system,
         prompt: requestParam.message,
+        observer: this._observer,
       });
 
       // Create fiber.
@@ -231,14 +185,13 @@ export class AiChatProcessor {
         throwCause(response.cause);
       }
 
-      this._observableRegistry.set(this.error, Option.none());
+      this._rx.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
     } catch (err) {
       log.error('request failed', { err });
-      this._observableRegistry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
-      this._observableRegistry.set(this._session, Option.none());
       this._fiber = undefined;
     }
   }
@@ -256,7 +209,6 @@ export class AiChatProcessor {
     );
 
     this._fiber = undefined;
-    this._observableRegistry.set(this._session, Option.none());
   }
 
   /**
@@ -272,8 +224,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
-    const prompt = trim`
-      Suggest a single short title for this chat.
+    const system = trim`
       It is extremely important that you respond only with the title and nothing else.
       If you cannot do this effectively respond with "New Chat".
     `;
@@ -281,7 +232,7 @@ export class AiChatProcessor {
     const history = await this._conversation.getHistory();
     const fiber = Effect.gen(this, function* () {
       const session = new AiSession();
-      return yield* session.run({ prompt, history });
+      return yield* session.run({ system, prompt: 'Suggest a name for this chat', history });
     }).pipe(
       // TODO(burdon): Use simpler model.
       Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
@@ -324,4 +275,30 @@ export class AiChatProcessor {
       return versions;
     },
   };
+
+  private _onMessage = Effect.fn(
+    function* (this: AiChatProcessor, message: DataType.Message) {
+      this._rx.set(this._streaming, Option.none());
+      this._rx.update(this._pending, (pending) => [...pending, message]);
+    }.bind(this),
+  );
+
+  private _onBlock = Effect.fn(
+    function* (this: AiChatProcessor, block: ContentBlock.Any) {
+      this._rx.update(this._streaming, (streaming) => {
+        const blocks = streaming.pipe(
+          Option.map((streaming) => streaming.blocks.filter((b) => !b.pending)),
+          Option.getOrElse(() => []),
+        );
+
+        return Option.some(
+          Obj.make(DataType.Message, {
+            created: new Date().toISOString(),
+            sender: { role: 'assistant' },
+            blocks: [...blocks, block],
+          }),
+        );
+      });
+    }.bind(this),
+  );
 }
