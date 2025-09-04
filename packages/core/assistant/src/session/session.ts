@@ -88,7 +88,6 @@ export class AiSession {
       this._pending = [];
 
       // Generate system prompt.
-      // TODO(budon): Dynamically resolve template variables here.
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
 
       const pending = this._pending;

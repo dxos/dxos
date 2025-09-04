@@ -20,7 +20,7 @@ const instructions = trim`
   Do not announce when you read or write the design spec document.
 `;
 
-const blueprint = Obj.make(Blueprint.Blueprint, {
+const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/design',
   name: 'Design Spec',
   description: 'Preserve the conversation in the design spec.',

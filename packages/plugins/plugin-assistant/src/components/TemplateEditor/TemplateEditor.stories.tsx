@@ -58,7 +58,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
+      types: [Blueprint.Blueprint],
     }),
     withLayout({ fullscreen: true, Container: ColumnContainer }),
     withTheme,
