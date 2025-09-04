@@ -98,7 +98,10 @@ export default defineFunction({
     log.info('Fetched tasks', { count: tasks.length });
 
     // Synchronize new objects with ECHO.
-    return yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY });
+    return {
+      objects: yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY }),
+      syncComplete: tasks.length < 150,
+    };
   }, Effect.provide(FetchHttpClient.layer)),
 });
 
