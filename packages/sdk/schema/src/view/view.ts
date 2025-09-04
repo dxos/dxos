@@ -44,13 +44,6 @@ export const Projection = Schema.Struct({
   fields: Schema.mutable(Schema.Array(FieldSchema)),
 
   /**
-   * Array of fields that are part of the view's schema but hidden from UI display.
-   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
-   */
-  // TODO(wittjosiah): Remove? This can be easily derived from fields.
-  hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
-
-  /**
    * The id for the field used to pivot the view.
    * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
@@ -126,7 +119,6 @@ export const createView = ({
     projection: {
       schema: overrideSchema,
       fields: [],
-      hiddenFields: [],
     },
     presentation: Ref.make(presentation),
   });
