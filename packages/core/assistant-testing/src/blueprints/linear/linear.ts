@@ -15,6 +15,7 @@ import { syncLinearIssues } from '../../functions';
  */
 const instructions = trim`
   You are able to sync Linear workspaces.
+  Sometimes sync does not complete in one go and you need to call the function again.
 
   Known workspaces:
 

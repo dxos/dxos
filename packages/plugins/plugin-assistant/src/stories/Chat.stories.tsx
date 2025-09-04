@@ -438,7 +438,7 @@ export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [DataType.Task, DataType.Person],
+    types: [DataType.Task, DataType.Person, DataType.Project],
     accessTokens: accessTokensFromEnv({
       'linear.app': import.meta.env.VITE_LINEAR_API_KEY,
     }),
