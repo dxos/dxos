@@ -141,20 +141,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
     };
 
     const classes = [];
-    const formatClasses = cellClassesForFieldType({ type: props.type, format: props.format });
+    const formatClasses = cellClassesForFieldType(props);
+
     if (formatClasses) {
       classes.push(formatClasses);
     }
+
     const rowSelectionClasses = cellClassesForRowSelection(
       this.model.selection.isObjectSelected(obj),
       this.model.selection.selectionMode,
     );
+
     if (rowSelectionClasses) {
       classes.push(rowSelectionClasses);
     }
-    if (classes.length > 0) {
-      cell.className = mx(classes.flat());
-    }
+
+    cell.className = mx(classes);
 
     // Arrays.
     if (props.type === TypeEnum.Array) {
