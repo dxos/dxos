@@ -12,11 +12,7 @@ import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import {
-  MarkdownViewer,
-  ToggleContainer as NativeToggleContainer,
-  type ToggleContainerProps,
-} from '@dxos/react-ui-components';
+import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { ContentBlock, type DataType } from '@dxos/schema';
@@ -30,9 +26,11 @@ import { ObjectLink } from './Link';
 import { type AiToolProvider, ToolBlock, isToolMessage } from './ToolBlock';
 
 export const styles = {
-  panel: 'flex flex-col is-full bg-groupSurface rounded-sm',
   margin: 'pie-4 pis-4',
   padding: 'pis-2 pie-2 pbs-0.5 pbe-0.5',
+  panel: 'is-full rounded-sm',
+  panelHeader: 'bg-groupSurface',
+  panelContent: 'bg-modalSurface',
   json: '!p-1 text-xs bg-transparent',
 };
 
@@ -62,8 +60,8 @@ export const ChatMessage = ({
 
   if (toolProvider && isToolMessage(message)) {
     return (
-      <MessageItem classNames={mx(styles.panel, 'animate-[fadeIn_0.5s]')}>
-        <ToolBlock classNames={styles.panel} message={message} toolProvider={toolProvider} />
+      <MessageItem classNames={[styles.margin, 'animate-[fadeIn_0.5s]']}>
+        <ToolBlock message={message} toolProvider={toolProvider} />
       </MessageItem>
     );
   }
@@ -215,12 +213,15 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['toolkit' as const]: ({ block }) => {
     invariant(block._tag === 'toolkit');
+
     const { t } = useTranslation(meta.id);
-    const { panel: panelClasses } = styles;
     return (
-      <ToggleContainer title={t('toolkit label')} classNames={styles.panel} defaultOpen>
-        <Toolbox />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel} defaultOpen>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={t('toolkit label')} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Toolbox />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
   },
 
@@ -264,9 +265,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
       default: {
         return (
-          <ToggleContainer title={block.disposition ?? block._tag}>
-            <Json data={safeParseJson(block.data ?? block)} classNames={styles.json} />
-          </ToggleContainer>
+          <ToggleContainer.Root classNames={styles.panel}>
+            <ToggleContainer.Header classNames={styles.panelHeader} title={block.disposition ?? block._tag} />
+            <ToggleContainer.Content classNames={styles.panelContent}>
+              <Json data={safeParseJson(block.data ?? block)} classNames={styles.json} />
+            </ToggleContainer.Content>
+          </ToggleContainer.Root>
         );
       }
     }
@@ -277,9 +281,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   default: ({ block }) => {
     return (
-      <ToggleContainer title={block._tag}>
-        <Json data={block} classNames={styles.json} />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel}>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={block._tag} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Json data={block} classNames={styles.json} />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
   },
 };
@@ -296,9 +303,10 @@ export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
   return (
     <>
       <MessageItem>
-        <ToggleContainer title={error.message || t('error label')} classNames={[styles.panel, 'bg-warningSurface']}>
-          <div className='p-2 text-small text-subdued'>{String(error.cause)}</div>
-        </ToggleContainer>
+        <ToggleContainer.Root classNames={styles.panel}>
+          <ToggleContainer.Header classNames={styles.panelHeader} title={error.message || t('error label')} />
+          <ToggleContainer.Content classNames={styles.panelContent}>{String(error.cause)}</ToggleContainer.Content>
+        </ToggleContainer.Root>
       </MessageItem>
       <MessageItem>
         <IconButton
@@ -329,10 +337,6 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
       </div>
     </div>
   );
-};
-
-const ToggleContainer = ({ classNames, ...props }: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(styles.panel, classNames)} />;
 };
 
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>

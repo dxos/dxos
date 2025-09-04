@@ -6,7 +6,7 @@ import { type AiTool } from '@effect/ai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type DataType } from '@dxos/schema';
@@ -23,12 +23,12 @@ export const isToolMessage = (message: DataType.Message) => {
 
 export type AiToolProvider = () => readonly AiTool.Any[];
 
-export type ToolBlockProps = ThemedClassName<{
+export type ToolBlockProps = {
   message: DataType.Message;
   toolProvider: AiToolProvider;
-}>;
+};
 
-export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps) => {
+export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
   const tools = toolProvider();
@@ -90,10 +90,10 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
     })
     .filter(isNonNullable);
 
-  return <ToolContainer classNames={classNames} items={items} />;
+  return <ToolContainer items={items} />;
 };
 
-export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { title: string; block: any }[] }>) => {
+export const ToolContainer = ({ items }: { items: { title: string; block: any }[] }) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -113,14 +113,12 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   }, [items]);
 
   return (
-    <ToggleContainer
-      classNames={['is-full grid grid-cols-[32px_1fr]', classNames]}
-      title={title}
-      open={open}
-      onChangeOpen={setOpen}
-    >
-      <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-      <Json data={items[selected].block} classNames={styles.json} />
-    </ToggleContainer>
+    <ToggleContainer.Root classNames={styles.panel} open={open} onChangeOpen={setOpen}>
+      <ToggleContainer.Header classNames={styles.panelHeader} title={title} />
+      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', styles.panelContent]}>
+        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
+        <Json data={items[selected].block} classNames={styles.json} />
+      </ToggleContainer.Content>
+    </ToggleContainer.Root>
   );
 };
