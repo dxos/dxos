@@ -68,7 +68,10 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               )}
               <div
                 className='flex justify-center items-center w-[24px] h-[24px] border border-separator rounded-full text-xs'
-                onClick={() => onSelect?.(i)}
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  onSelect?.(i);
+                }}
               >
                 {i}
               </div>

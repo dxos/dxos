@@ -8,11 +8,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type AgentStatus } from '@dxos/ai';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
-import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
+
+import { styles } from './ChatMessage';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -44,7 +47,6 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
     .map((block) => {
       switch (block._tag) {
         case 'toolCall': {
-          // TODO(burdon): Skip these updates?
           if (block.pending && request?.block.toolCallId === block.toolCallId) {
             return null;
           }
@@ -53,7 +55,10 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
           request = { tool, block };
           return {
             title: getToolCaption(request.tool, request.block.status),
-            block,
+            block: {
+              ...block,
+              input: safeParseJson(block.input),
+            },
           };
         }
 
@@ -67,7 +72,10 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
 
           return {
             title: getToolCaption(request.tool, request.block.status),
-            block,
+            block: {
+              ...block,
+              result: safeParseJson(block.result),
+            },
           };
         }
 
@@ -111,15 +119,11 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   return (
     <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
       <div className='is-full grid grid-cols-[32px_1fr]'>
-        <div className='flex justify-center'>
+        <div className='flex justify-center pbs-1'>
           <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
         </div>
-        <Json data={items[selected].block} />
+        <Json data={items[selected].block} classNames={styles.json} />
       </div>
     </ToggleContainer>
   );
 };
-
-export const Json = ({ data }: Pick<JsonProps, 'data'>) => (
-  <NativeJson data={data} classNames='!p-1 text-xs bg-transparent' />
-);
