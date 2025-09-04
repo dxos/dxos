@@ -16,9 +16,10 @@ export type HandlebarsOptions = {};
 /**
  * Simple Handlebars plugin for CodeMirror.
  * Supports:
- * - Variables: {{var}}
  * - Comments: {{! comment }}
- * - Variable name completion
+ * - Commands: {{#command}} {{/command}}
+ * - Variables: {{var}}
+ * - Commands with variables: {{#each items}} {{/each}}
  */
 export const handlebars = (_: HandlebarsOptions = {}): Extension => {
   return [
