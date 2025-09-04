@@ -273,16 +273,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
       // Fallback to legacy filter/sort behavior
       const filtered = filter ? filter(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [
-      schema,
-      values,
-      filter,
-      sort,
-      projection
-        ?.getFieldProjections()
-        .map(({ field }) => field.id)
-        .join(' '),
-    ]);
+    }, [schema, values, filter, sort, projection?.fields]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
