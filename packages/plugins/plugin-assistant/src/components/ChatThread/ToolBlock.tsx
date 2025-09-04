@@ -113,11 +113,14 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   }, [items]);
 
   return (
-    <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
-      <div className='is-full grid grid-cols-[32px_1fr]'>
-        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json data={items[selected].block} classNames={styles.json} />
-      </div>
+    <ToggleContainer
+      classNames={['is-full grid grid-cols-[32px_1fr]', classNames]}
+      title={title}
+      open={open}
+      onChangeOpen={setOpen}
+    >
+      <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
+      <Json data={items[selected].block} classNames={styles.json} />
     </ToggleContainer>
   );
 };
