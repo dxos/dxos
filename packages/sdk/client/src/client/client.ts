@@ -249,7 +249,6 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    // TODO(burdon): Find?
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
       this._echoClient.graph.schemaRegistry.addSchema(exists);

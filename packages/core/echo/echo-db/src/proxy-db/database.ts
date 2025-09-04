@@ -285,14 +285,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update objects.
    * @deprecated Mutate the object directly
    */
-  async update(filter: Filter.Any, operation: unknown): Promise<void> {
+  async update(_filter: Filter.Any, _operation: unknown): Promise<void> {
     throw new Error('Not implemented');
   }
 
   /**
    * @deprecated Use `db.add`.
    */
-  async insert(data: unknown): Promise<never> {
+  async insert(_data: unknown): Promise<never> {
     throw new Error('Not implemented');
   }
 
