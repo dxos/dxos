@@ -189,7 +189,9 @@ export const ViewEditor = ({
                     >
                       <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                         <List.ItemDragHandle disabled={readonly} />
-                        <List.ItemTitle onClick={() => handleToggleField(field)}>{field.path}</List.ItemTitle>
+                        <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
+                          {field.path}
+                        </List.ItemTitle>
                         <List.ItemButton
                           label={t(hidden ? 'show field label' : 'hide field label')}
                           data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
