@@ -53,6 +53,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
     }),
