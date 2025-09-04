@@ -25,6 +25,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/cli": "0.69.0",
     "@effect/cluster": "0.47.0",
     "@effect/platform": "0.90.2",

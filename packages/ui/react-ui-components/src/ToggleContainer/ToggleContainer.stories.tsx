@@ -10,12 +10,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 
-import { ToggleContainer, type ToggleContainerProps } from './ToggleContainer';
+import { ToggleContainer, type ToggleContainerRootProps } from './ToggleContainer';
 
 class Generator {
   private readonly _current = signal<string>(faker.lorem.sentence(5));
@@ -47,7 +46,7 @@ class Generator {
   }
 }
 
-const DefaultStory = ({ shrinkX, ...props }: ToggleContainerProps) => {
+const DefaultStory = (props: ToggleContainerRootProps) => {
   const generator = useMemo(() => new Generator(), []);
   const [running, setRunning] = useState(false);
   useEffect(() => {
@@ -68,19 +67,19 @@ const DefaultStory = ({ shrinkX, ...props }: ToggleContainerProps) => {
         <div>{generator.count.value}</div>
       </Toolbar.Root>
       <div className='flex p-4'>
-        <div className={mx('border border-border rounded-md p-2', !shrinkX && 'w-full')}>
-          <ToggleContainer
-            {...props}
-            shrinkX={shrinkX}
+        <ToggleContainer.Root classNames='border border-separator rounded-md' {...props}>
+          <ToggleContainer.Header
+            title={'Test'}
             icon={
               running ? (
-                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
               ) : undefined
             }
-          >
-            <MarkdownViewer classNames='text-sm' content={generator.text.value.join('\n\n')} />
-          </ToggleContainer>
-        </div>
+          />
+          <ToggleContainer.Content classNames='bg-modalSurface'>
+            <MarkdownViewer classNames='p-2 text-sm' content={generator.text.value.join('\n\n')} />
+          </ToggleContainer.Content>
+        </ToggleContainer.Root>
       </div>
     </div>
   );
@@ -88,24 +87,21 @@ const DefaultStory = ({ shrinkX, ...props }: ToggleContainerProps) => {
 
 const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
-  component: ToggleContainer,
+  component: ToggleContainer.Root,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
-} satisfies Meta<typeof ToggleContainer>;
+} satisfies Meta<typeof ToggleContainer.Root>;
 
 export default meta;
 
-type Story = StoryObj<typeof ToggleContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    title: 'Markdown',
-  },
+  args: {},
 };
 
 export const Shrink: Story = {
   args: {
-    title: 'Markdown',
-    shrinkX: true,
+    shrink: true,
   },
 };

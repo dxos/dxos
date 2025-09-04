@@ -45,7 +45,7 @@ const [ScrollContainerProvider, useScrollContainerContext] =
 // Root
 //
 
-export type RootProps = ThemedClassName<
+type RootProps = ThemedClassName<
   PropsWithChildren<{
     pin?: boolean;
     fade?: boolean;

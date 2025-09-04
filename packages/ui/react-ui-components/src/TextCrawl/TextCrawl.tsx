@@ -95,7 +95,7 @@ export const TextCrawl = ({
         }, transition);
       }
 
-      containerRef.current.style.transition = `transform ${transition}ms cubic-bezier(0.25, 1.25, 0.5, 1.2)`;
+      containerRef.current.style.transition = `transform ${transition}ms cubic-bezier(0.25, 1.25, 0.5, 1)`;
       containerRef.current.style.transform = `translateY(-${i * height}px)`;
     }
   }, [height, index]);
