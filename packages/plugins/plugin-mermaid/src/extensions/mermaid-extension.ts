@@ -20,7 +20,8 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         }
 
         update(update: ViewUpdate) {
-          if (update.docChanged || update.viewportChanged || update.selectionSet) {
+          // Always rebuild decorations when selection changes to handle arrow key navigation
+          if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
             this.decorations = this.buildDecorations(update.view);
           }
         }
@@ -32,8 +33,9 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
             enter: (node) => {
               if (node.name === 'FencedCode') {
                 const cursor = view.state.selection.main.head;
-                // Only show widget when cursor is outside the code block
-                const showWidget = view.state.readOnly || cursor < node.from || cursor > node.to;
+                // Show widget when cursor is outside the code block.
+                // Add a buffer of 1 position before and after to handle edge cases.
+                const showWidget = view.state.readOnly || cursor < node.from - 1 || cursor > node.to + 1;
                 if (showWidget) {
                   const info = node.node.getChild('CodeInfo');
                   if (info) {
@@ -43,14 +45,14 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
                       const content = view.state.sliceDoc(text.from, text.to).trim();
                       const label = content.split(' ')[0];
 
-                      // Create widget
+                      // Create widget.
                       const widget = new MermaidWidget(`mermaid-${node.from}`, content, label);
 
-                      // Find the line after the code block to place the widget
+                      // Find the line after the code block to place the widget.
                       const endLine = view.state.doc.lineAt(node.to);
                       const nextLinePos = endLine.to + 1;
 
-                      // Add widget after the code block
+                      // Add widget after the code block.
                       if (nextLinePos <= view.state.doc.length) {
                         decorations.push({
                           from: nextLinePos,
@@ -60,7 +62,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
                           }),
                         });
                       } else {
-                        // If at end of document, place at the end
+                        // If at end of document, place at the end.
                         decorations.push({
                           from: endLine.to,
                           to: endLine.to,
@@ -71,7 +73,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
                         });
                       }
 
-                      // Hide each line of the code block
+                      // Hide each line of the code block.
                       const startLine = view.state.doc.lineAt(node.from);
                       for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
                         const line = view.state.doc.line(lineNum);
@@ -106,7 +108,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         width: '100%',
         padding: '16px',
         justifyContent: 'center',
-        backgroundColor: 'var(--dx-modalSurface)',
+        backgroundColor: 'var(--dx-groupSurface)',
         borderRadius: '8px',
       },
       '& .cm-mermaid-label': {
@@ -146,7 +148,6 @@ class MermaidWidget extends WidgetType {
   override toDOM(view: EditorView): HTMLDivElement {
     const div = document.createElement('div');
     div.className = 'cm-mermaid';
-    console.log('Creating Mermaid widget DOM');
 
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
