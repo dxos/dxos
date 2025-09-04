@@ -109,6 +109,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         position: 'relative',
         display: 'inline-flex',
         width: '100%',
+        maring: '4px 0',
         padding: '16px',
         justifyContent: 'center',
         backgroundColor: 'var(--dx-groupSurface)',
