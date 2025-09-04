@@ -23,7 +23,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
         }
 
         update(update: ViewUpdate) {
-          // Always rebuild decorations when selection changes to handle arrow key navigation
+          // Always rebuild decorations when selection changes to handle arrow key navigation.
           if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
             this.decorations = this.buildDecorations(update.view);
           }
@@ -65,7 +65,7 @@ export const mermaid = (_options: MermaidOptions = {}): Extension => {
                           }),
                         });
                       } else {
-                        // If at end of document, place at the end.
+                        // Check if at the end of the document.
                         decorations.push({
                           from: endLine.to,
                           to: endLine.to,
