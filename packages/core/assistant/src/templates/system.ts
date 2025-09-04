@@ -4,6 +4,7 @@
 
 import defaultsDeep from 'lodash.defaultsdeep';
 
+import { type ModelCapabilities } from '@dxos/ai';
 import { Template } from '@dxos/blueprints';
 
 import FORMAT from './format.tpl?raw';
@@ -12,7 +13,7 @@ import SYSTEM from './system.tpl?raw';
 /**
  * System template variables.
  */
-export type SystemPromptOptions = {
+export type SystemPromptOptions = ModelCapabilities & {
   DATETIME: string;
 };
 
