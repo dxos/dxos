@@ -24,16 +24,16 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
+  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
   RESEARCH_BLUEPRINT,
-  LINEAR_BLUEPRINT,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
   research,
+  syncLinearIssues,
   updateDocument,
   updateTasks,
-  syncLinearIssues,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';

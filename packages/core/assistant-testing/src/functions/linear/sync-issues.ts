@@ -5,7 +5,7 @@
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { Array, Effect, Schema, pipe } from 'effect';
 
-import { Obj, Query, Ref, Type, Filter } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
