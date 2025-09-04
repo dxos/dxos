@@ -118,8 +118,6 @@ export class KanbanModel<T extends BaseKanbanItem = { id: string }> extends Reso
       const pivotPath = this.columnFieldPath;
       // - the column field selection options
       void this._getSelectOptions();
-      // - the projection fields
-      void this._projection.getFieldProjections();
       // - the list of items
       const items = this._items.value;
       // - and each item's column field value
