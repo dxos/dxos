@@ -14,7 +14,7 @@ import { ComplexSet } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-// TODO(burdon): Move to @dxos/schema ContentBlock.
+// TODO(burdon): Move to @dxos/schema ContentBlock?
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
@@ -56,6 +56,7 @@ export class Bindings {
 /**
  * Manages bindings of blueprints and objects to a conversation.
  */
+// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder {
   /**
    * Reactive query of all bindings.

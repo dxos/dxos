@@ -68,7 +68,8 @@ export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
     role='none'
     className={mx(
-      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd [--control-spacing:0px] [&_input]:justify-self-end [&_button]:justify-self-end',
+      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]',
+      '[--control-spacing:0px] [&_input]:justify-self-end [&_button]:justify-self-end',
       classNames,
     )}
   >
