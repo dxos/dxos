@@ -14,7 +14,7 @@ import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant, AssistantAction } from '../types';
 
-import { BLUEPRINT, BLUEPRINT_KEY } from './blueprint-definition';
+import { BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
@@ -33,18 +33,16 @@ export default (context: PluginContext) => [
           rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
-          space.db.add(Obj.clone(BLUEPRINT));
+
+          // TODO(burdon): Clone when activated. Copy-on-write for template.
+          space.db.add(createBlueprint());
         }),
     }),
     createResolver({
       intent: AssistantAction.CreateChat,
       resolve: async ({ space, name }) => {
         const queue = space.queues.create();
-        const object = Obj.make(Assistant.Chat, {
-          name,
-          queue: Ref.fromDXN(queue.dxn),
-        });
-
+        const object = Obj.make(Assistant.Chat, { name, queue: Ref.fromDXN(queue.dxn) });
         const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         // TODO(wittjosiah): This should be a space-level setting.
         const defaultBlueprint = blueprints.find((blueprint) => blueprint.key === BLUEPRINT_KEY);
@@ -53,7 +51,9 @@ export default (context: PluginContext) => [
           await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
         }
 
-        return { data: { object } };
+        return {
+          data: { object },
+        };
       },
     }),
     createResolver({

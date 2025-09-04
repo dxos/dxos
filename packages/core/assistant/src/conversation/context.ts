@@ -42,7 +42,8 @@ export type BindingProps = Partial<{
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
-  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
+  // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
+  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
