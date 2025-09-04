@@ -34,6 +34,15 @@ export const Default: Story = {
   },
 };
 
+export const Cyclic: Story = {
+  args: {
+    classNames: 'w-96 px-2',
+    lines: Array.from({ length: 5 }, (_, i) => `${i}. ${faker.lorem.paragraph()}`),
+    autoAdvance: true,
+    cyclic: true,
+  },
+};
+
 export const Demo: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>([]);
@@ -59,6 +68,7 @@ export const Numbers: Story = {
     const [count, setCount] = useState(123);
     const str = String(count).padStart(n, '0');
     useEffect(() => {
+      // TODO(burdon): Use animation frame.
       const i = setInterval(() => setCount((count) => count + 1), 1_000);
       return () => clearInterval(i);
     }, []);
@@ -74,6 +84,7 @@ export const Numbers: Story = {
                 size={size}
                 lines={digits}
                 index={digits.findIndex((d) => d === str[i])}
+                transition={100}
                 cyclic
               />
             ))}

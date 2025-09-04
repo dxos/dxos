@@ -66,10 +66,6 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
       {functions && functions.length > 0 && (
         <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
       )}
-
-      {!blueprints?.length && !activeBlueprints?.length && !services?.length && !functions?.length && (
-        <div>{t('no tools')}</div>
-      )}
     </div>
   );
 };

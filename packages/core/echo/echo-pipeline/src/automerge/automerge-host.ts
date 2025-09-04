@@ -563,8 +563,8 @@ export class AutomergeHost extends Resource {
         missingOnRemote: diff.missingOnRemote.length,
         missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
-        localDocumentCount: Object.keys(localState.documents).length,
-        remoteDocumentCount: Object.keys(state.documents).length,
+        localDocumentCount: Object.entries(localState.documents).filter(([_, heads]) => heads.length > 0).length,
+        remoteDocumentCount: Object.entries(state.documents).filter(([_, heads]) => heads.length > 0).length,
       });
     }
 

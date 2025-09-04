@@ -10,7 +10,7 @@ import React, { Fragment } from 'react';
 
 import { trim } from '@dxos/util';
 
-import { tokenSet } from './index';
+import { tokenSet } from './config';
 
 const colorAudit = auditFacet(tokenSet.colors, { condition: 'p3' });
 
@@ -51,8 +51,7 @@ const DefaultStory = () => {
           linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
           background-size: 32px 32px;
           background-position: 0 0, 16px 16px;
-        }
-        `}
+        }`}
       </style>
 
       <div className='flex'>

@@ -130,7 +130,7 @@ const CardStackStory = () => {
                     <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
                   </Card.StaticRoot>
                   <StackItem.DragPreview>
-                    {({ item }) => (
+                    {() => (
                       <CardDragPreview.Root>
                         <CardDragPreview.Content>
                           <Card.Toolbar>

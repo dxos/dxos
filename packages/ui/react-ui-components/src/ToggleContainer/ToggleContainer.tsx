@@ -70,7 +70,10 @@ export const ToggleContainer = ({
   return (
     <div className={mx('overflow-hidden', classNames)}>
       {title && (
-        <div className='flex py-1 items-center text-sm text-subdued cursor-pointer select-none' onClick={handleToggle}>
+        <div
+          className='flex py-1 items-center text-sm text-description cursor-pointer select-none'
+          onClick={handleToggle}
+        >
           <div className='flex w-[24px] h-[24px] items-center justify-center'>
             <Icon
               size={4}
@@ -86,7 +89,7 @@ export const ToggleContainer = ({
       <div
         style={{ transitionDuration: `${duration}ms` }}
         className={mx(
-          'grid transition-[grid-template-columns] ease-in-out',
+          'grid transition-[grid-template-columns] ease-in-out bg-modalSurface',
           expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
         )}
       >

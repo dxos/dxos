@@ -69,7 +69,7 @@ moon docs:serve           # Documentation site
 ### Development Commands
 ```bash
 moon <package>:lint -- --fix # Lint and fix code
-moon <package>:build         # Build a package
+moon <package>:build         # Compile and build a package
 ```
 
 ## Testing
