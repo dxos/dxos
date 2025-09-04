@@ -2,94 +2,116 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(wittjosiah): Better typescript support for functions using the sdk.
-// @ts-nocheck
-
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
+import { type HttpClientError } from '@effect/platform/HttpClientError';
 import { format, subDays } from 'date-fns';
-import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
-import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'effect';
+import { Chunk, Console, Effect, Ref, Schedule, Schema, Stream, pipe } from 'effect';
+import { type TimeoutException } from 'effect/Cause';
+
+import { ArtifactId } from '@dxos/assistant';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
+
+import { Mailbox } from '../types';
 
 export default defineFunction({
-  inputSchema: S.Struct({
-    mailboxId: S.String,
-    userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
-    after: S.optional(S.Union(S.Number, S.String)).pipe(
-      S.withDecodingDefault(() => format(subDays(new Date(), 30), 'yyyy-MM-dd')),
-    ),
-    pageSize: S.optional(S.Number).pipe(S.withDecodingDefault(() => 100)),
-    // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
-    tick: S.optional(S.String),
+  name: 'dxos.org/function/inbox/gmail-sync',
+  description: 'Sync emails from Gmail to the mailbox.',
+  inputSchema: Schema.Struct({
+    mailboxId: ArtifactId,
+    userId: Schema.optional(Schema.String),
+    after: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
+    pageSize: Schema.optional(Schema.Number),
   }),
-
-  outputSchema: S.Struct({
-    newMessages: S.Number,
+  outputSchema: Schema.Struct({
+    newMessages: Schema.Number,
   }),
-
-  handler: ({ context: { space }, data: { mailboxId, userId, after, pageSize } }: any) =>
+  handler: ({
+    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd'), pageSize = 100 },
+  }) =>
     Effect.gen(function* () {
-      yield* Effect.log('running gmail sync', { mailboxId, userId, after, pageSize });
+      yield* Console.log('running gmail sync', { mailboxId, userId, after, pageSize });
 
-      const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('dxos.org/type/AccessToken', { source: 'gmail.com' })).first(),
-        catch: (e: any) => e,
-      });
+      const {
+        objects: [{ token }],
+      } = yield* DatabaseService.runQuery(Filter.type(DataType.AccessToken, { source: 'gmail.com' }));
+      yield* Console.log('found token', { token });
+
+      // TODO(wittjosiah): Can't use `HttpClient.execute` directly because it results in CORS errors when traced.
+      //   Is this an issue on Google's side or is it a bug in `@effect/platform`?
+      const httpClient = yield* HttpClient.HttpClient;
+      const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
       // NOTE: Google API bundles size is v. large and caused runtime issues.
       const makeRequest = (url: string) =>
-        pipe(
-          url,
-          HttpClientRequest.get,
-          HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
-          HttpClient.execute,
-          Effect.flatMap((res: any) => res.json),
+        HttpClientRequest.get(url).pipe(
+          HttpClientRequest.setHeader('authorization', `Bearer ${token}`),
+          HttpClientRequest.setHeader('accept', 'application/json'),
+          httpClientWithTracerDisabled.execute,
+          Effect.flatMap((res) => res.json),
           Effect.timeout('1 second'),
           Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
           Effect.scoped,
         );
 
+      // TODO(wittjosiah): Add schema to parse response.
       const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) =>
-        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken }));
+        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken })) as Effect.Effect<
+          { messages: { id: string; threadId: string }[]; nextPageToken: string },
+          HttpClientError | TimeoutException,
+          HttpClient.HttpClient
+        >;
 
-      const getMessage = (userId: string, messageId: string) => makeRequest(getUrl(userId, messageId));
+      // TODO(wittjosiah): Add schema to parse response.
+      const getMessage = (userId: string, messageId: string) =>
+        makeRequest(getUrl(userId, messageId)) as Effect.Effect<
+          {
+            id: string;
+            threadId: string;
+            internalDate: string;
+            payload: {
+              headers: { name: string; value: string }[];
+              body?: { data: string };
+              parts?: { mimeType: string; body: { data: string } }[];
+            };
+          },
+          HttpClientError | TimeoutException,
+          HttpClient.HttpClient
+        >;
 
-      const mailbox = yield* Effect.tryPromise({
-        try: () => space.db.query({ id: mailboxId }).first(),
-        catch: (e: any) => e,
-      });
-      const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(mailbox.queue.dxn),
-        catch: (e: any) => e,
-      });
-      const newMessages = yield* Ref.make([]);
-      const nextPage = yield* Ref.make(null);
+      const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(mailboxId), Mailbox.Mailbox);
+      const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
+      const newMessages = yield* Ref.make<DataType.Message[]>([]);
+      const nextPage = yield* Ref.make<string | null>(null);
 
       do {
-        const last = objects.at(-1);
+        const last = queue.objects.at(-1);
         const q = last
           ? `in:inbox after:${Math.floor(new Date(last.created).getTime() / 1000)}`
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
+        yield* Console.log('listing messages', { q, pageToken });
         const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
         yield* Ref.update(nextPage, () => nextPageToken);
         for (const message of messages) {
           const messageDetails = yield* getMessage(userId, message.id);
           const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
-          const from = messageDetails.payload.headers.find((h: any) => h.name === 'From');
+          const from = messageDetails.payload.headers.find((h) => h.name === 'From');
           const sender = from && parseEmailString(from.value);
           // TODO(wittjosiah): Improve parsing of email contents.
           const content =
             messageDetails.payload.body?.data ??
-            messageDetails.payload.parts?.find((p: any) => p.mimeType === 'text/plain')?.body.data;
+            messageDetails.payload.parts?.find((p) => p.mimeType === 'text/plain')?.body.data;
           // Skip the message if content or sender is missing.
           // Skip the message if it's the same as the last message.
           // TODO(wittjosiah): This comparison should be done via foreignId probably.
           if (!content || !sender || created === last?.created) {
             continue;
           }
-          const subject = messageDetails.payload.headers.find((h: any) => h.name === 'Subject')?.value;
-          const object = create(MessageType, {
-            id: ObjectId.random(),
+          const subject = messageDetails.payload.headers.find((h) => h.name === 'Subject')?.value;
+          const object = Obj.make(DataType.Message, {
+            id: Type.ObjectId.random(),
             created,
             sender,
             blocks: [
@@ -104,7 +126,7 @@ export default defineFunction({
             },
           });
           // TODO(wittjosiah): Set foreignId in object meta.
-          yield* Ref.update(newMessages, (n: any) => [object, ...n]);
+          yield* Ref.update(newMessages, (n) => [object, ...n]);
         }
       } while (yield* Ref.get(nextPage));
 
@@ -114,15 +136,12 @@ export default defineFunction({
           queueMessages,
           Stream.fromIterable,
           Stream.grouped(10),
-          Stream.flatMap((batch: any) =>
-            Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(mailbox.queue.dxn, Chunk.toReadonlyArray(batch)),
-              catch: (e: any) => e,
-            }),
-          ),
+          Stream.flatMap((batch) => Effect.tryPromise(() => queue.append(Chunk.toArray(batch)))),
           Stream.runDrain,
         );
       }
+
+      yield* Console.log('gmail sync complete', { newMessages: queueMessages.length });
 
       return { newMessages: queueMessages.length };
     }).pipe(Effect.provide(FetchHttpClient.layer)),
@@ -153,56 +172,3 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
   return undefined;
 };
-
-//
-// Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
-//
-
-const ActorRoles = ['user', 'assistant'] as const;
-const ActorRole = S.Literal(...ActorRoles);
-type ActorRole = S.Schema.Type<typeof ActorRole>;
-
-const ActorSchema = S.Struct({
-  identityKey: S.optional(S.String),
-  email: S.optional(S.String),
-  name: S.optional(S.String),
-  role: S.optional(ActorRole),
-});
-
-const Base = S.Struct({
-  pending: S.optional(S.Boolean),
-});
-type Base = S.Schema.Type<typeof Base>;
-const Text = S.TaggedStruct('text', {
-  mimeType: S.optional(S.String),
-  text: S.String,
-  ...Base.fields,
-}).pipe(S.mutable);
-interface Text extends S.Schema.Type<typeof Text> {}
-
-const MessageType = S.Struct({
-  id: ObjectId,
-  created: S.String.annotations({
-    description: 'ISO date string when the message was sent.',
-  }),
-  sender: ActorSchema.annotations({
-    description: 'Identity of the message sender.',
-  }),
-  blocks: S.Array(Text).annotations({
-    description: 'Contents of the message.',
-  }),
-  properties: S.optional(
-    S.mutable(
-      S.Record({ key: S.String, value: S.Any }).annotations({
-        description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
-      }),
-    ),
-  ),
-}).pipe(
-  EchoObject({
-    typename: 'dxos.org/type/Message',
-    version: '0.2.0',
-  }),
-);
-type MessageType = S.Schema.Type<typeof MessageType>;

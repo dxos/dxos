@@ -5525,12 +5525,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
-      '@dxos/plugin-board':
-        specifier: workspace:*
-        version: link:../plugin-board
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -5546,27 +5540,12 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@dxos/plugin-sketch':
-        specifier: workspace:*
-        version: link:../plugin-sketch
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
-      '@dxos/plugin-wnfs':
-        specifier: workspace:*
-        version: link:../plugin-wnfs
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -5679,6 +5658,12 @@ importers:
       '@dxos/assistant-testing':
         specifier: workspace:*
         version: link:../../core/assistant-testing
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5688,6 +5673,18 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
+      '@dxos/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
@@ -5697,6 +5694,12 @@ importers:
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../plugin-thread
+      '@dxos/plugin-token-manager':
+        specifier: workspace:*
+        version: link:../plugin-token-manager
+      '@dxos/plugin-wnfs':
+        specifier: workspace:*
+        version: link:../plugin-wnfs
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
