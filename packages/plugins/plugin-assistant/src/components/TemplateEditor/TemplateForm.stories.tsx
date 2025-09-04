@@ -55,7 +55,6 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
     }),
     withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
     withTheme,

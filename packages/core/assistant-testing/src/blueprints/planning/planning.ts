@@ -85,7 +85,7 @@ const instructions = trim`
   - Be precise with task descriptions and hierarchy levels
 `;
 
-export const blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/planning',
   name: 'Planning',
   description: 'Plans and tracks complex tasks with artifact management.',
