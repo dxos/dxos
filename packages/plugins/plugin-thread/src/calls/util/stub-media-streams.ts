@@ -52,8 +52,7 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
   oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
 
   const gainNode = audioContext.createGain();
-  // even w/ gain at 0 some packets are sent
-  gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
   oscillator.connect(gainNode);
 
   const destination = audioContext.createMediaStreamDestination();

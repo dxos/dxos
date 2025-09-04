@@ -261,9 +261,6 @@ export class CallsServicePeer extends Resource {
         } else {
           log.error('missing track data');
         }
-      })
-      .catch((err) => {
-        log.catch(err);
       });
 
     const onDispose = async () => {
@@ -534,10 +531,10 @@ const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
   }
 };
 
-const INITIAL_DELAY = 10;
+const INITIAL_DELAY = 50;
 const MAX_DELAY = 500;
 const MAX_RETRIES = 20;
-const WAIT_FOR_DATA_TIMEOUT = 10_000;
+const WAIT_FOR_DATA_TIMEOUT = 15_000;
 
 const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTransceiver): Promise<void> => {
   let delay = INITIAL_DELAY;

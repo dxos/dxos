@@ -262,7 +262,7 @@ export class MediaManager extends Resource {
 
     if (pullResults.some(({ shouldRetry }) => shouldRetry)) {
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.verbose('reconciling tracks, retrying', { tracksToPull });
+      log.verbose('retrying pull tracks', { tracksToPull });
       invariant(this._pullTracksTask);
       this._pullTracksTask.schedule();
     }
@@ -282,21 +282,20 @@ export class MediaManager extends Resource {
       this._maybePushTrack(this._state.screenshareTrack, this._state.pushedScreenshareTrack),
     ]);
 
-    if (pushVideoResult?.track !== this._state.pushedVideoTrack) {
-      this._state.pushedVideoTrack = pushVideoResult?.track;
+    if (pushVideoResult.track !== this._state.pushedVideoTrack) {
+      this._state.pushedVideoTrack = pushVideoResult.track;
       updated = true;
     }
-    if (pushAudioResult?.track !== this._state.pushedAudioTrack) {
-      this._state.pushedAudioTrack = pushAudioResult?.track;
+    if (pushAudioResult.track !== this._state.pushedAudioTrack) {
+      this._state.pushedAudioTrack = pushAudioResult.track;
       updated = true;
     }
-    if (pushScreenshareResult?.track !== this._state.pushedScreenshareTrack) {
-      this._state.pushedScreenshareTrack = pushScreenshareResult?.track;
+    if (pushScreenshareResult.track !== this._state.pushedScreenshareTrack) {
+      this._state.pushedScreenshareTrack = pushScreenshareResult.track;
       updated = true;
     }
 
-    const shouldRetry =
-      pushVideoResult?.shouldRetry || pushAudioResult?.shouldRetry || pushScreenshareResult?.shouldRetry;
+    const shouldRetry = pushVideoResult.shouldRetry || pushAudioResult.shouldRetry || pushScreenshareResult.shouldRetry;
 
     if (updated) {
       this.stateUpdated.emit(this._state);
@@ -350,7 +349,7 @@ export class MediaManager extends Resource {
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
-  ): Promise<{ track?: TrackObject; shouldRetry?: boolean } | undefined> {
+  ): Promise<{ track?: TrackObject; shouldRetry?: boolean }> {
     if (!track && !previousTrack) {
       return { track: undefined };
     }
