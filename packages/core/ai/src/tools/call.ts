@@ -50,10 +50,18 @@ export const callTool: <Tools extends AiTool.Any>(
               _tag: 'toolResult',
               toolCallId: toolCall.toolCallId,
               name: toolCall.name,
-              error: String(error),
+              error: formatError(error),
             }) satisfies ContentBlock.ToolResult,
         ),
       ),
     );
   },
 );
+
+const formatError = (error: Error): string => {
+  if (error.cause) {
+    return `${String(error)}\ncaused by:\n${formatError(error.cause as Error)}`;
+  } else {
+    return String(error);
+  }
+};
