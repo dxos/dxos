@@ -30,7 +30,7 @@ export const createBlackCanvasStreamTrack = async ({
     canvasCtx.fillStyle = 'black';
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
   };
-  scheduleTaskInterval(ctx, async () => drawFrame(), 1_000);
+  scheduleTaskInterval(ctx, async () => drawFrame(), 200);
 
   const track = canvas.captureStream().getVideoTracks()[0];
   drawFrame();

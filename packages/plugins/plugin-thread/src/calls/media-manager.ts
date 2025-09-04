@@ -4,6 +4,7 @@
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { type Context, Resource, cancelWithContext } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { SpeakingMonitor } from './speaking-monitor';
@@ -54,7 +55,7 @@ export type MediaManagerParams = {
   serviceConfig: CallsServiceConfig;
 };
 
-const USE_INAUDIBLE_AUDIO = false;
+const USE_INAUDIBLE_AUDIO = true;
 
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
@@ -248,7 +249,7 @@ export class MediaManager extends Resource {
     });
 
     // Pull new tracks.
-    await Promise.all(tracksToPull.map((name) => this._pullTrack(name)));
+    const pullResults = await Promise.all(tracksToPull.map((name) => this._pullTrack(name)));
 
     // Close old tracks.
     await Promise.all([...audioTracksToClose, ...videoStreamsToClose].map(([_, { ctx }]) => ctx.dispose()));
@@ -258,6 +259,13 @@ export class MediaManager extends Resource {
       currentVideoStreams: Object.keys(this._state.pulledVideoStreams),
     });
     this.stateUpdated.emit(this._state);
+
+    if (pullResults.some(({ shouldRetry }) => shouldRetry)) {
+      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
+      log.verbose('reconciling tracks, retrying', { tracksToPull });
+      invariant(this._pullTracksTask);
+      this._pullTracksTask.schedule();
+    }
   }
 
   private async _pushTracks(): Promise<void> {
@@ -266,34 +274,43 @@ export class MediaManager extends Resource {
     }
 
     let updated = false;
-    const [pushedVideoTrack, pushedAudioTrack, pushedScreenshareTrack] = await Promise.all([
-      this._pushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
+    const [pushVideoResult, pushAudioResult, pushScreenshareResult] = await Promise.all([
+      this._maybePushTrack(this._state.videoTrack, this._state.pushedVideoTrack, [
         { maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE },
       ]),
-      this._pushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [{ networkPriority: 'high' }]),
-      this._pushTrack(this._state.screenshareTrack, this._state.pushedScreenshareTrack),
+      this._maybePushTrack(this._state.audioTrack, this._state.pushedAudioTrack, [{ networkPriority: 'high' }]),
+      this._maybePushTrack(this._state.screenshareTrack, this._state.pushedScreenshareTrack),
     ]);
 
-    if (pushedVideoTrack !== this._state.pushedVideoTrack) {
-      this._state.pushedVideoTrack = pushedVideoTrack;
+    if (pushVideoResult?.track !== this._state.pushedVideoTrack) {
+      this._state.pushedVideoTrack = pushVideoResult?.track;
       updated = true;
     }
-    if (pushedAudioTrack !== this._state.pushedAudioTrack) {
-      this._state.pushedAudioTrack = pushedAudioTrack;
+    if (pushAudioResult?.track !== this._state.pushedAudioTrack) {
+      this._state.pushedAudioTrack = pushAudioResult?.track;
       updated = true;
     }
-    if (pushedScreenshareTrack !== this._state.pushedScreenshareTrack) {
-      this._state.pushedScreenshareTrack = pushedScreenshareTrack;
+    if (pushScreenshareResult?.track !== this._state.pushedScreenshareTrack) {
+      this._state.pushedScreenshareTrack = pushScreenshareResult?.track;
       updated = true;
-    }
-    if (!updated) {
-      return;
     }
 
-    this.stateUpdated.emit(this._state);
+    const shouldRetry =
+      pushVideoResult?.shouldRetry || pushAudioResult?.shouldRetry || pushScreenshareResult?.shouldRetry;
+
+    if (updated) {
+      this.stateUpdated.emit(this._state);
+    }
+
+    if (shouldRetry) {
+      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
+      log.verbose('retrying push tracks', { pushVideoResult, pushAudioResult, pushScreenshareResult });
+      invariant(this._pushTracksTask);
+      this._pushTracksTask.schedule();
+    }
   }
 
-  private async _pullTrack(name: EncodedTrackName): Promise<void> {
+  private async _pullTrack(name: EncodedTrackName): Promise<{ shouldRetry: boolean }> {
     const ctx = this._ctx.derive();
     try {
       const trackData = TrackNameCodec.decode(name);
@@ -306,7 +323,7 @@ export class MediaManager extends Resource {
         case 'audio': {
           this._state.pulledAudioTracks[name] = { track, ctx };
           ctx.onDispose(() => delete this._state.pulledAudioTracks[name]);
-          break;
+          return { shouldRetry: false };
         }
         case 'video': {
           const mediaStream = new MediaStream();
@@ -317,7 +334,7 @@ export class MediaManager extends Resource {
             track.stop();
             delete this._state.pulledVideoStreams[name];
           });
-          break;
+          return { shouldRetry: false };
         }
         default:
           throw new Error(`Invalid track kind: ${track?.kind}`);
@@ -325,25 +342,34 @@ export class MediaManager extends Resource {
     } catch (err) {
       log.verbose('failed to pull track', { err, name });
       void ctx.dispose();
-      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.verbose('retrying pull track', { name });
-      this._pullTracksTask!.schedule();
+      return { shouldRetry: true };
     }
   }
 
-  private async _pushTrack(
+  private async _maybePushTrack(
     track?: MediaStreamTrack,
     previousTrack?: TrackObject,
     encodings?: RTCRtpEncodingParameters[],
-  ): Promise<TrackObject | undefined> {
+  ): Promise<{ track?: TrackObject; shouldRetry?: boolean } | undefined> {
     if (!track && !previousTrack) {
-      return;
+      return { track: undefined };
     }
 
-    return this._state.peer!.pushTrack({
-      track: track ?? null,
-      previousTrack,
-      encodings,
-    });
+    const ctx = this._ctx.derive();
+
+    try {
+      return {
+        track: await this._state.peer!.pushTrack({
+          ctx,
+          track: track ?? null,
+          previousTrack,
+          encodings,
+        }),
+      };
+    } catch (err) {
+      log.verbose('failed to push track', { err, track, previousTrack, encodings });
+      void ctx.dispose();
+      return { shouldRetry: true };
+    }
   }
 }
