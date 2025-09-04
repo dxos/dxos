@@ -7,6 +7,9 @@ import React, { forwardRef } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+const diameter = 24;
+const connector = 4;
+
 export type NumericTabsProps = ThemedClassName<{
   length: number;
   selected?: number;
@@ -14,7 +17,7 @@ export type NumericTabsProps = ThemedClassName<{
 }>;
 
 /**
- * @deprecated Use Timeline.
+ * Vertical strip of nodes.
  */
 export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
   ({ classNames, length, selected = 0, onSelect }, forwardedRef) => {
@@ -58,17 +61,21 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
           return (
             <div
               key={i}
-              className={mx(
-                'relative flex w-[24px] h-[28px] justify-center cursor-pointer',
-                selected !== i && 'text-subdued',
-              )}
+              className={mx('relative flex justify-center cursor-pointer', selected !== i && 'text-subdued')}
+              style={{ width: diameter, height: diameter + connector }}
             >
               {i < length - 1 && (
-                <div style={{ left: 11.5, top: 24, width: 1, height: 4 }} className='absolute bg-separator' />
+                <div
+                  style={{ left: 11.5, top: diameter, width: 1, height: connector }}
+                  className='absolute bg-separator'
+                />
               )}
               <div
-                className='flex justify-center items-center w-[24px] h-[24px] border border-separator rounded-full text-xs'
-                onClick={() => onSelect?.(i)}
+                className='flex justify-center items-center border border-separator rounded-full text-xs'
+                style={{ width: diameter, height: diameter }}
+                onClick={() => {
+                  onSelect?.(i);
+                }}
               >
                 {i}
               </div>
