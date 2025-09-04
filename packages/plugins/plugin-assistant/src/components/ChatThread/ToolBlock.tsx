@@ -104,11 +104,7 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   }, [open]);
 
   const handleSelect = (index: number) => {
-    if (index === selected) {
-      setOpen(false);
-    } else {
-      setSelected(index);
-    }
+    setSelected(index);
   };
 
   const title = useMemo(() => {
@@ -119,9 +115,7 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   return (
     <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
       <div className='is-full grid grid-cols-[32px_1fr]'>
-        <div className='flex justify-center pbs-1'>
-          <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
-        </div>
+        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json data={items[selected].block} classNames={styles.json} />
       </div>
     </ToggleContainer>
