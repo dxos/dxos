@@ -9,6 +9,9 @@ import _mermaid from 'mermaid';
 
 export type MermaidOptions = {};
 
+/**
+ * Extension to create mermaid diagrams.
+ */
 export const mermaid = (_options: MermaidOptions = {}): Extension => {
   return [
     ViewPlugin.fromClass(
