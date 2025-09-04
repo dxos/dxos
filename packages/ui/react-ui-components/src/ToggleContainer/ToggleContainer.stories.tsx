@@ -46,7 +46,7 @@ class Generator {
   }
 }
 
-const DefaultStory = ({ shrink, ...props }: ToggleContainerRootProps) => {
+const DefaultStory = (props: ToggleContainerRootProps) => {
   const generator = useMemo(() => new Generator(), []);
   const [running, setRunning] = useState(false);
   useEffect(() => {
@@ -67,16 +67,12 @@ const DefaultStory = ({ shrink, ...props }: ToggleContainerRootProps) => {
         <div>{generator.count.value}</div>
       </Toolbar.Root>
       <div className='flex p-4'>
-        <ToggleContainer.Root
-          shrink={shrink}
-          classNames={['border border-separator rounded-md', !shrink && 'is-full']}
-          {...props}
-        >
+        <ToggleContainer.Root classNames='border border-separator rounded-md' {...props}>
           <ToggleContainer.Header
             title={'Test'}
             icon={
               running ? (
-                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued ml-2 animate-spin' size={4} />
+                <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
               ) : undefined
             }
           />

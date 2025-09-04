@@ -32,7 +32,7 @@ const [ToggleContainerContext, useToggleContainerContext] = createContext<Contex
 // Root
 //
 
-export type RootProps = ThemedClassName<
+type RootProps = ThemedClassName<
   PropsWithChildren<
     {
       open?: boolean;
@@ -91,7 +91,7 @@ const Root = ({
       open={open}
       setOpen={setOpen}
     >
-      <div role='none' className={mx('is-full overflow-hidden', classNames)}>
+      <div role='none' className={mx('overflow-hidden', !shrink && 'is-full', classNames)}>
         {children}
       </div>
     </ToggleContainerContext>
