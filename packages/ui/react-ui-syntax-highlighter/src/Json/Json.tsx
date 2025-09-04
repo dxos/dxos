@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Move to jsonpath-plus.
+// TODO(burdon): Use to jsonpath-plus.
 import jp from 'jsonpath';
 import React, { useEffect, useState } from 'react';
 
@@ -10,17 +10,21 @@ import { Input, type ThemedClassName } from '@dxos/react-ui';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
-export type JsonProps = ThemedClassName<{ data?: any; testId?: string }>;
+const defaultClassNames = '!m-0 grow overflow-y-auto';
 
-export const Json = ({ data, classNames, testId }: JsonProps) => {
+export type JsonReplacer = (this: any, key: string, value: any) => any;
+
+export type JsonProps = ThemedClassName<{ testId?: string; data?: any; replacer?: JsonReplacer }>;
+
+export const Json = ({ data, testId, classNames, replacer }: JsonProps) => {
   return (
-    <SyntaxHighlighter language='json' classNames={['w-full', classNames]} data-testid={testId}>
-      {JSON.stringify(data, null, 2)}
+    <SyntaxHighlighter language='json' classNames={[defaultClassNames, classNames]} data-testid={testId}>
+      {JSON.stringify(data, replacer, 2)}
     </SyntaxHighlighter>
   );
 };
 
-export const JsonFilter = ({ data: initialData, classNames, testId }: JsonProps) => {
+export const JsonFilter = ({ data: initialData, ...params }: JsonProps) => {
   const [data, setData] = useState(initialData);
   const [text, setText] = useState('');
   const [error, setError] = useState<Error | null>(null);
@@ -49,9 +53,12 @@ export const JsonFilter = ({ data: initialData, classNames, testId }: JsonProps)
           placeholder='JSONPath (e.g., $.graph.nodes)'
         />
       </Input.Root>
-      <SyntaxHighlighter language='json' classNames={['grow overflow-y-auto', classNames]} data-testid={testId}>
-        {JSON.stringify(data, null, 2)}
-      </SyntaxHighlighter>
+      <Json data={data} {...params} />
     </div>
   );
+};
+
+export type CreateReplacerProps = {
+  omit?: string[];
+  parse?: string[];
 };

@@ -11,7 +11,7 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -47,7 +47,13 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
     );
   });
 
-  return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;
+  return (
+    <TemplateEditor
+      classNames='bg-baseSurface max-is-prose is-full'
+      id={blueprint.id}
+      template={blueprint.instructions}
+    />
+  );
 };
 
 const meta = {
@@ -56,11 +62,11 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
-      types: [Blueprint.Blueprint],
     }),
-    withLayout({ fullscreen: true, Container: ColumnContainer }),
+    withLayout({ fullscreen: true, classNames: 'justify-center bg-deckSurface' }),
     withTheme,
   ],
   parameters: {

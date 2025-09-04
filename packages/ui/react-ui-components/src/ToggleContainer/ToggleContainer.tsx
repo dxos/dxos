@@ -2,54 +2,77 @@
 // Copyright 2025 DXOS.org
 //
 
+import { createContext } from '@radix-ui/react-context';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { Icon, type ThemedClassName, useControlledState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type ToggleContainerProps = ThemedClassName<
-  PropsWithChildren<{
-    title?: string | JSX.Element;
-    icon?: JSX.Element;
-    open?: boolean;
-    defaultOpen?: boolean;
-    duration?: number;
-    /** Should shrink the width when closed. */
-    shrinkX?: boolean;
-    onChangeOpen?: (open: boolean) => void;
-  }>
+const IconBlock = ({ children }: PropsWithChildren) => {
+  return <div className='grid bs-[24px] is-[24px] place-items-center'>{children}</div>;
+};
+
+//
+// Context
+//
+
+type ContextValue = {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  /** Should shrink the width when closed. */
+  shrink: boolean;
+  duration: number;
+  expandX: boolean;
+  expandY: boolean;
+};
+
+const [ToggleContainerContext, useToggleContainerContext] = createContext<ContextValue>('ToggleContainer');
+
+//
+// Root
+//
+
+type RootProps = ThemedClassName<
+  PropsWithChildren<
+    {
+      open?: boolean;
+      defaultOpen?: boolean;
+      onChangeOpen?: (open: boolean) => void;
+    } & Partial<Pick<ContextValue, 'shrink' | 'duration'>>
+  >
 >;
 
-export const ToggleContainer = ({
+const Root = ({
   classNames,
-  title,
-  icon,
   open: openParam,
-  defaultOpen,
+  defaultOpen = false,
+  shrink = false,
   duration = 250,
-  shrinkX = false,
   children,
   onChangeOpen,
-}: ToggleContainerProps) => {
-  const [open, setOpen] = useControlledState(openParam ?? defaultOpen);
-  const [expandX, setExpandX] = useState(shrinkX ? open : true);
-  const [expandY, setExpandY] = useState(open);
+}: RootProps) => {
+  const [open, setOpen] = useControlledState<boolean>(openParam ?? defaultOpen);
+  const [expandX, setExpandX] = useState<boolean>(shrink ? open : true);
+  const [expandY, setExpandY] = useState<boolean>(open);
 
+  // Orchestrate opening/closing animation.
   useEffect(() => {
+    onChangeOpen?.(open);
+
     let t: NodeJS.Timeout;
     if (open) {
-      if (shrinkX) {
+      if (shrink) {
         setExpandX(true);
       }
       t = setTimeout(
         () => {
           setExpandY(true);
         },
-        shrinkX ? duration : 0,
+        shrink ? duration : 0,
       );
     } else {
       setExpandY(false);
-      if (shrinkX) {
+      if (shrink) {
         t = setTimeout(() => {
           setExpandX(false);
         }, duration);
@@ -59,52 +82,106 @@ export const ToggleContainer = ({
     return () => clearTimeout(t);
   }, [open]);
 
-  const handleToggle = () => {
-    if (onChangeOpen) {
-      onChangeOpen(!open);
-    } else {
-      setOpen((open) => !open);
-    }
-  };
+  return (
+    <ToggleContainerContext
+      shrink={shrink}
+      duration={duration}
+      expandX={expandX}
+      expandY={expandY}
+      open={open}
+      setOpen={setOpen}
+    >
+      <div role='none' className={mx('overflow-hidden', !shrink && 'is-full', classNames)}>
+        {children}
+      </div>
+    </ToggleContainerContext>
+  );
+};
+
+//
+// Header
+//
+
+type HeaderProps = ThemedClassName<{
+  title?: string | JSX.Element;
+  icon?: JSX.Element;
+  shrink?: boolean;
+}>;
+
+const Header = ({ classNames, title, icon }: HeaderProps) => {
+  const { open, setOpen, shrink, duration } = useToggleContainerContext(Header.displayName);
 
   return (
-    <div className={mx('overflow-hidden', classNames)}>
-      {title && (
-        <div
-          className='flex py-1 items-center text-sm text-description cursor-pointer select-none'
-          onClick={handleToggle}
-        >
-          <div className='flex w-[24px] h-[24px] items-center justify-center'>
-            <Icon
-              size={4}
-              icon={'ph--caret-right--regular'}
-              style={{ transitionDuration: `${shrinkX ? duration * 2 : duration}ms` }}
-              classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
-            />
-          </div>
-          <div className='flex-1 pis-1 pie-1 truncate'>{title}</div>
-          {icon}
-        </div>
+    <div
+      className={mx('is-full p-1 grid grid-cols-[24px_1fr_24px] gap-1 cursor-pointer select-none', classNames)}
+      onClick={() => setOpen(!open)}
+    >
+      <IconBlock>
+        <Icon
+          size={4}
+          icon={'ph--caret-right--regular'}
+          style={{ transitionDuration: `${shrink ? duration * 2 : duration}ms` }}
+          classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
+        />
+      </IconBlock>
+      <div className='flex items-center overflow-hidden'>
+        <div className={mx('text-sm text-description truncate', !icon && 'col-span-2')}>{title}</div>
+      </div>
+      {icon && <IconBlock>{icon}</IconBlock>}
+    </div>
+  );
+};
+
+Header.displayName = 'ToggleContainer.Header';
+
+//
+// Content
+//
+
+type ContentProps = ThemedClassName<PropsWithChildren>;
+
+const Content = ({ classNames, children }: ContentProps) => {
+  const { duration, expandX, expandY } = useToggleContainerContext(Content.displayName);
+
+  return (
+    <div
+      role='none'
+      style={{ transitionDuration: `${duration}ms` }}
+      className={mx(
+        'grid transition-[grid-template-columns] ease-in-out',
+        expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
       )}
-      <div
-        style={{ transitionDuration: `${duration}ms` }}
-        className={mx(
-          'grid transition-[grid-template-columns] ease-in-out bg-modalSurface',
-          expandX ? 'grid-cols-[1fr]' : 'grid-cols-[0fr]',
-        )}
-      >
-        <div className='overflow-hidden'>
-          <div
-            style={{ transitionDuration: `${duration}ms` }}
-            className={mx(
-              'grid transition-[grid-template-rows] ease-in-out',
-              expandY ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
-            )}
-          >
-            <div className={mx('flex overflow-hidden transition-opacity')}>{children}</div>
-          </div>
+    >
+      <div className='overflow-hidden'>
+        <div
+          role='none'
+          style={{ transitionDuration: `${duration}ms` }}
+          className={mx(
+            'grid transition-[grid-template-rows] ease-in-out',
+            expandY ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+          )}
+        >
+          <div className={mx('min-h-0 overflow-y-auto', classNames)}>{children}</div>
         </div>
       </div>
     </div>
   );
+};
+
+Content.displayName = 'ToggleContainer.Content';
+
+//
+// ToggleContainer
+//
+
+export const ToggleContainer = {
+  Root,
+  Header,
+  Content,
+};
+
+export type {
+  RootProps as ToggleContainerRootProps,
+  HeaderProps as ToggleContainerHeaderProps,
+  ContentProps as ToggleContainerContentProps,
 };
