@@ -30,7 +30,7 @@ export const createBlackCanvasStreamTrack = async ({
     canvasCtx.fillStyle = 'black';
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
   };
-  scheduleTaskInterval(ctx, async () => drawFrame(), 1_000);
+  scheduleTaskInterval(ctx, async () => drawFrame(), 200);
 
   const track = canvas.captureStream().getVideoTracks()[0];
   drawFrame();
@@ -52,8 +52,7 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
   oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
 
   const gainNode = audioContext.createGain();
-  // even w/ gain at 0 some packets are sent
-  gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.01, audioContext.currentTime);
   oscillator.connect(gainNode);
 
   const destination = audioContext.createMediaStreamDestination();

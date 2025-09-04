@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PersistentLifecycle } from '@dxos/async';
+import { PersistentLifecycle, Trigger, scheduleTask } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -204,11 +204,11 @@ export class CallsServicePeer extends Resource {
     sessionId,
     trackName,
   }: {
+    ctx: Context;
     peerConnection: RTCPeerConnection;
     transceiver: RTCRtpTransceiver;
     sessionId: string;
     trackName: string;
-    ctx?: Context;
   }): Promise<TrackObject | void> {
     log.verbose('pushing track ', trackName);
     const pushedTrackPromise = this.pushTrackDispatcher
@@ -246,9 +246,13 @@ export class CallsServicePeer extends Resource {
           };
         }),
       )
-      .then(({ tracks }) => {
+      .then(async ({ tracks }) => {
         const trackData = tracks.find((t) => t.mid === transceiver.mid);
         if (trackData) {
+          // we wait for the transceiver to start sending data before we emit
+          // the track metadata to ensure that the track will be able to be
+          // pulled before making the metadata available to anyone else.
+          await waitForTransceiverToSendData(ctx, transceiver);
           return {
             ...trackData,
             sessionId,
@@ -257,9 +261,6 @@ export class CallsServicePeer extends Resource {
         } else {
           log.error('missing track data');
         }
-      })
-      .catch((err) => {
-        log.catch(err);
       });
 
     const onDispose = async () => {
@@ -281,8 +282,8 @@ export class CallsServicePeer extends Resource {
     previousTrack,
   }: {
     track: MediaStreamTrack | null;
+    ctx: Context;
     encodings?: RTCRtpEncodingParameters[];
-    ctx?: Context;
     previousTrack?: TrackObject;
   }): Promise<TrackObject | undefined> {
     await this.waitUntilOpen();
@@ -528,4 +529,48 @@ const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
 
     await connected;
   }
+};
+
+const INITIAL_DELAY = 50;
+const MAX_DELAY = 500;
+const MAX_RETRIES = 20;
+const WAIT_FOR_DATA_TIMEOUT = 15_000;
+
+const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTransceiver): Promise<void> => {
+  let delay = INITIAL_DELAY;
+  let checks = 0;
+  const waitForData = new Trigger();
+  ctx.onDispose(() => waitForData.throw(new Error('Transceiver was closed')));
+
+  const checkStats = async () => {
+    if (ctx.disposed) return;
+
+    try {
+      const stats = await transceiver.sender.getStats();
+      let dataFound = false;
+      stats.forEach((stat) => {
+        if (stat.type === 'outbound-rtp' && stat.bytesSent > 0) {
+          dataFound = true;
+        }
+      });
+
+      if (dataFound) {
+        waitForData.wake();
+        return;
+      }
+    } catch {
+      // Stats might not be available yet, continue checking
+    }
+    checks++;
+    if (checks > MAX_RETRIES) {
+      waitForData.throw(new Error('Transceiver did not send data'));
+      return;
+    }
+
+    delay = Math.min(delay * 2, MAX_DELAY); // Exponential backoff with max cap
+    scheduleTask(ctx, checkStats, delay);
+  };
+
+  void checkStats();
+  return waitForData.wait({ timeout: WAIT_FOR_DATA_TIMEOUT });
 };
