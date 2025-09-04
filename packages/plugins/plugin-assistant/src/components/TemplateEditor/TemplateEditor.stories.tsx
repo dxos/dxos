@@ -11,6 +11,7 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
@@ -58,7 +59,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
+      types: [Template.Template, DataType.Text],
     }),
     withLayout({ fullscreen: true, Container: ColumnContainer }),
     withTheme,
