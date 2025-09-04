@@ -62,13 +62,13 @@ export const ControlGroupButton = ({ classNames, ...props }: ButtonProps) => {
   return <Button {...props} classNames={['md:col-span-2', classNames]} />;
 };
 
-export type ControlGroupProps = ThemedClassName<PropsWithChildren<{}>>;
+export type ControlGroupProps = ThemedClassName<PropsWithChildren>;
 
 export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
   <div
     role='none'
     className={mx(
-      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]',
+      'group container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-trimMd',
       '[--control-spacing:0px] [&_input]:justify-self-end [&_button]:justify-self-end',
       classNames,
     )}
@@ -80,22 +80,29 @@ export const ControlGroup = ({ children, classNames }: ControlGroupProps) => (
 export const ControlFrame = ({ children }: ControlGroupProps) => (
   <div
     role='none'
-    className='p-trimMd container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-trimSm md:gap-trimMd border border-separator rounded-md'
+    className={mx(
+      'container-max-width grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-trimSm md:gap-trimMd p-trimMd',
+      'border border-separator rounded-md',
+    )}
   >
     {children}
   </div>
 );
 
+export const controlItemClasses = mx([
+  'container-max-width grid md:col-span-2 grid-cols-subgrid gap-trimSm items-center',
+  // TODO(burdon): Use grid gap consistently or apply margins consistently?
+  'mlb-[--control-spacing] *:first:!mbs-0 *:last:!mbe-0 pli-trimMd plb-trimMd',
+  'border border-separator rounded-md',
+]);
+
+const controlItemTitleClasses = 'mbe-0 text-lg text-baseText font-normal';
+const controlItemDescriptionClasses = 'mlb-trimSm md:mbe-0 text-base text-description';
+
 export type ControlItemProps = PropsWithChildren<{
   title: Label;
   description?: Label;
 }>;
-
-export const controlItemClasses =
-  'mlb-[--control-spacing] pli-trimMd plb-trimMd container-max-width grid md:col-span-2 grid-cols-subgrid items-center gap-trimSm border border-separator rounded-md *:first:!mbs-0 *:last:!mbe-0';
-
-const controlItemTitleClasses = 'text-lg font-normal text-baseText mbe-0';
-const controlItemDescriptionClasses = 'text-base mlb-trimSm md:mbe-0 text-description';
 
 export const ControlItem = ({ title, description, children }: ControlItemProps) => {
   const { t } = useTranslation(translationKey);
