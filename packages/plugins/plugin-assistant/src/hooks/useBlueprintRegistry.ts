@@ -39,7 +39,7 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
   return active;
 };
 
-// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
+// TODO(burdon): Move logic into binder.
 export const useBlueprintHandlers = ({
   space,
   context,
@@ -64,6 +64,7 @@ export const useBlueprintHandlers = ({
           if (!blueprint) {
             return;
           }
+
           // NOTE: Possible race condition with other peers.
           storedBlueprint = space.db.add(Obj.clone(blueprint));
         }

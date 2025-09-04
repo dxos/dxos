@@ -177,7 +177,6 @@ export const ViewEditor = ({
           {({ items: fields }) => (
             <>
               {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
-
               <div role='list' className={listGrid}>
                 {fields?.map((field) => {
                   const hidden = field.visible === false;
@@ -190,16 +189,13 @@ export const ViewEditor = ({
                     >
                       <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
                         <List.ItemDragHandle disabled={readonly} />
-                        <List.ItemTitle
-                          onClick={() => handleToggleField(field)}
-                          {...(hidden && { classNames: 'line-through' })}
-                        >
+                        <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                           {field.path}
                         </List.ItemTitle>
                         <List.ItemButton
                           label={t(hidden ? 'show field label' : 'hide field label')}
                           data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
-                          icon={hidden ? 'ph--eye--regular' : 'ph--eye-slash--regular'}
+                          icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                           autoHide={false}
                           disabled={readonly || (!hidden && projectionModel.fields.length <= 1)}
                           onClick={() => (hidden ? handleShow(field.path) : handleHide(field.id))}
@@ -221,7 +217,7 @@ export const ViewEditor = ({
                         />
                       </div>
                       {expandedField === field.id && (
-                        <div role='none' className='col-span-5'>
+                        <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                           <FieldEditor
                             readonly={readonly || schemaReadonly}
                             projection={projectionModel}

@@ -14,7 +14,7 @@ import { ComplexSet } from '@dxos/util';
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-// TODO(burdon): Move to @dxos/schema ContentBlock.
+// TODO(burdon): Move to @dxos/schema ContentBlock?
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
@@ -42,7 +42,8 @@ export type BindingProps = Partial<{
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
-  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
+  // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
+  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -55,6 +56,7 @@ export class Bindings {
 /**
  * Manages bindings of blueprints and objects to a conversation.
  */
+// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder {
   /**
    * Reactive query of all bindings.

@@ -153,7 +153,6 @@ export class Bundler {
     const parsedImports = allMatches(IMPORT_REGEX, result.outputFiles[0].text);
     return Object.values(result.metafile!.outputs)[0].imports.map((entry): Import => {
       const namedImports: string[] = [];
-
       const parsedImport = parsedImports.find((capture) => capture?.[4] === entry.path);
       if (parsedImport?.[2]) {
         NAMED_IMPORTS_REGEX.lastIndex = 0;
@@ -207,10 +206,9 @@ const IMPORT_REGEX =
 const NAMED_IMPORTS_REGEX = /[ \n\t]*{((?:[ \n\t]*[^ \n\t"'{}]+[ \n\t]*,?)+)}[ \n\t]*/gm;
 
 const allMatches = (regex: RegExp, str: string) => {
-  regex.lastIndex = 0;
-
   let match;
   const matches = [];
+  regex.lastIndex = 0;
   while ((match = regex.exec(str))) {
     matches.push(match);
   }
