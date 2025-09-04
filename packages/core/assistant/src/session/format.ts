@@ -28,7 +28,6 @@ export const formatSystemPrompt = ({
   objects = [],
 }: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
-    // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),

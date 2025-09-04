@@ -50,4 +50,4 @@ Follow these guidelines carefully:
 
 ## Context
 
-Today is {{DATE}}.
+Today is {{DATETIME}}.

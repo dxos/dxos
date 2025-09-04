@@ -2,29 +2,31 @@
 // Copyright 2025 DXOS.org
 //
 
+import defaultsDeep from 'lodash.defaultsdeep';
+
 import { Template } from '@dxos/blueprints';
 
 import FORMAT from './format.tpl?raw';
 import SYSTEM from './system.tpl?raw';
 
-type PromptOptions = {
-  /**
-   * Emit chain-of-thought inside <cot> tag.
-   * Should be `false` for models with built-in reasoning: Claude, deepseek, o1.
-   */
-  cot?: boolean;
-
-  /**
-   * Whether to include suggestions in the prompt.
-   */
-  suggestions?: boolean;
+/**
+ * System template variables.
+ */
+export type SystemPromptOptions = {
+  DATETIME: string;
 };
 
 /**
  * Base system prompt.
  * NOTE: This contains protocol instructions that can not be dynamically edited.
  */
-export const createSystemPrompt = (options: PromptOptions) => Template.process<PromptOptions>(FORMAT, options);
+export const createSystemPrompt = (options: SystemPromptOptions) =>
+  Template.process<SystemPromptOptions>(
+    FORMAT,
+    defaultsDeep(options, {
+      DATETIME: new Date().toISOString(),
+    }),
+  );
 
 export const templates = {
   /** Editable system prompt.*/
