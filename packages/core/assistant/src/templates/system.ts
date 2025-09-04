@@ -20,7 +20,7 @@ export type SystemPromptOptions = {
  * Base system prompt.
  * NOTE: This contains protocol instructions that can not be dynamically edited.
  */
-export const createSystemPrompt = (options: SystemPromptOptions) =>
+export const createSystemPrompt = (options: Partial<SystemPromptOptions> = {}) =>
   Template.process<SystemPromptOptions>(
     FORMAT,
     defaultsDeep(options, {
