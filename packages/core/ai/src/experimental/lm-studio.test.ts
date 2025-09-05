@@ -17,6 +17,12 @@ import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
 
+/**
+ * To start the LM Studio server:
+ * ```bash
+ * ~/.lmstudio/bin/lms server start
+ * ```
+ */
 describe.skip('lm-studio', () => {
   it.effect(
     'streaming',
