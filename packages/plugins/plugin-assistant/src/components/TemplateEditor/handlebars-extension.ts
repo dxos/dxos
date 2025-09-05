@@ -35,9 +35,10 @@ export const handlebars = (_: HandlebarsOptions = {}): Extension => {
 };
 
 const regex = {
-  commentRegex: /\{\{!\s*[^}]*\}\}/g,
-  commandRegex: /\{\{[#/]([^}]+)\}\}/g,
-  varRegex: /\{\{(?!\s*!)([^}]+)\}\}/g,
+  comment: /\{\{!\s*[^}]*\}\}/g,
+  brackets: /\{\{[^}]*\}\}/g,
+  command: /\{\{[#/]([^}]+)\}\}/g,
+  var: /\{\{(?!\s*!)(\w[^}]*)\}\}/g,
 };
 
 /**
@@ -60,7 +61,17 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
         // Match comments: {{! comment }}
         {
           let match;
-          while ((match = regex.commentRegex.exec(text)) !== null) {
+          while ((match = regex.comment.exec(text)) !== null) {
+            const start = from + match.index;
+            const end = start + match[0].length;
+            widgets.push(Decoration.mark({ class: 'text-subdued' }).range(start, end));
+          }
+        }
+
+        // Match brackets: {{ and }}
+        {
+          let match;
+          while ((match = regex.brackets.exec(text)) !== null) {
             const start = from + match.index;
             const end = start + match[0].length;
             widgets.push(Decoration.mark({ class: 'text-subdued' }).range(start, end));
@@ -70,9 +81,16 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
         // Match commands: {{#command}} and {{/command}}
         {
           let match;
-          while ((match = regex.commandRegex.exec(text)) !== null) {
-            const start = from + match.index;
-            const end = start + match[0].length;
+          while ((match = regex.command.exec(text)) !== null) {
+            const start = from + match.index + 2;
+            let end = start + match[0].length - 4;
+            const text = view.state.doc.sliceString(start, end);
+            const parts = text.split(/\s+/);
+            if (parts.length > 1) {
+              const idx = start + parts[0].length;
+              widgets.push(Decoration.mark({ class: 'text-greenText' }).range(idx, end));
+              end = idx;
+            }
             widgets.push(Decoration.mark({ class: 'text-blueText' }).range(start, end));
           }
         }
@@ -80,9 +98,9 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
         // Match variables: {{var}}
         {
           let match;
-          while ((match = regex.varRegex.exec(text)) !== null) {
-            const start = from + match.index;
-            const end = start + match[0].length;
+          while ((match = regex.var.exec(text)) !== null) {
+            const start = from + match.index + 2;
+            const end = start + match[0].length - 4;
             widgets.push(Decoration.mark({ class: 'text-greenText' }).range(start, end));
           }
         }
