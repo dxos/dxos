@@ -112,24 +112,7 @@ export type CellClassesForFieldTypeProps = {
 };
 
 export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTypeProps): string[] | undefined => {
-  if (!format) {
-    switch (type) {
-      case TypeEnum.Number:
-        return ['text-right', 'font-mono'];
-      case TypeEnum.Boolean:
-        return ['text-right', 'font-mono'];
-      case TypeEnum.String:
-        return undefined;
-      case TypeEnum.Ref:
-        return undefined;
-
-      default: {
-        return undefined;
-      }
-    }
-  }
-
-  switch (format) {
+  switch (format || type) {
     case FormatEnum.Markdown:
       return undefined;
     case FormatEnum.Time:
@@ -143,6 +126,13 @@ export const cellClassesForFieldType = ({ type, format }: CellClassesForFieldTyp
     case FormatEnum.JSON:
     case FormatEnum.DID:
       return ['font-mono'];
+    case TypeEnum.Number:
+    case TypeEnum.Boolean:
+      return ['text-right', 'font-mono'];
+    case TypeEnum.String:
+      return undefined;
+    case TypeEnum.Ref:
+      return undefined;
     default:
       return undefined;
   }
