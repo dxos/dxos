@@ -15,18 +15,17 @@ import { translationKey } from '../../translations';
 import { findArrayElementType } from '../../util';
 
 import { type ComponentLookup } from './Form';
-import { FormField } from './FormContent';
+import { FormField, type FormFieldProps } from './FormContent';
 import { type FormInputStateProps, useFormValues } from './FormContext';
 import { type InputComponent, InputHeader } from './Input';
 
 type ArrayFieldProps = {
   property: SchemaProperty<any>;
-  readonly?: boolean;
   inputProps: FormInputStateProps;
   path?: (string | number)[];
   Custom?: Partial<Record<string, InputComponent>>;
   lookupComponent?: ComponentLookup;
-};
+} & Pick<FormFieldProps, 'readonly'>;
 
 export const ArrayField = ({ property, readonly, path, inputProps, Custom, lookupComponent }: ArrayFieldProps) => {
   const { t } = useTranslation(translationKey);
