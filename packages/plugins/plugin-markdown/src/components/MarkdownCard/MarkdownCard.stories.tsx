@@ -13,7 +13,6 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
-import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 
@@ -21,7 +20,7 @@ import { MarkdownCard } from './MarkdownCard';
 
 faker.seed(1234);
 
-const meta = {
+const meta: Meta<typeof MarkdownCard> = {
   title: 'plugins/plugin-markdown/Card',
   component: MarkdownCard,
   render: ({ role, subject, ...args }) => {
