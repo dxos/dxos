@@ -4595,6 +4595,9 @@ importers:
       effect:
         specifier: 3.17.7
         version: 3.17.7
+      esbuild:
+        specifier: 0.25.6
+        version: 0.25.6
       wtfnode:
         specifier: ^0.10.0
         version: 0.10.0

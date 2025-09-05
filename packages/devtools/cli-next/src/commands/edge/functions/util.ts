@@ -20,7 +20,6 @@ import {
   getUserFunctionIdInMetadata,
   setUserFunctionIdInMetadata,
 } from '@dxos/functions';
-import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -28,6 +27,8 @@ import { DataType } from '@dxos/schema';
 
 import { ClientService } from '../../../services';
 import { waitForSync } from '../../../util';
+
+import { bundle } from './deploy/bundle';
 
 const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
 
@@ -50,13 +51,14 @@ export const loadScript = Effect.fn(function* (path: string) {
 });
 
 const bundleScript = Effect.fn(function* (path: string) {
-  const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-  const buildResult = yield* Effect.tryPromise(() => bundler.bundle({ path }));
-  if (buildResult.error || !buildResult.bundle) {
-    return { error: buildResult.error || new Error('Bundle creation failed') };
+  const buildResult = yield* Effect.tryPromise(() => bundle({ entryPoint: path }));
+  if (buildResult.errors.length > 0 || !buildResult.outputs) {
+    return { error: new Error('Bundle creation failed') };
   }
 
-  return { bundle: buildResult.bundle };
+  console.log(Object.keys(buildResult.outputs));
+
+  return { bundle: buildResult.outputs['/runtime/entrypoint.js'] };
 });
 
 // TODO(wittjosiah): Align with plugin-script.
@@ -247,6 +249,7 @@ const upsertComposerScript = Effect.fn(function* ({
   }
 });
 
+/** @deprecated Migrate to `client.edge`. */
 export const createEdgeClient = (client: Client): EdgeHttpClient => {
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
