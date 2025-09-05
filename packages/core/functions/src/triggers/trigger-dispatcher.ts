@@ -27,6 +27,12 @@ export interface TriggerDispatcherOptions {
   timeControl: TimeControl;
 
   /**
+   * Starting time for manual time control mode.
+   * @default current time
+   */
+  startingTime?: Date;
+
+  /**
    * Poll interval for cron triggers in 'natural' time control mode.
    * @default 1 second
    */
@@ -106,13 +112,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   readonly timeControl: TimeControl;
 
   private _running = false;
-  private _internalTime: Date = new Date();
+  private _internalTime: Date;
   private _timerFiber: Fiber.Fiber<void, void> | undefined;
   private _scheduledTriggers = new Map<string, ScheduledTrigger>();
 
   constructor(options: TriggerDispatcherOptions) {
     this.timeControl = options.timeControl;
     this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
+    this._internalTime = options.startingTime ?? new Date();
   }
 
   start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
@@ -130,7 +137,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
       }
 
-      log.info('TriggerDispatcher started', { timeControl: this.timeControl });
+      log('TriggerDispatcher started', { timeControl: this.timeControl });
     });
 
   stop = (): Effect.Effect<void> =>
@@ -150,7 +157,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Clear scheduled triggers
       this._scheduledTriggers.clear();
 
-      log.info('TriggerDispatcher stopped');
+      log('TriggerDispatcher stopped');
     });
 
   invokeTrigger = (
@@ -185,7 +192,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         triggerId: trigger.id,
         result,
       };
-      log.info('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
+      log('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
       return triggerExecutionResult;
     });
 
@@ -209,7 +216,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      log.info('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
+      log('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
 
       // Invoke all due triggers
       return yield* Effect.all(
@@ -232,7 +239,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const millis = Duration.toMillis(duration);
       this._internalTime = new Date(this._internalTime.getTime() + millis);
 
-      log.info('Advanced internal time', {
+      log('Advanced internal time', {
         newTime: this._internalTime,
         advancedBy: Duration.format(duration),
       });
@@ -272,7 +279,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             const now = this.getCurrentTime();
             const nextExecution = existing?.nextExecution ?? Cron.next(cron, now);
 
-            log.info('Updated scheduled trigger', {
+            log('Updated scheduled trigger', {
               triggerId: trigger.id,
               cron: timerSpec.cron,
               nextExecution,
@@ -293,7 +300,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      log.info('Updated scheduled triggers', { count: this._scheduledTriggers.size });
+      log('Updated scheduled triggers', { count: this._scheduledTriggers.size });
     }).pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'));
 
   private _fetchTriggers = () =>

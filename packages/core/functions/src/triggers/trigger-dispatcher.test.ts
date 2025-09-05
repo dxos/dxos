@@ -86,7 +86,7 @@ describe('TriggerDispatcher', () => {
             data: { custom: 'data' },
           });
 
-          expect(result).toEqual({ custom: 'data' });
+          expect(result).toEqual(Exit.succeed({ custom: 'data' }));
         },
         Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
       ),
@@ -94,7 +94,7 @@ describe('TriggerDispatcher', () => {
   });
 
   describe('Timer Triggers', () => {
-    it.effect.only(
+    it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -155,18 +155,69 @@ describe('TriggerDispatcher', () => {
           yield* DatabaseService.add(disabledTrigger);
 
           const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
 
           // Manually test invocation of enabled vs disabled
-          const enabledResult = yield* dispatcher.invokeTrigger({ trigger: enabledTrigger });
-          const disabledResult = yield* dispatcher.invokeTrigger({ trigger: disabledTrigger });
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          const results = yield* dispatcher.invokeScheduledTriggers();
 
           // Enabled should succeed
-          expect(enabledResult.functionName).toBe('example.org/function/reply');
-
-          // Disabled should return 'disabled' function name
-          expect(disabledResult.functionName).toBe('disabled');
+          expect(results.length).toBe(1);
+          expect(results[0].triggerId).toBe(enabledTrigger.id);
+          expect(Exit.isSuccess(results[0].result)).toBe(true);
         },
         Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+
+    it.effect(
+      'cron triggers are invoked periodically on schedule',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
+
+          // cron every 5 minutes
+          const trigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '*/5 * * * *',
+            },
+          });
+          yield* DatabaseService.add(trigger);
+
+          // now = 15:01
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers(); // next execution = 15:05
+
+          // advance 1 minute; now = 15:02 -- trigger should not be invoked
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          let results = yield* dispatcher.invokeScheduledTriggers();
+          expect(results.length).toBe(0);
+
+          // advance 4 more minutes; now = 15:06 -- trigger should be invoked
+          yield* dispatcher.advanceTime(Duration.minutes(4));
+          results = yield* dispatcher.invokeScheduledTriggers();
+          expect(results.length).toBe(1);
+
+          // advance 2 more minutes; now = 15:08 -- trigger should not be invoked
+          yield* dispatcher.advanceTime(Duration.minutes(2));
+          results = yield* dispatcher.invokeScheduledTriggers();
+          expect(results.length).toBe(0);
+
+          // advance 3 more minutes; now = 15:11 -- trigger should be invoked
+          yield* dispatcher.advanceTime(Duration.minutes(3));
+          results = yield* dispatcher.invokeScheduledTriggers();
+          expect(results.length).toBe(1);
+        },
+        Effect.provide(
+          Layer.provideMerge(
+            TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
+            TestLayer,
+          ),
+        ),
       ),
     );
   });
@@ -177,6 +228,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(
         function* ({ expect }) {
           const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
 
           // Initially no triggers in database
 
@@ -195,7 +247,7 @@ describe('TriggerDispatcher', () => {
 
           // Can invoke the trigger
           const result = yield* dispatcher.invokeTrigger({ trigger });
-          expect(result.functionName).toBe('example.org/function/reply');
+          expect(Exit.isSuccess(result.result)).toBe(true);
         },
         Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
       ),
@@ -260,9 +312,10 @@ describe('TriggerDispatcher', () => {
                 cron,
               },
             });
+            yield* DatabaseService.add(trigger);
 
             const result = yield* dispatcher.invokeTrigger({ trigger });
-            expect(result.functionName).toBe('example.org/function/reply');
+            expect(Exit.isSuccess(result.result)).toBe(true);
           }
         },
         Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
@@ -285,12 +338,14 @@ describe('TriggerDispatcher', () => {
               cron: 'invalid-cron',
             },
           });
+          yield* DatabaseService.add(trigger);
 
           const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
 
           // Can still invoke manually even with invalid cron
-          const result = yield* dispatcher.invokeTrigger({ trigger });
-          expect(result.functionName).toBe('example.org/function/reply');
+          const result = yield* dispatcher.invokeScheduledTriggers();
+          expect(result.length).toBe(0);
         },
         Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
       ),
