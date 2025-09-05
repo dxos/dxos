@@ -152,7 +152,7 @@ export default () =>
               schema={schema}
               projection={data.projection}
               values={data.subject}
-              readonly={role === 'card--popover'}
+              readonly={role === 'card--popover' ? 'static' : false}
               onSave={handleSave}
               autoSave
               {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}

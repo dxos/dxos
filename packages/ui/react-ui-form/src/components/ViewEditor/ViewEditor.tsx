@@ -159,7 +159,7 @@ export const ViewEditor = ({
         autoSave
         schema={ViewMetaSchema}
         values={viewValues}
-        readonly={readonly}
+        readonly={readonly ? 'disabled-input' : false}
         onSave={handleUpdate}
         outerSpacing={outerSpacing}
       />
@@ -219,7 +219,7 @@ export const ViewEditor = ({
                       {expandedField === field.id && (
                         <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                           <FieldEditor
-                            readonly={readonly || schemaReadonly}
+                            readonly={readonly || schemaReadonly ? 'disabled-input' : false}
                             projection={projectionModel}
                             field={field}
                             registry={registry}
