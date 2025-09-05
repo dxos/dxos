@@ -61,17 +61,20 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
           return (
             <div
               key={i}
-              className={mx('relative flex justify-center cursor-pointer', selected !== i && 'text-subdued')}
+              className='relative flex justify-center cursor-pointer'
               style={{ width: diameter, height: diameter + connector }}
             >
               {i < length - 1 && (
                 <div
-                  style={{ left: 11.5, top: diameter, width: 1, height: connector }}
-                  className='absolute bg-separator'
+                  style={{ left: (diameter - 1) / 2, top: diameter, width: 2, height: connector }}
+                  className='absolute border-l border-groupSurface'
                 />
               )}
               <div
-                className='flex justify-center items-center border border-separator rounded-full text-xs'
+                className={mx(
+                  'flex justify-center items-center text-xs bg-groupSurface hover:bg-hoverSurface rounded-full',
+                  selected === i ? 'bg-infoSurface' : 'text-subdued',
+                )}
                 style={{ width: diameter, height: diameter }}
                 onClick={() => {
                   onSelect?.(i);

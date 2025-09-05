@@ -117,7 +117,15 @@ export const ToolContainer = ({ items }: { items: { title: string; block: any }[
       <ToggleContainer.Header classNames={styles.panelHeader} title={title} />
       <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', styles.panelContent]}>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json data={items[selected].block} classNames={styles.json} />
+        <Json
+          data={items[selected].block}
+          classNames={styles.json}
+          replacer={{
+            maxDepth: 3,
+            maxArrayLen: 10,
+            maxStringLen: 128,
+          }}
+        />
       </ToggleContainer.Content>
     </ToggleContainer.Root>
   );
