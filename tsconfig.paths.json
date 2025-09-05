@@ -2,7 +2,6 @@
 // The included projects will be built from source when running composer-app:serve.
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@dxos/storybook-utils": ["packages/common/storybook-utils/src/index.ts"],
       "@dxos/assistant-testing": ["packages/core/assistant-testing/src/index.ts"],
