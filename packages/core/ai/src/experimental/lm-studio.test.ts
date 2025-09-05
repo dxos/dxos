@@ -67,7 +67,7 @@ describe.skip('lm-studio', () => {
       },
       Effect.provide(
         Layer.provide(
-          // Actual model name seems to be ignored.
+          // NOTE: Actual model name is ignored by server.
           OpenAiLanguageModel.model('google/gemma-3-27b'),
           OpenAiClient.layer({
             apiUrl: LMSTUDIO_ENDPOINT,
