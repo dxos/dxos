@@ -2,19 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
 import { NodeContext } from '@effect/platform-node';
 import { assert, describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { TestConsole } from '../testing';
 
-import { dx } from './dx';
-
-const run = Command.run(dx, {
-  name: 'DXOS CLI',
-  version: '0.8.3', // {x-release-please-version}
-});
+import { run } from './dx';
 
 const args = (cmd: string) => [__filename, ...cmd.split(' ')];
 
