@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Duration, Effect, Layer, Context, Schedule, Fiber, Cron, Either } from 'effect';
+import { Duration, Effect, Layer, Context, Schedule, Fiber, Cron, Either, Exit } from 'effect';
 
 import { Filter, type EchoDatabase } from '@dxos/client/echo';
 import { type Expando, type Ref } from '@dxos/echo-schema';
@@ -39,8 +39,7 @@ export interface InvokeTriggerOptions {
 }
 export interface TriggerExecutionResult {
   triggerId: string;
-  functionName: string;
-  result: unknown;
+  result: Exit.Exit<unknown>;
 }
 
 interface ScheduledTrigger {
@@ -65,6 +64,11 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     stop(): Effect.Effect<void>;
 
     /**
+     * Refresh triggers.
+     */
+    refreshTriggers(): Effect.Effect<void, never, DatabaseService>;
+
+    /**
      * Manually invoke a specific trigger.
      */
     invokeTrigger(
@@ -74,7 +78,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     /**
      * Invoke all scheduled triggers whose time is up.
      */
-    invokeScheduledTriggers(): Effect.Effect<void, never, Services | LocalFunctionExecutionService>;
+    invokeScheduledTriggers(): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService>;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -163,28 +167,35 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         return yield* Effect.dieMessage('Trigger has no function reference');
       }
 
-      // Resolve the function
-      const serialiedFunction = yield* DatabaseService.load(trigger.function).pipe(Effect.orDie);
-      invariant(Obj.instanceOf(FunctionType, serialiedFunction));
-      const functionDef = deserializeFunction(serialiedFunction);
+      // Sandboxed section.
+      const result = yield* Effect.gen(this, function* () {
+        // Resolve the function
+        const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
+        invariant(Obj.instanceOf(FunctionType, serialiedFunction));
+        const functionDef = deserializeFunction(serialiedFunction);
 
-      // Prepare input data
-      const inputData = data ?? this._prepareInputData(trigger);
+        // Prepare input data
+        const inputData = data ?? this._prepareInputData(trigger);
 
-      // Invoke the function
-      const result = yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
+        // Invoke the function
+        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
+      }).pipe(Effect.exit);
+
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
-        functionName: functionDef.name,
         result,
       };
-      log.info('Trigger function executed', { result: triggerExecutionResult });
+      log.info('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+  invokeScheduledTriggers = (): Effect.Effect<
+    TriggerExecutionResult[],
+    never,
+    Services | LocalFunctionExecutionService
+  > =>
     Effect.gen(this, function* () {
-      yield* this._updateScheduledTriggers();
+      yield* this.refreshTriggers();
 
       const now = this.getCurrentTime();
       const triggersToInvoke: FunctionTrigger[] = [];
@@ -198,8 +209,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
+      log.info('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
+
       // Invoke all due triggers
-      yield* Effect.all(
+      return yield* Effect.all(
         triggersToInvoke.map((trigger) =>
           this.invokeTrigger({
             trigger,
@@ -210,22 +223,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       );
     });
 
-  advanceTime = (duration: Duration.Duration): Effect.Effect<void> => {
-    const self = this;
-    return Effect.gen(function* () {
-      if (self.timeControl !== 'manual') {
-        return yield* Effect.fail(new Error('advanceTime can only be used in manual time control mode'));
+  advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
+    Effect.gen(this, function* () {
+      if (this.timeControl !== 'manual') {
+        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
       }
 
       const millis = Duration.toMillis(duration);
-      self._internalTime = new Date(self._internalTime.getTime() + millis);
+      this._internalTime = new Date(this._internalTime.getTime() + millis);
 
       log.info('Advanced internal time', {
-        newTime: self._internalTime,
+        newTime: this._internalTime,
         advancedBy: Duration.format(duration),
       });
     }).pipe(Effect.orDie);
-  };
 
   getCurrentTime = (): Date => {
     if (this.timeControl === 'natural') {
@@ -235,18 +246,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     }
   };
 
-  private _fetchTriggers = () =>
-    Effect.gen(this, function* () {
-      const { objects } = yield* DatabaseService.runQuery(Filter.type(FunctionTrigger));
-      return objects;
-    }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
-
-  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
-    Effect.gen(this, function* () {
-      yield* this.invokeScheduledTriggers();
-    }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
-
-  private _updateScheduledTriggers = (): Effect.Effect<void, never, DatabaseService> =>
+  refreshTriggers = (): Effect.Effect<void, never, DatabaseService> =>
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
       const currentTriggerIds = new Set(triggers.map((t) => t.id));
@@ -270,11 +270,18 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             const cron = cronEither.right;
             const existing = this._scheduledTriggers.get(trigger.id);
             const now = this.getCurrentTime();
+            const nextExecution = existing?.nextExecution ?? Cron.next(cron, now);
 
+            log.info('Updated scheduled trigger', {
+              triggerId: trigger.id,
+              cron: timerSpec.cron,
+              nextExecution,
+              now,
+            });
             this._scheduledTriggers.set(trigger.id, {
               trigger,
               cron,
-              nextExecution: existing?.nextExecution ?? Cron.next(cron, now),
+              nextExecution,
             });
           } else {
             log.error('Invalid cron expression', {
@@ -287,7 +294,18 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       }
 
       log.info('Updated scheduled triggers', { count: this._scheduledTriggers.size });
-    }).pipe(Effect.withSpan('TriggerDispatcher.updateScheduledTriggers'));
+    }).pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'));
+
+  private _fetchTriggers = () =>
+    Effect.gen(this, function* () {
+      const { objects } = yield* DatabaseService.runQuery(Filter.type(FunctionTrigger));
+      return objects;
+    }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
+
+  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+    Effect.gen(this, function* () {
+      yield* this.invokeScheduledTriggers();
+    }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: FunctionTrigger): any => {
     if (!trigger.input) {

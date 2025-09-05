@@ -3,7 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, pipe, Schema } from 'effect';
+import { Effect, Layer, pipe, Schema, Duration, Exit } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -42,8 +42,30 @@ const TestLayer = pipe(
 );
 
 describe('TriggerDispatcher', () => {
+  describe('Time Control', () => {
+    it.effect(
+      'should get current time based on time control',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+
+          const initialTime = dispatcher.getCurrentTime();
+
+          // Advance time by 1 hour
+          yield* dispatcher.advanceTime(Duration.hours(1));
+
+          const newTime = dispatcher.getCurrentTime();
+          const timeDiff = newTime.getTime() - initialTime.getTime();
+
+          expect(timeDiff).toBe(Duration.toMillis(Duration.hours(1)));
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+  });
+
   describe('Manual Invocation', () => {
-    it.effect.only(
+    it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(
         function* ({ expect }) {
@@ -71,268 +93,209 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  // describe('Timer Triggers', () => {
-  //   test('should add and schedule timer triggers', async () => {
-  //     const trigger = createTestTrigger('trigger-1', '0 * * * *'); // Every hour
+  describe('Timer Triggers', () => {
+    it.effect.only(
+      'should invoke scheduled timer triggers',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
+          const trigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *', // Every minute - should trigger immediately
+            },
+          });
+          yield* DatabaseService.add(trigger);
 
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [trigger],
-  //     };
+          const dispatcher = yield* TriggerDispatcher;
+          yield* dispatcher.refreshTriggers();
 
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         yield* dispatcher.start();
+          // Manually invoke the trigger
+          yield* dispatcher.advanceTime(Duration.minutes(1));
+          const results = yield* dispatcher.invokeScheduledTriggers();
 
-  //         const executionResults: any[] = [];
+          // Should have executed successfully
+          expect(results.length).toBe(1);
+          expect(results[0].triggerId).toBe(trigger.id);
+          expect(Exit.isSuccess(results[0].result)).toBe(true);
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
 
-  //         // Mock function execution
-  //         const mockFunctionDef = createTestFunctionDef('test-function', (data) => {
-  //           executionResults.push(data);
-  //           return { result: 'success' };
-  //         });
+    it.effect(
+      'should handle disabled triggers',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
 
-  //         // Override the resolver to return our mock function
-  //         dispatcher._resolveFunctionDefinition = () => Effect.succeed(mockFunctionDef);
+          const enabledTrigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *',
+            },
+          });
 
-  //         // Invoke scheduled triggers (should execute immediately since time matches)
-  //         yield* dispatcher.invokeScheduledTriggers();
+          const disabledTrigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: false,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *',
+            },
+          });
 
-  //         expect(executionResults).toHaveLength(1);
-  //         expect(executionResults[0]).toHaveProperty('tick');
-  //       }),
-  //     );
-  //   });
+          yield* DatabaseService.add(enabledTrigger);
+          yield* DatabaseService.add(disabledTrigger);
 
-  //   test('should respect cron schedules', async () => {
-  //     const trigger = createTestTrigger('trigger-1', '0,5,10,15,20,25,30,35,40,45,50,55 * * * *'); // Every 5 minutes
+          const dispatcher = yield* TriggerDispatcher;
 
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [trigger],
-  //     };
+          // Manually test invocation of enabled vs disabled
+          const enabledResult = yield* dispatcher.invokeTrigger({ trigger: enabledTrigger });
+          const disabledResult = yield* dispatcher.invokeTrigger({ trigger: disabledTrigger });
 
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         yield* dispatcher.start();
+          // Enabled should succeed
+          expect(enabledResult.functionName).toBe('example.org/function/reply');
 
-  //         const executionResults: any[] = [];
-  //         const mockFunctionDef = createTestFunctionDef('test-function', (data) => {
-  //           executionResults.push(data);
-  //           return { result: 'success' };
-  //         });
+          // Disabled should return 'disabled' function name
+          expect(disabledResult.functionName).toBe('disabled');
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+  });
 
-  //         dispatcher._resolveFunctionDefinition = () => Effect.succeed(mockFunctionDef);
+  describe('Dynamic Trigger Management', () => {
+    it.effect(
+      'should handle trigger updates dynamically',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
 
-  //         // First execution at minute 0
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toHaveLength(1);
+          // Initially no triggers in database
 
-  //         // Advance 3 minutes - should not trigger
-  //         yield* dispatcher.advanceTime(Duration.minutes(3));
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toHaveLength(1);
+          // Add a trigger dynamically
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
+          const trigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *', // Every minute
+            },
+          });
+          yield* DatabaseService.add(trigger);
 
-  //         // Advance 2 more minutes (total 5) - should trigger
-  //         yield* dispatcher.advanceTime(Duration.minutes(2));
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toHaveLength(2);
-  //       }),
-  //     );
-  //   });
+          // Can invoke the trigger
+          const result = yield* dispatcher.invokeTrigger({ trigger });
+          expect(result.functionName).toBe('example.org/function/reply');
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+  });
 
-  //   test('should handle disabled triggers', async () => {
-  //     const triggers = [
-  //       createTestTrigger('trigger-1', '* * * * *', true),
-  //       createTestTrigger('trigger-2', '* * * * *', false), // Disabled
-  //     ];
+  describe('Error Handling', () => {
+    it.effect(
+      'should handle missing function reference',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
 
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers,
-  //     };
+          // Create trigger without function reference
+          const trigger = Obj.make(FunctionTrigger, {
+            function: undefined,
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *',
+            },
+          });
 
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         yield* dispatcher.start();
+          // Should die with message
+          const result = yield* dispatcher.invokeTrigger({ trigger }).pipe(
+            Effect.map(() => 'success'),
+            Effect.catchAllDefect(() => Effect.succeed('died')),
+          );
 
-  //         const executionResults: string[] = [];
-  //         const mockFunctionDef = createTestFunctionDef('test-function', (data) => {
-  //           executionResults.push(data.triggerId);
-  //           return { result: 'success' };
-  //         });
+          expect(result).toBe('died');
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+  });
 
-  //         dispatcher._resolveFunctionDefinition = () => Effect.succeed(mockFunctionDef);
-  //         dispatcher._prepareInputData = (trigger: FunctionTrigger) => ({
-  //           triggerId: trigger.id,
-  //         });
+  describe('Cron Patterns', () => {
+    it.effect(
+      'should support Effect cron expressions',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
 
-  //         yield* dispatcher.invokeScheduledTriggers();
+          const validPatterns = [
+            '* * * * *', // Every minute
+            '0 * * * *', // Every hour
+            '0 0 * * *', // Daily
+            '0 0 * * 1', // Every Monday
+            '0 9-17 * * *', // Every hour from 9 AM to 5 PM
+          ];
 
-  //         // Only enabled trigger should execute
-  //         expect(executionResults).toEqual(['trigger-1']);
-  //       }),
-  //     );
-  //   });
-  // });
+          const dispatcher = yield* TriggerDispatcher;
 
-  // describe('Dynamic Trigger Management', () => {
-  //   test('should add triggers dynamically', async () => {
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [],
-  //     };
+          // Test that valid patterns can be invoked
+          for (const cron of validPatterns) {
+            const trigger = Obj.make(FunctionTrigger, {
+              function: Ref.make(functionObj),
+              enabled: true,
+              spec: {
+                kind: 'timer',
+                cron,
+              },
+            });
 
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         yield* dispatcher.start();
+            const result = yield* dispatcher.invokeTrigger({ trigger });
+            expect(result.functionName).toBe('example.org/function/reply');
+          }
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
 
-  //         const executionResults: string[] = [];
-  //         const mockFunctionDef = createTestFunctionDef('test-function', (data) => {
-  //           executionResults.push(data.triggerId);
-  //           return { result: 'success' };
-  //         });
+    it.effect(
+      'should handle invalid cron expressions gracefully',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const functionObj = serializeFunction(reply);
+          yield* DatabaseService.add(functionObj);
 
-  //         dispatcher._resolveFunctionDefinition = () => Effect.succeed(mockFunctionDef);
-  //         dispatcher._prepareInputData = (trigger: FunctionTrigger) => ({
-  //           triggerId: trigger.id,
-  //         });
+          // Test with an invalid pattern
+          const trigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(functionObj),
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: 'invalid-cron',
+            },
+          });
 
-  //         // No triggers initially
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toHaveLength(0);
+          const dispatcher = yield* TriggerDispatcher;
 
-  //         // Add a trigger
-  //         dispatcher.addTriggers([createTestTrigger('dynamic-1', '* * * * *')]);
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toEqual(['dynamic-1']);
-
-  //         // Add another trigger
-  //         dispatcher.addTriggers([
-  //           createTestTrigger('dynamic-1', '* * * * *'), // Keep existing
-  //           createTestTrigger('dynamic-2', '* * * * *'), // Add new
-  //         ]);
-
-  //         executionResults.length = 0; // Clear results
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //         expect(executionResults).toContain('dynamic-1');
-  //         expect(executionResults).toContain('dynamic-2');
-  //         expect(executionResults).toHaveLength(2);
-  //       }),
-  //     );
-  //   });
-  // });
-
-  // describe('Error Handling', () => {
-  //   test('should handle function execution errors', async () => {
-  //     const trigger = createTestTrigger('trigger-1', '* * * * *');
-
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [trigger],
-  //     };
-
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         yield* dispatcher.start();
-
-  //         const mockFunctionDef = createTestFunctionDef('test-function', () => {
-  //           throw new Error('Function execution error');
-  //         });
-
-  //         dispatcher._resolveFunctionDefinition = () => Effect.succeed(mockFunctionDef);
-
-  //         // Should not throw, errors are logged
-  //         yield* dispatcher.invokeScheduledTriggers();
-  //       }),
-  //     );
-  //   });
-
-  //   test('should reject advanceTime in natural mode', async () => {
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'natural',
-  //     };
-
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         const result = yield* dispatcher.advanceTime(Duration.hours(1)).pipe(
-  //           Effect.map(() => 'success'),
-  //           Effect.orElseSucceed(() => 'failed'),
-  //         );
-
-  //         expect(result).toBe('failed');
-  //       }),
-  //     );
-  //   });
-  // });
-
-  // describe('Cron Patterns', () => {
-  //   test('should support Effect cron expressions', async () => {
-  //     const validPatterns = [
-  //       '* * * * *', // Every minute
-  //       '0 * * * *', // Every hour
-  //       '0 0 * * *', // Daily
-  //       '0 0 * * 1', // Every Monday
-  //       '0 9-17 * * *', // Every hour from 9 AM to 5 PM
-  //     ];
-
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [],
-  //     };
-
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         // Test that valid patterns are accepted
-  //         validPatterns.forEach((cron) => {
-  //           const trigger = createTestTrigger(`test-${cron}`, cron);
-  //           dispatcher.addTriggers([trigger]);
-  //         });
-
-  //         // Verify all triggers were added
-  //         const internalTriggers = dispatcher._scheduledTriggers;
-  //         expect(internalTriggers.size).toBe(validPatterns.length);
-  //       }),
-  //     );
-  //   });
-
-  //   test('should reject invalid cron expressions', async () => {
-  //     const invalidPatterns = [
-  //       'invalid',
-  //       '60 * * * *', // Invalid minute (0-59)
-  //       '* 25 * * *', // Invalid hour (0-23)
-  //       '* * 32 * *', // Invalid day (1-31)
-  //       '* * * 13 *', // Invalid month (1-12)
-  //     ];
-
-  //     const options: TriggerDispatcherOptions = {
-  //       database: createMockDatabase(),
-  //       timeControl: 'manual',
-  //       triggers: [],
-  //     };
-
-  //     await runTest(options, (dispatcher) =>
-  //       Effect.gen(function* () {
-  //         // Test that invalid patterns are rejected
-  //         invalidPatterns.forEach((cron) => {
-  //           const trigger = createTestTrigger(`test-${cron}`, cron);
-  //           dispatcher.addTriggers([trigger]);
-  //         });
-
-  //         // Verify no triggers were added
-  //         const internalTriggers = dispatcher._scheduledTriggers;
-  //         expect(internalTriggers.size).toBe(0);
-  //       }),
-  //     );
-  //   });
-  // });
+          // Can still invoke manually even with invalid cron
+          const result = yield* dispatcher.invokeTrigger({ trigger });
+          expect(result.functionName).toBe('example.org/function/reply');
+        },
+        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'manual' }), TestLayer)),
+      ),
+    );
+  });
 
   describe('Natural Time Control', () => {
     it.effect(
