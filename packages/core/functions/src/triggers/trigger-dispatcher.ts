@@ -8,8 +8,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { FunctionType } from '..';
 import { deserializeFunction } from '../handler';
+import { FunctionType } from '../schema';
 import { DatabaseService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
