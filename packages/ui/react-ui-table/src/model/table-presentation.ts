@@ -449,7 +449,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         value: '',
         readonly: true,
         accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
-        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell [&>div]:grid [&>div]:place-content-center' }),
+        className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
       };
     }
 
