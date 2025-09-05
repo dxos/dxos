@@ -23,12 +23,12 @@ export const TextInput = ({
 }: InputProps) => {
   const { status, error } = getStatus();
 
-  return readonly && !getValue() ? null : readonly && inputOnly ? (
+  return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
-      {readonly ? (
+      {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextInput
@@ -57,12 +57,12 @@ export const NumberInput = ({
 }: InputProps) => {
   const { status, error } = getStatus();
 
-  return readonly && !getValue() ? null : readonly && inputOnly ? (
+  return readonly && !getValue() ? null : readonly === 'static' && inputOnly ? (
     <p>{getValue() ?? ''}</p>
   ) : (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
-      {readonly ? (
+      {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextInput
@@ -87,10 +87,10 @@ export const BooleanInput = ({ type, label, inputOnly, getStatus, getValue, onVa
   return (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
-      {readonly ? (
+      {readonly === 'static' ? (
         <p>{t(checked ? 'boolean input true value' : 'boolean input false value')}</p>
       ) : (
-        <Input.Switch checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
+        <Input.Switch disabled={!!readonly} checked={checked} onCheckedChange={(value) => onValueChange(type, value)} />
       )}
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
     </Input.Root>
@@ -120,7 +120,7 @@ export const SelectInput = ({
   return readonly && !value ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
-      {readonly ? (
+      {readonly === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (
         <Select.Root value={value} onValueChange={handleValueChange}>
@@ -184,7 +184,7 @@ export const MarkdownInput = ({
   return (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
-      {readonly ? (
+      {readonly === 'static' ? (
         <p>{getValue() ?? ''}</p>
       ) : (
         <Input.TextArea
