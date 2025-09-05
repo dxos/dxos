@@ -327,13 +327,14 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
-        value: props.title ?? field.path,
+        value: '',
         resizeHandle: 'col',
         accessoryHtml: `
+          <span class="grow min-is-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface !text-description',
+        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
       };
     }
 

@@ -41,7 +41,7 @@ import { ColumnSettings } from './ColumnSettings';
 import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
-const columnDefault = { grid: { minSize: 128, maxSize: 640 } };
+const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 
 //
