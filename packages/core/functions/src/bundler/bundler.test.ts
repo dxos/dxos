@@ -6,7 +6,7 @@
 import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { isNode } from '@dxos/util';
+import { isNode, trim } from '@dxos/util';
 
 import { Bundler, initializeBundler } from './bundler';
 
@@ -19,7 +19,7 @@ describe('Bundler', () => {
 
   test('Basic', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
-    const result = await bundler.bundle({ source: 'const x = 100' }); // TODO(burdon): Test import.
+    const result = await bundler.bundle({ source: 'const x = 100' });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
   });
@@ -27,11 +27,10 @@ describe('Bundler', () => {
   test('Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
-      source: `
-      import { Filter } from './runtime.js';
-
-      const query = Filter.typename('dxos.org/type/Example');
-    `,
+      source: trim`
+        import { Filter } from './runtime.js';
+        const query = Filter.typename('dxos.org/type/Example');
+      `,
     });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
@@ -41,10 +40,10 @@ describe('Bundler', () => {
   test.skip('HTTPS Import', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({
-      source: `
-      import { invariant } from 'https://esm.sh/@dxos/invariant';
-      invariant(true);
-    `,
+      source: trim`
+        import { invariant } from 'https://esm.sh/@dxos/invariant';
+        invariant(true);
+      `,
     });
     expect(result.bundle).to.exist;
     expect(result.error).to.not.exist;
