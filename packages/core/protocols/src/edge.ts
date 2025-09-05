@@ -118,9 +118,10 @@ export type GetAgentStatusResponseBody = {
 
 export type UploadFunctionRequest = {
   name?: string;
-  script: string;
   version: string;
   ownerPublicKey: string;
+  entryPoint: string;
+  assets: Record<string, Uint8Array>;
 };
 
 export type UploadFunctionResponseBody = {

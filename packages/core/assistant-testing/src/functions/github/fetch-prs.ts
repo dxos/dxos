@@ -5,9 +5,7 @@
 import { HttpClient } from '@effect/platform';
 import { Effect, Schema } from 'effect';
 
-import { defineFunction } from '@dxos/functions';
-
-import { apiKeyAuth } from '../../util';
+import { defineFunction, withAuthorization } from '@dxos/functions';
 
 export default defineFunction({
   name: 'dxos.org/function/github/fetch-prs',
@@ -21,7 +19,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(function* ({ data }) {
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(apiKeyAuth({ service: 'github.com' })));
+    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'github.com' })));
 
     const response = yield* client.get(`https://api.github.com/repos/${data.owner}/${data.repo}/pulls`);
     const json: any = yield* response.json;

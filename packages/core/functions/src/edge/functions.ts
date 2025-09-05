@@ -14,22 +14,24 @@ import { type UploadFunctionResponseBody } from '@dxos/protocols';
 
 export type UploadWorkerArgs = {
   client: Client;
-  source: string;
   version: string;
   name?: string;
   functionId?: string;
   ownerPublicKey: PublicKey;
+  entryPoint: string;
+  assets: Record<string, Uint8Array>;
 };
 
 export const uploadWorkerFunction = async ({
   client,
   version,
-  source,
   name,
   functionId,
   ownerPublicKey,
+  entryPoint,
+  assets,
 }: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
-  log('uploading function', { functionId, name, version, source: source.length, ownerPublicKey });
+  log('uploading function', { functionId, name, version, ownerPublicKey });
   const edgeUrl = client.config.values.runtime?.services?.edge?.url;
   invariant(edgeUrl, 'Edge is not configured.');
   const edgeClient = new EdgeHttpClient(edgeUrl);
@@ -37,7 +39,7 @@ export const uploadWorkerFunction = async ({
   edgeClient.setIdentity(edgeIdentity);
   const response = await edgeClient.uploadFunction(
     { functionId },
-    { name, version, script: source, ownerPublicKey: ownerPublicKey.toHex() },
+    { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
   );
 
   // TODO(burdon): Edge service log.
@@ -46,7 +48,6 @@ export const uploadWorkerFunction = async ({
     functionId,
     name,
     version,
-    source: source.length,
     response,
   });
 

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { HttpClient, HttpClientRequest } from '@effect/platform';
 import { type Config, Context, Effect, Layer, Redacted } from 'effect';
 
 import { Query } from '@dxos/echo';
@@ -122,3 +123,15 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
     return credential;
   }
 }
+
+/**
+ * Maps the request to include the API key from the credential.
+ */
+export const withAuthorization = (query: CredentialQuery, kind?: 'Bearer' | 'Basic') =>
+  HttpClient.mapRequestEffect(
+    Effect.fnUntraced(function* (request) {
+      const key = yield* CredentialsService.getApiKey(query).pipe(Effect.map(Redacted.value));
+      const authorization = kind ? `${kind} ${key}` : key;
+      return HttpClientRequest.setHeader(request, 'Authorization', authorization);
+    }),
+  );
