@@ -1537,16 +1537,7 @@ export class DxGrid extends LitElement {
         gap * Math.max(0, this.limitColumns - 1)
       : Infinity;
     this.totalIntrinsicInlineSize =
-      this.intrinsicInlineSize +
-      (Number.isFinite(this.frozen.frozenColsStart)
-        ? [...Array(this.frozen.frozenColsStart)].reduce(
-            (acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsStart'),
-            0,
-          )
-        : 0) +
-      (Number.isFinite(this.frozen.frozenColsEnd)
-        ? [...Array(this.frozen.frozenColsEnd)].reduce((acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsEnd'), 0)
-        : 0);
+      this.limitColumns > 0 ? this.intrinsicInlineSize + this.frozenColsSize : this.frozenColsSize - gap;
   }
 
   private updateIntrinsicBlockSize(): void {
@@ -1555,16 +1546,7 @@ export class DxGrid extends LitElement {
         gap * Math.max(0, this.limitRows - 1)
       : Infinity;
     this.totalIntrinsicBlockSize =
-      this.intrinsicBlockSize +
-      (Number.isFinite(this.frozen.frozenRowsStart)
-        ? [...Array(this.frozen.frozenRowsStart)].reduce(
-            (acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsStart'),
-            0,
-          )
-        : 0) +
-      (Number.isFinite(this.frozen.frozenRowsEnd)
-        ? [...Array(this.frozen.frozenRowsEnd)].reduce((acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsEnd'), 0)
-        : 0);
+      this.limitRows > 0 ? this.intrinsicBlockSize + this.frozenRowsSize : this.frozenRowsSize - gap;
   }
 
   private updateIntrinsicSizes(): void {
