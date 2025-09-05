@@ -257,7 +257,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return {
         grid: meta,
         frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 40, resizeable: false } },
+        frozenColsEnd: { 0: { size: 32, resizeable: false } },
       };
     });
   }
