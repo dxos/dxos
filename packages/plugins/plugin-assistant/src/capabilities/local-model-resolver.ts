@@ -11,10 +11,16 @@ import { type Capability, contributes } from '@dxos/app-framework';
 
 import { AssistantCapabilities } from './capabilities';
 
+/**
+ * To start LM Studio server:
+ * ```bash
+ * ~/.lmstudio/bin/lms server start --cors
+ * ```
+ */
 export default (): Capability<any>[] => [
   contributes(
     AssistantCapabilities.AiModelResolver,
-    AiServiceRouter.AnthropicResolver.pipe(
+    AiServiceRouter.LMStudioResolver.pipe(
       Layer.provide(
         OpenAiClient.layer({
           apiUrl: AiServiceRouter.LMSTUDIO_ENDPOINT,
