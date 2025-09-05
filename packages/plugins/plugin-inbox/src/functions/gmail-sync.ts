@@ -3,14 +3,13 @@
 //
 
 import { FetchHttpClient, HttpClient, HttpClientRequest } from '@effect/platform';
-import { type HttpClientError } from '@effect/platform/HttpClientError';
 import { format, subDays } from 'date-fns';
-import { Chunk, Console, Effect, Ref, Schedule, Schema, Stream, pipe } from 'effect';
-import { type TimeoutException } from 'effect/Cause';
+import { Array, Chunk, Console, Effect, Ref, Schedule, Schema, Stream, pipe } from 'effect';
+import { isNotNullable } from 'effect/Predicate';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Filter, Obj, Type } from '@dxos/echo';
-import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
+import { Obj, Type } from '@dxos/echo';
+import { DatabaseService, QueueService, defineFunction, withAuthorization } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
 import { Mailbox } from '../types';
@@ -28,106 +27,39 @@ export default defineFunction({
     newMessages: Schema.Number,
   }),
   handler: ({
+    // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd'), pageSize = 100 },
   }) =>
     Effect.gen(function* () {
       yield* Console.log('running gmail sync', { mailboxId, userId, after, pageSize });
 
-      const {
-        objects: [{ token }],
-      } = yield* DatabaseService.runQuery(Filter.type(DataType.AccessToken, { source: 'gmail.com' }));
-      yield* Console.log('found token', { token });
-
-      // TODO(wittjosiah): Can't use `HttpClient.execute` directly because it results in CORS errors when traced.
-      //   Is this an issue on Google's side or is it a bug in `@effect/platform`?
-      const httpClient = yield* HttpClient.HttpClient;
-      const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
-
-      // NOTE: Google API bundles size is v. large and caused runtime issues.
-      const makeRequest = (url: string) =>
-        HttpClientRequest.get(url).pipe(
-          HttpClientRequest.setHeader('authorization', `Bearer ${token}`),
-          HttpClientRequest.setHeader('accept', 'application/json'),
-          httpClientWithTracerDisabled.execute,
-          Effect.flatMap((res) => res.json),
-          Effect.timeout('1 second'),
-          Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
-          Effect.scoped,
-        );
-
-      // TODO(wittjosiah): Add schema to parse response.
-      const listMessages = (userId: string, q: string, pageSize: number, pageToken: string | null) =>
-        makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken })) as Effect.Effect<
-          { messages: { id: string; threadId: string }[]; nextPageToken: string },
-          HttpClientError | TimeoutException,
-          HttpClient.HttpClient
-        >;
-
-      // TODO(wittjosiah): Add schema to parse response.
-      const getMessage = (userId: string, messageId: string) =>
-        makeRequest(getUrl(userId, messageId)) as Effect.Effect<
-          {
-            id: string;
-            threadId: string;
-            internalDate: string;
-            payload: {
-              headers: { name: string; value: string }[];
-              body?: { data: string };
-              parts?: { mimeType: string; body: { data: string } }[];
-            };
-          },
-          HttpClientError | TimeoutException,
-          HttpClient.HttpClient
-        >;
-
       const mailbox = yield* DatabaseService.resolve(ArtifactId.toDXN(mailboxId), Mailbox.Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
-      const nextPage = yield* Ref.make<string | null>(null);
+      const nextPage = yield* Ref.make<string | undefined>(undefined);
 
       do {
-        const last = queue.objects.at(-1);
+        const objects = yield* Effect.tryPromise(() => queue.queryObjects());
+        const last = objects.at(-1);
         const q = last
           ? `in:inbox after:${Math.floor(new Date(last.created).getTime() / 1000)}`
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
         yield* Console.log('listing messages', { q, pageToken });
+
         const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
         yield* Ref.update(nextPage, () => nextPageToken);
-        for (const message of messages) {
-          const messageDetails = yield* getMessage(userId, message.id);
-          const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
-          const from = messageDetails.payload.headers.find((h) => h.name === 'From');
-          const sender = from && parseEmailString(from.value);
-          // TODO(wittjosiah): Improve parsing of email contents.
-          const content =
-            messageDetails.payload.body?.data ??
-            messageDetails.payload.parts?.find((p) => p.mimeType === 'text/plain')?.body.data;
-          // Skip the message if content or sender is missing.
-          // Skip the message if it's the same as the last message.
-          // TODO(wittjosiah): This comparison should be done via foreignId probably.
-          if (!content || !sender || created === last?.created) {
-            continue;
-          }
-          const subject = messageDetails.payload.headers.find((h) => h.name === 'Subject')?.value;
-          const object = Obj.make(DataType.Message, {
-            id: Type.ObjectId.random(),
-            created,
-            sender,
-            blocks: [
-              {
-                _tag: 'text',
-                text: Buffer.from(content, 'base64').toString('utf-8'),
-              },
-            ],
-            properties: {
-              subject,
-              threadId: message.threadId,
-            },
-          });
-          // TODO(wittjosiah): Set foreignId in object meta.
-          yield* Ref.update(newMessages, (n) => [object, ...n]);
-        }
+
+        const messageObjects = yield* pipe(
+          messages,
+          Array.map(messageToObject(userId, last)),
+          Effect.all,
+          Effect.map((objects) => Array.filter(objects, isNotNullable)),
+          Effect.map((objects) => Array.reverse(objects)),
+        );
+
+        // TODO(wittjosiah): Set foreignId in object meta.
+        yield* Ref.update(newMessages, (n) => [...messageObjects, ...n]);
       } while (yield* Ref.get(nextPage));
 
       const queueMessages = yield* Ref.get(newMessages);
@@ -157,6 +89,42 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
   return api.toString();
 };
 
+// NOTE: Google API bundles size is v. large and caused runtime issues.
+const makeRequest = Effect.fnUntraced(function* (url: string) {
+  const httpClient = yield* HttpClient.HttpClient.pipe(
+    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')),
+  );
+  // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
+  //   Is this an issue on Google's side or is it a bug in `@effect/platform`?
+  //   https://github.com/Effect-TS/effect/issues/4568
+  const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+
+  return yield* HttpClientRequest.get(url).pipe(
+    HttpClientRequest.setHeader('accept', 'application/json'),
+    httpClientWithTracerDisabled.execute,
+    Effect.flatMap((res) => res.json),
+    Effect.timeout('1 second'),
+    Effect.retry(Schedule.exponential(1000).pipe(Schedule.compose(Schedule.recurs(3)))),
+    Effect.scoped,
+  );
+});
+
+/**
+ * Fetches a list of Gmail messages.
+ */
+const listMessages = Effect.fn(function* (userId: string, q: string, pageSize: number, pageToken: string | undefined) {
+  return yield* makeRequest(getUrl(userId, undefined, { q, pageSize, pageToken })).pipe(
+    Effect.flatMap(Schema.decodeUnknown(ListMessagesResponse)),
+  );
+});
+
+/**
+ * Fetches the details of a Gmail message.
+ */
+const getMessage = Effect.fn(function* (userId: string, messageId: string) {
+  return yield* makeRequest(getUrl(userId, messageId)).pipe(Effect.flatMap(Schema.decodeUnknown(MessageDetails)));
+});
+
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
@@ -172,3 +140,70 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
   return undefined;
 };
+
+/**
+ * Transforms a Gmail message to a ECHO message object.
+ */
+const messageToObject = (userId: string, last?: DataType.Message) =>
+  Effect.fn(function* (message: Message) {
+    const messageDetails = yield* getMessage(userId, message.id);
+    const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
+    const from = messageDetails.payload.headers.find((h) => h.name === 'From');
+    const sender = from && parseEmailString(from.value);
+    // TODO(wittjosiah): Improve parsing of email contents.
+    const content =
+      messageDetails.payload.body?.data ??
+      messageDetails.payload.parts?.find((p) => p.mimeType === 'text/plain')?.body.data;
+    // Skip the message if content or sender is missing.
+    // Skip the message if it's the same as the last message.
+    // TODO(wittjosiah): This comparison should be done via foreignId probably.
+    if (!content || !sender || created === last?.created) {
+      return undefined;
+    }
+    const subject = messageDetails.payload.headers.find((h) => h.name === 'Subject')?.value;
+    return Obj.make(DataType.Message, {
+      id: Type.ObjectId.random(),
+      created,
+      sender,
+      blocks: [
+        {
+          _tag: 'text',
+          text: Buffer.from(content, 'base64').toString('utf-8'),
+        },
+      ],
+      properties: {
+        subject,
+        threadId: message.threadId,
+      },
+    });
+  });
+
+const Message = Schema.Struct({
+  id: Schema.String,
+  threadId: Schema.String,
+});
+type Message = Schema.Schema.Type<typeof Message>;
+
+const ListMessagesResponse = Schema.Struct({
+  messages: Schema.Array(Message),
+  nextPageToken: Schema.optional(Schema.String),
+});
+
+const MessageDetails = Schema.Struct({
+  id: Schema.String,
+  threadId: Schema.String,
+  internalDate: Schema.String,
+  payload: Schema.Struct({
+    headers: Schema.Array(Schema.Struct({ name: Schema.String, value: Schema.String })),
+    body: Schema.optional(Schema.Struct({ size: Schema.Number, data: Schema.optional(Schema.String) })),
+    parts: Schema.optional(
+      Schema.Array(
+        Schema.Struct({
+          mimeType: Schema.String,
+          body: Schema.Struct({ size: Schema.Number, data: Schema.optional(Schema.String) }),
+        }),
+      ),
+    ),
+  }),
+});
+type MessageDetails = Schema.Schema.Type<typeof MessageDetails>;
