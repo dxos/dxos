@@ -68,7 +68,6 @@ const AudioFile = ({
 
   useEffect(() => {
     if (!audio) {
-      log.warn('no audio');
       return;
     }
 
@@ -147,10 +146,10 @@ const AudioFile = ({
   }, [normalizer]);
 
   const manageChunkRecording = () => {
-    if (running && isSpeaking) {
+    if (running && isSpeaking && transcriber) {
       log.info('starting transcription');
       transcriber?.startChunksRecording();
-    } else if (!isSpeaking || !running) {
+    } else if ((!isSpeaking || !running) && transcriber) {
       log.info('stopping transcription');
       transcriber?.stopChunksRecording();
     }
@@ -176,7 +175,15 @@ const AudioFile = ({
     manageChunkRecording();
   }, [isSpeaking, stream]);
 
-  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
+  return (
+    <TranscriptionStory
+      disabled={!stream}  
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      audioRef={ref}
+    />
+  );
 };
 
 const meta = {
