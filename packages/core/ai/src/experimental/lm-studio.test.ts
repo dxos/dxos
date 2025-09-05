@@ -9,6 +9,7 @@ import { describe, it } from '@effect/vitest';
 import { Chunk, Console, Effect, Layer, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
@@ -16,24 +17,28 @@ import { parseResponse } from '../AiParser';
 import { preprocessAiInput } from '../AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
 
-describe.skip('lmstudio', () => {
+describe.skip('lm-studio', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect: _ }) {
-        const history: DataType.Message[] = [];
-        history.push(
+      function* ({ expect }) {
+        const history: DataType.Message[] = [
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
             sender: { role: 'user' },
-            blocks: [{ _tag: 'text', text: 'What is 2 + 2?' }],
+            blocks: [
+              {
+                _tag: 'text',
+                text: 'What kind of model are you.',
+              },
+            ],
           }),
-        );
+        ];
 
         const prompt = yield* preprocessAiInput(history);
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
-          system: 'You are a helpful assistant.',
+          system: 'You are a helpful assistant. Be extremely brief with your answers.',
           disableToolCallResolution: true,
         }).pipe(
           parseResponse({
@@ -42,17 +47,22 @@ describe.skip('lmstudio', () => {
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
+
         const message = Obj.make(DataType.Message, {
           created: new Date().toISOString(),
           sender: { role: 'assistant' },
           blocks,
         });
+
+        const block = message.blocks[0];
+        invariant(block._tag === 'text');
+        expect(block.text).toContain('Google');
         log.info('message', { message });
-        history.push(message);
       },
       Effect.provide(
         Layer.provide(
-          OpenAiLanguageModel.model('google/gemma-3-27b' as any),
+          // Actual model name seems to be ignored.
+          OpenAiLanguageModel.model('google/gemma-3-27b'),
           OpenAiClient.layer({
             apiUrl: LMSTUDIO_ENDPOINT,
           }).pipe(Layer.provide(FetchHttpClient.layer)),
