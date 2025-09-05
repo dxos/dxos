@@ -448,8 +448,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="block m-[3px]"></dx-icon>',
-        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell' }),
+        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
+        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell [&>div]:grid [&>div]:place-content-center' }),
       };
     }
 
