@@ -32,7 +32,7 @@
     "@effect/platform-node": "0.95.0",
     "@effect/printer": "0.45.0",
     "@effect/printer-ansi": "0.45.0",
-    "@effect/rpc": "0.68.3",
+    "@effect/rpc": "0.68.4",
     "@effect/sql": "0.44.1",
     "@effect/typeclass": "0.36.0",
     "@effect/workflow": "0.8.3",
