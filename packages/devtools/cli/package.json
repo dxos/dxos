@@ -112,9 +112,9 @@
   "oclif": {
     "bin": "dx",
     "dirname": "dx",
-    "commands": "./dist/src/commands",
+    "commands": "./dist/commands",
     "hooks": {
-      "command_not_found": "./dist/src/hooks/command-not-found"
+      "command_not_found": "./dist/hooks/command-not-found"
     },
     "plugins": [
       "@dxos/cli-composer",
@@ -123,7 +123,7 @@
       "@oclif/plugin-plugins",
       "@oclif/plugin-update"
     ],
-    "helpClass": "./dist/src/help",
+    "helpClass": "./dist/help",
     "topicSeparator": " ",
     "topics": {
       "agent": {
