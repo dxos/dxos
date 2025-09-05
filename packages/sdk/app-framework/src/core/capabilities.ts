@@ -22,6 +22,10 @@ export type InterfaceDef<T> = {
   identifier: string;
 };
 
+export namespace InterfaceDef {
+  export type Implementation<I extends InterfaceDef<any>> = I extends InterfaceDef<infer T> ? T : never;
+}
+
 /**
  * Helper to define the interface of a capability.
  */
@@ -69,12 +73,12 @@ class CapabilityImpl<T> {
 /**
  * Helper to define the implementation of a capability.
  */
-export const contributes = <T>(
-  interfaceDef: Capability<T>['interface'],
-  implementation: Capability<T>['implementation'],
-  deactivate?: Capability<T>['deactivate'],
-): Capability<T> => {
-  return { interface: interfaceDef, implementation, deactivate } satisfies Capability<T>;
+export const contributes = <I extends InterfaceDef<any>>(
+  interfaceDef: I,
+  implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
+  deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
+): Capability<I> => {
+  return { interface: interfaceDef, implementation, deactivate } satisfies Capability<I>;
 };
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
