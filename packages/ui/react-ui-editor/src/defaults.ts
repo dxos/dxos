@@ -30,7 +30,7 @@ export const editorGutter = EditorView.theme({
   '.cm-gutters': {
     // NOTE: Color required to cover content if scrolling horizontally.
     // TODO(burdon): Non-transparent background clips the focus ring.
-    background: 'var(--dx-baseSurface)',
+    background: 'var(--dx-baseSurface) !important',
     paddingRight: '1rem',
   },
 });
