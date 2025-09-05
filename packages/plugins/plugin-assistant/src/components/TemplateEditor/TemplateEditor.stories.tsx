@@ -22,7 +22,7 @@ const TEMPLATE = trim`
   {{! System Prompt }}
   
   You are a machine that is an expert chess player.
-  The move history of the current game is: {{history}}
+  The move history of the current game is: {{history}}.
   If asked to suggest a move explain why it is a good move.
 
   {{#each artifacts}}
