@@ -258,7 +258,6 @@ const ChatPrompt = ({
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      console.log(streamingRef.current);
       if (!streamingRef.current) {
         event.emit({ type: 'submit', text });
         return true;

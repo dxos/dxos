@@ -17,6 +17,7 @@ import {
   BlueprintDefinition,
   EdgeModelResolver,
   IntentResolver,
+  LocalModelResolver,
   ReactSurface,
   Settings,
   Toolkit,
@@ -129,9 +130,14 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/ai-model-resolver`,
+      id: `${meta.id}/module/edge-model-resolver`,
       activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: EdgeModelResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/local-model-resolver`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: LocalModelResolver,
     }),
     defineModule({
       id: `${meta.id}/module/ai-service`,
