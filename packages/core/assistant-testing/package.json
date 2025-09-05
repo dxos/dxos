@@ -57,7 +57,7 @@
     "@effect/experimental": "0.54.5",
     "@effect/platform": "0.90.2",
     "@effect/platform-node": "0.95.0",
-    "@effect/rpc": "0.68.3",
+    "@effect/rpc": "0.68.4",
     "@effect/sql": "0.44.1",
     "@effect/workflow": "0.8.3",
     "effect": "3.17.7",
