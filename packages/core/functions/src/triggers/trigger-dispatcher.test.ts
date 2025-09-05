@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, pipe, Schema, Duration, Exit } from 'effect';
+import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
-import { Obj, Ref, Type } from '@dxos/echo';
-import { FetchHttpClient } from '@effect/platform';
+import { Obj, Ref } from '@dxos/echo';
+
 import { default as reply } from '../examples/reply';
-import { type FunctionDefinition, serializeFunction } from '../handler';
+import { serializeFunction } from '../handler';
 import { FunctionType } from '../schema';
 import {
   ComputeEventLogger,
@@ -21,6 +22,7 @@ import {
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from '../services/local-function-execution';
 import { TestDatabaseLayer } from '../testing';
 import { FunctionTrigger } from '../types';
+
 import { TriggerDispatcher } from './trigger-dispatcher';
 
 const TestLayer = pipe(

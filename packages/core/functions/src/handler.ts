@@ -4,12 +4,12 @@
 
 import { type Context, type Effect, Schema } from 'effect';
 
+import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-import { Obj, Type } from '@dxos/echo';
 import { FunctionType } from './schema';
 import { type Services } from './services';
 

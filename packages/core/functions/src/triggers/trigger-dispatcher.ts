@@ -2,19 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Duration, Effect, Layer, Context, Schedule, Fiber, Cron, Either, Exit } from 'effect';
+import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
 
-import { Filter, type EchoDatabase } from '@dxos/client/echo';
-import { type Expando, type Ref } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-
-import { LocalFunctionExecutionService } from '../services/local-function-execution';
-import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
-import { type FunctionDefinition, deserializeFunction } from '../handler';
-import { DatabaseService, type Services } from '../services';
+import { Filter } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
 import { FunctionType } from '..';
+import { deserializeFunction } from '../handler';
+import { DatabaseService, type Services } from '../services';
+import { LocalFunctionExecutionService } from '../services/local-function-execution';
+import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
 
 export type TimeControl = 'natural' | 'manual';
 
