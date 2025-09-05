@@ -4,8 +4,7 @@
 
 import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
 
-import { Filter } from '@dxos/echo';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
