@@ -42,13 +42,13 @@ const meta: Meta<typeof MarkdownCard> = {
     translations,
   },
   tags: ['cards'],
-};
+} satisfies Meta<typeof MarkdownCard>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover = {
+export const Popover: Story = {
   args: {
     role: 'card--popover',
     subject: Markdown.makeDocument({
@@ -56,9 +56,9 @@ export const Popover = {
       content: faker.lorem.paragraphs(3),
     }),
   },
-} satisfies Story;
+};
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
     subject: Markdown.makeDocument({
@@ -66,9 +66,9 @@ export const Intrinsic = {
       content: faker.lorem.paragraphs(3),
     }),
   },
-} satisfies Story;
+};
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
     subject: Markdown.makeDocument({
@@ -76,4 +76,4 @@ export const Extrinsic = {
       content: faker.lorem.paragraphs(3),
     }),
   },
-} satisfies Story;
+};

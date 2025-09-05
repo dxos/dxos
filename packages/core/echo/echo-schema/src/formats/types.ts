@@ -102,7 +102,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  GeoPoint = 'latlng',
+  GeoPoint = 'lnglat',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();

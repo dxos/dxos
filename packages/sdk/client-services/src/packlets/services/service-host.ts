@@ -219,7 +219,7 @@ export class ClientServicesHost {
 
     // TODO(wittjosiah): This is quite noisy during tests. Make configurable? Remove?
     if (!options.signalManager) {
-      log.warn('running signaling without telemetry metadata.');
+      // log.warn('running signaling without telemetry metadata.');
     }
 
     const endpoint = config?.get('runtime.services.edge.url');

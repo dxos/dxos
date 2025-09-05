@@ -226,7 +226,7 @@ describe('parser', () => {
             '<status>I am thinking...</status>',
             'Hello, world!',
             '<toolkit/>',
-            '<suggest>Yes</suggest>',
+            '<suggestion>Yes</suggestion>',
             '<select><option>Yes</option><option>No</option></select>',
           ]
             .flatMap(splitByCharacter)
@@ -249,7 +249,7 @@ describe('parser', () => {
             _tag: 'toolkit',
           },
           {
-            _tag: 'suggest',
+            _tag: 'suggestion',
             text: 'Yes',
           },
           {

@@ -44,11 +44,10 @@ export const Projection = Schema.Struct({
   fields: Schema.mutable(Schema.Array(FieldSchema)),
 
   /**
-   * Array of fields that are part of the view's schema but hidden from UI display.
-   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
+   * The id for the field used to pivot the view.
+   * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
-  // TODO(wittjosiah): Remove? This can be easily derived from fields.
-  hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
+  pivotFieldId: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
@@ -97,6 +96,7 @@ type CreateViewProps = {
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
   fields?: string[];
+  pivotFieldName?: string;
 };
 
 /**
@@ -109,6 +109,7 @@ export const createView = ({
   overrideSchema,
   presentation,
   fields: include,
+  pivotFieldName,
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
@@ -118,7 +119,6 @@ export const createView = ({
     projection: {
       schema: overrideSchema,
       fields: [],
-      hiddenFields: [],
     },
     presentation: Ref.make(presentation),
   });
@@ -133,7 +133,7 @@ export const createView = ({
     }
 
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (property.type === 'object') {
+    if (property.type === 'object' && !property.format) {
       continue;
     }
 
@@ -147,6 +147,13 @@ export const createView = ({
       const indexB = include.indexOf(b.path);
       return indexA - indexB;
     });
+  }
+
+  if (pivotFieldName) {
+    const fieldId = projection.getFieldId(pivotFieldName);
+    if (fieldId) {
+      view.projection.pivotFieldId = fieldId;
+    }
   }
 
   return view;
@@ -189,6 +196,7 @@ export const createViewWithReferences = async ({
   overrideSchema,
   presentation,
   fields,
+  pivotFieldName,
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
@@ -199,6 +207,7 @@ export const createViewWithReferences = async ({
     overrideSchema,
     presentation,
     fields,
+    pivotFieldName,
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);

@@ -9,10 +9,17 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-import { AppGraphBuilder, BlueprintDefinition, InboxState, IntentResolver, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  BLUEPRINT_KEY,
+  BlueprintDefinition,
+  InboxState,
+  IntentResolver,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CalendarType, InboxAction, MailboxType } from './types';
+import { Calendar, InboxAction, Mailbox } from './types';
 
 export const InboxPlugin = () =>
   definePlugin(meta, [
@@ -34,9 +41,10 @@ export const InboxPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: () => [
         contributes(Capabilities.Metadata, {
-          id: MailboxType.typename,
+          id: Mailbox.Mailbox.typename,
           metadata: {
             icon: 'ph--tray--regular',
+            blueprints: [BLUEPRINT_KEY],
           },
         }),
         contributes(Capabilities.Metadata, {
@@ -46,7 +54,7 @@ export const InboxPlugin = () =>
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: CalendarType.typename,
+          id: Calendar.Calendar.typename,
           metadata: {
             icon: 'ph--calendar--regular',
           },
@@ -67,14 +75,14 @@ export const InboxPlugin = () =>
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: MailboxType,
+            objectSchema: Mailbox.Mailbox,
             getIntent: (_, options) => createIntent(InboxAction.CreateMailbox, { spaceId: options.space.id }),
           }),
         ),
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: CalendarType,
+            objectSchema: Calendar.Calendar,
             getIntent: () => createIntent(InboxAction.CreateCalendar),
           }),
         ),

@@ -24,7 +24,7 @@ export const StatusBarActions = () => {
       <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' size={4} />
-          <StatusBar.Text classNames='hidden sm:block'>{t('discord label2')}</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('discord label')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
       <StatusBar.Button asChild>

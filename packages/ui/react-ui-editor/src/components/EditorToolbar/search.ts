@@ -8,10 +8,14 @@ import { type EditorView } from '@codemirror/view';
 import { createEditorAction } from './util';
 
 const createSearchAction = (getView: () => EditorView) =>
-  createEditorAction('search', () => openSearchPanel(getView()), {
-    testId: 'editor.toolbar.search',
-    icon: 'ph--magnifying-glass--regular',
-  });
+  createEditorAction(
+    'search',
+    {
+      testId: 'editor.toolbar.search',
+      icon: 'ph--magnifying-glass--regular',
+    },
+    () => openSearchPanel(getView()),
+  );
 
 export const createSearch = (getView: () => EditorView) => ({
   nodes: [createSearchAction(getView)],

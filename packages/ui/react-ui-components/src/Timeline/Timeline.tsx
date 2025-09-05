@@ -67,7 +67,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
   (
     {
       classNames,
-      branches: _branches,
+      branches: branchesParam,
       commits = empty,
       showIcon = true,
       compact = false,
@@ -81,8 +81,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     // Auto-discover branches if not provided.
     const branches = useMemo(() => {
-      if (_branches) {
-        return _branches;
+      if (branchesParam) {
+        return branchesParam;
       }
 
       return commits.reduce((branches, commit) => {
@@ -92,7 +92,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
         return branches;
       }, [] as string[]);
-    }, [_branches, commits]);
+    }, [branchesParam, commits]);
 
     // NOTE: Assumes commits are in topological order.
     const getCommitIndex = (id: string) => commits.findIndex((c) => c.id === id);
@@ -247,6 +247,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             );
           })}
         </ScrollContainer.Content>
+        <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );
   },

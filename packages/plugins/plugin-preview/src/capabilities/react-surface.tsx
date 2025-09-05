@@ -23,9 +23,9 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { DataType, type ProjectionModel } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
@@ -50,12 +50,12 @@ export default () =>
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
             view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
             view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.
@@ -129,7 +129,7 @@ export default () =>
       id: `${PREVIEW_PLUGIN}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
         const { t } = useTranslation(PREVIEW_PLUGIN);
@@ -150,8 +150,9 @@ export default () =>
           <Card.SurfaceRoot role={role}>
             <Form
               schema={schema}
+              projection={data.projection}
               values={data.subject}
-              readonly={role === 'card--popover'}
+              readonly={role === 'card--popover' ? 'static' : false}
               onSave={handleSave}
               autoSave
               {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}

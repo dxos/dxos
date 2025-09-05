@@ -10,6 +10,7 @@ export const dxosTheme = create({
   brandImage: '/dxos.png',
   brandTarget: '_blank',
   brandUrl: 'https://github.com/dxos',
+  appBg: '#1e1e1e',
 });
 
 export const docsTheme = create({

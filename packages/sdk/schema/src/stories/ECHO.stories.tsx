@@ -96,7 +96,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
@@ -117,10 +117,10 @@ const meta: Meta<typeof DefaultStory> = {
     withTheme,
     withLayout({ fullscreen: true }),
   ],
-};
-
-type Story = StoryObj<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

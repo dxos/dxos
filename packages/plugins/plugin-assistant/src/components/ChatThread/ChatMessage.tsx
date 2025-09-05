@@ -4,7 +4,6 @@
 
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
-import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { resolveRef } from '@dxos/client';
 import { Obj } from '@dxos/echo';
@@ -13,13 +12,10 @@ import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import {
-  MarkdownViewer,
-  ToggleContainer as NativeToggleContainer,
-  type ToggleContainerProps,
-} from '@dxos/react-ui-components';
+import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -27,33 +23,45 @@ import { type ChatEvent } from '../Chat';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
-import { Json, ToolBlock, isToolMessage } from './ToolBlock';
+import { type AiToolProvider, ToolBlock, isToolMessage } from './ToolBlock';
 
-const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
-const marginClasses = 'pie-4 pis-4';
-const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
+export const styles = {
+  margin: 'pie-4 pis-4',
+  padding: 'pis-2 pie-2 pbs-0.5 pbe-0.5',
+  panel: 'is-full rounded-sm',
+  panelHeader: 'bg-groupSurface',
+  panelContent: 'bg-modalSurface',
+  json: '!p-1 text-xs bg-transparent',
+};
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
   message: DataType.Message;
-  tools?: Tool[];
+  toolProvider?: AiToolProvider;
   onEvent?: (event: ChatEvent) => void;
   onDelete?: () => void;
 }>;
 
-export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent, onDelete }: ChatMessageProps) => {
+export const ChatMessage = ({
+  classNames,
+  debug,
+  space,
+  message,
+  toolProvider,
+  onEvent,
+  onDelete,
+}: ChatMessageProps) => {
   const { t } = useTranslation(meta.id);
   const {
     sender: { role },
     blocks,
   } = message;
 
-  // TODO(burdon): Consolidate tools upstream?
-  if (isToolMessage(message)) {
+  if (toolProvider && isToolMessage(message)) {
     return (
-      <MessageItem classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
-        <ToolBlock classNames={panelClasses} message={message} tools={tools} />
+      <MessageItem classNames={[styles.margin, 'animate-[fadeIn_0.5s]']}>
+        <ToolBlock message={message} toolProvider={toolProvider} />
       </MessageItem>
     );
   }
@@ -61,7 +69,7 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
   return (
     <>
       {debug && (
-        <div className={mx('flex justify-end text-subdued', marginClasses)}>
+        <div className={mx('flex justify-end text-subdued', styles.margin)}>
           <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
         </div>
       )}
@@ -85,7 +93,7 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
               </ErrorBoundary>
             </MessageItem>
             {debug && (
-              <div className={mx('flex justify-end text-subdued', marginClasses)}>
+              <div className={mx('flex justify-end text-subdued', styles.margin)}>
                 <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
               </div>
             )}
@@ -94,7 +102,7 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
       })}
 
       {onDelete && (
-        <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
+        <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', styles.margin)}>
           <IconButton
             classNames='animate-[fadeIn_0.5s]'
             icon='ph--trash--regular'
@@ -125,6 +133,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['text' as const]: ({ space, block }) => {
     invariant(block._tag === 'text');
+
     return (
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
@@ -165,12 +174,14 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Suggest
   //
-  ['suggest' as const]: ({ block, onEvent }) => {
-    invariant(block._tag === 'suggest');
+  ['suggestion' as const]: ({ block, onEvent }) => {
+    invariant(block._tag === 'suggestion');
+
     return (
       <IconButton
         icon='ph--lightning--regular'
         label={block.text}
+        classNames='text-description'
         onClick={() => onEvent?.({ type: 'submit', text: block.text })}
       />
     );
@@ -181,6 +192,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['select' as const]: ({ block, onEvent }) => {
     invariant(block._tag === 'select');
+
     return (
       <div className='flex flex-wrap gap-1'>
         {block.options.map((option, idx) => (
@@ -201,13 +213,26 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['toolkit' as const]: ({ block }) => {
     invariant(block._tag === 'toolkit');
-    const { t } = useTranslation(meta.id);
 
+    const { t } = useTranslation(meta.id);
     return (
-      <ToggleContainer title={t('toolkit label')} classNames={panelClasses} defaultOpen>
-        <Toolbox classNames={marginClasses} />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel} defaultOpen>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={t('toolkit label')} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Toolbox />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
+  },
+
+  //
+  // Summary
+  //
+  ['summary' as const]: ({ block }) => {
+    invariant(block._tag === 'summary');
+
+    const summary = ContentBlock.createSummaryMessage(block);
+    return <div className='text-subdued'>{summary}</div>;
   },
 
   //
@@ -240,9 +265,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
       default: {
         return (
-          <ToggleContainer title={block.disposition ?? block._tag}>
-            <Json data={safeParseJson(block.data ?? block)} />
-          </ToggleContainer>
+          <ToggleContainer.Root classNames={styles.panel}>
+            <ToggleContainer.Header classNames={styles.panelHeader} title={block.disposition ?? block._tag} />
+            <ToggleContainer.Content classNames={styles.panelContent}>
+              <Json data={safeParseJson(block.data ?? block)} classNames={styles.json} />
+            </ToggleContainer.Content>
+          </ToggleContainer.Root>
         );
       }
     }
@@ -253,9 +281,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   default: ({ block }) => {
     return (
-      <ToggleContainer title={block._tag}>
-        <Json data={block} />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel}>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={block._tag} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Json data={block} classNames={styles.json} />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
   },
 };
@@ -272,9 +303,10 @@ export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
   return (
     <>
       <MessageItem>
-        <ToggleContainer title={error.message || t('error label')} classNames={[panelClasses, 'bg-warningSurface']}>
-          <div className='p-2'>{String(error.cause)}</div>
-        </ToggleContainer>
+        <ToggleContainer.Root classNames={styles.panel}>
+          <ToggleContainer.Header classNames={styles.panelHeader} title={error.message || t('error label')} />
+          <ToggleContainer.Content classNames={styles.panelContent}>{String(error.cause)}</ToggleContainer.Content>
+        </ToggleContainer.Root>
       </MessageItem>
       <MessageItem>
         <IconButton
@@ -297,16 +329,14 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
   }
 
   return (
-    <div role='list-item' className={mx('flex is-full', user && 'justify-end', marginClasses, classNames)}>
-      <div className={mx(user ? ['rounded-sm', 'bg-[--user-fill] text-accentSurfaceText', paddingClasses] : 'is-full')}>
+    <div role='list-item' className={mx('flex is-full', user && 'justify-end', styles.margin, classNames)}>
+      <div
+        className={mx(user ? ['bg-[--user-fill] text-white dark:text-black rounded-sm', styles.padding] : 'is-full')}
+      >
         {children}
       </div>
     </div>
   );
-};
-
-const ToggleContainer = ({ classNames, ...props }: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(panelClasses, classNames)} />;
 };
 
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>

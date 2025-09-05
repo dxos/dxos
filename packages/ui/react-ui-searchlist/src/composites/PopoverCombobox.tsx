@@ -9,7 +9,6 @@ import {
   Popover,
   type PopoverArrowProps,
   type PopoverContentProps,
-  type PopoverViewportProps,
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 
@@ -100,16 +99,17 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
           onFocusOutside,
           onInteractOutside,
           forceMount,
-          classNames,
         }}
+        classNames={[
+          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr] overflow-hidden',
+          classNames,
+        ]}
         id={modalId}
         ref={forwardedRef}
       >
-        <Popover.Viewport>
-          <SearchList.Root {...props} classNames='contents density-fine' role='none'>
-            {children}
-          </SearchList.Root>
-        </Popover.Viewport>
+        <SearchList.Root {...props} classNames='contents density-fine' role='none'>
+          {children}
+        </SearchList.Root>
       </Popover.Content>
     );
   },
@@ -139,7 +139,7 @@ const PopoverComboboxInput = forwardRef<HTMLInputElement, PopoverComboboxInputPr
       <SearchList.Input
         {...props}
         classNames={[
-          'mli-cardSpacingChrome mbs-cardSpacingChrome is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
+          'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
           classNames,
         ]}
         ref={forwardedRef}
@@ -148,15 +148,16 @@ const PopoverComboboxInput = forwardRef<HTMLInputElement, PopoverComboboxInputPr
   },
 );
 
-type PopoverComboboxListProps = SearchListContentProps &
-  Pick<PopoverViewportProps, 'constrainBlock' | 'constrainInline'>;
+type PopoverComboboxListProps = SearchListContentProps;
 
 const PopoverComboboxList = forwardRef<HTMLDivElement, PopoverComboboxListProps>(
-  ({ constrainInline, constrainBlock, ...props }, forwardedRef) => {
+  ({ classNames, ...props }, forwardedRef) => {
     return (
-      <Popover.Viewport {...{ constrainInline, constrainBlock }}>
-        <SearchList.Content {...props} ref={forwardedRef} />
-      </Popover.Viewport>
+      <SearchList.Content
+        {...props}
+        classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
+        ref={forwardedRef}
+      />
     );
   },
 );

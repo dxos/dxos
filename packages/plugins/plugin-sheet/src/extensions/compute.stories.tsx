@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -99,8 +99,21 @@ const GraphStory = (props: EditorProps) => {
   );
 };
 
+const meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+} satisfies Meta;
+
+export default meta;
+
 // TODO(burdon): Inline formulae.
-export const Default = {
+export const Default: StoryObj<typeof EditorStory> = {
   render: EditorStory,
   args: {
     text: str(
@@ -124,7 +137,7 @@ export const Default = {
   },
 };
 
-export const Graph = {
+export const Graph: StoryObj<typeof GraphStory> = {
   render: GraphStory,
   args: {
     text: str(
@@ -141,16 +154,3 @@ export const Graph = {
     ),
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;

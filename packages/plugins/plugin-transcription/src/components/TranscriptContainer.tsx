@@ -10,13 +10,13 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
 import { useQueueModelAdapter } from '../hooks';
-import { type TranscriptType } from '../types';
+import { type Transcript } from '../types';
 
-import { Transcript, renderMarkdown } from './Transcript';
+import { TranscriptView, renderMarkdown } from './Transcript';
 
 export type TranscriptionContainerProps = {
   role: string;
-  transcript: TranscriptType;
+  transcript: Transcript.Transcript;
 };
 
 export const TranscriptionContainer = ({ transcript }: TranscriptionContainerProps) => {
@@ -28,7 +28,7 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
 
   return (
     <StackItem.Content classNames='container-max-width pli-2'>
-      <Transcript attendableId={attendableId} space={space} model={model} transcript={transcript} />
+      <TranscriptView attendableId={attendableId} space={space} model={model} transcript={transcript} />
     </StackItem.Content>
   );
 };

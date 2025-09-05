@@ -4,7 +4,7 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, type WheelEvent, useCallback, useState } from 'react';
+import React, { type MouseEvent, type WheelEvent, useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
@@ -19,7 +19,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue, trim } from '@dxos/util';
 
-import { type MailboxType } from '../../types';
 import { formatDate, hashString } from '../util';
 
 import { type Tag } from './model';
@@ -96,7 +95,7 @@ export type MailboxAction =
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
-export type MailboxProps = Pick<MailboxType, 'name'> & {
+export type MailboxProps = {
   id: string;
   messages: DataType.Message[];
   ignoreAttention?: boolean;
@@ -176,7 +175,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [messages, currentMessageId],
   );
 
-  const gridRows = React.useMemo(() => {
+  const gridRows = useMemo(() => {
     return messages.reduce(
       (acc, _, idx) => {
         const message = messages[idx];
@@ -192,7 +191,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     );
   }, [messages]);
 
-  const rows = React.useMemo(() => ({ grid: gridRows }), [gridRows]);
+  const rows = useMemo(() => ({ grid: gridRows }), [gridRows]);
 
   return (
     <div role='none' className='flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0'>

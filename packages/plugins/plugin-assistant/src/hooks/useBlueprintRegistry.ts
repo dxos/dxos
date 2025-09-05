@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useSignalEffect } from '@preact/signals-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
@@ -9,7 +10,6 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useAsyncSignalEffect } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 /**
@@ -29,16 +29,17 @@ export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Bluep
  */
 export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
-  useAsyncSignalEffect(async () => {
+
+  useSignalEffect(() => {
     const refs = [...(context?.blueprints.value ?? [])];
-    const blueprints = (await Ref.Array.loadAll(refs)).filter(isNonNullable);
+    const blueprints = refs.map((ref) => ref.target).filter(isNonNullable);
     setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
   });
 
   return active;
 };
 
-// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
+// TODO(burdon): Move logic into binder.
 export const useBlueprintHandlers = ({
   space,
   context,
@@ -63,6 +64,7 @@ export const useBlueprintHandlers = ({
           if (!blueprint) {
             return;
           }
+
           // NOTE: Possible race condition with other peers.
           storedBlueprint = space.db.add(Obj.clone(blueprint));
         }

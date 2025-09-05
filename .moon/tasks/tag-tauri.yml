@@ -18,8 +18,6 @@ tasks:
     preset: server
   tauri-ios-build:
     command: tauri ios build
-    args:
-      - --export-method=app-store-connect
     # TODO(wittjosiah): Determine which the outputs are which should be cached.
     options:
       cache: false

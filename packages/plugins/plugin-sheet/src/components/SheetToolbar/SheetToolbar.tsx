@@ -9,8 +9,6 @@ import { useAppGraph } from '@dxos/app-framework';
 import { type CompleteCellRange } from '@dxos/compute';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
-  type ActionGraphEdges,
-  type ActionGraphNodes,
   type ActionGraphProps,
   MenuProvider,
   ToolbarMenu,
@@ -37,22 +35,24 @@ const createToolbarActions = (
   state: ToolbarState,
   cursorFallbackRange?: CompleteCellRange,
   customActions?: Rx.Rx<ActionGraphProps>,
-) => {
+): Rx.Rx<ActionGraphProps> => {
   return Rx.make((get) => {
     const align = get(rxFromSignal(() => createAlign(model, state, cursorFallbackRange)));
     const style = get(rxFromSignal(() => createStyle(model, state, cursorFallbackRange)));
     const gap = createGapSeparator();
-    const nodes: ActionGraphNodes = [...align.nodes, ...style.nodes, ...gap.nodes];
-    const edges: ActionGraphEdges = [...align.edges, ...style.edges, ...gap.edges];
+
+    const graph: ActionGraphProps = {
+      nodes: [...align.nodes, ...style.nodes, ...gap.nodes],
+      edges: [...align.edges, ...style.edges, ...gap.edges],
+    };
+
     if (customActions) {
       const custom = get(customActions);
-      nodes.push(...custom.nodes);
-      edges.push(...custom.edges);
+      graph.nodes.push(...custom.nodes);
+      graph.edges.push(...custom.edges);
     }
-    return {
-      nodes,
-      edges,
-    };
+
+    return graph;
   });
 };
 

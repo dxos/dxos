@@ -29,7 +29,7 @@ const instructions = trim`
   </example>
 `;
 
-export const blueprint = Obj.make(Blueprint.Blueprint, {
+export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   key: 'dxos.org/blueprint/research',
   name: 'Research',
   description: 'Researches the web and creates structured data.',

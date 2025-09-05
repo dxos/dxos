@@ -9,10 +9,10 @@ import type { MenuActionProperties, MenuItemGroupProperties } from './types';
 import { createMenuAction, createMenuItemGroup } from './util';
 
 export interface ActionGroupBuilder {
-  action<P extends {} = {}>(id: string, invoke: () => void, properties: P & MenuActionProperties): this;
+  action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
   group<P extends {} = {}>(
     id: string,
-    properties: P & MenuItemGroupProperties,
+    props: P & MenuItemGroupProperties,
     cb: (builder: ActionGroupBuilder) => void,
   ): this;
 }
@@ -32,12 +32,6 @@ class MenuBuilderImpl implements MenuBuilder {
     private readonly _rootId: string,
   ) {}
 
-  action<P extends {} = {}>(id: string, invoke: () => void, properties: P & MenuActionProperties): this {
-    this._data.nodes.push(createMenuAction(id, invoke, properties));
-    this._data.edges.push({ source: this._rootId, target: id });
-    return this;
-  }
-
   root(props: MenuItemGroupProperties): this {
     invariant(this._rootId === 'root', 'Root group can only be at the top level');
     invariant(this._data.nodes.find((node) => node.id === 'root') === undefined, 'Root group can only be created once');
@@ -45,12 +39,18 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
+  action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this {
+    this._data.nodes.push(createMenuAction(id, invoke, props));
+    this._data.edges.push({ source: this._rootId, target: id });
+    return this;
+  }
+
   group<P extends {} = {}>(
     id: string,
-    properties: P & MenuItemGroupProperties,
+    props: P & MenuItemGroupProperties,
     cb: (builder: ActionGroupBuilder) => void,
   ): this {
-    this._data.nodes.push(createMenuItemGroup(id, properties));
+    this._data.nodes.push(createMenuItemGroup(id, props));
     this._data.edges.push({ source: this._rootId, target: id });
     cb(new MenuBuilderImpl(this._data, id));
     return this;

@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -36,7 +36,7 @@ export const Basic = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
@@ -49,6 +49,8 @@ const meta: Meta = {
     }),
   ],
   parameters: { translations },
-};
+} satisfies Meta<typeof GridSheet>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

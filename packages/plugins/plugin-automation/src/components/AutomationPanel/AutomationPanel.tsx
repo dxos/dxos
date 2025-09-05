@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { FunctionTrigger, type FunctionTriggerType, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -22,7 +22,7 @@ const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 export type AutomationPanelProps = {
   space: Space;
   object?: Obj.Any;
-  initialTrigger?: FunctionTriggerType;
+  initialTrigger?: FunctionTrigger;
   onDone?: () => void;
 };
 
@@ -34,12 +34,11 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   const functions = useQuery(space, Filter.type(FunctionType));
   const scripts = useQuery(space, Filter.type(ScriptType));
 
-  const [trigger, setTrigger] = useState<FunctionTriggerType | undefined>(initialTrigger);
+  const [trigger, setTrigger] = useState<FunctionTrigger | undefined>(initialTrigger);
   const [selected, setSelected] = useState<FunctionTrigger>();
 
   const handleSelect = (trigger: FunctionTrigger) => {
-    const { id: _, ...values } = trigger;
-    setTrigger(values);
+    setTrigger(trigger);
     setSelected(trigger);
   };
 
@@ -132,11 +131,11 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 };
 
 const getCopyAction = (client: Client, trigger: FunctionTrigger | undefined) => {
-  if (trigger?.spec?.kind === TriggerKind.Email) {
+  if (trigger?.spec?.kind === 'email') {
     return { translationKey: 'trigger copy email', contentProvider: () => `${getSpace(trigger)!.id}@dxos.network` };
   }
 
-  if (trigger?.spec?.kind === TriggerKind.Webhook) {
+  if (trigger?.spec?.kind === 'webhook') {
     return { translationKey: 'trigger copy url', contentProvider: () => getWebhookUrl(client, trigger) };
   }
 
@@ -151,14 +150,10 @@ const getWebhookUrl = (client: Client, trigger: FunctionTrigger) => {
   return new URL(`/webhook/${spaceId}:${trigger.id}`, edgeUrl).toString();
 };
 
-const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTriggerType) => {
+const getFunctionName = (scripts: ScriptType[], functions: FunctionType[], trigger: FunctionTrigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
   const functionObject = functions.find((fn) => fn === trigger.function?.target);
-  if (!functionObject) {
-    return shortId;
-  }
-
-  return scripts.find((s) => functionObject.source?.target?.id === s.id)?.name ?? shortId;
+  return functionObject?.name ?? shortId;
 };

@@ -17,7 +17,13 @@ import { type JsonPath, type JsonProp } from './jsonPath';
 // https://effect-ts.github.io/effect/schema/SchemaAST.ts.html
 //
 
+// TODO(wittjosiah): What is a "simple type"?
 export type SimpleType = 'object' | 'string' | 'number' | 'boolean' | 'enum' | 'literal';
+
+const isTupleType = (node: SchemaAST.AST): boolean => {
+  // NOTE: Arrays are represented as tuples with no elements and a rest part.
+  return SchemaAST.isTupleType(node) && node.elements.length > 0;
+};
 
 /**
  * Get the base type; e.g., traverse through refinements.
@@ -27,6 +33,8 @@ export const getSimpleType = (node: SchemaAST.AST): SimpleType | undefined => {
     SchemaAST.isDeclaration(node) ||
     SchemaAST.isObjectKeyword(node) ||
     SchemaAST.isTypeLiteral(node) ||
+    // TODO(wittjosiah): Tuples are actually arrays.
+    isTupleType(node) ||
     isDiscriminatedUnion(node)
   ) {
     return 'object';
@@ -127,15 +135,15 @@ const visitNode = (
   path: Path = [],
   depth = 0,
 ): VisitResult | undefined => {
-  const _result = test?.(node, path, depth);
+  const $result = test?.(node, path, depth);
   const result: VisitResult =
-    _result === undefined
+    $result === undefined
       ? VisitResult.CONTINUE
-      : typeof _result === 'boolean'
-        ? _result
+      : typeof $result === 'boolean'
+        ? $result
           ? VisitResult.CONTINUE
           : VisitResult.SKIP
-        : _result;
+        : $result;
 
   if (result === VisitResult.EXIT) {
     return result;

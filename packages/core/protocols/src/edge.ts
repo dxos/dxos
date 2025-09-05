@@ -127,6 +127,8 @@ export type UploadFunctionResponseBody = {
   functionId: string;
   version: string;
   meta: {
+    key?: string;
+    name?: string;
     description?: string;
     /**
      * JSON Schema for the input of the function.

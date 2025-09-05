@@ -33,13 +33,13 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   );
 };
 
-const meta: Meta<typeof Button> = {
+const meta = {
   title: 'ui/react-ui-core/Button',
   component: Button,
   render: DefaultStory,
   decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof Button>;
 
 export default meta;
 

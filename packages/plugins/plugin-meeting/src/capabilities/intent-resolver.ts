@@ -8,18 +8,30 @@ import { Capabilities, type PluginContext, contributes, createIntent, createReso
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { TranscriptionAction } from '@dxos/plugin-transcription/types';
+import { TranscriptAction } from '@dxos/plugin-transcription/types';
 import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MeetingAction, MeetingType } from '../types';
+import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: MeetingAction.OnSpaceCreated,
+      resolve: ({ rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: meetingCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Meeting.Meeting.typename }),
+          );
+          rootCollection.objects.push(Ref.make(meetingCollection));
+        }),
+    }),
     createResolver({
       intent: MeetingAction.Create,
       resolve: ({ name, channel }) =>
@@ -27,11 +39,9 @@ export default (context: PluginContext) =>
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getSpace(channel);
           invariant(space);
-          const { object: transcript } = yield* dispatch(
-            createIntent(TranscriptionAction.Create, { spaceId: space.id }),
-          );
+          const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { space }));
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
-          const meeting = Obj.make(MeetingType, {
+          const meeting = Obj.make(Meeting.Meeting, {
             name,
             created: new Date().toISOString(),
             participants: [],
@@ -50,7 +60,7 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(Type.getTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
       },
     }),

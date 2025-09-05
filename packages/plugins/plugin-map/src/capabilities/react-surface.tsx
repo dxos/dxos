@@ -26,7 +26,7 @@ export default () =>
       id: `${meta.id}/surface/map`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
-      component: ({ role }) => {
+      component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
         const [zoom, setZoom] = useState(14);
@@ -36,14 +36,23 @@ export default () =>
           setZoom(zoom);
         }, []);
 
-        return <MapContainer role={role} type={state.type} center={center} zoom={zoom} onChange={handleChange} />;
+        return (
+          <MapContainer
+            role={role}
+            type={state.type}
+            map={data.subject}
+            center={center}
+            zoom={zoom}
+            onChange={handleChange}
+          />
+        );
       },
     }),
     createSurface({
       id: `${meta.id}/surface/map-view`,
       role: ['article', 'section'],
       filter: (data): data is { subject: DataType.View } =>
-        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation),
+        Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
         const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });

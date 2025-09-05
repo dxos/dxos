@@ -37,6 +37,10 @@ export type ChatEvent =
   // UX
   //
   | {
+      type: 'update-prompt';
+      text: string;
+    }
+  | {
       type: 'scroll-to-bottom';
     }
   | {

@@ -16,6 +16,7 @@ import {
 import { ItemAnnotation } from '../annotations';
 
 import { Person } from './person';
+import { Project } from './project';
 
 /**
  * Task schema.
@@ -82,6 +83,7 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
+  project: Schema.optional(Type.Ref(Project).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.

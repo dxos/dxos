@@ -21,6 +21,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin name': 'Editor',
+        'settings title': 'Editor settings',
         'choose markdown from space dialog title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)
         'empty choose markdown from space message': 'None available; try creating a new one instead?',

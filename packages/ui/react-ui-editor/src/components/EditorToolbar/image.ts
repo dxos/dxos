@@ -5,10 +5,14 @@
 import { createEditorAction } from './util';
 
 const createImageUploadAction = (onImageUpload: () => void) =>
-  createEditorAction('image', onImageUpload, {
-    testId: 'editor.toolbar.image',
-    icon: 'ph--image-square--regular',
-  });
+  createEditorAction(
+    'image',
+    {
+      testId: 'editor.toolbar.image',
+      icon: 'ph--image-square--regular',
+    },
+    onImageUpload,
+  );
 
 export const createImageUpload = (onImageUpload: () => void) => ({
   nodes: [createImageUploadAction(onImageUpload)],

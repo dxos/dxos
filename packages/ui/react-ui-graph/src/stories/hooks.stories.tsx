@@ -4,13 +4,13 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
@@ -28,7 +28,7 @@ import { TestGraphModel, type TestNode, convertTreeToGraph, createTree } from '.
 
 import '../../styles/graph.css';
 
-type StoryProps = PropsWithChildren<{
+type ComponentProps = PropsWithChildren<{
   model: TestGraphModel;
   projectorOptions?: GraphForceProjectorOptions;
   count?: number;
@@ -37,25 +37,14 @@ type StoryProps = PropsWithChildren<{
   grid?: boolean;
 }>;
 
-const DefaultStory = ({ children, ...props }: StoryProps) => {
-  return (
-    <>
-      <SVG.Root>
-        <StoryComponent {...props} />
-      </SVG.Root>
-      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
-    </>
-  );
-};
-
-const StoryComponent = ({
+const Component = ({
   model,
   projectorOptions,
   count = 0,
   interval = 200,
   link = false,
   grid: showGrid = false,
-}: StoryProps) => {
+}: ComponentProps) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>();
   const markersRef = useRef<SVGGElement>();
@@ -94,7 +83,7 @@ const StoryComponent = ({
         labels: {
           text: (node: GraphLayoutNode<TestNode>) => node.id.substring(0, 4),
         },
-        onNodeClick: (node: GraphLayoutNode<TestNode>, event: MouseEvent) => {
+        onNodeClick: (node: GraphLayoutNode<TestNode>) => {
           renderer.fireBullet(node);
         },
         onLinkClick: (edge: GraphLayoutEdge<TestNode>, event: MouseEvent) => {
@@ -151,15 +140,26 @@ const StoryComponent = ({
   );
 };
 
-const meta: Meta = {
+const DefaultStory = ({ children, ...props }: ComponentProps) => {
+  return (
+    <>
+      <SVG.Root>
+        <Component {...props} />
+      </SVG.Root>
+      {children && <div className='absolute left-4 bottom-4 font-mono text-green-500 text-xs'>{children}</div>}
+    </>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

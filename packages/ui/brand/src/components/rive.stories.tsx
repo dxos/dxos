@@ -5,11 +5,12 @@
 import '@dxos-theme';
 
 import { type Rive, useRive } from '@rive-app/react-canvas';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
 import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type Meta, render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
   useEffect(() => {
@@ -88,8 +89,10 @@ const meta = {
       classNames: ['absolute inset-0 bg-black'],
     }),
   ],
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

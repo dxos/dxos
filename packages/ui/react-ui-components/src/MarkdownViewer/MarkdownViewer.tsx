@@ -39,7 +39,7 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
             return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
           },
           p: ({ children }) => {
-            return <div className='pbs-1 pbe-1 text-subdued'>{children}</div>;
+            return <div className='pbs-1 pbe-1'>{children}</div>;
           },
           a: ({ children, href, ...props }) => (
             <a

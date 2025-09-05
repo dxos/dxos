@@ -1,3 +1,7 @@
+/**
+ * Main theme.
+ */
+
 @import 'tailwindcss/base' layer(tw-base);
 @import 'tailwindcss/utilities';
 @import 'tailwindcss/components' layer(tw-components);

@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "Composer",
-        "width": 800,
-        "height": 600,
+        "width": 1600,
+        "height": 1200,
         "resizable": true,
         "fullscreen": false,
         "devtools": true
@@ -22,43 +22,34 @@
     ],
     "security": {
       "csp": {
-        "connect-src": "https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434",
-        "script-src": "https: http://localhost:* 'unsafe-eval' 'unsafe-inline'",
-        "style-src": "https: http://localhost:* 'unsafe-inline'",
-        "frame-src": "https: http://localhost:* composer: blob:;",
-        "worker-src": "https: http://localhost:* blob:;",
-        "img-src": "https: data: file: socket://* http://localhost:* blob:;",
+        "connect-src": "tauri: https: file: ipc: http://*.dxos.network wss://*.dxos.org ws://localhost:* http://localhost:* http://127.0.0.1:* wss://* http://localhost:21434",
+        "script-src": "'unsafe-eval' 'unsafe-inline' tauri: https: http://localhost:*",
+        "style-src": "'unsafe-inline' tauri: https: http://localhost:*",
+        "frame-src": "tauri: https: http://localhost:* composer: blob:",
+        "worker-src": "tauri: https: http://localhost:* blob:",
+        "img-src": "tauri: https: data: file: socket://* http://localhost:* blob:",
         "child-src": "'none'",
         "object-src": "'none'"
-      }
+      },
+      "dangerousDisableAssetCspModification": true
     },
     "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
     "macOS": {
       "entitlements": "./Entitlements.plist"
     },
     "iOS": {},
     "createUpdaterArtifacts": true,
-    "externalBin": [
-      "sidecar/ollama"
-    ]
+    "externalBin": ["sidecar/ollama"]
   },
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK",
-      "endpoints": [
-        "https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"
-      ]
+      "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"]
     }
   }
 }

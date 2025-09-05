@@ -4,24 +4,24 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Oscilloscope, type OscilloscopeProps } from './Oscilloscope';
+import { Oscilloscope } from './Oscilloscope';
 
-const meta: Meta<OscilloscopeProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Oscilloscope',
   component: Oscilloscope,
   decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof Oscilloscope>;
 
 export default meta;
 
-type Story = StoryObj<OscilloscopeProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

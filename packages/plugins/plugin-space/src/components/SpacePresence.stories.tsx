@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -99,10 +99,12 @@ export const Small = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-space/SpacePresence',
   decorators: [withTheme, withLayout()],
   parameters: { translations },
-};
+} satisfies Meta<typeof IdentityDid>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

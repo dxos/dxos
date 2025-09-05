@@ -21,7 +21,7 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 
 import { Filter, Query } from './api';
 
@@ -110,6 +110,15 @@ describe('Query', () => {
       expect(objects).toEqual([obj]);
     });
 
+    test('filter by foreign keys without flushing index', async () => {
+      const obj = live(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
+
+      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
+    });
+
     test('filter nothing', async () => {
       const { objects } = await db.query(Filter.nothing()).run();
       expect(objects).toHaveLength(0);
@@ -154,7 +163,7 @@ describe('Query', () => {
   });
 
   test('query.run() queries everything after restart', async () => {
-    const kv = createTestLevel();
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -164,23 +173,24 @@ describe('Query', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+      await peer.close();
     }
 
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
     }
   });
 
   test('objects with incorrect document urls are ignored', async () => {
-    const kv = createTestLevel();
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -191,7 +201,7 @@ describe('Query', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -203,10 +213,11 @@ describe('Query', () => {
       await db.flush();
       root = rootDocHandle.url;
       expectedObjectId = obj2.id;
+      await peer.close();
     }
 
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(1);

@@ -20,7 +20,12 @@ Once it's compiled it can be run from the cli-next package:
 moon run cli-next:dev -- --help
 ```
 
-TODO: Setup dev runner with `vite-node`.
+Running with vite-node (reads all workspace packages directly from source, so rebuilds are not required):
+
+```bash
+cd packages/devtools/cli-next
+./cli-next
+```
 
 ## CLI Design Guide
 

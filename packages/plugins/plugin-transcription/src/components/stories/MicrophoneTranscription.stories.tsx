@@ -193,7 +193,7 @@ const DefaultStory = ({
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
@@ -234,11 +234,11 @@ const meta: Meta<typeof DefaultStory> = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

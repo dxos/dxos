@@ -9,10 +9,14 @@ import {
   Capabilities,
   Events,
   IntentPlugin,
+  LayoutAction,
   type Plugin,
   type PluginContext,
   SettingsPlugin,
+  allOf,
   contributes,
+  createIntent,
+  createResolver,
   defineModule,
   definePlugin,
 } from '@dxos/app-framework';
@@ -20,12 +24,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
+  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
   RESEARCH_BLUEPRINT,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
   research,
+  syncLinearIssues,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
@@ -34,8 +40,9 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
+import { DeckAction } from '@dxos/plugin-deck/types';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -44,7 +51,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
@@ -122,7 +129,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       SettingsPlugin(),
       SpacePlugin(),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, ...types],
+        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
@@ -176,9 +183,11 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+            contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
+            contributes(Capabilities.Functions, [syncLinearIssues]),
           ],
         }),
         defineModule({
@@ -187,6 +196,29 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           activate: (context) => [
             contributes(Capabilities.Toolkit, TestingToolkit),
             contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+          ],
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/set-workspace',
+          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+          activate: async (context) => {
+            const client = context.getCapability(ClientCapabilities.Client);
+            const space = client.spaces.default;
+            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+            return [];
+          },
+        }),
+        defineModule({
+          id: 'example.com/plugin/testing/module/intent-resolver',
+          activatesOn: Events.SetupIntentResolver,
+          activate: () => [
+            contributes(Capabilities.IntentResolver, [
+              createResolver({
+                intent: DeckAction.ChangeCompanion,
+                resolve: () => ({}),
+              }),
+            ]),
           ],
         }),
       ]),
@@ -200,3 +232,23 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
     classNames: 'justify-center bg-deckSurface',
   }),
 ];
+
+/**
+ * Creates access tokens from environment variables.
+ * @param tokens - Record of token sources mapped to their VITE_ prefixed environment variable values
+ * @returns Array of AccessToken objects for non-empty token values
+ * @example
+ * ```tsx
+ * const tokens = accessTokensFromEnv({
+ *   'exa.ai': process.env.VITE_EXA_API_KEY,
+ *   'linear.app': process.env.VITE_LINEAR_API_KEY
+ * });
+ * ```
+ * @note All environment variables should use the VITE_ prefix for proper Vite bundling
+ */
+
+export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
+  return Object.entries(tokens)
+    .filter(([, token]) => !!token)
+    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
+};

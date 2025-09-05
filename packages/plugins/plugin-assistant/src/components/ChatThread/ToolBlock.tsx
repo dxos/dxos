@@ -2,57 +2,63 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
+import { type AiTool } from '@effect/ai';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AgentStatus, type Tool } from '@dxos/ai';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { NumericTabs, StatusRoll, ToggleContainer } from '@dxos/react-ui-components';
-import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
+import { type AgentStatus } from '@dxos/ai';
+import { useTranslation } from '@dxos/react-ui';
+import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
+
+import { styles } from './ChatMessage';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 
-const getToolName = (tool: Tool) => {
-  return tool.namespace && tool.function ? `${tool.namespace}:${tool.function}` : tool.name.split('_').pop();
+export type AiToolProvider = () => readonly AiTool.Any[];
+
+export type ToolBlockProps = {
+  message: DataType.Message;
+  toolProvider: AiToolProvider;
 };
 
-export type ToolBlockProps = ThemedClassName<{
-  message: DataType.Message;
-  tools?: Tool[];
-}>;
-
-export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) => {
+export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
-  const { blocks = [] } = message;
 
-  const getToolCaption = (tool?: Tool, status?: AgentStatus) => {
+  const tools = toolProvider();
+  const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
       return t('calling tool label');
     }
 
-    return status?.message ?? tool.caption ?? [t('calling label') + getToolName(tool)].join(' ');
+    return status?.message ?? tool.description ?? [t('calling label'), tool.name].join(' ');
   };
 
-  let request: { tool: Tool | undefined; block: any } | undefined;
+  let request: { tool: AiTool.Any | undefined; block: any } | undefined;
+  const { blocks = [] } = message;
   const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
   const items = toolBlocks
     .map((block) => {
       switch (block._tag) {
         case 'toolCall': {
-          // TODO(burdon): Skip these updates?
           if (block.pending && request?.block.toolCallId === block.toolCallId) {
             return null;
           }
 
-          request = { tool: tools?.find((tool) => tool.name === block.name), block };
+          const tool = tools.find((tool) => tool.name === block.name);
+          request = { tool, block };
           return {
             title: getToolCaption(request.tool, request.block.status),
-            block,
+            block: {
+              ...block,
+              input: safeParseJson(block.input),
+            },
           };
         }
 
@@ -66,7 +72,10 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
 
           return {
             title: getToolCaption(request.tool, request.block.status),
-            block,
+            block: {
+              ...block,
+              result: safeParseJson(block.result),
+            },
           };
         }
 
@@ -81,13 +90,10 @@ export const ToolBlock: FC<ToolBlockProps> = ({ classNames, message, tools }) =>
     })
     .filter(isNonNullable);
 
-  return <ToolContainer classNames={classNames} items={items} />;
+  return <ToolContainer items={items} />;
 };
 
-export const ToolContainer: FC<ThemedClassName<{ items: { title: string; block: any }[] }>> = ({
-  classNames,
-  items,
-}) => {
+export const ToolContainer = ({ items }: { items: { title: string; block: any }[] }) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -98,28 +104,21 @@ export const ToolContainer: FC<ThemedClassName<{ items: { title: string; block: 
   }, [open]);
 
   const handleSelect = (index: number) => {
-    if (index === selected) {
-      setOpen(false);
-    } else {
-      setSelected(index);
-    }
+    setSelected(index);
   };
 
   const title = useMemo(() => {
     const lines = items.map((item) => item.title).filter(isNotFalsy);
-    return <StatusRoll key='status-roll' lines={lines} duration={1_000} autoAdvance />;
+    return <TextCrawl key='status-roll' lines={lines} autoAdvance />;
   }, [items]);
 
   return (
-    <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
-      <div className='w-full grid grid-cols-[32px_1fr]'>
-        <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json data={items[selected].block} />
-      </div>
-    </ToggleContainer>
+    <ToggleContainer.Root classNames={styles.panel} open={open} onChangeOpen={setOpen}>
+      <ToggleContainer.Header classNames={styles.panelHeader} title={title} />
+      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', styles.panelContent]}>
+        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
+        <Json data={items[selected].block} classNames={styles.json} />
+      </ToggleContainer.Content>
+    </ToggleContainer.Root>
   );
 };
-
-export const Json = ({ data }: Pick<JsonProps, 'data'>) => (
-  <NativeJson data={data} classNames='!p-1 text-xs bg-transparent' />
-);

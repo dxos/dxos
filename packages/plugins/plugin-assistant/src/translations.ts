@@ -45,6 +45,7 @@ export const translations = [
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',
         'plugin name': 'Assistant',
+        'settings title': 'Assistant settings',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
         'create trigger label': 'Create trigger',
@@ -69,11 +70,13 @@ export const translations = [
         'no results': 'No results',
 
         'button retry': 'Retry',
-        'button suggest': 'Assistant suggestion',
+        'button suggestion': 'Assistant suggestion',
         'button select option': 'Select option',
         'button cancel': 'Cancel',
         'button save': 'Save',
         'button run': 'Run',
+        'button new thread': 'New Chat',
+        'chat history label': 'Chat History',
 
         'toolkit label': 'Toolkit',
 

@@ -5,14 +5,16 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { type MakeProps } from '@dxos/echo/Obj';
 import { LabelAnnotation, ViewAnnotation } from '@dxos/echo-schema';
 import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
-  // TODO(burdon): Should be part of view.
-  locationFieldId: Schema.optional(Schema.String),
+  center: Schema.optional(Type.Format.GeoPoint),
+  zoom: Schema.optional(Schema.Number),
+  // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.
+  //   e.g., points, lines, polygons, etc.
+  coordinates: Schema.Array(Type.Format.GeoPoint).pipe(Schema.mutable, Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Map',
@@ -24,18 +26,19 @@ export const Map = Schema.Struct({
 
 export type Map = Schema.Schema.Type<typeof Map>;
 
-export const makeMap = (props: MakeProps<typeof Map> = {}) => Obj.make(Map, props);
+/**
+ * Make a map object.
+ */
+export const make = (props: Obj.MakeProps<typeof Map> = {}) => Obj.make(Map, props);
 
-type CreateMapProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
-  locationFieldId: string;
+type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
+  presentation?: Omit<Obj.MakeProps<typeof Map>, 'name'>;
 };
 
 /**
- * @param param0 @deprecated
+ * Make a map as a view of a data set.
  */
-// TODO(burdon): Reconcile type with view.
-export const createMapView = async ({ locationFieldId, ...props }: CreateMapProps) => {
-  const map = Obj.make(Map, { locationFieldId });
-  const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: map });
-  return { jsonSchema, view };
+export const makeView = async ({ presentation, ...props }: MakeViewProps) => {
+  const map = Obj.make(Map, presentation ?? {});
+  return createViewFromSpace({ ...props, presentation: map });
 };

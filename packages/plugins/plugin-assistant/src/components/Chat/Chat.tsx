@@ -4,7 +4,7 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
-import { Result, useRxValue } from '@effect-rx/rx-react';
+import { useRxValue } from '@effect-rx/rx-react';
 import { createContext } from '@radix-ui/react-context';
 import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -22,8 +22,9 @@ import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type AiChatProcessor, useReferencesProvider } from '../../hooks';
+import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
+import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
@@ -76,20 +77,18 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
 
+  const lastPrompt = useRef<string | undefined>(undefined);
+
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
-    return Result.match(pending, {
-      onInitial: () => queueMessages,
-      onSuccess: (pending) => Array.dedupeWith([...queueMessages, ...pending.value], (a, b) => a.id === b.id),
-      onFailure: () => queueMessages,
-    });
+    return Array.dedupeWith([...queueMessages, ...pending], (a, b) => a.id === b.id);
   }, [queue?.objects, pending]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
+    return event.on((ev) => {
+      switch (ev.type) {
         case 'toggle-debug': {
           setDebug((current) => {
             const debug = !current;
@@ -101,7 +100,8 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
 
         case 'submit': {
           if (!streaming) {
-            void processor.request({ message: event.text });
+            lastPrompt.current = ev.text;
+            void processor.request({ message: ev.text });
           }
           break;
         }
@@ -114,16 +114,21 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
         }
 
         case 'cancel': {
-          void processor.cancel();
+          if (streaming) {
+            void processor.cancel();
+            if (lastPrompt.current) {
+              event.emit({ type: 'update-prompt', text: lastPrompt.current });
+            }
+          }
           break;
         }
 
         default: {
-          onEvent?.(event);
+          onEvent?.(ev);
         }
       }
     });
-  }, [event, onEvent, processor, streaming]);
+  }, [event, processor, streaming, onEvent]);
 
   if (!space) {
     return null;
@@ -178,13 +183,22 @@ const ChatPrompt = ({
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
-  const streaming = useRxValue(processor.streaming);
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+  const streaming = useRxValue(processor.streaming);
+  const streamingRef = useRef(streaming);
+
+  const editorRef = useRef<ChatEditorController>(null);
 
   const [active, setActive] = useState(false);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
+        case 'update-prompt':
+          if (!editorRef.current?.getText()?.length) {
+            editorRef.current?.setText(event.text);
+            editorRef.current?.focus();
+          }
+          break;
         case 'record-start':
           setActive(true);
           break;
@@ -194,8 +208,6 @@ const ChatPrompt = ({
       }
     });
   }, [event]);
-
-  const editorRef = useRef<ChatEditorController>(null);
 
   // TODO(burdon): Configure capability in TranscriptionPlugin.
   const { recording } = useVoiceInput({
@@ -246,12 +258,13 @@ const ChatPrompt = ({
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!streaming) {
+      console.log(streamingRef.current);
+      if (!streamingRef.current) {
         event.emit({ type: 'submit', text });
         return true;
       }
     },
-    [streaming, event],
+    [event],
   );
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
@@ -331,6 +344,11 @@ const ChatThread = (props: ChatThreadProps) => {
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
+  const toolProvider = useCallback<NonNullable<ChatThreadProps['toolProvider']>>(
+    () => processor.conversation.toolkit?.tools ?? [],
+    [processor],
+  );
+
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
     return event.on((event) => {
@@ -356,6 +374,7 @@ const ChatThread = (props: ChatThreadProps) => {
       space={space}
       messages={messages}
       error={error}
+      toolProvider={toolProvider}
       onEvent={(ev) => event.emit(ev)}
     />
   );

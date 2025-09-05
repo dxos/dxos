@@ -88,11 +88,11 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
       queue.append([
         createMessage('assistant', [
           {
-            _tag: 'suggest',
+            _tag: 'suggestion',
             text: 'Search...',
           },
           {
-            _tag: 'suggest',
+            _tag: 'suggestion',
             text: faker.lorem.paragraphs(1),
           },
         ]),
@@ -266,10 +266,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
+export const Default: Story = {};
 
-export const Delayed = {
+export const Delayed: Story = {
   args: {
     delay: 2_000,
   },
-} satisfies Story;
+};
+
+export const Sanity = () => {
+  return (
+    <div className='grid grow place-items-center'>
+      <div className='p-8 border border-separator rounded'>DXOS</div>
+    </div>
+  );
+};

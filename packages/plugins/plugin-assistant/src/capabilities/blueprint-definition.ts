@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes } from '@dxos/app-framework';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -11,10 +11,11 @@ import { analysis, list, load } from '../functions';
 
 const functions: FunctionDefinition[] = [analysis, list, load];
 const tools = [
+  'add-to-context',
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
   'add-schema',
-  'create-object',
+  'create-record',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
   // TODO(burdon): Anthropic only.
@@ -23,17 +24,19 @@ const tools = [
   // 'str_replace_based_edit_tool',
 ];
 
-export default () => {
-  return [
-    contributes(Capabilities.Functions, functions),
-    contributes(
-      Capabilities.BlueprintDefinition,
-      Blueprint.make({
-        key: 'dxos.org/blueprint/assistant',
-        name: 'Assistant',
-        tools: Blueprint.toolDefinitions({ functions, tools }),
-        instructions: templates.system,
-      }),
-    ),
-  ];
-};
+export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
+
+export const createBlueprint = (): Blueprint.Blueprint =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Assistant',
+    tools: Blueprint.toolDefinitions({ functions, tools }),
+    instructions: templates.system,
+  });
+
+const blueprint = createBlueprint();
+
+export default (): Capability<any>[] => [
+  contributes(Capabilities.Functions, functions),
+  contributes(Capabilities.BlueprintDefinition, blueprint),
+];

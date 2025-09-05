@@ -69,7 +69,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
         cells = this.getDraftRowCells(range);
         break;
       case 'fixedEndStart':
-        cells = this.getDraftSelectCells(range);
+        cells = this.getDraftIconCells(range);
         break;
       case 'fixedEndEnd':
         cells = this.getDraftActionCells(range);
@@ -141,20 +141,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
     };
 
     const classes = [];
-    const formatClasses = cellClassesForFieldType({ type: props.type, format: props.format });
+    const formatClasses = cellClassesForFieldType(props);
+
     if (formatClasses) {
       classes.push(formatClasses);
     }
+
     const rowSelectionClasses = cellClassesForRowSelection(
       this.model.selection.isObjectSelected(obj),
       this.model.selection.selectionMode,
     );
+
     if (rowSelectionClasses) {
       classes.push(rowSelectionClasses);
     }
-    if (classes.length > 0) {
-      cell.className = mx(classes.flat());
-    }
+
+    cell.className = mx(classes);
 
     // Arrays.
     if (props.type === TypeEnum.Array) {
@@ -279,27 +281,36 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const fields = this.model.projection?.fields ?? [];
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const cellIndex = toPlaneCellIndex({ col, row });
-        const field = fields[col];
-        if (!field) {
-          continue;
-        }
+        cells[toPlaneCellIndex({ col, row: 0 })] = {
+          value: '',
+          readonly: true,
+          className: 'dx-grid__row--cta__cell',
+        };
+      }
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
+          const cellIndex = toPlaneCellIndex({ col, row });
+          const field = fields[col];
+          if (!field) {
+            continue;
+          }
 
-        this.createDataCell(cells, draftRow.data, field, col, row);
+          this.createDataCell(cells, draftRow.data, field, col, row);
 
-        if (this.model.hasDraftRowValidationError(row, field.path)) {
-          const cellValue = cells[cellIndex];
-          if (cellValue) {
-            const existingClasses = cellValue.className || '';
-            const draftClasses = 'dx-grid__cell--flagged';
-            cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+          if (this.model.hasDraftRowValidationError(row, field.path)) {
+            const cellValue = cells[cellIndex];
+            if (cellValue) {
+              const existingClasses = cellValue.className || '';
+              const draftClasses = 'dx-grid__cell--flagged';
+              cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+            }
           }
         }
-
-        cells[cellIndex].className += ' !bg-toolbarSurface';
       }
     }
 
@@ -316,13 +327,14 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
-        value: props.title ?? field.path,
+        value: '',
         resizeHandle: 'col',
         accessoryHtml: `
+          <span class="grow min-is-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -405,30 +417,39 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
-      const disabled = !draftRow.valid;
-
-      cells[toPlaneCellIndex({ col: 0, row })] = {
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
+      cells[toPlaneCellIndex({ col: 0, row: 0 })] = {
         value: '',
+        className: 'dx-grid__row--cta__cell',
         readonly: true,
-        accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
-        className: '!bg-toolbarSurface',
       };
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        const disabled = !draftRow.valid;
+
+        cells[toPlaneCellIndex({ col: 0, row })] = {
+          value: '',
+          readonly: true,
+          accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+        };
+      }
     }
 
     return cells;
   }
 
-  private getDraftSelectCells(range: DxGridPlaneRange): DxGridPlaneCells {
+  private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+    for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        className: '!bg-toolbarSurface',
+        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="block m-1"></dx-icon>',
+        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell' }),
       };
     }
 

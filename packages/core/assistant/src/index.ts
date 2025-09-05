@@ -3,6 +3,7 @@
 //
 
 export * from './conversation';
+export * from './diff';
 export * from './functions';
 export * from './session';
 export * from './templates';

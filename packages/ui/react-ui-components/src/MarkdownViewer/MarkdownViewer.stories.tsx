@@ -14,11 +14,11 @@ import { MarkdownViewer } from './MarkdownViewer';
 
 faker.seed(0);
 
-const meta: Meta<typeof MarkdownViewer> = {
+const meta = {
   title: 'ui/react-ui-components/MarkdownViewer',
   component: MarkdownViewer,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
+} satisfies Meta<typeof MarkdownViewer>;
 
 export default meta;
 

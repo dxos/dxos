@@ -179,9 +179,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<status>${block.statusText}</status>`,
         });
-      case 'suggest':
+      case 'suggestion':
         return new AiInput.TextPart({
-          text: `<suggest>${block.text}</suggest>`,
+          text: `<suggestion>${block.text}</suggestion>`,
         });
       case 'select':
         return new AiInput.TextPart({
@@ -207,6 +207,8 @@ const convertAssistantMessagePart: (
       case 'file':
         // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
+      case 'summary':
+        break;
       default:
         // Ignore spurious tags.
         log.warn('ignoring spurious tag', { block });

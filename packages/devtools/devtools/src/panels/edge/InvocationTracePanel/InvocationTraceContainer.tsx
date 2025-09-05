@@ -18,7 +18,7 @@ import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 
 import { ExceptionPanel } from './ExceptionPanel';
-import { useInvocationSpans, useScriptNameResolver } from './hooks';
+import { useFunctionNameResolver, useInvocationSpans } from './hooks';
 import { LogPanel } from './LogPanel';
 import { RawDataPanel } from './RawDataPanel';
 import { formatDuration } from './utils';
@@ -36,7 +36,7 @@ export const InvocationTraceContainer = ({
   showSpaceSelector = false,
   target,
 }: InvocationTraceContainerProps) => {
-  const resolver = useScriptNameResolver({ space });
+  const resolver = useFunctionNameResolver({ space });
   const invocationSpans = useInvocationSpans({ space, target });
 
   const [selectedId, setSelectedId] = useState<string>();

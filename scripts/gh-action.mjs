@@ -359,7 +359,7 @@ async function checkWorkflowStatus() {
  * Extracts task-specific logs and identifies failed tasks.
  */
 function parseTaskLogs(logs) {
-  const logLines = logs.split('\n');
+  const logLines = logs.split('\n').map((line) => line.replace('/__w/dxos/dxos/', ''));
   const tasks = new Map();
   const failedTasks = [];
 
@@ -488,7 +488,8 @@ async function displayWorkflowLogs(run) {
               console.log(chalk.yellow('No failed tasks found, showing raw logs...'));
 
               // Fallback to original log display if no tasks detected
-              const logLines = logs.split('\n');
+              // Map paths so they are clickable in VSCode.
+              const logLines = logs.split('\n').map((line) => line.replace('/__w/dxos/dxos/', ''));
               const displayLines = logLines.slice(-500);
 
               displayLines.forEach((line) => {

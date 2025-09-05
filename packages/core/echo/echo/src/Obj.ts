@@ -3,13 +3,14 @@
 //
 
 import { Schema } from 'effect';
+import { dual } from 'effect/Function';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import type * as LiveObject from '@dxos/live-object';
 import { live } from '@dxos/live-object';
-import { assumeType } from '@dxos/util';
+import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
@@ -32,12 +33,27 @@ export interface Any extends BaseObj {}
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
-export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>>;
+export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
+  [Meta]?: Partial<EchoSchema.ObjectMeta>;
+};
+
+export const Meta: unique symbol = EchoSchema.MetaId as any;
+
+// TODO(dmaretskyi): Expose Meta = EchoSchema.MetaId.
 
 /**
  * Creates new object.
+ * @param schema - Object schema.
+ * @param props - Object properties.
+ * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
+ *
+ * Meta can be passed as a symbol in `props`.
+ *
+ * Example:
+ * ```ts
+ * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
+ * ```
  */
-// TODO(dmaretskyi): Move meta into props.
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
@@ -125,6 +141,33 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
   return meta;
 };
 
+/**
+ * @returns Foreign keys for the object from the specified source.
+ */
+export const getKeys: {
+  (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
+  (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
+} = dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
+  const meta = EchoSchema.getMeta(obj);
+  invariant(meta != null, 'Invalid object.');
+  return meta.keys.filter((key) => key.source === source);
+});
+
+/**
+ * Delete all keys from the object for the specified source.
+ * @param obj
+ * @param source
+ */
+export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
+  const meta = EchoSchema.getMeta(obj);
+  for (let i = 0; i < meta.keys.length; i++) {
+    if (meta.keys[i].source === source) {
+      meta.keys.splice(i, 1);
+      i--;
+    }
+  }
+};
+
 // TODO(dmaretskyi): Default to `false`.
 export const isDeleted = (obj: Any | Relation.Any): boolean => {
   const deleted = EchoSchema.isDeleted(obj);
@@ -189,9 +232,21 @@ export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions)
   const { id, ...data } = obj;
   const schema = getSchema(obj);
   invariant(schema != null, 'Object should have a schema');
-  const props: any = { ...data };
+  const props: any = deepMapValues(data, (value, recurse) => {
+    if (EchoSchema.Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
   if (opts?.retainId) {
     props.id = id;
   }
+  const meta = getMeta(obj);
+  props[EchoSchema.MetaId] = deepMapValues(meta, (value, recurse) => {
+    if (EchoSchema.Ref.isRef(value)) {
+      return value;
+    }
+    return recurse(value);
+  });
   return make(schema, props);
 };

@@ -5,8 +5,9 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { AiContextService, ArtifactId } from '@dxos/assistant';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -17,6 +18,19 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 class Toolkit extends AiToolkit.make(
+  AiTool.make('add-to-context', {
+    description: trim`
+      Adds the object to the chat context.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the document to read.',
+      }),
+    },
+    success: Schema.Void,
+    failure: Schema.Never,
+  }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
+
   AiTool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
@@ -29,6 +43,7 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
+
   AiTool.make('add-schema', {
     description: trim`
       Adds a schema to the space.
@@ -43,9 +58,10 @@ class Toolkit extends AiToolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-  AiTool.make('create-object', {
+
+  AiTool.make('create-record', {
     description: trim`
-      Adds a new object or record to the current space.
+      Creates a new record and adds it to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
       Note that only record schemas are supported.
     `,
@@ -59,6 +75,18 @@ class Toolkit extends AiToolkit.make(
 ) {
   static layer = (context: PluginContext) =>
     Toolkit.toLayer({
+      'add-to-context': Effect.fnUntraced(function* ({ id }) {
+        const { binder } = yield* AiContextService;
+        const { db } = yield* DatabaseService;
+        const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
+        yield* Effect.promise(() =>
+          binder.bind({
+            blueprints: [],
+            objects: [ref],
+          }),
+        );
+      }),
+
       'get-schemas': () => {
         const space = getActiveSpace(context);
         invariant(space, 'No active space');
@@ -92,7 +120,7 @@ class Toolkit extends AiToolkit.make(
             );
           }
 
-          return schemas.map((schema) => schema.typename);
+          return schemas;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)));
       },
 
@@ -107,7 +135,7 @@ class Toolkit extends AiToolkit.make(
         }).pipe(Effect.orDie);
       },
 
-      'create-object': ({ typename, data }) => {
+      'create-record': ({ typename, data }) => {
         const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
         invariant(space, 'No active space');
@@ -129,7 +157,7 @@ class Toolkit extends AiToolkit.make(
     });
 }
 
-export default (context: PluginContext) => [
+export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, Toolkit),
   contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
 ];

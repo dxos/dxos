@@ -18,11 +18,14 @@
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/cli": "0.69.0",
     "@effect/cluster": "0.47.0",
     "@effect/platform": "0.90.2",
@@ -34,13 +37,14 @@
     "@effect/typeclass": "0.36.0",
     "@effect/workflow": "0.8.3",
     "effect": "3.17.7",
-    "wtfnode": "^0.9.1",
+    "wtfnode": "^0.10.0",
     "yaml": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "typescript": "^5.9.2",
+    "vite-node": "^3.2.4",
     "vitest": "^3.2.0"
   },
   "publishConfig": {

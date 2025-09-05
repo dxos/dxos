@@ -11,22 +11,22 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { TEST_ID, Test, type TestProps } from './Test';
+import { TEST_ID, Test } from './Test';
 
 /**
  * Storybook sanity test.
  */
-const meta: Meta<TestProps> = {
+const meta = {
   title: 'common/storybook-utils/Test',
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   decorators: [withTheme],
   tags: ['test'],
-};
+} satisfies Meta<typeof Test>;
 
 export default meta;
 
-type Story = StoryObj<TestProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   // Interactions tab.

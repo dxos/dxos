@@ -163,6 +163,9 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../../ui/react-ui-tabs"
     },
     {
@@ -221,6 +224,9 @@
     },
     {
       "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
     },
     {
       "path": "../plugin-transcription"

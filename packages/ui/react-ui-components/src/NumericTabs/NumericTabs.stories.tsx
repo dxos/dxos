@@ -19,11 +19,11 @@ const content = Array.from({ length: 15 }, (_, i) => ({
   content: faker.lorem.paragraphs(3),
 }));
 
-const meta: Meta<typeof NumericTabs> = {
+const meta = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
-};
+} satisfies Meta<typeof NumericTabs>;
 
 export default meta;
 
@@ -34,18 +34,13 @@ export const Default: Story = {
     const [selected, setSelected] = useState(0);
     return (
       <div className='flex flex-col w-[30rem] p-4 bg-attention'>
-        <ToggleContainer
-          open
-          title={content[selected].title}
-          classNames='p-1 rounded-md bg-baseSurface border border-neutral-500'
-        >
-          <div className='flex w-full overflow-hidden'>
+        <ToggleContainer.Root classNames='grid grid-cols-[32px_1fr]' open>
+          <ToggleContainer.Header title={content[selected].title} />
+          <ToggleContainer.Content>
             <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
-            <div className='flex-1 pis-2 pie-2 overflow-y-auto'>
-              <div>{content[selected].content}</div>
-            </div>
-          </div>
-        </ToggleContainer>
+            <div className='flex-1 pis-2 pie-2 overflow-y-auto'>{content[selected].content}</div>
+          </ToggleContainer.Content>
+        </ToggleContainer.Root>
       </div>
     );
   },

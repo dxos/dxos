@@ -53,7 +53,6 @@ export type RootDocumentSpaceKeyProvider = (documentId: string) => PublicKey | u
 
 export type AutomergeHostParams = {
   db: LevelDB;
-
   indexMetadataStore: IndexMetadataStore;
   dataMonitor?: EchoDataMonitor;
 
@@ -237,7 +236,6 @@ export class AutomergeHost extends Resource {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
-    await this._ctx.dispose();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
   }
@@ -258,10 +256,12 @@ export class AutomergeHost extends Resource {
   }
 
   async addReplicator(replicator: EchoReplicator): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(replicator);
   }
 
   async removeReplicator(replicator: EchoReplicator): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
@@ -269,6 +269,7 @@ export class AutomergeHost extends Resource {
    * Loads the document handle from the repo and waits for it to be ready.
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     let handle: DocHandle<T> | undefined;
     if (typeof documentId === 'string') {
       // NOTE: documentId might also be a URL, in which case this lookup will fail.
@@ -291,6 +292,7 @@ export class AutomergeHost extends Resource {
   }
 
   async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
 
     const chunks = await this._storage.loadRange([documentId]);
@@ -301,6 +303,7 @@ export class AutomergeHost extends Resource {
    * Create new persisted document.
    */
   createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): DocHandle<T> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
         return this._repo.import(initialValue);
@@ -322,6 +325,7 @@ export class AutomergeHost extends Resource {
   }
 
   async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     const entries = heads.entries;
     if (!entries?.length) {
       return;
@@ -352,6 +356,7 @@ export class AutomergeHost extends Resource {
   }
 
   async reIndexHeads(documentIds: DocumentId[]): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
     for (const documentId of documentIds) {
       log('re-indexing heads for document', { documentId });
       const handle = await this._repo.find(documentId, FIND_PARAMS);
@@ -424,16 +429,21 @@ export class AutomergeHost extends Resource {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    if (this._ctx.disposed) {
+    if (!this.isOpen) {
+      return undefined;
+    }
+
+    this._indexMetadataStore.notifyMarkedDirty();
+    const documentId = path[0] as DocumentId;
+    const handle = this._repo.handles[documentId];
+    if (!handle || !handle.isReady()) {
       return;
     }
-    this._indexMetadataStore.notifyMarkedDirty();
-
-    const documentId = path[0] as DocumentId;
-    const document = this._repo.handles[documentId]?.doc();
+    const document = handle.doc();
     if (!document) {
       return;
     }
+
     const heads = getHeads(document);
     this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
@@ -553,8 +563,8 @@ export class AutomergeHost extends Resource {
         missingOnRemote: diff.missingOnRemote.length,
         missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
-        localDocumentCount: Object.keys(localState.documents).length,
-        remoteDocumentCount: Object.keys(state.documents).length,
+        localDocumentCount: Object.entries(localState.documents).filter(([_, heads]) => heads.length > 0).length,
+        remoteDocumentCount: Object.entries(state.documents).filter(([_, heads]) => heads.length > 0).length,
       });
     }
 

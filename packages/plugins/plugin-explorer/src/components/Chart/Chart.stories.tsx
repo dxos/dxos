@@ -33,10 +33,10 @@ const Story = () => {
 // TODO(burdon): Change to decorator.
 export const Default = () => <ClientRepeater component={Story} />;
 
-const meta: Meta<typeof Chart> = {
+const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Chart>;
 
 export default meta;

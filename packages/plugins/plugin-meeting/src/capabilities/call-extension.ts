@@ -19,8 +19,8 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, type MeetingSettingsProps, MeetingType } from '../types';
+import { meta } from '../meta';
+import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
@@ -32,9 +32,7 @@ export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context
-    .getCapability(Capabilities.SettingsStore)
-    .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
+  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
@@ -66,7 +64,7 @@ export default (context: PluginContext) => {
       state.activeMeeting = undefined;
     },
     onCallStateUpdated: async (callState: CallState) => {
-      const typename = Type.getTypename(MeetingType);
+      const typename = Type.getTypename(Meeting.Meeting);
       const activity = typename ? callState.activities?.[typename] : undefined;
       if (!activity?.payload) {
         return;

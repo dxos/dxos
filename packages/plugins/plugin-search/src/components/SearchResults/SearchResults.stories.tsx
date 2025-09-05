@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -16,13 +16,13 @@ import { SearchResults, type SearchResultsProps } from './SearchResults';
 
 faker.seed(1);
 
-const DefaultStory = (args: SearchResultsProps) => {
+const DefaultStory = (props: SearchResultsProps) => {
   const [selected, setSelected] = useState<string>();
 
   return (
     <div className='flex grow justify-center overflow-hidden'>
       <div className='flex w-[300px] m-4 overflow-hidden'>
-        <SearchResults {...args} selected={selected} onSelect={setSelected} />
+        <SearchResults {...props} selected={selected} onSelect={setSelected} />
       </div>
     </div>
   );
@@ -38,14 +38,7 @@ const objects = Array.from({ length: 100 }).map((_, i) => ({
 
 const match = new RegExp(word, 'i');
 
-export const Default = {
-  args: {
-    items: filterObjectsSync(objects, match),
-    match,
-  },
-};
-
-const meta: Meta<typeof SearchResults> = {
+const meta = {
   title: 'plugins/plugin-search/SearchResults',
   component: SearchResults,
   render: DefaultStory,
@@ -53,6 +46,15 @@ const meta: Meta<typeof SearchResults> = {
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof SearchResults>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    items: filterObjectsSync(objects, match),
+    match,
+  },
+};

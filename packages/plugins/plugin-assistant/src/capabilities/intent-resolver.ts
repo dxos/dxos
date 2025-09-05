@@ -5,12 +5,17 @@
 import { Effect } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
+import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { fullyQualifiedId } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
-import { Key, Obj, Ref } from '@dxos/echo';
+import { Filter, Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant, AssistantAction } from '../types';
+
+import { BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
+import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
   contributes(Capabilities.IntentResolver, [
@@ -26,24 +31,32 @@ export default (context: PluginContext) => [
             createIntent(CollectionAction.CreateQueryCollection, { typename: Blueprint.Blueprint.typename }),
           );
           rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
+
+          // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
-
-          // TODO(wittjosiah): Create default blueprint.
-          // const { object: blueprint } = yield* dispatch(createIntent(AssistantAction.CreateBlueprint, { ... }));
-          // space.db.add(blueprint);
         }),
     }),
     createResolver({
       intent: AssistantAction.CreateChat,
-      resolve: ({ space, name }) => ({
-        data: {
-          object: Obj.make(Assistant.Chat, {
-            name,
-            queue: Ref.fromDXN(space.queues.create().dxn),
-          }),
-        },
-      }),
+      resolve: async ({ space, name }) => {
+        const queue = space.queues.create();
+        const chat = Obj.make(Assistant.Chat, { name, queue: Ref.fromDXN(queue.dxn) });
+        const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+        // TODO(wittjosiah): This should be a space-level setting.
+        // TODO(burdon): Clone when activated. Copy-on-write for template.
+        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === BLUEPRINT_KEY);
+        if (!defaultBlueprint) {
+          defaultBlueprint = space.db.add(createBlueprint());
+        }
+
+        const binder = new AiContextBinder(queue);
+        await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
+
+        return {
+          data: { object: chat },
+        };
+      },
     }),
     createResolver({
       intent: AssistantAction.CreateBlueprint,
@@ -68,6 +81,14 @@ export default (context: PluginContext) => [
           }),
         },
       }),
+    }),
+    createResolver({
+      intent: AssistantAction.SetCurrentChat,
+      resolve: ({ companionTo, chat }) =>
+        Effect.gen(function* () {
+          const state = context.getCapability(AssistantCapabilities.MutableState);
+          state.currentChat[fullyQualifiedId(companionTo)] = chat;
+        }),
     }),
   ]),
 ];

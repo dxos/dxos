@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -30,15 +30,15 @@ const DefaultStory = ({ state: _state }: SpinnerProps) => {
   );
 };
 
-const meta: Meta<SpinnerProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Spinner',
   component: Spinner,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Spinner>;
 
 export default meta;
 
-type Story = StoryObj<SpinnerProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

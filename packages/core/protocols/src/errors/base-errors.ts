@@ -6,6 +6,7 @@
  * NOTE: Messages should be sentences (Start with a capital letter and end with a period).
  * Errors can optionally include a JSON context object.
  */
+// TODO(dmaretskyi): Duplicate of @dxos/errors
 export class BaseError extends Error {
   constructor(
     readonly code: string,

@@ -29,31 +29,27 @@ const createFormattingGroup = (formatting: Formatting) =>
 const createFormattingActions = (formatting: Formatting, getView: () => EditorView) =>
   Object.entries(formats).map(([type, icon]) => {
     const checked = !!formatting[type as keyof Formatting];
-    return createEditorAction(
-      type,
-      () => {
-        const view = getView();
-        if (!view) {
-          return;
-        }
+    return createEditorAction(type, { checked, icon }, () => {
+      const view = getView();
+      if (!view) {
+        return;
+      }
 
-        if (type === 'link') {
-          checked ? removeLink(view) : addLink()(view);
-          return;
-        }
+      if (type === 'link') {
+        checked ? removeLink(view) : addLink()(view);
+        return;
+      }
 
-        const inlineType =
-          type === 'strong'
-            ? Inline.Strong
-            : type === 'emphasis'
-              ? Inline.Emphasis
-              : type === 'strikethrough'
-                ? Inline.Strikethrough
-                : Inline.Code;
-        setStyle(inlineType, !checked)(view);
-      },
-      { checked, icon },
-    );
+      const inlineType =
+        type === 'strong'
+          ? Inline.Strong
+          : type === 'emphasis'
+            ? Inline.Emphasis
+            : type === 'strikethrough'
+              ? Inline.Strikethrough
+              : Inline.Code;
+      setStyle(inlineType, !checked)(view);
+    });
   });
 
 export const createFormatting = (state: EditorToolbarState, getView: () => EditorView) => {

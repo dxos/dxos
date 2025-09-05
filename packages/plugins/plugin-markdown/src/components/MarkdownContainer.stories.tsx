@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Capabilities, IntentPlugin, SettingsPlugin, Surface, contributes } from '@dxos/app-framework';
@@ -41,7 +41,7 @@ const DefaultStory = () => {
   return <Surface role='article' data={data} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-markdown/MarkdownContainer',
   render: DefaultStory,
   decorators: [
@@ -91,10 +91,10 @@ const meta: Meta<typeof DefaultStory> = {
     translations,
     controls: { disable: true },
   },
-};
+} satisfies Meta<typeof Capabilities>;
 
 export default meta;
 
-type Story = Meta<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

@@ -10,9 +10,11 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { AutomergeHost, DataServiceImpl, FIND_PARAMS, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
 import { IndexMetadataStore } from '@dxos/indexing';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
+
+import { createTmpPath } from '../testing';
 
 import { type DocHandleProxy } from './doc-handle-proxy';
 import { RepoProxy } from './repo-proxy';
@@ -97,10 +99,12 @@ describe('RepoProxy', () => {
   });
 
   test('load document from disk', async () => {
-    const level = createTestLevel();
+    const tmpPath = createTmpPath();
 
     let url: AutomergeUrl;
     {
+      const level = createTestLevel(tmpPath);
+      await openAndClose(level);
       const { host, dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -115,11 +119,14 @@ describe('RepoProxy', () => {
 
       await clientRepo.flush();
       await host.repo!.flush();
-      await host.close();
       await clientRepo.close();
+      await host.close();
+      await level.close();
     }
 
     {
+      const level = createTestLevel(tmpPath);
+      await openAndClose(level);
       const { dataService } = await setup(level);
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
@@ -131,7 +138,7 @@ describe('RepoProxy', () => {
   });
 
   test('new document persists without `flush`', async () => {
-    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const path = createTmpPath();
     let url: AutomergeUrl;
 
     {
@@ -163,7 +170,7 @@ describe('RepoProxy', () => {
   });
 
   test('document mutation persists without `flush`', async () => {
-    const path = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    const path = createTmpPath();
     let url: AutomergeUrl;
 
     {
