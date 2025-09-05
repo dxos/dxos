@@ -6,7 +6,7 @@ import { Context, Effect, Layer, Schema } from 'effect';
 
 import { todo } from '@dxos/debug';
 
-import { FunctionError } from '../errors';
+import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
 import type { Services } from './service-container';
@@ -19,9 +19,26 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
     invokeFunction(functionDef: FunctionDefinition<any, any>, input: unknown): Effect.Effect<unknown, never, Services>;
   }
 >() {
+  /**
+   * @deprecated Use layerLive instead.
+   */
   static layer = Layer.succeed(LocalFunctionExecutionService, {
     invokeFunction: (functionDef, input) => invokeFunction(functionDef, input),
   });
+
+  static layerLive = Layer.effect(
+    LocalFunctionExecutionService,
+    Effect.gen(function* () {
+      const resolver = yield* FunctionImplementationResolver;
+      return {
+        invokeFunction: Effect.fn('invokeFunction')(function* (functionDef, input) {
+          // TODO(dmaretskyi): Better error types
+          const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
+          return yield* invokeFunction(resolved, input);
+        }),
+      };
+    }),
+  );
 
   static invokeFunction: <F extends FunctionDefinition.Any>(
     functionDef: F,
@@ -75,3 +92,23 @@ const invokeFunction = (
 
     return data;
   }).pipe(Effect.withSpan('invokeFunction', { attributes: { name: functionDef.name } }));
+
+export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
+  FunctionImplementationResolver,
+  {
+    resolveFunctionImplementation(
+      functionDef: FunctionDefinition<any, any>,
+    ): Effect.Effect<FunctionDefinition<any, any>, FunctionNotFoundError>;
+  }
+>() {
+  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+    Layer.succeed(FunctionImplementationResolver, {
+      resolveFunctionImplementation: (functionDef) => {
+        const resolved = functions.find((f) => f.name === functionDef.name);
+        if (!resolved) {
+          return Effect.fail(new FunctionNotFoundError(functionDef.name));
+        }
+        return Effect.succeed(resolved);
+      },
+    });
+}
