@@ -61,7 +61,7 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
   // External change.
   useEffect(() => {
     model.update(game.pgn);
-    click.play();
+    void click.play();
   }, [game.pgn]);
 
   // Keyboard navigation.
@@ -100,7 +100,7 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
         return false;
       }
 
-      click.play();
+      void click.play();
       game.pgn = model.pgn;
       return true;
     },
