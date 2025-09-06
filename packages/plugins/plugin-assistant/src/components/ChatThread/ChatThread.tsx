@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, Fragment, useEffect, useMemo } from 'react';
+import React, { type CSSProperties, Fragment, forwardRef, useEffect, useMemo } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
-import { mx } from '@dxos/react-ui-theme';
-import { invariant } from '@dxos/invariant';
 
-import { ChatError, ChatMessage, styles, type ChatMessageProps } from './ChatMessage';
+import { ChatError, ChatMessage, type ChatMessageProps, styles } from './ChatMessage';
 import { reduceMessages } from './reducers';
 
 export type ChatThreadProps = ThemedClassName<

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ContentBlock, type DataType } from '@dxos/schema';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 
 type Reducer<R, I> = (acc: R, value: I, idx: number) => R;
 

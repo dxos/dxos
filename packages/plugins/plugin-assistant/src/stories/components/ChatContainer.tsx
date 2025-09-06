@@ -8,7 +8,7 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
-import { Chat, ChatProgress, Toolbar } from '../../components';
+import { Chat, Toolbar } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
 import { Assistant } from '../../types';
