@@ -63,7 +63,7 @@
     "@effect-rx/rx-react": "0.38.0",
     "@effect/platform": "0.90.2",
     "@types/react": "~18.2.0",
-    "react": "~18.2.0",
+    "react": "~19.1.1",
     "vite": "7.1.1"
   },
   "peerDependencies": {

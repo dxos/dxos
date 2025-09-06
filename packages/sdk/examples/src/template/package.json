@@ -13,8 +13,8 @@
     "@dxos/react-ui-types": "latest",
     "@dxos/react-client": "latest",
     "@dxos/echo-schema": "latest",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "~19.1.1",
+    "react-dom": "~19.1.1"
   },
   "devDependencies": {
     "@types/react": "~18.2.0",

@@ -27,8 +27,8 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.1.1",
+    "react-dom": "~19.1.1",
     "react-router-dom": "^6.4.0",
     "webext-bridge": "^6.0.1",
     "webextension-polyfill": "^0.12.0"
