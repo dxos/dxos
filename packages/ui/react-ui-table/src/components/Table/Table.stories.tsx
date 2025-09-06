@@ -177,6 +177,11 @@ const meta = {
       onSpaceCreated: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
         const { view } = await Table.makeView({ client, space, typename: schema.typename });
+        view.projection.fields = [
+          view.projection.fields.find((field) => field.path === 'name')!,
+          ...view.projection.fields.filter((field) => field.path !== 'name'),
+        ];
+
         space.db.add(view);
 
         Array.from({ length: 10 }).map(() => {
