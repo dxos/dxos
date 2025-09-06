@@ -7,6 +7,9 @@ import React, { forwardRef } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+const diameter = 24;
+const connector = 4;
+
 export type NumericTabsProps = ThemedClassName<{
   length: number;
   selected?: number;
@@ -14,7 +17,7 @@ export type NumericTabsProps = ThemedClassName<{
 }>;
 
 /**
- * @deprecated Use Timeline.
+ * Vertical strip of nodes.
  */
 export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
   ({ classNames, length, selected = 0, onSelect }, forwardedRef) => {
@@ -58,17 +61,24 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
           return (
             <div
               key={i}
-              className={mx(
-                'relative flex w-[24px] h-[28px] justify-center cursor-pointer',
-                selected !== i && 'text-subdued',
-              )}
+              className='relative flex justify-center cursor-pointer'
+              style={{ width: diameter, height: diameter + connector }}
             >
               {i < length - 1 && (
-                <div style={{ left: 11.5, top: 24, width: 1, height: 4 }} className='absolute bg-separator' />
+                <div
+                  style={{ left: (diameter - 1) / 2, top: diameter, width: 2, height: connector }}
+                  className='absolute border-l border-groupSurface'
+                />
               )}
               <div
-                className='flex justify-center items-center w-[24px] h-[24px] border border-separator rounded-full text-xs'
-                onClick={() => onSelect?.(i)}
+                className={mx(
+                  'flex justify-center items-center text-xs bg-groupSurface hover:bg-hoverSurface rounded-full',
+                  selected === i ? 'bg-infoSurface' : 'text-subdued',
+                )}
+                style={{ width: diameter, height: diameter }}
+                onClick={() => {
+                  onSelect?.(i);
+                }}
               >
                 {i}
               </div>

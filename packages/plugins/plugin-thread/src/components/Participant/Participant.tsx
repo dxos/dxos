@@ -17,15 +17,21 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
   const call = useCapability(ThreadCapabilities.CallManager);
   const isSelf: boolean = call.self.id !== undefined && user.id !== undefined && user.id.startsWith(call.self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
-  const pulledVideoStream = call.getVideoStream(
-    isScreenshare || !isSelf ? (user.tracks?.video as EncodedTrackName) : undefined,
-  );
+
+  const pulledVideoStream =
+    !isSelf && isScreenshare && user.tracks?.screenshareEnabled
+      ? call.getVideoStream(user.tracks?.screenshare as EncodedTrackName)
+      : !isSelf && !isScreenshare && user.tracks?.videoEnabled
+        ? call.getVideoStream(user.tracks?.video as EncodedTrackName)
+        : undefined;
 
   const videoStream = useMemo<MediaStream | undefined>(() => {
-    if (isSelf && !isScreenshare) {
-      return call.media.videoStream;
-    } else if (isSelf && isScreenshare) {
-      return call.media.screenshareVideoStream;
+    if (isSelf) {
+      if (isScreenshare) {
+        return call.media.screenshareVideoStream;
+      } else if (!isScreenshare) {
+        return call.media.videoStream;
+      }
     } else if (!isSelf) {
       return pulledVideoStream;
     }

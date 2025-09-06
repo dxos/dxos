@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type TagPickerItemData } from './extension';
+import { type TagPickerItemData } from './tag-picker-extension';
 import { TagPicker } from './TagPicker';
 
 const allItems: TagPickerItemData[] = [

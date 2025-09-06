@@ -20,7 +20,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import testVideo from '../testing/video.mp4?raw';
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
-import { useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
+import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
 
 // TODO(burdon): THIS IS TOO COMPLEX FOR A TEST SETUP.
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
@@ -62,14 +62,11 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
         // Push track to cloudflare.
         performance.mark('push:begin');
         log.info('pushing track', { track: mediaStreamTrack });
-        trackInfo.current = await peerPush.pushTrack({ track: mediaStreamTrack });
+        trackInfo.current = await peerPush.pushTrack({ track: mediaStreamTrack, ctx: Context.default() });
         performance.mark('push:end');
         const pushTime = performance.measure('push', 'push:begin', 'push:end').duration;
         log.info('successfully pushed track', { pushTime, trackInfo: trackInfo.current });
         setMetrics((prev) => ({ ...prev, 'time to push track [ms]': Math.round(pushTime) }));
-
-        // Wait for cloudflare to process the track.
-        await sleep(1000);
 
         // Pull track from cloudflare.
         performance.mark('pullTrack:begin');
@@ -106,7 +103,10 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
 
   const rePullTrack = useCallback(async () => {
     performance.mark('rePullVideo:begin');
-    invariant(pulledTrack);
+    if (!pulledTrack) {
+      log.info('no pulled track, skipping re-pull', { pulledTrack });
+      return;
+    }
     pulledTrack.stop();
     await pullCtx.current!.dispose();
     pullCtx.current = Context.default();
@@ -213,6 +213,19 @@ export const InaudibleAudioStreamTrack = {
     const audioStreamTrack = useInaudibleAudioStreamTrack();
     const { rePullTrack, metrics } = pushAndPullTrack(audioStreamTrack);
 
+    return (
+      <div className='flex flex-col gap-4 items-center'>
+        <Json data={metrics} />
+        <Button onClick={rePullTrack}>Re-pull audio</Button>
+      </div>
+    );
+  },
+};
+
+export const BlackVideoStreamTrack = {
+  render: () => {
+    const videoStreamTrack = useBlackCanvasStreamTrack();
+    const { rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
     return (
       <div className='flex flex-col gap-4 items-center'>
         <Json data={metrics} />

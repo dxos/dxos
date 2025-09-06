@@ -207,6 +207,8 @@ const convertAssistantMessagePart: (
       case 'file':
         // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
+      case 'summary':
+        break;
       default:
         // Ignore spurious tags.
         log.warn('ignoring spurious tag', { block });

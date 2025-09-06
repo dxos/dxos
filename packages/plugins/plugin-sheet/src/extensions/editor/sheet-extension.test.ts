@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import { defaultFunctions } from '@dxos/compute';
 
-import { sheetExtension } from './extension';
+import { sheetExtension } from './sheet-extension';
 
 describe('formula parser', () => {
   const {

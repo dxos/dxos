@@ -9,6 +9,7 @@ import { syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
+import { type MarkdownConfig } from '@lezer/markdown';
 
 import { type ThemeMode } from '@dxos/react-ui';
 import { isNotFalsy } from '@dxos/util';
@@ -17,6 +18,7 @@ import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
+  extensions?: MarkdownConfig[];
   indentWithTab?: boolean;
 };
 
@@ -51,6 +53,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       extensions: [
         // GFM provided by default.
         markdownTagsExtensions,
+        ...(options.extensions ?? []),
       ],
     }),
 

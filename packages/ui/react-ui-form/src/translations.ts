@@ -25,6 +25,8 @@ export const translations = [
         'field limit reached': 'Maximum number of fields reached',
         'boolean input true value': 'Yes',
         'boolean input false value': 'No',
+        'show field label': 'Show field',
+        'hide field label': 'Hide field',
         'delete field label': 'Delete field',
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',

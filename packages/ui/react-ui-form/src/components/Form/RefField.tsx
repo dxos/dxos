@@ -46,7 +46,7 @@ const isRefSnapShot = (val: any): val is { '/': string } => {
 export const RefField = ({
   type,
   label,
-  disabled,
+  readonly,
   placeholder,
   inputOnly,
   array,
@@ -71,7 +71,7 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ type, label, placeholder, disabled, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
+        {...{ type, label, placeholder, readonly, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
       />
     );
   }
@@ -164,11 +164,11 @@ export const RefField = ({
   );
 
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
-  return disabled && items.length < 1 ? null : (
+  return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
       <div data-no-submit>
-        {disabled ? (
+        {readonly ? (
           items.length < 1 ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
@@ -254,7 +254,7 @@ export const RefField = ({
 const RefFieldFallback = ({
   type,
   label,
-  disabled,
+  readonly,
   placeholder,
   inputOnly,
   getValue,
@@ -288,7 +288,7 @@ const RefFieldFallback = ({
     <TextInput
       type={type}
       label={label}
-      disabled={disabled}
+      readonly={readonly}
       placeholder={placeholder}
       inputOnly={inputOnly}
       getValue={handleGetValue as <V>() => V | undefined}
