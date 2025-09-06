@@ -29,6 +29,9 @@ patchedDependencies:
   '@automerge/automerge-repo':
     hash: cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030
     path: patches/@automerge__automerge-repo.patch
+  '@effect/ai-anthropic':
+    hash: 869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0
+    path: patches/@effect__ai-anthropic.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2265,11 +2268,11 @@ importers:
         specifier: 0.25.2
         version: 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-anthropic':
-        specifier: ^0.15.1
-        version: 0.15.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.16.1
+        version: 0.16.1(patch_hash=869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0)(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-openai':
-        specifier: 0.28.2
-        version: 0.28.2(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.29.1
+        version: 0.29.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/platform':
         specifier: ^0.90.2
         version: 0.90.2(effect@3.17.7)
@@ -2362,8 +2365,8 @@ importers:
         specifier: 0.25.2
         version: 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-anthropic':
-        specifier: ^0.15.1
-        version: 0.15.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.16.1
+        version: 0.16.1(patch_hash=869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0)(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/platform':
         specifier: ^0.90.2
         version: 0.90.2(effect@3.17.7)
@@ -2475,11 +2478,11 @@ importers:
         version: 1.7.0(encoding@0.1.13)
     devDependencies:
       '@effect/ai-anthropic':
-        specifier: 0.15.1
-        version: 0.15.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.16.1
+        version: 0.16.1(patch_hash=869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0)(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-openai':
-        specifier: 0.28.2
-        version: 0.28.2(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.29.1
+        version: 0.29.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/cluster':
         specifier: 0.47.0
         version: 0.47.0(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/sql@0.44.1(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(@effect/workflow@0.8.3(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
@@ -4999,6 +5002,12 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0(vite@7.1.1(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(tsx@4.19.4)(yaml@2.7.1))
 
+  packages/devtools/vscode-extension:
+    devDependencies:
+      '@types/vscode':
+        specifier: ^1.74.0
+        version: 1.103.0
+
   packages/e2e/blade-runner:
     dependencies:
       '@automerge/automerge':
@@ -5634,11 +5643,11 @@ importers:
         specifier: 0.25.2
         version: 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-anthropic':
-        specifier: ^0.15.1
-        version: 0.15.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.16.1
+        version: 0.16.1(patch_hash=869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0)(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@effect/ai-openai':
-        specifier: 0.28.2
-        version: 0.28.2(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
+        specifier: ^0.29.1
+        version: 0.29.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -16630,21 +16639,21 @@ packages:
       '@effect/platform': '*'
       effect: ^3.16.9
 
-  '@effect/ai-anthropic@0.15.1':
-    resolution: {integrity: sha512-sL7sYmemkkFlHxpQ2ftfwgA6c2LqK7DfBknudqb7Ri3FFR29w3pCbyt+Didw9n5M4FJSAvb+9nqG8/2vxa0JpA==}
+  '@effect/ai-anthropic@0.16.1':
+    resolution: {integrity: sha512-rbLhNSzlJePZOv6Gy7BkAuIXELjmPUG/LuIVTJ7swIvKtTujMYtiRbbursZ2xPNiQbWoR+nMhY1ZWN8fg3IsFQ==}
     peerDependencies:
-      '@effect/ai': ^0.25.2
-      '@effect/experimental': ^0.54.4
-      '@effect/platform': ^0.90.1
-      effect: ^3.17.7
+      '@effect/ai': ^0.26.1
+      '@effect/experimental': ^0.54.6
+      '@effect/platform': ^0.90.7
+      effect: ^3.17.13
 
-  '@effect/ai-openai@0.28.2':
-    resolution: {integrity: sha512-AZwCPE/fc4t771rAo+ozmBe636dpb9KisS2cM2XayR7SXUaDyyCxV6XpjH3eX2pPBy/n2hRR02pdvGlb35p87A==}
+  '@effect/ai-openai@0.29.1':
+    resolution: {integrity: sha512-DkkOEOfGH8AvY4MDMT2vLQrsJEYe3fE9AzGUjU3HyVzgS8m/rZ+ohE0N+RieQ0qHDPNIOAqtiX2xtYcj1314Zg==}
     peerDependencies:
-      '@effect/ai': ^0.25.2
-      '@effect/experimental': ^0.54.4
-      '@effect/platform': ^0.90.1
-      effect: ^3.17.7
+      '@effect/ai': ^0.26.0
+      '@effect/experimental': ^0.54.6
+      '@effect/platform': ^0.90.6
+      effect: ^3.17.10
 
   '@effect/ai@0.25.2':
     resolution: {integrity: sha512-7dGbO7QLAH/tYHD3LK567dc/6Df3QXlnLpuyrRuwNAXi+hkOkFO+h15BtaNy3lBQti2FRANUJiO3iApQUqgKWg==}
@@ -22331,6 +22340,9 @@ packages:
 
   '@types/varint@6.0.0':
     resolution: {integrity: sha512-2jBazyxGl4644tvu3VAez8UA/AtrcEetT9HOeAbqZ/vAcRVL/ZDFQjSS7rkWusU5cyONQVUz+nwwrNZdMva4ow==}
+
+  '@types/vscode@1.103.0':
+    resolution: {integrity: sha512-o4hanZAQdNfsKecexq9L3eHICd0AAvdbLk6hA60UzGXbGH/q8b/9xv2RgR7vV3ZcHuyKVq7b37IGd/+gM4Tu+Q==}
 
   '@types/webextension-polyfill@0.12.3':
     resolution: {integrity: sha512-F58aDVSeN/MjUGazXo/cPsmR76EvqQhQ1v4x23hFjUX0cfAJYE+JBWwiOGW36/VJGGxoH74sVlRIF3z7SJCKyg==}
@@ -35794,7 +35806,7 @@ snapshots:
       '@effect/platform': 0.90.2(effect@3.17.7)
       effect: 3.17.7
 
-  '@effect/ai-anthropic@0.15.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)':
+  '@effect/ai-anthropic@0.16.1(patch_hash=869a42dcc53a6625a4fc988b9591f0f714fc3d4dda2a820b0aa1fc3cf91a0df0)(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)':
     dependencies:
       '@anthropic-ai/tokenizer': 0.0.4
       '@effect/ai': 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
@@ -35802,7 +35814,7 @@ snapshots:
       '@effect/platform': 0.90.2(effect@3.17.7)
       effect: 3.17.7
 
-  '@effect/ai-openai@0.28.2(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)':
+  '@effect/ai-openai@0.29.1(@effect/ai@0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7))(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)':
     dependencies:
       '@effect/ai': 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
       '@effect/experimental': 0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2)
@@ -42108,6 +42120,8 @@ snapshots:
   '@types/varint@6.0.0':
     dependencies:
       '@types/node': 22.10.2
+
+  '@types/vscode@1.103.0': {}
 
   '@types/webextension-polyfill@0.12.3': {}
 
