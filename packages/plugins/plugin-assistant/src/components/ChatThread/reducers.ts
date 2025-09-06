@@ -128,13 +128,13 @@ const reduceSummary = (messages: DataType.Message[]): ContentBlock.Summary => {
           case 'summary': {
             acc.model = block.model;
             if (block.usage) {
-              acc.duration = time - (start ?? time);
               acc.message = block.message;
               acc.usage = {
                 inputTokens: (acc.usage?.inputTokens ?? 0) + (block.usage.inputTokens ?? 0),
                 outputTokens: (acc.usage?.outputTokens ?? 0) + (block.usage.outputTokens ?? 0),
                 totalTokens: (acc.usage?.totalTokens ?? 0) + (block.usage.totalTokens ?? 0),
               };
+              acc.duration = time - (start ?? time);
             }
             break;
           }
