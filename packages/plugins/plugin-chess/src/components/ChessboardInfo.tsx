@@ -33,7 +33,7 @@ export const ChessboardInfo = ({
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] p-2 overflow-hidden bg-inputSurface rounded',
+        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] p-2 overflow-hidden bg-groupSurface rounded-sm',
         classNames,
       )}
     >
