@@ -28,9 +28,10 @@ export const callTool: <Tools extends AiTool.Any>(
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
     const input = JSON.parse(toolCall.input);
-    // TODO(burdon): Auto stringify proxy objects.
-    log.info('callTool', { toolCall: JSON.stringify(toolCall), input });
-    return yield* toolkit.handle(toolCall.name as any, input).pipe(
+
+    // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
+    log.info('toolCall', { toolCall: toolCall.name, input });
+    const toolResult = yield* toolkit.handle(toolCall.name as any, input).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>
@@ -55,6 +56,16 @@ export const callTool: <Tools extends AiTool.Any>(
         ),
       ),
     );
+
+    log.info('toolResult', {
+      toolCall: toolCall.name,
+      ...{
+        error: 'error' in toolResult ? toolResult.error : undefined,
+        result: 'result' in toolResult ? JSON.parse(toolResult.result) : undefined,
+      },
+    });
+
+    return toolResult;
   },
 );
 

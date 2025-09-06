@@ -12,37 +12,36 @@ import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
 import { ChatError, ChatMessage, type ChatMessageProps } from './ChatMessage';
-import { messageReducer } from './reducer';
+import { messageReducer } from './message-reducer';
 
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
     messages?: DataType.Message[];
-    collapse?: boolean;
+    reduce?: boolean;
     error?: Error;
   } & Pick<ChatMessageProps, 'debug' | 'space' | 'toolProvider' | 'onEvent'>
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages, collapse = true, error, onEvent, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages = [], reduce = true, error, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
 
+    // Show error.
     useEffect(() => {
       onEvent?.({ type: 'scroll-to-bottom' });
     }, [error]);
 
-    // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
-    const { messages: filteredMessages = [] } = useMemo(() => {
-      if (collapse) {
-        return (messages ?? []).reduce<{ messages: DataType.Message[]; current?: DataType.Message }>(messageReducer, {
-          messages: [],
-        });
+    // Reduce messages to collapse related blocks.
+    const filteredMessages = useMemo(() => {
+      if (reduce) {
+        return messages.reduce(messageReducer, { messages: [] }).messages;
       } else {
-        return { messages: messages ?? [] };
+        return messages;
       }
-    }, [messages, collapse]);
+    }, [messages, reduce]);
 
     return (
       <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>

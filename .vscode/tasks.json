@@ -105,6 +105,23 @@
       "group": {
         "kind": "build"
       }
+    },
+    {
+      "label": "compile vscode-extension",
+      "type": "shell",
+      "command": "pnpm run compile",
+      "options": {
+        "cwd": "${workspaceFolder}/packages/devtools/vscode-extension"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
     }
   ]
 }

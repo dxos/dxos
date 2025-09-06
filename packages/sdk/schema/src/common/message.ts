@@ -128,35 +128,48 @@ export namespace ContentBlock {
    */
   export const Summary = Schema.TaggedStruct('summary', {
     mimeType: Schema.optional(Schema.String),
-    message: Schema.String,
+    message: Schema.optional(Schema.String),
+    model: Schema.optional(Schema.String),
     usage: Schema.optional(
+      // TOOD(burdon): Reuse AI Usage struct?
       Schema.Struct({
-        model: Schema.optional(Schema.String),
-        input: Schema.optional(Schema.Number),
-        output: Schema.optional(Schema.Number),
-        total: Schema.optional(Schema.Number),
+        inputTokens: Schema.optional(Schema.Number),
+        outputTokens: Schema.optional(Schema.Number),
+        totalTokens: Schema.optional(Schema.Number),
       }),
     ),
+    toolCalls: Schema.optional(Schema.Number),
+    errors: Schema.optional(Schema.Number),
     duration: Schema.optional(Schema.Number).annotations({
       description: 'Duration in ms.',
     }),
-    toolCalls: Schema.optional(Schema.Number),
     ...Base.fields,
   }).pipe(Schema.mutable);
   export interface Summary extends Schema.Schema.Type<typeof Summary> {}
 
   /**
    * Claude-like message
-   * ⎿ Done (15 tool uses · 21.5k tokens · 1m 13.5s)
+   * ⎿ Done (15 tool uses · 21.5k tokens (→21.1k ←0.4k) · 1m 13.5s)
    */
-  export const createSummaryMessage = ({ message, usage, toolCalls, duration }: Summary) => {
+  // TODO(burdon): String builder.
+  export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = true) => {
+    const paren = (str: string) => `(${str})`;
     const parts = [
-      usage?.model,
-      usage?.total && `${Unit.Thousand(usage.total)} tokens`,
+      verbose && model,
       toolCalls && `${toolCalls} tool uses`,
+      usage &&
+        [
+          `${Unit.Thousand(usage.totalTokens ?? 0)} tokens`,
+          verbose &&
+            paren(
+              [`→${Unit.Thousand(usage.inputTokens ?? 0)}`, `←${Unit.Thousand(usage.outputTokens ?? 0)}`].join(' '),
+            ),
+        ]
+          .filter(isNotFalsy)
+          .join(' '),
       duration && Unit.Duration(duration),
     ].filter(isNotFalsy);
-    return `${message} (${parts.join(' · ')})`;
+    return [message, paren(parts.join(' · '))].filter(Boolean).join(' ');
   };
 
   export const Base64ImageSource = Schema.Struct({

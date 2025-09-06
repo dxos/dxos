@@ -232,7 +232,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
     invariant(block._tag === 'summary');
 
     const summary = ContentBlock.createSummaryMessage(block);
-    return <div className='text-subdued'>{summary}</div>;
+    return <div className='text-sm text-subdued'>{summary}</div>;
   },
 
   //
