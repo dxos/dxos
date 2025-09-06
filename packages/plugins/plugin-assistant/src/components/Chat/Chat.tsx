@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
@@ -75,7 +75,6 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
   const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
-
   const lastPrompt = useRef<string | undefined>(undefined);
 
   const messages = useMemo(() => {
@@ -180,11 +179,11 @@ const ChatPrompt = ({
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useRxValue(processor.streaming);
-  const streamingRef = useRef(streaming);
+  const active = useRxValue(processor.active);
+  const activeRef = useDynamicRef(active);
 
   const editorRef = useRef<ChatEditorController>(null);
-
-  const [active, setActive] = useState(false);
+  const [recordingState, setRecordingState] = useState(false);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
@@ -195,10 +194,10 @@ const ChatPrompt = ({
           }
           break;
         case 'record-start':
-          setActive(true);
+          setRecordingState(true);
           break;
         case 'record-stop':
-          setActive(false);
+          setRecordingState(false);
           break;
       }
     });
@@ -206,7 +205,7 @@ const ChatPrompt = ({
 
   // TODO(burdon): Configure capability in TranscriptionPlugin.
   const { recording } = useVoiceInput({
-    active,
+    active: recordingState,
     onUpdate: (text) => {
       editorRef.current?.setText(text);
       editorRef.current?.focus();
@@ -253,7 +252,7 @@ const ChatPrompt = ({
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!streamingRef.current) {
+      if (!activeRef.current) {
         event.emit({ type: 'submit', text });
         return true;
       }

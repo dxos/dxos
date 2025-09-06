@@ -20,14 +20,14 @@ import {
   type GameboardRootProps,
   Chessboard as NativeChessboard,
   type ChessboardProps as NativeChessboardProps,
+  useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Chess } from '../types';
 
-import { ChessboardInfo, type ChessboardInfoProps } from './ChessboardInfo';
-import { ChessboardPlayers, type ChessboardPlayersProps } from './ChessboardPlayers';
+import { Info, type InfoProps } from './Info';
 
 export interface ChessboardController {
   setMoveNumber(index: number): void;
@@ -43,11 +43,11 @@ export class ExtendedChessModel extends ChessModel {
 // Root
 //
 
-type ChessboardRootProps = PropsWithChildren<{
+type RootProps = PropsWithChildren<{
   game: Chess.Game;
 }>;
 
-const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ game, children }, forwardedRef) => {
+const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, forwardedRef) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
   const click = useSoundEffect('Click');
 
@@ -63,6 +63,56 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
     model.update(game.pgn);
     void click.play();
   }, [game.pgn]);
+
+  // Move.
+  const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
+    (move) => {
+      if (!model.makeMove(move)) {
+        return false;
+      }
+
+      void click.play();
+      game.pgn = model.pgn;
+      return true;
+    },
+    [model],
+  );
+
+  return (
+    <Gameboard.Root model={model} onDrop={handleDrop}>
+      {children}
+    </Gameboard.Root>
+  );
+});
+
+//
+// Content
+//
+
+type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
+
+type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
+
+const Content = ({ classNames, children, role }: ContentProps) => {
+  return (
+    <Gameboard.Content
+      classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
+      grow={!role || role === 'card--extrinsic'}
+      contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
+    >
+      {children}
+    </Gameboard.Content>
+  );
+};
+
+//
+// Board
+//
+
+type BoardProps = NativeChessboardProps;
+
+const Board = (props: BoardProps) => {
+  const { model } = useGameboardContext<ChessModel>(Board.displayName);
 
   // Keyboard navigation.
   const ref = useRef<HTMLDivElement>(null);
@@ -93,65 +143,25 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
     });
   }, [model]);
 
-  // Move.
-  const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
-    (move) => {
-      if (!model.makeMove(move)) {
-        return false;
-      }
-
-      void click.play();
-      game.pgn = model.pgn;
-      return true;
-    },
-    [model],
-  );
-
-  return (
-    <Gameboard.Root model={model} onDrop={handleDrop}>
-      <div ref={ref} role='none' tabIndex={0} className='grid grow outline-none'>
-        {children}
-      </div>
-    </Gameboard.Root>
-  );
-});
-
-//
-// Content
-//
-
-type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
-
-type ChessboardContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
-
-const ChessboardContent = ({ classNames, children, role }: ChessboardContentProps) => {
-  return (
-    <Gameboard.Content
-      classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
-      grow={!role || role === 'card--extrinsic'}
-      contain={!role || role === 'card--extrinsic' || role === 'card--popover'}
-    >
-      {children}
-    </Gameboard.Content>
-  );
+  return <NativeChessboard ref={ref} {...props} />;
 };
+
+Board.displayName = 'Chessboard.Board';
 
 //
 // Chessboard
 //
 
 export const Chessboard = {
-  Root: ChessboardRoot,
-  Content: ChessboardContent,
-  Board: NativeChessboard,
-  Info: ChessboardInfo,
-  Players: ChessboardPlayers,
+  Root: Root,
+  Content: Content,
+  Board: Board,
+  Info: Info,
 };
 
 export type {
-  ChessboardRootProps,
-  ChessboardContentProps,
-  NativeChessboardProps as ChessboardBoardProps,
-  ChessboardInfoProps,
-  ChessboardPlayersProps,
+  RootProps as ChessboardRootProps,
+  ContentProps as ChessboardContentProps,
+  BoardProps as ChessboardBoardProps,
+  InfoProps as ChessboardInfoProps,
 };

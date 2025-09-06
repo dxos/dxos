@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,9 +26,20 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
   }, []);
 
   return (
-    <StackItem.Content classNames='@container bs-full is-full overflow-hidden'>
+    <StackItem.Content toolbar classNames='@container bs-full is-full overflow-hidden'>
       <Chessboard.Root game={game} ref={controller}>
-        <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && '@3xl:grid-cols-[1fr_320px]')}>
+        <Toolbar.Root>
+          <IconButton
+            variant='ghost'
+            icon='ph--info--regular'
+            iconOnly
+            label={t('toggle info button')}
+            size={6}
+            classNames={mx('invisible', !open && '@3xl:visible')}
+            onClick={() => setOpen((open) => !open)}
+          />
+        </Toolbar.Root>
+        <div className={mx('grid _grid-rows-[1fr_4rem] bs-full is-full gap-2', open && '@3xl:grid-cols-[1fr_320px]')}>
           <Chessboard.Content>
             <Chessboard.Board classNames='m-4 rounded-sm overflow-hidden' orientation={orientation} />
           </Chessboard.Content>
@@ -44,19 +55,6 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
               />
             </div>
           )}
-          <div className='flex justify-center items-center'>
-            <Chessboard.Players>
-              <IconButton
-                variant='ghost'
-                icon='ph--info--regular'
-                iconOnly
-                label={t('button toggle info')}
-                size={6}
-                classNames={mx('invisible', !open && '@3xl:visible')}
-                onClick={() => setOpen((open) => !open)}
-              />
-            </Chessboard.Players>
-          </div>
         </div>
       </Chessboard.Root>
     </StackItem.Content>
