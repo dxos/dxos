@@ -60,8 +60,8 @@
     "@types/three": "0.165.0",
     "glslify": "^7.1.1",
     "lodash.defaultsdeep": "^4.6.1",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.1.1",
+    "react-dom": "~19.1.1",
     "vite": "7.1.1"
   },
   "peerDependencies": {
