@@ -222,6 +222,12 @@ This will create a patch file in the `patches` directory and update the `patchDe
 
 3. Submit a PR to the third-party repo.
 
+Create a changeset, command and push.
+
+```bash
+pnpm changeset
+```
+
 Commit and push the changes to the third-party repo.
 
 ## Formatting and linting

@@ -152,7 +152,8 @@ export namespace ContentBlock {
    * ⎿ Done (15 tool uses · 21.5k tokens (→21.1k ←0.4k) · 1m 13.5s)
    */
   // TODO(burdon): String builder.
-  export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = true) => {
+  // TODO(burdon): Move to UI (and use translations).
+  export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = false) => {
     const paren = (str: string) => `(${str})`;
     const parts = [
       verbose && model,
