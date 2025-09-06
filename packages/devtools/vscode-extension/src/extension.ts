@@ -4,12 +4,12 @@
 
 import * as vscode from 'vscode';
 
+// Placeholder for extension.
+
 /**
  * Activates the extension.
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('DXOS VSCode Extension is now active!');
-
   // Register the hello world command.
   const helloCommand = vscode.commands.registerCommand('dxos.helloWorld', () => {
     vscode.window.showInformationMessage('Hello World from DXOS!');
@@ -22,12 +22,9 @@ export function activate(context: vscode.ExtensionContext) {
       const filePath = uri.fsPath;
       const workspace = vscode.workspace.getWorkspaceFolder(uri);
       const workspaceName = workspace ? workspace.name : 'No workspace';
-      
+
       vscode.window.showInformationMessage(
-        `DXOS File Info:\n` +
-        `Name: ${fileName}\n` +
-        `Path: ${filePath}\n` +
-        `Workspace: ${workspaceName}`
+        `DXOS File Info:\n` + `Name: ${fileName}\n` + `Path: ${filePath}\n` + `Workspace: ${workspaceName}`,
       );
     } else {
       vscode.window.showWarningMessage('No file selected.');
