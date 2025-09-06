@@ -1,0 +1,326 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
+
+import { Filter, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
+import { deserializeFunction } from '../handler';
+import { FunctionType } from '../schema';
+import { DatabaseService, type Services } from '../services';
+import { LocalFunctionExecutionService } from '../services/local-function-execution';
+import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
+
+export type TimeControl = 'natural' | 'manual';
+
+export interface TriggerDispatcherOptions {
+  /**
+   * Time control mode.
+   * - 'natural': Use real time.
+   * - 'manual': Use internal clock for testing.
+   */
+  timeControl: TimeControl;
+
+  /**
+   * Starting time for manual time control mode.
+   * @default current time
+   */
+  startingTime?: Date;
+
+  /**
+   * Poll interval for cron triggers in 'natural' time control mode.
+   * @default 1 second
+   */
+  livePollInterval?: Duration.Duration;
+}
+
+export interface InvokeTriggerOptions {
+  trigger: FunctionTrigger;
+  data?: unknown;
+}
+export interface TriggerExecutionResult {
+  triggerId: string;
+  result: Exit.Exit<unknown>;
+}
+
+interface ScheduledTrigger {
+  trigger: FunctionTrigger;
+  cron: Cron.Cron;
+  nextExecution: Date;
+}
+
+export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
+  TriggerDispatcher,
+  {
+    readonly timeControl: TimeControl;
+
+    /**
+     * Start the trigger dispatcher.
+     */
+    start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService>;
+
+    /**
+     * Stop the trigger dispatcher.
+     */
+    stop(): Effect.Effect<void>;
+
+    /**
+     * Refresh triggers.
+     */
+    refreshTriggers(): Effect.Effect<void, never, DatabaseService>;
+
+    /**
+     * Manually invoke a specific trigger.
+     */
+    invokeTrigger(
+      options: InvokeTriggerOptions,
+    ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService>;
+
+    /**
+     * Invoke all scheduled triggers whose time is up.
+     */
+    invokeScheduledTriggers(): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService>;
+
+    /**
+     * Advance the internal clock (manual time control only).
+     * Note: Does not invoke triggers.
+     */
+    advanceTime(duration: Duration.Duration): Effect.Effect<void>;
+
+    /**
+     * Get current time based on time control mode.
+     */
+    getCurrentTime(): Date;
+  }
+>() {
+  static layer = (options: Omit<TriggerDispatcherOptions, 'database'>) =>
+    Layer.effect(
+      TriggerDispatcher,
+      Effect.gen(function* () {
+        return new TriggerDispatcherImpl(options);
+      }),
+    );
+}
+
+class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
+  readonly livePollInterval: Duration.Duration;
+  readonly timeControl: TimeControl;
+
+  private _running = false;
+  private _internalTime: Date;
+  private _timerFiber: Fiber.Fiber<void, void> | undefined;
+  private _scheduledTriggers = new Map<string, ScheduledTrigger>();
+
+  constructor(options: TriggerDispatcherOptions) {
+    this.timeControl = options.timeControl;
+    this.livePollInterval = options.livePollInterval ?? Duration.seconds(1);
+    this._internalTime = options.startingTime ?? new Date();
+  }
+
+  start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+    Effect.gen(this, function* () {
+      if (this._running) {
+        return;
+      }
+
+      this._running = true;
+
+      // Start natural time processing if enabled
+      if (this.timeControl === 'natural') {
+        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(Effect.fork);
+      } else {
+        return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
+      }
+
+      log('TriggerDispatcher started', { timeControl: this.timeControl });
+    });
+
+  stop = (): Effect.Effect<void> =>
+    Effect.gen(this, function* () {
+      if (!this._running) {
+        return;
+      }
+
+      this._running = false;
+
+      // Stop timer processing
+      if (this._timerFiber) {
+        yield* Fiber.interrupt(this._timerFiber);
+        this._timerFiber = undefined;
+      }
+
+      // Clear scheduled triggers
+      this._scheduledTriggers.clear();
+
+      log('TriggerDispatcher stopped');
+    });
+
+  invokeTrigger = (
+    options: InvokeTriggerOptions,
+  ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService> =>
+    Effect.gen(this, function* () {
+      const { trigger, data } = options;
+
+      if (!trigger.enabled) {
+        return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+      }
+
+      if (!trigger.function) {
+        return yield* Effect.dieMessage('Trigger has no function reference');
+      }
+
+      // Sandboxed section.
+      const result = yield* Effect.gen(this, function* () {
+        // Resolve the function
+        const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
+        invariant(Obj.instanceOf(FunctionType, serialiedFunction));
+        const functionDef = deserializeFunction(serialiedFunction);
+
+        // Prepare input data
+        const inputData = data ?? this._prepareInputData(trigger);
+
+        // Invoke the function
+        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
+      }).pipe(Effect.exit);
+
+      const triggerExecutionResult: TriggerExecutionResult = {
+        triggerId: trigger.id,
+        result,
+      };
+      log('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
+      return triggerExecutionResult;
+    });
+
+  invokeScheduledTriggers = (): Effect.Effect<
+    TriggerExecutionResult[],
+    never,
+    Services | LocalFunctionExecutionService
+  > =>
+    Effect.gen(this, function* () {
+      yield* this.refreshTriggers();
+
+      const now = this.getCurrentTime();
+      const triggersToInvoke: FunctionTrigger[] = [];
+
+      for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
+        if (scheduledTrigger.nextExecution <= now) {
+          triggersToInvoke.push(scheduledTrigger.trigger);
+
+          // Update next execution time using Effect's Cron
+          scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+        }
+      }
+
+      log('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
+
+      // Invoke all due triggers
+      return yield* Effect.all(
+        triggersToInvoke.map((trigger) =>
+          this.invokeTrigger({
+            trigger,
+            data: { tick: now.getTime() } as TimerTriggerOutput,
+          }),
+        ),
+        { concurrency: 'unbounded' },
+      );
+    });
+
+  advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
+    Effect.gen(this, function* () {
+      if (this.timeControl !== 'manual') {
+        return yield* Effect.dieMessage('advanceTime can only be used in manual time control mode');
+      }
+
+      const millis = Duration.toMillis(duration);
+      this._internalTime = new Date(this._internalTime.getTime() + millis);
+
+      log('Advanced internal time', {
+        newTime: this._internalTime,
+        advancedBy: Duration.format(duration),
+      });
+    }).pipe(Effect.orDie);
+
+  getCurrentTime = (): Date => {
+    if (this.timeControl === 'natural') {
+      return new Date();
+    } else {
+      return new Date(this._internalTime);
+    }
+  };
+
+  refreshTriggers = (): Effect.Effect<void, never, DatabaseService> =>
+    Effect.gen(this, function* () {
+      const triggers = yield* this._fetchTriggers();
+      const currentTriggerIds = new Set(triggers.map((t) => t.id));
+
+      // Remove triggers that are no longer present
+      for (const triggerId of this._scheduledTriggers.keys()) {
+        if (!currentTriggerIds.has(triggerId)) {
+          this._scheduledTriggers.delete(triggerId);
+        }
+      }
+
+      // Add or update triggers
+      for (const trigger of triggers) {
+        if (trigger.spec?.kind === 'timer' && trigger.enabled) {
+          const timerSpec = trigger.spec as TimerTrigger;
+
+          // Parse cron expression using Effect's Cron module
+          const cronEither = Cron.parse(timerSpec.cron);
+
+          if (Either.isRight(cronEither)) {
+            const cron = cronEither.right;
+            const existing = this._scheduledTriggers.get(trigger.id);
+            const now = this.getCurrentTime();
+            const nextExecution = existing?.nextExecution ?? Cron.next(cron, now);
+
+            log('Updated scheduled trigger', {
+              triggerId: trigger.id,
+              cron: timerSpec.cron,
+              nextExecution,
+              now,
+            });
+            this._scheduledTriggers.set(trigger.id, {
+              trigger,
+              cron,
+              nextExecution,
+            });
+          } else {
+            log.error('Invalid cron expression', {
+              triggerId: trigger.id,
+              cron: timerSpec.cron,
+              error: cronEither.left.message,
+            });
+          }
+        }
+      }
+
+      log('Updated scheduled triggers', { count: this._scheduledTriggers.size });
+    }).pipe(Effect.withSpan('TriggerDispatcher.refreshTriggers'));
+
+  private _fetchTriggers = () =>
+    Effect.gen(this, function* () {
+      const { objects } = yield* DatabaseService.runQuery(Filter.type(FunctionTrigger));
+      return objects;
+    }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
+
+  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+    Effect.gen(this, function* () {
+      yield* this.invokeScheduledTriggers();
+    }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
+
+  private _prepareInputData = (trigger: FunctionTrigger): any => {
+    if (!trigger.input) {
+      return {};
+    }
+
+    // TODO: Process input template with trigger context
+    return trigger.input;
+  };
+}
+
+// Re-exports
+export { FunctionTrigger, type TimerTrigger } from '../types';
