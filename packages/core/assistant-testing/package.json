@@ -51,8 +51,8 @@
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "@effect/ai-anthropic": "0.15.1",
-    "@effect/ai-openai": "0.28.2",
+    "@effect/ai-anthropic": "^0.16.1",
+    "@effect/ai-openai": "^0.29.1",
     "@effect/cluster": "0.47.0",
     "@effect/experimental": "0.54.5",
     "@effect/platform": "0.90.2",
