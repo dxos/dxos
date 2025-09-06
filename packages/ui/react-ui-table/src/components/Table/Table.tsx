@@ -93,7 +93,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
 
-    const draftRowCount = Math.max(1, model?.getDraftRowCount() ?? 0);
+    const draftRowCount = model?.getDraftRowCount() ?? 0;
 
     const handleSave = useCallback(() => {
       dxGrid?.updateCells(true);
@@ -108,7 +108,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
 
       return {
         frozenRowsStart: 1,
-        frozenRowsEnd: draftRowCount,
+        frozenRowsEnd: Math.max(1, draftRowCount),
         frozenColsStart: model?.features.selection.enabled ? 1 : 0,
         frozenColsEnd: noActionColumn ? 0 : 1,
       };
