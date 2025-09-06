@@ -36,7 +36,7 @@ export type ChessboardProps = ThemedClassName<
  * Chessboard layout.
  */
 export const Chessboard = memo(
-  ({ orientation, showLabels, debug, rows = 8, cols = 8, classNames }: ChessboardProps) => {
+  ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }: ChessboardProps) => {
     useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
     const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);

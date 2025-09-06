@@ -21,6 +21,7 @@ import {
   Chessboard as NativeChessboard,
   type ChessboardProps as NativeChessboardProps,
 } from '@dxos/react-ui-gameboard';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Chess } from '../types';
@@ -48,6 +49,7 @@ type ChessboardRootProps = PropsWithChildren<{
 
 const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ game, children }, forwardedRef) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
+  const click = useSoundEffect('Click');
 
   // Controller.
   useImperativeHandle(forwardedRef, () => {
@@ -59,6 +61,7 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
   // External change.
   useEffect(() => {
     model.update(game.pgn);
+    click.play();
   }, [game.pgn]);
 
   // Keyboard navigation.
@@ -93,12 +96,13 @@ const ChessboardRoot = forwardRef<ChessboardController, ChessboardRootProps>(({ 
   // Move.
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
     (move) => {
-      if (model.makeMove(move)) {
-        game.pgn = model.pgn;
-        return true;
+      if (!model.makeMove(move)) {
+        return false;
       }
 
-      return false;
+      click.play();
+      game.pgn = model.pgn;
+      return true;
     },
     [model],
   );

@@ -11,7 +11,6 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -90,11 +89,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     return event.on((ev) => {
       switch (ev.type) {
         case 'toggle-debug': {
-          setDebug((current) => {
-            const debug = !current;
-            log.info('toggle-debug', { debug });
-            return debug;
-          });
+          setDebug((current) => !current);
           break;
         }
 

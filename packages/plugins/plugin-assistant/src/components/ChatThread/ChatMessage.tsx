@@ -82,7 +82,7 @@ export const ChatMessage = ({
         return (
           <MessageItem key={idx} classNames={classNames} user={block._tag === 'text' && role === 'user'}>
             <ErrorBoundary data={block}>
-              <Component space={space} block={block} onEvent={onEvent} />
+              <Component space={space} block={block} debug={debug} onEvent={onEvent} />
             </ErrorBoundary>
           </MessageItem>
         );
@@ -106,6 +106,7 @@ export const ChatMessage = ({
 type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
+  debug?: boolean;
   onEvent?: (event: ChatEvent) => void;
 };
 
@@ -215,10 +216,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Summary
   //
-  ['summary' as const]: ({ block }) => {
+  ['summary' as const]: ({ block, debug }) => {
     invariant(block._tag === 'summary');
 
-    const summary = ContentBlock.createSummaryMessage(block, false);
+    const summary = ContentBlock.createSummaryMessage(block, debug);
     return <div className='text-sm text-subdued'>{summary}</div>;
   },
 

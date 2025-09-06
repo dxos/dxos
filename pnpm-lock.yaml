@@ -6063,6 +6063,9 @@ importers:
       '@dxos/react-ui-gameboard':
         specifier: workspace:*
         version: link:../../ui/react-ui-gameboard
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-sfx
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack

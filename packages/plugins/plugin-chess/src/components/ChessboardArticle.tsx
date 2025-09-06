@@ -30,7 +30,7 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
       <Chessboard.Root game={game} ref={controller}>
         <div className={mx('grid grid-rows-[1fr_4rem] bs-full is-full gap-2', open && '@3xl:grid-cols-[1fr_320px]')}>
           <Chessboard.Content>
-            <Chessboard.Board orientation={orientation} />
+            <Chessboard.Board classNames='m-4 rounded-sm overflow-hidden' orientation={orientation} />
           </Chessboard.Content>
           {open && (
             <div className='hidden @3xl:flex flex-col p-8 justify-center items-center overflow-hidden'>
