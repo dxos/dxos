@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useEffect, useMemo } from 'react';
+import React, { type CSSProperties, forwardRef, Fragment, useEffect, useMemo } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -10,21 +10,22 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
+import { mx } from '@dxos/react-ui-theme';
+import { invariant } from '@dxos/invariant';
 
-import { ChatError, ChatMessage, type ChatMessageProps } from './ChatMessage';
-import { messageReducer } from './message-reducer';
+import { ChatError, ChatMessage, styles, type ChatMessageProps } from './ChatMessage';
+import { reduceMessages } from './reducers';
 
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
     messages?: DataType.Message[];
-    reduce?: boolean;
     error?: Error;
   } & Pick<ChatMessageProps, 'debug' | 'space' | 'toolProvider' | 'onEvent'>
 >;
 
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages = [], reduce = true, error, onEvent, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages = [], error, debug, onEvent, ...props }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -35,13 +36,20 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     }, [error]);
 
     // Reduce messages to collapse related blocks.
-    const filteredMessages = useMemo(() => {
-      if (reduce) {
-        return messages.reduce(messageReducer, { messages: [] }).messages;
+    const reducedMessages = useMemo(() => {
+      if (!debug) {
+        return messages.reduce(reduceMessages, { messages: [] }).messages;
       } else {
         return messages;
       }
-    }, [messages, reduce]);
+    }, [messages, debug]);
+
+    const getDelta = (idx: number) => {
+      invariant(idx > 0);
+      const prev = new Date(reducedMessages[idx - 1].created).getTime();
+      const current = new Date(reducedMessages[idx].created).getTime();
+      return current - prev;
+    };
 
     return (
       <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
@@ -49,8 +57,17 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
           classNames='relative flex flex-col gap-2 pbs-2 pbe-2'
           style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
         >
-          {filteredMessages.map((message) => (
-            <ChatMessage key={message.id} message={message} onEvent={onEvent} {...props} />
+          {reducedMessages.map((message, idx) => (
+            <Fragment key={message.id}>
+              {debug && (
+                <div className={mx('flex justify-end text-subdued', styles.margin)}>
+                  <pre className='text-xs'>
+                    {JSON.stringify({ created: message.created, delta: idx > 0 ? getDelta(idx) : undefined })}
+                  </pre>
+                </div>
+              )}
+              <ChatMessage message={message} debug={debug} onEvent={onEvent} {...props} />
+            </Fragment>
           ))}
 
           {error && <ChatError error={error} onEvent={onEvent} />}

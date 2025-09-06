@@ -58,7 +58,7 @@ export const ChatMessage = ({
     blocks,
   } = message;
 
-  if (toolProvider && isToolMessage(message)) {
+  if (!debug && toolProvider && isToolMessage(message)) {
     return (
       <MessageItem classNames={[styles.margin, 'animate-[fadeIn_0.5s]']}>
         <ToolBlock message={message} toolProvider={toolProvider} />
@@ -68,12 +68,6 @@ export const ChatMessage = ({
 
   return (
     <>
-      {debug && (
-        <div className={mx('flex justify-end text-subdued', styles.margin)}>
-          <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
-        </div>
-      )}
-
       {blocks.map((block, idx) => {
         // TODO(burdon): Filter empty messages.
         if (block._tag === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
@@ -86,18 +80,11 @@ export const ChatMessage = ({
         }
 
         return (
-          <Fragment key={idx}>
-            <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <ErrorBoundary data={block}>
-                <Component space={space} block={block} onEvent={onEvent} />
-              </ErrorBoundary>
-            </MessageItem>
-            {debug && (
-              <div className={mx('flex justify-end text-subdued', styles.margin)}>
-                <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
-              </div>
-            )}
-          </Fragment>
+          <MessageItem key={idx} classNames={classNames} user={block._tag === 'text' && role === 'user'}>
+            <ErrorBoundary data={block}>
+              <Component space={space} block={block} onEvent={onEvent} />
+            </ErrorBoundary>
+          </MessageItem>
         );
       })}
 
@@ -231,7 +218,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   ['summary' as const]: ({ block }) => {
     invariant(block._tag === 'summary');
 
-    const summary = ContentBlock.createSummaryMessage(block);
+    const summary = ContentBlock.createSummaryMessage(block, false);
     return <div className='text-sm text-subdued'>{summary}</div>;
   },
 

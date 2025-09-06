@@ -28,6 +28,7 @@ export type ToolBlockProps = {
   toolProvider: AiToolProvider;
 };
 
+// TODO(burdon): Pass in blocks.
 export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
   const { blocks = [] } = message;
@@ -65,14 +66,14 @@ export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
 
           case 'toolResult': {
             // TODO(burdon): Parse error type.
-            if (!lastToolCall || block.error) {
+            if (block.error) {
               return {
                 title: t('error label'),
                 content: block,
               };
             }
 
-            const title = getToolCaption(lastToolCall?.tool);
+            const title = getToolCaption(lastToolCall?.tool ?? t('tool result label'));
             lastToolCall = undefined;
             return {
               title,

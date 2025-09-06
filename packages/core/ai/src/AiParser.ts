@@ -273,7 +273,7 @@ export const parseResponse =
                   yield* flushText();
                   const { inputTokens, outputTokens, totalTokens } = part.usage;
                   summary.duration = Date.now() - start;
-                  summary.message = part.reason;
+                  summary.message = 'OK'; // part.reason;
                   summary.toolCalls = toolCalls;
                   summary.usage = {
                     inputTokens,

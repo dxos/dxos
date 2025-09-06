@@ -20,7 +20,7 @@ import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { ContentBlock, DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
@@ -152,8 +152,8 @@ export class AiSession {
         }
 
         // Execute the tool calls.
+        // TODO(burdon): Retry errors? Write result when each completes individually?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          // TODO(burdon): Retry errors?
           return callTool(toolkit, toolCall).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
@@ -174,16 +174,6 @@ export class AiSession {
           }),
         );
       } while (true);
-
-      // Session summary.
-      // TODO(burdon): Move to UI.
-      yield* submitMessage(
-        Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'assistant' },
-          blocks: [{ message: 'OK', ...reduceSummary(this._pending) }],
-        }),
-      );
 
       log('done', { pending: this._pending.length });
       return this._pending;
@@ -206,47 +196,6 @@ export class AiSession {
     // return parser.getResult(result);
   }
 }
-
-/**
- * Accumulate token counts from all summary blocks in pending messages.
- */
-const reduceSummary = (messages: DataType.Message[]): ContentBlock.Summary => {
-  let start: number | undefined;
-  return messages.reduce<ContentBlock.Summary>(
-    (acc, msg) => {
-      const time = new Date(msg.created).getTime();
-      if (!start) {
-        start = time;
-      }
-      msg.blocks.forEach((block) => {
-        switch (block._tag) {
-          case 'toolCall': {
-            acc.toolCalls = (acc.toolCalls ?? 0) + 1;
-            break;
-          }
-          case 'summary': {
-            acc.model = block.model;
-            if (block.usage) {
-              acc.duration = time - (start ?? time);
-              acc.usage = {
-                inputTokens: (acc.usage?.inputTokens ?? 0) + (block.usage.inputTokens ?? 0),
-                outputTokens: (acc.usage?.outputTokens ?? 0) + (block.usage.outputTokens ?? 0),
-                totalTokens: (acc.usage?.totalTokens ?? 0) + (block.usage.totalTokens ?? 0),
-              };
-            }
-            break;
-          }
-        }
-      });
-
-      return acc;
-    },
-    {
-      _tag: 'summary',
-      duration: 0,
-    } satisfies ContentBlock.Summary,
-  );
-};
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');
