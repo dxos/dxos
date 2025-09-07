@@ -33,7 +33,10 @@ export const bundle: (
 
     const result = yield* Effect.promise(() =>
       build({
-        entryPoints: [options.entryPoint],
+        entryPoints: {
+          // Gets mapped to `userFunc.js` by esbuild.
+          userFunc: options.entryPoint,
+        },
         bundle: true,
         format: 'esm',
         platform: 'browser',
@@ -92,10 +95,21 @@ export const bundle: (
       Effect.map((assets) => Array.zip(assetPaths, assets)),
       Effect.map((assets) => Object.fromEntries(assets)),
     );
-    const entryPointPath = Object.entries(result.metafile!.outputs).find(([path, desc]) => !!desc.entryPoint)?.[0];
-    invariant(entryPointPath, 'Entry point not found');
-    const entryPoint = basename(entryPointPath);
-    return { entryPoint, assets };
+
+    console.log('Function compiled');
+    console.log('Metafile path:', `${outdir}/metafile.json`);
+    console.log('Assets:\n');
+    console.log(
+      Object.entries(result.metafile!.outputs)
+        .map(
+          ([path, desc]) =>
+            `${relative(outdir, path)}: ${formatBytes(desc.bytes)}${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
+        )
+        .join('\n'),
+    );
+
+    // Must match esbuild entry point.
+    return { entryPoint: 'userFunc.js', assets };
   },
 );
 
@@ -104,3 +118,10 @@ class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR') {
     super('Bundle creation failed', { context: { errors } });
   }
 }
+
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)}KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)}MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+};
