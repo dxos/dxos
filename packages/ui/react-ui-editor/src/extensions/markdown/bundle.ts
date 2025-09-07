@@ -20,6 +20,7 @@ export type MarkdownBundleOptions = {
   themeMode?: ThemeMode;
   extensions?: MarkdownConfig[];
   indentWithTab?: boolean;
+  setextHeading?: boolean;
 };
 
 /**
@@ -53,7 +54,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       extensions: [
         // GFM provided by default.
         markdownTagsExtensions,
-        ...(options.extensions ?? []),
+        ...(options.extensions ?? defaultExtensions()),
       ],
     }),
 
@@ -70,5 +71,17 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
         ...completionKeymap,
       ].filter(isNotFalsy),
     ),
+  ];
+};
+
+/**
+ * Default customizations.
+ */
+export const defaultExtensions = (): MarkdownConfig[] => {
+  return [
+    {
+      // Remove the default SetextHeading parser.
+      remove: ['SetextHeading'],
+    },
   ];
 };

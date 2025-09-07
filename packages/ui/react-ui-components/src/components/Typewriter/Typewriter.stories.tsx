@@ -9,10 +9,11 @@ import React, { type KeyboardEventHandler, useCallback, useEffect, useState } fr
 
 import { Input, Toolbar } from '@dxos/react-ui';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 
-import { Typewriter, Cursor as TypewriterCursor } from './Typewriter';
+import { Markdown, Typewriter, Cursor as TypewriterCursor } from './Typewriter';
 
 type StoryProps = {
   blocks: string[];
@@ -74,7 +75,7 @@ const Text = ({ text, delay, trail }: { text: string; delay: number; trail: numb
           clearInterval(i);
           return index;
         }
-        return index + 1;
+        return index + 3;
       });
     }, delay);
     return () => clearInterval(i);
@@ -82,13 +83,14 @@ const Text = ({ text, delay, trail }: { text: string; delay: number; trail: numb
 
   return (
     <div className='inline-block p-2 font-mono'>
-      <span>{main}</span>
-      <Trail text={last} length={trail} />
-      <TypewriterCursor blink={index >= text.length + trail} />
+      <Markdown content={main} />
+      {/* <Trail text={last} length={trail} /> */}
+      {/* <TypewriterCursor blink={index >= text.length + trail} /> */}
     </div>
   );
 };
 
+// TODO(burdon): Turn this into a CM extension.
 const Trail = ({ text, length = 8 }: { text?: string; length?: number }) => {
   return (
     <span>
@@ -113,12 +115,17 @@ function splitIntoWordChunks(text: string, wordsPerChunk: number): string[] {
 
 const fence = '```';
 
-const longMarkdown = `
+const longMarkdown = trim`
 Markdown is a lightweight markup language used to format plain text in a simple and readable way. It allows you to create structured documents using conventions for headings, lists, emphasis (bold/italic), links, images, code, blockquotes, tables, and horizontal rules. 
+
 It’s widely used in:
 - documentation
 - note-taking
 - online writing
+
+There are task lists also:
+- [ ] Not done
+- [x] Done
 
 Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
 
@@ -129,14 +136,24 @@ ${fence}json
 }
 ${fence}
 
+And tables:
+
+| Column 1 | Column 2 |
+| -------- | -------- |
+| Item 1   | Item 2   |
+| Item 3   | Item 4   |
+| Item 5   | Item 6   |
+
 There are also extended flavors of Markdown (like GitHub Flavored Markdown) that add features such as checkboxes, footnotes, and task lists, expanding its capabilities for more complex documents.
 Markdown’s simplicity makes it ideal for writing structured content quickly while keeping the source clean and readable.
+
 If you want, I can also break down how Markdown parsing actually works behind the scenes, which explains how these plain-text symbols get converted to formatted output. Do you want me to do that?
 `;
 
-const longText = `
+const longText = trim`
 There are also extended flavors of Markdown (like GitHub Flavored Markdown) that add features such as checkboxes, footnotes, and task lists, expanding its capabilities for more complex documents.
 Markdown’s simplicity makes it ideal for writing structured content quickly while keeping the source clean and readable.
+
 If you want, I can also break down how Markdown parsing actually works behind the scenes, which explains how these plain-text symbols get converted to formatted output. Do you want me to do that?
 `;
 
@@ -161,7 +178,7 @@ export const Default: Story = {
   },
 };
 
-export const Markdown = () => <MarkdownViewer content={longMarkdown} />;
+export const Static = () => <MarkdownViewer content={longMarkdown} />;
 
 export const Cursor = () => (
   <div>
@@ -176,7 +193,7 @@ export const Fade = () => {
   const handleKeyDown = useCallback<NonNullable<KeyboardEventHandler<HTMLInputElement>>>((ev) => {
     switch (ev.key) {
       case 'Enter': {
-        setText(longText);
+        setText(longMarkdown);
         (ev.currentTarget as HTMLInputElement).value = '';
         break;
       }
@@ -197,7 +214,7 @@ export const Fade = () => {
           onKeyDown={handleKeyDown}
         />
       </Input.Root>
-      <Text text={text} delay={8} trail={64} />
+      <Text text={text} delay={10} trail={64} />
     </div>
   );
 };

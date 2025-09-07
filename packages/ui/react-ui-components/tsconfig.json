@@ -42,6 +42,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-syntax-highlighter"
     },
     {
