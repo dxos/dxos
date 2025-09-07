@@ -5,9 +5,9 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { type KeyboardEventHandler, useCallback, useEffect, useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Input, Toolbar } from '@dxos/react-ui';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownViewer } from '../MarkdownViewer';
@@ -95,7 +95,7 @@ Markdown is designed to be human-readable, meaning that even without rendering, 
 
 ${fence}json
 {
-  "hello": "world",
+  "hello": "world", 
   "items": [1, 2, 3, 4, 5]
 }
 ${fence}
@@ -128,20 +128,81 @@ export const Cursor = () => (
   </div>
 );
 
+const str = `
+There are also extended flavors of Markdown (like GitHub Flavored Markdown) that add features such as checkboxes, footnotes, and task lists, expanding its capabilities for more complex documents.
+Markdown’s simplicity makes it ideal for writing structured content quickly while keeping the source clean and readable.
+If you want, I can also break down how Markdown parsing actually works behind the scenes, which explains how these plain-text symbols get converted to formatted output. Do you want me to do that?
+`;
+
 export const Fade = () => {
-  const str = 'Streaming text could fade-in quickly if we split the last n characters in a rolling buffer.';
-  const n = 32;
-  const main = str.slice(0, -n);
-  const last = str.slice(-n);
+  const [text, setText] = useState('');
+
+  const handleKeyDown = useCallback<NonNullable<KeyboardEventHandler<HTMLInputElement>>>((ev) => {
+    switch (ev.key) {
+      case 'Enter': {
+        setText(str);
+        (ev.currentTarget as HTMLInputElement).value = '';
+        break;
+      }
+      case 'Escape': {
+        setText('');
+        break;
+      }
+    }
+  }, []);
+
   return (
-    <div className='inline-block p-2'>
+    <div className='flex flex-col p-2 gap-2'>
+      <Input.Root>
+        <Input.TextInput
+          autoFocus
+          classNames='is-full bg-transparent border-none outline-none'
+          placeholder='Type something...'
+          onKeyDown={handleKeyDown}
+        />
+      </Input.Root>
+      <Text text={text} delay={8} trail={128} />
+    </div>
+  );
+};
+
+const Text = ({ text, delay, trail }: { text: string; delay: number; trail: number }) => {
+  const [index, setIndex] = useState(0);
+  const str = (text + ' '.repeat(trail)).slice(0, index);
+  const main = str.slice(0, -trail);
+  const last = str.slice(-trail);
+
+  useEffect(() => {
+    setIndex(0);
+    const i = setInterval(() => {
+      setIndex((index) => {
+        if (index >= text.length + trail) {
+          clearInterval(i);
+          return index;
+        }
+        return index + 1;
+      });
+    }, delay);
+    return () => clearInterval(i);
+  }, [text]);
+
+  return (
+    <div className='inline-block p-2 font-mono'>
       <span>{main}</span>
-      {last.split('').map((c, i) => (
-        <span key={i} style={{ opacity: 1 - i / n }}>
+      <Trail text={last} length={trail} />
+      <TypewriterCursor blink={index >= text.length + trail} />
+    </div>
+  );
+};
+
+const Trail = ({ text, length = 8 }: { text?: string; length?: number }) => {
+  return (
+    <span>
+      {text?.split('').map((c, i) => (
+        <span key={i} style={{ opacity: 1 - i / length }}>
           {c}
         </span>
       ))}
-      <TypewriterCursor blink />
-    </div>
+    </span>
   );
 };
