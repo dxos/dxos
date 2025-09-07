@@ -59,6 +59,7 @@ const DefaultStory = ({ blocks, interval = 0, cps }: StoryProps) => {
   );
 };
 
+// TODO(burdon): Use codemirror (standard rendering of markdown; virtualization; more stable? faster?)
 const Text = ({ text, delay, trail }: { text: string; delay: number; trail: number }) => {
   const [index, setIndex] = useState(0);
   const str = (text + ' '.repeat(trail)).slice(0, index);
@@ -81,10 +82,6 @@ const Text = ({ text, delay, trail }: { text: string; delay: number; trail: numb
 
   return (
     <div className='inline-block p-2 font-mono'>
-      {/* TODO(burdon): Try codemirror here. */}
-      {/* <MarkdownViewer content={main}>
-        <Trail text={last} length={trail} />
-      </MarkdownViewer> */}
       <span>{main}</span>
       <Trail text={last} length={trail} />
       <TypewriterCursor blink={index >= text.length + trail} />
@@ -172,10 +169,6 @@ export const Cursor = () => (
     <TypewriterCursor blink />
   </div>
 );
-
-// TODO(burdon): Parse into blocks so not constantly re-rendering everything.
-// TODO(burdon): Use codemirror.
-// TODO(burdon): Create buffer of last chars which are animated rendered char-by-char.
 
 export const Fade = () => {
   const [text, setText] = useState('');
