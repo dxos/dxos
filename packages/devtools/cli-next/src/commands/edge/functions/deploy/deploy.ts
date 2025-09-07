@@ -50,9 +50,10 @@ export const deploy = Command.make(
     const { entryPoint, assets } = yield* bundle({ entryPoint: options.entryPoint });
 
     const edgeClient = createEdgeClient(client);
-    yield* Effect.tryPromise(() =>
+    const res = yield* Effect.tryPromise(() =>
       edgeClient.uploadFunction({ functionId }, { ownerPublicKey, name, version, entryPoint, assets }),
     );
+    console.log(JSON.stringify(res, null, 2));
   }),
   // Effect.fn(function* ({ file, name, version, script, functionId, spaceId }) {
   //   const { scriptFileContent, bundledScript } = yield* loadScript(file);

@@ -12,6 +12,7 @@ import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
 
 type BundleOptions = {
   entryPoint: string;
@@ -91,8 +92,9 @@ export const bundle: (
       Effect.map((assets) => Array.zip(assetPaths, assets)),
       Effect.map((assets) => Object.fromEntries(assets)),
     );
-    const entryPoint = basename(options.entryPoint);
-
+    const entryPointPath = Object.entries(result.metafile!.outputs).find(([path, desc]) => !!desc.entryPoint)?.[0];
+    invariant(entryPointPath, 'Entry point not found');
+    const entryPoint = basename(entryPointPath);
     return { entryPoint, assets };
   },
 );
