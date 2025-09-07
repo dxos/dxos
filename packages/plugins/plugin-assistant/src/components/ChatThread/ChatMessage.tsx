@@ -126,7 +126,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ node: { properties }, children, href, ...props }) => {
+          a: ({ node: { properties } = {}, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
                 // TODO(burdon): Check valid length (since serialized).
@@ -142,7 +142,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
               </Link>
             );
           },
-          img: ({ node: { properties } }) => {
+          img: ({ node: { properties } = {} }) => {
             const client = useClient();
             if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
               try {
