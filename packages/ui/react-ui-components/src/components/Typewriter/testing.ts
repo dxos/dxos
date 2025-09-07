@@ -7,14 +7,14 @@ import { useEffect, useState } from 'react';
 /**
  * Options for the streaming text generator.
  */
-export interface StreamingOptions {
+export type StreamingOptions = {
   /** Delay between chunks in ms. */
   chunkDelay?: number;
   /** Variance in timing (0-1). */
   variance?: number;
   /** Number of words per chunk. */
   wordsPerChunk?: number;
-}
+};
 
 /**
  * Simulates word-by-word streaming (more natural for LLMs).
@@ -53,7 +53,6 @@ export async function* streamWords(
     // Calculate delay based on chunk length.
     const varianceMultiplier = 1 + (Math.random() - 0.5) * variance * 2;
     const delay = chunkDelay * varianceMultiplier;
-
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
