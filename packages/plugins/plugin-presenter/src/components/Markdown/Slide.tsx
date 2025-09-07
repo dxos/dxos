@@ -12,11 +12,12 @@ import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
 import 'highlight.js/styles/github.css';
 
+import styles from './styles.css?raw';
 import { theme } from './theme';
 
 export type SlideProps = {
   content?: string;
-  classes?: { [selector: string]: string };
+  classes?: Record<string, string>;
 };
 
 export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
@@ -24,7 +25,7 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
   //  configurable. Find a way to remove the literal stylesheet here.
   return (
     <>
-      <style>{style}</style>
+      <style>{styles}</style>
       <ReactMarkdown
         components={components}
         // Markdown to HTML.
@@ -38,126 +39,6 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
   );
 };
 
-const style = `
-.dark pre code.hljs {
-  display: block;
-  overflow-x: auto;
-  padding: 1em
-}
-.dark code.hljs {
-  padding: 3px 5px
-}
-/*!
-  Theme: GitHub Dark
-  Description: Dark theme as seen on github.com
-  Author: github.com
-  Maintainer: @Hirse
-  Updated: 2021-05-15
-
-  Outdated base version: https://github.com/primer/github-syntax-dark
-  Current colors taken from GitHub's CSS
-*/
-.dark .hljs {
-  color: #c9d1d9;
-  background: #0d1117
-}
-.dark .hljs-doctag,
-.dark .hljs-keyword,
-.dark .hljs-meta .hljs-keyword,
-.dark .hljs-template-tag,
-.dark .hljs-template-variable,
-.dark .hljs-type,
-.dark .hljs-variable.language_ {
-  /* prettylights-syntax-keyword */
-  color: #ff7b72
-}
-.dark .hljs-title,
-.dark .hljs-title.class_,
-.dark .hljs-title.class_.inherited__,
-.dark .hljs-title.function_ {
-  /* prettylights-syntax-entity */
-  color: #d2a8ff
-}
-.dark .hljs-attr,
-.dark .hljs-attribute,
-.dark .hljs-literal,
-.dark .hljs-meta,
-.dark .hljs-number,
-.dark .hljs-operator,
-.dark .hljs-variable,
-.dark .hljs-selector-attr,
-.dark .hljs-selector-class,
-.dark .hljs-selector-id {
-  /* prettylights-syntax-constant */
-  color: #79c0ff
-}
-.dark .hljs-regexp,
-.dark .hljs-string,
-.dark .hljs-meta .hljs-string {
-  /* prettylights-syntax-string */
-  color: #a5d6ff
-}
-.dark .hljs-built_in,
-.dark .hljs-symbol {
-  /* prettylights-syntax-variable */
-  color: #ffa657
-}
-.dark .hljs-comment,
-.dark .hljs-code,
-.dark .hljs-formula {
-  /* prettylights-syntax-comment */
-  color: #8b949e
-}
-.dark .hljs-name,
-.dark .hljs-quote,
-.dark .hljs-selector-tag,
-.dark .hljs-selector-pseudo {
-  /* prettylights-syntax-entity-tag */
-  color: #7ee787
-}
-.dark .hljs-subst {
-  /* prettylights-syntax-storage-modifier-import */
-  color: #c9d1d9
-}
-.dark .hljs-section {
-  /* prettylights-syntax-markup-heading */
-  color: #1f6feb;
-  font-weight: bold
-}
-.dark .hljs-bullet {
-  /* prettylights-syntax-markup-list */
-  color: #f2cc60
-}
-.dark .hljs-emphasis {
-  /* prettylights-syntax-markup-italic */
-  color: #c9d1d9;
-  font-style: italic
-}
-.dark .hljs-strong {
-  /* prettylights-syntax-markup-bold */
-  color: #c9d1d9;
-  font-weight: bold
-}
-.dark .hljs-addition {
-  /* prettylights-syntax-markup-inserted */
-  color: #aff5b4;
-  background-color: #033a16
-}
-.dark .hljs-deletion {
-  /* prettylights-syntax-markup-deleted */
-  color: #ffdcd7;
-  background-color: #67060c
-}
-.dark .hljs-char.escape_,
-.dark .hljs-link,
-.dark .hljs-params,
-.dark .hljs-property,
-.dark .hljs-punctuation,
-.dark .hljs-tag {
-  /* purposely ignored */  
-}
-`;
-
 /**
  * Rehype plugin to format DOM based on frontmatter.
  * https://github.com/unifiedjs/unified#plugin
@@ -165,7 +46,7 @@ const style = `
  *  E.g., layout image from front-matter.
  */
 const slideLayout =
-  (options = {}) =>
+  (_options = {}) =>
   (tree: any, file: any) => {
     const {
       data: { frontmatter = {} },
