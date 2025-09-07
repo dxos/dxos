@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { type ReactMarkdownOptions } from 'react-markdown/lib/react-markdown';
 
@@ -13,20 +13,23 @@ import { omit } from '@dxos/util';
 
 // TODO(burdon): Benchmark vs. codemirror, which would be more consistent.
 
-export type MarkdownViewerProps = ThemedClassName<{
-  content?: string;
-  components?: ReactMarkdownOptions['components'];
-}>;
+export type MarkdownViewerProps = ThemedClassName<
+  PropsWithChildren<{
+    content?: string;
+    components?: ReactMarkdownOptions['components'];
+  }>
+>;
 
 /**
  * Transforms markdown text into react elements.
  * https://github.com/remarkjs/react-markdown
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  */
-export const MarkdownViewer = ({ classNames, components, content = '' }: MarkdownViewerProps) => {
+export const MarkdownViewer = ({ classNames, children, components, content = '' }: MarkdownViewerProps) => {
   return (
-    <div className={mx('gap-2', classNames)}>
+    <div className={mx('inline-block', classNames)}>
       <ReactMarkdown
+        className='inline-block'
         skipHtml
         components={{
           h1: ({ children }) => {
@@ -44,7 +47,7 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
           a: ({ children, href, ...props }) => (
             <a
               href={href}
-              className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use token.
+              className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use link token.
               target='_blank'
               rel='noopener noreferrer'
               {...props}
@@ -76,14 +79,14 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
             </blockquote>
           ),
           pre: ({ children }) => children,
+          // TODO(burdon): Copy/paste button.
           code: ({ children, className }) => {
-            const [_, language] = /language-(\w+)/.exec(className || '') || [];
-            // TODO(burdon): Copy/paste button.
+            const [, language] = /language-(\w+)/.exec(className || '') || [];
             return (
               <SyntaxHighlighter
                 PreTag='div'
                 language={language}
-                className='mbs-2 mbe-2 border border-separator rounded-sm text-sm !p-2 !bg-groupSurface'
+                classNames='mbs-2 mbe-2 !p-2 border border-separator rounded-sm text-sm !bg-groupSurface'
               >
                 {children}
               </SyntaxHighlighter>
@@ -94,6 +97,7 @@ export const MarkdownViewer = ({ classNames, components, content = '' }: Markdow
       >
         {content}
       </ReactMarkdown>
+      {children}
     </div>
   );
 };

@@ -20,7 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, useForwardedRef, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { translationKey } from '../translations';
+import { translationKey } from '../../translations';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
