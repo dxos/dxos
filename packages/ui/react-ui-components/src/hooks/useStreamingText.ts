@@ -6,13 +6,10 @@ import { useEffect, useState } from 'react';
 
 import { useDynamicRef } from '@dxos/react-ui';
 
-// TODO(burdon): Remove generator.
-// TODO(burdon): Needs to work with markdown so can't do special character effects.
-
 /**
  * Streams text character by character with a delay.
  */
-export const useStreamingText = (text: string, cps?: number): [string, boolean] => {
+export const useStreamingText = (text: string, delay = 10): [string, boolean] => {
   const [current, setCurrent] = useState('');
   const currentRef = useDynamicRef(current);
 
@@ -26,7 +23,6 @@ export const useStreamingText = (text: string, cps?: number): [string, boolean] 
       setCurrent('');
     }
 
-    const delay = cps ? 1_000 / cps : 10;
     void (async () => {
       for await (const chunk of streamText(next, delay)) {
         if (cancelled) {
@@ -42,7 +38,7 @@ export const useStreamingText = (text: string, cps?: number): [string, boolean] 
     return () => {
       cancelled = true;
     };
-  }, [text, cps]);
+  }, [text, delay]);
 
   return [current, current.length === text.length];
 };

@@ -12937,6 +12937,12 @@ importers:
 
   packages/ui/react-ui-components:
     dependencies:
+      '@codemirror/state':
+        specifier: ^6.4.1
+        version: 6.4.1
+      '@codemirror/view':
+        specifier: ^6.34.1
+        version: 6.34.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
