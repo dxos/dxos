@@ -7,6 +7,7 @@
   Outdated base version: https://github.com/primer/github-syntax-dark
   Current colors taken from GitHub's CSS
 */
+/* TODO(burdon): Use tokens. */
 .dark pre code.hljs {
   display: block;
   overflow-x: auto;
@@ -26,14 +27,12 @@
 .dark .hljs-template-variable,
 .dark .hljs-type,
 .dark .hljs-variable.language_ {
-  /* prettylights-syntax-keyword */
   color: #ff7b72;
 }
 .dark .hljs-title,
 .dark .hljs-title.class_,
 .dark .hljs-title.class_.inherited__,
 .dark .hljs-title.function_ {
-  /* prettylights-syntax-entity */
   color: #d2a8ff;
 }
 .dark .hljs-attr,
@@ -46,63 +45,51 @@
 .dark .hljs-selector-attr,
 .dark .hljs-selector-class,
 .dark .hljs-selector-id {
-  /* prettylights-syntax-constant */
   color: #79c0ff;
 }
 .dark .hljs-regexp,
 .dark .hljs-string,
 .dark .hljs-meta .hljs-string {
-  /* prettylights-syntax-string */
   color: #a5d6ff;
 }
 .dark .hljs-built_in,
 .dark .hljs-symbol {
-  /* prettylights-syntax-variable */
   color: #ffa657;
 }
 .dark .hljs-comment,
 .dark .hljs-code,
 .dark .hljs-formula {
-  /* prettylights-syntax-comment */
   color: #8b949e;
 }
 .dark .hljs-name,
 .dark .hljs-quote,
 .dark .hljs-selector-tag,
 .dark .hljs-selector-pseudo {
-  /* prettylights-syntax-entity-tag */
   color: #7ee787;
 }
 .dark .hljs-subst {
-  /* prettylights-syntax-storage-modifier-import */
   color: #c9d1d9;
 }
 .dark .hljs-section {
-  /* prettylights-syntax-markup-heading */
   color: #1f6feb;
   font-weight: bold;
 }
 .dark .hljs-bullet {
-  /* prettylights-syntax-markup-list */
   color: #f2cc60;
 }
 .dark .hljs-emphasis {
-  /* prettylights-syntax-markup-italic */
   color: #c9d1d9;
   font-style: italic;
 }
 .dark .hljs-strong {
-  /* prettylights-syntax-markup-bold */
   color: #c9d1d9;
   font-weight: bold;
 }
 .dark .hljs-addition {
-  /* prettylights-syntax-markup-inserted */
   color: #aff5b4;
   background-color: #033a16;
 }
 .dark .hljs-deletion {
-  /* prettylights-syntax-markup-deleted */
   color: #ffdcd7;
   background-color: #67060c;
 }
@@ -113,4 +100,5 @@
 .dark .hljs-punctuation,
 .dark .hljs-tag {
   /* purposely ignored */
+  all: unset;
 }
