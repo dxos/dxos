@@ -54,6 +54,7 @@ class CursorWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
     span.textContent = '▌';
+    span.style.opacity = '0.1';
     span.style.marginLeft = '2px';
     span.style.animation = 'blink 1s infinite';
     return span;
@@ -124,7 +125,7 @@ const appendDetectionField = (): StateField<DecorationSet> => {
  */
 const appendTheme = EditorView.theme({
   '.cm-typewriter-append': {
-    animation: 'typewriter-fade-in 2s ease-out forwards',
+    animation: 'typewriter-fade-in 1s ease-out forwards',
   },
   '@keyframes typewriter-fade-in': {
     '0%': {

@@ -4,9 +4,9 @@
 
 import { h } from 'hastscript';
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import addClasses from 'rehype-add-classes';
-import highlight from 'rehype-highlight';
+import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
+import rehypeAddClasses from 'rehype-add-classes';
+import rehypeHighlight from 'rehype-highlight';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkParseFrontmatter from 'remark-parse-frontmatter';
 
@@ -24,7 +24,21 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
   //  configurable. Find a way to remove the literal stylesheet here.
   return (
     <>
-      <style>{`
+      <style>{style}</style>
+      <ReactMarkdown
+        components={components}
+        // Markdown to HTML.
+        remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
+        // HTML processing.
+        rehypePlugins={[[rehypeAddClasses, classes], rehypeHighlight as any, slideLayout]}
+      >
+        {content}
+      </ReactMarkdown>
+    </>
+  );
+};
+
+const style = `
 .dark pre code.hljs {
   display: block;
   overflow-x: auto;
@@ -140,22 +154,9 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
 .dark .hljs-property,
 .dark .hljs-punctuation,
 .dark .hljs-tag {
-  /* purposely ignored */
-  
+  /* purposely ignored */  
 }
-      `}</style>
-      <ReactMarkdown
-        components={components}
-        // Markdown to HTML.
-        remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
-        // HTML processing.
-        rehypePlugins={[highlight, [addClasses, classes], slideLayout]}
-      >
-        {content}
-      </ReactMarkdown>
-    </>
-  );
-};
+`;
 
 /**
  * Rehype plugin to format DOM based on frontmatter.
@@ -210,9 +211,11 @@ const slideLayout =
     tree.children = [root];
   };
 
-const ImageWrapper = ({ node, ...props }: { node: any }) => {
+const ImageWrapper = ({ node: _, ...props }: { node: any }) => {
   const { alt = '', src } = props as { alt: string; src: string };
   return <img alt={alt} src={src} />;
 };
 
-const components = { img: ImageWrapper };
+const components: ReactMarkdownOptions['components'] = {
+  img: ({ node, ...props }) => <ImageWrapper node={node} {...props} />,
+};

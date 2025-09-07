@@ -42,7 +42,7 @@ const DefaultStory = ({ stream = false, ...options }: StreamingOptions & { strea
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grow overflow-hidden'>
-        <Markdown content={stream ? str : text} />
+        <Markdown content={stream ? str : text} options={{ autoScroll: true, fadeIn: true, cursor: true }} />
       </div>
     </div>
   );

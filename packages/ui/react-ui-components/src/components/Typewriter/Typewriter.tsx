@@ -17,23 +17,24 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { useStreamingText } from '../../hooks';
 
-import { typewriter } from './typewriter-extension';
+import { type TypewriterOptions, typewriter } from './typewriter-extension';
 
 export type TypewriterProps = ThemedClassName<{
   text: string;
   cps?: number;
+  options?: TypewriterOptions;
 }>;
 
-export const Typewriter = ({ classNames, text, cps }: TypewriterProps) => {
+export const Typewriter = ({ classNames, text, cps, options }: TypewriterProps) => {
   const [str] = useStreamingText(text, cps);
   return (
     <div className={mx('inline-block', classNames)}>
-      <Markdown content={str} />
+      <Markdown content={str} options={options} />
     </div>
   );
 };
 
-export const Markdown = ({ content = '' }: { content?: string }) => {
+export const Markdown = ({ content = '', options }: { content?: string; options?: TypewriterOptions }) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor(
     {
@@ -43,7 +44,7 @@ export const Markdown = ({ content = '' }: { content?: string }) => {
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions({ themeMode }),
         decorateMarkdown(), // TODO(burdon): Make option of createMarkdownExtensions.
-        typewriter({ autoScroll: true, fadeIn: true }),
+        typewriter(options),
       ],
     },
     [themeMode],
