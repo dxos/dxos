@@ -16,6 +16,8 @@ export type TypewriterProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Parse into blocks so not constantly re-rendering everything.
+// TODO(burdon): Use codemirror.
+// TODO(burdon): Create buffer of last chars which are animated rendered char-by-char.
 
 export const Typewriter = ({ classNames, text, cps }: TypewriterProps) => {
   const [str, blink] = useStreamingText(text, cps);

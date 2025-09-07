@@ -127,3 +127,21 @@ export const Cursor = () => (
     <TypewriterCursor blink />
   </div>
 );
+
+export const Fade = () => {
+  const str = 'Streaming text could fade-in quickly if we split the last n characters in a rolling buffer.';
+  const n = 32;
+  const main = str.slice(0, -n);
+  const last = str.slice(-n);
+  return (
+    <div className='inline-block p-2'>
+      <span>{main}</span>
+      {last.split('').map((c, i) => (
+        <span key={i} style={{ opacity: 1 - i / n }}>
+          {c}
+        </span>
+      ))}
+      <TypewriterCursor blink />
+    </div>
+  );
+};

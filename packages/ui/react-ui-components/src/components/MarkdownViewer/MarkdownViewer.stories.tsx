@@ -50,6 +50,20 @@ const content = trim`
   }
   ~~~
 
+  ## Task lists
+
+  - [ ] Task one
+  - [x] Task two
+  - [ ] Task three
+
+  ## Tables
+
+  | Column 1 | Column 2 | Column 3 |
+  | -------- | -------- | -------- |
+  | Cell 1   | Cell 2   | Cell 3   |
+  | Cell 4   | Cell 5   | Cell 6   |
+  | Cell 7   | Cell 8   | Cell 9   |
+
   ## Examples
 
   ${faker.lorem.paragraphs(1)}
@@ -57,7 +71,7 @@ const content = trim`
 
 export const Default: Story = {
   args: {
-    classNames: 'w-[30rem] border border-border rounded-md p-4 overflow-x-hidden overflow-y-auto',
+    classNames: 'w-[30rem] p-4 border border-border rounded-md overflow-y-auto bg-baseSurface',
     content,
   },
 };
