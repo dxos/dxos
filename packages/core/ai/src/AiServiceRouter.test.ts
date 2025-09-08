@@ -3,8 +3,10 @@
 //
 
 import { AiLanguageModel } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';

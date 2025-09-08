@@ -3,8 +3,10 @@
 //
 
 import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Config, Console, Effect, Layer, Schedule, Schema, Stream, pipe } from 'effect';
