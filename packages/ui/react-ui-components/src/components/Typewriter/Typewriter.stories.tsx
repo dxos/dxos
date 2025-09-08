@@ -13,7 +13,7 @@ import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 import { useStreamingText } from '../../hooks';
 
 import { type StreamingOptions, streamWords, useStreamingGenerator } from './testing';
-import content from './testing.md?raw';
+import content from './testing/short.md?raw';
 import { Markdown } from './Typewriter';
 
 const DefaultStory = ({ stream = false, ...options }: StreamingOptions & { stream?: boolean }) => {
@@ -76,4 +76,8 @@ export const Streaming: Story = {
     variance: 0.5,
     wordsPerChunk: 5,
   },
+};
+
+export const Components = () => {
+  return <Markdown content={content} options={{ autoScroll: true, fadeIn: true, cursor: true }} />;
 };

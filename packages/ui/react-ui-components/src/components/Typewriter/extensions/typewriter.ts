@@ -30,7 +30,6 @@ class CursorWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
     span.textContent = '▌';
-    span.style.opacity = '0.1';
     span.style.marginLeft = '2px';
     span.style.animation = 'blink 1s infinite';
     return span;

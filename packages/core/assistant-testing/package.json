@@ -60,7 +60,7 @@
     "@effect/rpc": "0.68.4",
     "@effect/sql": "0.44.1",
     "@effect/workflow": "0.8.3",
-    "effect": "3.17.7",
+    "effect": "3.17.13",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },

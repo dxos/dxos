@@ -99,7 +99,7 @@
     "cli-table3": "^0.6.5",
     "concurrently": "^9.2.0",
     "depcheck": "^1.4.7",
-    "effect": "3.17.7",
+    "effect": "3.17.13",
     "esbuild": "0.25.6",
     "esbuild-plugin-glsl": "^1.2.2",
     "esbuild-plugin-raw": "0.1.8",

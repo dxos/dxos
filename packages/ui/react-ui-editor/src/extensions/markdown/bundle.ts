@@ -76,12 +76,20 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
 
 /**
  * Default customizations.
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
  */
-export const defaultExtensions = (): MarkdownConfig[] => {
-  return [
-    {
-      // Remove the default SetextHeading parser.
-      remove: ['SetextHeading'],
-    },
-  ];
+export const defaultExtensions = (): MarkdownConfig[] => [noExtHeading, noHtml];
+
+/**
+ * Remove SetextHeading (e.g., headings created from "---").
+ */
+const noExtHeading: MarkdownConfig = {
+  remove: ['SetextHeading'],
+};
+
+/**
+ * Remove HTML and XML parsing.
+ */
+const noHtml: MarkdownConfig = {
+  remove: ['HTMLBlock', 'HTMLTag'],
 };

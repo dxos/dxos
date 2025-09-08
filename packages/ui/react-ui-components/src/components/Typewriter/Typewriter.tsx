@@ -6,18 +6,12 @@ import { useEffect } from '@preact-signals/safe-react/react';
 import React from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import {
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStreamingText } from '../../hooks';
 
-import { type TypewriterOptions, typewriter } from './typewriter-extension';
+import { type TypewriterOptions, extendedMarkdown, xmlTags } from './extensions';
 
 export type TypewriterProps = ThemedClassName<{
   text: string;
@@ -25,6 +19,7 @@ export type TypewriterProps = ThemedClassName<{
   options?: TypewriterOptions;
 }>;
 
+// TODO(burdon): Remove.
 export const Typewriter = ({ classNames, text, cps, options }: TypewriterProps) => {
   const [str] = useStreamingText(text, cps);
   return (
@@ -34,28 +29,32 @@ export const Typewriter = ({ classNames, text, cps, options }: TypewriterProps) 
   );
 };
 
+// TODO(burdon): Thread?
 export const Markdown = ({ content = '', options }: { content?: string; options?: TypewriterOptions }) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor(
     {
       initialValue: content,
       extensions: [
-        createBasicExtensions({ lineWrapping: true, readOnly: true }),
-        createThemeExtensions({ themeMode }),
-        createMarkdownExtensions({ themeMode }),
-        decorateMarkdown(), // TODO(burdon): Make option of createMarkdownExtensions.
-        typewriter(options),
+        // createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        // createThemeExtensions({ themeMode }),
+        // createMarkdownExtensions({ themeMode }),
+        extendedMarkdown(),
+        // decorateMarkdown(),
+        // typewriter(options),
+        xmlTags(),
       ],
     },
     [themeMode],
   );
 
   useEffect(() => {
-    requestAnimationFrame(() => {
-      if (!view) {
-        return;
-      }
+    if (!view) {
+      return;
+    }
 
+    // TODO(burdon): Convert to hook for appending content.
+    requestAnimationFrame(() => {
       // Detect if appending (this prevent jitter of updating the entire doc.)
       if (
         content.length > view.state.doc.length &&

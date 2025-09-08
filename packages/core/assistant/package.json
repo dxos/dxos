@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.17.7",
+    "effect": "3.17.13",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

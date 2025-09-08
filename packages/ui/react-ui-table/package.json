@@ -53,9 +53,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.1",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/autocomplete": "^6.18.7",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -106,7 +106,7 @@
     "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
+    "effect": "3.17.13",
     "fast-check": "^3.19.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
