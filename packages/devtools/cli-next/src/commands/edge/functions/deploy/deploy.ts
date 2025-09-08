@@ -3,16 +3,19 @@
 //
 
 import { Args, Command, Options } from '@effect/cli';
-import { Effect, Option } from 'effect';
+import { Console, Effect, Option } from 'effect';
 
+import { type FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { ClientService } from '../../../../services';
-import { getSpace } from '../../../../util';
+import { ClientService, CommandConfig } from '../../../../services';
+import { waitForSync } from '../../../../util';
 import { Common } from '../../../options';
 import { createEdgeClient } from '../util';
 
 import { bundle } from './bundle';
+import { DATA_TYPES, upsertComposerScript, upsertFunctionObject } from './echo';
+import { parseOptions } from './options';
 
 export const deploy = Command.make(
   'deploy',
@@ -39,30 +42,60 @@ export const deploy = Command.make(
     ),
   },
   Effect.fn(function* (options) {
+    const { json } = yield* CommandConfig;
     const client = yield* ClientService;
+    client.addTypes(DATA_TYPES);
     const identity = client.halo.identity.get();
     invariant(identity, 'Identity not available');
 
-    const ownerPublicKey = yield* Option.match(options.spaceId, {
-      onNone: () => Effect.succeed(identity.identityKey),
-      onSome: (spaceId) => getSpace(spaceId).pipe(Effect.map((space) => space.key)),
-    }).pipe(Effect.map((key) => key.toString()));
-
-    const functionId = Option.getOrUndefined(options.functionId);
-    const name = Option.getOrUndefined(options.name);
-    const version = Option.getOrElse(options.version, () => '0.0.1');
     const { entryPoint, assets } = yield* bundle({ entryPoint: options.entryPoint });
 
     if (options.dryRun) {
-      console.log('Dry run, not uploading function.');
+      yield* Console.log('Dry run, not uploading function.');
       return;
     }
 
+    const { space, ownerPublicKey, functionId, existingObject, name, version } = yield* parseOptions(options);
+
     const edgeClient = createEdgeClient(client);
-    const res = yield* Effect.tryPromise(() =>
+    const uploadResult = yield* Effect.tryPromise(() =>
       edgeClient.uploadFunction({ functionId }, { ownerPublicKey, name, version, entryPoint, assets }),
     );
-    console.log(JSON.stringify(res, null, 2));
+
+    const functionObject = yield* Option.all([space, existingObject]).pipe(
+      Option.map(([space, existingObject]) =>
+        upsertFunctionObject({
+          space,
+          existingObject,
+          uploadResult,
+          filePath: options.entryPoint,
+          name,
+        }).pipe(Effect.map(Option.some)),
+      ),
+      Option.getOrElse(() => Effect.succeed(Option.none<FunctionType>())),
+    );
+
+    if (options.script) {
+      yield* Option.all([space, functionObject]).pipe(
+        Option.map(([space, functionObject]) =>
+          upsertComposerScript({ space, functionObject, filePath: options.entryPoint, name }),
+        ),
+        Option.getOrElse(() => Effect.succeed(undefined)),
+      );
+    }
+
+    if (json) {
+      yield* Console.log(JSON.stringify(uploadResult, null, 2));
+    } else {
+      yield* Console.log('Function uploaded successfully!');
+      yield* Console.log(`Function ID: ${uploadResult.functionId}`);
+      yield* Console.log(`Version: ${uploadResult.version}`);
+    }
+
+    yield* Option.match(space, {
+      onNone: () => Effect.succeed(undefined),
+      onSome: (space) => waitForSync(space),
+    });
   }),
   // Effect.fn(function* ({ file, name, version, script, functionId, spaceId }) {
   //   const { scriptFileContent, bundledScript } = yield* loadScript(file);

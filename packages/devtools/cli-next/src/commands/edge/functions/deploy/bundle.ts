@@ -7,12 +7,13 @@ import { basename, join, relative } from 'node:path';
 
 import { FileSystem } from '@effect/platform';
 import { type PlatformError } from '@effect/platform/Error';
-import { Array, Effect } from 'effect';
+import { Array, Console, Effect } from 'effect';
 import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
-import { invariant } from '@dxos/invariant';
+
+import { CommandConfig } from '../../../../services';
 
 type BundleOptions = {
   entryPoint: string;
@@ -27,8 +28,9 @@ type BundleResult = {
 //  This is written for writing to the filesystem with node apis whereas the Bundler is written to work in the browser.
 export const bundle: (
   options: BundleOptions,
-) => Effect.Effect<BundleResult, BundleCreationError | PlatformError, FileSystem.FileSystem> = Effect.fn(
-  function* (options) {
+) => Effect.Effect<BundleResult, BundleCreationError | PlatformError, FileSystem.FileSystem | CommandConfig> =
+  Effect.fn(function* (options) {
+    const { verbose } = yield* CommandConfig;
     const outdir = `/tmp/dxos-functions-bundle-${new Date().toISOString()}-${PublicKey.random().toHex()}`;
 
     const result = yield* Effect.promise(() =>
@@ -96,23 +98,24 @@ export const bundle: (
       Effect.map((assets) => Object.fromEntries(assets)),
     );
 
-    console.log('Function compiled');
-    console.log('Metafile path:', `${outdir}/metafile.json`);
-    console.log('Assets:\n');
-    console.log(
-      Object.entries(result.metafile!.outputs)
-        .sort((a, b) => b[1].bytes - a[1].bytes)
-        .map(
-          ([path, desc]) =>
-            `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
-        )
-        .join('\n'),
-    );
+    if (verbose) {
+      yield* Console.log('Function compiled');
+      yield* Console.log('Metafile path:', `${outdir}/metafile.json`);
+      yield* Console.log('Assets:\n');
+      yield* Console.log(
+        Object.entries(result.metafile!.outputs)
+          .sort((a, b) => b[1].bytes - a[1].bytes)
+          .map(
+            ([path, desc]) =>
+              `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
+          )
+          .join('\n'),
+      );
+    }
 
     // Must match esbuild entry point.
     return { entryPoint: 'userFunc.js', assets };
-  },
-);
+  });
 
 class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR') {
   constructor(errors: Message[]) {
