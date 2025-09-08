@@ -33,6 +33,10 @@ export const deploy = Command.make(
       Options.optional,
     ),
     spaceId: Common.spaceId.pipe(Options.optional),
+    dryRun: Options.boolean('dry-run').pipe(
+      Options.withDescription('Do not upload, just build the function.'),
+      Options.withDefault(false),
+    ),
   },
   Effect.fn(function* (options) {
     const client = yield* ClientService;
@@ -48,6 +52,11 @@ export const deploy = Command.make(
     const name = Option.getOrUndefined(options.name);
     const version = Option.getOrElse(options.version, () => '0.0.1');
     const { entryPoint, assets } = yield* bundle({ entryPoint: options.entryPoint });
+
+    if (options.dryRun) {
+      console.log('Dry run, not uploading function.');
+      return;
+    }
 
     const edgeClient = createEdgeClient(client);
     const res = yield* Effect.tryPromise(() =>
