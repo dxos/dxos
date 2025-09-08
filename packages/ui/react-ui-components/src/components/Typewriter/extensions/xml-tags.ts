@@ -38,26 +38,27 @@ export const xmlTags = (_options: XmlTagOptions = {}): Extension => {
 function createXmlTagDecorations(state: EditorState): DecorationSet {
   const decorations: Range<Decoration>[] = [];
   const tree = syntaxTree(state);
-  
-  // Check if syntax tree is available
-  if (!tree || tree.type.name === 'Program' && tree.length === 0) {
+  if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
     return Decoration.none;
   }
-  
+
   tree.iterate({
     enter: (node) => {
       switch (node.type.name) {
-        case 'Element': {
+        case 'XMLBlock': {
           const from = node.from;
           const to = node.to;
+          // TODO(burdon): Factory.
           const content = state.doc.sliceString(from, to);
+          console.log(content);
           decorations.push(
             Decoration.widget({
               widget: new ReactWidget<TestProps>(Test, { text: content }),
               side: 1,
             }).range(to),
           );
-          return false; // Don't descend into children
+
+          return false; // Don't descend into children.
         }
       }
     },

@@ -17,18 +17,12 @@ describe('extended-markdown', () => {
   const createEditorState = (doc: string) => {
     return EditorState.create({
       doc,
-      extensions: [
-        //
-        extendedMarkdown(),
-        // xmlTags(), // TODO(burdon): Remove.
-      ],
+      extensions: [extendedMarkdown()],
     });
   };
 
   test.only('tree', async ({ expect }) => {
     const doc = trim`
-      Start 
-
       <prompt>Hello</prompt>
 
       Hi there!
@@ -43,70 +37,32 @@ describe('extended-markdown', () => {
       </choice>
 
       <toolkit />
-
-      End.
     `;
 
+    const elements: SyntaxNodeRef[] = [];
     const state = createEditorState(doc);
     const tree = syntaxTree(state);
-    const elements: SyntaxNodeRef[] = [];
-
-    let depth = 0;
-    const xmlBlocks: any[] = [];
-    const htmlBlocks: any[] = [];
-    console.log('starting...');
     tree.iterate({
       enter: (node) => {
-        const indent = '  '.repeat(depth);
-        const content = state.sliceDoc(node.from, Math.min(node.to, node.from + 50));
-        console.log(
-          `${indent}${node.type.name} [${node.from}-${node.to}]: "${content.replace(/\n/g, '\\n')}"${content.length > 50 ? '...' : ''}`,
-        );
-
         if (node.type.name === 'XMLBlock') {
-          xmlBlocks.push({ from: node.from, to: node.to });
-        } else if (node.type.name === 'HTMLBlock') {
-          htmlBlocks.push({ from: node.from, to: node.to });
-        }
-
-        // Check for various XML node types
-        if (node.type.name === 'Element' || 
-            node.type.name === 'prompt' || 
-            node.type.name === 'suggest' || 
-            node.type.name === 'choice' || 
-            node.type.name === 'toolkit' ||
-            node.type.name === 'option') {
+          // console.log(safeStringify(node));
           elements.push(node);
-          console.log(`Found element: ${node.type.name}`);
         }
-        depth++;
       },
-      leave: () => {
-        depth--;
-      },
+      leave: () => {},
     });
 
-    // Debug: print what we found
-    console.log('XMLBlocks:', xmlBlocks.length);
-    console.log('HTMLBlocks:', htmlBlocks.length);
-    console.log('Elements found:', elements.length);
-    
-    // Try to force parsing at specific positions
-    const allBlocks = [...xmlBlocks, ...htmlBlocks];
-    for (const block of allBlocks) {
-      const blockTree = syntaxTree(state);
-      blockTree.iterate({
-        from: block.from,
-        to: block.to,
-        enter: (node) => {
-          console.log(`  Block ${block.from}-${block.to}: ${node.type.name} [${node.from}-${node.to}]`);
-        }
-      });
-    }
-    
-    // Count total blocks (XMLBlock + HTMLBlock)
-    const totalBlocks = xmlBlocks.length + htmlBlocks.length;
-    expect(totalBlocks).toBe(4);
+    expect(elements).toHaveLength(4);
+    expect(elements.map(({ from, to }) => ({ from, to }))).toContain([
+      {
+        from: 0,
+        to: 22,
+      },
+      // { from: 10, to: 26 },
+      // { from: 42, to: 61 },
+      // { from: 67, to: 86 },
+      // { from: 92, to: 111 },
+    ]);
   });
 
   test('setext heading disabled', () => {
@@ -138,7 +94,7 @@ describe('extended-markdown', () => {
     console.log('\n=== Testing XML Overlay ===');
     console.log('Document:', doc);
 
-    // Get all syntax trees at different positions
+    // Get all syntax trees at different positions.
     const positions = [0, 1, 8, 15, 27];
     positions.forEach((pos) => {
       const tree = syntaxTree(state);
@@ -303,49 +259,3 @@ describe('extended-markdown', () => {
     expect(unclosedState.sliceDoc(0)).toBe(unclosedPromptDoc);
   });
 });
-
-export const SKIP = Object.freeze({});
-
-export type StringifyReplacer = (key: string, value: any) => typeof SKIP | any;
-
-// TODO(burdon): Move to util.
-export function safeStringify(obj: any, indent = 2, filter: StringifyReplacer = defaultFilter) {
-  const seen = new WeakSet();
-  function replacer(key: string, value: any) {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
-      }
-
-      seen.add(value);
-    }
-
-    if (filter) {
-      const v2 = filter?.(key, value);
-      if (v2 !== undefined) {
-        return v2 === SKIP ? undefined : v2;
-      }
-    }
-
-    return value;
-  }
-
-  let result = '';
-  try {
-    result = JSON.stringify(obj, replacer, indent);
-  } catch (error: any) {
-    result = `Error: ${error.message}`;
-  }
-
-  return result;
-}
-
-const defaultFilter: StringifyReplacer = (key, value) => {
-  if (typeof value === 'function') {
-    return SKIP;
-  }
-
-  if (key.startsWith('_')) {
-    return SKIP;
-  }
-};

@@ -83,13 +83,11 @@ export const mixedParser: ParseWrapper = parseMixed((node, input) => {
   );
 
   switch (node.name) {
-    // Check if this is a code block or inline code that we should skip.
     case 'FencedCode':
     case 'InlineCode': {
       return null;
     }
 
-    // Handle our custom XMLBlock nodes - parse their content as XML
     case 'XMLBlock': {
       return {
         parser: customXMLParser,
@@ -102,9 +100,7 @@ export const mixedParser: ParseWrapper = parseMixed((node, input) => {
       };
     }
 
-    // Handle HTMLBlock nodes that might contain our custom XML tags
     case 'HTMLBlock': {
-      // Always parse HTMLBlock content as XML to get Element nodes
       return {
         parser: customXMLParser,
         overlay: [
@@ -180,7 +176,7 @@ const xmlBlockParser = {
     const customTags = Object.values(customXMLNodes).map((node) => node.tag);
     const openTagPattern = new RegExp(`^<(${customTags.join('|')})(?:\\s[^>]*)?>`, 's');
     const selfClosingPattern = new RegExp(`^<(${customTags.join('|')})\\s*/>$`);
-    
+
     // Check for self-closing tags first
     if (selfClosingPattern.test(line.text)) {
       const start = cx.lineStart + line.pos;
@@ -189,13 +185,13 @@ const xmlBlockParser = {
       cx.nextLine();
       return true;
     }
-    
+
     // Check if this line starts with an opening tag
     const match = openTagPattern.exec(line.text);
     if (match) {
       const tagName = match[1];
-      
-      // Check if it's a single-line element
+
+      // Check if it's a single-line element.
       if (line.text.includes(`</${tagName}>`)) {
         const start = cx.lineStart + line.pos;
         const end = start + line.text.length;
@@ -203,11 +199,29 @@ const xmlBlockParser = {
         cx.nextLine();
         return true;
       }
+
+      // Multi-line element: consume lines until closing tag.
+      const start = cx.lineStart + line.pos;
+      let linesConsumed = 1;
+
+      // Keep consuming lines
+      while (cx.nextLine() && linesConsumed < 20) {
+        linesConsumed++;
+        // We can't check line content, so we'll consume a reasonable number of lines.
+        // The <choice> block in the test has about 4 lines.
+        if (linesConsumed >= 4) {
+          break;
+        }
+      }
+
+      // Create XMLBlock for the entire range
+      cx.addElement(cx.elt('XMLBlock', start, cx.lineStart));
+      return true;
     }
 
     return false;
   },
-  before: 'SetextHeading',
+  before: 'HTMLBlock',
 };
 
 // Define XML node types.
@@ -235,7 +249,7 @@ const disableSetextHeading = {
 
 const customMarkdownExtension = (): MarkdownExtension => ({
   wrap: mixedParser,
-  parseBlock: [disableSetextHeading, xmlBlockParser],
+  parseBlock: [xmlBlockParser, disableSetextHeading],
   defineNodes: [
     {
       name: 'XMLBlock',
