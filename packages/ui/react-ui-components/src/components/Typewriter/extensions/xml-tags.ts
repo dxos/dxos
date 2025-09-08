@@ -5,6 +5,7 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
+import { type SyntaxNode } from '@lezer/common';
 
 import { ReactWidget } from './ReactWidget';
 import { Test, type TestProps } from './Test';
@@ -45,16 +46,16 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
   tree.iterate({
     enter: (node) => {
       switch (node.type.name) {
-        case 'XMLBlock': {
-          const from = node.node.from;
-          const to = node.node.to;
-          const content = state.doc.sliceString(from, to);
-          decorations.push(
-            Decoration.replace({
-              widget: new ReactWidget<TestProps>(Test, { text: content }),
-              side: 1,
-            }).range(from, to),
-          );
+        case 'Element': {
+          const tagName = getTagName(state, node.node);
+          if (tagName) {
+            decorations.push(
+              Decoration.replace({
+                widget: new ReactWidget<TestProps>(Test, { tagName }),
+                side: 1,
+              }).range(node.node.from, node.node.to),
+            );
+          }
 
           return false; // Don't descend into children.
         }
@@ -64,3 +65,20 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
 
   return Decoration.set(decorations);
 }
+
+/**
+ * Get tag name by finding the first TagName node within this Element.
+ */
+const getTagName = (state: EditorState, node: SyntaxNode): string | undefined => {
+  let tagName: string | undefined;
+
+  const cursor = node.cursor();
+  cursor.iterate((node) => {
+    if (node.type.name === 'TagName' && !tagName) {
+      tagName = state.doc.sliceString(node.from, node.to);
+      return false; // Stop iteration.
+    }
+  });
+
+  return tagName;
+};
