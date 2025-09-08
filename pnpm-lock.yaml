@@ -4598,6 +4598,9 @@ importers:
       effect:
         specifier: 3.17.13
         version: 3.17.13
+      esbuild:
+        specifier: 0.25.6
+        version: 0.25.6
       wtfnode:
         specifier: ^0.10.0
         version: 0.10.0
@@ -5709,6 +5712,9 @@ importers:
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../plugin-thread
+      '@dxos/plugin-token-manager':
+        specifier: workspace:*
+        version: link:../plugin-token-manager
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -7150,6 +7156,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema

@@ -19,7 +19,9 @@ type AccordionItemContext<T extends ListItemRecord> = {
   item: T;
 };
 
-export const [AccordionItemProvider, useAccordionItemContext] =
+// TODO(wittjosiah): This seems to be conflicting with something in the bundle.
+//  Perhaps @radix-ui/react-accordion?
+export const [AccordionItemProvider, useDxAccordionItemContext] =
   createContext<AccordionItemContext<any>>(ACCORDION_ITEM_NAME);
 
 export type AccordionItemProps<T extends ListItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;

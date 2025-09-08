@@ -135,6 +135,7 @@
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
+    "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

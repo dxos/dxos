@@ -37,6 +37,7 @@
     "@effect/typeclass": "0.36.0",
     "@effect/workflow": "0.8.3",
     "effect": "3.17.13",
+    "esbuild": "0.25.6",
     "wtfnode": "^0.10.0",
     "yaml": "^2.5.0"
   },
