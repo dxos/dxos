@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chat, Toolbar } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
@@ -36,13 +37,11 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   }, [processor, chat]);
 
   return !chat || !processor ? null : (
-    <>
-      <div className='grid grid-cols-[1fr_auto] items-center'>
-        <Toolbar chat={chat} onReset={() => onEvent?.('reset')} />
-        <div className='flex shrink-0 gap-2 max-w-[20rem] pie-2 items-center'>
-          <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
-          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
-        </div>
+    <StackItem.Content toolbar>
+      <div role='none' className='flex items-center gap-2'>
+        <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
+        <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
+        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
       </div>
 
       <Chat.Root chat={chat} processor={processor}>
@@ -52,6 +51,6 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
           <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
         </div>
       </Chat.Root>
-    </>
+    </StackItem.Content>
   );
 };

@@ -29,6 +29,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
@@ -53,15 +54,13 @@ import {
 } from './components';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
-const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
-
 const DefaultStory = ({
   debug = true,
-  components,
+  deckComponents,
   blueprints = [],
 }: {
   debug?: boolean;
-  components: (FC<ComponentProps> | FC<ComponentProps>[])[];
+  deckComponents: FC<ComponentProps>[][];
   blueprints?: string[];
 }) => {
   const client = useClient();
@@ -109,30 +108,25 @@ const DefaultStory = ({
   }
 
   return (
-    <div
-      className='grid grid-cols gap-2 m-2'
-      style={{ gridTemplateColumns: `repeat(${components.length}, minmax(0, 40rem))` }}
+    <Stack
+      orientation='horizontal'
+      size='split'
+      rail={false}
+      classNames='absolute inset-0'
+      itemsCount={deckComponents.length}
     >
-      {components.map((Component, index) =>
-        Array.isArray(Component) ? (
-          <div
-            key={index}
-            className='grid grid-rows gap-2 overflow-hidden'
-            style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
-          >
-            {Component.map((Component, index) => (
-              <div key={index} className={panelClassNames}>
+      {deckComponents.map((plankComponents, i) => (
+        <StackItem.Root item={{ id: `${i}` }} key={i}>
+          <Stack orientation='vertical' size='split' rail={false} itemsCount={plankComponents.length}>
+            {plankComponents.map((Component, j) => (
+              <StackItem.Root key={j} item={{ id: `${i}:${j}` }}>
                 <Component space={space} debug={debug} onEvent={handleEvent} />
-              </div>
+              </StackItem.Root>
             ))}
-          </div>
-        ) : (
-          <div key={index} className={panelClassNames}>
-            <Component space={space} debug={debug} onEvent={handleEvent} />
-          </div>
-        ),
-      )}
-    </div>
+          </Stack>
+        </StackItem.Root>
+      ))}
+    </Stack>
   );
 };
 
@@ -193,7 +187,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], [SurfaceContainer]],
   },
 };
 
@@ -219,7 +213,7 @@ export const WithDocument: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [SurfaceContainer, CommentsContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
@@ -234,7 +228,7 @@ export const WithBlueprints: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [TasksContainer, BlueprintContainer]],
+    deckComponents: [[ChatContainer], [TasksContainer, BlueprintContainer]],
   },
 };
 
@@ -270,7 +264,7 @@ export const WithChess: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
@@ -290,7 +284,7 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, MessageContainer]],
+    deckComponents: [[ChatContainer], [SurfaceContainer, MessageContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -307,7 +301,7 @@ export const WithGmail: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, MessageContainer, TokenManagerContainer]],
+    deckComponents: [[ChatContainer], [SurfaceContainer, MessageContainer, TokenManagerContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -333,7 +327,7 @@ export const WithMap: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], [SurfaceContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
@@ -388,7 +382,7 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], [SurfaceContainer]],
   },
 };
 
@@ -404,7 +398,7 @@ export const WithBoard: Story = {
   }),
   args: {
     debug: true,
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], [SurfaceContainer]],
   },
 };
 
@@ -416,7 +410,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -430,7 +424,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
   },
 };
 
@@ -448,7 +442,7 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
@@ -463,7 +457,7 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [LINEAR_BLUEPRINT.key],
   },
 };

@@ -23,7 +23,7 @@ import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
-export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
+export type Size = 'intrinsic' | 'contain' | 'contain-fit-content' | 'split';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
   Partial<StackContextValue> & {
@@ -66,7 +66,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
-        `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
+        `repeat(${itemsCount}, ${size === 'split' ? `${(100 / itemsCount).toFixed(2)}%` : 'min-content'}) [tabster-dummies] 0`,
       ...style,
     };
 
