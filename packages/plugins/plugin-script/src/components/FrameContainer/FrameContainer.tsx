@@ -48,7 +48,8 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
   // Encodes compiled code via URL.
   invariant(result.sourceHash, 'Source hash is required.');
   const sourceHash = Buffer.from(result.sourceHash).toString('hex');
-  const src = result.bundle && `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}`;
+  const src =
+    'bundle' in result ? `${containerUrl}?ts=${sourceHash}#code=${encodeURIComponent(result.bundle)}` : undefined;
 
   return (
     <>
@@ -68,7 +69,7 @@ export const FrameContainer = ({ containerUrl, result, debug = true }: FrameCont
                 {
                   timestamp: result.timestamp,
                   sourceHash,
-                  error: result.error,
+                  error: 'error' in result ? result.error : undefined,
                   src,
                 },
                 undefined,
