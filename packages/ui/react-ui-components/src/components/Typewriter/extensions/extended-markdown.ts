@@ -75,13 +75,7 @@ const customXMLParser = xmlLanguage.parser.configure({
 /**
  * Configure mixed parser to recognize custom tags.
  */
-export const mixedParser: ParseWrapper = parseMixed((node, input) => {
-  const customTags = Object.values(customXMLNodes).map((node) => node.tag);
-  const xmlPattern = new RegExp(
-    `<(${customTags.join('|')})(?:[^>]*)>.*?</\\1>|<(${customTags.join('|')})\\s*/>`,
-    'gis',
-  );
-
+export const mixedParser: ParseWrapper = parseMixed((node) => {
   switch (node.name) {
     case 'FencedCode':
     case 'InlineCode': {
@@ -89,78 +83,17 @@ export const mixedParser: ParseWrapper = parseMixed((node, input) => {
     }
 
     case 'XMLBlock': {
+      // Parse the entire XMLBlock content with the XML parser.
+      // This will create proper XML nodes in the syntax tree.
       return {
         parser: customXMLParser,
-        overlay: [
-          {
-            from: node.from,
-            to: node.to,
-          },
-        ],
       };
     }
 
     case 'HTMLBlock': {
       return {
         parser: customXMLParser,
-        overlay: [
-          {
-            from: node.from,
-            to: node.to,
-          },
-        ],
       };
-    }
-
-    case 'Document': {
-      // Find all custom XML blocks within the document.
-      const text = input.read(node.from, node.to);
-      const matches = [...text.matchAll(xmlPattern)];
-      if (matches.length > 0) {
-        return {
-          parser: customXMLParser,
-          overlay: matches.map((match) => ({
-            from: node.from + match.index!,
-            to: node.from + match.index! + match[0].length,
-          })),
-        };
-      }
-      break;
-    }
-
-    case 'Paragraph': {
-      // Check if the entire paragraph is a single XML element.
-      const text = input.read(node.from, node.to).trim();
-      const singleXmlPattern = new RegExp(
-        `^<(${customTags.join('|')})(?:[^>]*)>.*?</\\1>$|^<(${customTags.join('|')})\\s*/>$`,
-        's',
-      );
-
-      // Parse the entire paragraph as XML.
-      if (singleXmlPattern.test(text)) {
-        return {
-          parser: customXMLParser,
-          overlay: [
-            {
-              from: node.from,
-              to: node.to,
-            },
-          ],
-        };
-      }
-
-      // Otherwise, look for XML fragments within the paragraph.
-      const matches = [...text.matchAll(xmlPattern)];
-      if (matches.length > 0) {
-        return {
-          parser: customXMLParser,
-          overlay: matches.map((match) => ({
-            from: node.from + match.index!,
-            to: node.from + match.index! + match[0].length,
-          })),
-        };
-      }
-      break;
     }
   }
 
@@ -262,7 +195,10 @@ const disableSetextHeading = {
 
 const customMarkdownExtension = (): MarkdownExtension => ({
   wrap: mixedParser,
-  parseBlock: [xmlBlockParser, disableSetextHeading],
+  parseBlock: [
+    // xmlBlockParser,
+    disableSetextHeading,
+  ],
   defineNodes: [
     {
       name: 'XMLBlock',

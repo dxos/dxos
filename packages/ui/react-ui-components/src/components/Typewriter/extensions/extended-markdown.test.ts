@@ -44,13 +44,14 @@ describe('extended-markdown', () => {
     const nodes: SyntaxNode[] = [];
     const state = createEditorState(doc);
     const tree = syntaxTree(state);
+
+    // Find all Element nodes (these are the XML blocks after parsing)
     tree.iterate({
       enter: (node) => {
-        if (node.type.name === 'XMLBlock') {
+        if (node.type.name === 'Element') {
           nodes.push(node.node);
         }
       },
-      leave: () => {},
     });
 
     expect(nodes).toHaveLength(4);

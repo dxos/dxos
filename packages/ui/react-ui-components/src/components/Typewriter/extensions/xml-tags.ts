@@ -52,44 +52,34 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
 
           // Get tag name from the XMLBlock's child nodes.
           let tagName = 'unknown';
-
-          // Log the node structure to understand it better
-          console.log('XMLBlock node:', node.type.name);
-          console.log('XMLBlock content:', content);
-
-          // Try iterating through the XMLBlock's children using tree iteration
-          const xmlNode = node.node;
+          
+          // The XMLBlock should now contain proper XML nodes thanks to parseMixed
           tree.iterate({
-            from: xmlNode.from,
-            to: xmlNode.to,
+            from: node.from,
+            to: node.to,
             enter: (childNode) => {
-              console.log('Child node type:', childNode.type.name, 'from:', childNode.from, 'to:', childNode.to);
-
-              // Look for opening tag patterns
-              if (
-                childNode.type.name === 'OpenTag' ||
-                childNode.type.name === 'SelfClosingTag' ||
-                childNode.type.name === 'StartTag'
-              ) {
-                // Extract tag name from the tag content
-                const tagContent = state.doc.sliceString(childNode.from, childNode.to);
-                const match = tagContent.match(/<(\w+)/);
-                if (match) {
-                  tagName = match[1];
-                  return false; // Stop iteration
-                }
+              // Look for Element nodes which represent the XML tags
+              if (childNode.type.name === 'Element') {
+                // Find the TagName within the Element
+                tree.iterate({
+                  from: childNode.from,
+                  to: childNode.to,
+                  enter: (innerNode) => {
+                    if (innerNode.type.name === 'TagName') {
+                      tagName = state.doc.sliceString(innerNode.from, innerNode.to);
+                      return false; // Stop iteration
+                    }
+                  }
+                });
+                return false; // Stop outer iteration
               }
-
-              // Also check for direct tag name nodes
-              if (
-                childNode.type.name === 'TagName' ||
-                childNode.type.name === 'XMLTagName' ||
-                childNode.type.name === 'ElementName'
-              ) {
+              
+              // Also check for direct TagName nodes (for self-closing tags)
+              if (childNode.type.name === 'TagName') {
                 tagName = state.doc.sliceString(childNode.from, childNode.to);
                 return false; // Stop iteration
               }
-            },
+            }
           });
 
           decorations.push(
