@@ -23,6 +23,7 @@ import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
@@ -48,6 +49,7 @@ import {
   MessageContainer,
   SurfaceContainer,
   TasksContainer,
+  TokenManagerContainer,
 } from './components';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
@@ -289,6 +291,23 @@ export const WithMail: Story = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, MessageContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+  },
+};
+
+export const WithGmail: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    config: config.remote,
+    types: [Mailbox.Mailbox],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      await binder.bind({ objects: [Ref.make(mailbox)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, MessageContainer, TokenManagerContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };

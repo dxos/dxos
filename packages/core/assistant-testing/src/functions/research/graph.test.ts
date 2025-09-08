@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AnthropicClient } from '@effect/ai-anthropic';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, pipe } from 'effect';
