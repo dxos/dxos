@@ -76,7 +76,6 @@ describe('extended-markdown', () => {
 
     tree.iterate({
       enter: (node) => {
-        // Check that no SetextHeading nodes exist.
         if (node.type.name === 'SetextHeading') {
           throw new Error('SetextHeading should be disabled!');
         }
@@ -84,41 +83,9 @@ describe('extended-markdown', () => {
     });
   });
 
-  test('xml overlay parsing', () => {
-    const doc = '<prompt>Hello world</prompt>';
-    const state = createEditorState(doc);
-
-    console.log('\n=== Testing XML Overlay ===');
-    console.log('Document:', doc);
-
-    // Get all syntax trees at different positions.
-    const positions = [0, 1, 8, 15, 27];
-    positions.forEach((pos) => {
-      const tree = syntaxTree(state);
-      console.log(`\nTree at position ${pos}: ${tree.type.name}`);
-    });
-
-    // Iterate through the entire tree and check for mixed content.
-    const tree = syntaxTree(state);
-    console.log('\nFull tree structure:');
-    let depth = 0;
-    tree.iterate({
-      enter: (node) => {
-        const indent = '  '.repeat(depth);
-        console.log(`${indent}${node.type.name} [${node.from}-${node.to}]`);
-        depth++;
-      },
-      leave: () => {
-        depth--;
-      },
-    });
-
-    // Check if we can force XML parsing on the content.
-    const xmlTree = syntaxTree(state);
-    console.log('\nForced tree parse:', xmlTree.type.name);
-  });
-
+  //
   // TODO(burdon): All tests below should test the tree.
+  //
 
   test('should parse standard markdown elements', ({ expect }) => {
     const doc = trim`

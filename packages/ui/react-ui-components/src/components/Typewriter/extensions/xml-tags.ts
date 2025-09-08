@@ -48,14 +48,12 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
         case 'XMLBlock': {
           const from = node.node.from;
           const to = node.node.to;
-          // TODO(burdon): Factory.
           const content = state.doc.sliceString(from, to);
-          console.log(content);
           decorations.push(
-            Decoration.widget({
+            Decoration.replace({
               widget: new ReactWidget<TestProps>(Test, { text: content }),
               side: 1,
-            }).range(to),
+            }).range(from, to),
           );
 
           return false; // Don't descend into children.
