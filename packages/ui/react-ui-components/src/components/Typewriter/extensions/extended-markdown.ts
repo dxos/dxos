@@ -186,7 +186,7 @@ const xmlBlockParser = {
       return true;
     }
 
-    // Check if this line starts with an opening tag
+    // Check if this line starts with an opening tag.
     const match = openTagPattern.exec(line.text);
     if (match) {
       const tagName = match[1];
@@ -202,20 +202,34 @@ const xmlBlockParser = {
 
       // Multi-line element: consume lines until closing tag.
       const start = cx.lineStart + line.pos;
-      let linesConsumed = 1;
+      let depth = 1;
 
-      // Keep consuming lines
-      while (cx.nextLine() && linesConsumed < 20) {
-        linesConsumed++;
-        // We can't check line content, so we'll consume a reasonable number of lines.
-        // The <choice> block in the test has about 4 lines.
-        if (linesConsumed >= 4) {
-          break;
+      // Keep consuming lines until we find the matching closing tag.
+      while (cx.nextLine()) {
+        // Check if current line contains opening tags.
+        const openingPattern = new RegExp(`<${tagName}(?:\\s[^>]*)?>`, 'g');
+        const openMatches = line.text.match(openingPattern);
+        if (openMatches) {
+          depth += openMatches.length;
+        }
+
+        // Check if current line contains closing tags.
+        const closingPattern = new RegExp(`</${tagName}>`, 'g');
+        const closeMatches = line.text.match(closingPattern);
+        if (closeMatches) {
+          depth -= closeMatches.length;
+
+          if (depth === 0) {
+            // Found the matching closing tag.
+            cx.nextLine(); // Move past the closing tag line.
+            break;
+          }
         }
       }
 
-      // Create XMLBlock for the entire range
-      cx.addElement(cx.elt('XMLBlock', start, cx.lineStart));
+      // Create XMLBlock for the entire range.
+      const end = cx.prevLineEnd();
+      cx.addElement(cx.elt('XMLBlock', start, end));
       return true;
     }
 

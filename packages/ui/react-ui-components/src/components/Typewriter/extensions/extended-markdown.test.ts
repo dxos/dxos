@@ -41,8 +41,6 @@ describe('extended-markdown', () => {
       <toolkit />
     `;
 
-    console.log(doc, doc[25]);
-
     const elements: SyntaxNodeRef[] = [];
     const state = createEditorState(doc);
     const tree = syntaxTree(state);
@@ -56,27 +54,11 @@ describe('extended-markdown', () => {
     });
 
     expect(elements).toHaveLength(4);
-    expect(elements.map(({ from, to }) => ({ content: doc.slice(from, to) }))).toEqual([
-      {
-        // from: 0,
-        // to: 27,
-        content: '<prompt>\n  Hello\n</prompt>\n',
-      },
-      {
-        // from: 64,
-        // to: 97,
-        content: '<suggest>Summarize tools</suggest>',
-      },
-      {
-        // from: 95,
-        // to: 164,
-        content: '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>\n',
-      },
-      {
-        // from: 175,
-        // to: 186,
-        content: '<toolkit />',
-      },
+    expect(elements.map(({ from, to }) => doc.slice(from, to))).toEqual([
+      '<prompt>\n  Hello\n</prompt>',
+      '<suggest>Summarize tools</suggest>',
+      '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>',
+      '<toolkit />',
     ]);
   });
 
