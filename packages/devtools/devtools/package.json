@@ -21,7 +21,7 @@
     "*": {}
   },
   "scripts": {
-    "proxy": "ts-node scripts/proxy.ts"
+    "proxy": "vite-node scripts/proxy.ts"
   },
   "dependencies": {
     "@automerge/automerge": "3.1.1",

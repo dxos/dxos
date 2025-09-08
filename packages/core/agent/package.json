@@ -30,7 +30,7 @@
     "/templates"
   ],
   "scripts": {
-    "echo-proxy": "ts-node --esm ./src/proxy/proxy.ts"
+    "echo-proxy": "vite-node ./src/proxy/proxy.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
