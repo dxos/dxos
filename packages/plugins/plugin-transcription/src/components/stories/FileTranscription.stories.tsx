@@ -177,7 +177,7 @@ const AudioFile = ({
 
   return (
     <TranscriptionStory
-      disabled={!stream}  
+      disabled={!stream}
       model={model}
       running={running}
       onRunningChange={setRunning}
