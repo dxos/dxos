@@ -218,7 +218,6 @@ const xmlBlockParser = {
         const closeMatches = line.text.match(closingPattern);
         if (closeMatches) {
           depth -= closeMatches.length;
-
           if (depth === 0) {
             // Found the matching closing tag.
             cx.nextLine(); // Move past the closing tag line.

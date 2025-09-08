@@ -4,7 +4,7 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
-import { type SyntaxNodeRef } from '@lezer/common';
+import { type SyntaxNode } from '@lezer/common';
 import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
@@ -41,24 +41,36 @@ describe('extended-markdown', () => {
       <toolkit />
     `;
 
-    const elements: SyntaxNodeRef[] = [];
+    const nodes: SyntaxNode[] = [];
     const state = createEditorState(doc);
     const tree = syntaxTree(state);
     tree.iterate({
       enter: (node) => {
         if (node.type.name === 'XMLBlock') {
-          elements.push(node.node);
+          nodes.push(node.node);
         }
       },
       leave: () => {},
     });
 
-    expect(elements).toHaveLength(4);
-    expect(elements.map(({ from, to }) => doc.slice(from, to))).toEqual([
-      '<prompt>\n  Hello\n</prompt>',
-      '<suggest>Summarize tools</suggest>',
-      '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>',
-      '<toolkit />',
+    expect(nodes).toHaveLength(4);
+    expect(
+      nodes.map((node) => ({
+        content: doc.slice(node.from, node.to),
+      })),
+    ).toEqual([
+      {
+        content: '<prompt>\n  Hello\n</prompt>',
+      },
+      {
+        content: '<suggest>Summarize tools</suggest>',
+      },
+      {
+        content: '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>',
+      },
+      {
+        content: '<toolkit />',
+      },
     ]);
   });
 
