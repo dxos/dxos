@@ -46,8 +46,8 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
     enter: (node) => {
       switch (node.type.name) {
         case 'XMLBlock': {
-          const from = node.from;
-          const to = node.to;
+          const from = node.node.from;
+          const to = node.node.to;
           // TODO(burdon): Factory.
           const content = state.doc.sliceString(from, to);
           console.log(content);

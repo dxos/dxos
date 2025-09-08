@@ -23,7 +23,9 @@ describe('extended-markdown', () => {
 
   test.only('tree', async ({ expect }) => {
     const doc = trim`
-      <prompt>Hello</prompt>
+      <prompt>
+        Hello
+      </prompt>
 
       Hi there!
 
@@ -39,29 +41,42 @@ describe('extended-markdown', () => {
       <toolkit />
     `;
 
+    console.log(doc, doc[25]);
+
     const elements: SyntaxNodeRef[] = [];
     const state = createEditorState(doc);
     const tree = syntaxTree(state);
     tree.iterate({
       enter: (node) => {
         if (node.type.name === 'XMLBlock') {
-          // console.log(safeStringify(node));
-          elements.push(node);
+          elements.push(node.node);
         }
       },
       leave: () => {},
     });
 
     expect(elements).toHaveLength(4);
-    expect(elements.map(({ from, to }) => ({ from, to }))).toContain([
+    expect(elements.map(({ from, to }) => ({ content: doc.slice(from, to) }))).toEqual([
       {
-        from: 0,
-        to: 22,
+        // from: 0,
+        // to: 27,
+        content: '<prompt>\n  Hello\n</prompt>\n',
       },
-      // { from: 10, to: 26 },
-      // { from: 42, to: 61 },
-      // { from: 67, to: 86 },
-      // { from: 92, to: 111 },
+      {
+        // from: 64,
+        // to: 97,
+        content: '<suggest>Summarize tools</suggest>',
+      },
+      {
+        // from: 95,
+        // to: 164,
+        content: '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>\n',
+      },
+      {
+        // from: 175,
+        // to: 186,
+        content: '<toolkit />',
+      },
     ]);
   });
 
