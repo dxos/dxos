@@ -156,12 +156,6 @@ export namespace Capabilities {
 
   /**
    * @category Capability
-   * @deprecated
-   */
-  // export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
-
-  /**
-   * @category Capability
    */
   export const Toolkit = defineCapability<AiToolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
 

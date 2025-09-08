@@ -16,7 +16,7 @@ export const TupleInput = ({
   binding,
   type,
   label,
-  disabled,
+  readonly,
   getStatus,
   getValue,
   onValueChange,
@@ -35,7 +35,7 @@ export const TupleInput = ({
           <Input.TextInput
             key={prop}
             type='number'
-            disabled={disabled}
+            disabled={!!readonly}
             value={values[prop]}
             onChange={(event) => onValueChange(type, { ...values, [prop]: safeParseFloat(event.target.value, 0) })}
             onBlur={onBlur}

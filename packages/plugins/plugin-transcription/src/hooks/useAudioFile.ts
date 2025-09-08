@@ -42,16 +42,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         audio.addEventListener(
           'canplay',
           async () => {
-            log.info('starting...');
-            try {
-              // Try to play the audio
-              await audio.play();
-              resolve();
-            } catch (playError) {
-              log.error('Play failed', { playError });
-              // Still resolve as the audio is ready, even if autoplay failed.
-              resolve();
-            }
+            resolve();
           },
           { once: true },
         );

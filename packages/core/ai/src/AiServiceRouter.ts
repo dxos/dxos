@@ -90,15 +90,14 @@ export const AnthropicResolver = AiModelResolver.fromModelMap(
   }),
 );
 
-/** @internal */
 export const LMSTUDIO_ENDPOINT = 'http://localhost:1234/v1';
 
 export const LMStudioResolver = AiModelResolver.fromModelMap(
   Effect.gen(function* () {
     return {
       // TODO(dmaretskyi): Add more LMStudio models.
-      '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('google/gemma-3-27b' as any),
-      '@meta/llama-3.2-3b-instruct': yield* OpenAiLanguageModel.model('llama-3.2-3b-instruct' as any),
+      '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('google/gemma-3-27b'),
+      '@meta/llama-3.2-3b-instruct': yield* OpenAiLanguageModel.model('llama-3.2-3b-instruct'),
     };
   }).pipe(
     Effect.provide(
@@ -119,9 +118,9 @@ export const OllamaResolver = ({
   AiModelResolver.fromModelMap(
     Effect.gen(function* () {
       return {
-        '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('gemma3:12b' as any),
-        'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest' as any),
-        'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b' as any),
+        '@google/gemma-3-27b': yield* OpenAiLanguageModel.model('gemma-3-27b'),
+        'deepseek-r1:latest': yield* OpenAiLanguageModel.model('deepseek-r1:latest'),
+        'qwen2.5:14b': yield* OpenAiLanguageModel.model('qwen2.5:14b'),
       };
     }).pipe(
       Effect.provide(

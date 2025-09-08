@@ -149,11 +149,10 @@ const getOrCreateChat = async (
   const { objects: relatedChats } = await space.db
     .query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source())
     .run();
+
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
-  // console.log('objects', JSON.stringify(objects, null, 2));
   if (chats.length > 0) {
-    // TODO(burdon): Is this the most recent?
-    return chats[chats.length - 1];
+    return chats.at(-1);
   }
 
   const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));

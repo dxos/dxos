@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, FunctionType, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { safeParseJson } from '@dxos/util';
 
 /** @deprecated Migrate to `client.edge`. */
 export const createEdgeClient = (client: Client): EdgeHttpClient => {
@@ -22,35 +23,23 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
 
 export const getDeployedFunctions = async (client: Client): Promise<FunctionType[]> => {
   const edgeClient = createEdgeClient(client);
-
   const result = await edgeClient.listFunctions();
   return result.uploadedFunctions.map((record: any) => {
-    // record shape is determined by EDGE API. We defensively parse.
+    // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
-    const versionMeta = safeJsonParse(latest.versionMetaJSON);
-
+    const versionMeta = safeParseJson<any>(latest.versionMetaJSON);
     const fn = Obj.make(FunctionType, {
-      key: versionMeta?.key,
-      name: versionMeta?.name ?? versionMeta?.key ?? record.id,
+      key: versionMeta.key,
+      name: versionMeta.name ?? versionMeta.key ?? record.id,
       version: latest?.version ?? '0.0.0',
-      description: versionMeta?.description,
-      inputSchema: versionMeta?.inputSchema,
-      outputSchema: versionMeta?.outputSchema,
+      description: versionMeta.description,
+      inputSchema: versionMeta.inputSchema,
+      outputSchema: versionMeta.outputSchema,
     });
-    setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id);
 
+    setUserFunctionIdInMetadata(Obj.getMeta(fn), record.id);
     return fn;
   });
-};
-
-// Local helper to avoid throwing on bad JSON from server.
-const safeJsonParse = (value: unknown): any => {
-  if (typeof value !== 'string' || value.length === 0) return {};
-  try {
-    return JSON.parse(value);
-  } catch {
-    return {};
-  }
 };
 
 export const invokeFunction = async (

@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "configurations": [
+    {
+      "name": "Run DXOS VSCode Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/devtools/vscode-extension"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/devtools/vscode-extension/out/**/*.js"
+      ],
+      "preLaunchTask": "compile vscode-extension"
+    }
+  ]
+}

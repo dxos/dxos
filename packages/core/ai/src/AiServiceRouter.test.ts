@@ -34,7 +34,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.resolver(
       Effect.gen(function* () {
-        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b' as any).pipe(
+        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(
             OpenAiClient.layer({
               apiUrl: LMSTUDIO_ENDPOINT,
