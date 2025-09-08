@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { Queue } from '@dxos/client/echo';
 import { type DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
 
 export enum MessageState {
   NONE = 0,

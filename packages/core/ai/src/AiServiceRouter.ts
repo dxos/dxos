@@ -3,8 +3,9 @@
 //
 
 import { type AiLanguageModel } from '@effect/ai';
-import { AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { type HttpClient } from '@effect/platform';
 import { Context, Effect, Layer, Option } from 'effect';
 
