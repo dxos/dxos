@@ -49,42 +49,9 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
           const from = node.node.from;
           const to = node.node.to;
           const content = state.doc.sliceString(from, to);
-
-          // Get tag name from the XMLBlock's child nodes.
-          let tagName = 'unknown';
-          
-          // The XMLBlock should now contain proper XML nodes thanks to parseMixed
-          tree.iterate({
-            from: node.from,
-            to: node.to,
-            enter: (childNode) => {
-              // Look for Element nodes which represent the XML tags
-              if (childNode.type.name === 'Element') {
-                // Find the TagName within the Element
-                tree.iterate({
-                  from: childNode.from,
-                  to: childNode.to,
-                  enter: (innerNode) => {
-                    if (innerNode.type.name === 'TagName') {
-                      tagName = state.doc.sliceString(innerNode.from, innerNode.to);
-                      return false; // Stop iteration
-                    }
-                  }
-                });
-                return false; // Stop outer iteration
-              }
-              
-              // Also check for direct TagName nodes (for self-closing tags)
-              if (childNode.type.name === 'TagName') {
-                tagName = state.doc.sliceString(childNode.from, childNode.to);
-                return false; // Stop iteration
-              }
-            }
-          });
-
           decorations.push(
             Decoration.replace({
-              widget: new ReactWidget<TestProps>(Test, { text: content, tagName }),
+              widget: new ReactWidget<TestProps>(Test, { text: content }),
               side: 1,
             }).range(from, to),
           );

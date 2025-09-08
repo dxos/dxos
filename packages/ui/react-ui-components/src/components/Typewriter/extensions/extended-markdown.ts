@@ -9,7 +9,7 @@ import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { type ParseWrapper, parseMixed } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
-import { type BlockContext, type Line, type MarkdownExtension } from '@lezer/markdown';
+import { type MarkdownExtension } from '@lezer/markdown';
 
 export type ExtendedMarkdownOptions = {};
 
@@ -75,100 +75,38 @@ const customXMLParser = xmlLanguage.parser.configure({
 /**
  * Configure mixed parser to recognize custom tags.
  */
-export const mixedParser: ParseWrapper = parseMixed((node) => {
+export const mixedParser: ParseWrapper = parseMixed((node, input) => {
   switch (node.name) {
     case 'FencedCode':
     case 'InlineCode': {
       return null;
     }
 
-    case 'XMLBlock': {
-      // Parse the entire XMLBlock content with the XML parser.
-      // This will create proper XML nodes in the syntax tree.
-      return {
-        parser: customXMLParser,
-      };
-    }
-
+    // Parse entire HTML and XML blocks.
+    case 'XMLBlock':
     case 'HTMLBlock': {
       return {
         parser: customXMLParser,
       };
     }
+
+    // Parse paragraphs that contain custom XML tags.
+    case 'Paragraph': {
+      const customTags = Object.values(customXMLNodes).map((node) => node.tag);
+      const tagPattern = new RegExp(`<(${customTags.join('|')})`);
+      const content = input.read(node.from, node.to);
+      if (tagPattern.test(content)) {
+        return {
+          parser: customXMLParser,
+        };
+      }
+
+      return null;
+    }
   }
 
   return null;
 });
-
-/**
- * Custom block parser for XML elements.
- */
-const xmlBlockParser = {
-  name: 'XMLBlock',
-  parse: (cx: BlockContext, line: Line) => {
-    const customTags = Object.values(customXMLNodes).map((node) => node.tag);
-    const openTagPattern = new RegExp(`^<(${customTags.join('|')})(?:\\s[^>]*)?>`, 's');
-    const selfClosingPattern = new RegExp(`^<(${customTags.join('|')})\\s*/>$`);
-
-    // Check for self-closing tags first
-    if (selfClosingPattern.test(line.text)) {
-      const start = cx.lineStart + line.pos;
-      const end = start + line.text.length;
-      cx.addElement(cx.elt('XMLBlock', start, end));
-      cx.nextLine();
-      return true;
-    }
-
-    // Check if this line starts with an opening tag.
-    const match = openTagPattern.exec(line.text);
-    if (match) {
-      const tagName = match[1];
-
-      // Check if it's a single-line element.
-      if (line.text.includes(`</${tagName}>`)) {
-        const start = cx.lineStart + line.pos;
-        const end = start + line.text.length;
-        cx.addElement(cx.elt('XMLBlock', start, end));
-        cx.nextLine();
-        return true;
-      }
-
-      // Multi-line element: consume lines until closing tag.
-      const start = cx.lineStart + line.pos;
-      let depth = 1;
-
-      // Keep consuming lines until we find the matching closing tag.
-      while (cx.nextLine()) {
-        // Check if current line contains opening tags.
-        const openingPattern = new RegExp(`<${tagName}(?:\\s[^>]*)?>`, 'g');
-        const openMatches = line.text.match(openingPattern);
-        if (openMatches) {
-          depth += openMatches.length;
-        }
-
-        // Check if current line contains closing tags.
-        const closingPattern = new RegExp(`</${tagName}>`, 'g');
-        const closeMatches = line.text.match(closingPattern);
-        if (closeMatches) {
-          depth -= closeMatches.length;
-          if (depth === 0) {
-            // Found the matching closing tag.
-            cx.nextLine(); // Move past the closing tag line.
-            break;
-          }
-        }
-      }
-
-      // Create XMLBlock for the entire range.
-      const end = cx.prevLineEnd();
-      cx.addElement(cx.elt('XMLBlock', start, end));
-      return true;
-    }
-
-    return false;
-  },
-  before: 'HTMLBlock',
-};
 
 // Define XML node types.
 const xmlNodeTypes = [
@@ -195,10 +133,7 @@ const disableSetextHeading = {
 
 const customMarkdownExtension = (): MarkdownExtension => ({
   wrap: mixedParser,
-  parseBlock: [
-    // xmlBlockParser,
-    disableSetextHeading,
-  ],
+  parseBlock: [disableSetextHeading],
   defineNodes: [
     {
       name: 'XMLBlock',
