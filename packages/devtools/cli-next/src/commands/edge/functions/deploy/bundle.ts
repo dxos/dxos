@@ -101,9 +101,10 @@ export const bundle: (
     console.log('Assets:\n');
     console.log(
       Object.entries(result.metafile!.outputs)
+        .sort((a, b) => b[1].bytes - a[1].bytes)
         .map(
           ([path, desc]) =>
-            `${relative(outdir, path)}: ${formatBytes(desc.bytes)}${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
+            `${formatBytes(desc.bytes).padEnd(10)} - ${relative(outdir, path)} ${basename(path) === 'userFunc.js' ? ' (entry point)' : ''}`,
         )
         .join('\n'),
     );
