@@ -69,8 +69,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "date-fns": "^3.3.1",
-    "nodemon": "^2.0.22",
-    "ts-node": "10.9.1"
+    "nodemon": "^2.0.22"
   },
   "engines": {
     "node": ">=12.0.0"

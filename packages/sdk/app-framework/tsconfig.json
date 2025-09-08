@@ -1,12 +1,8 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
-  "exclude": [
-    "/node_modules/"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["/node_modules/"],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/async"
@@ -71,12 +67,5 @@
     {
       "path": "../schema"
     }
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    },
-    "files": true,
-    "transpileOnly": true
-  }
+  ]
 }

@@ -3,12 +3,8 @@
   "compilerOptions": {
     "outDir": "dist/types"
   },
-  "exclude": [
-    "/node_modules/"
-  ],
-  "include": [
-    "src"
-  ],
+  "exclude": ["/node_modules/"],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/async"
@@ -112,8 +108,5 @@
     {
       "path": "../../sdk/config"
     }
-  ],
-  "ts-node": {
-    "swc": true
-  }
+  ]
 }

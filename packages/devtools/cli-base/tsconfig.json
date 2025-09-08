@@ -1,18 +1,10 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "types": [
-      "@dxos/typings",
-      "node"
-    ]
+    "lib": ["DOM", "ESNext"],
+    "types": ["@dxos/typings", "node"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../common/async"

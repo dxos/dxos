@@ -98,7 +98,8 @@
     "@types/react-dom": "~18.2.0",
     "oclif": "^4.15.12",
     "shx": "^0.3.3",
-    "undici": "*"
+    "undici": "*",
+    "ts-node": "10.9.1"
   },
   "peerDependencies": {
     "undici": "*"

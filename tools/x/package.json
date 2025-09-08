@@ -15,7 +15,7 @@
     "x": "./bin/x.js"
   },
   "scripts": {
-    "demo": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/main.tsx",
+    "demo": "vite-node ./src/main.tsx",
     "info": "tsc --showConfig | jq"
   },
   "dependencies": {

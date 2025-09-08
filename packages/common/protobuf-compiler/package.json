@@ -41,7 +41,6 @@
     "@types/mocha": "^10.0.7",
     "expect": "^27.0.2",
     "mocha": "^10.6.0",
-    "ts-node": "10.9.1",
     "typescript": "^5.9.2"
   },
   "peerDependencies": {
