@@ -1,14 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"]
   },
-  "include": [
-    "../live-object/src/define-hidden-property.ts",
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../../common/debug"
