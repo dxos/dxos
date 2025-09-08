@@ -15,7 +15,7 @@ export * from './json-schema';
 export * from './object';
 export * from './query';
 export * from './types';
-export * from './utils';
+export * from '../../../live-object/src/define-hidden-property';
 export * from './ref';
 export * from './projection';
 export * from './schema';

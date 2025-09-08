@@ -27,8 +27,8 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
@@ -41,8 +41,8 @@
   "devDependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6"
   },

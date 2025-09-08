@@ -36,9 +36,6 @@
       "path": "../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {

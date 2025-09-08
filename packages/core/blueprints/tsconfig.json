@@ -33,9 +33,6 @@
       "path": "../echo/echo"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
       "path": "../functions"
     }
   ]

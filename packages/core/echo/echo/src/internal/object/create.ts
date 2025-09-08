@@ -9,7 +9,7 @@ import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
 import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
-import { defineHiddenProperty } from '../utils';
+import { defineHiddenProperty } from '../../../../live-object/src/define-hidden-property';
 
 import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';

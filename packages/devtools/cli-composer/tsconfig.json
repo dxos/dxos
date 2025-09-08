@@ -4,7 +4,7 @@
     "emitDeclarationOnly": false,
     "outDir": "dist",
     "rootDirs": [
-      "./src" // <-- KEEP "./src" FIRST
+      "./src"
     ],
     "types": [
       "@dxos/typings",
@@ -43,7 +43,7 @@
       "path": "../../core/agent"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/live-object"

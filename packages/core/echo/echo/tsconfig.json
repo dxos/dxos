@@ -6,6 +6,7 @@
     ]
   },
   "include": [
+    "../live-object/src/define-hidden-property.ts",
     "src"
   ],
   "references": [
@@ -32,9 +33,6 @@
     },
     {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
     },
     {
       "path": "../echo-signals"
