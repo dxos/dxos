@@ -7,11 +7,12 @@ import { format, subDays } from 'date-fns';
 import { Array, Chunk, Console, Effect, Ref, Schedule, Schema, Stream, pipe } from 'effect';
 import { isNotNullable } from 'effect/Predicate';
 
-import { Obj, Type, DXN } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction, withAuthorization } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import { Mailbox } from '../types';
+// NOTE: Importing from types/index.ts pulls in @dxos/react-client dependencies.
+import { Mailbox } from '../types/mailbox';
 
 export default defineFunction({
   name: 'dxos.org/function/inbox/gmail-sync',
@@ -34,7 +35,7 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('running gmail sync', { mailboxId, userId, after, pageSize });
 
-      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
+      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
