@@ -97,40 +97,4 @@ export const deploy = Command.make(
       onSome: (space) => waitForSync(space),
     });
   }),
-  // Effect.fn(function* ({ file, name, version, script, functionId, spaceId }) {
-  //   const { scriptFileContent, bundledScript } = yield* loadScript(file);
-
-  //   const client = yield* ClientService;
-  //   const identity = client.halo.identity.get();
-  //   // TODO(wittjosiah): How to surface this error to the user?
-  //   invariant(identity, 'Identity not available');
-
-  //   yield* spaceId.pipe(
-  //     // TODO(wittjosiah): Feedback about invalid space ID.
-  //     Option.flatMap((spaceId) => (SpaceId.isValid(spaceId) ? Option.some(spaceId) : Option.none())),
-  //     Option.match({
-  //       onNone: () =>
-  //         upload({
-  //           functionId: Option.getOrUndefined(functionId),
-  //           name: Option.getOrUndefined(name),
-  //           version: Option.getOrUndefined(version),
-  //           ownerPublicKey: identity.identityKey,
-  //           bundledSource: bundledScript,
-  //         }),
-  //       onSome: (spaceId) =>
-  //         uploadToSpace({
-  //           functionId: Option.getOrUndefined(functionId),
-  //           name: Option.getOrUndefined(name),
-  //           version: Option.getOrUndefined(version),
-  //           client,
-  //           identity,
-  //           spaceId,
-  //           file,
-  //           script,
-  //           bundledScript,
-  //           scriptFileContent,
-  //         }),
-  //     }),
-  //   );
-  // }),
 ).pipe(Command.withDescription('Deploy a function to EDGE.'));

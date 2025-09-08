@@ -17,7 +17,7 @@ describe('Bundler', () => {
     }
   });
 
-  test.only('Basic', async () => {
+  test('Basic', async () => {
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
     const result = await bundler.bundle({ source: 'const x = 100' }); // TODO(burdon): Test import.
     assert(!('error' in result), 'error should not exist');

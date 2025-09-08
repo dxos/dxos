@@ -21,7 +21,7 @@ export const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataTy
 export const getNextVersion = (fnObject: Option.Option<FunctionType>) => {
   return Option.match(fnObject, {
     onNone: () => '0.0.1',
-    onSome: (fnObject) => incrementSemverPatch(fnObject.version ?? '0.0.0'),
+    onSome: (fnObject) => incrementSemverPatch(fnObject.version),
   });
 };
 
