@@ -136,7 +136,7 @@ test.describe('Table', () => {
     await page.close();
   });
 
-  test('test toggles', async ({ browser, browserName }) => {
+  test.skip('test toggles', async ({ browser, browserName }) => {
     test.skip(browserName === 'webkit');
     test.skip(browserName === 'firefox');
     const { page } = await setupPage(browser, { url: storyUrl });

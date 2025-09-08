@@ -8,7 +8,7 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
-import { Chat, ChatProgress, Toolbar } from '../../components';
+import { Chat, Toolbar } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
 import { Assistant } from '../../types';
@@ -47,7 +47,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
 
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
-        <ChatProgress chat={chat} />
+        {/* <ChatProgress chat={chat} /> */}
         <div className='p-4'>
           <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
         </div>

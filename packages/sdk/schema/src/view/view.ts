@@ -336,4 +336,9 @@ export const createDefaultSchema = () =>
         }),
     ),
     description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  }).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+  }).pipe(
+    Type.Obj({
+      typename: `example.com/type/${PublicKey.random().truncate()}`,
+      version: '0.1.0',
+    }),
+  );
