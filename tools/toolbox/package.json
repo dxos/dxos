@@ -18,7 +18,7 @@
   "main": "dist/src/main.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "toolbox": "tsx ./src/main.ts"
+    "toolbox": "vite-node ./src/main.ts"
   },
   "dependencies": {
     "chalk": "^4.1.0",

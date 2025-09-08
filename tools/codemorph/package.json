@@ -8,7 +8,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "scripts": {
-    "codemorph": "tsx ./src/main.ts"
+    "codemorph": "vite-node ./src/main.ts"
   },
   "dependencies": {
     "ts-morph": "^16.0.0"

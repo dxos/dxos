@@ -38,7 +38,7 @@
     "src"
   ],
   "scripts": {
-    "run:chat": "tsx ./bin/chat.ts"
+    "run:chat": "vite-node ./bin/chat.ts"
   },
   "dependencies": {
     "@automerge/automerge": "3.1.1",

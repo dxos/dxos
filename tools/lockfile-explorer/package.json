@@ -9,8 +9,8 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "lockfile-explorer": "tsx ./src/main.ts",
-    "watch": "tsx watch ./src/main.ts"
+    "lockfile-explorer": "vite-node ./src/main.ts",
+    "watch": "vite-node watch ./src/main.ts"
   },
   "dependencies": {
     "@dxos/util": "workspace:*",
