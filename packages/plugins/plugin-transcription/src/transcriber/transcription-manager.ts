@@ -90,19 +90,17 @@ export class TranscriptionManager extends Resource {
     return this;
   }
 
-  /**
-   * Enable or disable transcription.
-   * @param enabled - Whether to enable transcription.
-   */
-  @synchronized
-  async setEnabled(enabled?: boolean): Promise<void> {
+  async setEnabled(enabled: boolean): Promise<void> {
     if (this._enabled.value === enabled) {
       return;
     }
 
     this._enabled.value = enabled ?? false;
-    // TODO(burdon): Why is toggle called here?
-    this.isOpen && (await this._toggleTranscriber());
+    if (enabled) {
+      await this._maybeRestartTranscriber();
+    } else {
+      await this._stopTranscriber();
+    }
   }
 
   @synchronized
@@ -112,44 +110,19 @@ export class TranscriptionManager extends Resource {
     }
 
     this._audioStreamTrack = track;
-    this.isOpen && (await this._toggleTranscriber());
+    await this._maybeRestartTranscriber();
   }
 
   protected override async _open(): Promise<void> {
-    await this._toggleTranscriber();
+    await this._maybeRestartTranscriber();
   }
 
   protected override async _close(): Promise<void> {
-    void this._transcriber?.close();
+    await this._stopTranscriber();
   }
 
-  // TODO(burdon): Change this to setEnables (explicit), not toggle.
-  private async _toggleTranscriber(): Promise<void> {
-    await this._maybeReinitTranscriber();
-
-    // Open or close transcriber if transcription is enabled or disabled.
-    if (this._enabled.value) {
-      await this._transcriber?.open();
-      // TODO(burdon): Started and stopped blocks appear twice.
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ _tag: 'transcript', text: 'Started', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
-    } else {
-      await this._transcriber?.close();
-      const block = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        blocks: [{ _tag: 'transcript', text: 'Stopped', started: new Date().toISOString() }],
-        sender: { role: 'assistant' },
-      });
-      await this._queue?.append([block]);
-    }
-  }
-
-  private async _maybeReinitTranscriber(): Promise<void> {
-    if (!this._audioStreamTrack || !this._enabled.value) {
+  private async _maybeRestartTranscriber(): Promise<void> {
+    if (!this._audioStreamTrack || !this._enabled.value || !this.isOpen) {
       return;
     }
 
@@ -172,7 +145,13 @@ export class TranscriptionManager extends Resource {
         recorder: this._mediaRecorder,
         onSegments: (segments) => this._onSegments(segments),
       });
+
+      await this._transcriber?.open();
     }
+  }
+
+  private async _stopTranscriber(): Promise<void> {
+    await this._transcriber?.close();
   }
 
   private async _onSegments(segments: DataType.MessageBlock.Transcript[]): Promise<void> {

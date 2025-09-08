@@ -16,10 +16,11 @@ import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<DataType.Message>;
+  disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
   audioRef?: RefObject<HTMLAudioElement>;
-}> = ({ model, running, onRunningChange, audioRef }) => {
+}> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   const space = useSpace();
 
   return (
@@ -28,6 +29,7 @@ export const TranscriptionStory: FC<{
       <Toolbar.Root>
         <IconButton
           iconOnly
+          disabled={disabled}
           icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
           label={running ? 'Pause' : 'Play'}
           onClick={() => onRunningChange((running) => !running)}
