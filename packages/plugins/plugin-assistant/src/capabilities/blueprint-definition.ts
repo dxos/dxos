@@ -6,6 +6,7 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 import { templates } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
+import { syncLinearIssues, LINEAR_BLUEPRINT } from '@dxos/assistant-testing';
 
 import { analysis, list, load } from '../functions';
 
@@ -38,5 +39,7 @@ const blueprint = createBlueprint();
 
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
+  contributes(Capabilities.Functions, [syncLinearIssues]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
+  contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
 ];
