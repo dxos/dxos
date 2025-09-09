@@ -87,7 +87,7 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
         catch: AiAssistantError.wrap('Artifact diff resolution error'),
       });
 
-      log.info('version', { artifactDiff, versions });
+      log('version', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);

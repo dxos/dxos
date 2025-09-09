@@ -170,7 +170,7 @@ export namespace ContentBlock {
           .join(' '),
       duration && Unit.Duration(duration),
     ].filter(isNotFalsy);
-    return [message, paren(parts.join(' · '))].filter(Boolean).join(' ');
+    return [message, paren(parts.join(' · '))].filter(isNotFalsy).join(' ');
   };
 
   export const Base64ImageSource = Schema.Struct({

@@ -82,7 +82,7 @@ export const ChatMessage = ({
         return (
           <MessageItem key={idx} classNames={classNames} user={block._tag === 'text' && role === 'user'}>
             <ErrorBoundary data={block}>
-              <Component space={space} block={block} onEvent={onEvent} />
+              <Component space={space} block={block} debug={debug} onEvent={onEvent} />
             </ErrorBoundary>
           </MessageItem>
         );
@@ -106,6 +106,7 @@ export const ChatMessage = ({
 type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
+  debug?: boolean;
   onEvent?: (event: ChatEvent) => void;
 };
 
@@ -125,7 +126,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ node: { properties }, children, href, ...props }) => {
+          a: ({ node: { properties } = {}, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
                 // TODO(burdon): Check valid length (since serialized).
@@ -141,7 +142,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
               </Link>
             );
           },
-          img: ({ node: { properties } }) => {
+
+          img: ({ node: { properties } = {} }) => {
             const client = useClient();
             if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
               try {
@@ -215,10 +217,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Summary
   //
-  ['summary' as const]: ({ block }) => {
+  ['summary' as const]: ({ block, debug }) => {
     invariant(block._tag === 'summary');
 
-    const summary = ContentBlock.createSummaryMessage(block, false);
+    const summary = ContentBlock.createSummaryMessage(block, debug);
     return <div className='text-sm text-subdued'>{summary}</div>;
   },
 
@@ -329,6 +331,6 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
   `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
-// TODO(burdon): Move to parser.
+// TODO(burdon): Move to parser?
 const preprocessTextContent = (content: string) =>
   content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);
