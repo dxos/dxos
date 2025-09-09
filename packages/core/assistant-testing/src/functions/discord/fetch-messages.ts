@@ -49,15 +49,10 @@ const DiscordConfigFromCredential = Layer.unwrapEffect(
   Effect.gen(function* () {
     return DiscordConfig.layer({
       token: yield* CredentialsService.getApiKey({ service: 'discord.com' }),
+      rest: {
+        baseUrl: 'https://api-proxy.dxos.workers.dev/discord.com/api/v10',
+      },
     });
-  }),
-);
-
-const DisableHttpTracing = Layer.effect(
-  HttpClient.HttpClient,
-  Effect.gen(function* () {
-    const client = yield* HttpClient.HttpClient;
-    return client.pipe();
   }),
 );
 
@@ -201,14 +196,7 @@ export default defineFunction({
     },
     Effect.provide(
       DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
-        Layer.provide(
-          Layer.effect(
-            HttpClient.HttpClient,
-            HttpClient.HttpClient.pipe(Effect.provide(FetchHttpClient.layer)).pipe(
-              Effect.map(HttpClient.withTracerDisabledWhen(() => true)),
-            ),
-          ),
-        ),
+        Layer.provide(FetchHttpClient.layer),
       ),
     ),
     Effect.orDie,
