@@ -75,27 +75,6 @@ export default (context: PluginContext) =>
                   },
                 },
               },
-              {
-                id: `${LayoutAction.UpdateDialog._tag}/assistant/setup-linear-token`,
-                data: async () => {
-                  const client = context.getCapability(ClientCapabilities.Client);
-                  const space = getActiveSpace(context) ?? client.spaces.default;
-
-                  const token = prompt('Enter Linear API token');
-                  if (!token) {
-                    return;
-                  }
-
-                  space.db.add(Obj.make(DataType.AccessToken, { source: 'linear.app', token }));
-                  await space.db.flush({ indexes: true });
-                },
-                properties: {
-                  label: ['setup linear token label', { ns: meta.id }],
-                  icon: 'ph--sparkle--regular',
-                  disposition: 'pin-end',
-                  position: 'hoist',
-                },
-              },
             ]),
             Option.getOrElse(() => []),
           ),
