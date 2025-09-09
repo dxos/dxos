@@ -22,6 +22,8 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);
+  const [showServiceHistory, setShowServiceHistory] = useState(false);
+  const handleToggleServiceHistory = () => setShowServiceHistory(!showServiceHistory);
 
   const handleCopyRaw = async () => {
     await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
@@ -79,10 +81,19 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
             <Input.Label classNames={'text-sm'}>{t('show webrtc stats title')}</Input.Label>
             <Input.Checkbox checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
           </Input.Root>
-          <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
+        </div>
+        <div className='flex items-center gap-2'>
+          <Input.Root>
+            <Input.Label classNames={'text-sm'}>{t('show calls history title')}</Input.Label>
+            <Input.Checkbox checked={showServiceHistory} onCheckedChange={handleToggleServiceHistory} />
+          </Input.Root>
+        </div>
+        <div className='flex items-center gap-2'>
+          <IconButton classNames={'text-sm'} icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
         </div>
         <Table rows={rows} />
         {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
+        {showServiceHistory && <JsonView data={{ history: state?.media.peer?.history.get() }} />}
       </div>
     </Panel>
   );
@@ -121,14 +132,18 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
       '*self* ' + (self?.name ?? truncateKey(self!.id, 8)),
       self?.tracks?.audio && state.media.pushedAudioTrack ? 'AUD ✅' : 'AUD ❌',
       self?.tracks?.video && state.media.pushedVideoTrack ? 'VID ✅' : 'VID ❌',
-      self?.tracks?.screenshare && state.media.pushedScreenshareTrack ? 'SCR ✅' : 'SCR ❌',
+      self?.tracks?.screenshareEnabled
+        ? self.tracks.screenshareEnabled && state.media.pushedScreenshareTrack
+          ? 'SCR ✅'
+          : 'SCR ❌'
+        : undefined,
     ],
 
     ...users.map((user) => [
       user.name ?? truncateKey(user.id, 8),
       user.isOk.audio ? 'AUD ✅' : 'AUD ❌',
       user.isOk.video ? 'VID ✅' : 'VID ❌',
-      user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌',
+      user.tracks?.screenshareEnabled ? (user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌') : undefined,
     ]),
     ['ICE', state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection'],
   ];
@@ -139,7 +154,7 @@ export namespace Unit {
 }
 
 export type TableProps = {
-  rows: (string | number)[][];
+  rows: (string | number | undefined)[][];
 };
 
 export const Table = ({ rows }: TableProps) => {

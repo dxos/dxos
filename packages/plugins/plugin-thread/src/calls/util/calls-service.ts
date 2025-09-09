@@ -33,12 +33,14 @@ export type CallsServiceConfig = {
 
 export type HistoryRecord =
   | {
+      endpoint: string;
       type: 'request';
       time: string;
       method: string;
       body: any;
     }
   | {
+      endpoint: string;
       type: 'response';
       time: string;
       status: number;
@@ -116,7 +118,7 @@ export class CallsServicePeer extends Resource {
     });
     peerConnection.addEventListener('connectionstatechange', () => {
       if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'closed') {
-        log.warn('calls connection failed', { state: peerConnection.connectionState });
+        log.info('calls connection failed', { state: peerConnection.connectionState });
         void this._persistentLifecycle.scheduleRestart();
       }
     });
@@ -125,7 +127,7 @@ export class CallsServicePeer extends Resource {
     peerConnection.addEventListener('iceconnectionstatechange', () => {
       clearTimeout(iceTimeout);
       if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
-        log.warn('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
+        log.info('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
         void this._persistentLifecycle.scheduleRestart();
       } else if (peerConnection.iceConnectionState === 'disconnected') {
         // TODO(mykola): we should start to inspect the connection stats from here on for
@@ -138,7 +140,7 @@ export class CallsServicePeer extends Resource {
             return;
           }
 
-          log.warn('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
+          log.info('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
           void this._persistentLifecycle.scheduleRestart();
         }, timeoutSeconds * 1_000);
       }
@@ -155,6 +157,7 @@ export class CallsServicePeer extends Resource {
 
   private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit): Promise<T> {
     this.history.push({
+      endpoint: relativePath,
       type: 'request',
       time: new Date().toISOString(),
       method: requestInit?.method ?? 'GET',
@@ -170,6 +173,7 @@ export class CallsServicePeer extends Resource {
     try {
       const data = (await response.clone().json()) as T;
       this.history.push({
+        endpoint: relativePath,
         type: 'response',
         time: new Date().toISOString(),
         status: response.status,
@@ -183,6 +187,7 @@ export class CallsServicePeer extends Resource {
     } catch (error) {
       const text = await response.text();
       this.history.push({
+        endpoint: relativePath,
         type: 'response',
         time: new Date().toISOString(),
         status: response.status,
@@ -252,7 +257,7 @@ export class CallsServicePeer extends Resource {
           // we wait for the transceiver to start sending data before we emit
           // the track metadata to ensure that the track will be able to be
           // pulled before making the metadata available to anyone else.
-          await waitForTransceiverToSendData(ctx, transceiver);
+          // await waitForTransceiverToSendData(ctx, transceiver);
           return {
             ...trackData,
             sessionId,
@@ -406,7 +411,7 @@ export class CallsServicePeer extends Resource {
             })
             .catch((err) => log.catch(err));
         } else {
-          log.warn('missing track info', { trackData, availableTracks: Array.from(trackMap.keys()) });
+          log.info('missing track info', { trackData, availableTracks: Array.from(trackMap.keys()) });
         }
       });
 
@@ -534,7 +539,7 @@ const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
 const INITIAL_DELAY = 50;
 const MAX_DELAY = 500;
 const MAX_RETRIES = 20;
-const WAIT_FOR_DATA_TIMEOUT = 5_000;
+const WAIT_FOR_DATA_TIMEOUT = 10_000;
 
 const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTransceiver): Promise<void> => {
   let delay = INITIAL_DELAY;
