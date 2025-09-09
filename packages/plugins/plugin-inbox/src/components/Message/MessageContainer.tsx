@@ -24,9 +24,10 @@ export type MessageContainerProps = {
   space?: Space;
   message?: DataType.Message;
   inMailbox: Mailbox.Mailbox;
+  role?: string;
 };
 
-export const MessageContainer = ({ space, message, inMailbox }: MessageContainerProps) => {
+export const MessageContainer = ({ space, message, inMailbox, role }: MessageContainerProps) => {
   const { t } = useTranslation(INBOX_PLUGIN);
 
   const hasEnrichedContent = useMemo(() => {
@@ -81,6 +82,7 @@ export const MessageContainer = ({ space, message, inMailbox }: MessageContainer
         viewMode={viewMode.value}
         hasEnrichedContent={hasEnrichedContent}
         contactDxn={contactDxn.value}
+        role={role}
       />
     </StackItem.Content>
   );

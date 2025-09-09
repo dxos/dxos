@@ -13,7 +13,6 @@ import {
   createRenderer,
   createThemeExtensions,
   decorateMarkdown,
-  editorWidth,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -94,7 +93,7 @@ export const TranscriptView = ({
   return (
     <div
       ref={parentRef}
-      className={mx('flex grow overflow-hidden', editorWidth, classNames)}
+      className={mx('flex grow overflow-hidden container-max-width', classNames)}
       data-popover-collision-boundary={true}
     />
   );

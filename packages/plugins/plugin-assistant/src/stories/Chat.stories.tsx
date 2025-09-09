@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
@@ -27,8 +27,8 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
-import { useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
@@ -36,6 +36,7 @@ import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
+import { useContextBinder } from '../hooks';
 import { createTestMailbox, createTestTranscription } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
@@ -47,13 +48,12 @@ import {
   type ComponentProps,
   GraphContainer,
   MessageContainer,
-  SurfaceContainer,
   TasksContainer,
   TokenManagerContainer,
 } from './components';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
-const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden';
+const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
 const DefaultStory = ({
   debug = true,
@@ -104,6 +104,13 @@ const DefaultStory = ({
     }
   }, []);
 
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const binder = useContextBinder(chats.at(-1));
+  const objects = useSignalsMemo(
+    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
+    [binder],
+  );
+
   if (!space) {
     return null;
   }
@@ -126,8 +133,7 @@ const DefaultStory = ({
               orientation='vertical'
               size={i > 0 ? 'contain' : 'split'}
               rail={false}
-              itemsCount={plankComponents.length}
-              classNames='gap-[--stack-gap]'
+              itemsCount={plankComponents.length + (i > 0 ? objects.length : 0)}
             >
               {Components.map((Component) => {
                 const item = (
@@ -138,7 +144,21 @@ const DefaultStory = ({
                 j += 1;
                 return item;
               })}
-              {renderSurfaces && <SurfaceContainer space={space} debug={debug} indexOffset={j} />}
+              {renderSurfaces &&
+                objects.map((object, index) => {
+                  const k = index + j;
+                  return (
+                    <StackItem.Root key={k} order={k + 1} item={{ id: `${k}` }} classNames={panelClassNames}>
+                      {debug && (
+                        <div role='heading' className='flex gap-2 items-center text-xs justify-center text-subdued'>
+                          <span>{Obj.getTypename(object)}</span>
+                          <span>{object.id}</span>
+                        </div>
+                      )}
+                      <Surface role='section' limit={1} data={{ subject: object }} />
+                    </StackItem.Root>
+                  );
+                })}
             </Stack>
           </StackItem.Root>
         );
