@@ -533,8 +533,8 @@ const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
 
 const INITIAL_DELAY = 50;
 const MAX_DELAY = 500;
-const MAX_RETRIES = 50;
-const WAIT_FOR_DATA_TIMEOUT = 20_000;
+const MAX_RETRIES = 20;
+const WAIT_FOR_DATA_TIMEOUT = 5_000;
 
 const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTransceiver): Promise<void> => {
   let delay = INITIAL_DELAY;
