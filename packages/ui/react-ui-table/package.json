@@ -106,7 +106,7 @@
     "@types/lodash.orderby": "^4.6.9",
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "effect": "3.17.13",
+    "effect": "3.17.7",
     "fast-check": "^3.19.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",

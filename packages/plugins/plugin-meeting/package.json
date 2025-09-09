@@ -88,7 +88,7 @@
     "@effect-rx/rx-react": "0.38.0",
     "@effect/platform": "0.90.2",
     "@types/react": "~18.2.0",
-    "effect": "3.17.13",
+    "effect": "3.17.7",
     "preact": "~10.11.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
