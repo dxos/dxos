@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 import { buf } from '@dxos/protocols/buf';
 import {
   type ActivitySchema,
@@ -61,10 +62,13 @@ export type EncodedTrackName = string & { __brand: 'EncodedTrackName' };
 
 export const TrackNameCodec = {
   encode: (trackData: TrackObject): EncodedTrackName => {
-    return (trackData.sessionId + '/' + trackData.trackName) as EncodedTrackName;
+    invariant(trackData.sessionId);
+    invariant(trackData.trackName);
+    invariant(trackData.mid);
+    return (trackData.sessionId + '/' + trackData.trackName + '/' + trackData.mid) as EncodedTrackName;
   },
   decode: (name: EncodedTrackName): TrackObject => {
-    const [sessionId, trackName] = name.split('/');
-    return { sessionId, trackName, location: 'remote' };
+    const [sessionId, trackName, mid] = name.split('/');
+    return { sessionId, trackName, location: 'remote', mid };
   },
 };

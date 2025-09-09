@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { truncateKey } from '@dxos/debug';
-import { Panel } from '@dxos/devtools';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { JsonView, Panel } from '@dxos/devtools';
+import { log } from '@dxos/log';
+import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { type EncodedTrackName, type GlobalState } from '../calls';
 import { meta } from '../meta';
@@ -17,45 +19,48 @@ export type CallDebugPanelProps = ThemedClassName<{
 
 export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const users = state?.call?.users;
-  const self = state?.call?.self;
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);
 
   const handleCopyRaw = async () => {
-    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users }, null, 2));
+    await navigator.clipboard.writeText(JSON.stringify({ users: state?.call?.users, stats }, null, 2));
   };
 
-  // const webrtcStats = useMemo(
-  //   () =>
-  //     new WebRTCStats({
-  //       getStatsInterval: 1000,
-  //     }),
-  //   [],
-  // );
-  // const [stats, setStats] = useState<Record<string, any>>({});
+  const [showDetailedWebRTCStats, setShowDetailedWebRTCStats] = useState(false);
+  const handleShowDetailedWebRTCStats = () => setShowDetailedWebRTCStats(!showDetailedWebRTCStats);
 
-  // useEffect(() => {
-  //   const pc = state?.media.peer?.session?.peerConnection;
-  //   const handleStats = (stats: Record<string, any>) => setStats(stats.data);
-  //   let added = false;
-  //   if (pc) {
-  //     webrtcStats.addConnection({ pc, peerId: 1, connectionId: '1' });
-  //     webrtcStats.on('stats', handleStats);
-  //     added = true;
-  //   }
-  //   return () => {
-  //     try {
-  //       if (pc && added) {
-  //         webrtcStats.removeConnection({ pc });
-  //         webrtcStats.removeListener('stats', handleStats);
-  //       }
-  //     } catch (error) {
-  //       log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
-  //     }
-  //   };
-  // }, [state?.media.peer?.session?.peerConnection]);
+  const webrtcStats = useMemo(
+    () =>
+      new WebRTCStats({
+        getStatsInterval: 1000,
+      }),
+    [],
+  );
+  const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
+
+  useEffect(() => {
+    const pc = state?.media.peer?.session?.peerConnection;
+    const handleStats = (stats: WebRTCStatsEvent) => {
+      setStats(stats.data);
+    };
+    let added = false;
+    if (pc && showDetailedWebRTCStats) {
+      webrtcStats.addConnection({ pc, peerId: 1, connectionId: '1' });
+      webrtcStats.on('stats', handleStats as never);
+      added = true;
+    }
+    return () => {
+      try {
+        if (pc && added) {
+          webrtcStats.removeConnection({ pc });
+          webrtcStats.removeListener('stats', handleStats as never);
+        }
+      } catch (error) {
+        log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
+      }
+    };
+  }, [state?.media.peer?.session?.peerConnection, showDetailedWebRTCStats]);
 
   const rows = useMemo(() => getCallStatusTable(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
@@ -69,14 +74,15 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       maxHeight={false}
     >
       <div className='flex flex-col w-full gap-2 text-xs'>
-        {/* <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2'>
           <Input.Root>
             <Input.Label classNames={'text-sm'}>{t('show webrtc stats title')}</Input.Label>
             <Input.Checkbox checked={showDetailedWebRTCStats} onCheckedChange={handleShowDetailedWebRTCStats} />
-          </Input.Root>   
+          </Input.Root>
           <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
-        </div> */}
+        </div>
         <Table rows={rows} />
+        {showDetailedWebRTCStats && <JsonView data={{ stats }} />}
       </div>
     </Panel>
   );
@@ -88,7 +94,26 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
   }
 
   const self = state.call.self;
-  const users = state.call.users.filter((user) => user.id !== self!.id);
+  const users = state.call.users
+    .filter((user) => user.id !== self!.id)
+    .map((user) => {
+      const isOk = {
+        audio:
+          user.tracks?.audio &&
+          state.media.pulledAudioTracks[user.tracks?.audio as EncodedTrackName]?.ctx.disposed === false,
+        video:
+          user.tracks?.video &&
+          state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName]?.ctx.disposed === false,
+        screenshare:
+          user.tracks?.screenshare &&
+          state.media.pulledAudioTracks[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
+      };
+
+      return {
+        ...user,
+        isOk,
+      };
+    });
 
   return [
     ['users', state.call.users.length ?? 0],
@@ -98,20 +123,14 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
       self?.tracks?.video && state.media.pushedVideoTrack ? 'VID ✅' : 'VID ❌',
       self?.tracks?.screenshare && state.media.pushedScreenshareTrack ? 'SCR ✅' : 'SCR ❌',
     ],
+
     ...users.map((user) => [
       user.name ?? truncateKey(user.id, 8),
-      user.tracks?.audio && state.media.pulledAudioTracks[user.tracks.audio as EncodedTrackName]?.ctx.disposed === false
-        ? 'AUD ✅'
-        : 'AUD ❌',
-      user.tracks?.video &&
-      state.media.pulledVideoStreams[user.tracks.video as EncodedTrackName]?.ctx.disposed === false
-        ? 'VID ✅'
-        : 'VID ❌',
-      user.tracks?.screenshare &&
-      state.media.pulledAudioTracks[user.tracks.screenshare as EncodedTrackName]?.ctx.disposed === false
-        ? 'SCR ✅'
-        : 'SCR ❌',
+      user.isOk.audio ? 'AUD ✅' : 'AUD ❌',
+      user.isOk.video ? 'VID ✅' : 'VID ❌',
+      user.isOk.screenshare ? 'SCR ✅' : 'SCR ❌',
     ]),
+    ['ICE', state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection'],
   ];
 };
 
