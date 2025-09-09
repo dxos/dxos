@@ -122,7 +122,7 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
 
   const title = useMemo(() => {
     const lines = items.map((item) => item.title).filter(isNotFalsy);
-    return <TextCrawl key='status-roll' lines={lines} autoAdvance />;
+    return <TextCrawl key='status-roll' lines={lines} />;
   }, [items]);
 
   const data = items[selected].content;

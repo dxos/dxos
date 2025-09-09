@@ -31,8 +31,8 @@ export type MessageProps = ThemedClassName<{
 }>;
 
 export const Message = ({ space, message, viewMode, contactDxn, classNames }: MessageProps) => {
-  const client = useClient();
   const { themeMode } = useThemeContext();
+  const client = useClient();
 
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
