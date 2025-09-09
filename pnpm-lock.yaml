@@ -5468,6 +5468,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-testing':
+        specifier: workspace:*
+        version: link:../../core/assistant-testing
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5691,9 +5694,6 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@18.2.0)
     devDependencies:
-      '@dxos/assistant-testing':
-        specifier: workspace:*
-        version: link:../../core/assistant-testing
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
