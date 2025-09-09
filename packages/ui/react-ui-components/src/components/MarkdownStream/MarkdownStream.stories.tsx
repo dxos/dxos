@@ -12,18 +12,28 @@ import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useStreamingText } from '../../hooks';
 
-import { type StreamingOptions, streamWords, useStreamingGenerator } from './testing';
-import content from './testing/short.md?raw';
-import { Markdown } from './Typewriter';
+import { MarkdownContent } from './MarkdownContent';
+import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
+import { type TextStreamOptions, textStream, useTextStream } from './testing';
+import doc1 from './testing/doc-1.md?raw';
+import doc2 from './testing/doc-2.md?raw';
 
-const DefaultStory = ({ stream = false, ...options }: StreamingOptions & { stream?: boolean }) => {
+const testOptions: TextStreamOptions = {
+  chunkDelay: 200,
+  variance: 0.5,
+  wordsPerChunk: 5,
+};
+
+type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
+
+const DefaultStory = ({ content = '', options, streamOptions = testOptions }: StoryProps) => {
   const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
-  const [text, isStreaming] = useStreamingGenerator(generator);
+  const [text, isStreaming] = useTextStream(generator);
   const [str] = useStreamingText(text, 5);
 
   const handleStart = useCallback(() => {
-    setGenerator(streamWords(content, options));
-  }, []);
+    setGenerator(textStream(content, streamOptions));
+  }, [content]);
 
   const handleReset = useCallback(() => {
     setGenerator(null);
@@ -42,14 +52,14 @@ const DefaultStory = ({ stream = false, ...options }: StreamingOptions & { strea
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grow overflow-hidden'>
-        <Markdown content={stream ? str : text} options={{ autoScroll: true, fadeIn: true, cursor: true }} />
+        <MarkdownStream content={str} options={options} />
       </div>
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-components/Typewriter',
+  title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
   parameters: {
@@ -63,21 +73,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    chunkDelay: 300,
-    variance: 0.5,
-    wordsPerChunk: 5,
+    content: doc2,
   },
 };
 
 export const Streaming: Story = {
   args: {
-    stream: true,
-    chunkDelay: 300,
-    variance: 0.5,
-    wordsPerChunk: 5,
+    content: doc2,
+    options: {
+      autoScroll: true,
+      fadeIn: true,
+      cursor: true,
+    },
   },
 };
 
 export const Components = () => {
-  return <Markdown content={content} options={{ autoScroll: true, fadeIn: true, cursor: true }} />;
+  return <MarkdownContent content={doc1} />;
 };

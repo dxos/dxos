@@ -4,7 +4,9 @@
 
 import { type EditorView, WidgetType } from '@codemirror/view';
 import { type ComponentType, type ReactElement, createElement } from 'react';
-import { type Root, createRoot } from 'react-dom/client';
+import { type Root } from 'react-dom/client';
+
+import { renderRoot } from '@dxos/react-ui-editor';
 
 /**
  *
@@ -21,9 +23,8 @@ export class ReactWidget<Props extends {} = {}> extends WidgetType {
 
   override toDOM(_view: EditorView): HTMLElement {
     const container = document.createElement('span');
-    const root = createRoot(container);
     const element: ReactElement<Props> = createElement(this.component, this.props);
-    root.render(element);
+    const root = renderRoot(container, element);
 
     // Store root for cleanup.
     (container as any)._reactRoot = root;

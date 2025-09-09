@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 /**
  * Options for the streaming text generator.
  */
-export type StreamingOptions = {
+export type TextStreamOptions = {
   /** Delay between chunks in ms. */
   chunkDelay?: number;
   /** Variance in timing (0-1). */
@@ -19,9 +19,9 @@ export type StreamingOptions = {
 /**
  * Simulates word-by-word streaming (more natural for LLMs).
  */
-export async function* streamWords(
+export async function* textStream(
   text: string,
-  options: StreamingOptions = {},
+  options: TextStreamOptions = {},
 ): AsyncGenerator<string, void, unknown> {
   const { chunkDelay = 100, variance = 0.3, wordsPerChunk = 3 } = options;
 
@@ -60,7 +60,8 @@ export async function* streamWords(
 /**
  * React hook to consume a streaming generator.
  */
-export function useStreamingGenerator(generator: AsyncGenerator<string, void, unknown> | null): [string, boolean] {
+// TODO(burdon): Reconcile with useStreamngText.
+export function useTextStream(generator: AsyncGenerator<string, void, unknown> | null): [string, boolean] {
   const [text, setText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 

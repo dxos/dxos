@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
 import { EditorView } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
 
-export type TypewriterOptions = {
+export type StreamerOptions = {
   cursor?: boolean;
   fadeIn?: boolean;
   autoScroll?: boolean;
@@ -17,7 +17,7 @@ export type TypewriterOptions = {
 /**
  * Extension that adds a blinking cursor widget at the end of the document.
  */
-export const typewriter = (options: TypewriterOptions = {}): Extension => {
+export const streamer = (options: StreamerOptions = {}): Extension => {
   return [options.cursor && cursor(), options.fadeIn && fadeIn(), options.autoScroll && autoScroll()].filter(
     isNotFalsy,
   );

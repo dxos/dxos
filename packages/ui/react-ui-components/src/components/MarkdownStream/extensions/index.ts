@@ -3,5 +3,5 @@
 //
 
 export * from './extended-markdown';
-export * from './typewriter';
+export * from './streamer';
 export * from './xml-tags';

@@ -9,7 +9,7 @@ import { useDynamicRef } from '@dxos/react-ui';
 /**
  * Streams text character by character with a delay.
  */
-export const useStreamingText = (text: string, delay = 10): [string, boolean] => {
+export const useStreamingText = (text = '', delay = 10): [string, boolean] => {
   const [current, setCurrent] = useState('');
   const currentRef = useDynamicRef(current);
 

@@ -6,9 +6,10 @@ import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
+import { type FC } from 'react';
 
+import { Fallback, Prompt } from './components';
 import { ReactWidget } from './ReactWidget';
-import { Test, type TestProps } from './Test';
 
 export type XmlTagOptions = {};
 
@@ -49,10 +50,12 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
         case 'Element': {
           const tagName = getTagName(state, node.node);
           if (tagName) {
+            // console.log(node.node);
+            const Component = componentRegistry[tagName] || Fallback;
+            const props = { tagName };
             decorations.push(
               Decoration.replace({
-                widget: new ReactWidget<TestProps>(Test, { tagName }),
-                side: 1,
+                widget: new ReactWidget(Component, props),
               }).range(node.node.from, node.node.to),
             );
           }
@@ -65,6 +68,10 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
 
   return Decoration.set(decorations);
 }
+
+const componentRegistry: Record<string, FC> = {
+  prompt: Prompt,
+};
 
 /**
  * Get tag name by finding the first TagName node within this Element.

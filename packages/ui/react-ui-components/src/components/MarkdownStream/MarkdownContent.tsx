@@ -6,42 +6,27 @@ import { useEffect } from '@preact-signals/safe-react/react';
 import React from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { useTextEditor } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { createBasicExtensions, createThemeExtensions, decorateMarkdown, useTextEditor } from '@dxos/react-ui-editor';
 
-import { useStreamingText } from '../../hooks';
+import { type StreamerOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
 
-import { type TypewriterOptions, extendedMarkdown, xmlTags } from './extensions';
-
-export type TypewriterProps = ThemedClassName<{
-  text: string;
-  cps?: number;
-  options?: TypewriterOptions;
+export type MarkdownContentProps = ThemedClassName<{
+  content?: string;
+  options?: StreamerOptions;
 }>;
 
-// TODO(burdon): Remove.
-export const Typewriter = ({ classNames, text, cps, options }: TypewriterProps) => {
-  const [str] = useStreamingText(text, cps);
-  return (
-    <div className={mx('inline-block', classNames)}>
-      <Markdown content={str} options={options} />
-    </div>
-  );
-};
-
-// TODO(burdon): Thread?
-export const Markdown = ({ content = '', options }: { content?: string; options?: TypewriterOptions }) => {
+export const MarkdownContent = ({ content = '', options }: MarkdownContentProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor(
     {
       initialValue: content,
       extensions: [
-        // createBasicExtensions({ lineWrapping: true, readOnly: true }),
-        // createThemeExtensions({ themeMode }),
+        createBasicExtensions({ lineWrapping: true, readOnly: true }),
+        createThemeExtensions({ themeMode }),
         // createMarkdownExtensions({ themeMode }),
         extendedMarkdown(),
-        // decorateMarkdown(),
-        // typewriter(options),
+        decorateMarkdown(),
+        streamer(options),
         xmlTags(),
       ],
     },
