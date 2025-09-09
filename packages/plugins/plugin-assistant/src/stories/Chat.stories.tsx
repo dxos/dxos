@@ -54,6 +54,8 @@ import {
 } from './components';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
+const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden';
+
 const DefaultStory = ({
   debug = true,
   deckComponents,
@@ -112,14 +114,20 @@ const DefaultStory = ({
       orientation='horizontal'
       size='split'
       rail={false}
-      classNames='absolute inset-0'
+      classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
     >
       {deckComponents.map((plankComponents, i) => (
-        <StackItem.Root item={{ id: `${i}` }} key={i}>
-          <Stack orientation='vertical' size='split' rail={false} itemsCount={plankComponents.length}>
+        <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+          <Stack
+            orientation='vertical'
+            size='split'
+            rail={false}
+            itemsCount={plankComponents.length}
+            classNames='gap-[--stack-gap]'
+          >
             {plankComponents.map((Component, j) => (
-              <StackItem.Root key={j} item={{ id: `${i}:${j}` }}>
+              <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
                 <Component space={space} debug={debug} onEvent={handleEvent} />
               </StackItem.Root>
             ))}

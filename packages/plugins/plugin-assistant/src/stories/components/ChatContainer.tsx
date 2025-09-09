@@ -38,7 +38,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
 
   return !chat || !processor ? null : (
     <StackItem.Content toolbar>
-      <div role='none' className='flex items-center gap-2'>
+      <div role='none' className='flex items-center gap-2 pie-2'>
         <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
         <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />

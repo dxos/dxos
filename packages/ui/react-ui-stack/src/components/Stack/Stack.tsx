@@ -66,7 +66,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
-        `repeat(${itemsCount}, ${size === 'split' ? `${(100 / itemsCount).toFixed(2)}%` : 'min-content'}) [tabster-dummies] 0`,
+        size === 'split' ? `repeat(${itemsCount}, 1fr)` : `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
       ...style,
     };
 
@@ -99,7 +99,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const gridClasses = useMemo(() => {
       if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 pli-1' : 'grid-cols-1 plb-1';
+        return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
       }
       if (orientation === 'horizontal') {
         return size === 'contain-fit-content' ? railGridHorizontalContainFitContent : railGridHorizontal;
@@ -130,7 +130,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           {...props}
           {...arrowNavigationAttrs}
           className={mx(
-            'grid relative',
+            'grid relative [--stack-gap:var(--dx-trimXs)]',
             gridClasses,
             (size === 'contain' || size === 'contain-fit-content') &&
               (orientation === 'horizontal'
