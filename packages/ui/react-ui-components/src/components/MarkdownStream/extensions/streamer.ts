@@ -28,11 +28,14 @@ export const streamer = (options: StreamerOptions = {}): Extension => {
  */
 class CursorWidget extends WidgetType {
   toDOM() {
+    const root = document.createElement('span');
+    root.style.opacity = '0.2';
     const span = document.createElement('span');
     span.textContent = '▌';
     span.style.marginLeft = '2px';
     span.style.animation = 'blink 1s infinite';
-    return span;
+    root.appendChild(span);
+    return root;
   }
 }
 
@@ -132,6 +135,7 @@ const fadeIn = (): Extension => {
 /**
  * Extension that automatically scrolls to the bottom when content is added.
  */
+// TODO(burdon): Stop auto-scrolling if user scrolls.
 const autoScroll = (overscroll = 160, throttle = 2_000) => {
   let isThrottled = false;
 

@@ -3,12 +3,20 @@
 //
 
 import { useEffect } from '@preact-signals/safe-react/react';
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, decorateMarkdown, useTextEditor } from '@dxos/react-ui-editor';
 
-import { type StreamerOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
+import { Fallback, Prompt } from './components';
+import { type StreamerOptions, type XmlComponentProps, extendedMarkdown, streamer, xmlTags } from './extensions';
+
+// TODO(burdon): Factor out.
+const components: Record<string, FC<XmlComponentProps>> = {
+  prompt: Prompt,
+};
+
+const factory = (tag: string) => components[tag] ?? Fallback;
 
 export type MarkdownContentProps = ThemedClassName<{
   content?: string;
@@ -27,7 +35,7 @@ export const MarkdownContent = ({ content = '', options }: MarkdownContentProps)
         extendedMarkdown(),
         decorateMarkdown(),
         streamer(options),
-        xmlTags(),
+        xmlTags({ factory }),
       ],
     },
     [themeMode],

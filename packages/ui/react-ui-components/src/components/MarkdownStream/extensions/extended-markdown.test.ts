@@ -9,9 +9,8 @@ import { describe, test } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-// import content from '../testing/short.md?raw';
-
 import { extendedMarkdown } from './extended-markdown';
+import { nodeToJson } from './xml-util';
 
 describe('extended-markdown', () => {
   const createEditorState = (doc: string) => {
@@ -57,19 +56,44 @@ describe('extended-markdown', () => {
     expect(
       nodes.map((node) => ({
         content: doc.slice(node.from, node.to),
+        data: nodeToJson(state, node.node),
       })),
     ).toEqual([
       {
         content: '<prompt>\n  Hello\n</prompt>',
+        data: {
+          tag: 'prompt',
+          children: ['Hello'],
+        },
       },
       {
         content: '<suggest>Summarize tools</suggest>',
+        data: {
+          tag: 'suggest',
+          children: ['Summarize tools'],
+        },
       },
       {
         content: '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>',
+        data: {
+          tag: 'choice',
+          children: [
+            {
+              tag: 'option',
+              children: ['Summarize tools'],
+            },
+            {
+              tag: 'option',
+              children: ['Retry'],
+            },
+          ],
+        },
       },
       {
         content: '<toolkit />',
+        data: {
+          tag: 'toolkit',
+        },
       },
     ]);
   });

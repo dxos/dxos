@@ -5,26 +5,30 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
-import { type SyntaxNode } from '@lezer/common';
 import { type FC } from 'react';
 
-import { Fallback, Prompt } from './components';
 import { ReactWidget } from './ReactWidget';
+import { nodeToJson } from './xml-util';
 
-export type XmlTagOptions = {};
+export type XmlComponentProps<TProps = any> = { tag: string } & TProps;
+export type XmlComponentFactory = (tag: string) => FC<XmlComponentProps> | undefined;
+
+export type XmlTagOptions = {
+  factory?: XmlComponentFactory;
+};
 
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
-export const xmlTags = (_options: XmlTagOptions = {}): Extension => {
+export const xmlTags = ({ factory }: XmlTagOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        return createXmlTagDecorations(state);
+        return createXmlTagDecorations(state, factory);
       },
       update: (decorations, tr) => {
         if (tr.docChanged) {
-          return createXmlTagDecorations(tr.state);
+          return createXmlTagDecorations(tr.state, factory);
         }
 
         return decorations.map(tr.changes);
@@ -37,7 +41,7 @@ export const xmlTags = (_options: XmlTagOptions = {}): Extension => {
 /**
  * Creates decorations for XML tags in the document using the syntax tree.
  */
-function createXmlTagDecorations(state: EditorState): DecorationSet {
+function createXmlTagDecorations(state: EditorState, factory?: XmlComponentFactory): DecorationSet {
   const decorations: Range<Decoration>[] = [];
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
@@ -48,16 +52,16 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
     enter: (node) => {
       switch (node.type.name) {
         case 'Element': {
-          const tagName = getTagName(state, node.node);
-          if (tagName) {
-            // console.log(node.node);
-            const Component = componentRegistry[tagName] || Fallback;
-            const props = { tagName };
-            decorations.push(
-              Decoration.replace({
-                widget: new ReactWidget(Component, props),
-              }).range(node.node.from, node.node.to),
-            );
+          const props = nodeToJson(state, node.node);
+          if (props.tag) {
+            const Component = factory?.(props.tag);
+            if (Component) {
+              decorations.push(
+                Decoration.replace({
+                  widget: new ReactWidget(Component, props),
+                }).range(node.node.from, node.node.to),
+              );
+            }
           }
 
           return false; // Don't descend into children.
@@ -68,24 +72,3 @@ function createXmlTagDecorations(state: EditorState): DecorationSet {
 
   return Decoration.set(decorations);
 }
-
-const componentRegistry: Record<string, FC> = {
-  prompt: Prompt,
-};
-
-/**
- * Get tag name by finding the first TagName node within this Element.
- */
-const getTagName = (state: EditorState, node: SyntaxNode): string | undefined => {
-  let tagName: string | undefined;
-
-  const cursor = node.cursor();
-  cursor.iterate((node) => {
-    if (node.type.name === 'TagName' && !tagName) {
-      tagName = state.doc.sliceString(node.from, node.to);
-      return false; // Stop iteration.
-    }
-  });
-
-  return tagName;
-};
