@@ -4,8 +4,12 @@
 
 import { WidgetType } from '@codemirror/view';
 
+import { type XmlWidgetFactory } from '../xml-tags';
+
+export const ElementWidgetFactory: XmlWidgetFactory = ({ tag, ...props }) => new ElementWidget(tag, props);
+
 /**
- * Widget for HTML and Lit elements.
+ * Simple widget to create HTML elements from XML props.
  */
 export class ElementWidget extends WidgetType {
   constructor(
@@ -17,9 +21,9 @@ export class ElementWidget extends WidgetType {
 
   override toDOM(): HTMLElement {
     const el = document.createElement(this.tag);
-    Object.entries(this.props).forEach(([key, value]) => {
+    Object.entries(this.props ?? {}).forEach(([key, value]) => {
       if (key === 'children') {
-        el.innerHTML = value as string;
+        el.innerText = String(value);
       } else {
         el.setAttribute(key, String(value));
       }
