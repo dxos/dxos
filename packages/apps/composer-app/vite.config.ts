@@ -259,7 +259,7 @@ export default defineConfig((env) => ({
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
 
-    process.env.DX_STATS && [
+    isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,
         filename: 'stats.html',

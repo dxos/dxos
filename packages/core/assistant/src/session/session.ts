@@ -59,17 +59,18 @@ export type AiSessionOptions = {};
  * Could be personal or shared.
  */
 export class AiSession {
-  static run: <Tools extends AiTool.Any>(
-    params: AiSessionRunParams<Tools>,
-  ) => Effect.Effect<
-    DataType.Message[],
-    AiAssistantError | AiInputPreprocessingError | AiToolNotFoundError | AiError.AiError,
-    | AiLanguageModel.AiLanguageModel
-    | ToolResolverService
-    | ToolExecutionService
-    | TracingService
-    | AiTool.ToHandler<Tools>
-  > = <Tools extends AiTool.Any>(params: AiSessionRunParams<Tools>) => new AiSession().run(params);
+  /** Prevents concurrent execution of session. */
+  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
+
+  /** Message history from queue. */
+  // TODO(burdon): Evolve into supporting a git-like graph of messages.
+  private _history: DataType.Message[] = [];
+
+  /** Pending messages for this session (incl. the current prompt). */
+  private _pending: DataType.Message[] = [];
+
+  constructor(private readonly _options: AiSessionOptions = {}) {}
+
   run = <Tools extends AiTool.Any>({
     prompt,
     system: systemTemplate,
@@ -80,18 +81,10 @@ export class AiSession {
     observer = GenerationObserver.noop(),
   }: AiSessionRunParams<Tools>): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
-      const now = Date.now();
-      let toolCount = 0;
-
-      // Reset.
       this._history = [...history];
       this._pending = [];
-
-      // Generate system prompt.
-      // TODO(budon): Dynamically resolve template variables here.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
-
       const pending = this._pending;
+
       const submitMessage = Effect.fnUntraced(function* (message: DataType.Message) {
         pending.push(message);
         yield* observer.onMessage(message);
@@ -99,11 +92,14 @@ export class AiSession {
         return message;
       });
 
+      // Submit the prompt.
+      // TODO(burdon): Remove if cancelled?
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
-      //
+      // Generate system and prompt messages.
+      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
+
       // Tool call loop.
-      //
       do {
         log.info('request', {
           prompt: promptMessage,
@@ -113,18 +109,13 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        //
-        // Make the request.
-        //
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
+
+        // Execute the stream request.
         const blocks = yield* AiLanguageModel.streamText({
           prompt,
           system,
           toolkit,
-          // TODO(burdon): Check if this bug has been fixed and update deps/patches?
-          // TODO(burdon): Despite this flag, the model still calls tools.
-          //  Flag is only used in generateText (not streamText); patch and submit bug.
-          //  https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/src/AiLanguageModel.ts#L401
           disableToolCallResolution: true,
         }).pipe(
           Stream.catchTag(
@@ -134,14 +125,16 @@ export class AiSession {
             }),
           ),
           AiParser.parseResponse({
+            onBegin: () => observer.onBegin(),
             onBlock: (block) => observer.onBlock(block),
             onPart: (part) => observer.onPart(part),
+            onEnd: (summary) => observer.onEnd(summary),
           }),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
         );
 
-        // Create response message.
+        // Create the response message.
         const response = yield* submitMessage(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
@@ -150,18 +143,17 @@ export class AiSession {
           }),
         );
 
-        // Parse response for tool calls.
+        // Parse the response for tool calls.
         const toolCalls = getToolCalls(response);
         if (toolCalls.length === 0) {
           break;
-        }
-        if (!toolkit) {
+        } else if (!toolkit) {
           throw new Error('No toolkit provided'); // TODO(burdon): Throw user error?
         }
 
-        // TODO(burdon): Retry backend errors?
+        // Execute the tool calls.
+        // TODO(burdon): Retry errors? Write result when each completes individually?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
-          toolCount++;
           return callTool(toolkit, toolCall).pipe(
             Effect.provide(
               TracingService.layerSubframe((context) => ({
@@ -183,45 +175,14 @@ export class AiSession {
         );
       } while (true);
 
-      // Summary.
-      yield* submitMessage(
-        Obj.make(DataType.Message, {
-          created: new Date().toISOString(),
-          sender: { role: 'assistant' },
-          blocks: [
-            {
-              _tag: 'summary',
-              message: 'Success',
-              duration: Date.now() - now,
-              toolCalls: toolCount,
-              // TODO(burdon): Get token count.
-            },
-          ],
-        }),
-      );
-
       log('done', { pending: this._pending.length });
       return this._pending;
     }).pipe(this._semaphore.withPermits(1), Effect.withSpan('AiSession.run'));
 
-  /** Prevents concurrent execution of session. */
-  private readonly _semaphore = Effect.runSync(Effect.makeSemaphore(1));
-
   /**
-   * Prior history from queue.
-   * NOTE: The conversation should evolve into supporting a git-like graph of messages.
+   * @deprecated
    */
-  private _history: DataType.Message[] = [];
-
-  /**
-   * Pending messages for this session (incl. the current prompt).
-   */
-
-  private _pending: DataType.Message[] = [];
-
-  constructor(private readonly _options: AiSessionOptions = {}) {}
-
-  // TODO(burdon): Implement.
+  // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
     _options: AiSessionRunParams<AiTool.Any>,

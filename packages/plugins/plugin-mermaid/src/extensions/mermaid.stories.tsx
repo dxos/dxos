@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { mermaid } from './mermaid';
+import { mermaid } from './mermaid-extension';
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -34,7 +34,6 @@ const DefaultStory = ({ text }: StoryProps) => {
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
-        // TODO(burdon): Bug if mermaid extension is provided after decorateMarkdown.
         mermaid(),
         decorateMarkdown(),
       ],

@@ -4,7 +4,7 @@ Instructions and documentation for developer workflows in this DXOS repository.
 
 ## Prerequisites
 
-- Native libraries: 
+- Native libraries:
 
 ```bash
 brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
@@ -124,8 +124,8 @@ NOTE: Do not use `pnpm up` since it will update more than the targeted dependenc
 | `packages/deprecated`   | deprecated things                                                                              |
 | `tools`                 | workflow, automation, tooling code that supports the repo, but isn't part of the main platform |
 | `scripts`               | shell scripts for automation                                                                   |
-| `patches`               | pnpm applied patches via `pnpm patch`                                                           |
-| `docs`                  | a `astro` docs site behind `docs.dxos.org`                                                  |
+| `patches`               | pnpm applied patches via `pnpm patch`                                                          |
+| `docs`                  | a `astro` docs site behind `docs.dxos.org`                                                     |
 
 ## Logging
 
@@ -169,6 +169,7 @@ In order to include a new app in the publish loop it needs to be added to the `A
 Packages can be locked to a particular version as required by updating `pnpm.overrides` in `package.json`.
 
 Examples:
+
 - `"@types/node": "22.5.5"` (required by Cloudflare Workers).
 
 ## CI
@@ -195,6 +196,39 @@ Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branc
 | `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
 | `rc-*`       | release branches created from main and to merge with `production` or `stating`        |
 | `hotfix-*`   | a hotfix branch created from `production` and destined for `production`               |
+
+## Patching third-party repos
+
+1. Clone and fork the third-party repo then maked edits and build
+
+```bash
+cd ~/Code/Effect-TS
+git clone https://github.com/Effect-TS/effect.git
+git remote add upstream https://github.com/Effect-TS/effect.git
+pnpm build
+pnpm ellint
+```
+
+2. Create and commit a patch.
+
+```bash
+cd ~/Code/dxos/dxos
+pnpm patch @effect/ai-anthropic
+cp -r ~/Code/Effect-TS/effect/packages/ai/anthropic/dist/* ~/Code/dxos/dxos/node_modules/.pnpm_patches/@effect/ai-anthropic@0.16.1/
+pnpm patch-commit
+```
+
+This will create a patch file in the `patches` directory and update the `patchDependencies` of the root `package.json`.
+
+3. Submit a PR to the third-party repo.
+
+Create a changeset, command and push.
+
+```bash
+pnpm changeset
+```
+
+Commit and push the changes to the third-party repo.
 
 ## Formatting and linting
 

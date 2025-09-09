@@ -79,6 +79,7 @@ export const translations = [
         'chat history label': 'Chat History',
 
         'toolkit label': 'Toolkit',
+        'summary label': 'Summary',
 
         'calling tool label': 'Calling tool...',
         'calling label': 'Calling',

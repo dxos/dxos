@@ -6,13 +6,16 @@ import { type AiTool } from '@effect/ai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
-import { type JsonProps, Json as NativeJson } from '@dxos/react-ui-syntax-highlighter';
-import { type DataType } from '@dxos/schema';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
+
+import { styles } from './ChatMessage';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -20,15 +23,16 @@ export const isToolMessage = (message: DataType.Message) => {
 
 export type AiToolProvider = () => readonly AiTool.Any[];
 
-export type ToolBlockProps = ThemedClassName<{
+export type ToolBlockProps = {
   message: DataType.Message;
   toolProvider: AiToolProvider;
-}>;
+};
 
-export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps) => {
+// TODO(burdon): Pass in blocks.
+export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
+  const { blocks = [] } = message;
 
-  const tools = toolProvider();
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
       return t('calling tool label');
@@ -37,55 +41,72 @@ export const ToolBlock = ({ classNames, message, toolProvider }: ToolBlockProps)
     return status?.message ?? tool.description ?? [t('calling label'), tool.name].join(' ');
   };
 
-  let request: { tool: AiTool.Any | undefined; block: any } | undefined;
-  const { blocks = [] } = message;
-  const toolBlocks = blocks.filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
-  const items = toolBlocks
-    .map((block) => {
-      switch (block._tag) {
-        case 'toolCall': {
-          // TODO(burdon): Skip these updates?
-          if (block.pending && request?.block.toolCallId === block.toolCallId) {
-            return null;
-          }
+  const items = useMemo(() => {
+    let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
+    const tools = toolProvider();
+    return blocks
+      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
+      .map((block) => {
+        switch (block._tag) {
+          case 'toolCall': {
+            if (block.pending && lastToolCall?.block.toolCallId === block.toolCallId) {
+              return null;
+            }
 
-          const tool = tools.find((tool) => tool.name === block.name);
-          request = { tool, block };
-          return {
-            title: getToolCaption(request.tool, request.block.status),
-            block,
-          };
-        }
-
-        case 'toolResult': {
-          if (!request || block.error) {
+            const tool = tools.find((tool) => tool.name === block.name);
+            lastToolCall = { tool, block };
             return {
-              title: t('error label'),
-              block,
+              title: getToolCaption(lastToolCall?.tool),
+              content: {
+                ...block,
+                input: safeParseJson(block.input),
+              },
             };
           }
 
-          return {
-            title: getToolCaption(request.tool, request.block.status),
-            block,
-          };
-        }
+          case 'toolResult': {
+            // TODO(burdon): Parse error type.
+            if (block.error) {
+              return {
+                title: t('error label'),
+                content: block,
+              };
+            }
 
-        default: {
-          request = undefined;
-          return {
-            title: t('error label'),
-            block,
-          };
-        }
-      }
-    })
-    .filter(isNonNullable);
+            const title = getToolCaption(lastToolCall?.tool ?? t('tool result label'));
+            lastToolCall = undefined;
+            return {
+              title,
+              content: {
+                ...block,
+                result: safeParseJson(block.result),
+              },
+            };
+          }
 
-  return <ToolContainer classNames={classNames} items={items} />;
+          case 'summary': {
+            if (!lastToolCall) {
+              return null;
+            }
+
+            return {
+              title: t('summary label'),
+              content: block,
+            };
+          }
+        }
+      })
+      .filter(isNonNullable);
+  }, [blocks]);
+
+  return <ToolContainer items={items} />;
 };
 
-export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { title: string; block: any }[] }>) => {
+type ToolContainerParams = {
+  items: { title: string; content: any }[];
+};
+
+export const ToolContainer = ({ items }: ToolContainerParams) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -96,11 +117,7 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
   }, [open]);
 
   const handleSelect = (index: number) => {
-    if (index === selected) {
-      setOpen(false);
-    } else {
-      setSelected(index);
-    }
+    setSelected(index);
   };
 
   const title = useMemo(() => {
@@ -108,18 +125,23 @@ export const ToolContainer = ({ classNames, items }: ThemedClassName<{ items: { 
     return <TextCrawl key='status-roll' lines={lines} autoAdvance />;
   }, [items]);
 
+  const data = items[selected].content;
+
   return (
-    <ToggleContainer classNames={['flex flex-col', classNames]} title={title} open={open} onChangeOpen={setOpen}>
-      <div className='is-full grid grid-cols-[32px_1fr]'>
-        <div className='flex justify-center'>
-          <NumericTabs ref={tabsRef} length={items.length} selected={selected} onSelect={handleSelect} />
-        </div>
-        <Json data={items[selected].block} />
-      </div>
-    </ToggleContainer>
+    <ToggleContainer.Root classNames={styles.panel} open={open} onChangeOpen={setOpen}>
+      <ToggleContainer.Header classNames={styles.panelHeader} title={title} />
+      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', styles.panelContent]}>
+        <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
+        <Json
+          data={data}
+          classNames={styles.json}
+          replacer={{
+            maxDepth: 3,
+            maxArrayLen: 10,
+            maxStringLen: 128,
+          }}
+        />
+      </ToggleContainer.Content>
+    </ToggleContainer.Root>
   );
 };
-
-export const Json = ({ data }: Pick<JsonProps, 'data'>) => (
-  <NativeJson data={data} classNames='!p-1 text-xs bg-transparent' />
-);

@@ -7,14 +7,14 @@
 export const DEFAULT_EDGE_MODELS = [
   // AI Gateway.
   // https://developers.cloudflare.com/ai-gateway
+  '@anthropic/claude-3-5-haiku-latest',
   '@anthropic/claude-3-5-haiku-20241022',
   '@anthropic/claude-3-5-sonnet-20241022',
   '@anthropic/claude-3-7-sonnet-20250219',
-  '@anthropic/claude-sonnet-4-20250514',
-  '@anthropic/claude-opus-4-20250514',
-  '@anthropic/claude-3-5-haiku-latest',
   '@anthropic/claude-sonnet-4-0',
+  '@anthropic/claude-sonnet-4-20250514',
   '@anthropic/claude-opus-4-0',
+  '@anthropic/claude-opus-4-20250514',
 
   // Workers AI.
   // https://developers.cloudflare.com/workers-ai/models

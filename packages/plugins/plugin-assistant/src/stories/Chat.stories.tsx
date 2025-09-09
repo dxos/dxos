@@ -10,7 +10,7 @@ import React, { type FC, useCallback } from 'react';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -20,10 +20,10 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
@@ -49,8 +49,9 @@ import {
   MessageContainer,
   SurfaceContainer,
   TasksContainer,
+  TokenManagerContainer,
 } from './components';
-import { addTestData, config, getDecorators, testTypes } from './testing';
+import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
 const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
 
@@ -200,7 +201,7 @@ export const Default: Story = {
 export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
-    config: config.remote,
+    config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space, binder }) => {
       const doc = space.db.add(
         Markdown.makeDocument({
@@ -290,6 +291,23 @@ export const WithMail: Story = {
   }),
   args: {
     components: [ChatContainer, [SurfaceContainer, MessageContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+  },
+};
+
+export const WithGmail: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    config: config.remote,
+    types: [Mailbox.Mailbox],
+    onInit: async ({ space, binder }) => {
+      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      await binder.bind({ objects: [Ref.make(mailbox)] });
+    },
+  }),
+  args: {
+    components: [ChatContainer, [SurfaceContainer, MessageContainer, TokenManagerContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -394,7 +412,7 @@ export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin()],
     config: config.persistent,
-    types: [...ResearchDataTypes, ResearchGraph, DataType.AccessToken],
+    types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
@@ -432,5 +450,20 @@ export const WithTranscription: Story = {
   args: {
     components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+  },
+};
+
+export const WithLinearSync: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [DataType.Task, DataType.Person, DataType.Project],
+    accessTokens: accessTokensFromEnv({
+      'linear.app': import.meta.env.VITE_LINEAR_API_KEY,
+    }),
+  }),
+  args: {
+    components: [ChatContainer, [GraphContainer]],
+    blueprints: [LINEAR_BLUEPRINT.key],
   },
 };

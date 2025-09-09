@@ -53,9 +53,9 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
     }),
     withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
     withTheme,

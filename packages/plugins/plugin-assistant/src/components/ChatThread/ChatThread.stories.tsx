@@ -273,3 +273,11 @@ export const Delayed: Story = {
     delay: 2_000,
   },
 };
+
+export const Sanity = () => {
+  return (
+    <div className='grid grow place-items-center'>
+      <div className='p-8 border border-separator rounded'>DXOS</div>
+    </div>
+  );
+};

@@ -35,7 +35,7 @@ export type StatusRollProps = ThemedClassName<{
 export const StatusRoll = ({
   classNames,
   size = 'md',
-  index: index$ = -1,
+  index: indexParam = -1,
   lines = emptyLines,
   cyclic,
   autoAdvance,
@@ -45,10 +45,10 @@ export const StatusRoll = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastRoll = useRef(Date.now());
   const linesLength = useDynamicRef(lines.length);
-  const [index, setIndex] = useState(index$);
+  const [index, setIndex] = useState(indexParam);
   useEffect(() => {
-    setIndex(index$ === -1 ? lines.length - 1 : index$);
-  }, [lines, index$]);
+    setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
+  }, [lines, indexParam]);
 
   useEffect(() => {
     if (!autoAdvance) {
