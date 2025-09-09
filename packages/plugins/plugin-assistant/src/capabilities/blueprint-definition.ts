@@ -4,7 +4,7 @@
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, syncLinearIssues, fetchDiscordMessages, DISCORD_BLUEPRINT } from '@dxos/assistant-testing';
+import { DISCORD_BLUEPRINT, LINEAR_BLUEPRINT, fetchDiscordMessages, syncLinearIssues } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import { FetchHttpClient } from '@effect/platform';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import type {
   GuildChannelResponse,
