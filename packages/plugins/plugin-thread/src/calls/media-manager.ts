@@ -313,7 +313,8 @@ export class MediaManager extends Resource {
     const ctx = this._ctx.derive();
     try {
       const trackData = TrackNameCodec.decode(name);
-      const track = await this._state.peer!.pullTrack({ trackData, ctx });
+      // We need to set mid here to `undefined`, because mid is peer specific.
+      const track = await this._state.peer!.pullTrack({ trackData: { ...trackData, mid: undefined }, ctx });
       if (track?.readyState === 'ended') {
         throw new Error('Pulled track ended immediately');
       }
