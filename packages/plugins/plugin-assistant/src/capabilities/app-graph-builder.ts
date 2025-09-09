@@ -27,6 +27,7 @@ import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
 
 import { AssistantCapabilities } from './capabilities';
+import { DataType } from '@dxos/schema';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -72,6 +73,27 @@ export default (context: PluginContext) =>
                     macos: 'shift+meta+k',
                     windows: 'shift+ctrl+k',
                   },
+                },
+              },
+              {
+                id: `${LayoutAction.UpdateDialog._tag}/assistant/setup-linear-token`,
+                data: async () => {
+                  const client = context.getCapability(ClientCapabilities.Client);
+                  const space = getActiveSpace(context) ?? client.spaces.default;
+
+                  const token = prompt('Enter Linear API token');
+                  if (!token) {
+                    return;
+                  }
+
+                  space.db.add(Obj.make(DataType.AccessToken, { source: 'linear.app', token }));
+                  await space.db.flush({ indexes: true });
+                },
+                properties: {
+                  label: ['setup linear token label', { ns: meta.id }],
+                  icon: 'ph--sparkle--regular',
+                  disposition: 'pin-end',
+                  position: 'hoist',
                 },
               },
             ]),

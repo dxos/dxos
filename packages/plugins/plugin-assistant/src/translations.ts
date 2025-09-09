@@ -65,6 +65,7 @@ export const translations = [
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
+        'setup linear token label': 'Setup Linear token',
 
         'no tools': 'No tools are configured',
         'no results': 'No results',
