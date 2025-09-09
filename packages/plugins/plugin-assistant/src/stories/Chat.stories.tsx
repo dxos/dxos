@@ -62,7 +62,7 @@ const DefaultStory = ({
   blueprints = [],
 }: {
   debug?: boolean;
-  deckComponents: FC<ComponentProps>[][];
+  deckComponents: (FC<ComponentProps>[] | 'surfaces')[];
   blueprints?: string[];
 }) => {
   const client = useClient();
@@ -117,23 +117,27 @@ const DefaultStory = ({
       classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
     >
-      {deckComponents.map((plankComponents, i) => (
-        <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
-          <Stack
-            orientation='vertical'
-            size='split'
-            rail={false}
-            itemsCount={plankComponents.length}
-            classNames='gap-[--stack-gap]'
-          >
-            {plankComponents.map((Component, j) => (
-              <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
-                <Component space={space} debug={debug} onEvent={handleEvent} />
-              </StackItem.Root>
-            ))}
-          </Stack>
-        </StackItem.Root>
-      ))}
+      {deckComponents.map((plankComponents, i) => {
+        return plankComponents === 'surfaces' ? (
+          <SurfaceContainer space={space} debug={debug} />
+        ) : (
+          <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+            <Stack
+              orientation='vertical'
+              size='split'
+              rail={false}
+              itemsCount={plankComponents.length}
+              classNames='gap-[--stack-gap]'
+            >
+              {plankComponents.map((Component, j) => (
+                <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
+                  <Component space={space} debug={debug} onEvent={handleEvent} />
+                </StackItem.Root>
+              ))}
+            </Stack>
+          </StackItem.Root>
+        );
+      })}
     </Stack>
   );
 };
@@ -221,7 +225,7 @@ export const WithDocument: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer, CommentsContainer, LoggingContainer]],
+    deckComponents: [[CommentsContainer, ChatContainer], 'surfaces'],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
