@@ -13022,6 +13022,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

@@ -39,6 +39,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
     },
     {

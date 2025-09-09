@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

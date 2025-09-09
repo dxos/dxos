@@ -7,28 +7,34 @@ import { type EditorState, type Extension, type Range, StateField } from '@codem
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
 import { type FC } from 'react';
 
-import { ReactWidget } from './ReactWidget';
+import { ElementWidget, ReactWidget } from './widgets';
 import { nodeToJson } from './xml-util';
 
 export type XmlComponentProps<TProps = any> = { tag: string } & TProps;
-export type XmlComponentFactory = (tag: string) => FC<XmlComponentProps> | undefined;
+
+export type XmlComponentDef = {
+  type?: 'element' | 'react';
+  Component?: FC<XmlComponentProps>;
+};
+
+export type XmlComponentRegistry = Record<string, XmlComponentDef>;
 
 export type XmlTagOptions = {
-  factory?: XmlComponentFactory;
+  registry?: XmlComponentRegistry;
 };
 
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
-export const xmlTags = ({ factory }: XmlTagOptions = {}): Extension => {
+export const xmlTags = ({ registry }: XmlTagOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        return createXmlTagDecorations(state, factory);
+        return createXmlTagDecorations(state, registry);
       },
       update: (decorations, tr) => {
         if (tr.docChanged) {
-          return createXmlTagDecorations(tr.state, factory);
+          return createXmlTagDecorations(tr.state, registry);
         }
 
         return decorations.map(tr.changes);
@@ -41,7 +47,7 @@ export const xmlTags = ({ factory }: XmlTagOptions = {}): Extension => {
 /**
  * Creates decorations for XML tags in the document using the syntax tree.
  */
-function createXmlTagDecorations(state: EditorState, factory?: XmlComponentFactory): DecorationSet {
+function createXmlTagDecorations(state: EditorState, registry?: XmlComponentRegistry): DecorationSet {
   const decorations: Range<Decoration>[] = [];
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
@@ -53,14 +59,26 @@ function createXmlTagDecorations(state: EditorState, factory?: XmlComponentFacto
       switch (node.type.name) {
         case 'Element': {
           const props = nodeToJson(state, node.node);
-          if (props.tag) {
-            const Component = factory?.(props.tag);
-            if (Component) {
-              decorations.push(
-                Decoration.replace({
-                  widget: new ReactWidget(Component, props),
-                }).range(node.node.from, node.node.to),
-              );
+          if (registry && props.tag) {
+            const def = registry[props.tag];
+            if (def) {
+              const { Component } = def;
+              if (Component) {
+                // React components.
+                decorations.push(
+                  Decoration.replace({
+                    widget: new ReactWidget(Component, props),
+                  }).range(node.node.from, node.node.to),
+                );
+              } else {
+                // Lit components.
+                const { tag, ...rest } = props;
+                decorations.push(
+                  Decoration.replace({
+                    widget: new ElementWidget(tag, rest),
+                  }).range(node.node.from, node.node.to),
+                );
+              }
             }
           }
 

@@ -142,6 +142,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
               </Link>
             );
           },
+
           img: ({ node: { properties } = {} }) => {
             const client = useClient();
             if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
@@ -330,6 +331,6 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
   `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
-// TODO(burdon): Move to parser.
+// TODO(burdon): Move to parser?
 const preprocessTextContent = (content: string) =>
   content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);

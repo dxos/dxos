@@ -9,11 +9,11 @@ import { type Root } from 'react-dom/client';
 import { renderRoot } from '@dxos/react-ui-editor';
 
 /**
- *
+ * Wrapper for React components.
  */
 export class ReactWidget<Props extends {} = {}> extends WidgetType {
-  private component: ComponentType<Props>;
-  private props: Props;
+  private readonly component: ComponentType<Props>;
+  private readonly props: Props;
 
   constructor(component: ComponentType<Props>, props: Props) {
     super();

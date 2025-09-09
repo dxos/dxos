@@ -3,6 +3,7 @@
 //
 
 import '@dxos-theme';
+import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -15,7 +16,6 @@ import { useStreamingText } from '../../hooks';
 import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
-import doc1 from './testing/doc-1.md?raw';
 import doc2 from './testing/doc-2.md?raw';
 
 const testOptions: TextStreamOptions = {
@@ -89,5 +89,5 @@ export const Streaming: Story = {
 };
 
 export const Components = () => {
-  return <MarkdownContent content={doc1} />;
+  return <MarkdownContent content={doc2} />;
 };
