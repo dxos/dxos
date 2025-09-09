@@ -36,11 +36,11 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.1",
-    "@codemirror/language": "^6.10.3",
-    "@codemirror/search": "^6.5.6",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/autocomplete": "^6.18.7",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/search": "^6.5.11",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -121,6 +121,7 @@
     "use-deep-compare-effect": "^1.8.1"
   },
   "devDependencies": {
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-board": "workspace:*",

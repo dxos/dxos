@@ -83,24 +83,19 @@ export class AiChatProcessor {
   /** Last request (for retries). */
   private _lastRequest: AiRequest | undefined;
 
-  /**
-   * Pending messages (incl. the current user request).
-   */
+  /** Pending messages (incl. the current user request). */
   private readonly _pending = Rx.make<DataType.Message[]>([]);
 
-  /**
-   * Currently streaming message (from the AI service).
-   */
+  /** Currently streaming message (from the AI service). */
   private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
 
-  /**
-   * Streaming state.
-   */
+  /** Streaming state. */
   public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
 
-  /**
-   * Array of Messages (incl. the current message being streamed).
-   */
+  /** Active state. */
+  public readonly active = Rx.make(false);
+
+  /** Array of Messages (incl. the current message being streamed). */
   public readonly messages = Rx.make<DataType.Message[]>((get) =>
     Option.match(get(this._streaming), {
       onNone: () => get(this._pending),
@@ -129,10 +124,6 @@ export class AiChatProcessor {
     }
   }
 
-  get isRunning() {
-    return !!this._fiber;
-  }
-
   get context() {
     return this._conversation.context;
   }
@@ -156,6 +147,7 @@ export class AiChatProcessor {
     try {
       this._lastRequest = requestParam;
       this._rx.set(this.error, Option.none());
+      this._rx.set(this.active, true);
 
       // Create request.
       const request = this._conversation.createRequest({
@@ -193,6 +185,7 @@ export class AiChatProcessor {
       this._rx.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
       this._fiber = undefined;
+      this._rx.set(this.active, false);
     }
   }
 
@@ -209,6 +202,7 @@ export class AiChatProcessor {
     );
 
     this._fiber = undefined;
+    this._rx.set(this.active, false);
   }
 
   /**

@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { generateName } from '@dxos/display-name';
+import { type SpaceMember, getSpace, useMembers } from '@dxos/react-client/echo';
+import { Icon, IconButton, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -12,7 +14,7 @@ import { meta } from '../meta';
 
 import { type ExtendedChessModel } from './Chessboard';
 
-export type ChessboardInfoProps = ThemedClassName<
+export type InfoProps = ThemedClassName<
   {
     orientation?: Player;
     onOrientationChange?: (orientation: Player) => void;
@@ -20,50 +22,71 @@ export type ChessboardInfoProps = ThemedClassName<
   } & Pick<HistoryProps, 'min' | 'max' | 'onSelect'>
 >;
 
-export const ChessboardInfo = ({
-  classNames,
-  orientation = 'white',
-  onOrientationChange,
-  onClose,
-  ...props
-}: ChessboardInfoProps) => {
+export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
   const { t } = useTranslation(meta.id);
-  const { model } = useGameboardContext<ExtendedChessModel>(ChessboardInfo.displayName);
+  const { model } = useGameboardContext<ExtendedChessModel>(Info.displayName);
+  const members = useMembers(getSpace(model.object)?.key);
 
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[16rem] p-2 overflow-hidden bg-inputSurface rounded',
+        'grid grid-rows-[min-content_1fr_min-content] is-full min-is-[18rem] p-2 overflow-hidden bg-groupSurface rounded-sm',
         classNames,
       )}
     >
       <PlayerIndicator
         model={model}
         player={orientation === 'white' ? 'black' : 'white'}
-        title={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
+        icon={
+          onClose && (
+            <IconButton icon='ph--x--regular' iconOnly label={t('close info button')} size={4} onClick={onClose} />
+          )
+        }
       >
-        {onClose && <IconButton icon='ph--x--regular' iconOnly label={t('button flip')} size={4} onClick={onClose} />}
+        <PlayerSelector
+          value={model.object.players?.[orientation === 'white' ? 'black' : 'white']}
+          onValueChange={(value) => {
+            model.object.players![orientation === 'white' ? 'black' : 'white'] = value;
+          }}
+          members={members}
+        />
       </PlayerIndicator>
 
       <History model={model} {...props} />
 
-      <PlayerIndicator model={model} player={orientation} title={model.object.players?.[orientation]}>
-        {onOrientationChange && (
-          <IconButton
-            icon='ph--arrows-down-up--regular'
-            iconOnly
-            label={t('button flip')}
-            size={6}
-            classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
-            onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
-          />
-        )}
+      <PlayerIndicator
+        model={model}
+        player={orientation}
+        icon={
+          onOrientationChange && (
+            <IconButton
+              classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
+              icon='ph--arrows-clockwise--regular'
+              iconOnly
+              label={t('flip board button')}
+              size={4}
+              onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
+            />
+          )
+        }
+      >
+        <PlayerSelector
+          value={model.object.players?.[orientation]}
+          onValueChange={(value) => {
+            model.object.players![orientation] = value;
+          }}
+          members={members}
+        />
       </PlayerIndicator>
     </div>
   );
 };
 
-ChessboardInfo.displayName = 'Chessboard.Info';
+Info.displayName = 'Chessboard.Info';
+
+//
+// History
+//
 
 type HistoryProps = ThemedClassName<{
   model: ExtendedChessModel;
@@ -150,15 +173,20 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   );
 };
 
-const PlayerIndicator = ({
-  children,
-  model,
-  player,
-  title,
-}: PropsWithChildren<{ model: ExtendedChessModel; player: Player; title?: string }>) => {
+//
+// PlayerIndicator
+//
+
+type PlayerIndicatorProps = PropsWithChildren<{
+  model: ExtendedChessModel;
+  player: Player;
+  icon?: JSX.Element;
+}>;
+
+const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[2rem_1fr_2rem] gap-1 bs-[--rail-size] pis-1 pie-1 flex items-center overflow-hidden'>
+    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 bs-[--rail-size] pis-1 pie-1 flex items-center overflow-hidden'>
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
@@ -166,8 +194,43 @@ const PlayerIndicator = ({
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
         />
       </div>
-      <div className='truncate'>{title}</div>
-      {children}
+      <div className='truncate overflow-hidden items-center'>{children}</div>
+      {icon}
     </div>
+  );
+};
+
+//
+// PlayerSelector
+//
+
+type PlayerSelectorProps = {
+  value?: string;
+  onValueChange: (player: string) => void;
+  members: SpaceMember[];
+};
+
+const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <Select.Root value={value} onValueChange={onValueChange}>
+      <Select.TriggerButton placeholder={t('select player button')} />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {members.map((member) => {
+              const memberKey = member.identity.identityKey.toHex();
+              const displayName = member.identity?.profile?.displayName || generateName(memberKey);
+              return (
+                <Select.Option key={memberKey} value={memberKey}>
+                  {displayName}
+                </Select.Option>
+              );
+            })}
+          </Select.Viewport>
+          <Select.Arrow />
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
   );
 };

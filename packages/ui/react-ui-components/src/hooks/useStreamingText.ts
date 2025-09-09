@@ -2,21 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { useDynamicRef } from '@dxos/react-ui';
 
-export type TypewriterProps = ThemedClassName<{
-  text: string;
-  delay?: number;
-}>;
-
-export const Typewriter = ({ classNames, text, delay = 0 }: TypewriterProps) => {
+/**
+ * Streams text character by character with a delay.
+ */
+export const useStreamingText = (text = '', delay = 10): [string, boolean] => {
   const [current, setCurrent] = useState('');
   const currentRef = useDynamicRef(current);
 
   useEffect(() => {
+    let cancelled = false;
     const idx = text.indexOf(currentRef.current);
     let next = text;
     if (idx === 0) {
@@ -25,16 +23,14 @@ export const Typewriter = ({ classNames, text, delay = 0 }: TypewriterProps) => 
       setCurrent('');
     }
 
-    let cancelled = false;
     void (async () => {
-      for await (const char of streamText(next, delay)) {
+      for await (const chunk of streamText(next, delay)) {
         if (cancelled) {
           break;
         }
 
-        // TODO(burdon): Break words.
         setCurrent((prev) => {
-          return prev + char;
+          return prev + chunk;
         });
       }
     })();
@@ -44,7 +40,7 @@ export const Typewriter = ({ classNames, text, delay = 0 }: TypewriterProps) => 
     };
   }, [text, delay]);
 
-  return <p className={mx(classNames)}>{current}</p>;
+  return [current, current.length === text.length];
 };
 
 async function* streamText(text: string, delay: number) {

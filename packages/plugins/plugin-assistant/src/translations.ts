@@ -86,7 +86,7 @@ export const translations = [
         'error label': 'Error',
 
         'search placeholder': 'Search...',
-        'prompt placeholder': 'Ask or search for anything...',
+        'prompt placeholder': 'Enter question or command...',
         'button context objects': 'Add to context',
         'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',

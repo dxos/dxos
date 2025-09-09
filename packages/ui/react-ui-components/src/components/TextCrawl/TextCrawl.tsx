@@ -38,7 +38,7 @@ export const TextCrawl = ({
   index: indexParam = -1,
   lines = emptyLines,
   cyclic,
-  autoAdvance,
+  autoAdvance = false,
   transition = 250,
   minDuration = 1_000,
 }: TextCrawlProps) => {
