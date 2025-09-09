@@ -4,9 +4,9 @@
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
+import { LINEAR_BLUEPRINT, syncLinearIssues } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
-import { syncLinearIssues, LINEAR_BLUEPRINT } from '@dxos/assistant-testing';
 
 import { analysis, list, load } from '../functions';
 

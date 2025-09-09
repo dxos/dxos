@@ -22,12 +22,12 @@ import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Query, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant, AssistantAction } from '../types';
 
 import { AssistantCapabilities } from './capabilities';
-import { DataType } from '@dxos/schema';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
