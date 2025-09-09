@@ -4,16 +4,21 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, type WidgetType } from '@codemirror/view';
 import { type FC } from 'react';
 
-import { ElementWidget, ReactWidget } from './widgets';
+import { log } from '@dxos/log';
+
+import { ReactWidget } from './widgets';
 import { nodeToJson } from './xml-util';
 
 export type XmlComponentProps<TProps = any> = { tag: string } & TProps;
 
+export type XmlWidgetFactory = (props: XmlComponentProps) => WidgetType | null;
+
 export type XmlComponentDef = {
-  type?: 'element' | 'react';
+  block?: boolean;
+  factory?: XmlWidgetFactory;
   Component?: FC<XmlComponentProps>;
 };
 
@@ -58,28 +63,18 @@ function createXmlTagDecorations(state: EditorState, registry?: XmlComponentRegi
     enter: (node) => {
       switch (node.type.name) {
         case 'Element': {
-          const props = nodeToJson(state, node.node);
-          if (registry && props.tag) {
-            const def = registry[props.tag];
-            if (def) {
-              const { Component } = def;
-              if (Component) {
-                // React components.
-                decorations.push(
-                  Decoration.replace({
-                    widget: new ReactWidget(Component, props),
-                  }).range(node.node.from, node.node.to),
-                );
-              } else {
-                // Lit components.
-                const { tag, ...rest } = props;
-                decorations.push(
-                  Decoration.replace({
-                    widget: new ElementWidget(tag, rest),
-                  }).range(node.node.from, node.node.to),
-                );
+          try {
+            // TODO(burdon): Check tag is closed before creating widget.
+            const props = nodeToJson(state, node.node);
+            if (registry && props.tag) {
+              const { block, factory, Component } = registry?.[props.tag] ?? {};
+              const widget = factory ? factory(props) : Component ? new ReactWidget(Component, props) : undefined;
+              if (widget) {
+                decorations.push(Decoration.replace({ widget, block }).range(node.node.from, node.node.to));
               }
             }
+          } catch (err) {
+            log.catch(err);
           }
 
           return false; // Don't descend into children.

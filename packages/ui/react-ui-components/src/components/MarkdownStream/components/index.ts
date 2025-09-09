@@ -3,5 +3,4 @@
 //
 
 export * from './Fallback';
-export * from './Prompt';
 export * from './Suggest';

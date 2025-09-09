@@ -3,7 +3,7 @@
 //
 
 import { useEffect } from '@preact-signals/safe-react/react';
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, decorateMarkdown, useTextEditor } from '@dxos/react-ui-editor';
@@ -14,9 +14,10 @@ import { registry } from './registry';
 export type MarkdownContentProps = ThemedClassName<{
   content?: string;
   options?: StreamerOptions;
+  userHue?: string;
 }>;
 
-export const MarkdownContent = ({ content = '', options }: MarkdownContentProps) => {
+export const MarkdownContent = ({ content = '', options, userHue }: MarkdownContentProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor(
     {
@@ -59,5 +60,11 @@ export const MarkdownContent = ({ content = '', options }: MarkdownContentProps)
     });
   }, [content, view]);
 
-  return <div ref={parentRef} className='is-full overflow-hidden' />;
+  return (
+    <div
+      ref={parentRef}
+      className='is-full overflow-hidden'
+      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
+    />
+  );
 };
