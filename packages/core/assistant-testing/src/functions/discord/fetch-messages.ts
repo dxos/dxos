@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
+import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import type {
-  MessageResponse,
   GuildChannelResponse,
+  MessageResponse,
   PrivateChannelResponse,
   PrivateGroupChannelResponse,
   ThreadResponse,
@@ -50,6 +50,14 @@ const DiscordConfigFromCredential = Layer.unwrapEffect(
     return DiscordConfig.layer({
       token: yield* CredentialsService.getApiKey({ service: 'discord.com' }),
     });
+  }),
+);
+
+const DisableHttpTracing = Layer.effect(
+  HttpClient.HttpClient,
+  Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient;
+    return client.pipe();
   }),
 );
 
@@ -193,7 +201,14 @@ export default defineFunction({
     },
     Effect.provide(
       DiscordRESTMemoryLive.pipe(Layer.provideMerge(DiscordConfigFromCredential)).pipe(
-        Layer.provide(FetchHttpClient.layer),
+        Layer.provide(
+          Layer.effect(
+            HttpClient.HttpClient,
+            HttpClient.HttpClient.pipe(Effect.provide(FetchHttpClient.layer)).pipe(
+              Effect.map(HttpClient.withTracerDisabledWhen(() => true)),
+            ),
+          ),
+        ),
       ),
     ),
     Effect.orDie,
