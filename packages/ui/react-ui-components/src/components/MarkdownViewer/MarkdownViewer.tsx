@@ -47,7 +47,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return <h3 className='pbs-1 pbe-1 text-base'>{children}</h3>;
   },
   blockquote: ({ children, ...props }) => (
-    <blockquote className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-primary-500 text-primary-500' {...props}>
+    <blockquote className='pis-4 mbs-2 mbe-2 pbs-2 pbe-2 border-l-4 border-accentText text-accentText' {...props}>
       {children}
     </blockquote>
   ),
