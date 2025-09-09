@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton } from '@dxos/react-ui';
+import { IconButton, Popover } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { Chat, Toolbar } from '../../components';
@@ -14,6 +14,7 @@ import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../h
 import { useOnline, usePresets } from '../../hooks';
 import { Assistant } from '../../types';
 
+import { LoggingContainer } from './LoggingContainer';
 import { type ComponentProps } from './types';
 
 export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
@@ -40,17 +41,30 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
     <StackItem.Content toolbar>
       <div role='none' className='flex items-center gap-2 pie-2'>
         <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <IconButton icon='ph--log--regular' label='Logs' variant='ghost' />
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content>
+              <LoggingContainer space={space} />
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
         <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
         <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
       </div>
 
-      <Chat.Root chat={chat} processor={processor}>
-        <Chat.Thread />
-        {/* <ChatProgress chat={chat} /> */}
-        <div className='p-4'>
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
-        </div>
-      </Chat.Root>
+      <div role='none' className='relative'>
+        <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
+          <Chat.Thread />
+          {/* <ChatProgress chat={chat} /> */}
+          <div className='p-4'>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          </div>
+        </Chat.Root>
+      </div>
     </StackItem.Content>
   );
 };

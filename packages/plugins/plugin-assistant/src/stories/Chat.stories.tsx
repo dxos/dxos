@@ -46,7 +46,6 @@ import {
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
-  LoggingContainer,
   MessageContainer,
   SurfaceContainer,
   TasksContainer,
@@ -62,7 +61,7 @@ const DefaultStory = ({
   blueprints = [],
 }: {
   debug?: boolean;
-  deckComponents: (FC<ComponentProps>[] | 'surfaces')[];
+  deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
 }) => {
   const client = useClient();
@@ -118,22 +117,28 @@ const DefaultStory = ({
       itemsCount={deckComponents.length}
     >
       {deckComponents.map((plankComponents, i) => {
-        return plankComponents === 'surfaces' ? (
-          <SurfaceContainer space={space} debug={debug} />
-        ) : (
+        const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
+        const renderSurfaces = plankComponents.includes('surfaces');
+        let j = 0;
+        return (
           <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
             <Stack
               orientation='vertical'
-              size='split'
+              size={i > 0 ? 'contain' : 'split'}
               rail={false}
               itemsCount={plankComponents.length}
               classNames='gap-[--stack-gap]'
             >
-              {plankComponents.map((Component, j) => (
-                <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
-                  <Component space={space} debug={debug} onEvent={handleEvent} />
-                </StackItem.Root>
-              ))}
+              {Components.map((Component) => {
+                const item = (
+                  <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
+                    <Component space={space} debug={debug} onEvent={handleEvent} />
+                  </StackItem.Root>
+                );
+                j += 1;
+                return item;
+              })}
+              {renderSurfaces && <SurfaceContainer space={space} debug={debug} indexOffset={j} />}
             </Stack>
           </StackItem.Root>
         );
@@ -199,7 +204,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
   },
 };
 
@@ -225,7 +230,7 @@ export const WithDocument: Story = {
     },
   }),
   args: {
-    deckComponents: [[CommentsContainer, ChatContainer], 'surfaces'],
+    deckComponents: [[ChatContainer], ['surfaces', CommentsContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
@@ -276,7 +281,7 @@ export const WithChess: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
@@ -296,7 +301,7 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer, MessageContainer]],
+    deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -313,7 +318,7 @@ export const WithGmail: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer, MessageContainer, TokenManagerContainer]],
+    deckComponents: [[ChatContainer], ['surfaces', MessageContainer, TokenManagerContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -339,7 +344,7 @@ export const WithMap: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
@@ -394,7 +399,7 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
   },
 };
 
@@ -410,7 +415,7 @@ export const WithBoard: Story = {
   }),
   args: {
     debug: true,
-    deckComponents: [[ChatContainer], [SurfaceContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
   },
 };
 
@@ -422,7 +427,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -436,7 +441,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer]],
   },
 };
 
@@ -454,7 +459,7 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
