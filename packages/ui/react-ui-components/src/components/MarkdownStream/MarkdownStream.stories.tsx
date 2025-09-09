@@ -16,7 +16,7 @@ import { useStreamingText } from '../../hooks';
 import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
-import doc2 from './testing/doc-2.md?raw';
+import doc from './testing/doc.md?raw';
 
 const testOptions: TextStreamOptions = {
   chunkDelay: 200,
@@ -73,13 +73,13 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content: doc2,
+    content: doc,
   },
 };
 
 export const Streaming: Story = {
   args: {
-    content: doc2,
+    content: doc,
     options: {
       autoScroll: true,
       fadeIn: true,
@@ -89,5 +89,5 @@ export const Streaming: Story = {
 };
 
 export const Components = () => {
-  return <MarkdownContent content={doc2} />;
+  return <MarkdownContent content={doc} />;
 };
