@@ -6,6 +6,7 @@ import { WidgetType } from '@codemirror/view';
 
 import { type XmlWidgetFactory } from '../xml-tags';
 
+// TODO(burdon): Type check ContentBlock.Summary?
 export const SummaryWidgetFactory: XmlWidgetFactory = (props) => {
   const text = props.children?.[0];
   return typeof text === 'string' ? new SummaryWidget(text) : null;

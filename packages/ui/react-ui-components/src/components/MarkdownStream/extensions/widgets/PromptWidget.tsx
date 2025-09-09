@@ -23,7 +23,8 @@ export class PromptWidget extends WidgetType {
     const el = document.createElement('div');
     el.className = 'flex justify-end';
     const inner = document.createElement('div');
-    inner.className = 'p-2 rounded-sm bg-green-500';
+    // TODO(burdon): Container must set var (see ChatThread.tsx).
+    inner.className = 'p-2 rounded-sm bg-[--user-fill]';
     inner.textContent = this.text;
     el.appendChild(inner);
     return el;

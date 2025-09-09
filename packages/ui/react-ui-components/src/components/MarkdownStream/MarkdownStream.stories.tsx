@@ -8,8 +8,10 @@ import '@dxos/lit-ui';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { keyToFallback } from '@dxos/util';
 
 import { useStreamingText } from '../../hooks';
 
@@ -17,6 +19,9 @@ import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
+
+// TODO(burdon): Get user hue from identity.
+const userHue = keyToFallback(PublicKey.random()).hue;
 
 const testOptions: TextStreamOptions = {
   chunkDelay: 200,
@@ -52,7 +57,7 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grow overflow-hidden'>
-        <MarkdownStream content={str} options={options} />
+        <MarkdownStream content={str} options={options} userHue={userHue} />
       </div>
     </div>
   );
@@ -89,5 +94,5 @@ export const Streaming: Story = {
 };
 
 export const Components = () => {
-  return <MarkdownContent content={doc} />;
+  return <MarkdownContent content={doc} userHue={userHue} />;
 };
