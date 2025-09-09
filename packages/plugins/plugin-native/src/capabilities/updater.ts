@@ -39,7 +39,7 @@ export default (context: PluginContext) => {
         }),
         Match.when({ event: 'Progress' }, (event) => {
           downloaded += event.data.chunkLength;
-          log.info('download progress', { downloaded, contentLength });
+          log.verbose('download progress', { downloaded, contentLength });
         }),
         Match.when({ event: 'Finished' }, () => {
           log.info('download completed');
