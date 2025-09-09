@@ -3,7 +3,8 @@
 //
 
 import { AiLanguageModel } from '@effect/ai';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Effect, Layer, Stream } from 'effect';
