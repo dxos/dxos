@@ -18,10 +18,5 @@ export const MessageContainer = ({ space }: ComponentProps) => {
   const message = mailbox && state[fullyQualifiedId(mailbox)];
   const data = useMemo(() => ({ subject: message ?? 'message', companionTo: mailbox }), [message, mailbox]);
 
-  // TODO(wittjosiah): Fix styles to fill the container.
-  return (
-    <div className='flex h-[30rem]'>
-      <Surface role='article' data={data} limit={1} />
-    </div>
-  );
+  return <Surface role='section' data={data} limit={1} />;
 };

@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'scroll-down.button': 'Scroll down',
+        'no commits message': 'No events yet',
       },
     },
   },
