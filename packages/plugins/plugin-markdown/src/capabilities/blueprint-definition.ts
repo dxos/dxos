@@ -7,10 +7,10 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { create, diff, open } from '../functions';
+import { diff, open } from '../functions';
 
-const functions: FunctionDefinition[] = [create, diff, open];
-const tools = ['add-proposals'];
+const functions: FunctionDefinition[] = [diff, open];
+const tools = ['add-proposals', 'create-document'];
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/markdown';
 
