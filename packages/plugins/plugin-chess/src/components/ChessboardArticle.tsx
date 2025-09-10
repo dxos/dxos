@@ -14,7 +14,7 @@ import { type Chess } from '../types';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from './Chessboard';
 
-export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
+export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: string }) => {
   const { t } = useTranslation(meta.id);
   const [orientation, setOrientation] = useState<Player>('white');
   const [open, setOpen] = useState(true);
@@ -39,7 +39,14 @@ export const ChessboardArticle = ({ game }: { game: Chess.Game }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </Toolbar.Root>
-        <div className={mx('grid _grid-rows-[1fr_4rem] bs-full is-full gap-2', open && '@3xl:grid-cols-[1fr_320px]')}>
+        <div
+          className={mx(
+            'grid _grid-rows-[1fr_4rem] bs-full is-full gap-2',
+            open && '@3xl:grid-cols-[1fr_320px]',
+            role === 'section' && 'aspect-square',
+            role === 'section' && open && '@3xl:aspect-auto',
+          )}
+        >
           <Chessboard.Content>
             <Chessboard.Board classNames='m-4 rounded-sm overflow-hidden' orientation={orientation} />
           </Chessboard.Content>
