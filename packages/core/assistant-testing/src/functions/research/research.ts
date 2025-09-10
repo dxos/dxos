@@ -42,6 +42,10 @@ export default defineFunction({
       description: 'The query to search for.',
     }),
 
+    researchInstructions: Schema.optional(Schema.String).annotations({
+      description: 'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis.',
+    }),
+
     // TOOD(burdon): Move to context.
     mockSearch: Schema.optional(Schema.Boolean).annotations({
       description: 'Whether to use the mock search tool.',
@@ -57,7 +61,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch } }) {
+    function* ({ data: { query, mockSearch, researchInstructions } }) {
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
 
@@ -86,7 +90,11 @@ export default defineFunction({
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system: PROMPT,
+        system:
+          PROMPT +
+          (researchInstructions
+            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
+            : ''),
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
