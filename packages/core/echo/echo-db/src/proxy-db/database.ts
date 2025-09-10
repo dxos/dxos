@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
+import { Ref } from '@dxos/echo';
 import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -16,7 +17,6 @@ import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
-import { Ref } from '@dxos/echo';
 
 import type { SaveStateChangedEvent } from '../automerge';
 import {
