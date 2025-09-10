@@ -160,6 +160,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
     );
   },
 
+  ['reference' as const]: ({ block, space }) => {
+    invariant(block._tag === 'reference');
+
+    return <RefBlock block={block} space={space!} />;
+  },
+
   //
   // Suggest
   //
@@ -278,6 +284,19 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       </ToggleContainer.Root>
     );
   },
+};
+
+const RefBlock = ({ block, space }: { block: ContentBlock.Reference; space: Space }) => {
+  const ref = useMemo(() => space.db.ref(block.reference.dxn), [space, block.reference.dxn.toString()]);
+
+  // TODO(dmaretskyi): Replace this with composer cards
+  const title = Obj.getLabel(ref.target) ?? ref.target?.id ?? ref.dxn.toString();
+  return (
+    <div className='border-1 border-gray-200 p-2 rounded-sm'>
+      <h6>{title}</h6>
+      <p className='text-xs whitespace-pre-wrap text-gray-500'>{JSON.stringify(ref.target, null, 2)}</p>
+    </div>
+  );
 };
 
 export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {
