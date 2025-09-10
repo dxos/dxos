@@ -4,7 +4,7 @@
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, syncLinearIssues } from '@dxos/assistant-testing';
+import { LINEAR_BLUEPRINT, syncLinearIssues, RESEARCH_BLUEPRINT, research } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
@@ -37,9 +37,12 @@ export const createBlueprint = (): Blueprint.Blueprint =>
 
 const blueprint = createBlueprint();
 
+// TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
   contributes(Capabilities.Functions, [syncLinearIssues]),
+  contributes(Capabilities.Functions, [research]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
 ];

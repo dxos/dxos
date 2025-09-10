@@ -26,6 +26,7 @@ import { AssistantEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Assistant, AssistantAction, ServiceType } from './types';
+import { ResearchGraph } from '@dxos/assistant-testing';
 
 export const AssistantPlugin = () =>
   definePlugin(meta, [
@@ -102,7 +103,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo, ResearchGraph]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,

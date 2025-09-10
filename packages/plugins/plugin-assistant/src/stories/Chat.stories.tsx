@@ -47,6 +47,7 @@ import {
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  LoggingContainer,
   MessageContainer,
   TasksContainer,
   TokenManagerContainer,
@@ -447,7 +448,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
