@@ -211,30 +211,7 @@ export const createThemeExtensions = ({
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
-<<<<<<< HEAD
             view.scrollDOM.classList.add(...slots.scroll.className.split(/\s+/));
-          }
-        },
-      ),
-    // TODO(burdon): Remove.
-    slots.scroller?.className &&
-      ViewPlugin.fromClass(
-        class {
-          constructor(view: EditorView) {
-            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(/\s+/));
-||||||| c1bfbce967
-            view.scrollDOM.classList.add(slots.scroll.className);
-          }
-        },
-      ),
-    slots.scroller?.className &&
-      ViewPlugin.fromClass(
-        class {
-          constructor(view: EditorView) {
-            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(' '));
-=======
-            view.scrollDOM.classList.add(...slots.scroll.className.split(/\s+/));
->>>>>>> origin/main
           }
         },
       ),
