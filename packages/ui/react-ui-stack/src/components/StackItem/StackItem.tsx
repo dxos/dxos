@@ -90,7 +90,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [closestEdge, setEdge] = useState<Edge | null>(null);
     const [sourceId, setSourceId] = useState<string | null>(null);
     const [dragState, setDragState] = useState<ItemDragState>(idle);
-    const { orientation, rail, onRearrange } = useStack();
+    const { orientation, rail, onRearrange, size: stackSize } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
@@ -243,7 +243,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
           data-dx-stack-item
           {...resizeAttributes}
           style={{
-            ...sizeStyle(size, orientation),
+            ...(stackSize !== 'split' && sizeStyle(size, orientation)),
             ...(Number.isFinite(order) && {
               [orientation === 'horizontal' ? 'gridColumn' : 'gridRow']: `${order}`,
             }),

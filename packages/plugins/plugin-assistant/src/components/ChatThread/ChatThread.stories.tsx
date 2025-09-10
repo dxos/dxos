@@ -124,7 +124,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
           {
             _tag: 'text',
             text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
-          },
+          } satisfies ContentBlock.Text,
           // Inline cards.
           ...[obj2, obj3, obj4].map(
             (obj) =>

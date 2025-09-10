@@ -37,10 +37,11 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
 
     // Reduce messages to collapse related blocks.
     const reducedMessages = useMemo(() => {
-      if (!debug) {
-        return messages.reduce(reduceMessages, { messages: [] }).messages;
+      if (debug) {
+        // Raw.
+        return messages; // TODO(burdon): Need TS.
       } else {
-        return messages;
+        return messages.reduce(reduceMessages, { messages: [] }).messages;
       }
     }, [messages, debug]);
 

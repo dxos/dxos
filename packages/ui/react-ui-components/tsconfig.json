@@ -39,7 +39,13 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-syntax-highlighter"

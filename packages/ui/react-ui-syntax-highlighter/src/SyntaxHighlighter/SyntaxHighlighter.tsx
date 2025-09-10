@@ -36,7 +36,7 @@ export const SyntaxHighlighter = ({
 
   return (
     <NativeSyntaxHighlighter
-      className={mx('w-full p-0 font-thin overflow-auto scrollbar-thin !text-baseText', classNames)}
+      className={mx('is-full p-0 font-thin overflow-auto scrollbar-thin !text-baseText', classNames)}
       language={languages[language as keyof typeof languages] || language}
       style={themeMode === 'dark' ? dark : light}
       // TODO(burdon): To override with classNames must prefix with "!".
