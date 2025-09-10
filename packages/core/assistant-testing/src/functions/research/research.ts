@@ -36,14 +36,16 @@ import { ResearchDataTypes } from './types';
  */
 export default defineFunction({
   name: 'dxos.org/function/research',
-  description: 'Research the web for information',
+  description:
+    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: 'The query to search for.',
     }),
 
     researchInstructions: Schema.optional(Schema.String).annotations({
-      description: 'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis.',
+      description:
+        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
     }),
 
     // TOOD(burdon): Move to context.
