@@ -7,28 +7,44 @@ import React, { type CSSProperties } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, decorateMarkdown, useTextEditor } from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
 
-import { type StreamerOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
-import { registry } from './registry';
+import { type StreamerOptions, type XmlTagOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
 
-export type MarkdownContentProps = ThemedClassName<{
-  content?: string;
-  options?: StreamerOptions;
-  userHue?: string;
-}>;
+export type MarkdownContentProps = ThemedClassName<
+  {
+    content?: string;
+    userHue?: string; // TODO(burdon): Factor out.
+    options?: StreamerOptions;
+  } & Pick<XmlTagOptions, 'registry' | 'onEvent'>
+>;
 
-export const MarkdownContent = ({ content = '', options, userHue }: MarkdownContentProps) => {
+export const MarkdownContent = ({
+  classNames,
+  content = '',
+  userHue,
+  options,
+  registry,
+  onEvent,
+}: MarkdownContentProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, view } = useTextEditor(
     {
       initialValue: content,
       extensions: [
         createBasicExtensions({ lineWrapping: true, readOnly: true }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            scroll: {
+              className: 'pie-3 pis-3',
+            },
+          },
+        }),
         extendedMarkdown({ registry }),
         decorateMarkdown(),
+        xmlTags({ registry, onEvent }),
         streamer(options),
-        xmlTags({ registry }),
       ],
     },
     [themeMode],
@@ -62,7 +78,7 @@ export const MarkdownContent = ({ content = '', options, userHue }: MarkdownCont
   return (
     <div
       ref={parentRef}
-      className='is-full overflow-hidden'
+      className={mx('is-full overflow-hidden', classNames)}
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     />
   );

@@ -4,6 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
+import { Domino } from '../../domino';
 import { type XmlWidgetFactory } from '../xml-tags';
 
 export const PromptWidgetFactory: XmlWidgetFactory = (props) => {
@@ -20,14 +21,11 @@ export class PromptWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'flex justify-end';
-    const inner = document.createElement('div');
     // NOTE: Container must set var based on user's identity.
-    inner.className = 'p-2 bg-[--user-fill] rounded-sm';
-    inner.textContent = this.text;
-    el.appendChild(inner);
-    return el;
+    return Domino.of('div')
+      .classNames('flex justify-end')
+      .child(Domino.of('div').classNames('p-2 bg-[--user-fill] rounded-sm').text(this.text))
+      .build();
   }
 
   override eq(other: WidgetType): boolean {

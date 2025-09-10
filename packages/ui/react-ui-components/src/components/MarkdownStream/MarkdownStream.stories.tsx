@@ -17,6 +17,7 @@ import { useStreamingText } from '../../hooks';
 
 import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
+import { registry } from './registry';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
 
@@ -49,16 +50,20 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
   }, []);
 
   return (
-    <div className='flex flex-col h-full overflow-hidden gap-4 p-4'>
+    <div className='grid grid-rows-[min-content_1fr] h-full overflow-hidden'>
       <Toolbar.Root>
         <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
           Start
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <div className='grid grow overflow-hidden'>
-        <MarkdownStream content={str} options={options} userHue={userHue} />
-      </div>
+      <MarkdownStream
+        content={str}
+        options={options}
+        userHue={userHue}
+        registry={registry}
+        onEvent={(ev) => console.log(ev)}
+      />
     </div>
   );
 };
@@ -94,5 +99,13 @@ export const Streaming: Story = {
 };
 
 export const Components = () => {
-  return <MarkdownContent content={doc} userHue={userHue} options={{ autoScroll: true }} />;
+  return (
+    <MarkdownContent
+      content={doc}
+      userHue={userHue}
+      options={{ autoScroll: true }}
+      registry={registry}
+      onEvent={(ev) => console.log(ev)}
+    />
+  );
 };

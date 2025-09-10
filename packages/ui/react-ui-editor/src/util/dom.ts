@@ -40,6 +40,7 @@ export type ElementOptions = {
   text?: string;
 };
 
+/** @deprecated Use Domino */
 export const createElement = (tag: string, options?: ElementOptions, children?: HTMLElement[]): HTMLElement => {
   const el = document.createElement(tag);
   if (options?.className) {

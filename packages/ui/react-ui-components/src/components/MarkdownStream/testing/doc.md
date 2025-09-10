@@ -26,7 +26,7 @@ Here are some options.
 
 And some suggestions.
 
-<suggest>Retry</suggest>
+<suggest>List available tools</suggest>
 
 This is a link <dx-ref-tag refid="dxn://example.com/123">DXOS</dx-ref-tag> which is inline.
 

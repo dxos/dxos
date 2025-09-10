@@ -155,7 +155,9 @@ export const CellEditor = ({ value, extension, autoFocus, onBlur, box, gridId, s
                 slots?.scroller?.className,
               ),
             },
-            content: { className: mx('!break-normal', slots?.content?.className) },
+            content: {
+              className: mx('!break-normal', slots?.content?.className),
+            },
           },
         }),
       ],

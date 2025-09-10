@@ -4,6 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
+import { Domino } from '../../domino';
 import { type XmlWidgetFactory } from '../xml-tags';
 
 // TODO(burdon): Type check ContentBlock.Summary?
@@ -21,10 +22,7 @@ export class SummaryWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    const el = document.createElement('div');
-    el.className = 'text-sm text-subdued';
-    el.textContent = this.text;
-    return el;
+    return Domino.of('div').classNames('text-sm text-subdued').text(this.text).build();
   }
 
   override eq(other: WidgetType): boolean {

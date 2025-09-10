@@ -158,6 +158,7 @@ export type ThemeExtensionsOptions = {
     scroll?: {
       className?: string;
     };
+    // TODO(burdon): Remove.
     scroller?: {
       className?: string;
     };
@@ -187,7 +188,7 @@ export const defaultThemeSlots = grow;
 export const createThemeExtensions = ({
   themeMode,
   styles,
-  syntaxHighlighting: _syntaxHighlighting,
+  syntaxHighlighting: syntaxHighlightingProps,
   slots: _slots,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
@@ -195,7 +196,7 @@ export const createThemeExtensions = ({
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
     // https://github.com/codemirror/theme-one-dark
-    _syntaxHighlighting &&
+    syntaxHighlightingProps &&
       (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
@@ -203,15 +204,16 @@ export const createThemeExtensions = ({
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
-            view.scrollDOM.classList.add(slots.scroll.className);
+            view.scrollDOM.classList.add(...slots.scroll.className.split(/\s+/));
           }
         },
       ),
+    // TODO(burdon): Remove.
     slots.scroller?.className &&
       ViewPlugin.fromClass(
         class {
           constructor(view: EditorView) {
-            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(' '));
+            view.dom.querySelector('.cm-scroller')?.classList.add(...slots.scroller.className.split(/\s+/));
           }
         },
       ),
@@ -247,9 +249,9 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
           channel: `awareness.${id}`,
           peerId: identity.identityKey.toHex(),
           info: {
-            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
             darkColor: `var(--dx-${hue}Cursor)`,
             lightColor: `var(--dx-${hue}Cursor)`,
+            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
           },
         }),
       ),
