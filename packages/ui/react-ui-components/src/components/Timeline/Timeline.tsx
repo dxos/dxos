@@ -6,10 +6,11 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
+import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
+import { translationKey } from '../../translations';
 import { ScrollContainer, type ScrollController } from '../ScrollContainer';
 
 export type TimelineOptions = {
@@ -77,6 +78,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     },
     forwardedRef,
   ) => {
+    const { t } = useTranslation(translationKey);
     const scrollerRef = useForwardedRef(forwardedRef);
 
     // Auto-discover branches if not provided.
@@ -203,49 +205,53 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
           tabIndex={0}
           ref={containerRef}
         >
-          {commits.map((commit, index) => {
-            // Skip branches that are not whitelisted.
-            const idx = getBranchIndex(commit.branch);
-            if (idx === -1) {
-              return null;
-            }
+          {commits.length < 1 ? (
+            <p className={mx(descriptionText, 'p-trimMd')}>{t('no commits message')}</p>
+          ) : (
+            commits.map((commit, index) => {
+              // Skip branches that are not whitelisted.
+              const idx = getBranchIndex(commit.branch);
+              if (idx === -1) {
+                return null;
+              }
 
-            return (
-              <div
-                key={commit.id}
-                data-index={index}
-                aria-current={current === index}
-                className={mx(
-                  'group flex shrink-0 overflow-hidden pis-3 pie-3 gap-2 items-center',
-                  // TODO(burdon): Factor out fragment.
-                  'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
-                )}
-                style={{ height: `${options.lineHeight}px` }}
-                onClick={() => setCurrent(index)}
-              >
-                <div className='flex shrink-0'>
-                  <LineVector
-                    branches={branches}
-                    spans={spans}
-                    index={index}
-                    commit={commit}
-                    currentCommit={currentCommit}
-                    options={options}
-                  />
-                </div>
-                {showIcon && (
-                  <div className='flex shrink-0 w-6 justify-center'>
-                    {commit.icon && (
-                      <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
-                    )}
+              return (
+                <div
+                  key={commit.id}
+                  data-index={index}
+                  aria-current={current === index}
+                  className={mx(
+                    'group flex shrink-0 overflow-hidden pis-3 pie-3 gap-2 items-center',
+                    // TODO(burdon): Factor out fragment.
+                    'aria-[current=true]:bg-activeSurface hover:bg-hoverSurface',
+                  )}
+                  style={{ height: `${options.lineHeight}px` }}
+                  onClick={() => setCurrent(index)}
+                >
+                  <div className='flex shrink-0'>
+                    <LineVector
+                      branches={branches}
+                      spans={spans}
+                      index={index}
+                      commit={commit}
+                      currentCommit={currentCommit}
+                      options={options}
+                    />
                   </div>
-                )}
-                <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
-                  {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                  {showIcon && (
+                    <div className='flex shrink-0 w-6 justify-center'>
+                      {commit.icon && (
+                        <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
+                      )}
+                    </div>
+                  )}
+                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-baseText'>
+                    {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </ScrollContainer.Content>
         <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
