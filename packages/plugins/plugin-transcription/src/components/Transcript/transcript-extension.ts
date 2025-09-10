@@ -131,7 +131,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           );
         }
 
-        update(update: ViewUpdate) {
+        update(_update: ViewUpdate) {
           // Initial sync.
           if (!this._initialized) {
             this._initialized = true;

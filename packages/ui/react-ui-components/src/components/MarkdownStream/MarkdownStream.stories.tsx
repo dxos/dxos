@@ -94,5 +94,5 @@ export const Streaming: Story = {
 };
 
 export const Components = () => {
-  return <MarkdownContent content={doc} userHue={userHue} />;
+  return <MarkdownContent content={doc} userHue={userHue} options={{ autoScroll: true }} />;
 };

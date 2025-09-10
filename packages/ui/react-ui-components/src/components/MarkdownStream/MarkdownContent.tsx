@@ -25,7 +25,6 @@ export const MarkdownContent = ({ content = '', options, userHue }: MarkdownCont
       extensions: [
         createBasicExtensions({ lineWrapping: true, readOnly: true }),
         createThemeExtensions({ themeMode }),
-        // createMarkdownExtensions({ themeMode }),
         extendedMarkdown({ registry }),
         decorateMarkdown(),
         streamer(options),
