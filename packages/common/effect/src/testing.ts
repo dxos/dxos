@@ -79,4 +79,6 @@ export namespace TestHelpers {
           return yield* effect;
         }
       });
+
+  export const tagEnabled = (tag: TestTag) => process.env.DX_TEST_TAGS?.includes(tag);
 }
