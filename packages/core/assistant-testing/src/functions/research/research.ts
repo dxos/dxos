@@ -79,8 +79,7 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-            ContextQueueService.layer(researchQueue),
-          ),
+          ).pipe(Layer.provide(ContextQueueService.layer(researchQueue))),
         ),
       );
 
@@ -91,7 +90,6 @@ export default defineFunction({
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
