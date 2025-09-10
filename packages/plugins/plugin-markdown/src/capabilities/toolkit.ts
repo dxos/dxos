@@ -33,7 +33,7 @@ class Toolkit extends AiToolkit.make(
 
         return Effect.gen(function* () {
           const { object } = yield* dispatch(createIntent(MarkdownAction.Create, { name, content }));
-          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
+          yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space }));
           return object;
         }).pipe(Effect.orDie);
       },
