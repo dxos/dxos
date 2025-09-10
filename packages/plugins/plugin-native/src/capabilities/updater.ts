@@ -15,8 +15,9 @@ import { NATIVE_PLUGIN } from '../meta';
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
 export default (context: PluginContext) => {
+  // Skip updates if not supported or in dev mode.
   const platform = type();
-  if (!SUPPORTS_OTA.includes(platform)) {
+  if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
     return contributes(Capabilities.Null, null);
   }
 
