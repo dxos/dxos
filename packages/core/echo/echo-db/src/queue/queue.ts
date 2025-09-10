@@ -22,6 +22,10 @@ import type { Queue } from './types';
 
 const TRACE_QUEUE_LOAD = false;
 
+// Appending large amount of objects at once is not supported by the server.
+// https://linear.app/dxos/issue/DX-449/queueappend-fails-when-there-are-too-many-objects-due-to-there-being
+const QUEUE_APPEND_BATCH_SIZE = 15;
+
 /**
  * Client-side view onto an EDGE queue.
  */
@@ -138,13 +142,17 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     }
     this._signal.notifyWrite();
 
+    const json = items.map((item) => Obj.toJSON(item));
+
     try {
-      await this._service.insertIntoQueue(
-        this._subspaceTag,
-        this._spaceId,
-        this._queueId,
-        items.map((item) => Obj.toJSON(item)),
-      );
+      for (let i = 0; i < json.length; i += QUEUE_APPEND_BATCH_SIZE) {
+        await this._service.insertIntoQueue(
+          this._subspaceTag,
+          this._spaceId,
+          this._queueId,
+          json.slice(i, i + QUEUE_APPEND_BATCH_SIZE),
+        );
+      }
     } catch (err) {
       log.catch(err);
       this._error = err as Error;
