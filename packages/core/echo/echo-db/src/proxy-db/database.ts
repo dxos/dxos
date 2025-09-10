@@ -78,6 +78,11 @@ export interface EchoDatabase {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
+   *
+   * ## Difference from `Ref.fromDXN`
+   *
+   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `db.ref(dxn)` is preferable in cases with access to the database.
    */
   ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
