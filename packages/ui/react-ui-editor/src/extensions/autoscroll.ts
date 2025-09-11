@@ -2,11 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ViewPlugin } from '@codemirror/view';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { EditorView } from '@dxos/react-ui-editor';
-
-import { Domino } from '../domino';
+import { Domino } from '../util';
 
 const lineHeight = 24;
 
@@ -18,7 +16,6 @@ export type AutoScrollOptions = {
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-// TODO(burdon): Move to react-ui-editor.
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 1_000 }: AutoScrollOptions = {}) => {
   let isThrottled = false;

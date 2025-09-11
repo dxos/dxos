@@ -6,9 +6,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 /**
  * Super lightweight chainable DOM builder.
- * Short for "DOM I know, we probably shouldn't need this!"
  */
-// TODO(burdon): Move to util and reconcile with react-ui-editor util.
 export class Domino<T extends HTMLElement> {
   static of<K extends keyof HTMLElementTagNameMap>(tag: K): Domino<HTMLElementTagNameMap[K]> {
     return new Domino<HTMLElementTagNameMap[K]>(tag);

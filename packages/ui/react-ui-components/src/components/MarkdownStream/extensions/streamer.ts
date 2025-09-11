@@ -5,10 +5,8 @@
 import { type Extension, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
 
-import { EditorView } from '@dxos/react-ui-editor';
+import { EditorView, autoScroll } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
-
-import { autoScroll } from './autoscroll';
 
 export type StreamerOptions = {
   autoScroll?: boolean;

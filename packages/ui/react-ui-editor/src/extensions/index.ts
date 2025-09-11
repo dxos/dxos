@@ -4,6 +4,7 @@
 
 export * from './annotations';
 export * from './autocomplete';
+export * from './autoscroll';
 export * from './automerge';
 export * from './awareness';
 export * from './blast';
