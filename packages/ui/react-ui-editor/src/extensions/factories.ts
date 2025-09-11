@@ -48,6 +48,7 @@ export const preventNewline = EditorState.transactionFilter.of((tr) => (tr.newDo
  * https://codemirror.net/docs/extensions
  * https://github.com/codemirror/basic-setup
  * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts
+ * https://github.com/codemirror/theme-one-dark
  */
 export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
@@ -158,17 +159,6 @@ export type ThemeExtensionsOptions = {
     scroll?: {
       className?: string;
     };
-<<<<<<< HEAD
-    // TODO(burdon): Remove.
-    scroller?: {
-      className?: string;
-    };
-||||||| c1bfbce967
-    scroller?: {
-      className?: string;
-    };
-=======
->>>>>>> origin/main
     content?: {
       className?: string;
     };
@@ -202,9 +192,7 @@ export const createThemeExtensions = ({
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    // https://github.com/codemirror/theme-one-dark
-    syntaxHighlightingProps &&
-      (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
+    syntaxHighlightingProps && syntaxHighlighting(themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     slots.scroll?.className &&
@@ -239,7 +227,6 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();
     const hue = (identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0');
-
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
