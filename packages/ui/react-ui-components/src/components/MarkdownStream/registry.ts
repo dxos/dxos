@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ToolBlock } from '../ToolBlock';
+
 import { Fallback, Suggest } from './components';
 import {
   ElementWidgetFactory,
@@ -66,13 +68,11 @@ export const registry: XmlComponentRegistry = {
   },
   ['toolCall' as const]: {
     block: true,
-    // TODO(thure): Should use ToolBlock, but that is currently in a downstream package `plugin-assistant`.
-    Component: Fallback,
+    Component: ToolBlock,
   },
   ['toolResult' as const]: {
     block: true,
-    // TODO(thure): Should also use ToolBlock, but that is currently in a downstream package `plugin-assistant`.
-    Component: Fallback,
+    Component: ToolBlock,
   },
   ['toolkit' as const]: {
     block: true,

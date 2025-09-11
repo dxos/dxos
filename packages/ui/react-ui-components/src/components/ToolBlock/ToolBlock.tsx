@@ -13,9 +13,8 @@ import { type ContentBlock, type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
 import { safeParseJson } from '@dxos/util';
 
-import { meta } from '../../meta';
-
-import { styles } from './ChatMessage';
+import { chatMessageJson, chatMessagePanel, chatMessagePanelContent, chatMessagePanelHeader } from '../../fragments';
+import { translationKey } from '../../translations';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -30,7 +29,7 @@ export type ToolBlockProps = {
 
 // TODO(burdon): Pass in blocks.
 export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = useTranslation(translationKey);
   const { blocks = [] } = message;
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
@@ -128,13 +127,13 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
   const data = items[selected].content;
 
   return (
-    <ToggleContainer.Root classNames={styles.panel} open={open} onChangeOpen={setOpen}>
-      <ToggleContainer.Header classNames={styles.panelHeader} title={title} />
-      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', styles.panelContent]}>
+    <ToggleContainer.Root classNames={chatMessagePanel} open={open} onChangeOpen={setOpen}>
+      <ToggleContainer.Header classNames={chatMessagePanelHeader} title={title} />
+      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', chatMessagePanelContent]}>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json
           data={data}
-          classNames={styles.json}
+          classNames={chatMessageJson}
           replacer={{
             maxDepth: 3,
             maxArrayLen: 10,
