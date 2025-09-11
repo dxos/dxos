@@ -7,7 +7,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
 import { useTranslation } from '@dxos/react-ui';
-import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
@@ -15,6 +14,9 @@ import { safeParseJson } from '@dxos/util';
 
 import { chatMessageJson, chatMessagePanel, chatMessagePanelContent, chatMessagePanelHeader } from '../../fragments';
 import { translationKey } from '../../translations';
+import { NumericTabs } from '../NumericTabs';
+import { TextCrawl } from '../TextCrawl';
+import { ToggleContainer } from '../ToggleContainer';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
