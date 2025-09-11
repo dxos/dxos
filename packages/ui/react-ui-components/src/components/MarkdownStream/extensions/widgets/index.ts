@@ -4,5 +4,3 @@
 
 export * from './ElementWidget';
 export * from './ReactWidget';
-export * from './PromptWidget';
-export * from './SummaryWidget';
