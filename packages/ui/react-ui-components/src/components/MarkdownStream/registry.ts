@@ -2,15 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolBlock } from '../ToolBlock';
-
-import { Fallback, Suggest } from './components';
-import {
-  ElementWidgetFactory,
-  PromptWidgetFactory,
-  SummaryWidgetFactory,
-  type XmlComponentRegistry,
-} from './extensions';
+import { Fallback } from './components';
+import { ElementWidgetFactory, type XmlComponentRegistry } from './extensions';
 
 // TODO(burdon): Move to plugin.
 
@@ -27,23 +20,30 @@ import {
 //   - 'status'
 //   - 'transcript'
 
-export const registry: XmlComponentRegistry = {
+export const registry = {
   //
   // Element
   //
 
-  // TODO(thure): Should this not use the 'reference' tag?
-  ['dx-ref-tag' as const]: {
+  ['reference' as const]: {
     block: false,
     factory: ElementWidgetFactory,
   },
   ['summary' as const]: {
     block: true,
-    factory: SummaryWidgetFactory,
+    factory: ElementWidgetFactory,
   },
   ['prompt' as const]: {
     block: true,
-    factory: PromptWidgetFactory,
+    factory: ElementWidgetFactory,
+  },
+  ['select' as const]: {
+    block: true,
+    factory: ElementWidgetFactory,
+  },
+  ['suggestion' as const]: {
+    block: true,
+    factory: ElementWidgetFactory,
   },
   // TODO(thure): Does `'text' as const` need to be registered, or is that just inherently handled by `MarkdownStream`?
 
@@ -57,25 +57,16 @@ export const registry: XmlComponentRegistry = {
     // TODO(thure): Whether this renders a `Surface` (must remain React) or a `ToggleContainer` (can become Lit) depends on its `disposition`, what to do here?
     Component: Fallback,
   },
-  ['select' as const]: {
+  ['toolCall' as const]: {
     block: true,
     Component: Fallback,
   },
-  // TODO(thure): `ChatMessage.tsx` L166 uses 'suggestion', is this a typo?
-  ['suggest' as const]: {
-    block: true,
-    Component: Suggest,
-  },
-  ['toolCall' as const]: {
-    block: true,
-    Component: ToolBlock,
-  },
   ['toolResult' as const]: {
     block: true,
-    Component: ToolBlock,
+    Component: Fallback,
   },
   ['toolkit' as const]: {
     block: true,
     Component: Fallback,
   },
-} as const;
+} satisfies XmlComponentRegistry;
