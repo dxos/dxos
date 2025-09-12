@@ -43,6 +43,10 @@ export const useStreamingText = (text = '', delay = 10): [string, boolean] => {
   return [current, current.length === text.length];
 };
 
+/**
+ *
+ */
+// TODO(burdon): Stream complete XML tags.
 async function* streamText(text: string, delay: number) {
   for (const char of text) {
     yield char;

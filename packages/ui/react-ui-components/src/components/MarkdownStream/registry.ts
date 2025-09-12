@@ -3,54 +3,71 @@
 //
 
 import { Fallback, Json } from './components';
-import { ElementWidgetFactory, type XmlComponentRegistry } from './extensions';
+import { type XmlComponentRegistry } from './extensions';
+import { PromptWidget, ReferenceWidget, SelectWidget, SuggestionWidget, SummaryWidget } from './widgets';
 
 // TODO(burdon): Move to plugin.
-
-/**
- * Custom XML tags registry.
- */
-// TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`) which don’t appear to be handled by extant rendering logic (maybe intentionally, just might want to mark them as “won’t-implement” here for clarity):
-//   - 'anchor'
-//   - 'reference'
-//   - 'file'
-//   - 'image'
-//   - 'proposal'
-//   - 'reasoning'
-//   - 'status'
-//   - 'transcript'
 
 export const registry = {
   //
   // Element
   //
 
-  ['reference' as const]: {
-    block: false,
-    factory: ElementWidgetFactory,
-  },
-  ['summary' as const]: {
-    block: true,
-    factory: ElementWidgetFactory,
-  },
+  /**
+   * Custom XML tags registry.
+   */
+  // TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`) which don’t appear to be handled by extant rendering logic (maybe intentionally, just might want to mark them as “won’t-implement” here for clarity):
+  //   - 'anchor'
+  //   - 'reference'
+  //   - 'file'
+  //   - 'image'
+  //   - 'proposal'
+  //   - 'reasoning'
+  //   - 'status'
+  //   - 'transcript'
+
   ['prompt' as const]: {
     block: true,
-    factory: ElementWidgetFactory,
+    factory: (props) => {
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new PromptWidget(text) : null;
+    },
+  },
+  ['reference' as const]: {
+    block: false,
+    factory: (props) => {
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new ReferenceWidget(text) : null;
+    },
   },
   ['select' as const]: {
     block: true,
-    factory: ElementWidgetFactory,
+    factory: (props) => {
+      const options = props.children
+        .filter((option: any) => option.tag === 'option')
+        .map((option: any) => option.children?.[0]);
+      return new SelectWidget(options);
+    },
   },
-  ['suggestion' as const]: {
+  ['suggest' as const]: {
     block: true,
-    factory: ElementWidgetFactory,
+    factory: (props) => {
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new SuggestionWidget(text) : null;
+    },
   },
-  // TODO(thure): Does `'text' as const` need to be registered, or is that just inherently handled by `MarkdownStream`?
+  ['summary' as const]: {
+    block: true,
+    factory: (props) => {
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new SummaryWidget(text) : null;
+    },
+  },
 
   //
   // React
+  // TODO(thure): Convert all but components rendering a `Surface` to a Lit widget.
   //
-  // TODO(thure, paraphrasing burdon): Convert all but components rendering a `Surface` to a Lit widget.
 
   ['json' as const]: {
     block: true,
