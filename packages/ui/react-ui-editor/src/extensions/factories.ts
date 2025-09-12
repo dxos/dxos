@@ -48,6 +48,7 @@ export const preventNewline = EditorState.transactionFilter.of((tr) => (tr.newDo
  * https://codemirror.net/docs/extensions
  * https://github.com/codemirror/basic-setup
  * https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts
+ * https://github.com/codemirror/theme-one-dark
  */
 export type BasicExtensionsOptions = {
   allowMultipleSelections?: boolean;
@@ -184,16 +185,14 @@ export const defaultThemeSlots = grow;
 export const createThemeExtensions = ({
   themeMode,
   styles,
-  syntaxHighlighting: _syntaxHighlighting,
+  syntaxHighlighting: syntaxHighlightingProps,
   slots: _slots,
 }: ThemeExtensionsOptions = {}): Extension => {
   const slots = defaultsDeep({}, _slots, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    // https://github.com/codemirror/theme-one-dark
-    _syntaxHighlighting &&
-      (themeMode === 'dark' ? syntaxHighlighting(oneDarkHighlightStyle) : syntaxHighlighting(defaultHighlightStyle)),
+    syntaxHighlightingProps && syntaxHighlighting(themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     slots.scroll?.className &&
@@ -228,7 +227,6 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();
     const hue = (identity?.profile?.data?.hue as HuePalette | undefined) ?? hexToHue(peerId ?? '0');
-
     extensions.push(
       awareness(
         new SpaceAwarenessProvider({
@@ -236,9 +234,9 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
           channel: `awareness.${id}`,
           peerId: identity.identityKey.toHex(),
           info: {
-            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
             darkColor: `var(--dx-${hue}Cursor)`,
             lightColor: `var(--dx-${hue}Cursor)`,
+            displayName: identity.profile?.displayName ?? generateName(identity.identityKey.toHex()),
           },
         }),
       ),
