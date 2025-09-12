@@ -170,6 +170,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
     );
   },
 
+  ['reference' as const]: ({ block, space }) => {
+    invariant(block._tag === 'reference');
+
+    return <RefBlock block={block} space={space!} />;
+  },
+
   //
   // Suggest
   //
@@ -288,6 +294,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       </ToggleContainer.Root>
     );
   },
+};
+
+const RefBlock = ({ block, space }: { block: ContentBlock.Reference; space: Space }) => {
+  const ref = useMemo(() => space.db.ref(block.reference.dxn), [space, block.reference.dxn.toString()]);
+
+  return <Surface role='card' data={{ subject: ref.target }} limit={1} />;
 };
 
 export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {

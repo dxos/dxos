@@ -36,10 +36,16 @@ import { ResearchDataTypes } from './types';
  */
 export default defineFunction({
   name: 'dxos.org/function/research',
-  description: 'Research the web for information',
+  description:
+    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: 'The query to search for.',
+    }),
+
+    researchInstructions: Schema.optional(Schema.String).annotations({
+      description:
+        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
     }),
 
     // TOOD(burdon): Move to context.
@@ -57,7 +63,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch } }) {
+    function* ({ data: { query, mockSearch, researchInstructions } }) {
       const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
       const researchQueue = yield* DatabaseService.load(researchGraph.queue);
 
@@ -79,19 +85,21 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-            ContextQueueService.layer(researchQueue),
-          ),
+          ).pipe(Layer.provide(ContextQueueService.layer(researchQueue))),
         ),
       );
 
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system: PROMPT,
+        system:
+          PROMPT +
+          (researchInstructions
+            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
+            : ''),
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
