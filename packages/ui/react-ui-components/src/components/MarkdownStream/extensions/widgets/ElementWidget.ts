@@ -24,10 +24,11 @@ export class ElementWidget extends WidgetType {
 
   private createUserMessageElement() {
     const el = document.createElement('div');
-    el.className = 'dx-chat__message-block flex justify-end';
+    el.role = 'none';
+    el.className = 'flex justify-end';
     const inner = document.createElement('p');
     // NOTE: Container must set var based on user's identity.
-    inner.className = 'dx-chat__message-block__message--self pli-3 plb-2 bg-[--user-fill] rounded-sm';
+    inner.className = 'pli-3 plb-2 bg-[--user-fill] rounded-sm';
     inner.textContent = String(this.props.children);
     el.appendChild(inner);
     return el;

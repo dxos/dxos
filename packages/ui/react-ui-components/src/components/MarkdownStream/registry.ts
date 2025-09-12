@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Fallback } from './components';
+import { Fallback, Json } from './components';
 import { ElementWidgetFactory, type XmlComponentRegistry } from './extensions';
 
 // TODO(burdon): Move to plugin.
@@ -55,7 +55,7 @@ export const registry = {
   ['json' as const]: {
     block: true,
     // TODO(thure): Whether this renders a `Surface` (must remain React) or a `ToggleContainer` (can become Lit) depends on its `disposition`, what to do here?
-    Component: Fallback,
+    Component: Json,
   },
   ['toolCall' as const]: {
     block: true,
