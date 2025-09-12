@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
+import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -13,7 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 const zeroWidthSpace = '\u200b';
 
 export type SyntaxHighlighterProps = ThemedClassName<
-  NativeSyntaxHighlighterProps & {
+  NaturalSyntaxHighlighterProps & {
     fallback?: string;
   }
 >;

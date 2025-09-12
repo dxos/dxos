@@ -9,7 +9,7 @@ import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { ViewEditor as NativeViewEditor } from '@dxos/react-ui-form';
+import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { DataType } from '@dxos/schema';
 
 import { SpaceAction } from '../types';
@@ -52,7 +52,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   }
 
   return (
-    <NativeViewEditor
+    <NaturalViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
