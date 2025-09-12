@@ -24,7 +24,7 @@ Options:
 
 Suggestion:
 
-<suggest>List available tools</suggest>
+<suggestion>List available tools</suggestion>
 
 Here is a tool call, result, and summary.
 

@@ -55,7 +55,7 @@ export const registry: XmlComponentRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  ['suggest' as const]: {
+  ['suggestion' as const]: {
     block: true,
     factory: (props) => {
       const text = getTextChild(props.children);
