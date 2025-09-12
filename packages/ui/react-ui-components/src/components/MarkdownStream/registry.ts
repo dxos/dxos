@@ -2,53 +2,71 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Fallback, Suggest } from './components';
-import {
-  ElementWidgetFactory,
-  PromptWidgetFactory,
-  SummaryWidgetFactory,
-  type XmlComponentRegistry,
-} from './extensions';
+import { Fallback, Json } from './components';
+import { ElementWidgetFactory, type XmlComponentRegistry } from './extensions';
 
 // TODO(burdon): Move to plugin.
 
 /**
  * Custom XML tags registry.
  */
-export const registry: XmlComponentRegistry = {
+// TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`) which don’t appear to be handled by extant rendering logic (maybe intentionally, just might want to mark them as “won’t-implement” here for clarity):
+//   - 'anchor'
+//   - 'reference'
+//   - 'file'
+//   - 'image'
+//   - 'proposal'
+//   - 'reasoning'
+//   - 'status'
+//   - 'transcript'
+
+export const registry = {
   //
   // Element
   //
 
-  ['dx-ref-tag' as const]: {
+  ['reference' as const]: {
     block: false,
     factory: ElementWidgetFactory,
   },
   ['summary' as const]: {
     block: true,
-    factory: SummaryWidgetFactory,
+    factory: ElementWidgetFactory,
   },
   ['prompt' as const]: {
     block: true,
-    factory: PromptWidgetFactory,
+    factory: ElementWidgetFactory,
   },
+  ['select' as const]: {
+    block: true,
+    factory: ElementWidgetFactory,
+  },
+  ['suggestion' as const]: {
+    block: true,
+    factory: ElementWidgetFactory,
+  },
+  // TODO(thure): Does `'text' as const` need to be registered, or is that just inherently handled by `MarkdownStream`?
 
   //
   // React
   //
+  // TODO(thure, paraphrasing burdon): Convert all but components rendering a `Surface` to a Lit widget.
 
-  // TODO(burdon): Convert to widget.
-  ['select' as const]: {
+  ['json' as const]: {
+    block: true,
+    // TODO(thure): Whether this renders a `Surface` (must remain React) or a `ToggleContainer` (can become Lit) depends on its `disposition`, what to do here?
+    Component: Json,
+  },
+  ['toolCall' as const]: {
     block: true,
     Component: Fallback,
   },
-  // TODO(burdon): Convert to widget.
-  ['suggest' as const]: {
+  ['toolResult' as const]: {
     block: true,
-    Component: Suggest,
+    Component: Fallback,
   },
   ['toolkit' as const]: {
     block: true,
     Component: Fallback,
   },
-} as const;
+} satisfies XmlComponentRegistry;
