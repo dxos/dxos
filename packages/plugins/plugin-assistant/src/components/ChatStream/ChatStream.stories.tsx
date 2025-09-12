@@ -10,18 +10,23 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
+import {
+  MarkdownContent,
+  MarkdownStream,
+  type MarkdownStreamProps,
+  type TextStreamOptions,
+  textStream,
+  useStreamingText,
+  useTextStream,
+} from '@dxos/react-ui-components';
 import { editorWidth } from '@dxos/react-ui-editor';
 import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { useStreamingText } from '../../hooks';
-
-import { MarkdownContent } from './MarkdownContent';
-import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
-import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
+import { xmlComponentRegistry } from './xmlComponentRegistry';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -59,13 +64,20 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream content={str} options={options} userHue={userHue} onEvent={(ev) => console.log(ev)} />
+      <MarkdownStream
+        content={str}
+        options={options}
+        userHue={userHue}
+        // classNames='[&_.cm-scroller]:pli-cardSpacingInline [&_.cm-scroller]:plb-cardSpacingBlock min-bs-0'
+        registry={xmlComponentRegistry}
+        onEvent={(ev) => console.log(ev)}
+      />
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-components/MarkdownStream',
+  title: 'plugins/plugin-assistant/ChatStream',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: editorWidth })],
   parameters: {
@@ -96,6 +108,12 @@ export const Streaming: Story = {
 
 export const Components = () => {
   return (
-    <MarkdownContent content={doc} userHue={userHue} options={{ autoScroll: true }} onEvent={(ev) => console.log(ev)} />
+    <MarkdownContent
+      content={doc}
+      userHue={userHue}
+      options={{ autoScroll: true }}
+      registry={xmlComponentRegistry}
+      onEvent={(ev) => console.log(ev)}
+    />
   );
 };

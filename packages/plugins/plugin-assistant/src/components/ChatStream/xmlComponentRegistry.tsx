@@ -4,12 +4,17 @@
 
 import React from 'react';
 
+import {
+  PromptWidget,
+  ReferenceWidget,
+  SelectWidget,
+  SuggestionWidget,
+  SummaryWidget,
+  ToggleContainer,
+  type XmlComponentProps,
+  type XmlComponentRegistry,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-
-import { ToggleContainer } from '../ToggleContainer';
-
-import { type XmlComponentProps, type XmlComponentRegistry } from './extensions';
-import { PromptWidget, ReferenceWidget, SelectWidget, SuggestionWidget, SummaryWidget } from './widgets';
 
 type FallbackProps = XmlComponentProps<any>;
 
@@ -94,6 +99,10 @@ export const xmlComponentRegistry: XmlComponentRegistry = {
   // TODO(thure): Convert all but components rendering a `Surface` to a Lit widget.
   //
 
+  ['toolBlock' as const]: {
+    block: true,
+    Component: Fallback,
+  },
   ['toolCall' as const]: {
     block: true,
     Component: Fallback,
