@@ -21,6 +21,7 @@ import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
@@ -47,6 +48,7 @@ import {
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  LoggingContainer,
   MessageContainer,
   TasksContainer,
   TokenManagerContainer,
@@ -447,7 +449,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -467,7 +469,7 @@ export const WithSearch: Story = {
 
 export const WithTranscription: Story = {
   decorators: getDecorators({
-    plugins: [TranscriptionPlugin()],
+    plugins: [TranscriptionPlugin(), PreviewPlugin()],
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space, binder }) => {
