@@ -34,7 +34,7 @@ import {
 } from '../../testing';
 import { translations } from '../../translations';
 
-import { TranscriptView, type TranscriptViewProps, renderMarkdown } from './Transcript';
+import { TranscriptView, type TranscriptViewProps, renderByline } from './Transcript';
 
 faker.seed(1);
 
@@ -79,7 +79,7 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
-    () => new SerializationModel<DataType.Message>(renderMarkdown([]), initialMessages),
+    () => new SerializationModel<DataType.Message>(renderByline([]), initialMessages),
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
@@ -141,7 +141,7 @@ const QueueStory = ({
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown(members), queue, initialMessages);
+  const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
   return (
     <TranscriptContainer
@@ -161,7 +161,7 @@ const EntityExtractionQueueStory = () => {
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown(members), queue, []);
+  const model = useQueueModelAdapter(renderByline(members), queue, []);
 
   return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
 };

@@ -3,6 +3,7 @@
 //
 
 import { mx } from '@dxos/react-ui-theme';
+import { type ClassNameValue } from '@dxos/react-ui-types';
 
 /**
  * Super lightweight chainable DOM builder.
@@ -16,11 +17,12 @@ export class Domino<T extends HTMLElement> {
   constructor(tag: keyof HTMLElementTagNameMap) {
     this._el = document.createElement(tag) as T;
   }
-  classNames(...classNames: string[]): this {
+  classNames(...classNames: ClassNameValue[]): this {
     this._el.className = mx(classNames);
     return this;
   }
   text(value: string): this {
+    console.log('[set text content]', value);
     this._el.textContent = value;
     return this;
   }
