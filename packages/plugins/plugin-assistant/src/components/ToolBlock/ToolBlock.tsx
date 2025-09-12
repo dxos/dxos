@@ -7,16 +7,21 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
 import { useTranslation } from '@dxos/react-ui';
+import {
+  NumericTabs,
+  TextCrawl,
+  ToggleContainer,
+  chatMessageJson,
+  chatMessagePanel,
+  chatMessagePanelContent,
+  chatMessagePanelHeader,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { isNonNullable, isNotFalsy } from '@dxos/util';
 import { safeParseJson } from '@dxos/util';
 
-import { chatMessageJson, chatMessagePanel, chatMessagePanelContent, chatMessagePanelHeader } from '../../fragments';
-import { translationKey } from '../../translations';
-import { NumericTabs } from '../NumericTabs';
-import { TextCrawl } from '../TextCrawl';
-import { ToggleContainer } from '../ToggleContainer';
+import { meta } from '../../meta';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -31,7 +36,7 @@ export type ToolBlockProps = {
 
 // TODO(burdon): Pass in blocks.
 export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = useTranslation(meta.id);
   const { blocks = [] } = message;
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {

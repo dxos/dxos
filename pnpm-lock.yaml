@@ -13182,6 +13182,9 @@ importers:
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

@@ -3,15 +3,13 @@
 //
 
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
-import { EditorView, GutterMarker, ViewPlugin, type ViewUpdate, gutter } from '@codemirror/view';
+import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
-import { type CleanupFn, addEventListener, combine } from '@dxos/async';
-import { type RenderCallback } from '@dxos/react-ui-editor';
 import { type DataType } from '@dxos/schema';
 
-import { DocumentAdapter, type SerializationModel } from '../../model';
+import { type SerializationModel } from '../../model';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
@@ -19,13 +17,12 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
 export type TranscriptOptions = {
   model: SerializationModel<DataType.Message>;
   started?: Date;
-  renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
 /**
  * Scrolling transcript with timestamps.
  */
-export const transcript = ({ model, started, renderButton }: TranscriptOptions): Extension => {
+export const transcript = ({ model, started }: TranscriptOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({
@@ -55,119 +52,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
       },
     }),
 
-    // Listen for model updates.
-    ViewPlugin.fromClass(
-      class {
-        private readonly _controls?: HTMLDivElement;
-        private readonly _cleanup: CleanupFn;
-        private readonly _adapter: DocumentAdapter;
-        private _initialized = false;
-
-        constructor(view: EditorView) {
-          this._adapter = new DocumentAdapter(view);
-
-          const scroller = view.scrollDOM;
-          let isAutoScrolling = false;
-          let hasScrolled = false;
-
-          let timeout: NodeJS.Timeout | undefined;
-          const scrollToBottom = (smooth = false) => {
-            scroller.style.scrollBehavior = smooth ? 'smooth' : '';
-
-            // Temporarily hide scrollbar to prevent flicker.
-            scroller.classList.add('cm-hide-scrollbar');
-            isAutoScrolling = true;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-              this._controls?.classList.add('opacity-0');
-              scroller.classList.remove('cm-hide-scrollbar');
-              isAutoScrolling = false;
-            }, 500);
-
-            // Scroll to bottom.
-            view.dispatch({
-              effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
-            });
-          };
-
-          // Scroll button.
-          if (renderButton) {
-            this._controls = document.createElement('div');
-            this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
-            view.dom.appendChild(this._controls);
-            renderButton(
-              this._controls,
-              {
-                onClick: () => {
-                  scrollToBottom(false);
-                },
-              },
-              view,
-            );
-          }
-
-          // Event listeners.
-          this._cleanup = combine(
-            addEventListener(view.scrollDOM, 'scroll', () => {
-              if (!isAutoScrolling) {
-                hasScrolled = true;
-                this._controls?.classList.remove('opacity-0');
-              }
-            }),
-
-            model.update.on(() => {
-              // Check if clamped to bottom.
-              const autoScroll =
-                scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight === 0 || !hasScrolled;
-
-              // Sync.
-              model.sync(this._adapter);
-
-              // Scroll.
-              if (autoScroll) {
-                scrollToBottom(true);
-              }
-            }),
-          );
-        }
-
-        update(_update: ViewUpdate) {
-          // Initial sync.
-          if (!this._initialized) {
-            this._initialized = true;
-            setTimeout(() => {
-              model.sync(this._adapter);
-            });
-          }
-        }
-
-        destroy() {
-          this._controls?.remove();
-          this._cleanup();
-        }
-      },
-    ),
-
     EditorView.theme({
-      '.cm-scroller': {
-        overflowY: 'scroll',
-      },
-      '.cm-hide-scrollbar': {
-        scrollbarWidth: 'none',
-        '-ms-overflow-style': 'none',
-      },
-      '.cm-hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
-      '.cm-controls': {
-        position: 'absolute',
-        bottom: '0.5rem',
-        right: '0.5rem',
-        zIndex: 1000,
-      },
-      '.cm-line': {
-        paddingRight: '1rem',
-      },
       '.cm-timestamp-gutter': {
         width: '6rem',
         paddingRight: '1rem',

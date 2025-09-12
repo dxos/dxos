@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { BlueprintDefinition, IntentResolver, ReactSurface, Transcriber } from './capabilities';
-import { renderMarkdown } from './components';
+import { renderByline } from './components';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Transcript } from './types';
@@ -37,7 +37,7 @@ export const TranscriptionPlugin = () =>
               await queue?.refresh();
               const content = queue?.objects
                 .filter((message) => Obj.instanceOf(DataType.Message, message))
-                .flatMap((message, index) => renderMarkdown(members)(message, index))
+                .flatMap((message, index) => renderByline(members)(message, index))
                 .join('\n\n');
               return content;
             },

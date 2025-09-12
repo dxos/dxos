@@ -14,15 +14,12 @@ import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
 import {
-  type AiToolProvider,
-  ToolBlock,
   chatMessageJson,
   chatMessageMargin,
   chatMessagePadding,
   chatMessagePanel,
   chatMessagePanelContent,
   chatMessagePanelHeader,
-  isToolMessage,
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
@@ -31,6 +28,7 @@ import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
+import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
