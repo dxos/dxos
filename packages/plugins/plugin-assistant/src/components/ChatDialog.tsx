@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
+import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
@@ -52,15 +52,15 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
-      <NativeChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
-        <NativeChatDialog.Header title={t('assistant dialog title')} />
-        <NativeChatDialog.Content>
+      <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
+        <NaturalChatDialog.Header title={t('assistant dialog title')} />
+        <NaturalChatDialog.Content>
           <Chat.Thread />
-        </NativeChatDialog.Content>
-        <NativeChatDialog.Footer classNames='p-1.5'>
+        </NaturalChatDialog.Content>
+        <NaturalChatDialog.Footer classNames='p-1.5'>
           <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
-        </NativeChatDialog.Footer>
-      </NativeChatDialog.Root>
+        </NaturalChatDialog.Footer>
+      </NaturalChatDialog.Root>
     </Chat.Root>
   );
 };
