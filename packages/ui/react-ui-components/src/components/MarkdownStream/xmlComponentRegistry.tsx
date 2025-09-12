@@ -2,9 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Fallback } from './components';
-import { type XmlComponentRegistry } from './extensions';
+import React from 'react';
+
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+
+import { ToggleContainer } from '../ToggleContainer';
+
+import { type XmlComponentProps, type XmlComponentRegistry } from './extensions';
 import { PromptWidget, ReferenceWidget, SelectWidget, SuggestionWidget, SummaryWidget } from './widgets';
+
+type FallbackProps = XmlComponentProps<any>;
+
+const Fallback = ({ tag, ...props }: FallbackProps) => {
+  return (
+    <ToggleContainer.Root classNames='rounded-sm'>
+      <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
+      <ToggleContainer.Content classNames='bg-modalSurface'>
+        {/* TODO(burdon): Can we avoid the ! */}
+        <Json classNames='!p-2 text-sm' data={props} />
+      </ToggleContainer.Content>
+    </ToggleContainer.Root>
+  );
+};
 
 // TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`),
 //  which don’t appear to be handled by extant rendering logic
