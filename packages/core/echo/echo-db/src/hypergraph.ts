@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Obj, type Ref, type Relation } from '@dxos/echo';
+import { Ref, type Obj, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
   type BaseObject,
@@ -13,6 +13,7 @@ import {
   ImmutableSchema,
   type ObjectId,
   RuntimeSchemaRegistry,
+  setRefResolver,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant } from '@dxos/invariant';
@@ -172,6 +173,23 @@ export class Hypergraph {
   private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
     query = Filter.is(query) ? Query.select(query) : query;
     return new QueryResult(this._createLiveObjectQueryContext(), normalizeQuery(query, options));
+  }
+
+  /**
+   * Creates a reference to an existing object in the database.
+   *
+   * NOTE: The reference may be dangling if the object is not present in the database.
+   *
+   * ## Difference from `Ref.fromDXN`
+   *
+   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `graph.ref(dxn)` is preferable in cases with access to the database.
+   *
+   */
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+    const ref = Ref.fromDXN(dxn);
+    setRefResolver(ref, this.createRefResolver({}));
+    return ref;
   }
 
   /**
