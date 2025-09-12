@@ -82,10 +82,6 @@ export const translations = [
         'toolkit label': 'Toolkit',
         'summary label': 'Summary',
 
-        'calling tool label': 'Calling tool...',
-        'calling label': 'Calling',
-        'error label': 'Error',
-
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',
         'button context objects': 'Add to context',

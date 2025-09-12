@@ -10,14 +10,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { editorWidth } from '@dxos/react-ui-editor';
+import { railGridHorizontal } from '@dxos/react-ui-stack';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
 import { useStreamingText } from '../../hooks';
 
-import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
-import { registry } from './registry';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
 
@@ -50,8 +50,8 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
   }, []);
 
   return (
-    <div className='grid grid-rows-[min-content_1fr] h-full overflow-hidden'>
-      <Toolbar.Root>
+    <>
+      <Toolbar.Root classNames='border-be border-separator'>
         <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
           Start
         </Toolbar.Button>
@@ -61,17 +61,18 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
         content={str}
         options={options}
         userHue={userHue}
-        registry={registry}
-        onEvent={(ev) => console.log(ev)}
+        classNames='[&_.cm-scroller]:pli-cardSpacingInline [&_.cm-scroller]:plb-cardSpacingBlock min-bs-0'
+        // registry={registry}
+        // onEvent={(ev) => console.log(ev)}
       />
-    </div>
+    </>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
+  decorators: [withTheme, withLayout({ fullscreen: true, classNames: ['grid', railGridHorizontal, editorWidth] })],
   parameters: {
     layout: 'centered',
   },
@@ -100,12 +101,12 @@ export const Streaming: Story = {
 
 export const Components = () => {
   return (
-    <MarkdownContent
+    <MarkdownStream
       content={doc}
       userHue={userHue}
       options={{ autoScroll: true }}
-      registry={registry}
-      onEvent={(ev) => console.log(ev)}
+      // registry={registry}
+      // onEvent={(ev) => console.log(ev)}
     />
   );
 };

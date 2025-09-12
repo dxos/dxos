@@ -6,13 +6,6 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui-editor';
 
-import { type XmlWidgetFactory } from '../extensions';
-
-export const PromptWidgetFactory: XmlWidgetFactory = (props) => {
-  const text = props.children?.[0];
-  return typeof text === 'string' ? new PromptWidget(text) : null;
-};
-
 /**
  * Simple prompt widget.
  */
@@ -21,11 +14,13 @@ export class PromptWidget extends WidgetType {
     super();
   }
 
+  /**
+   * NOTE: Container must set var based on user's identity.
+   */
   override toDOM(): HTMLElement {
-    // NOTE: Container must set var based on user's identity.
     return Domino.of('div')
       .classNames('flex justify-end')
-      .child(Domino.of('div').classNames('p-2 bg-[--user-fill] rounded-sm').text(this.text))
+      .child(Domino.of('div').classNames('pli-3 plb-2 bg-[--user-fill] rounded-sm').text(this.text))
       .build();
   }
 
