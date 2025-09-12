@@ -34,6 +34,7 @@ import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
@@ -468,7 +469,7 @@ export const WithSearch: Story = {
 
 export const WithTranscription: Story = {
   decorators: getDecorators({
-    plugins: [TranscriptionPlugin()],
+    plugins: [TranscriptionPlugin(), PreviewPlugin()],
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space, binder }) => {

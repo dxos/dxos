@@ -4,7 +4,7 @@
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { addEventListener } from '@dxos/async';
-import { type Client, resolveRef } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
 import { type DxRefTagActivate } from '@dxos/lit-ui';
@@ -20,12 +20,7 @@ const handlePreviewLookup = async (
   { ref, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
   try {
-    const dxn = DXN.parse(ref);
-    if (!dxn) {
-      return null;
-    }
-
-    const object = await resolveRef(client, dxn, defaultSpace);
+    const object = await defaultSpace.db.ref(DXN.parse(ref)).load();
     return { label, object };
   } catch (err) {
     return null;
