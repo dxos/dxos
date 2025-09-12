@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -102,7 +103,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo, ResearchGraph]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
