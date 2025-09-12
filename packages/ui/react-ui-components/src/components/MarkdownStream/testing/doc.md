@@ -34,10 +34,6 @@ Here is a tool call, result, and summary.
 
 This is a link <reference reference="dxn://example.com/123">DXOS</reference> which is inline.
 
-JSON tag:
-
-<json data='{ "key": "value" }' />
-
 Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
 
 JSON fenced code:

@@ -53,7 +53,7 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
   }, []);
 
   return (
-    <div className={mx('grid', railGridHorizontal)}>
+    <div className={mx('grid is-full', railGridHorizontal)}>
       <Toolbar.Root classNames='border-be border-separator'>
         <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
           Start
@@ -65,8 +65,8 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
         options={options}
         userHue={userHue}
         // classNames='[&_.cm-scroller]:pli-cardSpacingInline [&_.cm-scroller]:plb-cardSpacingBlock min-bs-0'
-        // registry={registry}
-        // onEvent={(ev) => console.log(ev)}
+        registry={registry}
+        onEvent={(ev) => console.log(ev)}
       />
     </div>
   );

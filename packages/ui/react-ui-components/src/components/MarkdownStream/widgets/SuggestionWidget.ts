@@ -16,6 +16,7 @@ export class SuggestionWidget extends WidgetType {
 
   override toDOM(): HTMLElement {
     return Domino.of('button')
+      .data('density', 'fine')
       .classNames('dx-button animate-[fadeIn_0.5s] gap-2')
       .child(Domino.of<any>('dx-icon').attr('icon', 'ph--lightning--regular'), Domino.of('span').text(this.text))
       .build();

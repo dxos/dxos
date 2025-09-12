@@ -4,7 +4,7 @@
 
 import { type Decorator, type StoryContext } from '@storybook/react';
 import React, { type PropsWithChildren, createContext, useContext, useEffect, useRef, useState } from 'react';
-import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
+import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -189,7 +189,7 @@ const ErrorBoundary = ({ children }: PropsWithChildren) => {
     return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
   }
 
-  return <NativeErrorBoundary FallbackComponent={ErrorFallback}>{children}</NativeErrorBoundary>;
+  return <NaturalErrorBoundary FallbackComponent={ErrorFallback}>{children}</NaturalErrorBoundary>;
 };
 
 const ErrorFallback = ({ error }: FallbackProps) => {
