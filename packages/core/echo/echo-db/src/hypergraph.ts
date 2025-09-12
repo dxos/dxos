@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { Ref, type Obj, type Relation } from '@dxos/echo';
+import { type Obj, Ref, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import {
   type BaseObject,
