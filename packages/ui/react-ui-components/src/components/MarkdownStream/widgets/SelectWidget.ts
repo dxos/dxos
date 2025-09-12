@@ -19,9 +19,13 @@ export class SelectWidget extends WidgetType {
    */
   override toDOM(): HTMLElement {
     return Domino.of('div')
-      .classNames('flex flex-wrap gap-1')
       .attr('role', 'group')
-      .child(...this.options.map((option) => Domino.of('button').classNames('dx-button').text(option)))
+      .classNames('flex flex-wrap gap-1')
+      .child(
+        ...this.options.map((option) =>
+          Domino.of('button').classNames('dx-button').data('density', 'fine').text(option),
+        ),
+      )
       .build();
   }
 

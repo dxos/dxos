@@ -68,7 +68,7 @@ function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): De
           try {
             // TODO(burdon): Check tag is closed before creating widget.
             const props = nodeToJson(state, node.node);
-            if (options.registry && props.tag) {
+            if (options.registry && props?.tag) {
               const { block, factory, Component } = options.registry[props.tag] ?? {};
               const widget = factory
                 ? factory(props, options.onEvent)

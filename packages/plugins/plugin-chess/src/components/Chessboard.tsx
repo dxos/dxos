@@ -18,8 +18,8 @@ import {
   ChessModel,
   Gameboard,
   type GameboardRootProps,
-  Chessboard as NativeChessboard,
-  type ChessboardProps as NativeChessboardProps,
+  Chessboard as NaturalChessboard,
+  type ChessboardProps as NaturalChessboardProps,
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -109,7 +109,7 @@ const Content = ({ classNames, children, role }: ContentProps) => {
 // Board
 //
 
-type BoardProps = NativeChessboardProps;
+type BoardProps = NaturalChessboardProps;
 
 const Board = (props: BoardProps) => {
   const { model } = useGameboardContext<ChessModel>(Board.displayName);
@@ -143,7 +143,7 @@ const Board = (props: BoardProps) => {
     });
   }, [model]);
 
-  return <NativeChessboard ref={ref} {...props} />;
+  return <NaturalChessboard ref={ref} {...props} />;
 };
 
 Board.displayName = 'Chessboard.Board';

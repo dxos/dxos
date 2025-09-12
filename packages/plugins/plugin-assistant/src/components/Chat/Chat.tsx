@@ -33,7 +33,7 @@ import {
   ChatReferences,
   ChatStatusIndicator,
 } from '../ChatPrompt';
-import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
+import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
 
 import { type ChatEvent } from './events';
 
@@ -329,7 +329,7 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Thread
 //
 
-type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
   const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
@@ -359,7 +359,7 @@ const ChatThread = (props: ChatThreadProps) => {
   }
 
   return (
-    <NativeChatThread
+    <NaturalChatThread
       {...props}
       ref={scrollerRef}
       debug={debug}
