@@ -6,19 +6,16 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui-editor';
 
-/**
- * Simple prompt widget.
- */
 export class ReferenceWidget extends WidgetType {
-  constructor(private refid: string) {
+  constructor(
+    private text: string,
+    private refid: string,
+  ) {
     super();
   }
 
-  /**
-   * NOTE: Container must set var based on user's identity.
-   */
   override toDOM(): HTMLElement {
-    return Domino.of<any>('dx-ref-tag').text(this.refid).build();
+    return Domino.of<any>('dx-ref-tag').attr('refid', this.refid).text(this.text).build();
   }
 
   override eq(other: WidgetType): boolean {

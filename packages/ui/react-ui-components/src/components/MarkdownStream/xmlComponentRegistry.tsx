@@ -26,8 +26,7 @@ const getTextChild = (children: any[]): string | null => {
 /**
  * Custom XML tags registry.
  */
-// TODO(burdon): Move to plugin.
-export const registry: XmlComponentRegistry = {
+export const xmlComponentRegistry: XmlComponentRegistry = {
   //
   // Widgets
   //
@@ -43,7 +42,8 @@ export const registry: XmlComponentRegistry = {
     block: false,
     factory: (props) => {
       const text = getTextChild(props.children);
-      return text ? new ReferenceWidget(text) : null;
+      console.log('[reference props]', props, text);
+      return text && props.reference ? new ReferenceWidget(text, props.reference) : null;
     },
   },
   ['select' as const]: {
