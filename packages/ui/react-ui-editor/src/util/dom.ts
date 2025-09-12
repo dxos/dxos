@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-// Copied from @codemirror/view
-
-export interface Rect {
+export type Rect = {
   readonly left: number;
   readonly right: number;
   readonly top: number;
   readonly bottom: number;
-}
+};
 
 export const flattenRect = (rect: Rect, left: boolean) => {
   const x = left ? rect.left : rect.right;
@@ -33,25 +31,4 @@ export const clientRectsFor = (dom: Node) => {
   } else {
     return [] as any as DOMRectList;
   }
-};
-
-export type ElementOptions = {
-  className?: string;
-  text?: string;
-};
-
-/** @deprecated Use Domino */
-export const createElement = (tag: string, options?: ElementOptions, children?: HTMLElement[]): HTMLElement => {
-  const el = document.createElement(tag);
-  if (options?.className) {
-    el.className = options.className;
-  }
-  if (options?.text) {
-    el.textContent = options.text;
-  }
-  if (children) {
-    el.append(...(Array.isArray(children) ? children : [children]));
-  }
-
-  return el;
 };

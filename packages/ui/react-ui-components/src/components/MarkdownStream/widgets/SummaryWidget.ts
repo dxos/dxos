@@ -6,7 +6,7 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui-editor';
 
-import { type XmlWidgetFactory } from '../xml-tags';
+import { type XmlWidgetFactory } from '../extensions';
 
 // TODO(burdon): Type check ContentBlock.Summary?
 export const SummaryWidgetFactory: XmlWidgetFactory = (props) => {

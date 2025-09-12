@@ -6,7 +6,7 @@ import { WidgetType } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui-editor';
 
-import { type XmlWidgetFactory } from '../xml-tags';
+import { type XmlWidgetFactory } from '../extensions';
 
 export const PromptWidgetFactory: XmlWidgetFactory = (props) => {
   const text = props.children?.[0];

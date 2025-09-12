@@ -9,7 +9,7 @@ import { type FC } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ReactWidget } from './widgets';
+import { ReactWidget } from './ReactWidget';
 import { nodeToJson } from './xml-util';
 
 export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;

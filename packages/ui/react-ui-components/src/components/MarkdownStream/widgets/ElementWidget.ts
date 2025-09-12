@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { type XmlWidgetFactory } from '../xml-tags';
+import { type XmlWidgetFactory } from '../extensions';
 
 export const ElementWidgetFactory: XmlWidgetFactory = ({ tag, ...props }) => new ElementWidget(tag, props);
 

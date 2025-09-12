@@ -28,6 +28,10 @@ export class Domino<T extends HTMLElement> {
     this._el.dataset[key] = value;
     return this;
   }
+  style(styles: Partial<CSSStyleDeclaration>): this {
+    Object.assign(this._el.style, styles);
+    return this;
+  }
   attr<K extends keyof T>(key: K, value: T[K]): this {
     (this._el as any)[key] = value;
     return this;

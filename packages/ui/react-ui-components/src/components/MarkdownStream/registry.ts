@@ -3,12 +3,8 @@
 //
 
 import { Fallback, Suggest } from './components';
-import {
-  ElementWidgetFactory,
-  PromptWidgetFactory,
-  SummaryWidgetFactory,
-  type XmlComponentRegistry,
-} from './extensions';
+import { type XmlComponentRegistry } from './extensions';
+import { ElementWidgetFactory, PromptWidgetFactory, SummaryWidgetFactory } from './widgets';
 
 // TODO(burdon): Move to plugin.
 

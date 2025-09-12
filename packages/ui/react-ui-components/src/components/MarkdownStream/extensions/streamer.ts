@@ -5,7 +5,7 @@
 import { type Extension, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
 
-import { EditorView, autoScroll } from '@dxos/react-ui-editor';
+import { Domino, EditorView, autoScroll } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
 
 export type StreamerOptions = {
@@ -65,14 +65,17 @@ const cursor = (): Extension => {
  */
 class CursorWidget extends WidgetType {
   toDOM() {
-    const root = document.createElement('span');
-    root.style.opacity = '0.2';
-    const span = document.createElement('span');
-    span.textContent = '▌';
-    span.style.marginLeft = '2px';
-    span.style.animation = 'blink 1s infinite';
-    root.appendChild(span);
-    return root;
+    return Domino.of('span')
+      .style({
+        opacity: '0.2',
+      })
+      .child(
+        Domino.of('span').text('▌').style({
+          marginLeft: '2px',
+          animation: 'blink 1s infinite',
+        }),
+      )
+      .build();
   }
 }
 
