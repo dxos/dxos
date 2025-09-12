@@ -20,9 +20,9 @@ import { useStreamingText } from '../../hooks';
 
 import { MarkdownContent } from './MarkdownContent';
 import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
-import { registry } from './registry';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
+import { xmlComponentRegistry } from './xmlComponentRegistry';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -65,7 +65,7 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
         options={options}
         userHue={userHue}
         // classNames='[&_.cm-scroller]:pli-cardSpacingInline [&_.cm-scroller]:plb-cardSpacingBlock min-bs-0'
-        registry={registry}
+        registry={xmlComponentRegistry}
         onEvent={(ev) => console.log(ev)}
       />
     </div>
@@ -108,7 +108,7 @@ export const Components = () => {
       content={doc}
       userHue={userHue}
       options={{ autoScroll: true }}
-      registry={registry}
+      registry={xmlComponentRegistry}
       onEvent={(ev) => console.log(ev)}
     />
   );
