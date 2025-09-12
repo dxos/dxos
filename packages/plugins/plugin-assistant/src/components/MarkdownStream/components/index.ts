@@ -5,3 +5,4 @@
 export * from './Fallback';
 export * from './Suggest';
 export * from './Json';
+export * from './ToolBlock';

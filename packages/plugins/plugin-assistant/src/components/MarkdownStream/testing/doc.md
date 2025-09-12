@@ -28,9 +28,11 @@ And some suggestions.
 
 Here is a tool call, result, and summary.
 
-<toolCall toolCallId="1234" name="search" input='{ query: "cats" }'/>
-<toolResult toolCallId="1234" name="search" result="This is a search result"/>
-<summary>OK (1.2ms)</summary>
+<toolBlock>
+  <toolCall toolCallId="1234" name="search" input='{ query: "cats" }'/>
+  <toolResult toolCallId="1234" name="search" result="This is a search result"/>
+  <summary>OK (1.2ms)</summary>
+</toolBlock>
 
 This is a link <reference reference="dxn://example.com/123">DXOS</reference> which is inline.
 

@@ -5,26 +5,23 @@
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { useRxValue } from '@effect-rx/rx-react';
-import { createContext } from '@radix-ui/react-context';
 import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
-import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
 import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
-import { type AiChatProcessor } from '../../processor';
-import { type Assistant } from '../../types';
+import { ChatContextProvider, type ChatContextValue, type ChatEvent, useChatContext } from '../ChatContext';
 import {
   ChatActions,
   type ChatActionsProps,
@@ -34,26 +31,7 @@ import {
   ChatStatusIndicator,
 } from '../ChatPrompt';
 import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
-
-import { type ChatEvent } from './events';
-
-//
-// Context
-// NOTE: The context should not be exported. It is only used internally.
-// Components outside of this Radix-style group shuld define their own APIs.
-//
-
-type ChatContextValue = {
-  debug?: boolean;
-  event: Event<ChatEvent>;
-  space: Space;
-  chat: Assistant.Chat;
-  messages: DataType.Message[];
-  processor: AiChatProcessor;
-};
-
-// NOTE: Do not export.
-export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+import { type ScrollController } from '../ScrollContainer';
 
 //
 // Root
@@ -385,4 +363,4 @@ export const Chat = {
   Thread: ChatThread,
 };
 
-export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };
+export type { ChatRootProps, ChatThreadProps, ChatPromptProps };

@@ -9,13 +9,7 @@ export const translationKey = 'react-ui-components';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {
-        'scroll-down.button': 'Scroll down',
-        'no commits message': 'No events yet',
-        'calling tool label': 'Calling tool...',
-        'calling label': 'Calling',
-        'error label': 'Error',
-      },
+      [translationKey]: {},
     },
   },
 ] as const satisfies Resource[];

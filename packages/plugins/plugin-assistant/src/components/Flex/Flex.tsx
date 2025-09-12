@@ -4,10 +4,8 @@
 
 import React, { type HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-
-// TODO(burdon): Move to react-ui.
 
 export type FlexProps = ThemedClassName<
   PropsWithChildren<

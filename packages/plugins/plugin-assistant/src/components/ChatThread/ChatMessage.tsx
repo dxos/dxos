@@ -12,25 +12,24 @@ import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
+import { ContentBlock, type DataType } from '@dxos/schema';
+import { safeParseJson } from '@dxos/util';
+
 import {
-  type AiToolProvider,
-  ToolBlock,
   chatMessageJson,
   chatMessageMargin,
   chatMessagePadding,
   chatMessagePanel,
   chatMessagePanelContent,
   chatMessagePanelHeader,
-  isToolMessage,
-} from '@dxos/react-ui-components';
-import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
-import { ContentBlock, type DataType } from '@dxos/schema';
-import { safeParseJson } from '@dxos/util';
-
+} from '../../fragments';
 import { meta } from '../../meta';
-import { type ChatEvent } from '../Chat';
+import { type ChatEvent } from '../ChatContext';
+import { MarkdownViewer } from '../MarkdownViewer';
+import { ToggleContainer } from '../ToggleContainer';
+import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';

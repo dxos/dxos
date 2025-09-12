@@ -8,7 +8,7 @@ import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui
 import { mx } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
-import { type ChatEvent } from '../Chat';
+import { type ChatEvent } from '../ChatContext';
 
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{

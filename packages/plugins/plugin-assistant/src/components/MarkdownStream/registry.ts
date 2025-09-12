@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Fallback, Json } from './components';
+import { Fallback, Json, ToolBlock } from './components';
 import { ElementWidgetFactory, type XmlComponentRegistry } from './extensions';
 
 // TODO(burdon): Move to plugin.
@@ -51,7 +51,10 @@ export const registry = {
   // React
   //
   // TODO(thure, paraphrasing burdon): Convert all but components rendering a `Surface` to a Lit widget.
-
+  ['toolBlock' as const]: {
+    block: true,
+    Component: ToolBlock,
+  },
   ['json' as const]: {
     block: true,
     // TODO(thure): Whether this renders a `Surface` (must remain React) or a `ToggleContainer` (can become Lit) depends on its `disposition`, what to do here?
