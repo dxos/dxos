@@ -5,7 +5,7 @@
 import { type Extension, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
 
-import { EditorView } from '@dxos/react-ui-editor';
+import { Domino, EditorView, autoScroll } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
 
 export type StreamerOptions = {
@@ -24,55 +24,6 @@ export const streamer = (options: StreamerOptions = {}): Extension => {
     options.cursor && cursor(),
     options.fadeIn && fadeIn(),
   ].filter(isNotFalsy);
-};
-
-/**
- * Extension that automatically scrolls to the bottom when content is added.
- */
-// TODO(burdon): Stop auto-scrolling if user scrolls.
-const autoScroll = (overscroll = 160, throttle = 2_000) => {
-  let isThrottled = false;
-
-  return [
-    // Update listener for logging when scrolling is needed.
-    EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
-        const view = update.view;
-        const scroller = view.scrollDOM;
-        const scrollTop = scroller.scrollTop;
-        const scrollHeight = scroller.scrollHeight;
-        const clientHeight = scroller.clientHeight;
-        const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-        if (distanceFromBottom > overscroll) {
-          if (!isThrottled) {
-            isThrottled = true;
-            scroller.scrollTo({
-              top: scroller.scrollHeight - scroller.clientHeight,
-              behavior: 'smooth',
-            });
-
-            // Reset throttle after delay.
-            setTimeout(() => {
-              isThrottled = false;
-            }, throttle);
-          }
-        }
-      }
-    }),
-
-    EditorView.theme({
-      '.cm-scroller': {
-        paddingBottom: `${overscroll}px`,
-        scrollbarWidth: 'none',
-      },
-      '.hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
-      '.cm-scroller::-webkit-scrollbar': {
-        display: 'none',
-      },
-    }),
-  ];
 };
 
 /**
@@ -114,14 +65,17 @@ const cursor = (): Extension => {
  */
 class CursorWidget extends WidgetType {
   toDOM() {
-    const root = document.createElement('span');
-    root.style.opacity = '0.2';
-    const span = document.createElement('span');
-    span.textContent = '▌';
-    span.style.marginLeft = '2px';
-    span.style.animation = 'blink 1s infinite';
-    root.appendChild(span);
-    return root;
+    return Domino.of('span')
+      .style({
+        opacity: '0.2',
+      })
+      .child(
+        Domino.of('span').text('▌').style({
+          marginLeft: '2px',
+          animation: 'blink 1s infinite',
+        }),
+      )
+      .build();
   }
 }
 
@@ -146,7 +100,7 @@ const fadeIn = (): Extension => {
             // This is an append operation.
             newDecorations.push(
               Decoration.mark({
-                class: 'cm-typewriter-append',
+                class: 'cm-fade-in',
               }).range(fromB, toB),
             );
           }
@@ -169,10 +123,10 @@ const fadeIn = (): Extension => {
     }),
 
     EditorView.theme({
-      '.cm-typewriter-append': {
-        animation: 'typewriter-fade-in 0.5s ease-out forwards',
+      '.cm-fade-in': {
+        animation: 'fade-in 0.5s ease-out forwards',
       },
-      '@keyframes typewriter-fade-in': {
+      '@keyframes fade-in': {
         '0%': {
           opacity: '0',
         },

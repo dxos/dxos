@@ -4,7 +4,7 @@
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, research, syncLinearIssues } from '@dxos/assistant-testing';
+import { DISCORD_BLUEPRINT, LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, research, fetchDiscordMessages, syncLinearIssues } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
@@ -42,7 +42,9 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
   contributes(Capabilities.Functions, [syncLinearIssues]),
   contributes(Capabilities.Functions, [research]),
+  contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
 ];

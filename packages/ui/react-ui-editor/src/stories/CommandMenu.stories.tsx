@@ -27,7 +27,7 @@ import {
 } from '../components';
 import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
 import { str } from '../testing';
-import { createElement } from '../util';
+import { Domino } from '../util';
 
 import { EditorStory, names } from './components';
 
@@ -83,13 +83,12 @@ export const Slash: Story = {
     text: str('# Slash', '', names.join(' '), ''),
     trigger: '/',
     placeholder: {
-      content: () => {
-        return createElement('div', undefined, [
-          createElement('span', { text: 'Press' }),
-          createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
-          createElement('span', { text: 'for commands' }),
-        ]);
-      },
+      content: () =>
+        Domino.of('div')
+          .child(Domino.of('span').text('Press'))
+          .child(Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'))
+          .child(Domino.of('span').text('for commands'))
+          .build(),
     },
     getMenu: (text) => {
       return filterItems(groups, (item) =>

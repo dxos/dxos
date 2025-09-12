@@ -4,8 +4,6 @@
 
 Markdown is a lightweight markup language used to format plain text in a simple and readable way. It allows you to create structured documents using conventions for headings, lists, emphasis (bold/italic), links, images, code, blockquotes, tables, and horizontal rules.
 
-<summary>OK (1.2ms)</summary>
-
 It’s widely used in:
 
 - documentation
@@ -17,20 +15,32 @@ There are task lists also:
 - [ ] Not done
 - [x] Done
 
-Here are some options.
+Options:
 
 <select>
   <option>Option 1</option>
   <option>Option 2</option>
 </select>
 
-And some suggestions.
+Suggestion:
 
-<suggest>Retry</suggest>
+<suggest>List available tools</suggest>
 
-This is a link <dx-ref-tag refid="dxn://example.com/123">DXOS</dx-ref-tag> which is inline.
+Here is a tool call, result, and summary.
+
+<toolCall toolCallId="1234" name="search" input='{ query: "cats" }'/>
+<toolResult toolCallId="1234" name="search" result="This is a search result"/>
+<summary>OK (1.2ms)</summary>
+
+This is a link <reference reference="dxn://example.com/123">DXOS</reference> which is inline.
+
+JSON tag:
+
+<json data='{ "key": "value" }' />
 
 Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
+
+JSON fenced code:
 
 ```json
 {
@@ -39,7 +49,7 @@ Markdown is designed to be human-readable, meaning that even without rendering, 
 }
 ```
 
-And tables:
+Table:
 
 | Column 1 | Column 2 |
 | -------- | -------- |

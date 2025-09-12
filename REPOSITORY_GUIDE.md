@@ -32,6 +32,12 @@ Setup:
 proto install
 ```
 
+To update moon:
+
+```bash
+proto install moon latest
+```
+
 Install at the repo root:
 
 ```bash
