@@ -2,43 +2,75 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
 import { useEffect, useState } from 'react';
 
 import { useDynamicRef } from '@dxos/react-ui';
 
 /**
- * Streams text character by character with a delay.
+ * Streams text character by character with a delay. If the delay is zero, does nothing.
  */
-export const useStreamingText = (text = '', delay = 10): [string, boolean] => {
-  const [current, setCurrent] = useState('');
+export const useStreamingText = (text = '', view?: EditorView, perCharacterDelay = 10): [string, boolean] => {
+  const [current, setCurrent] = useState(perCharacterDelay > 0 ? '' : text);
   const currentRef = useDynamicRef(current);
 
   useEffect(() => {
-    let cancelled = false;
-    const idx = text.indexOf(currentRef.current);
-    let next = text;
-    if (idx === 0) {
-      next = text.slice(currentRef.current.length);
+    if (perCharacterDelay > 0) {
+      let cancelled = false;
+      const idx = text.indexOf(currentRef.current);
+      let next = text;
+      if (idx === 0) {
+        next = text.slice(currentRef.current.length);
+      } else {
+        setCurrent('');
+      }
+
+      void (async () => {
+        for await (const chunk of streamText(next, perCharacterDelay)) {
+          if (cancelled) {
+            break;
+          }
+
+          setCurrent((prev) => {
+            return prev + chunk;
+          });
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
     } else {
-      setCurrent('');
+      setCurrent(text);
+    }
+  }, [text, perCharacterDelay]);
+
+  useEffect(() => {
+    if (!view) {
+      return;
     }
 
-    void (async () => {
-      for await (const chunk of streamText(next, delay)) {
-        if (cancelled) {
-          break;
+    requestAnimationFrame(() => {
+      // Detect if appending (this prevent jitter of updating the entire doc.)
+      if (current.length > view.state.doc.length) {
+        if (current.startsWith(view.state.doc.sliceString(0, view.state.doc.length))) {
+          const append = current.slice(view.state.doc.length);
+          console.log('[append]', append.length);
+          // TODO(burdon): Dispatch effect that indicates append and apply decoration to fade in.
+          view.dispatch({
+            changes: [{ from: view.state.doc.length, insert: append }],
+          });
+        } else {
+          debugger;
         }
-
-        setCurrent((prev) => {
-          return prev + chunk;
+      } else {
+        console.log('[set all]', current.length - view.state.doc.length);
+        view.dispatch({
+          changes: [{ from: 0, to: view.state.doc.length, insert: current }],
         });
       }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [text, delay]);
+    });
+  }, [text, current, view]);
 
   return [current, current.length === text.length];
 };

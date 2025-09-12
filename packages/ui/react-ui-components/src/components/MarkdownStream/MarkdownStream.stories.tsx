@@ -6,7 +6,7 @@ import '@dxos-theme';
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
@@ -16,12 +16,10 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { useStreamingText } from '../../hooks';
-
-import { MarkdownContent } from './MarkdownContent';
-import { MarkdownStream, type MarkdownStreamProps } from './MarkdownStream';
+import { MarkdownStream } from './MarkdownStream';
 import { type TextStreamOptions, textStream, useTextStream } from './testing';
 import doc from './testing/doc.md?raw';
+import { type MarkdownStreamProps } from './types';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -34,10 +32,9 @@ const testOptions: TextStreamOptions = {
 
 type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
 
-const DefaultStory = ({ content = '', options, streamOptions = testOptions }: StoryProps) => {
+const DefaultStory = ({ content = '', streamOptions = testOptions, ...options }: StoryProps) => {
   const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
   const [text, isStreaming] = useTextStream(generator);
-  const [str] = useStreamingText(text, 5);
 
   const handleStart = useCallback(() => {
     setGenerator(textStream(content, streamOptions));
@@ -52,14 +49,17 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
   }, []);
 
   return (
-    <div className={mx('grid is-full', railGridHorizontal)}>
+    <div
+      className={mx('grid is-full', railGridHorizontal)}
+      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
+    >
       <Toolbar.Root classNames='border-be border-separator'>
         <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
           Start
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream content={str} options={options} userHue={userHue} onEvent={(ev) => console.log(ev)} />
+      <MarkdownStream content={text} {...options} />
     </div>
   );
 };
@@ -86,16 +86,12 @@ export const Default: Story = {
 export const Streaming: Story = {
   args: {
     content: doc,
-    options: {
-      autoScroll: true,
-      fadeIn: true,
-      cursor: true,
-    },
+    autoScroll: true,
+    fadeIn: true,
+    cursor: true,
   },
 };
 
 export const Components = () => {
-  return (
-    <MarkdownContent content={doc} userHue={userHue} options={{ autoScroll: true }} onEvent={(ev) => console.log(ev)} />
-  );
+  return <MarkdownStream content={doc} autoScroll perCharacterDelay={10} />;
 };
