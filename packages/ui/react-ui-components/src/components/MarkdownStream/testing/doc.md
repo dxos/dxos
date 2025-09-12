@@ -15,14 +15,14 @@ There are task lists also:
 - [ ] Not done
 - [x] Done
 
-Here are some options.
+Options:
 
 <select>
   <option>Option 1</option>
   <option>Option 2</option>
 </select>
 
-And some suggestions.
+Suggestion:
 
 <suggest>List available tools</suggest>
 
@@ -34,11 +34,13 @@ Here is a tool call, result, and summary.
 
 This is a link <reference reference="dxn://example.com/123">DXOS</reference> which is inline.
 
-Here is some JSON:
+JSON tag:
 
 <json data='{ "key": "value" }' />
 
 Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
+
+JSON fenced code:
 
 ```json
 {
@@ -47,7 +49,7 @@ Markdown is designed to be human-readable, meaning that even without rendering, 
 }
 ```
 
-And tables:
+Table:
 
 | Column 1 | Column 2 |
 | -------- | -------- |

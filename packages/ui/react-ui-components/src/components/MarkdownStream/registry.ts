@@ -36,19 +36,24 @@ export const registry = {
   ['reference' as const]: {
     block: false,
     factory: (props) => {
-      return new ReferenceWidget(props.children?.[0]);
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new ReferenceWidget(text) : null;
     },
   },
   ['select' as const]: {
     block: true,
     factory: (props) => {
-      return new SelectWidget(props.children);
+      const options = props.children
+        .filter((option: any) => option.tag === 'option')
+        .map((option: any) => option.children?.[0]);
+      return new SelectWidget(options);
     },
   },
-  ['suggestion' as const]: {
+  ['suggest' as const]: {
     block: true,
     factory: (props) => {
-      return new SuggestionWidget(props.children?.[0]);
+      const text = props.children?.[0];
+      return typeof text === 'string' ? new SuggestionWidget(text) : null;
     },
   },
   ['summary' as const]: {

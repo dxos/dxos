@@ -70,7 +70,7 @@ export type MarkdownEditorProps = {
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
 export const MarkdownEditor = ({
-  extensions: _extensions,
+  extensions: extensionsParam,
   slashCommandGroups,
   onLinkQuery,
   ...props
@@ -118,8 +118,7 @@ export const MarkdownEditor = ({
   }, [getMenu]);
 
   const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
-
-  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
 
   return (
     <RefPopover modal={false} {...refPopoverProps}>
