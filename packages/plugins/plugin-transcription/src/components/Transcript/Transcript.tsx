@@ -6,11 +6,10 @@ import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
-  createRenderer,
   createThemeExtensions,
   decorateMarkdown,
   preview,
@@ -25,7 +24,8 @@ import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
 
-export const renderMarkdown =
+// TODO(thure): Move this?
+export const renderByline =
   (identities: Identity[]) =>
   (message: DataType.Message, index: number, debug = false): string[] => {
     if (message.sender.role === 'assistant') {
@@ -44,6 +44,7 @@ export const renderMarkdown =
       message.sender.identityDid;
     const blocks = message.blocks.filter((block) => block._tag === 'transcript');
     return [
+      // TODO(thure): Use an XML tag with the bits needed here.
       `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
       blocks.map((block) => block.text.trim()).join(' '),
       '',
@@ -82,9 +83,6 @@ export const TranscriptView = ({
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
-          renderButton: createRenderer(({ onClick }) => (
-            <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
-          )),
         }),
       ].filter(isNotFalsy),
     };
@@ -94,7 +92,7 @@ export const TranscriptView = ({
     <div
       ref={parentRef}
       className={mx('flex grow overflow-hidden container-max-width', classNames)}
-      data-popover-collision-boundary={true}
+      data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
     />
   );
 };

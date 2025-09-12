@@ -37,7 +37,7 @@ export const MarkdownContent = ({
           themeMode,
           slots: {
             scroll: {
-              className: 'pie-3 pis-3',
+              className: 'pli-cardSpacingInline plb-cardSpacingBlock',
             },
           },
         }),

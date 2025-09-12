@@ -11,4 +11,3 @@ export * from './ScrollContainer';
 export * from './TextCrawl';
 export * from './Timeline';
 export * from './ToggleContainer';
-export * from './ToolBlock';

@@ -2,9 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Fallback } from './components';
-import { type XmlComponentRegistry } from './extensions';
-import { PromptWidget, ReferenceWidget, SelectWidget, SuggestionWidget, SummaryWidget } from './widgets';
+import React from 'react';
+
+import {
+  PromptWidget,
+  ReferenceWidget,
+  SelectWidget,
+  SuggestionWidget,
+  SummaryWidget,
+  ToggleContainer,
+  type XmlComponentProps,
+  type XmlComponentRegistry,
+} from '@dxos/react-ui-components';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+
+type FallbackProps = XmlComponentProps<any>;
+
+const Fallback = ({ tag, ...props }: FallbackProps) => {
+  return (
+    <ToggleContainer.Root classNames='rounded-sm'>
+      <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
+      <ToggleContainer.Content classNames='bg-modalSurface'>
+        {/* TODO(burdon): Can we avoid the ! */}
+        <Json classNames='!p-2 text-sm' data={props} />
+      </ToggleContainer.Content>
+    </ToggleContainer.Root>
+  );
+};
 
 // TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`),
 //  which don’t appear to be handled by extant rendering logic
@@ -26,8 +50,7 @@ const getTextChild = (children: any[]): string | null => {
 /**
  * Custom XML tags registry.
  */
-// TODO(burdon): Move to plugin.
-export const registry: XmlComponentRegistry = {
+export const xmlComponentRegistry: XmlComponentRegistry = {
   //
   // Widgets
   //
@@ -43,7 +66,8 @@ export const registry: XmlComponentRegistry = {
     block: false,
     factory: (props) => {
       const text = getTextChild(props.children);
-      return text ? new ReferenceWidget(text) : null;
+      console.log('[reference props]', props, text);
+      return text && props.reference ? new ReferenceWidget(text, props.reference) : null;
     },
   },
   ['select' as const]: {
@@ -55,7 +79,7 @@ export const registry: XmlComponentRegistry = {
       return options?.length ? new SelectWidget(options) : null;
     },
   },
-  ['suggest' as const]: {
+  ['suggestion' as const]: {
     block: true,
     factory: (props) => {
       const text = getTextChild(props.children);
@@ -75,6 +99,10 @@ export const registry: XmlComponentRegistry = {
   // TODO(thure): Convert all but components rendering a `Surface` to a Lit widget.
   //
 
+  ['toolBlock' as const]: {
+    block: true,
+    Component: Fallback,
+  },
   ['toolCall' as const]: {
     block: true,
     Component: Fallback,

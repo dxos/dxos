@@ -3,3 +3,4 @@
 //
 
 export * from './ToolBlock';
+export * from './ToolBlockWidget';

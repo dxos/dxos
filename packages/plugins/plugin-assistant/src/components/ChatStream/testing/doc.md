@@ -1,3 +1,5 @@
+<prompt>Hello</prompt>
+
 ## Markdown
 
 Markdown is a lightweight markup language used to format plain text in a simple and readable way. It allows you to create structured documents using conventions for headings, lists, emphasis (bold/italic), links, images, code, blockquotes, tables, and horizontal rules.
@@ -12,6 +14,27 @@ There are task lists also:
 
 - [ ] Not done
 - [x] Done
+
+Options:
+
+<select>
+  <option>Option 1</option>
+  <option>Option 2</option>
+</select>
+
+Suggestion:
+
+<suggestion>List available tools</suggestion>
+
+Here is a tool block, containing a tool call, result, and summary.
+
+<toolBlock>
+  <toolCall toolCallId="1234" name="search" input='{ query: "cats" }'/>
+  <toolResult toolCallId="1234" name="search" result="This is a search result"/>
+  <summary>OK (1.2ms)</summary>
+</toolBlock>
+
+This is a link <reference reference="dxn://example.com/123">DXOS</reference> which is inline.
 
 Markdown is designed to be human-readable, meaning that even without rendering, the text remains understandable. It’s highly portable and supported across many platforms like GitHub, documentation tools, blogging systems, and note-taking apps.
 
