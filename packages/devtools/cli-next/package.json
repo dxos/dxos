@@ -27,7 +27,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/cli": "0.69.2",
-    "@effect/cluster": "0.48.5",
+    "@effect/cluster": "0.48.6",
     "@effect/platform": "0.90.9",
     "@effect/platform-node": "0.96.1",
     "@effect/printer": "0.45.0",
@@ -45,7 +45,6 @@
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "typescript": "^5.9.2",
-    "vite-node": "^3.2.4",
     "vitest": "^3.2.0"
   },
   "publishConfig": {
