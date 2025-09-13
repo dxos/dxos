@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema, Layer } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { DatabaseService, QueueService, ContextQueueService } from '@dxos/functions';
+import { ContextQueueService, DatabaseService, QueueService } from '@dxos/functions';
 
 /**
  * Container for a set of ephemeral research results.

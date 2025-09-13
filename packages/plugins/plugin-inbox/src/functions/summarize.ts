@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import {
+  LocalSearchHandler,
+  LocalSearchToolkit,
+  contextQueueLayerFromResearchGraph,
+  makeGraphWriterHandler,
+  makeGraphWriterToolkit,
+} from '@dxos/assistant-testing';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
-import {
-  makeGraphWriterToolkit,
-  makeGraphWriterHandler,
-  LocalSearchToolkit,
-  LocalSearchHandler,
-  contextQueueLayerFromResearchGraph,
-} from '@dxos/assistant-testing';
-import { AiToolkit } from '@effect/ai';
 
 /**
  * Summarize a mailbox.
