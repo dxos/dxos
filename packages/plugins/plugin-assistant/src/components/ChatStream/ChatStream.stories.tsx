@@ -11,10 +11,10 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
 import {
-  MarkdownStream,
   type MarkdownStreamProps,
   type TextStreamOptions,
   textStream,
+  useMarkdownStream,
   useTextStream,
 } from '@dxos/react-ui-components';
 import { editorWidth } from '@dxos/react-ui-editor';
@@ -24,7 +24,6 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
 import doc from './testing/doc.md?raw';
-import { xmlComponentRegistry } from './xmlComponentRegistry';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -40,6 +39,7 @@ type StoryProps = MarkdownStreamProps;
 const DefaultStory = ({ content = '', ...options }: StoryProps) => {
   const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
   const [text, isStreaming] = useTextStream(generator);
+  const { parentRef } = useMarkdownStream({ content: text });
 
   const handleStart = useCallback(() => {
     setGenerator(textStream(content, testOptions));
@@ -64,7 +64,7 @@ const DefaultStory = ({ content = '', ...options }: StoryProps) => {
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream content={text} {...testOptions} {...options} registry={xmlComponentRegistry} />
+      <div ref={parentRef} className='is-full overflow-hidden' />
     </div>
   );
 };

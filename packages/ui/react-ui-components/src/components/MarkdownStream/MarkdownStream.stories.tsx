@@ -16,10 +16,11 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { MarkdownStream } from './MarkdownStream';
-import { type TextStreamOptions, textStream, useTextStream } from './testing';
+import { faker } from '../../../../../common/random/src';
+
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
+import { type TextStreamOptions, textStream, useTextStream as useTestStream } from './testing';
 import doc from './testing/doc.md?raw';
-import { type MarkdownStreamProps } from './types';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
@@ -34,7 +35,7 @@ type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
 
 const DefaultStory = ({ content = '', streamOptions = testOptions, ...options }: StoryProps) => {
   const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
-  const [text, isStreaming] = useTextStream(generator);
+  const [text, isStreaming] = useTestStream(generator);
 
   const handleStart = useCallback(() => {
     setGenerator(textStream(content, streamOptions));
@@ -54,12 +55,12 @@ const DefaultStory = ({ content = '', streamOptions = testOptions, ...options }:
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
       <Toolbar.Root classNames='border-be border-separator'>
-        <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
+        <Toolbar.Button disabled={isStreaming} onClick={handleStart}>
           Start
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream content={text} {...options} />
+      <MarkdownStream classNames='is-full overflow-hidden' content={text} {...options} />;
     </div>
   );
 };
@@ -86,12 +87,36 @@ export const Default: Story = {
 export const Streaming: Story = {
   args: {
     content: doc,
-    autoScroll: true,
     fadeIn: true,
     cursor: true,
   },
 };
 
 export const Components = () => {
-  return <MarkdownStream content={doc} autoScroll perCharacterDelay={10} />;
+  const [controller, setController] = useState<MarkdownStreamController | null>(null);
+
+  const handleReset = useCallback(() => {
+    controller?.update(Array.from({ length: 3 }, () => faker.lorem.paragraph()).join('\n\n'));
+  }, [controller]);
+
+  const handleAppend = useCallback(() => {
+    controller?.append('\n\n' + faker.lorem.paragraph());
+  }, [controller]);
+
+  useEffect(() => {
+    handleReset();
+  }, [controller]);
+
+  return (
+    <div
+      className={mx('grid is-full', railGridHorizontal)}
+      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
+    >
+      <Toolbar.Root classNames='border-be border-separator'>
+        <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
+        <Toolbar.Button onClick={handleAppend}>Append</Toolbar.Button>
+      </Toolbar.Root>
+      <MarkdownStream ref={setController} classNames='is-full overflow-hidden' fadeIn cursor />
+    </div>
+  );
 };

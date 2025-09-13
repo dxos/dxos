@@ -5,11 +5,10 @@
 import { type Extension, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
 
-import { Domino, EditorView, autoScroll } from '@dxos/react-ui-editor';
+import { Domino, EditorView } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
 
 export type StreamerOptions = {
-  autoScroll?: boolean;
   cursor?: boolean;
   fadeIn?: boolean;
 };
@@ -18,12 +17,7 @@ export type StreamerOptions = {
  * Extension that adds a blinking cursor widget at the end of the document.
  */
 export const streamer = (options: StreamerOptions = {}): Extension => {
-  return [
-    // Options.
-    options.autoScroll && autoScroll(),
-    options.cursor && cursor(),
-    options.fadeIn && fadeIn(),
-  ].filter(isNotFalsy);
+  return [options.cursor && cursor(), options.fadeIn && fadeIn()].filter(isNotFalsy);
 };
 
 /**
@@ -93,8 +87,12 @@ const fadeIn = (): Extension => {
 
         // Check if content was appended at the end.
         const newDecorations: any[] = [];
-
         tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+          // Don't fade in initial content.
+          if (fromB === 0 && toB === inserted.length) {
+            return;
+          }
+
           // Check if the change is at the end of the document.
           if (toA === tr.startState.doc.length && inserted.length > 0) {
             // This is an append operation.
