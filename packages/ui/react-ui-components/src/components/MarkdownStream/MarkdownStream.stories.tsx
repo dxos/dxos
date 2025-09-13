@@ -17,36 +17,70 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
+import { type XmlComponentRegistry } from '../../../dist/types/src';
+
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
-import { type TextStreamOptions, textStream, useTextStream as useTestStream } from './testing';
+import { type TextStreamOptions, textStream } from './testing';
 import doc from './testing/doc.md?raw';
+import { SuggestionWidget } from './widgets';
 
 // TODO(burdon): Get user hue from identity.
 const userHue = keyToFallback(PublicKey.random()).hue;
 
-const testOptions: TextStreamOptions = {
+const defaultStreamOptions: TextStreamOptions = {
+  wordsPerChunk: 5,
   chunkDelay: 200,
   variance: 0.5,
-  wordsPerChunk: 5,
+};
+
+const testRegistry: XmlComponentRegistry = {
+  ['suggestion' as const]: {
+    block: true,
+    factory: (props: any) => new SuggestionWidget(props.children?.[0]),
+  },
 };
 
 type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
 
-const DefaultStory = ({ content = '', streamOptions = testOptions, ...options }: StoryProps) => {
-  const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
-  const [text, isStreaming] = useTestStream(generator);
-
-  const handleStart = useCallback(() => {
-    setGenerator(textStream(content, streamOptions));
-  }, [content]);
-
-  const handleReset = useCallback(() => {
-    setGenerator(null);
-  }, []);
+const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...props }: StoryProps) => {
+  const [controller, setController] = useState<MarkdownStreamController | null>(null);
+  const [streaming, setStreaming] = useState(false);
 
   useEffect(() => {
-    handleStart();
-  }, []);
+    if (!streaming || !controller) {
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      for await (const chunk of textStream(content, streamOptions)) {
+        if (cancelled) {
+          break;
+        }
+
+        controller.append(chunk);
+      }
+
+      setStreaming(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [controller, content, streaming]);
+
+  const handleReset = useCallback(() => {
+    setStreaming(false);
+    controller?.update('');
+  }, [controller]);
+
+  const handleAppend = useCallback(() => {
+    controller?.append(
+      [faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
+        '\n\n',
+      ),
+    );
+  }, [controller]);
 
   return (
     <div
@@ -54,12 +88,18 @@ const DefaultStory = ({ content = '', streamOptions = testOptions, ...options }:
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
       <Toolbar.Root classNames='border-be border-separator'>
-        <Toolbar.Button disabled={isStreaming} onClick={handleStart}>
+        <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
           Start
         </Toolbar.Button>
+        <Toolbar.Button disabled={!streaming} onClick={() => setStreaming(false)}>
+          Stop
+        </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
+        <Toolbar.Button disabled={streaming} onClick={handleAppend}>
+          Append
+        </Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream classNames='is-full overflow-hidden' content={text} {...options} />;
+      <MarkdownStream ref={setController} classNames='is-full overflow-hidden' {...props} />
     </div>
   );
 };
@@ -80,44 +120,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     content: doc,
-  },
-};
-
-export const Streaming: Story = {
-  args: {
-    content: doc,
     fadeIn: true,
     cursor: true,
+    registry: testRegistry,
   },
-};
-
-export const Components = () => {
-  const [controller, setController] = useState<MarkdownStreamController | null>(null);
-
-  const handleReset = useCallback(() => {
-    controller?.update(Array.from({ length: 3 }, () => faker.lorem.paragraph()).join('\n\n'));
-  }, [controller]);
-
-  const handleAppend = useCallback(() => {
-    controller?.append(
-      ['', faker.lorem.paragraph(), `<suggest>${faker.lorem.word()}</suggest>`, faker.lorem.paragraph()].join('\n\n'),
-    );
-  }, [controller]);
-
-  useEffect(() => {
-    handleReset();
-  }, [controller]);
-
-  return (
-    <div
-      className={mx('grid is-full', railGridHorizontal)}
-      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
-    >
-      <Toolbar.Root classNames='border-be border-separator'>
-        <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
-        <Toolbar.Button onClick={handleAppend}>Append</Toolbar.Button>
-      </Toolbar.Root>
-      <MarkdownStream ref={setController} classNames='is-full overflow-hidden' fadeIn cursor />
-    </div>
-  );
 };
