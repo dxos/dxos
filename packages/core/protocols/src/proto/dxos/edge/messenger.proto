@@ -77,6 +77,13 @@ message Message {
   optional string service_id = 20;
 
   optional google.protobuf.Any payload = 100;
+
+  /// Used to pass core tracing information.
+  /// (e.g., sentry-trace: trace_id-span_id-sampled)
+  optional string trace_id = 200;
+  /// W3C-compliant standard used for passing extended context and metadata.
+  /// (e.g., baggage: sentry-environment=production,sentry-release=1.0.0,sentry-public_key=abc123,...)
+  optional string baggage = 201;
 }
 
 //
