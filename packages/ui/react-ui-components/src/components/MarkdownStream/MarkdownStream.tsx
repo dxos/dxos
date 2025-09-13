@@ -18,6 +18,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 
 import { type StreamerOptions, type XmlTagOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
+import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
   update: (text: string) => void;
@@ -104,16 +105,3 @@ export const MarkdownStream = forwardRef<MarkdownStreamController, MarkdownStrea
     return <div ref={parentRef} className={mx('is-full overflow-hidden', classNames)} />;
   },
 );
-
-/**
- * Streams text character by character with a delay.
- */
-// TODO(burdon): Handle XML tags.
-const createStreamer = (characterDelay: number) => (source: Stream.Stream<string>) =>
-  source.pipe(
-    Stream.flatMap((chunk) =>
-      Stream.fromIterable(chunk.split('')).pipe(
-        Stream.flatMap((char) => Stream.succeed(char).pipe(Stream.tap(() => Effect.sleep(characterDelay)))),
-      ),
-    ),
-  );

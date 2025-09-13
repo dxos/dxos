@@ -9,14 +9,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { editorWidth } from '@dxos/react-ui-editor';
 import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
-
-import { faker } from '../../../../../common/random/src';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream, useTextStream as useTestStream } from './testing';
@@ -100,7 +99,9 @@ export const Components = () => {
   }, [controller]);
 
   const handleAppend = useCallback(() => {
-    controller?.append('\n\n' + faker.lorem.paragraph());
+    controller?.append(
+      ['', faker.lorem.paragraph(), `<suggest>${faker.lorem.word()}</suggest>`, faker.lorem.paragraph()].join('\n\n'),
+    );
   }, [controller]);
 
   useEffect(() => {
