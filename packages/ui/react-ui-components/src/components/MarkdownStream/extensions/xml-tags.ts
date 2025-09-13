@@ -27,7 +27,6 @@ export type XmlComponentRegistry = Record<string, XmlComponentDef>;
 
 export type XmlTagOptions = {
   registry?: XmlComponentRegistry;
-  onEvent?: XmlEventHandler;
 };
 
 /**
@@ -71,9 +70,9 @@ function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): De
             if (options.registry && props?.tag) {
               const { block, factory, Component } = options.registry[props.tag] ?? {};
               const widget = factory
-                ? factory(props, options.onEvent)
+                ? factory(props)
                 : Component
-                  ? new ReactWidget(Component, { ...props, onEvent: options.onEvent })
+                  ? new ReactWidget(Component, { ...props })
                   : undefined;
               if (widget) {
                 decorations.push(Decoration.replace({ widget, block }).range(node.node.from, node.node.to));

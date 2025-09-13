@@ -66,7 +66,6 @@ export const xmlComponentRegistry: XmlComponentRegistry = {
     block: false,
     factory: (props) => {
       const text = getTextChild(props.children);
-      console.log('[reference props]', props, text);
       return text && props.reference ? new ReferenceWidget(text, props.reference) : null;
     },
   },
