@@ -17,7 +17,7 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "tsx ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen",
+    "prebuild": "vite-node ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen",
     "test": "true || mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
@@ -41,7 +41,6 @@
     "@types/mocha": "^10.0.7",
     "expect": "^27.0.2",
     "mocha": "^10.6.0",
-    "ts-node": "10.9.1",
     "typescript": "^5.9.2"
   },
   "peerDependencies": {
