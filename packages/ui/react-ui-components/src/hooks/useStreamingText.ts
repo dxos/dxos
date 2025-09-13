@@ -15,62 +15,54 @@ export const useStreamingText = (text = '', view?: EditorView, perCharacterDelay
   const currentRef = useDynamicRef(current);
 
   useEffect(() => {
-    if (perCharacterDelay > 0) {
-      let cancelled = false;
-      const idx = text.indexOf(currentRef.current);
-      let next = text;
-      if (idx === 0) {
-        next = text.slice(currentRef.current.length);
-      } else {
-        setCurrent('');
-      }
-
-      void (async () => {
-        for await (const chunk of streamText(next, perCharacterDelay)) {
-          if (cancelled) {
-            break;
-          }
-
-          setCurrent((prev) => {
-            return prev + chunk;
+    if (view) {
+      if (perCharacterDelay > 0) {
+        let cancelled = false;
+        const idx = text.indexOf(currentRef.current);
+        let next = text;
+        if (idx === 0) {
+          next = text.slice(currentRef.current.length);
+        } else {
+          setCurrent('');
+          view.dispatch({
+            changes: [{ from: 0, to: view.state.doc.length, insert: '' }],
           });
         }
-      })();
 
-      return () => {
-        cancelled = true;
-      };
-    } else {
-      setCurrent(text);
-    }
-  }, [text, perCharacterDelay]);
+        void (async () => {
+          for await (const chunk of streamText(next, perCharacterDelay)) {
+            if (cancelled) {
+              break;
+            }
 
-  useEffect(() => {
-    if (!view) {
-      return;
-    }
+            setCurrent((prev) => {
+              return prev + chunk;
+            });
+            view.dispatch({
+              changes: [{ from: view.state.doc.length, insert: chunk }],
+            });
+          }
+        })();
 
-    requestAnimationFrame(() => {
-      // Detect if appending (this prevent jitter of updating the entire doc.)
-      if (current.length > view.state.doc.length) {
-        if (current.startsWith(view.state.doc.sliceString(0, view.state.doc.length))) {
-          const append = current.slice(view.state.doc.length);
-          console.log('[append]', append.length);
+        return () => {
+          cancelled = true;
+        };
+      } else {
+        setCurrent(text);
+        if (text.startsWith(view.state.doc.sliceString(0, view.state.doc.length))) {
+          const append = text.slice(view.state.doc.length);
           // TODO(burdon): Dispatch effect that indicates append and apply decoration to fade in.
           view.dispatch({
             changes: [{ from: view.state.doc.length, insert: append }],
           });
         } else {
-          debugger;
+          view.dispatch({
+            changes: [{ from: 0, to: view.state.doc.length, insert: text }],
+          });
         }
-      } else {
-        console.log('[set all]', current.length - view.state.doc.length);
-        view.dispatch({
-          changes: [{ from: 0, to: view.state.doc.length, insert: current }],
-        });
       }
-    });
-  }, [text, current, view]);
+    }
+  }, [text, view, perCharacterDelay]);
 
   return [current, current.length === text.length];
 };
