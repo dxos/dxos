@@ -36,6 +36,7 @@ To update moon:
 
 ```bash
 proto install moon latest
+proto pin moon latest
 ```
 
 Install at the repo root:
