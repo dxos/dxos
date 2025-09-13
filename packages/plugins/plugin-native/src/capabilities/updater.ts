@@ -15,8 +15,9 @@ import { NATIVE_PLUGIN } from '../meta';
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
 export default (context: PluginContext) => {
+  // Skip updates if not supported or in dev mode.
   const platform = type();
-  if (!SUPPORTS_OTA.includes(platform)) {
+  if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
     return contributes(Capabilities.Null, null);
   }
 
@@ -39,7 +40,7 @@ export default (context: PluginContext) => {
         }),
         Match.when({ event: 'Progress' }, (event) => {
           downloaded += event.data.chunkLength;
-          log.info('download progress', { downloaded, contentLength });
+          log.verbose('download progress', { downloaded, contentLength });
         }),
         Match.when({ event: 'Finished' }, () => {
           log.info('download completed');

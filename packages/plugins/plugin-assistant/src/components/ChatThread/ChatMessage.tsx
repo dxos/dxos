@@ -13,6 +13,14 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import {
+  chatMessageJson,
+  chatMessageMargin,
+  chatMessagePadding,
+  chatMessagePanel,
+  chatMessagePanelContent,
+  chatMessagePanelHeader,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { ContentBlock, type DataType } from '@dxos/schema';
@@ -20,18 +28,18 @@ import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
+import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
-import { type AiToolProvider, ToolBlock, isToolMessage } from './ToolBlock';
 
 export const styles = {
-  margin: 'pie-4 pis-4',
-  padding: 'pis-2 pie-2 pbs-0.5 pbe-0.5',
-  panel: 'is-full rounded-sm',
-  panelHeader: 'bg-groupSurface',
-  panelContent: 'bg-modalSurface',
-  json: '!p-1 text-xs bg-transparent',
+  margin: chatMessageMargin,
+  padding: chatMessagePadding,
+  panel: chatMessagePanel,
+  panelHeader: chatMessagePanelHeader,
+  panelContent: chatMessagePanelContent,
+  json: chatMessageJson,
 };
 
 export type ChatMessageProps = ThemedClassName<{
@@ -82,7 +90,7 @@ export const ChatMessage = ({
         return (
           <MessageItem key={idx} classNames={classNames} user={block._tag === 'text' && role === 'user'}>
             <ErrorBoundary data={block}>
-              <Component space={space} block={block} onEvent={onEvent} />
+              <Component space={space} block={block} debug={debug} onEvent={onEvent} />
             </ErrorBoundary>
           </MessageItem>
         );
@@ -106,6 +114,7 @@ export const ChatMessage = ({
 type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
+  debug?: boolean;
   onEvent?: (event: ChatEvent) => void;
 };
 
@@ -125,7 +134,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ node: { properties }, children, href, ...props }) => {
+          a: ({ node: { properties } = {}, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
                 // TODO(burdon): Check valid length (since serialized).
@@ -141,7 +150,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
               </Link>
             );
           },
-          img: ({ node: { properties } }) => {
+
+          img: ({ node: { properties } = {} }) => {
             const client = useClient();
             if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
               try {
@@ -156,6 +166,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
         }}
       />
     );
+  },
+
+  ['reference' as const]: ({ block, space }) => {
+    invariant(block._tag === 'reference');
+
+    return <RefBlock block={block} space={space!} />;
   },
 
   //
@@ -215,10 +231,10 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   // Summary
   //
-  ['summary' as const]: ({ block }) => {
+  ['summary' as const]: ({ block, debug }) => {
     invariant(block._tag === 'summary');
 
-    const summary = ContentBlock.createSummaryMessage(block, false);
+    const summary = ContentBlock.createSummaryMessage(block, debug);
     return <div className='text-sm text-subdued'>{summary}</div>;
   },
 
@@ -278,6 +294,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   },
 };
 
+const RefBlock = ({ block, space }: { block: ContentBlock.Reference; space: Space }) => {
+  const ref = useMemo(() => space.db.ref(block.reference.dxn), [space, block.reference.dxn.toString()]);
+
+  return <Surface role='card' data={{ subject: ref.target }} limit={1} />;
+};
+
 export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {
   error: Error;
 };
@@ -329,6 +351,6 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
   `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
-// TODO(burdon): Move to parser.
+// TODO(burdon): Move to parser?
 const preprocessTextContent = (content: string) =>
   content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);

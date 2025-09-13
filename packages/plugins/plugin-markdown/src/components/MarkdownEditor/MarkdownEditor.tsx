@@ -13,6 +13,7 @@ import {
   CommandMenu,
   type CommandMenuGroup,
   type DNDOptions,
+  Domino,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
@@ -25,7 +26,6 @@ import {
   addLink,
   coreSlashCommands,
   createBasicExtensions,
-  createElement,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
@@ -70,7 +70,7 @@ export type MarkdownEditorProps = {
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
 export const MarkdownEditor = ({
-  extensions: _extensions,
+  extensions: extensionsParam,
   slashCommandGroups,
   onLinkQuery,
   ...props
@@ -100,26 +100,25 @@ export const MarkdownEditor = ({
       trigger,
       placeholder: {
         delay: 3_000,
-        content: () => {
-          return createElement('div', undefined, [
-            createElement('span', { text: 'Press' }),
-            ...trigger.map((text) =>
-              createElement('span', {
-                className: 'border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]',
-                text,
-              }),
-            ),
-            createElement('span', { text: 'for commands.' }),
-          ]);
-        },
+        content: () =>
+          Domino.of('div')
+            .child(
+              Domino.of('span').text('Press'),
+              ...trigger.map((text) =>
+                Domino.of('span')
+                  .classNames('border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]')
+                  .text(text),
+              ),
+              Domino.of('span').text('for commands.'),
+            )
+            .build(),
       },
       getMenu,
     };
   }, [getMenu]);
 
   const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
-
-  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
 
   return (
     <RefPopover modal={false} {...refPopoverProps}>

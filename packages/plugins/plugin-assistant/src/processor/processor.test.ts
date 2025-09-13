@@ -67,7 +67,7 @@ describe('Chat processor', () => {
         const processor = new AiChatProcessor(conversation, services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();
-        expect(processor.isRunning).to.be.false;
+        expect(processor.active).to.be.false;
         expect(result).to.exist;
       },
       Effect.provide(TestLayer),

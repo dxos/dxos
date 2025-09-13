@@ -101,7 +101,10 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({
             themeMode,
-            slots: { editor: { className: 'is-full' }, content: { className: '!text-sm' } },
+            slots: {
+              editor: { className: 'is-full' },
+              content: { className: '!text-sm' },
+            },
           }),
           tagPicker({
             debug: true,

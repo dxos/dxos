@@ -30,7 +30,7 @@ export const callTool: <Tools extends AiTool.Any>(
     const input = JSON.parse(toolCall.input);
 
     // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
-    log.info('toolCall', { toolCall: toolCall.name, input });
+    log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
@@ -57,7 +57,7 @@ export const callTool: <Tools extends AiTool.Any>(
       ),
     );
 
-    log.info('toolResult', {
+    log('toolResult', {
       toolCall: toolCall.name,
       ...{
         error: 'error' in toolResult ? toolResult.error : undefined,

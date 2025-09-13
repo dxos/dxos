@@ -10,4 +10,10 @@ export class ServiceNotAvailableError extends BaseError.extend('SERVICE_NOT_AVAI
   }
 }
 
+export class FunctionNotFoundError extends BaseError.extend('FUNCTION_NOT_FOUND') {
+  constructor(functionKey: string) {
+    super(`Function not found: ${functionKey}`);
+  }
+}
+
 export class FunctionError extends BaseError.extend('FUNCTION_ERROR') {}

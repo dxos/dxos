@@ -32,21 +32,22 @@ export default () =>
       id: `${INBOX_PLUGIN}/mailbox`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
+      component: ({ data, role }) => <MailboxContainer mailbox={data.subject} role={role} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
-      component: ({ data: { companionTo, subject: message } }) => {
+      component: ({ data: { companionTo, subject: message }, role }) => {
         const space = getSpace(companionTo);
         return (
           <MessageContainer
             message={typeof message === 'string' ? undefined : message}
             space={space}
             inMailbox={companionTo}
+            role={role}
           />
         );
       },

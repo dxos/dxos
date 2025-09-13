@@ -37,7 +37,7 @@ import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderMarkdown } from '../Transcript';
+import { renderByline } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -78,7 +78,7 @@ const DefaultStory = ({
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
   useEffect(() => {

@@ -28,11 +28,12 @@ export type MessageProps = ThemedClassName<{
   viewMode: ViewMode;
   hasEnrichedContent: boolean;
   contactDxn?: string;
+  role?: string;
 }>;
 
-export const Message = ({ space, message, viewMode, contactDxn, classNames }: MessageProps) => {
-  const client = useClient();
+export const Message = ({ space, message, viewMode, contactDxn, role, classNames }: MessageProps) => {
   const { themeMode } = useThemeContext();
+  const client = useClient();
 
   const content = useMemo(() => {
     const textBlocks = message.blocks.filter((block) => 'text' in block);
@@ -61,13 +62,16 @@ export const Message = ({ space, message, viewMode, contactDxn, classNames }: Me
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
   return (
-    <div role='none' className='grid grid-rows-[min-content_1fr]'>
+    <div
+      role='none'
+      className={mx('grid', role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]')}
+    >
       <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
-      <div role='none' className='relative'>
+      <div role='none' className={role === 'section' ? 'contents' : 'relative'}>
         <div
           role='none'
           ref={parentRef}
-          className={mx('absolute inset-0', classNames)}
+          className={mx(role !== 'section' && 'absolute inset-0', classNames)}
           data-popover-collision-boundary={true}
         />
       </div>

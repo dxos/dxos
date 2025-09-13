@@ -40,7 +40,7 @@ Monorepo tools:
 
 - moon for monorepo management.
 - pnpm for package management.
-- vitest
+- vitest (use "pnpm vitest" to run tests)
 - vite
 
 Testing:

@@ -13,7 +13,7 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
 
-import { InboxCapabilities } from '../../capabilities/capabilities';
+import { InboxCapabilities } from '../../capabilities';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
@@ -23,9 +23,10 @@ import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef 
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
+  role?: string;
 };
 
-export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
+export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -138,6 +139,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           id={id}
           onAction={handleAction}
           currentMessageId={currentMessageId}
+          role={role}
         />
       ) : (
         <EmptyMailboxContent mailbox={mailbox} />

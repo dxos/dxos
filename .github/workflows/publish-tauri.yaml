@@ -48,6 +48,10 @@ jobs:
           # Verify installation
           cn --version
 
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
       - name: Bump version in Tauri config
         # Latest Version is Prerelease?
         # ├─ Yes → Config Version is one behind Latest Core?
@@ -58,7 +62,15 @@ jobs:
         #        └─ No → Skip bump
         id: bump-version
         run: |
-          RELEASE_DATA=$(cn release list dxos/composer --channel tauri --format json)
+          # TODO(wittjosiah): Switch to production.
+          # Determine channel argument: omit for labs, use branch name otherwise
+          if [ "${{ steps.extract_branch.outputs.branch }}" = "labs" ]; then
+            CHANNEL_ARG=""
+          else
+            CHANNEL_ARG="--channel ${{ steps.extract_branch.outputs.branch }}"
+          fi
+
+          RELEASE_DATA=$(cn release list dxos/composer $CHANNEL_ARG --format json)
           LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.[0].version')
           CONFIG_VERSION=$(jq -r '.version' packages/apps/composer-app/src-tauri/tauri.conf.json)
 
