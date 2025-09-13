@@ -6,17 +6,15 @@ import '@dxos-theme';
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
 import {
-  MarkdownContent,
   MarkdownStream,
   type MarkdownStreamProps,
   type TextStreamOptions,
   textStream,
-  useStreamingText,
   useTextStream,
 } from '@dxos/react-ui-components';
 import { editorWidth } from '@dxos/react-ui-editor';
@@ -37,15 +35,14 @@ const testOptions: TextStreamOptions = {
   wordsPerChunk: 5,
 };
 
-type StoryProps = MarkdownStreamProps & { streamOptions?: TextStreamOptions };
+type StoryProps = MarkdownStreamProps;
 
-const DefaultStory = ({ content = '', options, streamOptions = testOptions }: StoryProps) => {
+const DefaultStory = ({ content = '', ...options }: StoryProps) => {
   const [generator, setGenerator] = useState<AsyncGenerator<string, void, unknown> | null>(null);
   const [text, isStreaming] = useTextStream(generator);
-  const [str] = useStreamingText(text, 5);
 
   const handleStart = useCallback(() => {
-    setGenerator(textStream(content, streamOptions));
+    setGenerator(textStream(content, testOptions));
   }, [content]);
 
   const handleReset = useCallback(() => {
@@ -57,21 +54,17 @@ const DefaultStory = ({ content = '', options, streamOptions = testOptions }: St
   }, []);
 
   return (
-    <div className={mx('grid is-full', railGridHorizontal)}>
+    <div
+      className={mx('grid is-full', railGridHorizontal)}
+      style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
+    >
       <Toolbar.Root classNames='border-be border-separator'>
         <Toolbar.Button onClick={handleStart} disabled={isStreaming}>
           Start
         </Toolbar.Button>
         <Toolbar.Button onClick={handleReset}>Reset</Toolbar.Button>
       </Toolbar.Root>
-      <MarkdownStream
-        content={str}
-        options={options}
-        userHue={userHue}
-        // classNames='[&_.cm-scroller]:pli-cardSpacingInline [&_.cm-scroller]:plb-cardSpacingBlock min-bs-0'
-        registry={xmlComponentRegistry}
-        onEvent={(ev) => console.log(ev)}
-      />
+      <MarkdownStream content={text} {...testOptions} {...options} registry={xmlComponentRegistry} />
     </div>
   );
 };
@@ -97,23 +90,10 @@ export const Default: Story = {
 
 export const Streaming: Story = {
   args: {
+    perCharacterDelay: 10,
     content: doc,
-    options: {
-      autoScroll: true,
-      fadeIn: true,
-      cursor: true,
-    },
+    autoScroll: true,
+    fadeIn: true,
+    cursor: true,
   },
-};
-
-export const Components = () => {
-  return (
-    <MarkdownContent
-      content={doc}
-      userHue={userHue}
-      options={{ autoScroll: true }}
-      registry={xmlComponentRegistry}
-      onEvent={(ev) => console.log(ev)}
-    />
-  );
 };
