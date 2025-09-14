@@ -50,7 +50,7 @@ const getTextChild = (children: any[]): string | null => {
 /**
  * Custom XML tags registry.
  */
-export const xmlComponentRegistry: XmlComponentRegistry = {
+export const componentRegistry: XmlComponentRegistry = {
   //
   // Widgets
   //

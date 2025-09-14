@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, Fragment, forwardRef, useEffect, useMemo } from 'react';
+import React, { type CSSProperties, forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { MarkdownStream, ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { MarkdownStream, type MarkdownStreamController, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { ChatError, ChatMessage, type ChatMessageProps, styles } from './ChatMessage';
+import { type ChatMessageProps } from './ChatMessage';
 import { reduceMessages } from './reducers';
+import { componentRegistry } from './registry';
 
 export type ChatThreadProps = ThemedClassName<
   {
@@ -44,53 +45,62 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
       }
     }, [messages, debug]);
 
-    const getDelta = (idx: number) => {
+    const getTimeDelta = (idx: number) => {
       invariant(idx > 0);
       const prev = new Date(reducedMessages[idx - 1].created).getTime();
       const current = new Date(reducedMessages[idx].created).getTime();
       return current - prev;
     };
 
+    // TODO(burdon): Generalize reducer.
     const content = useMemo(() => {
       return reducedMessages.reduce((acc, message) => {
         for (const block of message.blocks) {
-          switch (block._tag) {
-            case 'text': {
-              acc += block.text;
-              break;
-            }
-          }
+          acc += blockToMarkdown(message, block) ?? '';
         }
 
         return acc;
       }, '');
     }, [reducedMessages]);
-
-    return <MarkdownStream content={content} />;
+    const lastRef = useRef<string | null>(null);
+    const controller = useRef<MarkdownStreamController>(null);
+    useEffect(() => {
+      const append = lastRef.current && content.startsWith(lastRef.current);
+      if (!append) {
+        console.log(JSON.stringify(content), content.length);
+        console.log(JSON.stringify(lastRef.current), lastRef.current?.length);
+        console.log(JSON.stringify(content.startsWith(lastRef.current ?? '_')));
+        console.log(JSON.stringify(content.indexOf(lastRef.current ?? '_')));
+        controller.current?.update(content);
+      } else {
+        controller.current?.append(content.slice(lastRef.current?.length ?? 0));
+      }
+      lastRef.current = content;
+    }, [controller, content]);
 
     return (
-      <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
-        <ScrollContainer.Content
-          classNames='relative flex flex-col gap-2 pbs-2 pbe-2'
-          style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
-        >
-          {reducedMessages.map((message, idx) => (
-            <Fragment key={message.id}>
-              {debug && (
-                <div className={mx('flex justify-end text-subdued', styles.margin)}>
-                  <pre className='text-xs'>
-                    {JSON.stringify({ created: message.created, delta: idx > 0 ? getDelta(idx) : undefined })}
-                  </pre>
-                </div>
-              )}
-              <ChatMessage message={message} debug={debug} onEvent={onEvent} {...props} />
-            </Fragment>
-          ))}
-
-          {error && <ChatError error={error} onEvent={onEvent} />}
-        </ScrollContainer.Content>
-        <ScrollContainer.ScrollDownButton />
-      </ScrollContainer.Root>
+      <div
+        className={mx('bs-full is-full overflow-hidden', classNames)}
+        style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+      >
+        <MarkdownStream ref={controller} content={content} registry={componentRegistry} characterDelay={5} fadeIn />
+      </div>
     );
   },
 );
+
+/**
+ *
+ */
+const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
+  switch (block._tag) {
+    case 'text': {
+      if (message.sender.role === 'user') {
+        return `<prompt>${block.text}</prompt>\n`;
+      } else {
+        // NOTE: Don't add newline to block since it may be partial.
+        return block.text;
+      }
+    }
+  }
+};

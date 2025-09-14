@@ -22,6 +22,7 @@ export const createStreamer =
  * Tokenizes a string into characters and complete XML/HTML tags.
  * For example: "hello <b>world</b>!" becomes ["h", "e", "l", "l", "o", " ", "<b>", "w", "o", "r", "l", "d", "</b>", "!"]
  */
+// TODO(burdon): Hold closing tag.
 const tokenizeWithTags = (text: string): string[] => {
   const tokens: string[] = [];
 

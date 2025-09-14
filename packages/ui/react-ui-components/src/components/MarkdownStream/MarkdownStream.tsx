@@ -102,6 +102,6 @@ export const MarkdownStream = forwardRef<MarkdownStreamController, MarkdownStrea
       [view],
     );
 
-    return <div ref={parentRef} className={mx('is-full overflow-hidden', classNames)} />;
+    return <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />;
   },
 );
