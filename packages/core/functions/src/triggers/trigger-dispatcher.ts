@@ -2,17 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
+import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule, Array } from 'effect';
 
-import { Filter, Obj } from '@dxos/echo';
+import { DXN, Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
-import { DatabaseService, type Services } from '../services';
+import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
-import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
+import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput, QueueTriggerOutput } from '../types';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -59,6 +60,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
 
     /**
      * Start the trigger dispatcher.
+     * Will automatically invoke triggers.
      */
     start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService>;
 
@@ -82,7 +84,21 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     /**
      * Invoke all scheduled triggers whose time is up.
      */
-    invokeScheduledTriggers(): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService>;
+    invokeScheduledTimerTriggers(): Effect.Effect<
+      TriggerExecutionResult[],
+      never,
+      Services | LocalFunctionExecutionService
+    >;
+
+    /**
+     * Invoke all scheduled queue triggers who have messages to process.
+     */
+    // TODO(dmaretskyi): Combine all invokeScheduled*Triggers into a single method.
+    invokeScheduledQueueTriggers(): Effect.Effect<
+      TriggerExecutionResult[],
+      never,
+      Services | LocalFunctionExecutionService
+    >;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -194,7 +210,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = (): Effect.Effect<
+  invokeScheduledTimerTriggers = (): Effect.Effect<
     TriggerExecutionResult[],
     never,
     Services | LocalFunctionExecutionService
@@ -221,11 +237,60 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         triggersToInvoke.map((trigger) =>
           this.invokeTrigger({
             trigger,
-            data: { tick: now.getTime() } as TimerTriggerOutput,
+            data: { tick: now.getTime() } satisfies TimerTriggerOutput,
           }),
         ),
         { concurrency: 'unbounded' },
       );
+    });
+
+  invokeScheduledQueueTriggers = (): Effect.Effect<
+    TriggerExecutionResult[],
+    never,
+    Services | LocalFunctionExecutionService
+  > =>
+    Effect.gen(this, function* () {
+      const triggers = yield* this._fetchTriggers();
+
+      let invocations: TriggerExecutionResult[] = [];
+      for (const trigger of triggers) {
+        const spec = trigger.spec;
+        if (spec?.kind !== 'queue') {
+          continue;
+        }
+        const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+        const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+
+        // TODO(dmaretskyi): Include cursor & limit in the query.
+        const objects = yield* Effect.promise(() => queue.queryObjects());
+        for (const object of objects) {
+          const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+          // TODO(dmaretskyi): Extract methods for managing queue position.
+          if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
+            continue;
+          }
+
+          invocations.push(
+            yield* this.invokeTrigger({
+              trigger,
+              data: {
+                queue: spec.queue,
+                item: object,
+                cursor: objectPos,
+              } satisfies QueueTriggerOutput,
+            }),
+          );
+
+          // Update trigger cursor.
+          Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+          Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+          yield* DatabaseService.flush();
+
+          // We only invoke one trigger for each queue at a time.
+          break;
+        }
+      }
+      return invocations;
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
@@ -309,7 +374,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
-      yield* this.invokeScheduledTriggers();
+      yield* this.invokeScheduledTimerTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: FunctionTrigger): any => {
@@ -324,3 +389,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
 // Re-exports
 export { FunctionTrigger, type TimerTrigger } from '../types';
+
+/**
+ * Key for the current queue cursor for queue triggers.
+ */
+const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
