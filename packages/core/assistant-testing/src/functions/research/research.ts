@@ -9,18 +9,12 @@ import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
+  createToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
-import { createToolkit } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import {
-  ContextQueueService,
-  DatabaseService,
-  LocalFunctionExecutionService,
-  TracingService,
-  defineFunction,
-} from '@dxos/functions';
+import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
 import { exaFunction, exaMockFunction } from '../exa';
@@ -28,7 +22,7 @@ import { exaFunction, exaMockFunction } from '../exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
-import { createResearchGraph, queryResearchGraph } from './research-graph';
+import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -64,9 +58,6 @@ export default defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch, researchInstructions } }) {
-      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
-
       yield* DatabaseService.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
@@ -85,7 +76,7 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-          ).pipe(Layer.provide(ContextQueueService.layer(researchQueue))),
+          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
         ),
       );
 
