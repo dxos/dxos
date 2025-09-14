@@ -375,6 +375,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
       yield* this.invokeScheduledTimerTriggers();
+      yield* this.invokeScheduledQueueTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: FunctionTrigger): any => {
