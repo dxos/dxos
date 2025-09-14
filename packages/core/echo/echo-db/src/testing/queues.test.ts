@@ -13,6 +13,7 @@ import { live } from '@dxos/live-object';
 import type { Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;
@@ -80,6 +81,34 @@ describe('queues', (ctx) => {
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(getSchema(resolved)).toEqual(Testing.Contact);
+    }
+  });
+
+  test('objects in queues have positions', async () => {
+    await using peer = await builder.createPeer({ types: [Testing.Contact] });
+    const spaceId = SpaceId.random();
+    const queues = peer.client.constructQueueFactory(spaceId);
+    const queue = queues.create();
+    await queue.append([
+      Obj.make(Testing.Contact, {
+        name: 'john',
+      }),
+      Obj.make(Testing.Contact, {
+        name: 'jane',
+      }),
+    ]);
+
+    {
+      const [obj1, obj2] = await queue.queryObjects();
+      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
+    }
+
+    {
+      await queue.refresh();
+      const [obj1, obj2] = queue.objects;
+      expect(Obj.getKeys(obj1, KEY_QUEUE_POSITION).at(0)?.id).toEqual('0');
+      expect(Obj.getKeys(obj2, KEY_QUEUE_POSITION).at(0)?.id).toEqual('1');
     }
   });
 
