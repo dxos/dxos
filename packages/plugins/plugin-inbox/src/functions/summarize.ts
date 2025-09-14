@@ -2,11 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import {
+  LocalSearchHandler,
+  LocalSearchToolkit,
+  contextQueueLayerFromResearchGraph,
+  makeGraphWriterHandler,
+  makeGraphWriterToolkit,
+} from '@dxos/assistant-testing';
 import { TracingService, defineFunction } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 /**
@@ -27,10 +36,26 @@ export default defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { messages } }) {
+      const GraphWriterToolkit = makeGraphWriterToolkit({
+        schema: [DataType.Person, DataType.Project, DataType.Organization],
+      });
+      const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
+
+      const toolkit = yield* AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            //
+            GraphWriterHandler,
+            LocalSearchHandler,
+          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
+        ),
+      );
+
       const result = yield* new AiSession().run({
         prompt: messages,
         history: [],
         system: systemPrompt,
+        toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
       });
 
@@ -62,6 +87,17 @@ export default defineFunction({
 
 const systemPrompt = trim`
   You are a helpful assistant that summarizes mailboxes.
+
+  # Research
+  As the first step perform research:
+    - Identify people, companies, projects, etc.
+    - Search local database for existing entitities.
+    - If the local entities don't exist, add new ones with graph-write tool.
+    - In your summary include references to objects instead of their names in the following format:
+
+    <example>
+      We need to talk about @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+    </example>
 
   # Goal
   Create a markdown summary of the mailbox with text notes provided.
