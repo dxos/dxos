@@ -38,7 +38,7 @@ import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
-import { createTestMailbox, createTestTranscription } from '../testing';
+import { addTestData, createTestMailbox, createTestTranscription, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -53,7 +53,7 @@ import {
   TasksContainer,
   TokenManagerContainer,
 } from './components';
-import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
+import { accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 

@@ -42,13 +42,12 @@ const cursor = (): Extension => {
 
     EditorView.theme({
       '@keyframes blink': {
-        '0%, 50%': { opacity: '1' },
-        '51%, 100%': { opacity: '0' },
-      },
-      '.typewriter-cursor': {
-        color: 'currentColor',
-        fontWeight: 'normal',
-        display: 'inline-block',
+        '0%, 50%': {
+          opacity: '1',
+        },
+        '50%, 100%': {
+          opacity: '0',
+        },
       },
     }),
   ];
@@ -60,15 +59,8 @@ const cursor = (): Extension => {
 class CursorWidget extends WidgetType {
   toDOM() {
     return Domino.of('span')
-      .style({
-        opacity: '0.2',
-      })
-      .child(
-        Domino.of('span').text('▌').style({
-          marginLeft: '2px',
-          animation: 'blink 1s infinite',
-        }),
-      )
+      .style({ opacity: '0.8' })
+      .child(Domino.of('span').text('\u258D').style({ animation: 'blink 1s infinite' }))
       .build();
   }
 }

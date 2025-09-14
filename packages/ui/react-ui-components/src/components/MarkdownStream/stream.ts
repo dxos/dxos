@@ -24,8 +24,8 @@ export const createStreamer =
  */
 const tokenizeWithTags = (text: string): string[] => {
   const tokens: string[] = [];
-  let i = 0;
 
+  let i = 0;
   while (i < text.length) {
     if (text[i] === '<') {
       // Find the closing bracket.

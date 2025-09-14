@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { MarkdownStream, ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
@@ -38,8 +38,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     // Reduce messages to collapse related blocks.
     const reducedMessages = useMemo(() => {
       if (debug) {
-        // Raw.
-        return messages; // TODO(burdon): Need TS.
+        return messages;
       } else {
         return messages.reduce(reduceMessages, { messages: [] }).messages;
       }
@@ -51,6 +50,23 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
       const current = new Date(reducedMessages[idx].created).getTime();
       return current - prev;
     };
+
+    const content = useMemo(() => {
+      return reducedMessages.reduce((acc, message) => {
+        for (const block of message.blocks) {
+          switch (block._tag) {
+            case 'text': {
+              acc += block.text;
+              break;
+            }
+          }
+        }
+
+        return acc;
+      }, '');
+    }, [reducedMessages]);
+
+    return <MarkdownStream content={content} />;
 
     return (
       <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>

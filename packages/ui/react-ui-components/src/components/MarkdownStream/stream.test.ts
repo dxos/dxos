@@ -58,14 +58,14 @@ describe('stream', () => {
   );
 });
 
-const testStreamer = (text: string, delay: number) =>
+const testStreamer = (text: string, characterDelay: number) =>
   Effect.gen(function* () {
     const result: string[] = [];
 
     // Fork the stream processing.
     const queue = yield* Queue.unbounded<string>();
     const fiber = yield* Stream.fromQueue(queue).pipe(
-      createStreamer(delay),
+      createStreamer(characterDelay),
       Stream.runForEach((text) => Effect.sync(() => result.push(text))),
       Effect.fork,
     );
@@ -74,7 +74,7 @@ const testStreamer = (text: string, delay: number) =>
     yield* Queue.offer(queue, text);
 
     // Advance clock.
-    yield* TestClock.adjust(text.length * delay);
+    yield* TestClock.adjust(text.length * characterDelay);
 
     // Shutdown the queue to signal completion.
     yield* Queue.shutdown(queue);
