@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
@@ -19,7 +19,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-import { type SerializationModel } from '../../model';
+import { DocumentAdapter, type SerializationModel } from '../../model';
 import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
@@ -72,7 +72,7 @@ export const TranscriptView = ({
   ignoreAttention,
 }: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
-  const { parentRef } = useTextEditor(() => {
+  const { parentRef, view } = useTextEditor(() => {
     return {
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
@@ -87,6 +87,20 @@ export const TranscriptView = ({
       ].filter(isNotFalsy),
     };
   }, [space, model]);
+
+  // Sync the serialization model with the editor view.
+  useEffect(() => {
+    if (!view) {
+      return;
+    }
+
+    const adapter = new DocumentAdapter(view);
+    model.sync(adapter);
+    const unsubscribe = model.update.on(() => {
+      model.sync(adapter);
+    });
+    return () => unsubscribe();
+  }, [view, model]);
 
   return (
     <div
