@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { DatabaseService, QueueService } from '@dxos/functions';
+import { ContextQueueService, DatabaseService, QueueService } from '@dxos/functions';
 
 /**
  * Container for a set of ephemeral research results.
@@ -34,3 +34,11 @@ export const createResearchGraph: () => Effect.Effect<ResearchGraph, never, Data
   const queue = yield* QueueService.createQueue();
   return yield* DatabaseService.add(Obj.make(ResearchGraph, { queue: Ref.fromDXN(queue.dxn) }));
 });
+
+export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
+    const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+    return ContextQueueService.layer(researchQueue);
+  }),
+);
