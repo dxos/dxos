@@ -614,7 +614,7 @@ importers:
         version: link:../../plugins/plugin-search
       '@dxos/plugin-sheet':
         specifier: workspace:*
-        version: link:../../plugins/plugin-sheet
+        version: link:../../plugins/plugin-help/plugin-sheet
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../../plugins/plugin-sketch
@@ -6383,7 +6383,7 @@ importers:
         version: link:../plugin-script
       '@dxos/plugin-sheet':
         specifier: workspace:*
-        version: link:../plugin-sheet
+        version: link:../plugin-help/plugin-sheet
       '@dxos/plugin-sketch':
         specifier: workspace:*
         version: link:../plugin-sketch
@@ -7111,6 +7111,238 @@ importers:
       type-fest:
         specifier: 4.10.1
         version: 4.10.1
+      vite:
+        specifier: 7.1.1
+        version: 7.1.1(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
+
+  packages/plugins/plugin-help/plugin-sheet:
+    dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.7
+        version: 6.18.7
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: ^6.38.2
+        version: 6.38.2
+      '@dnd-kit/core':
+        specifier: ^6.0.5
+        version: 6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@dnd-kit/modifiers':
+        specifier: ^6.0.0
+        version: 6.0.0(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+      '@dnd-kit/sortable':
+        specifier: ^7.0.1
+        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
+      '@dnd-kit/utilities':
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../../core/compute
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../../core/functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/lit-grid':
+        specifier: workspace:*
+        version: link:../../../ui/lit-grid
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../../core/echo/live-object
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../../plugin-deck
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../../plugin-graph
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugin-markdown
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../../plugin-script
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugin-space
+      '@dxos/plugin-stack':
+        specifier: workspace:*
+        version: link:../../plugin-stack
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../../plugin-thread
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../../ui/primitives/react-hooks
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-form
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-grid
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-menu
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@lezer/common':
+        specifier: ^1.2.2
+        version: 1.2.2
+      '@lezer/highlight':
+        specifier: ^1.2.1
+        version: 1.2.1
+      '@lezer/lezer':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@lezer/lr':
+        specifier: ^1.4.2
+        version: 1.4.2
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.9.0
+        version: 1.11.0
+      '@radix-ui/react-context':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
+      codemirror-lang-spreadsheet:
+        specifier: ^1.3.0
+        version: 1.3.0
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.6.0
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      re-resizable:
+        specifier: ^6.9.17
+        version: 6.9.17(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-markdown:
+        specifier: ^8.0.5
+        version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+    devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-generator
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-types
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../common/storybook-utils
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
+      '@effect-rx/rx-react':
+        specifier: 0.38.0
+        version: 0.38.0(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(react@18.2.0)(scheduler@0.23.2)
+      '@effect/platform':
+        specifier: 0.90.2
+        version: 0.90.2(effect@3.17.7)
+      '@lezer/generator':
+        specifier: ^1.7.1
+        version: 1.7.1
+      '@tldraw/indices':
+        specifier: ^2.0.0-alpha.14
+        version: 2.0.0-canary.e43b0103fdf5
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
+      '@types/react-window':
+        specifier: ^1.8.8
+        version: 1.8.8
+      effect:
+        specifier: 3.17.7
+        version: 3.17.7
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
       vite:
         specifier: 7.1.1
         version: 7.1.1(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
@@ -8996,238 +9228,6 @@ importers:
       '@types/react-dom':
         specifier: ~18.2.0
         version: 18.2.25
-      effect:
-        specifier: 3.17.7
-        version: 3.17.7
-      react:
-        specifier: ~18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ~18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: 7.1.1
-        version: 7.1.1(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
-
-  packages/plugins/plugin-sheet:
-    dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
-      '@codemirror/state':
-        specifier: ^6.5.2
-        version: 6.5.2
-      '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
-      '@dnd-kit/core':
-        specifier: ^6.0.5
-        version: 6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/modifiers':
-        specifier: ^6.0.0
-        version: 6.0.0(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/sortable':
-        specifier: ^7.0.1
-        version: 7.0.1(@dnd-kit/core@6.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react@18.2.0)
-      '@dnd-kit/utilities':
-        specifier: ^3.2.0
-        version: 3.2.0(react@18.2.0)
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../sdk/app-framework
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/compute':
-        specifier: workspace:*
-        version: link:../../core/compute
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/lit-grid':
-        specifier: workspace:*
-        version: link:../../ui/lit-grid
-      '@dxos/live-object':
-        specifier: workspace:*
-        version: link:../../core/echo/live-object
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
-      '@dxos/plugin-deck':
-        specifier: workspace:*
-        version: link:../plugin-deck
-      '@dxos/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
-      '@dxos/plugin-thread':
-        specifier: workspace:*
-        version: link:../plugin-thread
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/react-hooks':
-        specifier: workspace:*
-        version: link:../../ui/primitives/react-hooks
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-editor
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
-      '@dxos/react-ui-grid':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-grid
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-list
-      '@dxos/react-ui-menu':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-stack
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@lezer/common':
-        specifier: ^1.2.2
-        version: 1.2.2
-      '@lezer/highlight':
-        specifier: ^1.2.1
-        version: 1.2.1
-      '@lezer/lezer':
-        specifier: ^1.1.2
-        version: 1.1.2
-      '@lezer/lr':
-        specifier: ^1.4.2
-        version: 1.4.2
-      '@preact-signals/safe-react':
-        specifier: ^0.9.0
-        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
-      '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
-      '@radix-ui/react-context':
-        specifier: 1.1.1
-        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
-      codemirror-lang-spreadsheet:
-        specifier: ^1.3.0
-        version: 1.3.0
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      re-resizable:
-        specifier: ^6.9.17
-        version: 6.9.17(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      react-markdown:
-        specifier: ^8.0.5
-        version: 8.0.7(@types/react@18.2.79)(react@18.2.0)
-      react-resize-detector:
-        specifier: ^11.0.1
-        version: 11.0.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    devDependencies:
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-generator
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-syntax-highlighter':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-syntax-highlighter
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
-      '@dxos/react-ui-types':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-types
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/test-utils':
-        specifier: workspace:*
-        version: link:../../common/test-utils
-      '@effect-rx/rx-react':
-        specifier: 0.38.0
-        version: 0.38.0(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(react@18.2.0)(scheduler@0.23.2)
-      '@effect/platform':
-        specifier: 0.90.2
-        version: 0.90.2(effect@3.17.7)
-      '@lezer/generator':
-        specifier: ^1.7.1
-        version: 1.7.1
-      '@tldraw/indices':
-        specifier: ^2.0.0-alpha.14
-        version: 2.0.0-canary.e43b0103fdf5
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/react':
-        specifier: ~18.2.0
-        version: 18.2.79
-      '@types/react-dom':
-        specifier: ~18.2.0
-        version: 18.2.25
-      '@types/react-window':
-        specifier: ^1.8.8
-        version: 1.8.8
       effect:
         specifier: 3.17.7
         version: 3.17.7
@@ -50627,7 +50627,7 @@ snapshots:
 
   node-gyp-build-optional-packages@5.2.2:
     dependencies:
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
     optional: true
 
   node-gyp-build@4.5.0: {}

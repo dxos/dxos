@@ -56,7 +56,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     const content = useMemo(() => {
       return reducedMessages.reduce((acc, message) => {
         for (const block of message.blocks) {
-          acc += blockToMarkdown(message, block) ?? '';
+          acc += (blockToMarkdown(message, block) ?? '') + (block.pending ? '' : '\n');
         }
 
         return acc;
@@ -67,10 +67,6 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     useEffect(() => {
       const append = lastRef.current && content.startsWith(lastRef.current);
       if (!append) {
-        console.log(JSON.stringify(content), content.length);
-        console.log(JSON.stringify(lastRef.current), lastRef.current?.length);
-        console.log(JSON.stringify(content.startsWith(lastRef.current ?? '_')));
-        console.log(JSON.stringify(content.indexOf(lastRef.current ?? '_')));
         controller.current?.update(content);
       } else {
         controller.current?.append(content.slice(lastRef.current?.length ?? 0));
@@ -92,15 +88,19 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
 /**
  *
  */
-const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
+// TODO(burdon): Factor out.
+export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        return `<prompt>${block.text}</prompt>\n`;
+        return `<prompt>${block.text}</prompt>`;
       } else {
-        // NOTE: Don't add newline to block since it may be partial.
         return block.text;
       }
+    }
+
+    default: {
+      return `<json>${JSON.stringify(block)}</json>`;
     }
   }
 };

@@ -21,8 +21,8 @@ export const createStreamer =
 /**
  * Tokenizes a string into characters and complete XML/HTML tags.
  * For example: "hello <b>world</b>!" becomes ["h", "e", "l", "l", "o", " ", "<b>", "w", "o", "r", "l", "d", "</b>", "!"]
+ * If a tag fragment is encountered (no closing '>'), the entire fragment is returned as one token.
  */
-// TODO(burdon): Hold closing tag.
 const tokenizeWithTags = (text: string): string[] => {
   const tokens: string[] = [];
 
@@ -36,9 +36,9 @@ const tokenizeWithTags = (text: string): string[] => {
         tokens.push(text.slice(i, closeIndex + 1));
         i = closeIndex + 1;
       } else {
-        // No closing bracket found, treat as regular character.
-        tokens.push(text[i]);
-        i++;
+        // No closing bracket found, return the entire remaining fragment.
+        tokens.push(text.slice(i));
+        break;
       }
     } else {
       // Regular character.

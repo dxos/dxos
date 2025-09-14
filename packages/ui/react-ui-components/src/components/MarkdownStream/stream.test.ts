@@ -56,6 +56,14 @@ describe('stream', () => {
       expect(result).toEqual(['H', 'e', 'l', 'l', 'o', '<br/>', 'w', 'o', 'r', 'l', 'd', '<img src="test.jpg"/>']);
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
+
+  it.effect('stream with incomplete tag fragment', ({ expect }) =>
+    Effect.gen(function* () {
+      const text = 'Hello <div class="test';
+      const result = yield* testStreamer(text, 5);
+      expect(result).toEqual(['H', 'e', 'l', 'l', 'o', ' ', '<div class="test']);
+    }).pipe(Effect.provide(TestContext.TestContext)),
+  );
 });
 
 const testStreamer = (text: string, characterDelay: number) =>

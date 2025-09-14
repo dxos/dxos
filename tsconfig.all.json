@@ -301,6 +301,9 @@
       "path": "packages/plugins/plugin-help/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-help/plugin-sheet/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
@@ -347,9 +350,6 @@
     },
     {
       "path": "packages/plugins/plugin-search/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-sheet/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-sketch/tsconfig.json"

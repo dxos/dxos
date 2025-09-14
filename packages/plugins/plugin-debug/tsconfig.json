@@ -132,6 +132,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-help/plugin-sheet"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -139,9 +142,6 @@
     },
     {
       "path": "../plugin-script"
-    },
-    {
-      "path": "../plugin-sheet"
     },
     {
       "path": "../plugin-sketch"

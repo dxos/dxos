@@ -114,4 +114,13 @@ export const componentRegistry: XmlComponentRegistry = {
     block: true,
     Component: Fallback,
   },
+
+  //
+  // Fallback
+  //
+
+  ['json' as const]: {
+    block: true,
+    Component: Fallback,
+  },
 };

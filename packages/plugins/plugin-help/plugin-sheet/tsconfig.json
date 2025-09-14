@@ -17,133 +17,133 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
+      "path": "../../../common/async"
     },
     {
-      "path": "../../common/context"
+      "path": "../../../common/context"
     },
     {
-      "path": "../../common/crypto"
+      "path": "../../../common/crypto"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../common/invariant"
+      "path": "../../../common/invariant"
     },
     {
-      "path": "../../common/keys"
+      "path": "../../../common/keys"
     },
     {
-      "path": "../../common/log"
+      "path": "../../../common/log"
     },
     {
-      "path": "../../common/random"
+      "path": "../../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
+      "path": "../../../common/storybook-utils"
     },
     {
-      "path": "../../common/test-utils"
+      "path": "../../../common/test-utils"
     },
     {
-      "path": "../../common/util"
+      "path": "../../../common/util"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../../core/compute"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-generator"
+      "path": "../../../core/echo/echo-generator"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/live-object"
+      "path": "../../../core/echo/live-object"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../../core/functions"
     },
     {
-      "path": "../../sdk/app-framework"
+      "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client"
+      "path": "../../../sdk/client"
     },
     {
-      "path": "../../sdk/react-client"
+      "path": "../../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../../../sdk/schema"
     },
     {
-      "path": "../../ui/lit-grid"
+      "path": "../../../ui/lit-grid"
     },
     {
-      "path": "../../ui/primitives/react-hooks"
+      "path": "../../../ui/primitives/react-hooks"
     },
     {
-      "path": "../../ui/react-ui"
+      "path": "../../../ui/react-ui"
     },
     {
-      "path": "../../ui/react-ui-attention"
+      "path": "../../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-editor"
+      "path": "../../../ui/react-ui-editor"
     },
     {
-      "path": "../../ui/react-ui-form"
+      "path": "../../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-grid"
+      "path": "../../../ui/react-ui-grid"
     },
     {
-      "path": "../../ui/react-ui-list"
+      "path": "../../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-menu"
+      "path": "../../../ui/react-ui-menu"
     },
     {
-      "path": "../../ui/react-ui-stack"
+      "path": "../../../ui/react-ui-stack"
     },
     {
-      "path": "../../ui/react-ui-syntax-highlighter"
+      "path": "../../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-ui-types"
+      "path": "../../../ui/react-ui-types"
     },
     {
-      "path": "../plugin-attention"
+      "path": "../../plugin-attention"
     },
     {
-      "path": "../plugin-client"
+      "path": "../../plugin-client"
     },
     {
-      "path": "../plugin-deck"
+      "path": "../../plugin-deck"
     },
     {
-      "path": "../plugin-graph"
+      "path": "../../plugin-graph"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../../plugin-markdown"
     },
     {
-      "path": "../plugin-script"
+      "path": "../../plugin-script"
     },
     {
-      "path": "../plugin-space"
+      "path": "../../plugin-space"
     },
     {
-      "path": "../plugin-stack"
+      "path": "../../plugin-stack"
     },
     {
-      "path": "../plugin-thread"
+      "path": "../../plugin-thread"
     }
   ]
 }
