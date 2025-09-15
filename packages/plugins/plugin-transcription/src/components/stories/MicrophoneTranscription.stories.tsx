@@ -254,19 +254,21 @@ export const Default: Story = {
   },
 };
 
-export const EntityExtraction: Story = {
-  args: {
-    detectSpeaking: true,
-    entityExtraction: 'ner',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-    audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix hugging face quota issues.
+// export const EntityExtraction: Story = {
+//   args: {
+//     detectSpeaking: true,
+//     entityExtraction: 'ner',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//     audioConstraints: {
+//       echoCancellation: true,
+//       noiseSuppression: true,
+//       autoGainControl: true,
+//     },
+//   },
+// };
 
 export const SpeechDetection: Story = {
   args: {
