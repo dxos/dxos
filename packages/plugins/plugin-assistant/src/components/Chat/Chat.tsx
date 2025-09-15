@@ -342,6 +342,7 @@ const ChatThread = (props: ChatThreadProps) => {
     [processor],
   );
 
+  // TOOD(burdon): Controller.
   const scrollerRef = useRef<ScrollController>(null);
   useEffect(() => {
     return event.on((event) => {

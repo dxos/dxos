@@ -15,6 +15,7 @@ import {
   type XmlComponentRegistry,
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 
 type FallbackProps = XmlComponentProps<any>;
 
@@ -123,4 +124,21 @@ export const componentRegistry: XmlComponentRegistry = {
     block: true,
     Component: Fallback,
   },
+};
+
+export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
+  switch (block._tag) {
+    case 'text': {
+      if (message.sender.role === 'user') {
+        return `<prompt>${block.text}</prompt>`;
+      } else {
+        return block.text;
+      }
+    }
+
+    // TOOD(burdon): Reduce toolchain.
+    default: {
+      return `<json>\n${JSON.stringify(block)}\n</json>`;
+    }
+  }
 };

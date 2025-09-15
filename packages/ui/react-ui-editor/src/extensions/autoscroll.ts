@@ -125,8 +125,8 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 1_000 }: Au
       // TODO(burdon): IconButton.
       '.cm-scroll-button': {
         position: 'absolute',
-        bottom: '0.75rem',
-        right: '0.75rem',
+        bottom: '0.5rem',
+        right: '1rem',
       },
     }),
   ];

@@ -57,7 +57,7 @@ const groups: CommandMenuGroup[] = [
       {
         id: 'custom-1',
         label: 'Log',
-        icon: 'ph--log--regular',
+        icon: 'ph--sort-ascending--regular',
         onSelect: console.log,
       },
     ],

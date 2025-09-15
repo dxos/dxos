@@ -4,18 +4,17 @@
 
 import React, { type CSSProperties, forwardRef, useEffect, useMemo, useRef } from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatMessageProps } from './ChatMessage';
 import { reduceMessages } from './reducers';
-import { componentRegistry } from './registry';
+import { blockToMarkdown, componentRegistry } from './registry';
 
 export type ChatThreadProps = ThemedClassName<
   {
@@ -25,8 +24,9 @@ export type ChatThreadProps = ThemedClassName<
   } & Pick<ChatMessageProps, 'debug' | 'space' | 'toolProvider' | 'onEvent'>
 >;
 
+// TOOD(burdon): Export scroll controller.
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, debug, onEvent, ...props }, forwardedRef) => {
+  ({ classNames, identity, messages = [], error, debug, onEvent }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -45,18 +45,25 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
       }
     }, [messages, debug]);
 
-    const getTimeDelta = (idx: number) => {
-      invariant(idx > 0);
-      const prev = new Date(reducedMessages[idx - 1].created).getTime();
-      const current = new Date(reducedMessages[idx].created).getTime();
-      return current - prev;
-    };
+    // const getTimeDelta = (idx: number) => {
+    //   invariant(idx > 0);
+    //   const prev = new Date(reducedMessages[idx - 1].created).getTime();
+    //   const current = new Date(reducedMessages[idx].created).getTime();
+    //   return current - prev;
+    // };
 
     // TODO(burdon): Generalize reducer.
     const content = useMemo(() => {
       return reducedMessages.reduce((acc, message) => {
         for (const block of message.blocks) {
-          acc += (blockToMarkdown(message, block) ?? '') + (block.pending ? '' : '\n');
+          const str = blockToMarkdown(message, block);
+          if (str && str !== '\n') {
+            console.log(str, JSON.stringify(block));
+            acc += str;
+            if (!block.pending) {
+              // acc += '\n';
+            }
+          }
         }
 
         return acc;
@@ -84,23 +91,3 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
     );
   },
 );
-
-/**
- *
- */
-// TODO(burdon): Factor out.
-export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
-  switch (block._tag) {
-    case 'text': {
-      if (message.sender.role === 'user') {
-        return `<prompt>${block.text}</prompt>`;
-      } else {
-        return block.text;
-      }
-    }
-
-    default: {
-      return `<json>${JSON.stringify(block)}</json>`;
-    }
-  }
-};

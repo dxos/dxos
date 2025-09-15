@@ -43,7 +43,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
         <Popover.Root>
           <Popover.Trigger asChild>
-            <IconButton icon='ph--log--regular' label='Logs' variant='ghost' />
+            <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content>
