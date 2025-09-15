@@ -3,8 +3,10 @@
 //
 
 import { AiLanguageModel } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
@@ -32,7 +34,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(
     AiModelResolver.resolver(
       Effect.gen(function* () {
-        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-12b' as any).pipe(
+        const gemma = yield* OpenAiLanguageModel.model('google/gemma-3-27b').pipe(
           Effect.provide(
             OpenAiClient.layer({
               apiUrl: LMSTUDIO_ENDPOINT,
@@ -42,7 +44,7 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
 
         return (name) => {
           switch (name) {
-            case '@google/gemma-3-12b':
+            case '@google/gemma-3-27b':
               return gemma;
             default:
               return Layer.fail(new AiModelNotAvailableError(name));
@@ -74,7 +76,7 @@ describe('AiServiceRouter', () => {
         const model = yield* AiLanguageModel.AiLanguageModel;
         expect(model).toBeDefined();
       },
-      Effect.provide(AiService.model('@google/gemma-3-12b').pipe(Layer.provide(TestRouter))),
+      Effect.provide(AiService.model('@google/gemma-3-27b').pipe(Layer.provide(TestRouter))),
     ),
   );
 });

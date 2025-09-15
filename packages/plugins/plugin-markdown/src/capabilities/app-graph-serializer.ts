@@ -43,7 +43,7 @@ export default (context: PluginContext) =>
         const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
           pipe(
-            createIntent(MarkdownAction.Create, { spaceId: space.id, name: data.name, content: data.data }),
+            createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),
             chain(SpaceAction.AddObject, { target }),
           ),
         );

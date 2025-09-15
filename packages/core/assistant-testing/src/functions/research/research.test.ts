@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, structuredOutputParser } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -66,9 +66,12 @@ describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
-      function* ({ expect }) {
+      function* ({ expect: _ }) {
         yield* DatabaseService.add(
-          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
+          Obj.make(DataType.Organization, {
+            name: 'Notion',
+            website: 'https://www.notion.com',
+          }),
         );
         yield* DatabaseService.flush({ indexes: true });
 
@@ -94,23 +97,22 @@ describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'research blueprint',
     Effect.fn(
-      function* ({ expect }) {
-        yield* DatabaseService.add(
-          Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' }),
-        );
-        yield* DatabaseService.flush({ indexes: true });
-
+      function* ({ expect: _ }) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
-        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+
+        const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+        yield* DatabaseService.add(org);
+        yield* DatabaseService.flush({ indexes: true });
 
         const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
-        yield* conversation.run({
-          prompt: `Research notion founders.`,
+        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+        yield* conversation.createRequest({
           observer,
+          prompt: `Research notion founders.`,
         });
       },
       Effect.provide(TestLayer),
@@ -123,12 +125,6 @@ describe('misc', () => {
   it('createExtractionSchema', () => {
     const _schema = createExtractionSchema(ResearchDataTypes);
     // log.info('schema', { schema });
-  });
-
-  it('extract schema json schema', () => {
-    const schema = createExtractionSchema(ResearchDataTypes);
-    const _parser = structuredOutputParser(schema);
-    // log.info('schema', { json: parser.tool.parameters });
   });
 
   it('getSanitizedSchemaName', () => {

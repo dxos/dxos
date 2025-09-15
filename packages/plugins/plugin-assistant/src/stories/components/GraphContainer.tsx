@@ -14,8 +14,8 @@ import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dx
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
+import { useFlush, useMatcherExtension } from '../../hooks';
 import { type Expression, QueryParser, createFilter } from '../../parser';
-import { useFlush, useMatcherExtension } from '../hooks';
 
 import { type ComponentProps } from './types';
 

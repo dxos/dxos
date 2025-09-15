@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -13,13 +13,15 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { PublicKeySelector } from './PublicKeySelector';
 
-const meta: Meta = {
+const meta = {
   title: 'devtools/devtools/PublicKeySelector',
   component: PublicKeySelector,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof PublicKeySelector>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Normal = (props: any) => {
   return (

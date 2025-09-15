@@ -6,6 +6,7 @@ import { type Decorator } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
+import { useAsyncEffect } from '@dxos/react-hooks';
 
 import { type CreateAppOptions, useApp } from '../App';
 import { Capabilities, Events } from '../common';
@@ -22,6 +23,7 @@ import {
 // TODO(burdon): Factor out (use consistently in plugin framework?)
 export type Provider<C, R> = (context: C) => R;
 export type ProviderOrValue<C, R> = Provider<C, R> | R;
+
 export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
   return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
 };
@@ -56,7 +58,9 @@ export const setupPluginManager = ({
 };
 
 export type WithPluginManagerOptions = CreateAppOptions & {
+  /** @deprecated */
   capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
+  /** @deprecated */
   fireEvents?: (ActivationEvent | string)[];
 };
 
@@ -86,12 +90,8 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
     }, [pluginManager, context]);
 
     // Fire events.
-    useEffect(() => {
-      const timeout = setTimeout(async () => {
-        await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-      });
-
-      return () => clearTimeout(timeout);
+    useAsyncEffect(async () => {
+      await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
     }, [pluginManager]);
 
     // Create app.

@@ -159,7 +159,8 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   // Objects
   //
 
-  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Object),
+  // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Array),
 };
 
 /**

@@ -116,7 +116,7 @@ export class DxAvatar extends LitElement {
     const bg = this.hue
       ? this.hueVariant === 'surface'
         ? `var(--dx-${this.hue}Surface)`
-        : `var(--dx-${this.hue}Fill)`
+        : `var(--dx-${this.hue === 'neutral' ? 'inputSurface' : `${this.hue}Fill`})`
       : 'var(--surface-bg)';
     const fg =
       this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
@@ -195,6 +195,7 @@ export class DxAvatar extends LitElement {
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
+              class="dx-avatar__image"
               href=${this.imgSrc}
               mask=${`url(#${this.maskId})`}
               crossorigin=${this.imgCrossOrigin}

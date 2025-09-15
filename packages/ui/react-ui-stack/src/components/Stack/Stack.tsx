@@ -23,7 +23,14 @@ import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
-export type Size = 'intrinsic' | 'contain' | 'contain-fit-content';
+/**
+ * Size is how Stack and its StackItems coordinate the dimensions of the items with the available space.
+ * - `intrinsic` signals to Stack and its StackItems to occupy their intrinsic size
+ * - Any other size will extrinsically fill the available space along the axis of its orientation and handle overflow:
+ *   - `contain` causes StackItems to occupy their intrinsic size
+ *   - `split` divides the Stack’s available space among the StackItems
+ */
+export type Size = 'intrinsic' | 'contain' | 'split';
 
 export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
   Partial<StackContextValue> & {
@@ -66,7 +73,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
-        `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
+        size === 'split' ? `repeat(${itemsCount}, 1fr)` : `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
       ...style,
     };
 
@@ -99,12 +106,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const gridClasses = useMemo(() => {
       if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 pli-1' : 'grid-cols-1 plb-1';
+        return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
       }
       if (orientation === 'horizontal') {
-        return size === 'contain-fit-content' ? railGridHorizontalContainFitContent : railGridHorizontal;
+        return railGridHorizontal;
       } else {
-        return size === 'contain-fit-content' ? railGridVerticalContainFitContent : railGridVertical;
+        return railGridVertical;
       }
     }, [rail, orientation, size]);
 
@@ -130,11 +137,11 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           {...props}
           {...arrowNavigationAttrs}
           className={mx(
-            'grid relative',
+            'grid relative [--stack-gap:var(--dx-trimXs)]',
             gridClasses,
-            (size === 'contain' || size === 'contain-fit-content') &&
+            size === 'contain' &&
               (orientation === 'horizontal'
-                ? 'overflow-x-auto min-bs-0 max-bs-full bs-full'
+                ? 'overflow-x-auto overscroll-x-contain min-bs-0 max-bs-full bs-full'
                 : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}

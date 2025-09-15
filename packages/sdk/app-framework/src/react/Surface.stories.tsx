@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -24,7 +25,7 @@ const randomColor = (): string => {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
-const Story = () => {
+const Component = () => {
   const manager = usePluginManager();
   const surfaces = useSurfaces();
   const [picked, setPicked] = useState('test');
@@ -78,20 +79,26 @@ const Story = () => {
   );
 };
 
-export default {
+const DefaultStory = (props: { manager: PluginManager }) => {
+  return (
+    <PluginManagerProvider value={props.manager}>
+      <Component />
+    </PluginManagerProvider>
+  );
+};
+
+const meta = {
   title: 'sdk/app-framework/Surface',
-  render: ({ manager }: { manager: PluginManager }) => {
-    return (
-      <PluginManagerProvider value={manager}>
-        <Story />
-      </PluginManagerProvider>
-    );
-  },
+  render: DefaultStory,
   // NOTE: Intentionally not using withPluginManager to try to reduce surface area of the story.
   decorators: [withTheme, withLayout()],
   args: {
     manager: setupPluginManager(),
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

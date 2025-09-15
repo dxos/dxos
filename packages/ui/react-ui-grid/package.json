@@ -24,9 +24,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.1",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/autocomplete": "^6.18.7",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",

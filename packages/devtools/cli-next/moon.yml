@@ -1,0 +1,40 @@
+type: application
+language: typescript
+tags:
+  - ts-build
+  - ts-test
+tasks:
+  build:
+    deps:
+      - prebuild
+    options:
+      mergeOutputs: replace
+    outputs: []
+  compile:
+    # TODO(wittjosiah): Maybe add bundleAll option to match what tsup would do?
+    # Bundling the deps would allow the published package.json to not have dependencies.
+    args:
+      - '--entryPoint=src/bin.ts'
+      - '--platform=node'
+      - '--injectGlobals'
+      - '--outputPath=dist'
+    options:
+      mergeArgs: replace
+      mergeOutputs: replace
+    outputs:
+      - dist/node-esm/
+  dev:
+    command: ./cli-next
+    deps:
+      - ^:compile
+    local: true
+  prebuild:
+    script: pnpm vite-node ./scripts/copy-package-json.ts
+    deps:
+      - compile
+    inputs:
+      - scripts/copy-package-json.ts
+      - package.json
+      - moon.yml
+    outputs:
+      - dist/package.json

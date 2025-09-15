@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, String, pipe } from 'effect';
+import { Array, Effect, Option, pipe } from 'effect';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../errors';
 
 import { ArtifactDiffResolver } from './artifact-diff';
-import { type SessionRunParams } from './session';
+import { type AiSessionRunParams } from './session';
 
 /**
  * Formats the system prompt.
@@ -26,24 +26,25 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<SessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
-    // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
-      Effect.flatMap(Effect.forEach((template) => DatabaseService.load(template.source))),
+      Effect.flatMap(Effect.forEach((template) => DatabaseService.loadOption(template.source))),
+      Effect.map(Array.filter(Option.isSome)),
       Effect.map(
         Array.map(
           (template) => trim`
             <blueprint>
-              ${Template.process(template.content)}
+              ${Template.process(template.value.content)}
             </blueprint>
           `,
         ),
       ),
-      // Effect.tap((templates) => log.info('templates', { templates })),
-      Effect.map(Array.reduce('\n\n## Blueprints:\n\n', String.concat)),
+      Effect.map((blueprints) =>
+        blueprints.length > 0 ? ['## Blueprints Definitions', ...blueprints].join('\n\n') : undefined,
+      ),
     );
 
     const objectDefs = yield* pipe(
@@ -56,12 +57,12 @@ export const formatSystemPrompt = ({
           </object>
         `),
       ),
-      Effect.map(Array.reduce('\n## Context objects:\n\n', String.concat)),
+      Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 
     return yield* pipe(
-      Effect.succeed([blueprintDefs, objectDefs]),
-      Effect.map(Array.reduce(system ?? '', String.concat)),
+      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.map((parts) => parts.join('\n\n')),
     );
   });
 
@@ -70,9 +71,9 @@ export const formatSystemPrompt = ({
  */
 // TODO(burdon): Move to AiPreprocessor.
 // TODO(burdon): Convert util below to `Effect.fn` (to preserve stack info)
-export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams<any>, 'prompt' | 'history'>) =>
+export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunParams<any>, 'prompt' | 'history'>) =>
   Effect.gen(function* () {
-    const prelude: ContentBlock.Any[] = [];
+    const blocks: ContentBlock.Any[] = [];
 
     // TODO(dmaretskyi): Evaluate other approaches as `serviceOption` isn't represented in the type system.
     const artifactDiffResolver = yield* Effect.serviceOption(ArtifactDiffResolver);
@@ -86,25 +87,25 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<SessionRunParams
         catch: AiAssistantError.wrap('Artifact diff resolution error'),
       });
 
-      log.info('version', { artifactDiff, versions });
+      log('version', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);
           continue;
         }
 
-        prelude.push({ _tag: 'anchor', objectId: id, version });
+        blocks.push({ _tag: 'anchor', objectId: id, version });
       }
 
       if (artifactDiff.size > 0) {
-        prelude.push(createArtifactUpdateBlock(artifactDiff));
+        blocks.push(createArtifactUpdateBlock(artifactDiff));
       }
     }
 
     return Obj.make(DataType.Message, {
       created: new Date().toISOString(),
       sender: { role: 'user' },
-      blocks: [...prelude, { _tag: 'text', text: prompt }],
+      blocks: [...blocks, { _tag: 'text', text: prompt }],
     });
   });
 

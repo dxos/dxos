@@ -19,14 +19,14 @@ import { RevealPlayer } from './RevealPlayer';
 // https://fontsource.org/fonts
 // https://fonts.google.com
 
-const meta: Meta<typeof RevealPlayer> = {
+const meta = {
   title: 'plugins/plugin-presenter/RevealPlayer',
   component: RevealPlayer,
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof RevealPlayer>;
 
 export default meta;
 

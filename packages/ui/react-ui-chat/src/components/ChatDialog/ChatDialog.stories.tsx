@@ -16,7 +16,7 @@ import { ChatDialog } from './ChatDialog';
 
 const items = Array.from({ length: 100 }, (_, i) => `Item ${i}`);
 
-const meta: Meta<typeof ChatDialog.Root> = {
+const meta = {
   title: 'ui/react-ui-chat/ChatDialog',
   component: ChatDialog.Root,
   render: (args) => {
@@ -57,10 +57,10 @@ const meta: Meta<typeof ChatDialog.Root> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ChatDialog.Root>;
 
 export default meta;
 
-type Story = StoryObj<typeof ChatDialog.Root>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

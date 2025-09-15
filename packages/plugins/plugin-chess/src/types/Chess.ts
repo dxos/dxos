@@ -8,6 +8,7 @@ import { Schema } from 'effect';
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { ItemAnnotation } from '@dxos/schema';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -25,20 +26,28 @@ export const Game = Schema.Struct({
       ),
     }).pipe(Schema.mutable),
   ),
-  pgn: Schema.String.annotations({
-    description: 'Portable Game Notation.',
-  }),
+  pgn: Schema.optional(
+    Schema.String.annotations({
+      description: 'Portable Game Notation.',
+    }),
+  ),
+  fen: Schema.optional(
+    Schema.String.annotations({
+      description: 'Forsyth-Edwards Notation.',
+    }),
+  ),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Chess',
     version: '0.2.0',
   }),
   LabelAnnotation.set(['name']),
+  ItemAnnotation.set(true),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}
 
-export const makeGame = ({ name, pgn }: { name?: string; pgn?: string } = {}) => {
+export const makeGame = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: string } = {}) => {
   const chess = new ChessJS();
   if (pgn) {
     try {
@@ -51,6 +60,7 @@ export const makeGame = ({ name, pgn }: { name?: string; pgn?: string } = {}) =>
   return Obj.make(Game, {
     name,
     players: {},
-    pgn: chess.pgn(),
+    pgn,
+    fen,
   });
 };

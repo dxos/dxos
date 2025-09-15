@@ -16,11 +16,11 @@ import { type Template } from '../../templates';
 export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
 
 // TODO(ZaymonFC):
-//   - Show activity and feedback to the user.
-//   - Only take an array of templateIds and get the name from the data.
-//   - Pending / onError states.
+//  - Show activity and feedback to the user.
+//  - Only take an array of templateIds and get the name from the data.
+//  - Pending / onError states.
 
-type DeploymentDialogProps = {
+export type DeploymentDialogProps = {
   accessToken: DataType.AccessToken;
   scriptTemplates: Template[];
 };

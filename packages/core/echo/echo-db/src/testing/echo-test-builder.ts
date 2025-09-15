@@ -29,9 +29,9 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  kv?: LevelDB;
   indexing?: Partial<EchoHostIndexingConfig>;
   types?: Schema.Schema.AnyNoContext[];
+  kv?: LevelDB;
 };
 
 export class EchoTestBuilder extends Resource {
@@ -57,11 +57,12 @@ export class EchoTestBuilder extends Resource {
    */
   async createDatabase(options: PeerOptions = {}) {
     const peer = await this.createPeer(options);
-    const db = await peer.createDatabase(PublicKey.random());
+    const key = PublicKey.random();
+    const db = await peer.createDatabase(key);
     return {
+      key,
       peer,
       host: peer.host,
-
       graph: db.graph,
       db,
       queues: peer.client.constructQueueFactory(db.spaceId),

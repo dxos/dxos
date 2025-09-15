@@ -5,14 +5,14 @@
 import '@dxos-theme';
 
 import { type EditorView } from '@codemirror/view';
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import {
   CommandMenu,
@@ -27,7 +27,7 @@ import {
 } from '../components';
 import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
 import { str } from '../testing';
-import { createElement } from '../util';
+import { Domino } from '../util';
 
 import { EditorStory, names } from './components';
 
@@ -64,18 +64,18 @@ const groups: CommandMenuGroup[] = [
   },
 ];
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-editor/CommandMenu',
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: (args) => <DefaultStory {...args} />,
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Not working.
 export const Slash: Story = {
@@ -83,13 +83,12 @@ export const Slash: Story = {
     text: str('# Slash', '', names.join(' '), ''),
     trigger: '/',
     placeholder: {
-      content: () => {
-        return createElement('div', undefined, [
-          createElement('span', { text: 'Press' }),
-          createElement('span', { className: 'border border-separator rounded-sm mx-1 px-1', text: '/' }),
-          createElement('span', { text: 'for commands' }),
-        ]);
-      },
+      content: () =>
+        Domino.of('div')
+          .child(Domino.of('span').text('Press'))
+          .child(Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'))
+          .child(Domino.of('span').text('for commands'))
+          .build(),
     },
     getMenu: (text) => {
       return filterItems(groups, (item) =>
@@ -100,7 +99,7 @@ export const Slash: Story = {
 };
 
 export const Link: Story = {
-  render: (args) => {
+  render: (args: StoryProps) => {
     const { space } = useClientProvider();
     const getMenu = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
@@ -140,10 +139,6 @@ export const Link: Story = {
 
     return <DefaultStory {...args} getMenu={getMenu} />;
   },
-  args: {
-    text: str('# Link', '', names.join(' '), ''),
-    trigger: ['/', '@'],
-  },
   decorators: [
     withClientProvider({
       createSpace: true,
@@ -157,4 +152,9 @@ export const Link: Story = {
       },
     }),
   ],
+  args: {
+    text: str('# Link', '', names.join(' '), ''),
+    trigger: ['/', '@'],
+    getMenu: () => [],
+  },
 };

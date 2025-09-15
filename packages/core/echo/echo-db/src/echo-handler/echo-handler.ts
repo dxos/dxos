@@ -405,6 +405,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
     invariant(path.length > 0);
+    if (typeof path.at(-1) === 'symbol') {
+      throw new Error('Invalid path');
+    }
+    if (path.length === 1 && path[0] === 'id') {
+      throw new Error('Object Id is readonly');
+    }
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
@@ -1004,7 +1010,6 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
-
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);

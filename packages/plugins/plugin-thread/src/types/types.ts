@@ -8,14 +8,12 @@ import { Type } from '@dxos/echo';
 import { EchoObjectSchema, SpaceSchema } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { ChannelType, ThreadType } from './schema';
 
 export namespace ThreadAction {
-  const THREAD_ACTION = `${THREAD_PLUGIN}/action`;
-
-  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${THREAD_ACTION}/on-space-created`, {
+  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
       rootCollection: DataType.Collection,
@@ -23,7 +21,7 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
-  export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${THREAD_ACTION}/create-channel`, {
+  export class CreateChannel extends Schema.TaggedClass<CreateChannel>()(`${meta.id}/action/create-channel`, {
     input: Schema.Struct({
       spaceId: Type.SpaceId,
       name: Schema.optional(Schema.String),
@@ -34,7 +32,7 @@ export namespace ThreadAction {
   }) {}
 
   export class CreateChannelThread extends Schema.TaggedClass<CreateChannelThread>()(
-    `${THREAD_ACTION}/create-channel-thread`,
+    `${meta.id}/action/create-channel-thread`,
     {
       input: Schema.Struct({
         channel: ChannelType,
@@ -45,7 +43,7 @@ export namespace ThreadAction {
     },
   ) {}
 
-  export class Create extends Schema.TaggedClass<Create>()(`${THREAD_ACTION}/create`, {
+  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
       anchor: Schema.optional(Schema.String),
@@ -54,7 +52,7 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
-  export class Delete extends Schema.TaggedClass<Delete>()(`${THREAD_ACTION}/delete`, {
+  export class Delete extends Schema.TaggedClass<Delete>()(`${meta.id}/action/delete`, {
     input: Schema.Struct({
       anchor: AnchoredTo,
       subject: EchoObjectSchema,
@@ -63,21 +61,31 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
-  export class Select extends Schema.TaggedClass<Select>()(`${THREAD_ACTION}/select`, {
+  export class Select extends Schema.TaggedClass<Select>()(`${meta.id}/action/select`, {
     input: Schema.Struct({
       current: Schema.String,
     }),
     output: Schema.Void,
   }) {}
 
-  export class ToggleResolved extends Schema.TaggedClass<ToggleResolved>()(`${THREAD_ACTION}/toggle-resolved`, {
+  export class ToggleResolved extends Schema.TaggedClass<ToggleResolved>()(`${meta.id}/action/toggle-resolved`, {
     input: Schema.Struct({
       thread: ThreadType,
     }),
     output: Schema.Void,
   }) {}
 
-  export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${THREAD_ACTION}/add-message`, {
+  export class AddProposal extends Schema.TaggedClass<AddProposal>()(`${meta.id}/action/add-proposal`, {
+    input: Schema.Struct({
+      text: Schema.String,
+      anchor: Schema.String,
+      sender: DataType.Actor,
+      subject: EchoObjectSchema,
+    }),
+    output: Schema.Void,
+  }) {}
+
+  export class AddMessage extends Schema.TaggedClass<AddMessage>()(`${meta.id}/action/add-message`, {
     input: Schema.Struct({
       subject: EchoObjectSchema,
       anchor: AnchoredTo,
@@ -87,7 +95,7 @@ export namespace ThreadAction {
     output: Schema.Void,
   }) {}
 
-  export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${THREAD_ACTION}/delete-message`, {
+  export class DeleteMessage extends Schema.TaggedClass<DeleteMessage>()(`${meta.id}/action/delete-message`, {
     input: Schema.Struct({
       anchor: AnchoredTo,
       subject: EchoObjectSchema,

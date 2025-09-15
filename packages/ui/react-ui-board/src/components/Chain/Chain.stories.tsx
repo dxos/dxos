@@ -4,27 +4,31 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chain } from './Chain';
+import { Chain, type ChainRootProps } from './Chain';
 
-const meta: Meta<typeof Chain.Root> = {
-  title: 'ui/react-ui-board/Chain',
-  component: Chain.Root,
-  render: (args) => (
-    <Chain.Root {...args}>
+const DefaultStory = (props: ChainRootProps) => {
+  return (
+    <Chain.Root {...props}>
       <Chain.Background />
     </Chain.Root>
-  ),
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  );
 };
+
+const meta = {
+  title: 'ui/react-ui-board/Chain',
+  component: Chain.Root,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof Chain.Root>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

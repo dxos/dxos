@@ -34,8 +34,8 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -97,10 +97,10 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.90.0",
+    "@effect/platform": "0.90.2",
     "@types/dom-speech-recognition": "^0.0.6",
     "@types/react": "~18.2.0",
-    "effect": "3.17.6",
+    "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "tailwindcss": "~3.4.1"

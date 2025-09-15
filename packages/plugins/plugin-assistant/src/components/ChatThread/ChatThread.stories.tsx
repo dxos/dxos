@@ -5,26 +5,33 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Context, Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import React, { useEffect, useMemo } from 'react';
 
-import { type Queue, type Space } from '@dxos/client/echo';
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
+import { ContextQueueService, DatabaseService } from '@dxos/functions';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { defaultTx } from '@dxos/react-ui-theme';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { ColumnContainer, render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { ColumnContainer, render, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
+import { renderObjectLink } from './ChatMessage';
 import { ChatThread, type ChatThreadProps } from './ChatThread';
 
 faker.seed(1);
 
 const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: number }) => {
   const space = useSpace();
-  const queueDxn = useMemo(() => space?.queues.create<DataType.Message>().dxn, [space]);
+  const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<DataType.Message>(queueDxn);
   useEffect(() => {
     if (!space || !queue) {
@@ -39,7 +46,7 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
         }
 
         return queue;
-      }).pipe(Effect.provide(Context.make(TestQueue, TestQueue.make(space, queue)))),
+      }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
     );
   }, [space, queue]);
 
@@ -47,7 +54,9 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
     return null;
   }
 
-  return <ChatThread {...props} space={space} messages={queue?.objects ?? []} />;
+  return (
+    <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+  );
 };
 
 const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
@@ -58,167 +67,169 @@ const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): Da
   });
 };
 
-export class TestQueue extends Context.Tag('@dxos/test/TestQueue')<
-  TestQueue,
-  {
-    space: Space;
-    queue: Queue<DataType.Message>;
-  }
->() {
-  static make = (space: Space, queue: Queue<DataType.Message>): Context.Tag.Service<TestQueue> => {
-    return {
-      space,
-      queue,
-    };
-  };
-}
-
-const MESSAGES: Effect.Effect<void, never, TestQueue>[] = [
+const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService>[] = [
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('user', [
-        {
-          _tag: 'text',
-          text: faker.lorem.sentence(5),
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('user', [
+          {
+            _tag: 'text',
+            text: faker.lorem.sentence(5),
+          },
+        ]),
       ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'suggest',
-          text: 'Search...',
-        },
-        {
-          _tag: 'suggest',
-          text: faker.lorem.paragraphs(1),
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'suggestion',
+            text: 'Search...',
+          },
+          {
+            _tag: 'suggestion',
+            text: faker.lorem.paragraphs(1),
+          },
+        ]),
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: 'Select an option:',
+          },
+          {
+            _tag: 'select',
+            options: ['Option 1', 'Option 2', 'Option 3'],
+          },
+        ]),
       ]),
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: 'Select an option:',
-        },
-        {
-          _tag: 'select',
-          options: ['Option 1', 'Option 2', 'Option 3'],
-        },
-      ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue, space } = yield* TestQueue;
-    const obj = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: `This is [${obj.name}](${Obj.getDXN(obj).toString()}).`,
-        },
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* DatabaseService;
+    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+    const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
+    const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
+    const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          // Inline tag.
+          {
+            _tag: 'text',
+            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
+          } satisfies ContentBlock.Text,
+          // Inline cards.
+          ...[obj2, obj3, obj4].map(
+            (obj) =>
+              ({
+                _tag: 'text',
+                text: renderObjectLink(obj, true),
+              }) satisfies ContentBlock.Text,
+          ),
+        ]),
       ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: faker.lorem.paragraphs(1),
-        },
-        {
-          _tag: 'toolkit',
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: faker.lorem.paragraphs(1),
+          },
+          {
+            _tag: 'toolkit',
+          },
+        ]),
       ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          disposition: 'cot',
-          text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-            .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-            .join('\n'),
-        },
-        {
-          _tag: 'text',
-          text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
-            .map(() => faker.lorem.paragraphs())
-            .join('\n\n'),
-        },
-        {
-          _tag: 'toolCall',
-          toolCallId: '1234',
-          name: 'search',
-          input: {},
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            disposition: 'cot',
+            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+              .join('\n'),
+          },
+          {
+            _tag: 'toolCall',
+            toolCallId: '1234',
+            name: 'search',
+            input: JSON.stringify({}),
+          },
+        ]),
+        createMessage('user', [
+          {
+            _tag: 'toolResult',
+            toolCallId: '1234',
+            name: 'search',
+            result: 'This is a tool result.',
+          },
+        ]),
       ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('user', [
-        {
-          _tag: 'toolResult',
-          toolCallId: '1234',
-          name: 'search',
-          result: 'This is a tool result.',
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'toolCall',
+            toolCallId: '4567',
+            name: 'create',
+            input: JSON.stringify({}),
+          },
+        ]),
+        createMessage('user', [
+          {
+            _tag: 'toolResult',
+            toolCallId: '4567',
+            name: 'create',
+            result: 'This is a tool result.',
+          },
+        ]),
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
+              .map(() => faker.lorem.paragraphs())
+              .join('\n\n'),
+          },
+        ]),
       ]),
-    ]);
+    );
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'toolCall',
-          toolCallId: '4567',
-          name: 'create',
-          input: {},
-        },
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: faker.lorem.paragraphs(2),
+          },
+        ]),
       ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('user', [
-        {
-          _tag: 'toolResult',
-          toolCallId: '4567',
-          name: 'create',
-          result: 'This is a tool result.',
-        },
-      ]),
-    ]);
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* TestQueue;
-    return queue.append([
-      createMessage('assistant', [
-        {
-          _tag: 'text',
-          text: faker.lorem.paragraphs(1),
-        },
-      ]),
-    ]);
+    );
   }),
 ];
 
@@ -227,13 +238,23 @@ const meta = {
   component: ChatThread,
   render: render(StoryContainer),
   decorators: [
-    withClientProvider({
-      createIdentity: true,
-      types: [DataType.Organization],
+    withPluginManager({
+      plugins: [
+        ClientPlugin({
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+          },
+          types: [DataType.Organization, DataType.Person],
+        }),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin(),
+        IntentPlugin(),
+        PreviewPlugin(),
+      ],
     }),
-    withTheme,
     withLayout({
       Container: ColumnContainer,
+      classNames: 'is-[40rem]',
     }),
   ],
   parameters: {
@@ -245,8 +266,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {
+export const Default: Story = {};
+
+export const Delayed: Story = {
   args: {
-    onEvent: (event) => console.log(event),
+    delay: 2_000,
   },
-} satisfies Story;
+};
+
+export const Sanity = () => {
+  return (
+    <div className='grid grow place-items-center'>
+      <div className='p-8 border border-separator rounded'>DXOS</div>
+    </div>
+  );
+};

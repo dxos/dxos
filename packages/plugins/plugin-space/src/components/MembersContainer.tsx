@@ -41,13 +41,12 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
   }
 };
 
-export const MembersContainer = ({
-  space,
-  createInvitationUrl,
-}: {
+export type MembersContainerProps = {
   space: Space;
   createInvitationUrl: (invitationCode: string) => string;
-}) => {
+};
+
+export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const config = useConfig();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -168,7 +167,7 @@ export const MembersContainer = ({
               )}
             </ControlFrame>
             {/* TODO(wittjosiah): Make ControlItemInput & ControlFrame compatible. */}
-            <div className='justify-center gap-4 p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+            <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
               <ControlItemInput title={t('space locked label')} description={t('space locked description')}>
                 <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
               </ControlItemInput>

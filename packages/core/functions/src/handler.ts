@@ -4,12 +4,14 @@
 
 import { type Context, type Effect, Schema } from 'effect';
 
+import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-import type { Services } from './services';
+import { FunctionType } from './schema';
+import { type Services } from './services';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -83,7 +85,9 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
-export type FunctionDefinition<T = {}, O = any> = {
+export type FunctionDefinition<T = any, O = any> = {
+  // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
+  key: string;
   name: string;
   description?: string;
   inputSchema: Schema.Schema<T, any>;
@@ -91,14 +95,15 @@ export type FunctionDefinition<T = {}, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
-// TODO(dmaretskyi): Bind input type to function handler.
+// TODO(dmaretskyi): Fix key.
 export const defineFunction = <T, O>({
+  key,
   name,
   description,
   inputSchema,
   outputSchema = Schema.Any,
   handler,
-}: FunctionDefinition<T, O>): FunctionDefinition<T, O> => {
+}: Omit<FunctionDefinition<T, O>, 'key'> & { key?: string }): FunctionDefinition<T, O> => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
@@ -107,6 +112,7 @@ export const defineFunction = <T, O>({
   }
 
   return {
+    key: key ?? name,
     name,
     description,
     inputSchema,
@@ -120,3 +126,25 @@ export namespace FunctionDefinition {
   export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
   export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
 }
+
+export const serializeFunction = (functionDef: FunctionDefinition<any, any>): FunctionType =>
+  Obj.make(FunctionType, {
+    key: functionDef.name,
+    name: functionDef.name,
+    version: '0.1.0',
+    description: functionDef.description,
+    inputSchema: Type.toJsonSchema(functionDef.inputSchema),
+    outputSchema: !functionDef.outputSchema ? undefined : Type.toJsonSchema(functionDef.outputSchema),
+  });
+
+export const deserializeFunction = (functionObj: FunctionType): FunctionDefinition<unknown, unknown> => {
+  return {
+    // TODO(dmaretskyi): Fix key.
+    key: functionObj.key ?? functionObj.name,
+    name: functionObj.name,
+    description: functionObj.description,
+    inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
+    outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
+    handler: () => {},
+  };
+};

@@ -2,23 +2,36 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
+import React, {
+  type PropsWithChildren,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 
-import { log } from '@dxos/log';
+import { addEventListener } from '@dxos/async';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   ChessModel,
   Gameboard,
   type GameboardRootProps,
-  Chessboard as NativeChessboard,
-  type ChessboardProps as NativeChessboardProps,
+  Chessboard as NaturalChessboard,
+  type ChessboardProps as NaturalChessboardProps,
+  useGameboardContext,
 } from '@dxos/react-ui-gameboard';
+import { useSoundEffect } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type Chess } from '../types';
 
-import { ChessboardInfo, type ChessboardInfoProps } from './ChessboardInfo';
-import { ChessboardPlayers, type ChessboardPlayersProps } from './ChessboardPlayers';
+import { Info, type InfoProps } from './Info';
+
+export interface ChessboardController {
+  setMoveNumber(index: number): void;
+}
 
 export class ExtendedChessModel extends ChessModel {
   constructor(readonly object: Chess.Game) {
@@ -30,25 +43,37 @@ export class ExtendedChessModel extends ChessModel {
 // Root
 //
 
-type ChessboardRootProps = PropsWithChildren<{
+type RootProps = PropsWithChildren<{
   game: Chess.Game;
 }>;
 
-const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
+const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, forwardedRef) => {
   const model = useMemo(() => new ExtendedChessModel(game), []);
+  const click = useSoundEffect('Click');
+
+  // Controller.
+  useImperativeHandle(forwardedRef, () => {
+    return {
+      setMoveNumber: (index) => model.setMoveIndex(index),
+    };
+  }, [model]);
+
+  // External change.
   useEffect(() => {
     model.update(game.pgn);
-    log('update', { pgn: game.pgn });
+    void click.play();
   }, [game.pgn]);
 
+  // Move.
   const handleDrop = useCallback<NonNullable<GameboardRootProps<ChessModel>['onDrop']>>(
     (move) => {
-      if (model.makeMove(move)) {
-        game.pgn = model.pgn;
-        return true;
+      if (!model.makeMove(move)) {
+        return false;
       }
 
-      return false;
+      void click.play();
+      game.pgn = model.pgn;
+      return true;
     },
     [model],
   );
@@ -58,7 +83,7 @@ const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
       {children}
     </Gameboard.Root>
   );
-};
+});
 
 //
 // Content
@@ -66,9 +91,9 @@ const ChessboardRoot = ({ game, children }: ChessboardRootProps) => {
 
 type Role = 'card--popover' | 'card--intrinsic' | 'card--extrinsic';
 
-type ChessboardContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
+type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
-const ChessboardContent = ({ classNames, children, role }: ChessboardContentProps) => {
+const Content = ({ classNames, children, role }: ContentProps) => {
   return (
     <Gameboard.Content
       classNames={mx(classNames, role === 'card--popover' && 'size-container popover-square')}
@@ -81,21 +106,62 @@ const ChessboardContent = ({ classNames, children, role }: ChessboardContentProp
 };
 
 //
+// Board
+//
+
+type BoardProps = NaturalChessboardProps;
+
+const Board = (props: BoardProps) => {
+  const { model } = useGameboardContext<ChessModel>(Board.displayName);
+
+  // Keyboard navigation.
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) {
+      return;
+    }
+
+    return addEventListener(ref.current, 'keydown', (ev) => {
+      switch (ev.key) {
+        case 'ArrowUp':
+          model.setMoveIndex(0);
+          break;
+        case 'ArrowDown':
+          model.setMoveIndex(model.game.history().length);
+          break;
+        case 'ArrowLeft':
+          if (model.moveIndex.value > 0) {
+            model.setMoveIndex(model.moveIndex.value - 1);
+          }
+          break;
+        case 'ArrowRight':
+          if (model.moveIndex.value < model.game.history().length) {
+            model.setMoveIndex(model.moveIndex.value + 1);
+          }
+          break;
+      }
+    });
+  }, [model]);
+
+  return <NaturalChessboard ref={ref} {...props} />;
+};
+
+Board.displayName = 'Chessboard.Board';
+
+//
 // Chessboard
 //
 
 export const Chessboard = {
-  Root: ChessboardRoot,
-  Content: ChessboardContent,
-  Board: NativeChessboard,
-  Info: ChessboardInfo,
-  Players: ChessboardPlayers,
+  Root: Root,
+  Content: Content,
+  Board: Board,
+  Info: Info,
 };
 
 export type {
-  ChessboardRootProps,
-  ChessboardContentProps,
-  NativeChessboardProps as ChessboardBoardProps,
-  ChessboardInfoProps,
-  ChessboardPlayersProps,
+  RootProps as ChessboardRootProps,
+  ContentProps as ChessboardContentProps,
+  BoardProps as ChessboardBoardProps,
+  InfoProps as ChessboardInfoProps,
 };

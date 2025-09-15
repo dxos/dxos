@@ -108,7 +108,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             })(),
           ],
         },
-        target: 'es2022',
+        target: 'es2020',
       },
     }),
   });

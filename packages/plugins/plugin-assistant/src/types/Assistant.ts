@@ -17,6 +17,8 @@ export const Chat = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
+  // TODO(dmaretskyi): Eventually this and the message queue will be the same.
+  traceQueue: Schema.optional(Type.Ref(Queue)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/assistant/Chat',

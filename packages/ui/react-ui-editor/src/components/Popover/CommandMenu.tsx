@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef } from 'react';
 
 import { Icon, type Label, Popover, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
@@ -45,10 +45,10 @@ export const CommandMenu = ({ groups, currentItem, onSelect }: CommandMenuProps)
         <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
           <ul>
             {groupsWithItems.map((group, index) => (
-              <React.Fragment key={group.id}>
+              <Fragment key={group.id}>
                 <CommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
                 {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
-              </React.Fragment>
+              </Fragment>
             ))}
           </ul>
         </Popover.Viewport>

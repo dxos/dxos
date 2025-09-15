@@ -14,8 +14,8 @@ export type PagerProps = {
   onExit?: () => void;
 };
 
-export const Pager = ({ index: controlledIndex = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = useControlledState(controlledIndex);
+export const Pager = ({ index: indexParam = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
+  const [index, setIndex] = useControlledState(indexParam);
   useEffect(() => {
     onChange?.(index);
   }, [index]);

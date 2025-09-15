@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactElement, type SVGProps, forwardRef } from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -95,14 +95,16 @@ const DefaultStory = () => {
   );
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-registry/Icon',
   render: DefaultStory,
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof IconBase>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

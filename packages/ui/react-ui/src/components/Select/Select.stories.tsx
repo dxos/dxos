@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -42,15 +42,19 @@ const DefaultStory = ({ items = [] }: StoryProps) => {
   );
 };
 
-export const Default: StoryObj<StoryProps> = {
-  args: {
-    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
-  },
-};
-
-export default {
+const meta = {
   title: 'ui/react-ui-core/Select',
   render: DefaultStory,
   decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    items: Array.from({ length: 16 }).map((_, i) => ({ id: `item-${i}`, text: faker.lorem.word() })),
+  },
 };

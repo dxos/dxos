@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
@@ -232,7 +233,7 @@ type StoryProps = {
   autoCreate?: boolean;
 };
 
-const Story = ({ text, autoCreate }: StoryProps) => {
+const DefaultStory = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
@@ -349,17 +350,21 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Comments',
-  component: StoryThread,
+  component: StoryThread as any,
+  render: DefaultStory,
   decorators: [withTheme],
-  render: (args: StoryProps) => <Story {...args} />,
   parameters: { translations, layout: 'fullscreen' },
-};
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const str = (...lines: string[]) => lines.join('\n');
 
-export const Default = {
+export const Default: Story = {
   args: {
     text: str(
       '# Comments',

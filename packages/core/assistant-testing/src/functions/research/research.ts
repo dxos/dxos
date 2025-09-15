@@ -5,17 +5,24 @@
 import { AiToolkit } from '@effect/ai';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AiSession, GenerationObserver } from '@dxos/assistant';
+import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import {
+  AiSession,
+  GenerationObserver,
+  createToolkit,
+  makeToolExecutionServiceFromFunctions,
+  makeToolResolverFromFunctions,
+} from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { ContextQueueService, DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import type { DXN } from '@dxos/keys';
+import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
+import { type DXN } from '@dxos/keys';
 
-import { ExaToolkit } from './exa';
+import { exaFunction, exaMockFunction } from '../exa';
+
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
-// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up
+// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
-import { createResearchGraph, queryResearchGraph } from './research-graph';
+import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -23,10 +30,16 @@ import { ResearchDataTypes } from './types';
  */
 export default defineFunction({
   name: 'dxos.org/function/research',
-  description: 'Research the web for information',
+  description:
+    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: 'The query to search for.',
+    }),
+
+    researchInstructions: Schema.optional(Schema.String).annotations({
+      description:
+        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
     }),
 
     // TOOD(burdon): Move to context.
@@ -36,61 +49,71 @@ export default defineFunction({
     }),
   }),
   outputSchema: Schema.Struct({
-    objects: Schema.Array(Schema.Unknown).annotations({
-      description: 'The structured objects created as a result of the research.',
-    }),
     note: Schema.optional(Schema.String).annotations({
       description: 'A note from the research agent.',
     }),
+    objects: Schema.Array(Schema.Unknown).annotations({
+      description: 'The structured objects created as a result of the research.',
+    }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch } }) {
-      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
+    function* ({ data: { query, mockSearch, researchInstructions } }) {
       yield* DatabaseService.flush({ indexes: true });
-
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
+      const objectDXNs: DXN[] = [];
       const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
+      const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
+        onAppend: (dxns) => objectDXNs.push(...dxns),
+      });
 
-      const newObjectDXNs: DXN[] = [];
-      const result = yield* new AiSession()
-        .run({
-          prompt: query,
-          history: [],
-          system: PROMPT,
-          toolkit: AiToolkit.merge(ExaToolkit, LocalSearchToolkit, GraphWriterToolkit),
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
-        })
-        .pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              mockSearch ? ExaToolkit.layerMock : ExaToolkit.layerLive,
-              LocalSearchHandler,
-              makeGraphWriterHandler(GraphWriterToolkit, { onAppend: (dxns) => newObjectDXNs.push(...dxns) }),
-              ContextQueueService.layer(researchQueue),
-            ),
-          ),
-        );
+      const toolkit = yield* createToolkit({
+        toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
+        toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+      }).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            //
+            GraphWriterHandler,
+            LocalSearchHandler,
+          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
+        ),
+      );
 
+      const session = new AiSession();
+      const result = yield* session.run({
+        prompt: query,
+        system:
+          PROMPT +
+          (researchInstructions
+            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
+            : ''),
+        toolkit,
+        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
+      });
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
-
-      const objects = yield* Effect.forEach(newObjectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
+      const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 
       return {
-        objects,
         note,
+        objects,
       };
     },
     Effect.provide(
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
-        ToolResolverService.layerEmpty,
-        ToolExecutionService.layerEmpty,
-      ),
+        // TODO(dmaretskyi): Extract.
+        makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
+        makeToolExecutionServiceFromFunctions(
+          [exaFunction, exaMockFunction],
+          AiToolkit.make() as any,
+          Layer.empty as any,
+        ),
+        TracingService.layerNoop,
+      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),
 });

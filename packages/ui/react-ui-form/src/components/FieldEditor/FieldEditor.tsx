@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
   type FieldType,
   type ProjectionModel,
@@ -22,13 +22,12 @@ import { translationKey } from '../../translations';
 import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
-  readonly?: boolean;
   projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormProps<any>, 'outerSpacing'>;
+} & Pick<FormProps<any>, 'outerSpacing' | 'readonly'>;
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
@@ -47,7 +46,7 @@ export const FieldEditor = ({
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
   const [schemas, setSchemas] = useState<EchoSchema[]>([]);
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!registry) {
       return;
     }
@@ -55,14 +54,10 @@ export const FieldEditor = ({
     const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
-    const t = setTimeout(async () => {
-      const schemas = await registry.query().run();
-      setSchemas(schemas);
-    });
-    return () => {
-      clearTimeout(t);
-      subscription?.();
-    };
+    const schemas = await registry.query().run();
+    setSchemas(schemas);
+
+    return () => subscription?.();
   }, [registry]);
 
   const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();

@@ -14,7 +14,7 @@ export default defineFunction({
     enable: Schema.Boolean.annotations({ description: 'Enable or disable analysis mode.' }),
   }),
   outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { enable } }) {
-    log.info('analysis mode', { enable });
+  handler: Effect.fn(function* ({ context, data: { enable } }) {
+    log.info('analysis mode', { space: context.space?.id, enable });
   }),
 });

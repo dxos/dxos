@@ -29,11 +29,15 @@ const createViewModeActions = (value: string, onViewModeChange: (mode: EditorVie
     readonly: 'ph--pencil-slash--regular',
   }).map(([viewMode, icon]) => {
     const checked = viewMode === value;
-    return createEditorAction(`view-mode--${viewMode}`, () => onViewModeChange(viewMode as EditorViewMode), {
-      label: [`${viewMode} mode label`, { ns: translationKey }],
-      checked,
-      icon,
-    });
+    return createEditorAction(
+      `view-mode--${viewMode}`,
+      {
+        label: [`${viewMode} mode label`, { ns: translationKey }],
+        checked,
+        icon,
+      },
+      () => onViewModeChange(viewMode as EditorViewMode),
+    );
   });
 
 export const createViewMode = (state: EditorToolbarState, onViewModeChange: (mode: EditorViewMode) => void) => {

@@ -2,67 +2,80 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, type PropsWithChildren } from 'react';
+import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
-import { type Tool } from '@dxos/ai';
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
+import { resolveRef } from '@dxos/client';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
+import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
 import {
-  MarkdownViewer,
-  ToggleContainer as NativeToggleContainer,
-  type ToggleContainerProps,
+  chatMessageJson,
+  chatMessageMargin,
+  chatMessagePadding,
+  chatMessagePanel,
+  chatMessagePanelContent,
+  chatMessagePanelHeader,
 } from '@dxos/react-ui-components';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { ContentBlock, type DataType } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
+import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
-import { Json, ToolBlock, isToolMessage } from './ToolBlock';
 
-const panelClasses = 'flex flex-col is-full bg-activeSurface rounded-sm';
-const marginClasses = 'pie-4 pis-4';
-const paddingClasses = 'pis-2 pie-2 pbs-0.5 pbe-0.5';
+export const styles = {
+  margin: chatMessageMargin,
+  padding: chatMessagePadding,
+  panel: chatMessagePanel,
+  panelHeader: chatMessagePanelHeader,
+  panelContent: chatMessagePanelContent,
+  json: chatMessageJson,
+};
 
 export type ChatMessageProps = ThemedClassName<{
   debug?: boolean;
   space?: Space;
   message: DataType.Message;
-  tools?: Tool[];
+  toolProvider?: AiToolProvider;
   onEvent?: (event: ChatEvent) => void;
   onDelete?: () => void;
 }>;
 
-export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent, onDelete }: ChatMessageProps) => {
+export const ChatMessage = ({
+  classNames,
+  debug,
+  space,
+  message,
+  toolProvider,
+  onEvent,
+  onDelete,
+}: ChatMessageProps) => {
   const { t } = useTranslation(meta.id);
   const {
     sender: { role },
     blocks,
   } = message;
 
-  // TODO(burdon): Consolidate tools upstream?
-  if (isToolMessage(message)) {
+  if (!debug && toolProvider && isToolMessage(message)) {
     return (
-      <MessageItem classNames={mx(classNames, 'animate-[fadeIn_0.5s]')}>
-        <ToolBlock classNames={panelClasses} message={message} tools={tools} />
+      <MessageItem classNames={[styles.margin, 'animate-[fadeIn_0.5s]']}>
+        <ToolBlock message={message} toolProvider={toolProvider} />
       </MessageItem>
     );
   }
 
   return (
     <>
-      {debug && (
-        <div className={mx('flex justify-end text-subdued', marginClasses)}>
-          <pre className='text-xs'>{JSON.stringify({ created: message.created })}</pre>
-        </div>
-      )}
-
       {blocks.map((block, idx) => {
         // TODO(burdon): Filter empty messages.
         if (block._tag === 'text' && block.text.replaceAll(/\s+/g, '').length === 0) {
@@ -75,23 +88,16 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
         }
 
         return (
-          <Fragment key={idx}>
-            <MessageItem classNames={classNames} user={block._tag === 'text' && role === 'user'}>
-              <ErrorBoundary data={block}>
-                <Component space={space} block={block} onEvent={onEvent} />
-              </ErrorBoundary>
-            </MessageItem>
-            {debug && (
-              <div className={mx('flex justify-end text-subdued', marginClasses)}>
-                <pre className='text-xs'>{JSON.stringify({ block: block._tag })}</pre>
-              </div>
-            )}
-          </Fragment>
+          <MessageItem key={idx} classNames={classNames} user={block._tag === 'text' && role === 'user'}>
+            <ErrorBoundary data={block}>
+              <Component space={space} block={block} debug={debug} onEvent={onEvent} />
+            </ErrorBoundary>
+          </MessageItem>
         );
       })}
 
       {onDelete && (
-        <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', marginClasses)}>
+        <div className={mx('flex justify-end pbs-2 pbe-2 opacity-50 hover:opacity-100', styles.margin)}>
           <IconButton
             classNames='animate-[fadeIn_0.5s]'
             icon='ph--trash--regular'
@@ -108,6 +114,7 @@ export const ChatMessage = ({ classNames, debug, space, message, tools, onEvent,
 type ContentBlockProps = {
   space?: Space;
   block: ContentBlock.Any;
+  debug?: boolean;
   onEvent?: (event: ChatEvent) => void;
 };
 
@@ -122,13 +129,15 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['text' as const]: ({ space, block }) => {
     invariant(block._tag === 'text');
+
     return (
       <MarkdownViewer
         content={preprocessTextContent(block.text)}
         components={{
-          a: ({ node: { properties }, children, href, ...props }) => {
+          a: ({ node: { properties } = {}, children, href, ...props }) => {
             if (space && typeof properties?.href === 'string' && properties?.href?.startsWith('dxn')) {
               try {
+                // TODO(burdon): Check valid length (since serialized).
                 const dxn = DXN.parse(properties.href);
                 return <ObjectLink space={space} dxn={dxn} />;
               } catch {}
@@ -136,33 +145,46 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
             // TODO(burdon): Can we revert to the default handler?
             return (
-              <a
-                href={href}
-                className='text-primary-500 hover:text-primary-500' // TODO(burdon): Token.
-                target='_blank'
-                rel='noopener noreferrer'
-                {...props}
-              >
+              <Link href={href} target='_blank' rel='noopener noreferrer' {...props}>
                 {children}
-              </a>
+              </Link>
             );
+          },
+
+          img: ({ node: { properties } = {} }) => {
+            const client = useClient();
+            if (space && typeof properties?.src === 'string' && properties?.src?.startsWith('dxn')) {
+              try {
+                const dxn = DXN.parse(properties?.src);
+                const subject = resolveRef(client, dxn, space);
+                const data = useMemo(() => ({ subject }), [subject]);
+                return <Surface role='card--transclusion' data={data} limit={1} />;
+              } catch {}
+            }
+            return <img {...properties} />;
           },
         }}
       />
     );
   },
 
+  ['reference' as const]: ({ block, space }) => {
+    invariant(block._tag === 'reference');
+
+    return <RefBlock block={block} space={space!} />;
+  },
+
   //
   // Suggest
   //
-  ['suggest' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
-    invariant(block._tag === 'suggest');
+  ['suggestion' as const]: ({ block, onEvent }) => {
+    invariant(block._tag === 'suggestion');
+
     return (
       <IconButton
         icon='ph--lightning--regular'
         label={block.text}
-        title={t('button suggest')}
+        classNames='text-description'
         onClick={() => onEvent?.({ type: 'submit', text: block.text })}
       />
     );
@@ -172,8 +194,8 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   // Select
   //
   ['select' as const]: ({ block, onEvent }) => {
-    const { t } = useTranslation(meta.id);
     invariant(block._tag === 'select');
+
     return (
       <div className='flex flex-wrap gap-1'>
         {block.options.map((option, idx) => (
@@ -181,7 +203,6 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
             classNames={'animate-[fadeIn_0.5s] rounded-sm text-sm'}
             key={idx}
             onClick={() => onEvent?.({ type: 'submit', text: option })}
-            title={t('button select option')}
           >
             {option}
           </Button>
@@ -195,11 +216,26 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   ['toolkit' as const]: ({ block }) => {
     invariant(block._tag === 'toolkit');
+
+    const { t } = useTranslation(meta.id);
     return (
-      <ToggleContainer title='Toolbox' classNames={panelClasses} defaultOpen>
-        <Toolbox classNames={marginClasses} />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel} defaultOpen>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={t('toolkit label')} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Toolbox />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
+  },
+
+  //
+  // Summary
+  //
+  ['summary' as const]: ({ block, debug }) => {
+    invariant(block._tag === 'summary');
+
+    const summary = ContentBlock.createSummaryMessage(block, debug);
+    return <div className='text-sm text-subdued'>{summary}</div>;
   },
 
   //
@@ -232,9 +268,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
 
       default: {
         return (
-          <ToggleContainer title={block.disposition ?? block._tag}>
-            <Json data={safeParseJson(block.data ?? block)} />
-          </ToggleContainer>
+          <ToggleContainer.Root classNames={styles.panel}>
+            <ToggleContainer.Header classNames={styles.panelHeader} title={block.disposition ?? block._tag} />
+            <ToggleContainer.Content classNames={styles.panelContent}>
+              <Json data={safeParseJson(block.data ?? block)} classNames={styles.json} />
+            </ToggleContainer.Content>
+          </ToggleContainer.Root>
         );
       }
     }
@@ -245,11 +284,49 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   //
   default: ({ block }) => {
     return (
-      <ToggleContainer title={block._tag}>
-        <Json data={block} />
-      </ToggleContainer>
+      <ToggleContainer.Root classNames={styles.panel}>
+        <ToggleContainer.Header classNames={styles.panelHeader} title={block._tag} />
+        <ToggleContainer.Content classNames={styles.panelContent}>
+          <Json data={block} classNames={styles.json} />
+        </ToggleContainer.Content>
+      </ToggleContainer.Root>
     );
   },
+};
+
+const RefBlock = ({ block, space }: { block: ContentBlock.Reference; space: Space }) => {
+  const ref = useMemo(() => space.db.ref(block.reference.dxn), [space, block.reference.dxn.toString()]);
+
+  return <Surface role='card' data={{ subject: ref.target }} limit={1} />;
+};
+
+export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {
+  error: Error;
+};
+
+/**
+ * Error message with retry.
+ */
+export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <>
+      <MessageItem>
+        <ToggleContainer.Root classNames={styles.panel}>
+          <ToggleContainer.Header classNames={styles.panelHeader} title={error.message || t('error label')} />
+          <ToggleContainer.Content classNames={styles.panelContent}>{String(error.cause)}</ToggleContainer.Content>
+        </ToggleContainer.Root>
+      </MessageItem>
+      <MessageItem>
+        <IconButton
+          classNames='bg-errorSurface text-errorSurfaceText'
+          icon='ph--lightning--regular'
+          label={t('button retry')}
+          onClick={() => onEvent?.({ type: 'retry' })}
+        />
+      </MessageItem>
+    </>
+  );
 };
 
 /**
@@ -261,18 +338,19 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
   }
 
   return (
-    <div role='list-item' className={mx('flex is-full', user && 'justify-end', marginClasses, classNames)}>
-      <div className={mx(user ? ['rounded-sm', 'bg-[--user-fill] text-accentSurfaceText', paddingClasses] : 'is-full')}>
+    <div role='list-item' className={mx('flex is-full', user && 'justify-end', styles.margin, classNames)}>
+      <div
+        className={mx(user ? ['bg-[--user-fill] text-white dark:text-black rounded-sm', styles.padding] : 'is-full')}
+      >
         {children}
       </div>
     </div>
   );
 };
 
-const ToggleContainer = (props: ToggleContainerProps) => {
-  return <NativeToggleContainer {...props} classNames={mx(panelClasses, props.classNames)} />;
-};
+export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
+  `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
-// TODO(burdon): Move to parser.
+// TODO(burdon): Move to parser?
 const preprocessTextContent = (content: string) =>
   content.replaceAll(new RegExp(DXN_ECHO_REGEXP, 'g'), (_, dxn) => `<${dxn}>`);

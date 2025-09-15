@@ -8,11 +8,11 @@ import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { IntentResolver, ReactSurface, Transcriber } from './capabilities';
-import { renderMarkdown } from './components';
+import { BlueprintDefinition, IntentResolver, ReactSurface, Transcriber } from './capabilities';
+import { renderByline } from './components';
 import { meta } from './meta';
 import { translations } from './translations';
-import { TranscriptType } from './types';
+import { Transcript } from './types';
 
 export const TranscriptionPlugin = () =>
   definePlugin(meta, [
@@ -26,18 +26,18 @@ export const TranscriptionPlugin = () =>
       activatesOn: Events.SetupMetadata,
       activate: (context) =>
         contributes(Capabilities.Metadata, {
-          id: TranscriptType.typename,
+          id: Transcript.Transcript.typename,
           metadata: {
             icon: 'ph--subtitles--regular',
             // TODO(wittjosiah): Factor out. Artifact? Separate capability?
-            getTextContent: async (transcript: TranscriptType) => {
+            getTextContent: async (transcript: Transcript.Transcript) => {
               const space = getSpace(transcript);
               const members = space?.members.get().map((member) => member.identity) ?? [];
               const queue = space?.queues.get<DataType.Message>(transcript.queue.dxn);
               await queue?.refresh();
               const content = queue?.objects
                 .filter((message) => Obj.instanceOf(DataType.Message, message))
-                .flatMap((message, index) => renderMarkdown(members)(message, index))
+                .flatMap((message, index) => renderByline(members)(message, index))
                 .join('\n\n');
               return content;
             },
@@ -47,7 +47,7 @@ export const TranscriptionPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => [contributes(ClientCapabilities.Schema, [TranscriptType])],
+      activate: () => [contributes(ClientCapabilities.Schema, [Transcript.Transcript])],
     }),
     defineModule({
       id: `${meta.id}/module/react-surface`,
@@ -63,5 +63,10 @@ export const TranscriptionPlugin = () =>
       id: `${meta.id}/module/transcription`,
       activatesOn: Events.SetupAppGraph,
       activate: Transcriber,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

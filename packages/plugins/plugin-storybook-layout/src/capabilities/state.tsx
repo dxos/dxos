@@ -23,6 +23,8 @@ export type LayoutState = {
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
+
+  workspace: string;
 };
 export const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storybook-layout/state');
 
@@ -30,6 +32,7 @@ const defaultState: LayoutState = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
   dialogOpen: false,
+  workspace: 'default',
 };
 
 export default ({ initialState }: { initialState?: Partial<LayoutState> }) => {
@@ -49,7 +52,7 @@ export default ({ initialState }: { initialState?: Partial<LayoutState> }) => {
       return state.complementarySidebarState === 'expanded';
     },
     get workspace() {
-      return 'default';
+      return state.workspace;
     },
     get active() {
       return [];

@@ -11,7 +11,7 @@ import {
   Icon,
   IconButton,
   type IconButtonProps,
-  Toolbar as NativeToolbar,
+  Toolbar as NaturalToolbar,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
@@ -56,7 +56,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
+      <NaturalToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={call.media.audioEnabled}
           state={{
@@ -95,7 +95,7 @@ export const Toolbar = ({
             <Icon icon='ph--users--regular' size={4} />
             <div>{participants}</div>
           </div>
-        )) || <NativeToolbar.Separator variant='gap' />}
+        )) || <NaturalToolbar.Separator variant='gap' />}
 
         {call.joined && (
           <>
@@ -151,7 +151,7 @@ export const Toolbar = ({
         ) : (
           <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
         )}
-      </NativeToolbar.Root>
+      </NaturalToolbar.Root>
     </div>
   );
 };

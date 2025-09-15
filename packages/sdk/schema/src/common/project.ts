@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
 
-import { IconAnnotation } from '../annotations';
+import { IconAnnotation, ItemAnnotation } from '../annotations';
 
 /**
  * Project schema.
@@ -20,6 +20,7 @@ const ProjectSchema = Schema.Struct({
 }).pipe(
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
+  ItemAnnotation.set(true),
   IconAnnotation.set('ph--kanban--regular'),
 );
 

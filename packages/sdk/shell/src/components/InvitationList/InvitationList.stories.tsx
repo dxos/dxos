@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
@@ -13,12 +14,16 @@ import { inviteWithState } from '../../testing/fixtures';
 
 import { InvitationList } from './InvitationList';
 
-export default {
+const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme, withLayout()],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof InvitationList>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default = () => {
   return (

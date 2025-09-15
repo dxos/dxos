@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -30,7 +33,25 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

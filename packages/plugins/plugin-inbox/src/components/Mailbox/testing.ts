@@ -7,7 +7,7 @@ import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MailboxType } from '../../types';
+import { Mailbox } from '../../types';
 
 const EXAMPLE_TAGS = [
   { label: 'important', hue: 'amber' },
@@ -85,7 +85,7 @@ export const initializeMailbox = async (space: Space, messageCount = 30) => {
   const queueDxn = space.queues.create().dxn;
   const queue = space.queues.get<DataType.Message>(queueDxn);
   await queue.append([...Array(messageCount)].map(() => createMessage(space)));
-  const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });
+  const mailbox = Mailbox.make({ queue: queueDxn });
   space.db.add(mailbox);
   return mailbox;
 };

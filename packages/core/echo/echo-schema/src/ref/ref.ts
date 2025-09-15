@@ -341,6 +341,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async load(): Promise<T> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     const obj = await this.#resolver.resolve(this.#dxn);
     if (obj == null) {
@@ -363,8 +366,7 @@ export class RefImpl<T> implements Ref<T> {
    * Clones the reference object.
    */
   noInline(): RefImpl<T> {
-    this.#target = undefined;
-    const ref = new RefImpl<T>(this.#dxn, this.#target);
+    const ref = new RefImpl<T>(this.#dxn, undefined);
     ref.#resolver = this.#resolver;
     return ref;
   }

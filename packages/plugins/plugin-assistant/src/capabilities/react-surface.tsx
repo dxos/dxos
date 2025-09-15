@@ -2,30 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-import React, { useCallback, useEffect } from 'react';
+import React from 'react';
 
-import { Capabilities, contributes, createIntent, createSurface, useIntentDispatcher } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { SpaceAction } from '@dxos/plugin-space/types';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import {
   AssistantSettings,
   BlueprintContainer,
+  ChatCompanion,
   ChatContainer,
   ChatDialog,
   PromptSettings,
   SequenceContainer,
 } from '../components';
-import { type AiChatProcessor } from '../hooks';
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant, AssistantAction } from '../types';
+import { Assistant } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -44,65 +42,12 @@ export default () =>
       component: ({ data, role }) => <ChatContainer role={role} chat={data.subject} />,
     }),
     createSurface({
-      id: `${meta.id}/object-chat`,
+      id: `${meta.id}/companion-chat`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' } =>
         Obj.isObject(data.companionTo) &&
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
-      component: ({ data, role }) => {
-        const { dispatch } = useIntentDispatcher();
-
-        // Initialize companion chat if it doesn't exist.
-        // TODO(wittjosiah): Factor out to container.
-        useEffect(() => {
-          const timeout = setTimeout(async () => {
-            const space = getSpace(data.companionTo);
-            if (space && data.subject === 'assistant-chat') {
-              const result = await space.db
-                .query(Query.select(Filter.ids(data.companionTo.id)).targetOf(Assistant.CompanionTo).source())
-                .run();
-              if (result.objects.length > 0) {
-                return;
-              }
-
-              const program = Effect.gen(function* () {
-                const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-                yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
-                yield* dispatch(
-                  createIntent(SpaceAction.AddRelation, {
-                    space,
-                    schema: Assistant.CompanionTo,
-                    source: object,
-                    target: data.companionTo,
-                  }),
-                );
-              });
-
-              void Effect.runPromise(program);
-            }
-          });
-
-          return () => clearTimeout(timeout);
-        }, [data.subject]);
-
-        // TODO(wittjosiah): Factor out to container.
-        const handleProcessorReady = useCallback(
-          (processor: AiChatProcessor) => {
-            if (Obj.instanceOf(Blueprint.Blueprint, data.companionTo)) {
-              void processor.context.bind({ blueprints: [Ref.make(data.companionTo)] });
-            } else {
-              void processor.context.bind({ objects: [Ref.make(data.companionTo)] });
-            }
-          },
-          [data.companionTo],
-        );
-
-        if (data.subject === 'assistant-chat') {
-          return null;
-        }
-
-        return <ChatContainer role={role} chat={data.subject} onProcessorReady={handleProcessorReady} />;
-      },
+      component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
     }),
     createSurface({
       id: `${meta.id}/sequence`,
@@ -111,10 +56,11 @@ export default () =>
       component: ({ data }) => <SequenceContainer sequence={data.subject} />,
     }),
     createSurface({
-      id: `${meta.id}/companion/logs`,
+      id: `${meta.id}/companion-logs`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
         Obj.instanceOf(Sequence, data.companionTo) && data.subject === 'logs',
+      // eslint-disable-next-line unused-imports/no-unused-vars
       component: ({ data, role }) => {
         const space = getSpace(data.companionTo);
         return (

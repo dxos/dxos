@@ -48,13 +48,13 @@ describe('preprocessor', () => {
             _tag: 'toolResult',
             toolCallId: 'call_1',
             name: 'calculator',
-            result: 'Result of tool 1',
+            result: JSON.stringify('Result of tool 1'),
           },
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
             name: 'calculator',
-            result: 'Result of tool 2',
+            result: JSON.stringify('Result of tool 2'),
           },
           {
             _tag: 'text',
@@ -107,7 +107,7 @@ describe('preprocessor', () => {
             _tag: 'toolCall',
             toolCallId: 'call_1',
             name: 'calculator',
-            input: { operation: 'add', a: 2, b: 2 },
+            input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
           },
           {
             _tag: 'text',
@@ -305,13 +305,13 @@ describe('preprocessor', () => {
             _tag: 'toolResult',
             toolCallId: 'call_1',
             name: 'calculator',
-            result: 'First result',
+            result: JSON.stringify('First result'),
           },
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
             name: 'search',
-            result: 'Second result',
+            result: JSON.stringify('Second result'),
           },
           {
             _tag: 'text',
@@ -348,7 +348,7 @@ describe('preprocessor', () => {
         sender: { role: 'assistant' },
         blocks: [
           { _tag: 'status', statusText: 'Processing...' },
-          { _tag: 'suggest', text: 'Try this approach' },
+          { _tag: 'suggestion', text: 'Try this approach' },
           { _tag: 'select', options: ['Option A', 'Option B'] },
           { _tag: 'proposal', text: 'I propose we do this' },
           { _tag: 'toolkit' },
@@ -367,7 +367,7 @@ describe('preprocessor', () => {
       );
       expect(assistantMessage.parts[1]).toEqual(
         new AiInput.TextPart({
-          text: '<suggest>Try this approach</suggest>',
+          text: '<suggestion>Try this approach</suggestion>',
         }),
       );
       expect(assistantMessage.parts[2]).toEqual(
@@ -404,7 +404,7 @@ describe('preprocessor', () => {
             _tag: 'toolCall',
             toolCallId: 'call_1',
             name: 'test',
-            input: {},
+            input: '{}',
           },
         ],
       });

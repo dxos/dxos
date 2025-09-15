@@ -65,6 +65,7 @@
     "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/timeframe": "workspace:*",
@@ -74,7 +75,7 @@
     "@bufbuild/buf": "^1.43.0",
     "@bufbuild/protoc-gen-es": "^2.1.0",
     "@dxos/protobuf-compiler": "workspace:*",
-    "effect": "3.17.6"
+    "effect": "3.17.7"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

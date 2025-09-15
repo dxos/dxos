@@ -14,7 +14,7 @@ import { hues, subtleHover } from '@dxos/react-ui-theme';
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
-export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, onValueChange }: InputProps) => {
+export const SelectOptionInput = ({ type, label, readonly, getStatus, getValue, onValueChange }: InputProps) => {
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,8 +117,8 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
           <List.Root
             items={options}
             isItem={(item) => true}
-            onMove={disabled ? undefined : handleMove}
-            readonly={disabled}
+            onMove={readonly ? undefined : handleMove}
+            readonly={!!readonly}
           >
             {({ items }) => (
               <div role='list' className='w-full overflow-auto'>
@@ -131,7 +131,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>
-                        <List.ItemDragHandle disabled={disabled} />
+                        <List.ItemDragHandle disabled={!!readonly} />
                         <List.ItemTitle onClick={() => handleClick(item.id)} classNames='flex-1'>
                           {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                           <Tag palette={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
@@ -150,7 +150,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                           <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-1'>
                             <Input.TextInput
-                              disabled={disabled}
+                              disabled={!!readonly}
                               placeholder={t('select option label placeholder')}
                               ref={selected === item.id ? inputRef : undefined}
                               value={item.title}
@@ -159,9 +159,9 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                               classNames='flex-1'
                               data-no-submit
                             />
-                            <HuePicker disabled={disabled} value={item.color} onChange={handleColorChange(item.id)} />
+                            <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
                             <IconButton
-                              disabled={disabled}
+                              disabled={!!readonly}
                               icon='ph--trash--fill'
                               iconOnly
                               label={t('select option delete')}
@@ -178,7 +178,7 @@ export const SelectOptionInput = ({ type, label, disabled, getStatus, getValue, 
                   icon='ph--plus--regular'
                   label={t('select option add')}
                   onClick={handleAdd}
-                  disabled={disabled}
+                  disabled={!!readonly}
                   classNames='is-full'
                 />
               </div>

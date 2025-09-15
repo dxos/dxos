@@ -7,14 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/storybook-utils';
+import { trim } from '@dxos/util';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
-const meta: Meta<typeof SyntaxHighlighter> = {
+const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
   component: SyntaxHighlighter,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;
 
@@ -30,8 +31,14 @@ export const Default: Story = {
 
 export const Typescript: Story = {
   args: {
-    language: 'ts',
-    children: 'const x = 100;',
+    language: 'tsx',
+    children: trim`
+      import React from 'react'
+      
+      const Test = () => {
+        return <div>Test</div>
+      }
+    `,
   },
 };
 

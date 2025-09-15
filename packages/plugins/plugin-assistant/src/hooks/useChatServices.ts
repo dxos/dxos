@@ -6,7 +6,6 @@ import { type AiTool, AiToolkit } from '@effect/ai';
 import { Layer } from 'effect';
 import { useMemo } from 'react';
 
-import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
@@ -21,28 +20,19 @@ import {
 } from '@dxos/functions';
 
 import { AssistantCapabilities } from '../capabilities';
-
-// TODO(burdon): Deconstruct into separate layers?
-export type AiChatServices =
-  | AiService.AiService
-  | CredentialsService
-  | DatabaseService
-  | QueueService
-  | RemoteFunctionExecutionService
-  | ToolResolverService
-  | ToolExecutionService
-  | TracingService;
+import { type AiChatServices } from '../processor';
+import { type Assistant } from '../types';
 
 export type UseChatServicesProps = {
   space?: Space;
+  chat?: Assistant.Chat;
 };
 
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
-  const aiServiceLayer =
-    useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
+export const useChatServices = ({ space, chat }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
+  const serviceLayer = useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
   const functions = useCapabilities(Capabilities.Functions);
   const toolkits = useCapabilities(Capabilities.Toolkit);
   const handlers = useCapabilities(Capabilities.ToolkitHandler);
@@ -52,8 +42,9 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
     // TODO(wittjosiah): Don't cast.
     const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
     const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
+
     return Layer.mergeAll(
-      aiServiceLayer,
+      serviceLayer,
       makeToolResolverFromFunctions(allFunctions, toolkit),
       makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
       CredentialsService.layerFromDatabase(),
@@ -61,13 +52,13 @@ export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<Ai
     ).pipe(
       Layer.provideMerge(
         Layer.mergeAll(
-          space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
-          space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
-          TracingService.layerNoop,
+          space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
+          space ? QueueService.layer(space.queues) : QueueService.notAvailable,
+          chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
           LocalFunctionExecutionService.layer,
           RemoteFunctionExecutionService.mockLayer,
         ),
       ),
     );
-  }, [space, functions, toolkits, handlers]);
+  }, [space, functions, toolkits, handlers, chat?.traceQueue?.target]);
 };

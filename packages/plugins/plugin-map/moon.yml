@@ -8,6 +8,5 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
-      - '--platform=node'
+      - '--entryPoint=src/testing.ts'
       - '--preactSignalTracking'

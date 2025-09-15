@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -13,9 +14,11 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import {
   AiService,
   AppGraphBuilder,
+  AssistantState,
   BlueprintDefinition,
   EdgeModelResolver,
   IntentResolver,
+  LocalModelResolver,
   ReactSurface,
   Settings,
   Toolkit,
@@ -36,6 +39,14 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
       activate: Settings,
+    }),
+    defineModule({
+      id: `${meta.id}/module/state`,
+      // TODO(wittjosiah): Does not integrate with settings store.
+      //   Should this be a different event?
+      //   Should settings store be renamed to be more generic?
+      activatesOn: Events.SetupSettings,
+      activate: AssistantState,
     }),
     defineModule({
       id: `${meta.id}/module/metadata`,
@@ -92,7 +103,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo, ResearchGraph]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
@@ -120,9 +131,14 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/ai-model-resolver`,
+      id: `${meta.id}/module/edge-model-resolver`,
       activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: EdgeModelResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/local-model-resolver`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: LocalModelResolver,
     }),
     defineModule({
       id: `${meta.id}/module/ai-service`,

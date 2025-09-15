@@ -35,14 +35,13 @@ type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValue
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonProps>(
   ({ children, placeholder, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
           <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
-            <Icon icon='ph--caret-down--bold' classNames={tx('select.triggerIcon', 'select__trigger__icon', {})} />
+            <Icon size={3} icon='ph--caret-down--bold' />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
@@ -82,7 +81,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
         className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <Icon icon='ph--caret-up--bold' />}
+        {children ?? <Icon size={3} icon='ph--caret-up--bold' />}
       </SelectPrimitive.SelectScrollUpButton>
     );
   },
@@ -99,7 +98,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
         className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <Icon icon='ph--caret-down--bold' />}
+        {children ?? <Icon size={3} icon='ph--caret-down--bold' />}
       </SelectPrimitive.SelectScrollDownButton>
     );
   },
@@ -152,6 +151,7 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
 
 type SelectOptionProps = SelectItemProps;
 
+// TODO(burdon): Option to show icon on left/right.
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (

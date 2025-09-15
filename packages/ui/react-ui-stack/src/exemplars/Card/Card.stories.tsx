@@ -12,7 +12,6 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
 
-// Set a seed for reproducible random values
 faker.seed(0);
 
 type CardStoryProps = {
@@ -23,8 +22,27 @@ type CardStoryProps = {
   showIcon: boolean;
 };
 
-const meta: Meta<CardStoryProps> = {
+const DefaultStory = ({ title, description, image, showImage, showIcon }: CardStoryProps) => {
+  return (
+    <div className='max-is-md'>
+      <Card.StaticRoot>
+        <Card.Toolbar>
+          <Card.DragHandle toolbarItem />
+          <Card.ToolbarSeparator variant='gap' />
+          <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
+        </Card.Toolbar>
+        {showImage && <Card.Poster alt={title} image={image} />}
+        {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
+        <Card.Heading>{title}</Card.Heading>
+        {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      </Card.StaticRoot>
+    </div>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-stack/Card',
+  render: DefaultStory,
   decorators: [withTheme],
   argTypes: {
     title: {
@@ -48,6 +66,13 @@ const meta: Meta<CardStoryProps> = {
       description: 'Whether to show an icon (when image is not shown)',
     },
   },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(),
@@ -55,24 +80,4 @@ const meta: Meta<CardStoryProps> = {
     showImage: true,
     showIcon: true,
   },
-};
-
-export default meta;
-
-export const Default: StoryObj<CardStoryProps> = {
-  render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
-    <div className='max-is-md'>
-      <Card.StaticRoot>
-        <Card.Toolbar>
-          <Card.DragHandle toolbarItem />
-          <Card.ToolbarSeparator variant='gap' />
-          <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
-        </Card.Toolbar>
-        {showImage && <Card.Poster alt={title} image={image} />}
-        {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
-        <Card.Heading>{title}</Card.Heading>
-        {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-      </Card.StaticRoot>
-    </div>
-  ),
 };

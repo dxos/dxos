@@ -11,12 +11,14 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin name': 'Debug',
+        'settings title': 'Debug settings',
         'mutation count': 'Number of mutations',
         'mutation period': 'Mutation period',
         'open devtools label': 'Open DevTools',
         'devtools label': 'DevTools',
         'devtools overview label': 'DevTools Stats',
         'debug label': 'Debug',
+        'debug app graph label': 'App Graph',
         'settings show debug panel': 'Show Debug panel.',
         'settings show devtools panel': 'Show DevTools panel.',
         'settings wireframe': 'Show wireframes.',

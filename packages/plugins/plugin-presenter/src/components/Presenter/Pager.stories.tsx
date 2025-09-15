@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
@@ -24,15 +24,17 @@ const DefaultStory = ({ count = 20 }: PagerProps) => {
   );
 };
 
-export const Default = {};
-
-const meta: Meta<PagerProps> = {
+const meta = {
   title: 'plugins/plugin-presenter/Pager',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

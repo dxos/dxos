@@ -9,7 +9,7 @@ import { InvocationOutcome, type InvocationSpan } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
-import { useScriptNameResolver } from './hooks';
+import { useFunctionNameResolver } from './hooks';
 import { formatDuration } from './utils';
 
 const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
@@ -40,7 +40,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
   }, [span]);
 
   const targetDxn = useMemo(() => span.invocationTarget.dxn, [span.invocationTarget]);
-  const resolver = useScriptNameResolver({ space });
+  const resolver = useFunctionNameResolver({ space });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestampMs, 'yyyy-MM-dd HH:mm:ss'), [span.timestampMs]);

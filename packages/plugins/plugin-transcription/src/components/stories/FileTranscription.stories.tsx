@@ -31,7 +31,7 @@ import { MessageNormalizer, getActorId } from '../../segments-normalization';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderMarkdown } from '../Transcript';
+import { renderByline } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -68,7 +68,6 @@ const AudioFile = ({
 
   useEffect(() => {
     if (!audio) {
-      log.warn('no audio');
       return;
     }
 
@@ -84,7 +83,7 @@ const AudioFile = ({
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
       void queue?.append([
@@ -147,10 +146,10 @@ const AudioFile = ({
   }, [normalizer]);
 
   const manageChunkRecording = () => {
-    if (running && isSpeaking) {
+    if (running && isSpeaking && transcriber) {
       log.info('starting transcription');
       transcriber?.startChunksRecording();
-    } else if (!isSpeaking || !running) {
+    } else if ((!isSpeaking || !running) && transcriber) {
       log.info('stopping transcription');
       transcriber?.stopChunksRecording();
     }
@@ -176,10 +175,18 @@ const AudioFile = ({
     manageChunkRecording();
   }, [isSpeaking, stream]);
 
-  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
+  return (
+    <TranscriptionStory
+      disabled={!stream}
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      audioRef={ref}
+    />
+  );
 };
 
-const meta: Meta<typeof AudioFile> = {
+const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withPluginManager({
@@ -206,9 +213,11 @@ const meta: Meta<typeof AudioFile> = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 100,
@@ -232,15 +241,16 @@ export const Default: StoryObj<typeof AudioFile> = {
   },
 };
 
-export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
-  args: {
-    detectSpeaking: true,
-    normalizeSentences: true,
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
-    // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-  },
-};
+// TODO(mykola): Fix sentence normalization.
+// export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
+//   render: AudioFile,
+//   args: {
+//     detectSpeaking: true,
+//     normalizeSentences: true,
+//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+//     audioUrl: 'https://dxos.network/audio-london.m4a',
+//     // textUrl: 'https://dxos.network/audio-london.txt',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//   },
+// };

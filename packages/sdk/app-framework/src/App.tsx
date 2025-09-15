@@ -8,7 +8,7 @@ import React, { type FC, type PropsWithChildren, useCallback, useEffect, useMemo
 
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';
-import { useDefaultValue } from '@dxos/react-hooks';
+import { useAsyncEffect, useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Events } from './common';
 import { type Plugin, PluginManager, type PluginManagerOptions } from './core';
@@ -134,16 +134,12 @@ export const useApp = ({
     setupDevtools(manager);
   }, [manager]);
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      await Promise.all([
-        // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
-        manager.activate(Events.SetupReactSurface),
-        manager.activate(Events.Startup),
-      ]);
-    });
-
-    return () => clearTimeout(timeout);
+  useAsyncEffect(async () => {
+    await Promise.all([
+      // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
+      manager.activate(Events.SetupReactSurface),
+      manager.activate(Events.Startup),
+    ]);
   }, [manager]);
 
   return useCallback(

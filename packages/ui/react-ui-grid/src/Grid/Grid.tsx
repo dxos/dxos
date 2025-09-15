@@ -178,6 +178,7 @@ export {
   toPlaneCellIndex,
   parseCellIndex,
   cellQuery,
+  DxEditRequest,
 } from '@dxos/lit-grid';
 
 export type {

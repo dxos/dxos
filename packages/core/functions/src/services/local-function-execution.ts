@@ -6,7 +6,7 @@ import { Context, Effect, Layer, Schema } from 'effect';
 
 import { todo } from '@dxos/debug';
 
-import { FunctionError } from '../errors';
+import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
 import type { Services } from './service-container';
@@ -16,24 +16,44 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
     // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
-    invokeFunction(fnDef: FunctionDefinition<any, any>, input: unknown): Effect.Effect<unknown, never, Services>;
+    invokeFunction(functionDef: FunctionDefinition<any, any>, input: unknown): Effect.Effect<unknown, never, Services>;
   }
 >() {
+  /**
+   * @deprecated Use layerLive instead.
+   */
   static layer = Layer.succeed(LocalFunctionExecutionService, {
-    invokeFunction: (fnDef, input) => invokeFunction(fnDef, input),
+    invokeFunction: (functionDef, input) => invokeFunction(functionDef, input),
   });
 
+  static layerLive = Layer.effect(
+    LocalFunctionExecutionService,
+    Effect.gen(function* () {
+      const resolver = yield* FunctionImplementationResolver;
+      return {
+        invokeFunction: Effect.fn('invokeFunction')(function* (functionDef, input) {
+          // TODO(dmaretskyi): Better error types
+          const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
+          return yield* invokeFunction(resolved, input);
+        }),
+      };
+    }),
+  );
+
   static invokeFunction: <F extends FunctionDefinition.Any>(
-    fnDef: F,
+    functionDef: F,
     input: FunctionDefinition.Input<F>,
   ) => Effect.Effect<FunctionDefinition.Output<F>, never, Services | LocalFunctionExecutionService> =
     Effect.serviceFunctionEffect(LocalFunctionExecutionService, (_) => _.invokeFunction as any);
 }
 
-const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect.Effect<unknown, never, Services> =>
+const invokeFunction = (
+  functionDef: FunctionDefinition<any, any>,
+  input: any,
+): Effect.Effect<unknown, never, Services> =>
   Effect.gen(function* () {
     // Assert input matches schema
-    const assertInput = fnDef.inputSchema.pipe(Schema.asserts);
+    const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
     (assertInput as any)(input);
 
     const context: FunctionContext = {
@@ -46,7 +66,7 @@ const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
-      const result = fnDef.handler({ context, data: input });
+      const result = functionDef.handler({ context, data: input });
       if (Effect.isEffect(result)) {
         return yield* (result as Effect.Effect<unknown, unknown, Services>).pipe(Effect.orDie);
       } else if (
@@ -62,13 +82,33 @@ const invokeFunction = (fnDef: FunctionDefinition<any, any>, input: any): Effect
     }).pipe(
       Effect.orDie,
       Effect.catchAllDefect((defect) =>
-        Effect.die(new FunctionError('Error running function', { context: { name: fnDef.name }, cause: defect })),
+        Effect.die(new FunctionError('Error running function', { context: { name: functionDef.name }, cause: defect })),
       ),
     );
 
     // Assert output matches schema
-    const assertOutput = fnDef.outputSchema?.pipe(Schema.asserts);
+    const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
     (assertOutput as any)(data);
 
     return data;
-  }).pipe(Effect.withSpan('invokeFunction', { attributes: { name: fnDef.name } }));
+  }).pipe(Effect.withSpan('invokeFunction', { attributes: { name: functionDef.name } }));
+
+export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
+  FunctionImplementationResolver,
+  {
+    resolveFunctionImplementation(
+      functionDef: FunctionDefinition<any, any>,
+    ): Effect.Effect<FunctionDefinition<any, any>, FunctionNotFoundError>;
+  }
+>() {
+  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+    Layer.succeed(FunctionImplementationResolver, {
+      resolveFunctionImplementation: (functionDef) => {
+        const resolved = functions.find((f) => f.name === functionDef.name);
+        if (!resolved) {
+          return Effect.fail(new FunctionNotFoundError(functionDef.name));
+        }
+        return Effect.succeed(resolved);
+      },
+    });
+}

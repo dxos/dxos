@@ -37,7 +37,7 @@ import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderMarkdown } from '../Transcript';
+import { renderByline } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -78,7 +78,7 @@ const DefaultStory = ({
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
   useEffect(() => {
@@ -193,7 +193,7 @@ const DefaultStory = ({
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
@@ -234,11 +234,11 @@ const meta: Meta<typeof DefaultStory> = {
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -254,19 +254,21 @@ export const Default: Story = {
   },
 };
 
-export const EntityExtraction: Story = {
-  args: {
-    detectSpeaking: true,
-    entityExtraction: 'ner',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-    audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix hugging face quota issues.
+// export const EntityExtraction: Story = {
+//   args: {
+//     detectSpeaking: true,
+//     entityExtraction: 'ner',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//     audioConstraints: {
+//       echoCancellation: true,
+//       noiseSuppression: true,
+//       autoGainControl: true,
+//     },
+//   },
+// };
 
 export const SpeechDetection: Story = {
   args: {

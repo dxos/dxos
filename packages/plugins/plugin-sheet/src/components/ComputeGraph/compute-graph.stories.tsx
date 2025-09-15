@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
@@ -24,7 +24,7 @@ import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
-const Story = () => {
+const DefaultStory = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
@@ -83,16 +83,18 @@ const Story = () => {
   );
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/functions',
+  render: DefaultStory,
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withTheme,
   ],
-  render: (args: any) => <Story {...args} />,
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

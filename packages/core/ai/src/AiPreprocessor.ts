@@ -5,7 +5,6 @@
 import { AiInput } from '@effect/ai';
 import { Array, Effect, Predicate, pipe } from 'effect';
 
-import { getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
@@ -20,6 +19,7 @@ import { AiInputPreprocessingError } from './errors';
  * 1. Filtering out messages that are not from the user or assistant.
  * 2. Converting each message into an AIInput.
  * 3. Removing any invalid AIInput.
+ *
  * The function returns a list of valid AIInput objects.
  */
 export const preprocessAiInput: (
@@ -46,8 +46,7 @@ export const preprocessAiInput: (
                               new AiInput.ToolCallResultPart({
                                 id: AiInput.ToolCallId.make(block.toolCallId),
                                 name: block.name,
-                                // TODO(dmaretskyi): Fix getSnapshot typing ..or use Obj.toJSON (if that works).
-                                result: block.error ?? getSnapshot(block.result as any),
+                                result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
                               }),
                           ),
                         });
@@ -165,8 +164,7 @@ const convertAssistantMessagePart: (
         return new AiInput.ToolCallPart({
           id: block.toolCallId,
           name: block.name,
-          // TODO(dmaretskyi): Fix getSnapshot typing.
-          params: getSnapshot(block.input as any),
+          params: JSON.parse(block.input),
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.
@@ -181,9 +179,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<status>${block.statusText}</status>`,
         });
-      case 'suggest':
+      case 'suggestion':
         return new AiInput.TextPart({
-          text: `<suggest>${block.text}</suggest>`,
+          text: `<suggestion>${block.text}</suggestion>`,
         });
       case 'select':
         return new AiInput.TextPart({
@@ -209,6 +207,8 @@ const convertAssistantMessagePart: (
       case 'file':
         // TODO(burdon): Just log and ignore?
         return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
+      case 'summary':
+        break;
       default:
         // Ignore spurious tags.
         log.warn('ignoring spurious tag', { block });

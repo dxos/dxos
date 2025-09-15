@@ -8,107 +8,25 @@ import { Option, pipe } from 'effect';
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { COMPOSER_SPACE_LOCK, rxFromQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
+import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ChannelType } from '@dxos/plugin-thread/types';
-import { Query, type QueryResult, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
+import { SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, MeetingType } from '../types';
+import { meta } from '../meta';
+import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
-    createExtension({
-      id: `${MEETING_PLUGIN}/root`,
-      connector: (node) => {
-        let query: QueryResult<MeetingType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(MeetingType));
-              }
-
-              const meetings = get(rxFromQuery(query));
-              return meetings.length > 0
-                ? [
-                    {
-                      id: `${space.id}-meetings`,
-                      type: `${MEETING_PLUGIN}/meetings`,
-                      data: null,
-                      properties: {
-                        label: ['meetings label', { ns: MEETING_PLUGIN }],
-                        icon: 'ph--note--regular',
-                        space,
-                      },
-                    },
-                  ]
-                : [];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
-    // TODO(wittjosiah): Show presence dots for meetings based on active participants in the call.
-    // TODO(wittjosiah): Highlight active meetings in L1.
-    //  Separate section for active meetings, with different icons & labels.
-    //  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
-    createExtension({
-      id: `${MEETING_PLUGIN}/meetings`,
-      connector: (node) => {
-        let query: QueryResult<MeetingType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === `${MEETING_PLUGIN}/meetings` && isSpace(node.properties.space)
-                ? Option.some(node.properties.space)
-                : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(MeetingType));
-              }
-
-              const [{ metadata }] = get(context.capabilities(Capabilities.Metadata)).filter(
-                (
-                  capability,
-                ): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-                  capability.id === MeetingType.typename,
-              );
-
-              return get(rxFromQuery(query))
-                .toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
-                .map((meeting) => ({
-                  id: fullyQualifiedId(meeting),
-                  type: `${MEETING_PLUGIN}/meeting`,
-                  data: meeting,
-                  properties: {
-                    label: metadata.label(meeting) ?? ['meeting label', { ns: MEETING_PLUGIN }],
-                    icon: metadata.icon,
-                  },
-                }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
     // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
     createExtension({
-      id: `${MEETING_PLUGIN}/share-call-link`,
+      id: `${meta.id}/share-call-link`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -137,7 +55,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['share call link label', { ns: MEETING_PLUGIN }],
+                  label: ['share call link label', { ns: meta.id }],
                   icon: 'ph--share-network--regular',
                 },
               },
@@ -148,12 +66,13 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${MEETING_PLUGIN}/call-thread`,
+      id: `${meta.id}/call-thread`,
       connector: (node) => {
-        return Rx.make((get) => {
-          return pipe(
+        return Rx.make((get) =>
+          pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((node) => node.data),
+            Option.filter(Obj.instanceOf(ChannelType)),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));
@@ -174,7 +93,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.thread.target)),
                   properties: {
-                    label: ['meeting thread label', { ns: MEETING_PLUGIN }],
+                    label: ['meeting thread label', { ns: meta.id }],
                     icon: 'ph--chat-text--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -183,13 +102,13 @@ export default (context: PluginContext) =>
               ];
             }),
             Option.getOrElse(() => []),
-          );
-        });
+          ),
+        );
       },
     }),
 
     createExtension({
-      id: `${MEETING_PLUGIN}/call-companion`,
+      id: `${meta.id}/call-companion`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -212,10 +131,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data,
                   properties: {
-                    label: [
-                      data === 'meeting' ? 'meeting list label' : 'meeting companion label',
-                      { ns: MEETING_PLUGIN },
-                    ],
+                    label: [data === 'meeting' ? 'meeting list label' : 'meeting companion label', { ns: meta.id }],
                     icon: 'ph--note--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -229,7 +145,7 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${MEETING_PLUGIN}/call-transcript`,
+      id: `${meta.id}/call-transcript`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -257,19 +173,21 @@ export default (context: PluginContext) =>
                         chain(MeetingAction.SetActive),
                       );
                       const { data } = await dispatch(intent);
-                      meeting = data!.object as MeetingType;
+                      meeting = data!.object as Meeting.Meeting;
                     }
 
                     const callManager = context.getCapability(ThreadCapabilities.CallManager);
                     const transcript = await meeting.transcript.load();
                     const transcriptionEnabled = !enabled;
-                    callManager.setActivity(Type.getTypename(MeetingType)!, {
+                    callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
                       meetingId: fullyQualifiedId(meeting),
                       transcriptDxn: transcript.queue.dxn.toString(),
                       transcriptionEnabled,
                     });
 
-                    if (transcriptionEnabled) {
+                    if (!transcriptionEnabled) {
+                      log.warn('transcription disabled');
+                    } else {
                       const primary = fullyQualifiedId(channel);
                       const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
                       await dispatch(createIntent(DeckAction.ChangeCompanion, { primary, companion }));
@@ -277,8 +195,8 @@ export default (context: PluginContext) =>
                   },
                   properties: {
                     label: enabled
-                      ? ['stop transcription label', { ns: MEETING_PLUGIN }]
-                      : ['start transcription label', { ns: MEETING_PLUGIN }],
+                      ? ['stop transcription label', { ns: meta.id }]
+                      : ['start transcription label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     disposition: 'toolbar',
                     classNames: enabled ? 'bg-callAlert' : '',
@@ -306,7 +224,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {
-                    label: ['transcript companion label', { ns: MEETING_PLUGIN }],
+                    label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -320,12 +238,14 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${MEETING_PLUGIN}/meeting-transcript-companion`,
+      id: `${meta.id}/meeting-transcript-companion`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(MeetingType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Meeting.Meeting, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.map((meeting) => {
               return [
                 {
@@ -333,7 +253,7 @@ export default (context: PluginContext) =>
                   type: PLANK_COMPANION_TYPE,
                   data: get(rxFromSignal(() => meeting.transcript.target)),
                   properties: {
-                    label: ['transcript companion label', { ns: MEETING_PLUGIN }],
+                    label: ['transcript companion label', { ns: meta.id }],
                     icon: 'ph--subtitles--regular',
                     position: 'hoist',
                     disposition: 'hidden',

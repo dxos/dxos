@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing';
@@ -30,6 +31,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
               <Select.Option value={'b'}>B</Select.Option>
               <Select.Option value={'c'}>C</Select.Option>
             </Select.Viewport>
+            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -70,14 +72,18 @@ const DefaultStory = (props: StorybookToolbarProps) => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Toolbar',
-  component: Toolbar,
+  component: Toolbar as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

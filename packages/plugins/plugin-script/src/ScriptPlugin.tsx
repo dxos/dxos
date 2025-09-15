@@ -11,7 +11,14 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { AppGraphBuilder, Compiler, IntentResolver, ReactSurface, ScriptSettings } from './capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  Compiler,
+  IntentResolver,
+  ReactSurface,
+  ScriptSettings,
+} from './capabilities';
 import { ScriptEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
@@ -76,5 +83,10 @@ export const ScriptPlugin = () =>
       id: `${meta.id}/module/intent-resolver`,
       activatesOn: Events.SetupIntentResolver,
       activate: IntentResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/blueprint`,
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: BlueprintDefinition,
     }),
   ]);

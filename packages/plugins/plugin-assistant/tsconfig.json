@@ -115,6 +115,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -148,6 +151,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
       "path": "../../ui/react-ui-sfx"
     },
     {
@@ -155,6 +161,12 @@
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/react-ui-tag-picker"
@@ -209,6 +221,15 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-theme"
+    },
+    {
+      "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-token-manager"
     },
     {
       "path": "../plugin-transcription"

@@ -13,13 +13,14 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { type ChannelType } from '@dxos/plugin-thread/types';
+import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, type MeetingSettingsProps, MeetingType } from '../types';
+import { meta } from '../meta';
+import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
 
@@ -31,9 +32,7 @@ export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context
-    .getCapability(Capabilities.SettingsStore)
-    .getStore<MeetingSettingsProps>(MEETING_PLUGIN)!.value;
+  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
@@ -55,9 +54,9 @@ export default (context: PluginContext) => {
       // }
 
       // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-      // state.transcriptionManager = await context
-      //   .getCapability(TranscriptionCapabilities.TranscriptionManager)({ messageEnricher })
-      //   .open();
+      state.transcriptionManager = await context
+        .getCapability(TranscriptionCapabilities.TranscriptionManager)({})
+        .open();
     },
     onLeave: async () => {
       await state.transcriptionManager?.close();
@@ -65,7 +64,7 @@ export default (context: PluginContext) => {
       state.activeMeeting = undefined;
     },
     onCallStateUpdated: async (callState: CallState) => {
-      const typename = Type.getTypename(MeetingType);
+      const typename = Type.getTypename(Meeting.Meeting);
       const activity = typename ? callState.activities?.[typename] : undefined;
       if (!activity?.payload) {
         return;

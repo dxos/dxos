@@ -7,7 +7,8 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type BaseObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo';
+import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -68,7 +69,22 @@ export interface EchoDatabase {
 
   toJSON(): object;
 
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
+  /**
+   * @deprecated Use `ref` instead.
+   */
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
+
+  /**
+   * Creates a reference to an existing object in the database.
+   *
+   * NOTE: The reference may be dangling if the object is not present in the database.
+   *
+   * ## Difference from `Ref.fromDXN`
+   *
+   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `db.ref(dxn)` is preferable in cases with access to the database.
+   */
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -96,6 +112,11 @@ export interface EchoDatabase {
    * Run migrations.
    */
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
+   * Get the current sync state.
+   */
+  getSyncState(): Promise<SpaceSyncState>;
 
   /**
    * Get notification about the sync progress with other peers.
@@ -262,6 +283,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+    const ref = Ref.fromDXN(dxn);
+    setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
+    return ref;
+  }
+
   // Odd way to define methods types from a typedef.
   declare query: QueryFn;
   static {
@@ -280,14 +307,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update objects.
    * @deprecated Mutate the object directly
    */
-  async update(filter: Filter.Any, operation: unknown): Promise<void> {
+  async update(_filter: Filter.Any, _operation: unknown): Promise<void> {
     throw new Error('Not implemented');
   }
 
   /**
    * @deprecated Use `db.add`.
    */
-  async insert(data: unknown): Promise<never> {
+  async insert(_data: unknown): Promise<never> {
     throw new Error('Not implemented');
   }
 
@@ -353,6 +380,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this.flush();
+  }
+
+  getSyncState(): Promise<SpaceSyncState> {
+    return this._coreDatabase.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {

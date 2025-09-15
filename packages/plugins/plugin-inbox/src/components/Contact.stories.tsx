@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -22,7 +22,7 @@ import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
 
 import { InboxPlugin } from '../InboxPlugin';
-import { MailboxType } from '../types';
+import { Mailbox } from '../types';
 
 const ContactItem = ({ contact }: { contact: DataType.Person }) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -90,7 +90,43 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
   );
 };
 
-export const Contacts = {
+const meta = {
+  title: 'plugins/plugin-inbox/Related',
+  decorators: [
+    withPluginManager({
+      plugins: [
+        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            await client.spaces.default.waitUntilReady();
+            const space = client.spaces.default;
+            const { emails } = await seedTestData(space);
+            const queueDxn = space.queues.create().dxn;
+            const queue = space.queues.get<DataType.Message>(queueDxn);
+            await queue.append(emails);
+            const mailbox = Mailbox.make({ queue: queueDxn });
+            space.db.add(mailbox);
+          },
+        }),
+        StorybookLayoutPlugin(),
+        PreviewPlugin(),
+        SpacePlugin(),
+        IntentPlugin(),
+        SettingsPlugin(),
+        InboxPlugin(),
+      ],
+    }),
+  ],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Contacts: Story = {
   render: () => {
     const space = useSpace();
     const contacts = useQuery(space, Filter.type(DataType.Person));
@@ -105,7 +141,7 @@ export const Contacts = {
   },
 };
 
-export const Organizations = {
+export const Organizations: Story = {
   render: () => {
     const space = useSpace();
     const organizations = useQuery(space, Filter.type(DataType.Organization));
@@ -119,37 +155,3 @@ export const Organizations = {
     );
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-inbox/Related',
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        ClientPlugin({
-          types: [MailboxType, DataType.Message, DataType.Person, DataType.Organization],
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-            await client.spaces.waitUntilReady();
-            await client.spaces.default.waitUntilReady();
-            const space = client.spaces.default;
-            const { emails } = await seedTestData(space);
-            const queueDxn = space.queues.create().dxn;
-            const queue = space.queues.get<DataType.Message>(queueDxn);
-            await queue.append(emails);
-            const mailbox = Obj.make(MailboxType, { queue: Ref.fromDXN(queueDxn) });
-            space.db.add(mailbox);
-          },
-        }),
-        StorybookLayoutPlugin(),
-        PreviewPlugin(),
-        SpacePlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-        InboxPlugin(),
-      ],
-    }),
-  ],
-};
-
-export default meta;

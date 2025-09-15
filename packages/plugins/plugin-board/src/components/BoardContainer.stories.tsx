@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -16,8 +16,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { type Client, useClient } from '@dxos/react-client';
-import { Filter, Ref, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -30,13 +29,8 @@ import { BoardContainer } from './BoardContainer';
 
 faker.seed(0);
 
-//
-// Initialization utilities
-//
-
-const initializeBoard = async ({ space, client }: { space: Space; client: Client }) => {
-  // Create a new board
-  const board = Obj.make(Board.Board, {
+const createBoard = () =>
+  Obj.make(Board.Board, {
     name: 'Test Board',
     items: [],
     layout: {
@@ -45,25 +39,17 @@ const initializeBoard = async ({ space, client }: { space: Space; client: Client
     },
   });
 
-  return { board };
-};
-
-//
-// Story components
-//
-
-const rollOrg = () =>
-  ({
+const createOrg = () =>
+  Obj.make(DataType.Organization, {
     name: faker.commerce.productName(),
     description: faker.lorem.paragraph(),
     image: faker.image.url(),
     website: faker.internet.url(),
-    status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
-    // TODO(thure): Why is this so difficult to type?
-  }) as unknown as DataType.Organization;
+    // TODO(burdon): Fix.
+    // status: faker.helpers.arrayElement(DataType.OrganizationStatusOptions).id,
+  });
 
-const StorybookBoard = () => {
-  const _client = useClient();
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const boards = useQuery(space, Filter.type(Board.Board));
@@ -83,16 +69,13 @@ const StorybookBoard = () => {
   return <BoardContainer role='board' board={board} />;
 };
 
-type StoryProps = {};
-
 //
 // Story definitions
 //
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'plugins/plugin-board/Board',
-  component: StorybookBoard,
-  render: () => <StorybookBoard />,
+  render: DefaultStory,
   parameters: { translations: [...translations, ...stackTranslations] },
   decorators: [
     withLayout({ fullscreen: true }),
@@ -105,15 +88,11 @@ const meta: Meta<StoryProps> = {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { board } = await initializeBoard({
-              space,
-              client,
-            });
-            space.db.add(board);
+            const board = space.db.add(createBoard());
 
             // Add some sample items
             Array.from({ length: 10 }).map(() => {
-              const org = Obj.make(DataType.Organization, rollOrg());
+              const org = createOrg();
               space.db.add(org);
               board.items.push(Ref.make(org));
               board.layout.cells[org.id] = {
@@ -138,6 +117,6 @@ const meta: Meta<StoryProps> = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

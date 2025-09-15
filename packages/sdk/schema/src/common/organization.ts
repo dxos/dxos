@@ -13,7 +13,7 @@ import {
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 
-import { IconAnnotation } from '../annotations';
+import { IconAnnotation, ItemAnnotation } from '../annotations';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const OrganizationStatusOptions = [
@@ -77,6 +77,7 @@ const OrganizationSchema = Schema.Struct({
 }).pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
+  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
 );
 

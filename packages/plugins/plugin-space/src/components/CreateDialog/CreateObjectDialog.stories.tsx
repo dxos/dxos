@@ -19,18 +19,18 @@ import { translations } from '../../translations';
 
 import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 
-const Story = (args: CreateObjectDialogProps) => {
+const Story = (props: CreateObjectDialogProps) => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
-        <CreateObjectDialog {...args} />
+        <CreateObjectDialog {...props} />
       </Dialog.Overlay>
     </Dialog.Root>
   );
 };
 
 // TODO(wittjosiah): Story should be for CreateObjectPanel.
-const meta: Meta<typeof CreateObjectDialog> = {
+const meta = {
   title: 'plugins/plugin-space/CreateObjectDialog',
   component: CreateObjectDialog,
   render: Story,
@@ -43,7 +43,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
     translations: [...translations, ...shellTranslations],
   },
   args: {},
-};
+} satisfies Meta<typeof CreateObjectDialog>;
 
 export default meta;
 
