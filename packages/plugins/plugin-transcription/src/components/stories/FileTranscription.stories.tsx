@@ -241,15 +241,16 @@ export const Default: StoryObj<typeof AudioFile> = {
   },
 };
 
-export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
-  args: {
-    detectSpeaking: true,
-    normalizeSentences: true,
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
-    // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-  },
-};
+// TODO(mykola): Fix sentence normalization.
+// export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
+//   render: AudioFile,
+//   args: {
+//     detectSpeaking: true,
+//     normalizeSentences: true,
+//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+//     audioUrl: 'https://dxos.network/audio-london.m4a',
+//     // textUrl: 'https://dxos.network/audio-london.txt',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//   },
+// };
