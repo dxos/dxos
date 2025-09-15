@@ -585,6 +585,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-project/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },
