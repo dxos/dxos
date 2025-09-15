@@ -12,6 +12,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -50,6 +51,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           extendedMarkdown({ registry }),
           createBasicExtensions({ lineWrapping: true, readOnly: true }),
           decorateMarkdown(),
+          preview(),
           xmlTags({ registry }),
           streamer(streamerOptions),
           autoScroll(),

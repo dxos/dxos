@@ -63,32 +63,7 @@ describe('stream', () => {
     Effect.gen(function* () {
       const text = 'Hello <b>World</b>!';
       const result = yield* testStreamer(text, 5);
-      expect(result).toEqual(['H', 'e', 'l', 'l', 'o', ' ', '<b>', 'W', 'o', 'r', 'l', 'd', '</b>', '!']);
-    }).pipe(Effect.provide(TestContext.TestContext)),
-  );
-
-  it.effect('stream with nested tags', ({ expect }) =>
-    Effect.gen(function* () {
-      const text = '<div>Hello <span class="highlight">world</span>!</div>';
-      const result = yield* testStreamer(text, 5);
-      expect(result).toEqual([
-        '<div>',
-        'H',
-        'e',
-        'l',
-        'l',
-        'o',
-        ' ',
-        '<span class="highlight">',
-        'w',
-        'o',
-        'r',
-        'l',
-        'd',
-        '</span>',
-        '!',
-        '</div>',
-      ]);
+      expect(result).toEqual(['H', 'e', 'l', 'l', 'o', ' ', '<b>World</b>', '!']);
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
 

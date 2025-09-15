@@ -301,11 +301,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    // TODO(burdon): React component breaks markdown formatting.
-    generator: MESSAGES,
     debug: true,
+    generator: MESSAGES,
     characterDelay: 0,
-    fadeIn: false,
   },
 };
 
@@ -313,5 +311,8 @@ export const Delayed: Story = {
   args: {
     generator: MESSAGES,
     delay: 2_000,
+    fadeIn: true,
+    cursor: true,
+    characterDelay: 0,
   },
 };

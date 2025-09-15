@@ -8,6 +8,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  autoScroll,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -52,25 +53,15 @@ export const renderByline =
   };
 
 export type TranscriptViewProps = ThemedClassName<{
-  transcript?: Transcript.Transcript;
   space?: Space;
+  transcript?: Transcript.Transcript;
   model: SerializationModel<DataType.Message>;
-  // TODO(wittjosiah): Move to container.
-  attendableId?: string;
-  ignoreAttention?: boolean;
 }>;
 
 /**
  * Transcript component implemented using the editor.
  */
-export const TranscriptView = ({
-  classNames,
-  transcript: object,
-  space,
-  model,
-  attendableId,
-  ignoreAttention,
-}: TranscriptViewProps) => {
+export const TranscriptView = ({ classNames, space, transcript: object, model }: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
@@ -79,11 +70,12 @@ export const TranscriptView = ({
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        space && preview(),
+        preview(),
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
         }),
+        autoScroll(),
       ].filter(isNotFalsy),
     };
   }, [space, model]);

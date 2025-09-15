@@ -152,7 +152,7 @@ class PreviewInlineWidget extends WidgetType {
     return this._link.ref === other._link.ref && this._link.label === other._link.label;
   }
 
-  override toDOM(view: EditorView): HTMLElement {
+  override toDOM(_view: EditorView): HTMLElement {
     const root = document.createElement('dx-ref-tag');
     root.textContent = this._link.label;
     root.setAttribute('refId', this._link.ref);

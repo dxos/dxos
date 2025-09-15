@@ -26,13 +26,16 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     error?: Error;
-  } & Pick<ChatMessageProps, 'debug' | 'space' | 'toolProvider' | 'onEvent'> &
-    Pick<MarkdownStreamProps, 'characterDelay' | 'fadeIn'>
+  } & Pick<ChatMessageProps, 'debug' | 'toolProvider' | 'onEvent'> &
+    Pick<MarkdownStreamProps, 'characterDelay' | 'cursor' | 'fadeIn'>
 >;
 
 // TOOD(burdon): Export scroll controller.
 export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, debug, onEvent, characterDelay = 5, fadeIn = true }, forwardedRef) => {
+  (
+    { classNames, identity, messages = [], error, debug, onEvent, characterDelay = 5, cursor = true, fadeIn = true },
+    forwardedRef,
+  ) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -73,6 +76,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
           content={content}
           registry={componentRegistry}
           characterDelay={characterDelay}
+          cursor={cursor}
           fadeIn={fadeIn}
         />
       </div>
