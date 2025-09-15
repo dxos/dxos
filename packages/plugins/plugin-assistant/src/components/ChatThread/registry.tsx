@@ -24,28 +24,10 @@ const Fallback = ({ tag, ...props }: FallbackProps) => {
     <ToggleContainer.Root classNames='rounded-sm'>
       <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
       <ToggleContainer.Content classNames='bg-modalSurface'>
-        {/* TODO(burdon): Can we avoid the ! */}
         <Json classNames='!p-2 text-sm' data={props} />
       </ToggleContainer.Content>
     </ToggleContainer.Root>
   );
-};
-
-// TODO(thure): Tags with a definition in the `ContentBlock` namespace (`message.ts` in `sdk/schema`),
-//  which don’t appear to be handled by extant rendering logic
-//  (maybe intentionally, just might want to mark them as “won’t-implement” here for clarity):
-//   - 'anchor'
-//   - 'reference'
-//   - 'file'
-//   - 'image'
-//   - 'proposal'
-//   - 'reasoning'
-//   - 'status'
-//   - 'transcript'
-
-const getTextChild = (children: any[]): string | null => {
-  const child = children?.[0];
-  return typeof child === 'string' ? child : null;
 };
 
 /**
@@ -96,9 +78,9 @@ export const componentRegistry: XmlComponentRegistry = {
 
   //
   // React
-  // TODO(thure): Convert all but components rendering a `Surface` to a Lit widget.
   //
 
+  // TODO(burdon): Reference messages via context.
   ['toolBlock' as const]: {
     block: true,
     Component: Fallback,
@@ -126,6 +108,14 @@ export const componentRegistry: XmlComponentRegistry = {
   },
 };
 
+const getTextChild = (children: any[]): string | null => {
+  const child = children?.[0];
+  return typeof child === 'string' ? child : null;
+};
+
+/**
+ * Convert block to markdown.
+ */
 export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
   switch (block._tag) {
     case 'text': {
@@ -134,6 +124,18 @@ export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.A
       } else {
         return block.text;
       }
+    }
+
+    case 'suggestion': {
+      return `<suggestion>${block.text}</suggestion>`;
+    }
+
+    case 'select': {
+      return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
+    }
+
+    case 'toolkit': {
+      return `<toolkit />`;
     }
 
     // TOOD(burdon): Reduce toolchain.

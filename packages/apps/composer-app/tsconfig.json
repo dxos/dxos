@@ -121,9 +121,6 @@
       "path": "../../plugins/plugin-help"
     },
     {
-      "path": "../../plugins/plugin-help/plugin-sheet"
-    },
-    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -170,6 +167,9 @@
     },
     {
       "path": "../../plugins/plugin-search"
+    },
+    {
+      "path": "../../plugins/plugin-sheet"
     },
     {
       "path": "../../plugins/plugin-sketch"

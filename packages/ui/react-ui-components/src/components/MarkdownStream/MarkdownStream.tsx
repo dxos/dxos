@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useImperativeHandle } from '@preact-signals/safe-react/react';
 import { Effect, Fiber, Queue, Stream } from 'effect';
-import React, { forwardRef, useEffect } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
@@ -21,8 +20,8 @@ import { type StreamerOptions, type XmlTagOptions, extendedMarkdown, streamer, x
 import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
-  update: (text: string) => void;
-  append: (text: string) => void;
+  update: (text: string) => Promise<void>;
+  append: (text: string) => Promise<void>;
 };
 
 export type MarkdownStreamProps = ThemedClassName<{
@@ -32,31 +31,31 @@ export type MarkdownStreamProps = ThemedClassName<{
   XmlTagOptions &
   StreamerOptions;
 
-export const MarkdownStream = forwardRef<MarkdownStreamController, MarkdownStreamProps>(
+export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, registry, content, characterDelay = 5, ...streamerOptions }, forwardedRef) => {
     const { themeMode } = useThemeContext();
-    const { parentRef, view } = useTextEditor(
-      {
+    const { parentRef, view } = useTextEditor(() => {
+      return {
         initialValue: content,
         extensions: [
-          createBasicExtensions({ lineWrapping: true, readOnly: true }),
           createThemeExtensions({
             themeMode,
             slots: {
               scroll: {
-                className: 'pli-cardSpacingInline plb-cardSpacingBlock',
+                // NOTE: Child widgets must have `max-is-[100cqi]`.
+                className: 'size-container pli-cardSpacingInline plb-cardSpacingBlock',
               },
             },
           }),
           extendedMarkdown({ registry }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true }),
           decorateMarkdown(),
           xmlTags({ registry }),
           streamer(streamerOptions),
           autoScroll(),
         ],
-      },
-      [themeMode, registry],
-    );
+      };
+    }, [themeMode, registry]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -83,25 +82,28 @@ export const MarkdownStream = forwardRef<MarkdownStreamController, MarkdownStrea
       };
     }, [view, queue]);
 
-    // Expose contoller as API.
-    useImperativeHandle(
-      forwardedRef,
-      () => ({
+    // Expose controller as API.
+    useImperativeHandle(forwardedRef, () => {
+      if (!view) {
+        return null as any;
+      }
+
+      return {
         // Update document.
         update: async (text: string) => {
-          setQueue(Effect.runSync(Queue.unbounded<string>()));
-          view?.dispatch({
-            changes: [{ from: 0, to: view.state.doc.length, insert: text }],
+          const queue = Effect.runSync(Queue.unbounded<string>());
+          setQueue(queue);
+          view!.dispatch({
+            changes: [{ from: 0, to: view!.state.doc.length, insert: text }],
           });
         },
         // Append to queue.
         append: async (text: string) => {
           await Effect.runPromise(Queue.offer(queueRef.current, text));
         },
-      }),
-      [view],
-    );
+      };
+    }, [view]);
 
-    return <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />;
+    return <div ref={parentRef} className={mx('is-full overflow-hidden', classNames)} />;
   },
 );

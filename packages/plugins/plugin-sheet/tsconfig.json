@@ -8,7 +8,6 @@
     ]
   },
   "exclude": [
-    "*.t.ts",
     "vite.config.ts"
   ],
   "include": [
@@ -24,13 +23,16 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/crypto"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/local-storage"
     },
     {
       "path": "../../common/log"
@@ -42,22 +44,19 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/test-utils"
+    },
+    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute"
     },
     {
-      "path": "../../core/conductor"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-generator"
-    },
-    {
-      "path": "../../core/echo/echo-pipeline"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -69,25 +68,19 @@
       "path": "../../core/functions"
     },
     {
-      "path": "../../core/protocols"
-    },
-    {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
-      "path": "../../sdk/client-services"
-    },
-    {
-      "path": "../../sdk/config"
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/lit-grid"
     },
     {
       "path": "../../ui/primitives/react-hooks"
@@ -99,16 +92,19 @@
       "path": "../../ui/react-ui-attention"
     },
     {
-      "path": "../../ui/react-ui-canvas-compute"
-    },
-    {
-      "path": "../../ui/react-ui-canvas-editor"
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-kanban"
+      "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -117,10 +113,13 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-table"
+      "path": "../../ui/react-ui-theme"
     },
     {
-      "path": "../../ui/react-ui-theme"
+      "path": "../../ui/react-ui-types"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -135,28 +134,16 @@
       "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-meeting"
-    },
-    {
       "path": "../plugin-script"
-    },
-    {
-      "path": "../plugin-sheet"
-    },
-    {
-      "path": "../plugin-sketch"
     },
     {
       "path": "../plugin-space"
     },
     {
-      "path": "../plugin-status-bar"
+      "path": "../plugin-stack"
     },
     {
-      "path": "../plugin-table"
-    },
-    {
-      "path": "../plugin-theme"
+      "path": "../plugin-thread"
     }
   ]
 }

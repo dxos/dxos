@@ -15,11 +15,18 @@ export class SuggestionWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    return Domino.of('button')
-      .data('density', 'fine')
-      .classNames('dx-button animate-[fadeIn_0.5s] gap-2')
-      .child(Domino.of<any>('dx-icon').attr('icon', 'ph--lightning--regular'), Domino.of('span').text(this.text))
-      .build();
+    return (
+      Domino.of('button')
+        .data('density', 'fine')
+        // NOTW: Scroll container must have `size-container`.
+        .classNames('dx-button max-is-[100cqi] mbs-2 mbe-2 gap-2')
+        .child(
+          //
+          Domino.of<any>('dx-icon').attr('icon', 'ph--lightning--regular'),
+          Domino.of('span').classNames('truncate').text(this.text),
+        )
+        .build()
+    );
   }
 
   override eq(other: WidgetType): boolean {

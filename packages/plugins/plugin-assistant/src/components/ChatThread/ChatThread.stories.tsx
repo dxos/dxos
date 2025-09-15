@@ -18,18 +18,22 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { defaultTx } from '@dxos/react-ui-theme';
+import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { ColumnContainer, render, withLayout } from '@dxos/storybook-utils';
+import { render, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
 import { renderObjectLink } from './ChatMessage';
-import { ChatThread, type ChatThreadProps } from './ChatThread';
+import { ChatThread, type ChatThreadProps, useMarkdownText } from './ChatThread';
 
 faker.seed(1);
 
-const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: number }) => {
+type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+
+type StoryProps = ChatThreadProps & { generator?: MessageGenerator[]; delay?: number; debug?: boolean };
+
+const DefaultStory = ({ generator = [], delay = 0, debug = false, ...props }: StoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<DataType.Message>(queueDxn);
@@ -40,22 +44,33 @@ const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: num
 
     void Effect.runPromise(
       Effect.gen(function* () {
-        for (const step of MESSAGES) {
+        for (const step of generator) {
           yield* step;
-          yield* Effect.sleep(delay);
+          if (delay) {
+            yield* Effect.sleep(delay);
+          }
         }
 
         return queue;
       }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
     );
-  }, [space, queue]);
+  }, [space, queue, generator]);
+
+  const raw = useMarkdownText(queue?.objects ?? []);
 
   if (!space) {
     return null;
   }
 
   return (
-    <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+    <div className={mx('grid divide-x divide-separator bs-full is-full', debug && 'grid-cols-2')}>
+      <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+      {debug && (
+        <div className='p-2 overflow-y-auto'>
+          <pre className='text-xs text-subdued'>{raw}</pre>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -67,7 +82,7 @@ const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): Da
   });
 };
 
-const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService>[] = [
+const MESSAGES: MessageGenerator[] = [
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
@@ -88,12 +103,39 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
       queue.append([
         createMessage('assistant', [
           {
-            _tag: 'suggestion',
-            text: 'Search...',
+            _tag: 'text',
+            text: [
+              '## Markdown',
+              'Here is a [link](https://dxos.org)',
+              'And some **bold** text.',
+              // TODO(burdon): Markdown formatting requires a blank line at the end.
+              '',
+            ].join('\n'),
+          },
+          {
+            _tag: 'text',
+            disposition: 'cot',
+            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+              .join('\n'),
+          },
+        ]),
+      ]),
+    );
+  }),
+
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: 'A suggestion:',
           },
           {
             _tag: 'suggestion',
-            text: faker.lorem.paragraphs(1),
+            text: faker.lorem.paragraph(),
           },
         ]),
         createMessage('assistant', [
@@ -123,8 +165,9 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
           // Inline tag.
           {
             _tag: 'text',
-            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
-          } satisfies ContentBlock.Text,
+            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph(), '\n'].join(' '),
+          },
+
           // Inline cards.
           ...[obj2, obj3, obj4].map(
             (obj) =>
@@ -144,10 +187,6 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
       queue.append([
         createMessage('assistant', [
           {
-            _tag: 'text',
-            text: faker.lorem.paragraphs(1),
-          },
-          {
             _tag: 'toolkit',
           },
         ]),
@@ -160,13 +199,6 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
-          {
-            _tag: 'text',
-            disposition: 'cot',
-            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-              .join('\n'),
-          },
           {
             _tag: 'toolCall',
             toolCallId: '1234',
@@ -210,7 +242,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
           {
             _tag: 'text',
             text: Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
-              .map(() => faker.lorem.paragraphs())
+              .map(() => faker.lorem.paragraph())
               .join('\n\n'),
           },
         ]),
@@ -225,7 +257,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
         createMessage('assistant', [
           {
             _tag: 'text',
-            text: faker.lorem.paragraphs(2),
+            text: faker.lorem.paragraph(),
           },
         ]),
       ]),
@@ -236,7 +268,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
 const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
-  render: render(StoryContainer),
+  render: render(DefaultStory),
   decorators: [
     withPluginManager({
       plugins: [
@@ -253,8 +285,9 @@ const meta = {
       ],
     }),
     withLayout({
-      Container: ColumnContainer,
-      classNames: 'is-[40rem]',
+      fullscreen: true,
+      // Container: ColumnContainer,
+      // classNames: 'is-[40rem]',
     }),
   ],
   parameters: {
@@ -266,18 +299,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-
-export const Delayed: Story = {
+export const Default: Story = {
   args: {
-    delay: 2_000,
+    // TODO(burdon): React component breaks markdown formatting.
+    generator: MESSAGES,
+    debug: true,
+    characterDelay: 0,
+    fadeIn: false,
   },
 };
 
-export const Sanity = () => {
-  return (
-    <div className='grid grow place-items-center'>
-      <div className='p-8 border border-separator rounded'>DXOS</div>
-    </div>
-  );
+export const Delayed: Story = {
+  args: {
+    generator: MESSAGES,
+    delay: 2_000,
+  },
 };

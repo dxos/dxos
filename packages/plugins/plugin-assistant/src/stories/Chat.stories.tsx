@@ -146,6 +146,7 @@ const DefaultStory = ({
                 j += 1;
                 return item;
               })}
+
               {renderSurfaces &&
                 objects.map((object, index) => {
                   const k = index + j;

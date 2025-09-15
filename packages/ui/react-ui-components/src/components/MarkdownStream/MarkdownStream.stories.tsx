@@ -17,8 +17,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { type XmlComponentRegistry } from '../../../dist/types/src';
-
+import { type XmlComponentRegistry } from './extensions';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
 import doc from './testing/doc.md?raw';
@@ -47,7 +46,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
   const [streaming, setStreaming] = useState(false);
 
   useEffect(() => {
-    if (!streaming || !controller) {
+    if (!controller || !streaming) {
       return;
     }
 
@@ -58,7 +57,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
           break;
         }
 
-        controller.append(chunk);
+        await controller.append(chunk);
       }
 
       setStreaming(false);
@@ -71,11 +70,11 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleReset = useCallback(() => {
     setStreaming(false);
-    controller?.update('');
+    void controller?.update('');
   }, [controller]);
 
   const handleAppend = useCallback(() => {
-    controller?.append(
+    void controller?.append(
       [faker.lorem.paragraph(), `<suggestion>${faker.lorem.word()}</suggestion>`, faker.lorem.paragraph(), ''].join(
         '\n\n',
       ),

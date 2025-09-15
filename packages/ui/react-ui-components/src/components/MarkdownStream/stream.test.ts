@@ -5,9 +5,52 @@
 import { describe, it } from '@effect/vitest';
 import { Effect, Queue, Stream, TestClock, TestContext } from 'effect';
 
-import { createStreamer } from './stream';
+import { createStreamer, tokenizeWithFragments, tokenizeWithTags } from './stream';
 
 describe('stream', () => {
+  it.effect('tokenize tags', ({ expect }) =>
+    Effect.gen(function* () {
+      {
+        expect(tokenizeWithTags('A\n<test />\nB')).toEqual(['A', '\n', '<test />', '\n', 'B']);
+        expect(tokenizeWithTags('A\n<test>hello</test>\nB')).toEqual([
+          'A',
+          '\n',
+          '<test>',
+          'h',
+          'e',
+          'l',
+          'l',
+          'o',
+          '</test>',
+          '\n',
+          'B',
+        ]);
+      }
+    }),
+  );
+
+  it.effect('tokenize fragments', ({ expect }) =>
+    Effect.gen(function* () {
+      {
+        expect(tokenizeWithFragments('A\n<toolkit />\nB')).toEqual(['A', '\n', '<toolkit />', '\n', 'B']);
+        expect(tokenizeWithFragments('A\n<suggestion>Test</suggestion>\nB')).toEqual([
+          'A',
+          '\n',
+          '<suggestion>Test</suggestion>',
+          '\n',
+          'B',
+        ]);
+        expect(tokenizeWithFragments('A\n<select><option /><option>Test</option></select>\nB')).toEqual([
+          'A',
+          '\n',
+          '<select><option /><option>Test</option></select>',
+          '\n',
+          'B',
+        ]);
+      }
+    }),
+  );
+
   it.effect('stream char-by-char', ({ expect }) =>
     Effect.gen(function* () {
       const text = 'Hello World!';

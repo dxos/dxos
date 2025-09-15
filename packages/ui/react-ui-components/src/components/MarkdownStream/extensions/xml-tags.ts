@@ -65,7 +65,7 @@ function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): De
       switch (node.type.name) {
         case 'Element': {
           try {
-            // TODO(burdon): Check tag is closed before creating widget.
+            // Check tag is closed before creating widget.
             const props = nodeToJson(state, node.node);
             if (options.registry && props?.tag) {
               const { block, factory, Component } = options.registry[props.tag] ?? {};
@@ -74,6 +74,7 @@ function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): De
                 : Component
                   ? new ReactWidget(Component, { ...props })
                   : undefined;
+
               if (widget) {
                 decorations.push(Decoration.replace({ widget, block }).range(node.node.from, node.node.to));
               }

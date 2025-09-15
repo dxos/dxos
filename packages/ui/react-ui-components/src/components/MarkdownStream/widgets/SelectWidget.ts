@@ -20,10 +20,10 @@ export class SelectWidget extends WidgetType {
   override toDOM(): HTMLElement {
     return Domino.of('div')
       .attr('role', 'group')
-      .classNames('flex flex-wrap gap-1')
+      .classNames('flex flex-wrap mbs-2 mbe-2 gap-1')
       .child(
         ...this.options.map((option) =>
-          Domino.of('button').classNames('dx-button').data('density', 'fine').text(option),
+          Domino.of('button').classNames('dx-button max-is-[100cqi]').data('density', 'fine').text(option),
         ),
       )
       .build();
