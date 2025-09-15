@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type FileHandle } from 'node:fs/promises';
+import { check, lock } from 'proper-lockfile';
 
 import { invariant } from '@dxos/invariant';
-import { LockFile } from '@dxos/lock-file';
 import { log, logInfo } from '@dxos/log';
 
 import { type ResourceLock, type ResourceLockOptions } from './resource-lock';
@@ -15,7 +14,7 @@ export class Lock implements ResourceLock {
   private readonly _lockPath: string;
   private readonly _onAcquire: ResourceLockOptions['onAcquire'];
   private readonly _onRelease: ResourceLockOptions['onRelease'];
-  private _fileHandle?: FileHandle;
+  private _release?: () => Promise<void>;
 
   constructor({ lockKey: lockPath, onAcquire, onRelease }: ResourceLockOptions) {
     this._lockPath = lockPath;
@@ -30,8 +29,7 @@ export class Lock implements ResourceLock {
 
   async acquire(): Promise<void> {
     log('acquiring lock...');
-    this._fileHandle = await LockFile.acquire(this._lockPath);
-
+    this._release = await lock(this._lockPath);
     await this._onAcquire?.();
 
     log('acquired lock');
@@ -39,9 +37,9 @@ export class Lock implements ResourceLock {
 
   async release(): Promise<void> {
     await this._onRelease?.();
-    invariant(this._fileHandle, 'Lock is not acquired');
-    await LockFile.release(this._fileHandle);
+    invariant(this._release, 'Lock is not acquired');
+    await this._release();
   }
 }
 
-export const isLocked = (lockPath: string) => LockFile.isLocked(lockPath);
+export const isLocked = (lockPath: string) => check(lockPath);

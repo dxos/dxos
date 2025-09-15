@@ -184,7 +184,6 @@
       "core-js",
       "edgedriver",
       "esbuild",
-      "fs-ext",
       "fsctl",
       "geckodriver",
       "hnswlib-node",

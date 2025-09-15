@@ -38,9 +38,6 @@
       "path": "../../common/kv-store"
     },
     {
-      "path": "../../common/lock-file"
-    },
-    {
       "path": "../../common/log"
     },
     {

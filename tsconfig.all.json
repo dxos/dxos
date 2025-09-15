@@ -70,9 +70,6 @@
       "path": "packages/common/local-storage/tsconfig.json"
     },
     {
-      "path": "packages/common/lock-file/tsconfig.json"
-    },
-    {
       "path": "packages/common/log/tsconfig.json"
     },
     {

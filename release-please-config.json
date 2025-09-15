@@ -135,11 +135,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/lock-file/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/log/package.json",
           "jsonpath": "$.version"
         },

@@ -1700,22 +1700,6 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0
 
-  packages/common/lock-file:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../async
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-      fs-ext:
-        specifier: 2.0.0
-        version: 2.0.0
-    devDependencies:
-      '@types/fs-ext':
-        specifier: 2.0.0
-        version: 2.0.0
-
   packages/common/log:
     dependencies:
       '@dxos/node-std':
@@ -11210,9 +11194,6 @@ importers:
       '@dxos/kv-store':
         specifier: workspace:*
         version: link:../../common/kv-store
-      '@dxos/lock-file':
-        specifier: workspace:*
-        version: link:../../common/lock-file
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11264,6 +11245,9 @@ importers:
       platform:
         specifier: ^1.3.6
         version: 1.3.6
+      proper-lockfile:
+        specifier: ^4.1.2
+        version: 4.1.2
     devDependencies:
       '@dxos/signal':
         specifier: workspace:*
@@ -11274,6 +11258,9 @@ importers:
       '@types/platform':
         specifier: ^1.3.4
         version: 1.3.5
+      '@types/proper-lockfile':
+        specifier: ^4.1.4
+        version: 4.1.4
       '@types/readable-stream':
         specifier: ^2.3.9
         version: 2.3.14
@@ -22028,9 +22015,6 @@ packages:
   '@types/fontkit@2.0.8':
     resolution: {integrity: sha512-wN+8bYxIpJf+5oZdrdtaX04qUuWHcKxcDEgRS9Qm9ZClSHjzEn13SxUC+5eRM+4yXIeTYk8mTzLAWGF64847ew==}
 
-  '@types/fs-ext@2.0.0':
-    resolution: {integrity: sha512-v+rZ57B796XFBS4gbkYnmsmGdh8zDdcyFFtA+GqNdeD75MlS97m+hknE/JixwlxbpvPwUqoYraf3ePC6r+ByXw==}
-
   '@types/fs-extra@9.0.13':
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
 
@@ -22261,6 +22245,9 @@ packages:
 
   '@types/prop-types@15.7.5':
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
+
+  '@types/proper-lockfile@4.1.4':
+    resolution: {integrity: sha512-uo2ABllncSqg9F1D4nugVl9v93RmjxF6LJzQLMLDdPaXCUIDPeOJ21Gbqi43xNKzBi/WQ0Q0dICqufzQbMjipQ==}
 
   '@types/qs@6.9.7':
     resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
@@ -26097,10 +26084,6 @@ packages:
   fs-exists-sync@0.1.0:
     resolution: {integrity: sha512-cR/vflFyPZtrN6b38ZyWxpWdhlXrzZEBawlpBQMq7033xVY7/kg0GDMBK5jg8lDYQckdJ5x/YC88lM3C7VMsLg==}
     engines: {node: '>=0.10.0'}
-
-  fs-ext@2.0.0:
-    resolution: {integrity: sha512-aK8NlpSO5LUdSoWeshpnkgtptbua1rGo58Wc+mHQ2+JnoBlubMTsnV56Swl4bA0msrgAhG8TDu1aGS8deJwzBQ==}
-    engines: {node: '>= 8.0.0'}
 
   fs-extra@10.1.0:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
@@ -29952,6 +29935,9 @@ packages:
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
+  proper-lockfile@4.1.2:
+    resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
+
   property-information@3.2.0:
     resolution: {integrity: sha512-BKU45RMZAA+3npkQ/VxEH7EeZImQcfV6rfKH0O4HkkDz3uqqz+689dbkjiWia00vK390MY6EARPS6TzNS4tXPg==}
 
@@ -30776,6 +30762,10 @@ packages:
 
   retext@9.0.0:
     resolution: {integrity: sha512-sbMDcpHCNjvlheSgMfEcVrZko3cDzdbe1x/e7G66dFp0Ff7Mldvi2uv6JkJQzdRcvLYE8CA8Oe8siQx8ZOgTcA==}
+
+  retry@0.12.0:
+    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
+    engines: {node: '>= 4'}
 
   retry@0.13.1:
     resolution: {integrity: sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==}
@@ -41756,10 +41746,6 @@ snapshots:
     dependencies:
       '@types/node': 22.10.2
 
-  '@types/fs-ext@2.0.0':
-    dependencies:
-      '@types/node': 22.10.2
-
   '@types/fs-extra@9.0.13':
     dependencies:
       '@types/node': 22.10.2
@@ -42018,6 +42004,10 @@ snapshots:
       postcss: 8.5.3
 
   '@types/prop-types@15.7.5': {}
+
+  '@types/proper-lockfile@4.1.4':
+    dependencies:
+      '@types/retry': 0.12.2
 
   '@types/qs@6.9.7': {}
 
@@ -46626,10 +46616,6 @@ snapshots:
   fs-constants@1.0.0: {}
 
   fs-exists-sync@0.1.0: {}
-
-  fs-ext@2.0.0:
-    dependencies:
-      nan: 2.19.0
 
   fs-extra@10.1.0:
     dependencies:
@@ -51426,6 +51412,12 @@ snapshots:
       object-assign: 4.1.1
       react-is: 16.13.1
 
+  proper-lockfile@4.1.2:
+    dependencies:
+      graceful-fs: 4.2.10
+      retry: 0.12.0
+      signal-exit: 3.0.7
+
   property-information@3.2.0: {}
 
   property-information@5.6.0:
@@ -52608,6 +52600,8 @@ snapshots:
       retext-latin: 4.0.0
       retext-stringify: 4.0.0
       unified: 11.0.5
+
+  retry@0.12.0: {}
 
   retry@0.13.1: {}
 
