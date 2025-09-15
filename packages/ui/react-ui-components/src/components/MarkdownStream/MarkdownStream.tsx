@@ -8,6 +8,7 @@ import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
+  EditorView,
   autoScroll,
   createBasicExtensions,
   createThemeExtensions,
@@ -21,6 +22,7 @@ import { type StreamerOptions, type XmlTagOptions, extendedMarkdown, streamer, x
 import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
+  scrollToBottom: () => void;
   update: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 };
@@ -91,15 +93,21 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       }
 
       return {
-        // Update document.
+        // Immediately scroll to bottom (and pin).
+        scrollToBottom: () => {
+          view.dispatch({
+            effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
+          });
+        },
+        // Update entire document.
         update: async (text: string) => {
           const queue = Effect.runSync(Queue.unbounded<string>());
           setQueue(queue);
-          view!.dispatch({
-            changes: [{ from: 0, to: view!.state.doc.length, insert: text }],
+          view.dispatch({
+            changes: [{ from: 0, to: view.state.doc.length, insert: text }],
           });
         },
-        // Append to queue.
+        // Append to queue (and stream).
         append: async (text: string) => {
           await Effect.runPromise(Queue.offer(queueRef.current, text));
         },

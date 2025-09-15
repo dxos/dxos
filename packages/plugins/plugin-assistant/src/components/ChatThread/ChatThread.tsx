@@ -2,17 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type CSSProperties,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import {
-  MarkdownStream,
-  type MarkdownStreamController,
-  type MarkdownStreamProps,
-  type ScrollController,
-} from '@dxos/react-ui-components';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
@@ -20,6 +23,8 @@ import { keyToFallback } from '@dxos/util';
 import { type ChatMessageProps } from './ChatMessage';
 import { reduceMessages } from './reducers';
 import { blockToMarkdown, componentRegistry } from './registry';
+
+export type ChatThreadController = Pick<MarkdownStreamController, 'scrollToBottom'>;
 
 export type ChatThreadProps = ThemedClassName<
   {
@@ -30,8 +35,7 @@ export type ChatThreadProps = ThemedClassName<
     Pick<MarkdownStreamProps, 'characterDelay' | 'cursor' | 'fadeIn'>
 >;
 
-// TOOD(burdon): Export scroll controller.
-export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
+export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
   (
     { classNames, identity, messages = [], error, debug, onEvent, characterDelay = 5, cursor = true, fadeIn = true },
     forwardedRef,
@@ -47,6 +51,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
 
     // Reduce messages to collapse related blocks.
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
+    useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
 
     // Update content.
     const lastRef = useRef<string | null>(null); // TODO(burdon): Remove.
@@ -84,6 +89,7 @@ export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
   },
 );
 
+// TOOD(burdon): Don't regenerate on each update; just append last block.
 export const useMarkdownText = (messages: DataType.Message[], debug = false) => {
   const reducedMessages = useMemo(() => {
     if (debug) {

@@ -16,7 +16,6 @@ import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
-import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
@@ -33,7 +32,11 @@ import {
   ChatReferences,
   ChatStatusIndicator,
 } from '../ChatPrompt';
-import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import {
+  type ChatThreadController,
+  ChatThread as NaturalChatThread,
+  type ChatThreadProps as NaturalChatThreadProps,
+} from '../ChatThread';
 
 import { type ChatEvent } from './events';
 
@@ -329,12 +332,11 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Thread
 //
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools' | 'onEvent'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
+  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
-
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
   const toolProvider = useCallback<NonNullable<ChatThreadProps['toolProvider']>>(
@@ -342,14 +344,13 @@ const ChatThread = (props: ChatThreadProps) => {
     [processor],
   );
 
-  // TOOD(burdon): Controller.
-  const scrollerRef = useRef<ScrollController>(null);
+  const scrollerRef = useRef<ChatThreadController | null>(null);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
         case 'submit':
         case 'scroll-to-bottom':
-          scrollerRef.current?.scrollToBottom('smooth');
+          scrollerRef.current?.scrollToBottom();
           break;
       }
     });
@@ -365,7 +366,6 @@ const ChatThread = (props: ChatThreadProps) => {
       ref={scrollerRef}
       debug={debug}
       identity={identity}
-      space={space}
       messages={messages}
       error={error}
       toolProvider={toolProvider}

@@ -37,9 +37,8 @@ export const tokenizeWithFragments = (text: string): string[] => {
 
         // Collect tokens until we find the closing tag.
         let fragment = token;
-        let j = i + 1;
         let foundClosing = false;
-
+        let j = i + 1;
         while (j < initialTokens.length) {
           fragment += initialTokens[j];
           if (initialTokens[j] === closingTag) {
@@ -73,11 +72,7 @@ export const tokenizeWithFragments = (text: string): string[] => {
   return tokens;
 };
 
-/**
- * Tokenizes a string into characters and complete XML/HTML tags.
- * For example: "hello <b>world</b>!" becomes ["h", "e", "l", "l", "o", " ", "<b>", "w", "o", "r", "l", "d", "</b>", "!"]
- * If a tag fragment is encountered (no closing '>'), the entire fragment is returned as one token.
- */
+// TODO(burdon): Split into paragraphs and tags.
 export const tokenizeWithTags = (text: string): string[] => {
   const tokens: string[] = [];
 

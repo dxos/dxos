@@ -58,13 +58,9 @@ const DefaultStory = ({ generator = [], delay = 0, debug = false, ...props }: St
 
   const raw = useMarkdownText(queue?.objects ?? []);
 
-  if (!space) {
-    return null;
-  }
-
   return (
     <div className={mx('grid divide-x divide-separator bs-full is-full', debug && 'grid-cols-2')}>
-      <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+      <ChatThread {...props} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
       {debug && (
         <div className='p-2 overflow-y-auto'>
           <pre className='text-xs text-subdued'>{raw}</pre>
