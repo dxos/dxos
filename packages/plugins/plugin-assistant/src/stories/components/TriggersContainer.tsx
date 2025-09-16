@@ -6,6 +6,7 @@ import { useQuery, Space } from '@dxos/react-client/echo';
 import { useComputeRuntimeCallback } from '../../hooks';
 import { Effect } from 'effect';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation, useAsyncState } from '@dxos/react-ui';
+import { AutomationPanel } from '@dxos/plugin-automation';
 
 export const TriggersContainer = ({ space }: ComponentProps) => {
   const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(space);
@@ -19,13 +20,7 @@ export const TriggersContainer = ({ space }: ComponentProps) => {
       </div>
 
       {/* TODO(dmaretskyi): Use existing trigger list component from composer. */}
-      <ul>
-        {triggers.map((trigger) => (
-          <li key={trigger.id}>
-            {trigger.id}, {JSON.stringify(trigger.spec)}
-          </li>
-        ))}
-      </ul>
+      <AutomationPanel space={space} />
     </div>
   );
 };

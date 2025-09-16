@@ -107,7 +107,7 @@ export const defineFunction = <T, O>({
   inputSchema,
   outputSchema = Schema.Any,
   handler,
-}: Omit<FunctionDefinition<T, O>, 'key'> & { key?: string }): FunctionDefinition<T, O> => {
+}: Omit<FunctionDefinition<T, O>, 'key' | typeof typeId> & { key?: string }): FunctionDefinition<T, O> => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }
