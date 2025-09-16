@@ -3,10 +3,10 @@
 //
 
 import { type AiTool, AiToolkit } from '@effect/ai';
-import { Layer } from 'effect';
+import { Layer, Runtime, Effect } from 'effect';
 import { useMemo } from 'react';
 
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { type Space } from '@dxos/client/echo';
 import {
@@ -22,6 +22,7 @@ import {
 import { AssistantCapabilities } from '../capabilities';
 import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
+import { useClient } from '@dxos/react-client';
 
 export type UseChatServicesProps = {
   space?: Space;
@@ -31,34 +32,27 @@ export type UseChatServicesProps = {
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space, chat }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
-  const serviceLayer = useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
-  const functions = useCapabilities(Capabilities.Functions);
-  const toolkits = useCapabilities(Capabilities.Toolkit);
-  const handlers = useCapabilities(Capabilities.ToolkitHandler);
+// TODO(dmaretskyi): Better return type.
+export const useChatServices = ({
+  space,
+  chat,
+}: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
+  const client = useClient();
+  space ??= client.spaces.default;
+
+  const computeRuntimeResolver = useCapability(AssistantCapabilities.ComputeRuntime);
 
   return useMemo(() => {
-    const allFunctions = functions.flat();
-    // TODO(wittjosiah): Don't cast.
-    const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
-    const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
-
-    return Layer.mergeAll(
-      serviceLayer,
-      makeToolResolverFromFunctions(allFunctions, toolkit),
-      makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
-      CredentialsService.layerFromDatabase(),
-      ComputeEventLogger.layerFromTracing,
-    ).pipe(
-      Layer.provideMerge(
-        Layer.mergeAll(
-          space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
-          space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-          chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
-          LocalFunctionExecutionService.layer,
-          RemoteFunctionExecutionService.mockLayer,
-        ),
-      ),
-    );
-  }, [space, functions, toolkits, handlers, chat?.traceQueue?.target]);
+    const runtime = computeRuntimeResolver.getRuntime(space.id);
+    return () =>
+      runtime.runPromise(
+        Effect.gen(function* () {
+          return yield* Effect.runtime<AiChatServices>().pipe(
+            Effect.provide(
+              chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
+            ),
+          );
+        }),
+      );
+  }, [space, chat?.traceQueue?.target]);
 };

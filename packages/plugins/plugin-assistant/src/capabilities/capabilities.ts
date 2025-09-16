@@ -4,7 +4,7 @@
 
 import { type Layer, ManagedRuntime } from 'effect';
 
-import { type AiService, type AiServiceRouter } from '@dxos/ai';
+import { type AiService, type AiServiceRouter, ToolResolverService, ToolExecutionService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';
 
@@ -46,15 +46,19 @@ export namespace AssistantCapabilities {
    */
   export type ComputeServices =
     | TriggerDispatcher
-    | ComputeEventLogger
-    | TracingService
     | AiService.AiService
     | DatabaseService
     | QueueService
     | CredentialsService
     | LocalFunctionExecutionService
     | RemoteFunctionExecutionService
-    | FunctionImplementationResolver;
+    // TODO(dmaretskyi): This service is private and shouldn't be exposed as a part of public API.
+    | FunctionImplementationResolver
+    // TODO(dmaretskyi): Those should be provided at AI-chat call site.
+    | ToolResolverService
+    | ToolExecutionService
+    | ComputeEventLogger
+    | TracingService;
 
   export interface ComputeRuntimeProvider {
     getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
