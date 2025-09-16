@@ -8,6 +8,7 @@ import React, {
   type CSSProperties,
   Children,
   type ComponentPropsWithRef,
+  type KeyboardEvent,
   forwardRef,
   useCallback,
   useEffect,
@@ -15,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { ListItem, type ThemedClassName } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
@@ -67,6 +68,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     },
     forwardedRef,
   ) => {
+    const stackId = useId('stack', props.id);
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation });
@@ -104,6 +106,51 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       }
     }, [stackElement, separatorOnScroll, orientation]);
 
+    /**
+     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack; if the arrow key matches the
+     * orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item; or, if there is no
+     * such stack item, focus is passed to the adjacent empty stack if one can be found.
+     */
+    const handleKeydown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        if (event.key.startsWith('Arrow') && !target.closest('input, textarea')) {
+          const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);
+          const closestStack = target.closest('[data-dx-stack]');
+          if (closestOwnedItem && closestStack) {
+            const orientation = closestStack.getAttribute('aria-orientation');
+            const parallelDelta = (orientation === 'vertical' ? event.key === 'ArrowUp' : event.key === 'ArrowLeft')
+              ? -1
+              : (orientation === 'vertical' ? event.key === 'ArrowDown' : event.key === 'ArrowRight')
+                ? 1
+                : 0;
+            const perpendicularDelta = (
+              orientation === 'vertical' ? event.key === 'ArrowLeft' : event.key === 'ArrowUp'
+            )
+              ? -1
+              : (orientation === 'vertical' ? event.key === 'ArrowRight' : event.key === 'ArrowDown')
+                ? 1
+                : 0;
+            if (parallelDelta !== 0) {
+              const items = Array.from(
+                target.closest('[data-dx-stack]')?.querySelectorAll(`[data-dx-stack-item="${stackId}"]`) ?? [],
+              );
+              const currentIndex = items.indexOf(closestOwnedItem);
+              const nextIndex = (currentIndex + parallelDelta + items.length) % items.length;
+              event.preventDefault();
+              (items[nextIndex] as HTMLElement)?.focus();
+              (items[nextIndex] as HTMLElement)?.scrollIntoView({ behavior: 'instant' });
+            }
+            if (perpendicularDelta !== 0) {
+              // TODO
+            }
+          }
+        }
+        props.onKeyDown?.(event);
+      },
+      [props.onKeyDown, stackId],
+    );
+
     const gridClasses = useMemo(() => {
       if (!rail) {
         return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
@@ -132,10 +179,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     }, [stackElement, handleScroll]);
 
     return (
-      <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
+      <StackContext.Provider value={{ orientation, rail, size, onRearrange, stackId }}>
         <div
           {...props}
-          {...arrowNavigationAttrs}
           className={mx(
             'grid relative [--stack-gap:var(--dx-trimXs)]',
             gridClasses,
@@ -145,6 +191,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}
+          onKeyDown={handleKeydown}
+          data-dx-stack={stackId}
           data-rail={rail}
           aria-orientation={orientation}
           style={styles}
