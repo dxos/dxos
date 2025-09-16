@@ -74,6 +74,7 @@ export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
       onToggle={handleToggle}
       title={t('meeting status title')}
       maxHeight={false}
+      info={<div className='flex items-center gap-2'> {state?.call.joined ? 'Active' : 'Inactive'}</div>}
     >
       <div className='flex flex-col w-full gap-2 text-xs'>
         <div className='flex items-center gap-2'>
