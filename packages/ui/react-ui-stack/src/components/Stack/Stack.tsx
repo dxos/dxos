@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type CSSProperties,
@@ -71,7 +70,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     const stackId = useId('stack', props.id);
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
