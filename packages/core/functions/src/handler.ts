@@ -8,10 +8,11 @@ import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import { type QueryResult } from '@dxos/protocols';
+import { type QueryResult, assertParameter } from '@dxos/protocols';
 
 import { FunctionType } from './schema';
 import { type Services } from './services';
+import { assertArgument } from '@dxos/invariant';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -85,7 +86,10 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
   // const _: SpaceAPI = {} as Space;
 };
 
+const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
+
 export type FunctionDefinition<T = any, O = any> = {
+  [typeId]: true;
   // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
   key: string;
   name: string;
@@ -112,6 +116,7 @@ export const defineFunction = <T, O>({
   }
 
   return {
+    [typeId]: true,
     key: key ?? name,
     name,
     description,
@@ -121,7 +126,21 @@ export const defineFunction = <T, O>({
   };
 };
 
-export namespace FunctionDefinition {
+export const FunctionDefinition = {
+  make: defineFunction,
+  isFunction: (value: unknown): value is FunctionDefinition.Any => {
+    return typeof value === 'object' && value !== null && Symbol.for('@dxos/functions/FunctionDefinition') in value;
+  },
+  serialize: (functionDef: FunctionDefinition.Any): FunctionType => {
+    assertArgument(FunctionDefinition.isFunction(functionDef), 'functionDef');
+    return serializeFunction(functionDef);
+  },
+  deserialize: (functionObj: FunctionType): FunctionDefinition.Any => {
+    assertArgument(Obj.instanceOf(FunctionType, functionObj), 'functionObj');
+    return deserializeFunction(functionObj);
+  },
+};
+export declare namespace FunctionDefinition {
   export type Any = FunctionDefinition<any, any>;
   export type Input<T extends FunctionDefinition> = T extends FunctionDefinition<infer I, any> ? I : never;
   export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
@@ -139,6 +158,7 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
 
 export const deserializeFunction = (functionObj: FunctionType): FunctionDefinition<unknown, unknown> => {
   return {
+    [typeId]: true,
     // TODO(dmaretskyi): Fix key.
     key: functionObj.key ?? functionObj.name,
     name: functionObj.name,

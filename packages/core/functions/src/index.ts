@@ -13,3 +13,4 @@ export * from './url';
 export * from './triggers/trigger-dispatcher';
 export * from './services';
 export * from './executor';
+export * as exampleFunctions from './examples';
