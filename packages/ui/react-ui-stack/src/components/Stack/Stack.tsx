@@ -114,9 +114,11 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         const target = event.target as HTMLElement;
         if (event.key.startsWith('Arrow') && !target.closest('input, textarea')) {
           const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);
-          const closestStack = target.closest('[data-dx-stack]');
+          const closestStack = target.closest('[data-dx-stack]') as HTMLElement | null;
+          const ancestorStack = closestStack?.closest('[data-dx-stack]') as HTMLElement | null;
           if (closestOwnedItem && closestStack) {
             const orientation = closestStack.getAttribute('aria-orientation');
+            const ancestorOrientation = ancestorStack?.getAttribute('aria-orientation');
             const parallelDelta = (orientation === 'vertical' ? event.key === 'ArrowUp' : event.key === 'ArrowLeft')
               ? -1
               : (orientation === 'vertical' ? event.key === 'ArrowDown' : event.key === 'ArrowRight')
@@ -133,14 +135,53 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               const items = Array.from(
                 target.closest('[data-dx-stack]')?.querySelectorAll(`[data-dx-stack-item="${stackId}"]`) ?? [],
               );
-              const currentIndex = items.indexOf(closestOwnedItem);
-              const nextIndex = (currentIndex + parallelDelta + items.length) % items.length;
-              event.preventDefault();
-              (items[nextIndex] as HTMLElement)?.focus();
-              (items[nextIndex] as HTMLElement)?.scrollIntoView({ behavior: 'instant' });
+              const nextItem = items[
+                (items.indexOf(closestOwnedItem) + parallelDelta + items.length) % items.length
+              ] as HTMLElement | undefined;
+              if (nextItem) {
+                event.preventDefault();
+                nextItem.focus();
+                nextItem.scrollIntoView({ behavior: 'instant' });
+              }
             }
-            if (perpendicularDelta !== 0) {
-              // TODO
+            if (perpendicularDelta !== 0 && ancestorStack && ancestorOrientation !== orientation) {
+              const siblingStacks = Array.from(
+                ancestorStack.querySelectorAll(
+                  `[data-dx-stack-item="${ancestorStack.getAttribute('data-dx-stack')}"] [data-dx-stack]`,
+                ),
+              ) as HTMLElement[];
+              const nextStack = siblingStacks[
+                (siblingStacks.indexOf(closestStack) + perpendicularDelta + siblingStacks.length) % siblingStacks.length
+              ] as HTMLElement | undefined;
+              const nextStackItems = nextStack
+                ? (Array.from(
+                    nextStack.querySelectorAll(`[data-dx-stack-item="${nextStack.getAttribute('data-dx-stack')}"]`),
+                  ) as HTMLElement[])
+                : [];
+
+              if (nextStackItems.length > 0) {
+                // Find the closest item by position
+                const ownedItemRect = closestOwnedItem.getBoundingClientRect();
+                const targetPosition = orientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
+
+                let closestItem = nextStackItems[0];
+                let closestDistance = Infinity;
+
+                for (const item of nextStackItems) {
+                  const itemRect = item.getBoundingClientRect();
+                  const itemPosition = orientation === 'vertical' ? itemRect.top : itemRect.left;
+                  const distance = Math.abs(itemPosition - targetPosition);
+
+                  if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestItem = item;
+                  }
+                }
+
+                event.preventDefault();
+                closestItem.focus();
+                closestItem.scrollIntoView({ behavior: 'instant' });
+              }
             }
           }
         }
