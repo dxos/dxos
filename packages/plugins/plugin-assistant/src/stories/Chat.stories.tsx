@@ -54,6 +54,8 @@ import {
   TokenManagerContainer,
 } from './components';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
+import { exampleFunctions, FunctionTrigger, serializeFunction, FunctionType } from '@dxos/functions';
+import { TriggersContainer } from './components/TriggersContainer';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -498,5 +500,32 @@ export const WithLinearSync: Story = {
   args: {
     deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [LINEAR_BLUEPRINT.key],
+  },
+};
+
+export const WithTriggers: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [FunctionType, FunctionTrigger],
+    onInit: async ({ space, binder }) => {
+      const functionObj = serializeFunction(exampleFunctions.reply);
+      space.db.add(functionObj);
+      const object = space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'timer',
+            cron: '*/5 * * * * *', // Every 5 seconds
+          },
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], [TriggersContainer]],
+    blueprints: [],
   },
 };

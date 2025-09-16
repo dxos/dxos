@@ -57,6 +57,8 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
   {
     readonly timeControl: TimeControl;
 
+    get running(): boolean;
+
     /**
      * Start the trigger dispatcher.
      */
@@ -120,6 +122,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
   }
 
+  get running(): boolean {
+    return this._running;
+  }
+
   start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
       if (this._running) {
@@ -135,7 +141,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
       }
 
-      log('TriggerDispatcher started', { timeControl: this.timeControl });
+      log.info('TriggerDispatcher started', { timeControl: this.timeControl });
     });
 
   stop = (): Effect.Effect<void> =>
@@ -155,7 +161,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Clear scheduled triggers
       this._scheduledTriggers.clear();
 
-      log('TriggerDispatcher stopped');
+      log.info('TriggerDispatcher stopped');
     });
 
   invokeTrigger = (
@@ -214,7 +220,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      log('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
+      log.info('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
 
       // Invoke all due triggers
       return yield* Effect.all(
@@ -309,6 +315,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
+      log.info('run triggers');
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
