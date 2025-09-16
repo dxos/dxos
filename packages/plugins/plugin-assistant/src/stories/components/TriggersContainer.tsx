@@ -19,7 +19,6 @@ export const TriggersContainer = ({ space }: ComponentProps) => {
         </Input.Root>
       </div>
 
-      {/* TODO(dmaretskyi): Use existing trigger list component from composer. */}
       <AutomationPanel space={space} />
     </div>
   );
