@@ -144,6 +144,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   return (
     <TabsPrimitive.List
       {...props}
+      data-arrow-keys='handled'
       className={mx(
         'max-bs-full is-full',
         // NOTE: Padding should be common to Toolbar.

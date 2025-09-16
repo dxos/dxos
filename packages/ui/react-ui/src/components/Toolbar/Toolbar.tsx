@@ -30,6 +30,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
     return (
       <ToolbarPrimitive.Root
         {...props}
+        data-arrow-keys='handled'
         className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
         ref={forwardedRef}
       >

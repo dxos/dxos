@@ -264,6 +264,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
             hasInteractedOutsideRef.current = true;
           }
         })}
+        data-arrow-keys='handled'
         className={tx('menu.content', 'menu', { elevation }, classNames)}
         style={{
           ...props.style,

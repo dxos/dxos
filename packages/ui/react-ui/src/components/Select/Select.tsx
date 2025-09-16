@@ -59,6 +59,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
     return (
       <SelectPrimitive.Content
         {...props}
+        data-arrow-keys='handled'
         collisionPadding={safeCollisionPadding}
         className={tx('select.content', 'select__content', { elevation }, classNames)}
         position='popper'
