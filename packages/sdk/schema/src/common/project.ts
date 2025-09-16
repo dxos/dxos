@@ -16,17 +16,10 @@ import { Collection } from './collection';
  * Project schema.
  */
 export const Project = Schema.Struct({
-  id: Type.ObjectId,
   name: Schema.String.pipe(GeneratorAnnotation.set('commerce.productName'), Schema.optional),
   image: Schema.optional(Format.URL),
   description: Schema.optional(Schema.String),
-  // prettier-ignore
-  collections: Schema.Array(
-    Schema.Union(
-      Type.Ref(Collection),
-      Type.Ref(View),
-    ),
-  ).pipe(Schema.mutable),
+  collections: Schema.Union(Type.Ref(Collection), Type.Ref(View)).pipe(Schema.Array, Schema.mutable),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Project',
