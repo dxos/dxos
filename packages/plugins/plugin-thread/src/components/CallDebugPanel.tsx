@@ -117,7 +117,7 @@ const getCallStatusTable = (state?: GlobalState): TableProps['rows'] => {
           state.media.pulledVideoStreams[user.tracks?.video as EncodedTrackName]?.ctx.disposed === false,
         screenshare:
           user.tracks?.screenshare &&
-          state.media.pulledAudioTracks[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
+          state.media.pulledVideoStreams[user.tracks?.screenshare as EncodedTrackName]?.ctx.disposed === false,
       };
 
       return {
