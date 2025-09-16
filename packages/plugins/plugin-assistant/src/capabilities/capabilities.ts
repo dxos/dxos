@@ -2,26 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Layer, ManagedRuntime } from 'effect';
+import { type Layer, type ManagedRuntime } from 'effect';
 
-import { type AiService, type AiServiceRouter, ToolResolverService, ToolExecutionService } from '@dxos/ai';
+import { type AiService, type AiServiceRouter, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
+import type {
+  ComputeEventLogger,
+  CredentialsService,
+  DatabaseService,
+  FunctionImplementationResolver,
+  LocalFunctionExecutionService,
+  QueueService,
+  RemoteFunctionExecutionService,
+  TracingService,
+  TriggerDispatcher,
+} from '@dxos/functions';
+import type { SpaceId } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
 import { type Assistant } from '../types';
-import type {
-  FunctionImplementationResolver,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
-  CredentialsService,
-  QueueService,
-  DatabaseService,
-  TracingService,
-  ComputeEventLogger,
-  TriggerDispatcher,
-} from '@dxos/functions';
-import type { SpaceId } from '@dxos/keys';
 
 export namespace AssistantCapabilities {
   export type AssistantState = {

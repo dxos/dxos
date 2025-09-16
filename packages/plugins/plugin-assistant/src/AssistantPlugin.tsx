@@ -16,13 +16,13 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  ComputeRuntime,
   EdgeModelResolver,
   IntentResolver,
   LocalModelResolver,
   ReactSurface,
   Settings,
-  Toolkit, 
-ComputeRuntime,
+  Toolkit,
 } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';

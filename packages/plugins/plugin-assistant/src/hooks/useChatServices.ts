@@ -2,27 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
-import { Layer, Runtime, Effect } from 'effect';
+import { Effect, type Runtime } from 'effect';
 import { useMemo } from 'react';
 
-import { Capabilities, useCapabilities, useCapability } from '@dxos/app-framework';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  LocalFunctionExecutionService,
-  QueueService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
+import { useClient } from '@dxos/react-client';
 
 import { AssistantCapabilities } from '../capabilities';
 import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
-import { useClient } from '@dxos/react-client';
 
 export type UseChatServicesProps = {
   space?: Space;

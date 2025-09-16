@@ -3,7 +3,7 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Cause, Effect, Exit, Fiber, Layer, Option, Runtime } from 'effect';
+import { Cause, Effect, Exit, Fiber, Option, Runtime } from 'effect';
 
 import {
   AiService,

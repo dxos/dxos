@@ -1,30 +1,29 @@
-import {
-  Capabilities,
-  LayoutAction,
-  type PluginContext,
-  type PromiseIntentDispatcher,
-  contributes,
-  createIntent,
-} from '@dxos/app-framework';
-import { AssistantCapabilities } from './capabilities';
-import { AiToolkit, AiTool } from '@effect/ai';
-import { Layer, Effect, ManagedRuntime } from 'effect';
-import { makeToolResolverFromFunctions, makeToolExecutionServiceFromFunctions } from '@dxos/assistant';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type AiTool, AiToolkit } from '@effect/ai';
+import { Effect, Layer, ManagedRuntime } from 'effect';
+
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Resource } from '@dxos/context';
 import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  QueueService,
-  TracingService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
   FunctionImplementationResolver,
+  LocalFunctionExecutionService,
+  QueueService,
+  RemoteFunctionExecutionService,
+  TracingService,
   TriggerDispatcher,
 } from '@dxos/functions';
-import { SpaceId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import { invariant } from '@dxos/invariant';
-import { Resource } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
+import { ClientCapabilities } from '@dxos/plugin-client';
+
+import { AssistantCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
