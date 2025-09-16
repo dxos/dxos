@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Extension, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, WidgetType } from '@codemirror/view';
+import { type Extension, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { Domino, EditorView } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/react-ui-editor';
 import { isNotFalsy } from '@dxos/util';
+
+const BLINK_RATE = 2_000;
 
 export type StreamerOptions = {
   cursor?: boolean;
@@ -24,49 +26,87 @@ export const streamer = (options: StreamerOptions = {}): Extension => {
  * State field to manage the cursor widget decoration.
  */
 const cursor = (): Extension => {
-  return [
-    StateField.define<DecorationSet>({
-      create: () => Decoration.none,
-      update: (_decorations, tr) => {
-        // Always place cursor at the end of the document.
-        const endPos = tr.state.doc.length;
-        return Decoration.set([
-          Decoration.widget({
-            widget: new CursorWidget(),
-            side: 1, // Place after the position.
-          }).range(endPos),
-        ]);
-      },
-      provide: (f) => EditorView.decorations.from(f),
-    }),
+  const hideCursor = StateEffect.define();
 
-    EditorView.theme({
-      '@keyframes blink': {
-        '0%, 50%': {
-          opacity: '1',
-        },
-        '50%, 100%': {
-          opacity: '0',
-        },
-      },
-    }),
-  ];
+  // State field to track if cursor should be shown.
+  const showCursor = StateField.define<boolean>({
+    create: () => true,
+    update: (value, tr) => {
+      for (const effect of tr.effects) {
+        if (effect.is(hideCursor)) {
+          return false;
+        }
+      }
+      if (tr.docChanged) {
+        return true;
+      }
+      return value;
+    },
+  });
+
+  // View plugin to manage timer and dispatch effects.
+  const timerPlugin = ViewPlugin.fromClass(
+    class {
+      timer: any;
+
+      constructor(private view: EditorView) {}
+
+      update(update: ViewUpdate) {
+        if (update.docChanged) {
+          clearTimeout(this.timer);
+          this.timer = setTimeout(() => {
+            this.view.dispatch({
+              effects: hideCursor.of(null),
+            });
+          }, BLINK_RATE);
+        }
+      }
+
+      destroy() {
+        clearTimeout(this.timer);
+      }
+    },
+  );
+
+  // Decoration field that uses the showCursor state.
+  const cursorDecoration = StateField.define<DecorationSet>({
+    create: () => Decoration.none,
+    update: (_decorations, tr) => {
+      const show = tr.state.field(showCursor);
+      if (!show) {
+        return Decoration.none;
+      }
+
+      // Always place cursor at the end of the document.
+      const endPos = tr.state.doc.length;
+      return Decoration.set([
+        Decoration.widget({
+          widget: new CursorWidget(),
+          side: 1, // Place after the position.
+        }).range(endPos),
+      ]);
+    },
+    provide: (f) => EditorView.decorations.from(f),
+  });
+
+  return [showCursor, timerPlugin, cursorDecoration];
 };
 
 /**
  * Widget class for the cursor at the end of the document.
+ * Half
  */
 class CursorWidget extends WidgetType {
   toDOM() {
     return Domino.of('span')
       .style({ opacity: '0.8' })
-      .child(Domino.of('span').text('\u258D').style({ animation: 'blink 1s infinite' }))
+      .child(Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' }))
       .build();
   }
 }
 
 /**
- * State field to detect and decorate appended text.
+ * State field to detect and decorate appended text.2
  */
 const fadeIn = (): Extension => {
   return [

@@ -6,7 +6,6 @@ import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react
 
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
 import { resolveRef } from '@dxos/client';
-import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN, DXN_ECHO_REGEXP } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
@@ -347,9 +346,6 @@ const MessageItem = ({ classNames, children, user }: ThemedClassName<PropsWithCh
     </div>
   );
 };
-
-export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
-  `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
 
 // TODO(burdon): Move to parser?
 const preprocessTextContent = (content: string) =>

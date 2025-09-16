@@ -2,15 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type CSSProperties,
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type CSSProperties, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -21,8 +13,8 @@ import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatMessageProps } from './ChatMessage';
-import { reduceMessages } from './reducers';
-import { blockToMarkdown, componentRegistry } from './registry';
+import { componentRegistry } from './registry';
+import { MessageSyncer } from './sync';
 
 export type ChatThreadController = Pick<MarkdownStreamController, 'scrollToBottom'>;
 
@@ -31,44 +23,32 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     error?: Error;
-  } & Pick<ChatMessageProps, 'debug' | 'toolProvider' | 'onEvent'> &
+  } & Pick<ChatMessageProps, 'debug' | 'toolProvider'> &
     Pick<MarkdownStreamProps, 'characterDelay' | 'cursor' | 'fadeIn'>
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
   (
-    { classNames, identity, messages = [], error, debug, onEvent, characterDelay = 5, cursor = true, fadeIn = true },
+    { classNames, identity, messages = [], error, debug, characterDelay = 5, cursor = true, fadeIn = true },
     forwardedRef,
   ) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
 
-    // Show error.
-    useEffect(() => {
-      onEvent?.({ type: 'scroll-to-bottom' });
-    }, [error]);
-
-    // Reduce messages to collapse related blocks.
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
     useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
 
-    // Update content.
-    const lastRef = useRef<string | null>(null); // TODO(burdon): Remove.
-    const content = useMarkdownText(messages, debug);
+    // Show error.
     useEffect(() => {
-      if (!controller) {
-        return;
-      }
+      controller?.scrollToBottom();
+    }, [controller, error]);
 
-      const append = lastRef.current && content.startsWith(lastRef.current);
-      if (!append) {
-        void controller.update(content);
-      } else {
-        void controller.append(content.slice(lastRef.current?.length ?? 0));
-      }
-      lastRef.current = content;
-    }, [controller, content]);
+    // Update document.
+    const syncer = useMemo(() => controller && new MessageSyncer(controller), [controller]);
+    useEffect(() => {
+      syncer?.sync(messages);
+    }, [syncer, messages]);
 
     return (
       <div
@@ -78,7 +58,6 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
         <MarkdownStream
           ref={setController}
           classNames='bs-full max-is-prose overflow-hidden'
-          content={content}
           registry={componentRegistry}
           characterDelay={characterDelay}
           cursor={cursor}
@@ -88,37 +67,3 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
     );
   },
 );
-
-// TOOD(burdon): Don't regenerate on each update; just append last block.
-export const useMarkdownText = (messages: DataType.Message[], debug = false) => {
-  const reducedMessages = useMemo(() => {
-    if (debug) {
-      return messages;
-    } else {
-      return messages.reduce(reduceMessages, { messages: [] }).messages;
-    }
-  }, [messages, debug]);
-
-  return useMemo(() => {
-    return reducedMessages.reduce((acc, message) => {
-      for (const block of message.blocks) {
-        const str = blockToMarkdown(message, block);
-        if (str && str !== '\n') {
-          acc += str;
-          if (!block.pending) {
-            acc += '\n';
-          }
-        }
-      }
-
-      return acc;
-    }, '');
-  }, [reducedMessages]);
-};
-
-// const getTimeDelta = (idx: number) => {
-//   invariant(idx > 0);
-//   const prev = new Date(reducedMessages[idx - 1].created).getTime();
-//   const current = new Date(reducedMessages[idx].created).getTime();
-//   return current - prev;
-// };

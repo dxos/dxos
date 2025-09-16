@@ -109,7 +109,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         },
         // Append to queue (and stream).
         append: async (text: string) => {
-          await Effect.runPromise(Queue.offer(queueRef.current, text));
+          if (text.length) {
+            await Effect.runPromise(Queue.offer(queueRef.current, text));
+          }
         },
       };
     }, [view]);

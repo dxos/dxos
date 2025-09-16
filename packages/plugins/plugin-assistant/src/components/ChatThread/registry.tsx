@@ -117,6 +117,15 @@ const getTextChild = (children: any[]): string | null => {
  * Convert block to markdown.
  */
 export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
+  let str = _blockToMarkdown(message, block);
+  if (str && !block.pending) {
+    return (str += '\n');
+  }
+
+  return str;
+};
+
+const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -134,13 +143,13 @@ export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.A
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
 
-    case 'toolkit': {
-      return `<toolkit />`;
-    }
+    // case 'toolkit': {
+    //   return `<toolkit />`;
+    // }
 
     // TOOD(burdon): Reduce toolchain.
-    default: {
-      return `<json>\n${JSON.stringify(block)}\n</json>`;
-    }
+    // default: {
+    // return `<json>\n${JSON.stringify(block)}\n</json>`;
+    // }
   }
 };
