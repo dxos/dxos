@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Layer } from 'effect';
+import { type Layer, ManagedRuntime } from 'effect';
 
 import { type AiService, type AiServiceRouter } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
@@ -10,6 +10,18 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
 import { type Assistant } from '../types';
+import type {
+  FunctionImplementationResolver,
+  LocalFunctionExecutionService,
+  RemoteFunctionExecutionService,
+  CredentialsService,
+  QueueService,
+  DatabaseService,
+  TracingService,
+  ComputeEventLogger,
+  TriggerDispatcher,
+} from '@dxos/functions';
+import type { SpaceId } from '@dxos/keys';
 
 export namespace AssistantCapabilities {
   export type AssistantState = {
@@ -28,4 +40,28 @@ export namespace AssistantCapabilities {
   export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
     `${meta.id}/capability/ai-model-resolver`,
   );
+
+  /**
+   * Service stack for executing agents, functions, and triggers.
+   */
+  export type ComputeServices =
+    | TriggerDispatcher
+    | ComputeEventLogger
+    | TracingService
+    | AiService.AiService
+    | DatabaseService
+    | QueueService
+    | CredentialsService
+    | LocalFunctionExecutionService
+    | RemoteFunctionExecutionService
+    | FunctionImplementationResolver;
+
+  export interface ComputeRuntimeProvider {
+    getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
+  }
+
+  /**
+   * Runtime for executing agents, functions, and triggers.
+   */
+  export const ComputeRuntime = defineCapability<ComputeRuntimeProvider>(`${meta.id}/capability/compute-runtime`);
 }

@@ -21,7 +21,8 @@ import {
   LocalModelResolver,
   ReactSurface,
   Settings,
-  Toolkit,
+  Toolkit, 
+ComputeRuntime,
 } from './capabilities';
 import { AssistantEvents } from './events';
 import { meta } from './meta';
@@ -157,5 +158,11 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Use a different event.
       activatesOn: Events.Startup,
       activate: Toolkit,
+    }),
+    defineModule({
+      id: `${meta.id}/module/compute-runtime`,
+      // TODO(wittjosiah): Use a different event.
+      activatesOn: Events.Startup,
+      activate: ComputeRuntime,
     }),
   ]);
