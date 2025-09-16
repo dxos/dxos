@@ -50,6 +50,8 @@ export const railGridVerticalContainFitContent =
 
 export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
 
+const PERPENDICULAR_FOCUS_THRESHHOLD = 128;
+
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
     {
@@ -115,7 +117,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         if (event.key.startsWith('Arrow') && !target.closest('input, textarea')) {
           const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);
           const closestStack = target.closest('[data-dx-stack]') as HTMLElement | null;
-          const ancestorStack = closestStack?.closest('[data-dx-stack]') as HTMLElement | null;
+          const ancestorStack = closestStack?.parentElement?.closest('[data-dx-stack]') as HTMLElement | null;
           if (closestOwnedItem && closestStack) {
             const orientation = closestStack.getAttribute('aria-orientation');
             const ancestorOrientation = ancestorStack?.getAttribute('aria-orientation');
@@ -140,8 +142,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               ] as HTMLElement | undefined;
               if (nextItem) {
                 event.preventDefault();
-                nextItem.focus();
                 nextItem.scrollIntoView({ behavior: 'instant' });
+                nextItem.focus();
               }
             }
             if (perpendicularDelta !== 0 && ancestorStack && ancestorOrientation !== orientation) {
@@ -176,11 +178,14 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                     closestDistance = distance;
                     closestItem = item;
                   }
+                  if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
+                    break;
+                  }
                 }
 
                 event.preventDefault();
-                closestItem.focus();
                 closestItem.scrollIntoView({ behavior: 'instant' });
+                closestItem.focus();
               }
             }
           }
