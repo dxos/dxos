@@ -109,7 +109,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
      * orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item; or, if there is no
      * such stack item, focus is passed to the adjacent empty stack if one can be found.
      */
-    const handleKeydown = useCallback(
+    const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
         const target = event.target as HTMLElement;
         if (event.key.startsWith('Arrow') && !target.closest('input, textarea')) {
@@ -189,7 +189,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}
-          onKeyDown={handleKeydown}
+          onKeyDown={handleKeyDown}
           data-dx-stack={stackId}
           data-rail={rail}
           aria-orientation={orientation}
