@@ -226,12 +226,14 @@ export const findNode = (node: SchemaAST.AST, test: (node: SchemaAST.AST) => boo
 
   // Branching union (e.g., optional, discriminated unions).
   else if (SchemaAST.isUnion(node)) {
-    if (isOption(node)) {
-      for (const type of node.types) {
-        const child = findNode(type, test);
-        if (child) {
-          return child;
-        }
+    if (isLiteralUnion(node)) {
+      return undefined;
+    }
+
+    for (const type of node.types) {
+      const child = findNode(type, test);
+      if (child) {
+        return child;
       }
     }
   }
