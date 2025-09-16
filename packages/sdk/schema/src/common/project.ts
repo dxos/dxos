@@ -28,6 +28,6 @@ export const Project = Schema.Struct({
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
   ItemAnnotation.set(true),
-  IconAnnotation.set('ph--kanban--regular'),
+  IconAnnotation.set('ph--check-square-offset--regular'),
 );
 export interface Project extends Schema.Schema.Type<typeof Project> {}

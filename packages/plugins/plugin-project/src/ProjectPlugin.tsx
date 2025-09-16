@@ -27,7 +27,7 @@ export const ProjectPlugin = () =>
         contributes(Capabilities.Metadata, {
           id: DataType.Project.typename,
           metadata: {
-            icon: 'ph--asterisk--regular',
+            icon: 'ph--check-square-offset--regular',
           },
         }),
     }),

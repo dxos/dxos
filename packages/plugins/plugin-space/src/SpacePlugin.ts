@@ -133,12 +133,6 @@ export const SpacePlugin = ({
           },
         }),
         contributes(Capabilities.Metadata, {
-          id: Type.getTypename(DataType.Project),
-          metadata: {
-            icon: 'ph--check-square-offset--regular',
-          },
-        }),
-        contributes(Capabilities.Metadata, {
           id: Type.getTypename(DataType.Task),
           metadata: {
             icon: 'ph--check-circle--regular',
