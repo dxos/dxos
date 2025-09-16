@@ -13,7 +13,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/bundle/shell.js"
     },
-    "./style.css": "./dist/bundle/style.css",
+    "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
