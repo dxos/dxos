@@ -13,7 +13,14 @@ import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
 import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
-import { FunctionTrigger, type QueueTriggerOutput, type TimerTrigger, type TimerTriggerOutput } from '../types';
+import {
+  FunctionTrigger,
+  type QueueTriggerOutput,
+  type TimerTrigger,
+  type TimerTriggerOutput,
+  TriggerKind,
+  TriggerKinds,
+} from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 
@@ -86,23 +93,11 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer>;
 
     /**
-     * Invoke all scheduled triggers whose time is up.
+     * Invoke all scheduled triggers who are due.
      */
-    invokeScheduledTimerTriggers(): Effect.Effect<
-      TriggerExecutionResult[],
-      never,
-      Services | LocalFunctionExecutionService | InvocationTracer
-    >;
-
-    /**
-     * Invoke all scheduled queue triggers who have messages to process.
-     */
-    // TODO(dmaretskyi): Combine all invokeScheduled*Triggers into a single method.
-    invokeScheduledQueueTriggers(): Effect.Effect<
-      TriggerExecutionResult[],
-      never,
-      Services | LocalFunctionExecutionService | InvocationTracer
-    >;
+    invokeScheduledTriggers(opts?: {
+      kinds?: TriggerKind[];
+    }): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService | InvocationTracer>;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -248,82 +243,87 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     });
 
-  invokeScheduledTimerTriggers = (): Effect.Effect<
+  invokeScheduledTriggers = ({ kinds = ['timer', 'queue'] } = {}): Effect.Effect<
     TriggerExecutionResult[],
     never,
     Services | LocalFunctionExecutionService | InvocationTracer
   > =>
     Effect.gen(this, function* () {
-      yield* this.refreshTriggers();
-
-      const now = this.getCurrentTime();
-      const triggersToInvoke: FunctionTrigger[] = [];
-
-      for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
-        if (scheduledTrigger.nextExecution <= now) {
-          triggersToInvoke.push(scheduledTrigger.trigger);
-
-          // Update next execution time using Effect's Cron
-          scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
-        }
-      }
-
-      // Invoke all due triggers
-      return yield* Effect.forEach(
-        triggersToInvoke,
-        (trigger) =>
-          this.invokeTrigger({
-            trigger,
-            data: { tick: now.getTime() } satisfies TimerTriggerOutput,
-          }),
-        { concurrency: 1 },
-      );
-    });
-
-  invokeScheduledQueueTriggers = (): Effect.Effect<
-    TriggerExecutionResult[],
-    never,
-    Services | LocalFunctionExecutionService | InvocationTracer
-  > =>
-    Effect.gen(this, function* () {
-      const triggers = yield* this._fetchTriggers();
-
       const invocations: TriggerExecutionResult[] = [];
-      for (const trigger of triggers) {
-        const spec = trigger.spec;
-        if (spec?.kind !== 'queue') {
-          continue;
-        }
-        const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-        const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+      for (const kind of kinds) {
+        switch (kind) {
+          case 'timer':
+            {
+              yield* this.refreshTriggers();
+              const now = this.getCurrentTime();
+              const triggersToInvoke: FunctionTrigger[] = [];
 
-        // TODO(dmaretskyi): Include cursor & limit in the query.
-        const objects = yield* Effect.promise(() => queue.queryObjects());
-        for (const object of objects) {
-          const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
-          // TODO(dmaretskyi): Extract methods for managing queue position.
-          if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
-            continue;
+              for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
+                if (scheduledTrigger.nextExecution <= now) {
+                  triggersToInvoke.push(scheduledTrigger.trigger);
+
+                  // Update next execution time using Effect's Cron
+                  scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+                }
+              }
+
+              // Invoke all due triggers
+              invocations.push(
+                ...(yield* Effect.forEach(
+                  triggersToInvoke,
+                  (trigger) =>
+                    this.invokeTrigger({
+                      trigger,
+                      data: { tick: now.getTime() } satisfies TimerTriggerOutput,
+                    }),
+                  { concurrency: 1 },
+                )),
+              );
+            }
+            break;
+          case 'queue': {
+            const triggers = yield* this._fetchTriggers();
+            for (const trigger of triggers) {
+              const spec = trigger.spec;
+              if (spec?.kind !== 'queue') {
+                continue;
+              }
+              const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+              const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+
+              // TODO(dmaretskyi): Include cursor & limit in the query.
+              const objects = yield* Effect.promise(() => queue.queryObjects());
+              for (const object of objects) {
+                const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+                // TODO(dmaretskyi): Extract methods for managing queue position.
+                if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
+                  continue;
+                }
+
+                invocations.push(
+                  yield* this.invokeTrigger({
+                    trigger,
+                    data: {
+                      queue: spec.queue,
+                      item: object,
+                      cursor: objectPos,
+                    } satisfies QueueTriggerOutput,
+                  }),
+                );
+
+                // Update trigger cursor.
+                Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                yield* DatabaseService.flush();
+
+                // We only invoke one trigger for each queue at a time.
+                break;
+              }
+            }
           }
-
-          invocations.push(
-            yield* this.invokeTrigger({
-              trigger,
-              data: {
-                queue: spec.queue,
-                item: object,
-                cursor: objectPos,
-              } satisfies QueueTriggerOutput,
-            }),
-          );
-
-          // Update trigger cursor.
-          Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
-          Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
-          yield* DatabaseService.flush();
-
-          // We only invoke one trigger for each queue at a time.
-          break;
+          default: {
+            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+          }
         }
       }
       return invocations;
@@ -414,8 +414,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     Services | LocalFunctionExecutionService | InvocationTracer
   > =>
     Effect.gen(this, function* () {
-      yield* this.invokeScheduledTimerTriggers();
-      yield* this.invokeScheduledQueueTriggers();
+      yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
   private _prepareInputData = (trigger: FunctionTrigger): any => {

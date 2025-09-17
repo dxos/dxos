@@ -118,7 +118,7 @@ describe('TriggerDispatcher', () => {
 
         // Manually invoke the trigger
         yield* dispatcher.advanceTime(Duration.minutes(1));
-        const results = yield* dispatcher.invokeScheduledTimerTriggers();
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
 
         // Should have executed successfully
         expect(results.length).toBe(1);
@@ -159,7 +159,7 @@ describe('TriggerDispatcher', () => {
 
         // Manually test invocation of enabled vs disabled
         yield* dispatcher.advanceTime(Duration.minutes(1));
-        const results = yield* dispatcher.invokeScheduledTimerTriggers();
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
 
         // Enabled should succeed
         expect(results.length).toBe(1);
@@ -191,22 +191,22 @@ describe('TriggerDispatcher', () => {
 
         // advance 1 minute; now = 15:02 -- trigger should not be invoked
         yield* dispatcher.advanceTime(Duration.minutes(1));
-        let results = yield* dispatcher.invokeScheduledTimerTriggers();
+        let results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(0);
 
         // advance 4 more minutes; now = 15:06 -- trigger should be invoked
         yield* dispatcher.advanceTime(Duration.minutes(4));
-        results = yield* dispatcher.invokeScheduledTimerTriggers();
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(1);
 
         // advance 2 more minutes; now = 15:08 -- trigger should not be invoked
         yield* dispatcher.advanceTime(Duration.minutes(2));
-        results = yield* dispatcher.invokeScheduledTimerTriggers();
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(0);
 
         // advance 3 more minutes; now = 15:11 -- trigger should be invoked
         yield* dispatcher.advanceTime(Duration.minutes(3));
-        results = yield* dispatcher.invokeScheduledTimerTriggers();
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(results.length).toBe(1);
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
@@ -324,7 +324,7 @@ describe('TriggerDispatcher', () => {
         yield* dispatcher.refreshTriggers();
 
         // Can still invoke manually even with invalid cron
-        const result = yield* dispatcher.invokeScheduledTimerTriggers();
+        const result = yield* dispatcher.invokeScheduledTriggers({ kinds: ['timer'] });
         expect(result.length).toBe(0);
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
@@ -367,7 +367,7 @@ describe('TriggerDispatcher', () => {
         ]);
 
         const dispatcher = yield* TriggerDispatcher;
-        const results = yield* dispatcher.invokeScheduledQueueTriggers();
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
@@ -401,21 +401,21 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
 
         {
-          const results = yield* dispatcher.invokeScheduledQueueTriggers();
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledQueueTriggers();
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledQueueTriggers();
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
           expect(results.length).toBe(0);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
