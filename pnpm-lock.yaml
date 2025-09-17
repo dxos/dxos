@@ -600,6 +600,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../../plugins/plugin-preview
+      '@dxos/plugin-project':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-project
       '@dxos/plugin-pwa':
         specifier: workspace:*
         version: link:../../plugins/plugin-pwa
@@ -7126,6 +7129,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-testing':
+        specifier: workspace:*
+        version: link:../../core/assistant-testing
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -7231,6 +7237,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.25.2
+        version: 0.25.2(@effect/experimental@0.54.6(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)(ioredis@5.3.2))(@effect/platform@0.90.9(effect@3.17.13))(@effect/rpc@0.69.2(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -8527,6 +8536,73 @@ importers:
       effect:
         specifier: 3.17.13
         version: 3.17.13
+      react:
+        specifier: ~18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ~18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: 7.1.1
+        version: 7.1.1(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
+
+  packages/plugins/plugin-project:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.9.0
+        version: 1.11.0
+      effect:
+        specifier: 3.17.7
+        version: 3.17.7
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~18.2.0
+        version: 18.2.79
+      '@types/react-dom':
+        specifier: ~18.2.0
+        version: 18.2.25
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -16707,6 +16783,14 @@ packages:
       '@effect/experimental': ^0.54.6
       '@effect/platform': ^0.90.6
       effect: ^3.17.10
+
+  '@effect/ai@0.25.2':
+    resolution: {integrity: sha512-7dGbO7QLAH/tYHD3LK567dc/6Df3QXlnLpuyrRuwNAXi+hkOkFO+h15BtaNy3lBQti2FRANUJiO3iApQUqgKWg==}
+    peerDependencies:
+      '@effect/experimental': ^0.54.4
+      '@effect/platform': ^0.90.1
+      '@effect/rpc': ^0.68.3
+      effect: ^3.17.7
 
   '@effect/ai@0.26.1':
     resolution: {integrity: sha512-FisoFF5ghyvPx3975OFzCPlzG3UEKzY7RHdOxdmrPTeoM8/5NXi0oPGKyGpHjJmC/6efhhlwmGfRT4BTtuwTdg==}
@@ -25234,6 +25318,9 @@ packages:
 
   effect@3.17.13:
     resolution: {integrity: sha512-JMz5oBxs/6mu4FP9Csjub4jYMUwMLrp+IzUmSDVIzn2NoeoyOXMl7x1lghfr3dLKWffWrdnv/d8nFFdgrHXPqw==}
+
+  effect@3.17.7:
+    resolution: {integrity: sha512-dpt0ONUn3zzAuul6k4nC/coTTw27AL5nhkORXgTi6NfMPzqWYa1M05oKmOMTxpVSTKepqXVcW9vIwkuaaqx9zA==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -35864,6 +35951,14 @@ snapshots:
       effect: 3.17.13
       gpt-tokenizer: 2.9.0
 
+  '@effect/ai@0.25.2(@effect/experimental@0.54.6(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)(ioredis@5.3.2))(@effect/platform@0.90.9(effect@3.17.13))(@effect/rpc@0.69.2(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)':
+    dependencies:
+      '@effect/experimental': 0.54.6(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)(ioredis@5.3.2)
+      '@effect/platform': 0.90.9(effect@3.17.13)
+      '@effect/rpc': 0.69.2(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)
+      effect: 3.17.13
+      find-my-way-ts: 0.1.6
+
   '@effect/ai@0.26.1(@effect/experimental@0.54.6(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)(ioredis@5.3.2))(@effect/platform@0.90.9(effect@3.17.13))(@effect/rpc@0.69.2(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13))(effect@3.17.13)':
     dependencies:
       '@effect/experimental': 0.54.6(@effect/platform@0.90.9(effect@3.17.13))(effect@3.17.13)(ioredis@5.3.2)
@@ -45461,6 +45556,11 @@ snapshots:
   ee-first@1.1.1: {}
 
   effect@3.17.13:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.1
+
+  effect@3.17.7:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.1

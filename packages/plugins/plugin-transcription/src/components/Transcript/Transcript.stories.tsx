@@ -232,10 +232,13 @@ export const WithQueue: StoryObj<typeof QueueStoryWrapper> = {
   },
 };
 
-export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
-  render: EntityExtractionQueueStory,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix AI service in entity extraction function.
+// TODO(mykola): Fix hugging face quota issues.
+// export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
+//   render: EntityExtractionQueueStory,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//   },
+// };

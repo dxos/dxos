@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
   type CSSProperties,
   Children,
   type ComponentPropsWithRef,
+  type KeyboardEvent,
   forwardRef,
   useCallback,
   useEffect,
@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 
-import { ListItem, type ThemedClassName } from '@dxos/react-ui';
+import { ListItem, type ThemedClassName, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStackDropForElements } from '../../hooks';
@@ -50,6 +50,16 @@ export const railGridVerticalContainFitContent =
 
 export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
 
+const PERPENDICULAR_FOCUS_THRESHHOLD = 128;
+
+const scrollIntoViewAndFocus = (el: HTMLElement, orientation: StackProps['orientation']) => {
+  el.scrollIntoView({
+    behavior: 'instant',
+    [orientation === 'vertical' ? 'block' : 'inline']: 'center',
+  });
+  return el.focus();
+};
+
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
     {
@@ -67,9 +77,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     },
     forwardedRef,
   ) => {
+    const stackId = useId('stack', props.id);
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation });
 
     const styles: CSSProperties = {
       [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
@@ -104,6 +114,130 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       }
     }, [stackElement, separatorOnScroll, orientation]);
 
+    /**
+     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack; if the arrow key matches the
+     * orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item; or, if there is no
+     * such stack item, focus is passed to the adjacent empty stack if one can be found.
+     */
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        if (
+          event.key.startsWith('Arrow') &&
+          !target.closest(
+            `input, textarea, [role="textbox"], [data-tabster*="mover"], [data-arrow-keys="all"], [data-arrow-keys~="${event.key.toLowerCase().slice(5)}"]`,
+          )
+        ) {
+          const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);
+          const closestStack = target.closest('[data-dx-stack]') as HTMLElement | null;
+          const closestStackItems = Array.from(
+            closestStack?.querySelectorAll(`[data-dx-stack-item="${stackId}"]`) ?? [],
+          );
+          const closestStackOrientation = closestStack?.getAttribute('aria-orientation') as Orientation;
+          const ancestorStack = closestStack?.parentElement?.closest('[data-dx-stack]') as HTMLElement | null;
+          if (closestOwnedItem && closestStack) {
+            const ancestorOrientation = ancestorStack?.getAttribute('aria-orientation') as Orientation | undefined;
+            const parallelDelta = (
+              closestStackOrientation === 'vertical' ? event.key === 'ArrowUp' : event.key === 'ArrowLeft'
+            )
+              ? -1
+              : (closestStackOrientation === 'vertical' ? event.key === 'ArrowDown' : event.key === 'ArrowRight')
+                ? 1
+                : 0;
+            const perpendicularDelta = (
+              closestStackOrientation === 'vertical' ? event.key === 'ArrowLeft' : event.key === 'ArrowUp'
+            )
+              ? -1
+              : (closestStackOrientation === 'vertical' ? event.key === 'ArrowRight' : event.key === 'ArrowDown')
+                ? 1
+                : 0;
+            if (parallelDelta !== 0) {
+              const adjacentItem = closestStackItems[
+                (closestStackItems.indexOf(closestOwnedItem) + parallelDelta + closestStackItems.length) %
+                  closestStackItems.length
+              ] as HTMLElement | undefined;
+              if (adjacentItem) {
+                event.preventDefault();
+                scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
+              }
+            }
+            if (perpendicularDelta !== 0) {
+              if (ancestorStack && ancestorOrientation !== closestStackOrientation) {
+                const siblingStacks = Array.from(
+                  ancestorStack.querySelectorAll(
+                    `[data-dx-stack-item="${ancestorStack.getAttribute('data-dx-stack')}"] [data-dx-stack]`,
+                  ),
+                ) as HTMLElement[];
+                const adjacentStack = siblingStacks[
+                  (siblingStacks.indexOf(closestStack) + perpendicularDelta + siblingStacks.length) %
+                    siblingStacks.length
+                ] as HTMLElement | undefined;
+                const adjacentStackSelfItem = adjacentStack?.closest(
+                  `[data-dx-stack-item=${ancestorStack.getAttribute('data-dx-stack')}]`,
+                ) as HTMLElement | undefined;
+                const adjacentStackItems = adjacentStack
+                  ? (Array.from(
+                      adjacentStack.querySelectorAll(
+                        `[data-dx-stack-item="${adjacentStack.getAttribute('data-dx-stack')}"]`,
+                      ),
+                    ) as HTMLElement[])
+                  : [];
+                if (adjacentStackItems.length > 0) {
+                  // Find the closest item by position
+                  const ownedItemRect = closestOwnedItem.getBoundingClientRect();
+                  const targetPosition =
+                    closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
+
+                  let closestItem = adjacentStackItems[0];
+                  let closestDistance = Infinity;
+
+                  for (const item of adjacentStackItems) {
+                    const itemRect = item.getBoundingClientRect();
+                    const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
+                    const distance = Math.abs(itemPosition - targetPosition);
+
+                    if (distance < closestDistance) {
+                      closestDistance = distance;
+                      closestItem = item;
+                    }
+                    if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
+                      break;
+                    }
+                  }
+
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(closestItem, closestStackOrientation);
+                } else if (adjacentStackSelfItem) {
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(adjacentStackSelfItem, ancestorOrientation);
+                }
+              } else if (closestOwnedItem) {
+                const closestOwnedItemStack = closestOwnedItem.querySelector('[data-dx-stack]');
+                const closestOwnedItemStackItems = closestOwnedItemStack
+                  ? (Array.from(
+                      closestOwnedItemStack.querySelectorAll(
+                        `[data-dx-stack-item="${closestOwnedItemStack.getAttribute('data-dx-stack')}"]`,
+                      ),
+                    ) as HTMLElement[])
+                  : [];
+                if (closestOwnedItemStackItems.length > 0) {
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(
+                    closestOwnedItemStackItems[
+                      ['ArrowUp', 'ArrowLeft'].includes(event.key) ? closestOwnedItemStackItems.length - 1 : 0
+                    ],
+                    closestOwnedItemStack?.getAttribute('aria-orientation') as Orientation,
+                  );
+                }
+              }
+            }
+          }
+        }
+        props.onKeyDown?.(event);
+      },
+      [props.onKeyDown, stackId],
+    );
+
     const gridClasses = useMemo(() => {
       if (!rail) {
         return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
@@ -132,10 +266,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     }, [stackElement, handleScroll]);
 
     return (
-      <StackContext.Provider value={{ orientation, rail, size, onRearrange }}>
+      <StackContext.Provider value={{ orientation, rail, size, onRearrange, stackId }}>
         <div
           {...props}
-          {...arrowNavigationAttrs}
           className={mx(
             'grid relative [--stack-gap:var(--dx-trimXs)]',
             gridClasses,
@@ -145,6 +278,8 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'overflow-y-auto min-is-0 max-is-full is-full'),
             classNames,
           )}
+          onKeyDown={handleKeyDown}
+          data-dx-stack={stackId}
           data-rail={rail}
           aria-orientation={orientation}
           style={styles}

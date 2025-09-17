@@ -57,6 +57,7 @@
     "@dxos/plugin-outliner": "workspace:*",
     "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-project": "workspace:*",
     "@dxos/plugin-pwa": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
