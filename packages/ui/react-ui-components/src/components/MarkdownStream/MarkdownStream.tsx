@@ -18,10 +18,18 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type StreamerOptions, type XmlTagOptions, extendedMarkdown, streamer, xmlTags } from './extensions';
+import {
+  type StreamerOptions,
+  type XmlTagOptions,
+  extendedMarkdown,
+  streamer,
+  xmlTagContext,
+  xmlTags,
+} from './extensions';
 import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
+  setContext: (context: any) => void;
   scrollToBottom: () => void;
   update: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
@@ -88,6 +96,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       }
 
       return {
+        // Set the context for XML tags.
+        setContext: (context: any) => {
+          view.dispatch({
+            effects: xmlTagContext.of(context),
+          });
+        },
         // Immediately scroll to bottom (and pin).
         scrollToBottom: () => {
           view.dispatch({

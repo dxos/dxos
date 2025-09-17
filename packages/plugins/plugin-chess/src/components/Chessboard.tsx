@@ -143,7 +143,7 @@ const Board = (props: BoardProps) => {
     });
   }, [model]);
 
-  return <NaturalChessboard ref={ref} {...props} />;
+  return <NaturalChessboard ref={ref} {...{ 'data-arrow-keys': 'all' }} {...props} />;
 };
 
 Board.displayName = 'Chessboard.Board';

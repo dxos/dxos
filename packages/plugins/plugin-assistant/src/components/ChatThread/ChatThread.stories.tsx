@@ -6,7 +6,7 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Effect, Fiber, Layer } from 'effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
-import { ChatThread, type ChatThreadProps } from './ChatThread';
+import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
 
 faker.seed(1);
 
@@ -53,7 +53,13 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
     };
   }, [space, queue, generator]);
 
-  return <ChatThread {...props} messages={queue?.objects ?? []} />;
+  // Set context.
+  const [controller, setController] = useState<ChatThreadController | null>(null);
+  useEffect(() => {
+    controller?.setContext({ timestamp: Date.now() });
+  }, [controller]);
+
+  return <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />;
 };
 
 const meta = {
@@ -77,7 +83,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     generator: createMessageGenerator(),
-    characterDelay: 0,
   },
 };
 
@@ -87,6 +92,5 @@ export const Delayed: Story = {
     delay: 3_000,
     fadeIn: true,
     cursor: false,
-    characterDelay: 5,
   },
 };

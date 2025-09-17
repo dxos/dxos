@@ -16,7 +16,7 @@ import { type ChatMessageProps } from './ChatMessage';
 import { componentRegistry } from './registry';
 import { MessageSyncer } from './sync';
 
-export type ChatThreadController = Pick<MarkdownStreamController, 'scrollToBottom'>;
+export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
 
 export type ChatThreadProps = ThemedClassName<
   {

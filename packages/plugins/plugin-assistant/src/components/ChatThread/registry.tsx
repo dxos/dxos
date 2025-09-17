@@ -17,9 +17,9 @@ import {
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 
-type FallbackProps = XmlComponentProps<any>;
+import { type MessageThreadContext } from './sync';
 
-const Fallback = ({ tag, ...props }: FallbackProps) => {
+const Fallback = ({ tag, ...props }: XmlComponentProps<any>) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
       <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
@@ -116,8 +116,8 @@ const getTextChild = (children: any[]): string | null => {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any, debug = false) => {
-  let str = _blockToMarkdown(message, block, debug);
+export const blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+  let str = _blockToMarkdown(context, message, block);
   if (str && !block.pending) {
     return (str += '\n');
   }
@@ -125,7 +125,8 @@ export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.A
   return str;
 };
 
-const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any, debug = false) => {
+// TODO(burdon): Pass in context.
+const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -143,9 +144,11 @@ const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any, de
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
 
-    // TODO(burdon): Debug via state field?
+    // TODO(burdon): Add to context.
+    // case 'toolCall': {}
+    // case 'toolResult': {}
     case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block, debug)}</summary>`;
+      return `<summary>${ContentBlock.createSummaryMessage(block, true)}</summary>`;
     }
 
     case 'toolkit': {

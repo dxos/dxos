@@ -44,10 +44,16 @@ export type PreviewOptions = {
 export const preview = (options: PreviewOptions = {}): Extension => {
   return [
     // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
-    // "Block decorations may not be specified via plugins"
+    // "Block decorations may not be specified via plugins".
     StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state, options),
-      update: (_: RangeSet<Decoration>, tr: Transaction) => buildDecorations(tr.state, options),
+      create: (state) => buildLinkDecorations(state, options),
+      update: (decorations: RangeSet<Decoration>, tr: Transaction) => {
+        if (tr.docChanged) {
+          return buildLinkDecorations(tr.state, options);
+        }
+
+        return decorations.map(tr.changes);
+      },
       provide: (field) => [
         EditorView.decorations.from(field),
         EditorView.atomicRanges.of((view) => view.state.field(field)),
@@ -57,33 +63,12 @@ export const preview = (options: PreviewOptions = {}): Extension => {
 };
 
 /**
- * Link references.
- *
- *  [Label][dxn:echo:123]    Inline reference
- * ![Label][dxn:echo:123]    Block reference
- * ![Label][?dxn:echo:123]   Suggestion
- */
-export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
-  const mark = node.getChild('LinkMark');
-  const label = node.getChild('LinkLabel');
-  if (mark && label) {
-    const ref = state.sliceDoc(label.from + 1, label.to - 1);
-    return {
-      suggest: ref.startsWith('?'),
-      block: state.sliceDoc(mark.from, mark.from + 1) === '!',
-      label: state.sliceDoc(mark.to, label.from - 1),
-      ref: ref.startsWith('?') ? ref.slice(1) : ref,
-    };
-  }
-};
-
-/**
  * Echo references are represented as markdown reference links.
  * https://www.markdownguide.org/basic-syntax/#reference-style-links
  * [Label|block][dxn:echo:123]
  * [Label|inline][dxn:echo:123]
  */
-const buildDecorations = (state: EditorState, options: PreviewOptions) => {
+const buildLinkDecorations = (state: EditorState, options: PreviewOptions) => {
   const builder = new RangeSetBuilder<Decoration>();
 
   syntaxTree(state).iterate({
@@ -130,6 +115,29 @@ const buildDecorations = (state: EditorState, options: PreviewOptions) => {
   });
 
   return builder.finish();
+};
+
+/**
+ * Link references.
+ *
+ *  [Label][dxn:echo:123]    Inline reference
+ * ![Label][dxn:echo:123]    Block reference
+ * ![Label][?dxn:echo:123]   Suggestion
+ */
+export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
+  const mark = node.getChild('LinkMark');
+  const label = node.getChild('LinkLabel');
+  console.log(mark);
+  console.log({ mark, label, text: state.sliceDoc(node.from, node.to) });
+  if (mark && label) {
+    const ref = state.sliceDoc(label.from + 1, label.to - 1);
+    return {
+      suggest: ref.startsWith('?'),
+      block: state.sliceDoc(mark.from, mark.from + 1) === '!',
+      label: state.sliceDoc(mark.to, label.from - 1),
+      ref: ref.startsWith('?') ? ref.slice(1) : ref,
+    };
+  }
 };
 
 /**

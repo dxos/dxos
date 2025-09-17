@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, type Range, StateField } from '@codemirror/state';
+import { type EditorState, type Extension, type Range, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, type WidgetType } from '@codemirror/view';
 import { type FC } from 'react';
 
@@ -14,8 +14,13 @@ import { nodeToJson } from './xml-util';
 
 export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 
+export type XmlComponentProps<TProps = any> = TProps &
+  Pick<XmlTagOptions, 'context'> & {
+    tag: string;
+    onEvent?: XmlEventHandler;
+  };
+
 export type XmlWidgetFactory = (props: XmlComponentProps, onEvent?: XmlEventHandler) => WidgetType | null;
-export type XmlComponentProps<TProps = any> = { tag: string; onEvent?: XmlEventHandler } & TProps;
 
 export type XmlComponentDef = {
   block?: boolean;
@@ -27,20 +32,36 @@ export type XmlComponentRegistry = Record<string, XmlComponentDef>;
 
 export type XmlTagOptions = {
   registry?: XmlComponentRegistry;
+  context?: any;
 };
+
+export const xmlTagContext = StateEffect.define<any>();
 
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
 export const xmlTags = (options: XmlTagOptions = {}): Extension => {
+  const context = StateField.define<any>({
+    create: () => options.context,
+    update: (value, tr) => {
+      for (const effect of tr.effects) {
+        if (effect.is(xmlTagContext)) {
+          return effect.value;
+        }
+      }
+      return value;
+    },
+  });
+
   return [
+    context,
+
+    // Tags.
     StateField.define<DecorationSet>({
-      create: (state) => {
-        return createXmlTagDecorations(state, options);
-      },
+      create: (state) => buildXmlTagDecorations(state, options, state.field(context)),
       update: (decorations, tr) => {
         if (tr.docChanged) {
-          return createXmlTagDecorations(tr.state, options);
+          return buildXmlTagDecorations(tr.state, options, tr.state.field(context));
         }
 
         return decorations.map(tr.changes);
@@ -53,7 +74,7 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
 /**
  * Creates decorations for XML tags in the document using the syntax tree.
  */
-function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): DecorationSet {
+function buildXmlTagDecorations(state: EditorState, options: XmlTagOptions, context: any): DecorationSet {
   const decorations: Range<Decoration>[] = [];
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
@@ -70,9 +91,9 @@ function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): De
             if (options.registry && props?.tag) {
               const { block, factory, Component } = options.registry[props.tag] ?? {};
               const widget = factory
-                ? factory(props)
+                ? factory({ context, ...props })
                 : Component
-                  ? new ReactWidget(Component, { ...props })
+                  ? new ReactWidget(Component, { context, ...props })
                   : undefined;
 
               if (widget) {

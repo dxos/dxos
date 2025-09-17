@@ -7,13 +7,17 @@ import { type DataType } from '@dxos/schema';
 
 import { blockToMarkdown } from './registry';
 
+// TODO(burdon): Pass in blockToMarkdown (factor out).
+
 // TODO(burdon): Extend syncer interface.
 export type TextModel = {
   update: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 };
 
-// TODO(burdon): Pass in blockToMarkdown.
+export class MessageThreadContext {
+  reset() {}
+}
 
 /**
  * Syncs messages with the editor.
@@ -25,6 +29,8 @@ export class MessageSyncer {
   private _currentBlockIndex = 0;
   private _currentBlockContent?: string;
 
+  private readonly _context = new MessageThreadContext();
+
   constructor(private readonly _doc: TextModel) {}
 
   reset() {
@@ -33,6 +39,7 @@ export class MessageSyncer {
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
+    this._context.reset();
     void this._doc.update('');
   }
 
@@ -58,7 +65,7 @@ export class MessageSyncer {
       let j = this._currentBlockIndex;
       for (const block of message.blocks.slice(this._currentBlockIndex)) {
         this._currentBlockIndex = j;
-        const currentBlockContent = blockToMarkdown(message, block, true);
+        const currentBlockContent = blockToMarkdown(this._context, message, block);
         if (currentBlockContent) {
           let content: string = '';
           if (this._currentBlockContent && currentBlockContent.startsWith(this._currentBlockContent)) {
