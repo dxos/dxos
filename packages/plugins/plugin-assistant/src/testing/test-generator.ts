@@ -53,9 +53,10 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           {
             _tag: 'text',
             disposition: 'cot',
-            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-              .join('\n\n'),
+            text:
+              Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
+                .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
+                .join('\n\n') + '\n',
           },
         ]),
       ]),
@@ -69,7 +70,15 @@ export const createMessageGenerator = (): MessageGenerator[] => [
         createMessage('assistant', [
           {
             _tag: 'text',
-            text: 'A suggestion:',
+            text: 'How can I help?',
+          },
+          {
+            _tag: 'suggestion',
+            text: 'List tools',
+          },
+          {
+            _tag: 'suggestion',
+            text: 'Show info',
           },
           {
             _tag: 'suggestion',
@@ -95,8 +104,8 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     const { db } = yield* DatabaseService;
     const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
     const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    // const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -107,11 +116,11 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           },
 
           // Inline cards.
-          ...[obj2, obj3, obj4].map(
+          ...[obj2].map(
             (obj) =>
               ({
                 _tag: 'text',
-                text: renderObjectLink(obj, true),
+                text: renderObjectLink(obj, true) + '\n',
               }) satisfies ContentBlock.Text,
           ),
         ]),

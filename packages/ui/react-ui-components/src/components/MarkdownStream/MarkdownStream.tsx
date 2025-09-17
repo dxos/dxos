@@ -55,7 +55,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           }),
           extendedMarkdown({ registry }),
           createBasicExtensions({ lineWrapping: true, readOnly: true }),
-          decorateMarkdown(),
+          decorateMarkdown({
+            skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+          }),
           preview(),
           xmlTags({ registry }),
           streamer(streamerOptions),

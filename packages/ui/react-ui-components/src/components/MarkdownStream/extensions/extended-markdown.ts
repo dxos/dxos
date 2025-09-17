@@ -78,5 +78,5 @@ const mixedParser = (registry?: XmlComponentRegistry): ParseWrapper => {
   });
 };
 
-export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
-  `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
+export const renderObjectLink = (obj: Obj.Any, block?: boolean) =>
+  `${block ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;

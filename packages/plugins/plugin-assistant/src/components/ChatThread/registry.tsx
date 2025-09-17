@@ -141,7 +141,7 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
     }
 
     case 'select': {
-      return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
+      return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>\n`;
     }
 
     // TODO(burdon): Add to context.

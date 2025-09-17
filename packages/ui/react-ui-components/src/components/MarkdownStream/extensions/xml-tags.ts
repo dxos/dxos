@@ -66,7 +66,7 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
 
         return decorations.map(tr.changes);
       },
-      provide: (f) => EditorView.decorations.from(f),
+      provide: (field) => EditorView.decorations.from(field),
     }),
   ];
 };
