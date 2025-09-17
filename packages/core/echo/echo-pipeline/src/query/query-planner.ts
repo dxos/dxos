@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Order } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN, SpaceId } from '@dxos/keys';
@@ -58,6 +59,8 @@ export class QueryPlanner {
         return this._generateUnionClause(query, context);
       case 'set-difference':
         return this._generateSetDifferenceClause(query, context);
+      case 'order':
+        return this._generateOrderClause(query, context);
       default:
         throw new QueryError(`Unsupported query type: ${(query as any).type}`, {
           context: { query: context.originalQuery },
@@ -424,6 +427,16 @@ export class QueryPlanner {
   private _optimizeSoloUnions(plan: QueryPlan.Plan): QueryPlan.Plan {
     // TODO(dmaretskyi): Implement this.
     return plan;
+  }
+
+  private _generateOrderClause(query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'OrderStep',
+        order: query.order.length > 0 ? query.order : [Order.natural.ast],
+      },
+    ]);
   }
 }
 

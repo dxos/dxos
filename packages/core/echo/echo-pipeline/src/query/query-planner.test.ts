@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Order, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
@@ -38,6 +38,45 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+        ],
+      }
+    `);
+  });
+
+  test('get all people ordered by name', () => {
+    const query = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc'));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:dxos.org/type/Person:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "property",
+                "property": "name",
+              },
+            ],
           },
         ],
       }

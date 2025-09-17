@@ -205,6 +205,34 @@ const QuerySetDifferenceClause_ = Schema.Struct({
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
 
+export const OrderDirection = Schema.Literal('asc', 'desc');
+export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
+
+export const Order = Schema.Union(
+  Schema.Struct({
+    // How database wants to order them (in practice - by id).
+    kind: Schema.Literal('natural'),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('property'),
+    property: Schema.String,
+    direction: OrderDirection,
+  }),
+);
+export type Order = Schema.Schema.Type<typeof Order>;
+
+/**
+ * Order the query results.
+ * Left-to-right the orders dominate.
+ */
+const QueryOrderClause_ = Schema.Struct({
+  type: Schema.Literal('order'),
+  query: Schema.suspend(() => Query),
+  order: Schema.Array(Order),
+});
+export interface QueryOrderClause extends Schema.Schema.Type<typeof QueryOrderClause_> {}
+export const QueryOrderClause: Schema.Schema<QueryOrderClause> = QueryOrderClause_;
+
 /**
  * Add options to a query.
  */
@@ -225,6 +253,7 @@ const Query_ = Schema.Union(
   QueryRelationTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
+  QueryOrderClause,
   QueryOptionsClause,
 );
 

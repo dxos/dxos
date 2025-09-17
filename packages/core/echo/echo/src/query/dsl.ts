@@ -17,6 +17,35 @@ import type * as Type from '../Type';
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
 
+export interface Order<T> {
+  // TODO(dmaretskyi): See new effect-schema approach to variance.
+  '~Order': { value: T };
+
+  ast: QueryAST.Order;
+}
+
+class OrderClass implements Order<any> {
+  private static variance: Order<any>['~Order'] = {} as Order<any>['~Order'];
+
+  static is(value: unknown): value is Order<any> {
+    return typeof value === 'object' && value !== null && '~Order' in value;
+  }
+
+  constructor(public readonly ast: QueryAST.Order) {}
+
+  '~Order' = OrderClass.variance;
+}
+
+export namespace Order {
+  export const natural: Order<any> = new OrderClass({ kind: 'natural' });
+  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
+    new OrderClass({
+      kind: 'property',
+      property,
+      direction,
+    });
+}
+
 export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Query': { value: T };
@@ -84,6 +113,14 @@ export interface Query<T> {
    * @returns Query for the target objects.
    */
   target(): Query<Type.Relation.Target<T>>;
+
+  /**
+   * Order the query results.
+   * Orders are specified in priority order. The first order will be applied first, etc.
+   * @param order - Order to sort the results.
+   * @returns Query for the ordered results.
+   */
+  orderBy(...order: Order<T>[]): Query<T>;
 
   /**
    * Add options to a query.
@@ -631,6 +668,14 @@ class QueryClass implements Query<any> {
       type: 'relation-traversal',
       anchor: this.ast,
       direction: 'target',
+    });
+  }
+
+  orderBy(...order: Order<any>[]): Query<any> {
+    return new QueryClass({
+      type: 'order',
+      query: this.ast,
+      order: order.map((o) => o.ast),
     });
   }
 
