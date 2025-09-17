@@ -7,11 +7,10 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
-import { Button, DropdownMenu, Icon, Input } from '@dxos/react-ui';
+import { Button, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { RefDropdownMenu } from '../components';
 import { editorWidth } from '../defaults';
 import { type Action, command, floatingMenu } from '../extensions';
 import { str } from '../testing';
@@ -42,10 +41,10 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
   };
 
   return (
-    <div className='flex w-full justify-center'>
+    <div className='flex is-full justify-center'>
       <div
         className={mx(
-          'flex w-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
+          'flex is-full p-2 gap-2 items-center bg-modalSurface border border-separator rounded-md',
           editorWidth,
         )}
       >
@@ -70,26 +69,16 @@ const meta = {
   title: 'ui/react-ui-editor/Command',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
-    <RefDropdownMenu.Provider>
-      <EditorStory
-        text={str('# Command', '', '', '')}
-        extensions={[
-          floatingMenu(),
-          command({
-            renderDialog: createRenderer(CommandDialog),
-            onHint: () => "Press '/' for commands",
-          }),
-        ]}
-      />
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={() => console.log('!')}>Test</DropdownMenu.Item>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </RefDropdownMenu.Provider>
+    <EditorStory
+      text={str('# Command', '', '', '')}
+      extensions={[
+        floatingMenu(),
+        command({
+          renderDialog: createRenderer(CommandDialog),
+          onHint: () => "Press '/' for commands",
+        }),
+      ]}
+    />
   ),
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof Button>;
