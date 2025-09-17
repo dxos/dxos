@@ -122,6 +122,7 @@
   },
   "devDependencies": {
     "@dxos/assistant-testing": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
@@ -136,7 +137,6 @@
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
-    "@dxos/devtools": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-token-manager": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
