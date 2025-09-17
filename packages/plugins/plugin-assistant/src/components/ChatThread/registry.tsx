@@ -15,7 +15,7 @@ import {
   type XmlComponentRegistry,
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { type ContentBlock, type DataType } from '@dxos/schema';
+import { ContentBlock, type DataType } from '@dxos/schema';
 
 type FallbackProps = XmlComponentProps<any>;
 
@@ -116,8 +116,8 @@ const getTextChild = (children: any[]): string | null => {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
-  let str = _blockToMarkdown(message, block);
+export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any, debug = false) => {
+  let str = _blockToMarkdown(message, block, debug);
   if (str && !block.pending) {
     return (str += '\n');
   }
@@ -125,7 +125,7 @@ export const blockToMarkdown = (message: DataType.Message, block: ContentBlock.A
   return str;
 };
 
-const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) => {
+const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any, debug = false) => {
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -143,13 +143,17 @@ const _blockToMarkdown = (message: DataType.Message, block: ContentBlock.Any) =>
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
 
-    // case 'toolkit': {
-    //   return `<toolkit />`;
-    // }
+    // TODO(burdon): Debug via state field?
+    case 'summary': {
+      return `<summary>${ContentBlock.createSummaryMessage(block, debug)}</summary>`;
+    }
 
-    // TOOD(burdon): Reduce toolchain.
-    // default: {
-    // return `<json>\n${JSON.stringify(block)}\n</json>`;
-    // }
+    case 'toolkit': {
+      return `<toolkit />`;
+    }
+
+    default: {
+      return `<json>\n${JSON.stringify(block)}\n</json>`;
+    }
   }
 };

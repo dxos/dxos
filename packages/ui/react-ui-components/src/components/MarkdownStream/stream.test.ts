@@ -3,7 +3,7 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Queue, Stream, TestContext } from 'effect';
+import { Effect, Stream, TestContext } from 'effect';
 
 import { createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
 
@@ -74,22 +74,11 @@ const testStreamer = (text: string) =>
   Effect.gen(function* () {
     const result: string[] = [];
 
-    // Fork the stream processing.
-    const queue = yield* Queue.unbounded<string>();
-    const fiber = yield* Stream.fromQueue(queue).pipe(
+    // Create a stream from the single text value.
+    yield* Stream.make(text).pipe(
       createStreamer,
       Stream.runForEach((text) => Effect.sync(() => result.push(text))),
-      Effect.fork,
     );
-
-    // Offer the string to the queue.
-    yield* Queue.offer(queue, text);
-
-    // Shutdown the queue to signal completion.
-    yield* Queue.shutdown(queue);
-
-    // Wait for the fiber to complete.
-    yield* fiber.await;
 
     return result;
   });

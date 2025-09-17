@@ -58,7 +58,7 @@ export class MessageSyncer {
       let j = this._currentBlockIndex;
       for (const block of message.blocks.slice(this._currentBlockIndex)) {
         this._currentBlockIndex = j;
-        const currentBlockContent = blockToMarkdown(message, block);
+        const currentBlockContent = blockToMarkdown(message, block, true);
         if (currentBlockContent) {
           let content: string = '';
           if (this._currentBlockContent && currentBlockContent.startsWith(this._currentBlockContent)) {
