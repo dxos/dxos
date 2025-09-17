@@ -337,6 +337,9 @@
       "path": "packages/plugins/plugin-preview/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-project/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
     },
     {

@@ -173,9 +173,20 @@ const processProperty = <T extends BaseObject>(
           if (tupleType) {
             invariant(baseType.elements.length === 0);
             baseType = findNode(tupleType.type, isSimpleType);
+
             if (baseType) {
-              type = getSimpleType(baseType);
-              array = true;
+              const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
+              if (jsonSchema && '$id' in jsonSchema) {
+                const { typename } = getSchemaReference(jsonSchema) ?? {};
+                if (typename) {
+                  type = 'object';
+                  format = FormatEnum.Ref;
+                  array = true;
+                }
+              } else {
+                type = getSimpleType(baseType);
+                array = true;
+              }
             }
           }
         } else {

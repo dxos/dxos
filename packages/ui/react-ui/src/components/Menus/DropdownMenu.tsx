@@ -124,6 +124,7 @@ const DropdownMenuTrigger = forwardRef<DropdownMenuTriggerElement, DropdownMenuT
           disabled={disabled}
           {...triggerProps}
           ref={composeRefs(forwardedRef, context.triggerRef)}
+          data-arrow-keys='down'
           onPointerDown={composeEventHandlers(props.onPointerDown, (event) => {
             // only call handler if it's the left button (mousedown gets triggered by all mouse buttons)
             // but not when the control key is pressed (avoiding MacOS right click)
@@ -264,6 +265,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
             hasInteractedOutsideRef.current = true;
           }
         })}
+        data-arrow-keys='up down'
         className={tx('menu.content', 'menu', { elevation }, classNames)}
         style={{
           ...props.style,
