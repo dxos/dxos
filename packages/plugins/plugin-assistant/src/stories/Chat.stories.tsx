@@ -13,6 +13,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { FunctionTrigger, FunctionType, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -53,6 +54,8 @@ import {
   TasksContainer,
   TokenManagerContainer,
 } from './components';
+import { InvocationsContainer } from './components/InvocationsContainer';
+import { TriggersContainer } from './components/TriggersContainer';
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
@@ -498,5 +501,32 @@ export const WithLinearSync: Story = {
   args: {
     deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [LINEAR_BLUEPRINT.key],
+  },
+};
+
+export const WithTriggers: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [FunctionType, FunctionTrigger],
+    onInit: async ({ space, binder }) => {
+      const functionObj = serializeFunction(exampleFunctions.reply);
+      space.db.add(functionObj);
+      const object = space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'timer',
+            cron: '*/5 * * * * *', // Every 5 seconds
+          },
+        }),
+      );
+      await binder.bind({ objects: [Ref.make(object)] });
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
   },
 };

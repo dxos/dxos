@@ -122,8 +122,10 @@
   },
   "devDependencies": {
     "@dxos/assistant-testing": "workspace:*",
+    "@dxos/devtools": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-board": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
