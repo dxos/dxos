@@ -38,6 +38,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -57,7 +58,6 @@ import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
-import { exampleFunctions } from '@dxos/functions';
 
 // TODO(burdon): Factor out.
 export const config = {
