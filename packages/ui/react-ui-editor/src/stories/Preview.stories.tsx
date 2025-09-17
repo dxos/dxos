@@ -23,6 +23,42 @@ import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview
 
 import { EditorStory } from './components';
 
+type StoryProps = { text?: string };
+
+const DefaultStory = ({ text = '' }: StoryProps) => {
+  const [view, setView] = useState<EditorView>();
+  const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+
+  const extensions = useMemo(() => {
+    return [
+      image(),
+      preview({
+        addBlockContainer: (link, el) => {
+          setPreviewBlocks((prev) => [...prev, { link, el }]);
+        },
+        removeBlockContainer: (link) => {
+          setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+        },
+      }),
+    ];
+  }, []);
+
+  const handleViewRef = useCallback((instance?: EditorView | null) => {
+    setView(instance ?? undefined);
+  }, []);
+
+  return (
+    <PreviewProvider onLookup={handlePreviewLookup}>
+      <EditorStory ref={handleViewRef} text={text} extensions={extensions} />
+
+      <PreviewCard />
+      {previewBlocks.map(({ link, el }) => (
+        <PreviewBlock key={link.ref} link={link} el={el} view={view} />
+      ))}
+    </PreviewProvider>
+  );
+};
+
 const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
   // Random text.
   faker.seed(ref.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 1));
@@ -31,17 +67,6 @@ const handlePreviewLookup = async ({ label, ref }: PreviewLinkRef): Promise<Prev
     label,
     text,
   };
-};
-
-// Async lookup.
-// TODO(burdon): Handle errors.
-const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
-  const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
-  useEffect(() => {
-    void handlePreviewLookup(link).then((target) => setTarget(target ?? undefined));
-  }, [link]);
-
-  return target;
 };
 
 const PreviewCard = () => {
@@ -172,9 +197,35 @@ const PreviewBlock = ({ el, link, view }: PreviewBlockProps) => {
   );
 };
 
+// Async lookup.
+// TODO(burdon): Handle errors.
+const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
+  const [target, setTarget] = useState<PreviewLinkTarget | undefined>();
+  useEffect(() => {
+    void handlePreviewLookup(link).then((target) => setTarget(target ?? undefined));
+  }, [link]);
+
+  return target;
+};
+
+const text = trim`
+  # Preview
+
+  This project is part of the [DXOS][dxn:queue:data:123] SDK.
+
+  ![DXOS][?dxn:queue:data:123]
+
+  It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
+
+  ## Deep dive
+
+  ![ECHO][dxn:queue:data:echo]
+`;
+
 const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
+  render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof EditorStory>;
@@ -184,53 +235,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const [view, setView] = useState<EditorView>();
-    const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
-
-    const extensions = useMemo(() => {
-      return [
-        image(),
-        preview({
-          addBlockContainer: (link, el) => {
-            setPreviewBlocks((prev) => [...prev, { link, el }]);
-          },
-          removeBlockContainer: (link) => {
-            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
-          },
-        }),
-      ];
-    }, []);
-
-    const handleViewRef = useCallback((instance?: EditorView | null) => {
-      setView(instance ?? undefined);
-    }, []);
-
-    return (
-      <PreviewProvider onLookup={handlePreviewLookup}>
-        <EditorStory
-          ref={handleViewRef}
-          text={trim`
-            # Preview
-
-            This project is part of the [DXOS][dxn:queue:data:123] SDK.
-
-            ![DXOS][?dxn:queue:data:123]
-
-            It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
-
-            ## Deep dive
-
-            ![ECHO][dxn:queue:data:echo]
-
-          `}
-          extensions={extensions}
-        />
-        <PreviewCard />
-        {previewBlocks.map(({ link, el }) => (
-          <PreviewBlock key={link.ref} link={link} el={el} view={view} />
-        ))}
-      </PreviewProvider>
-    );
+  args: {
+    text,
   },
 };

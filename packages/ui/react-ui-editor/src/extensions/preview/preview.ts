@@ -114,8 +114,8 @@ const buildDecorations = (state: EditorState, options: PreviewOptions): Decorati
 
 /**
  * Link references.
- *  [Label](dxn:echo:123)    Inline reference
- * ![Label](dxn:echo:123)    Block reference
+ *  [Label](dxn:echo:123) Inline reference
+ * ![Label](dxn:echo:123) Block reference
  */
 export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef | undefined => {
   const mark = node.getChildren('LinkMark');
@@ -123,7 +123,6 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
   if (mark && urlNode) {
     const url = state.sliceDoc(urlNode.from, urlNode.to);
     if (url.startsWith('dxn:')) {
-      console.log(url);
       const label = state.sliceDoc(mark[0].to, mark[1].from);
       return {
         block: state.sliceDoc(mark[0].from, mark[0].from + 1) === '!',
@@ -136,7 +135,7 @@ export const getLinkRef = (state: EditorState, node: SyntaxNode): PreviewLinkRef
 
 /**
  * Inline widget.
- * [Label](dxn:echo:123)
+ *  [Label](dxn:echo:123)
  */
 class PreviewInlineWidget extends WidgetType {
   constructor(

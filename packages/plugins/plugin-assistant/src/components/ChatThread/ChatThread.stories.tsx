@@ -12,6 +12,9 @@ import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { Popover } from '@dxos/react-ui';
+import { PreviewProvider, useRefPopover } from '@dxos/react-ui-editor';
+import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -59,7 +62,36 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
     controller?.setContext({ timestamp: Date.now() });
   }, [controller]);
 
-  return <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />;
+  return (
+    <PreviewProvider
+      onLookup={async ({ label, ref }) => {
+        return { label, text: ref };
+      }}
+    >
+      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />;
+      <PreviewCard />
+    </PreviewProvider>
+  );
+};
+
+// TODO(burdon): Factor out.
+// TODO(burdon): Provide renderer for preview extension.
+const PreviewCard = () => {
+  const { target } = useRefPopover('PreviewCard');
+
+  return (
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Card.SurfaceRoot role='card--popover'>
+            <Card.Heading>{target?.label}</Card.Heading>
+            {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
+          </Card.SurfaceRoot>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
 };
 
 const meta = {
