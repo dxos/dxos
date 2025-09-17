@@ -129,7 +129,7 @@ export class QueryExecutor extends Resource {
   constructor(options: QueryExecutorOptions) {
     super();
 
-    this._indexer = options.indexer;
+  this._indexer = options.indexer;
     this._automergeHost = options.automergeHost;
     this._spaceStateManager = options.spaceStateManager;
 
