@@ -12,6 +12,7 @@ export type StackContextValue = {
   rail: boolean;
   size: Size;
   onRearrange?: StackItemRearrangeHandler;
+  stackId?: string;
 };
 
 export const StackContext = createContext<StackContextValue>({

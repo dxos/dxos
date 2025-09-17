@@ -90,7 +90,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
     const [closestEdge, setEdge] = useState<Edge | null>(null);
     const [sourceId, setSourceId] = useState<string | null>(null);
     const [dragState, setDragState] = useState<ItemDragState>(idle);
-    const { orientation, rail, onRearrange, size: stackSize } = useStack();
+    const { orientation, rail, onRearrange, size: stackSize, stackId } = useStack();
     const [size = orientation === 'horizontal' ? DEFAULT_HORIZONTAL_SIZE : DEFAULT_VERTICAL_SIZE, setInternalSize] =
       useState(propsSize);
 
@@ -240,7 +240,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
             classNames,
           )}
-          data-dx-stack-item
+          data-dx-stack-item={stackId}
           {...resizeAttributes}
           style={{
             ...(stackSize !== 'split' && sizeStyle(size, orientation)),
