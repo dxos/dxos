@@ -34,7 +34,7 @@ const ContextMenuContent = forwardRef<HTMLDivElement, ContextMenuContentProps>(
     return (
       <ContextMenuPrimitive.Content
         {...props}
-        data-arrow-keys='handled'
+        data-arrow-keys='handles-vertical'
         collisionPadding={safeCollisionPadding}
         className={tx('menu.content', 'menu', { elevation }, classNames)}
         ref={forwardedRef}

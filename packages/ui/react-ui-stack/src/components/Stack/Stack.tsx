@@ -124,85 +124,111 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         const target = event.target as HTMLElement;
         if (
           event.key.startsWith('Arrow') &&
-          !target.closest('input, textarea, [data-tabster*="mover"], [data-arrow-keys="handled"]')
+          !target.closest(
+            `input, textarea, [data-tabster*="mover"], [data-arrow-keys="handles-${['ArrowLeft', 'ArrowRight'].includes(event.key) ? 'horizontal' : 'vertical'}"]`,
+          )
         ) {
           const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);
           const closestStack = target.closest('[data-dx-stack]') as HTMLElement | null;
+          const closestStackItems = Array.from(
+            closestStack?.querySelectorAll(`[data-dx-stack-item="${stackId}"]`) ?? [],
+          );
+          const closestStackOrientation = closestStack?.getAttribute('aria-orientation') as Orientation;
           const ancestorStack = closestStack?.parentElement?.closest('[data-dx-stack]') as HTMLElement | null;
           if (closestOwnedItem && closestStack) {
-            const orientation = closestStack.getAttribute('aria-orientation') as Orientation;
             const ancestorOrientation = ancestorStack?.getAttribute('aria-orientation') as Orientation | undefined;
-            const parallelDelta = (orientation === 'vertical' ? event.key === 'ArrowUp' : event.key === 'ArrowLeft')
+            const parallelDelta = (
+              closestStackOrientation === 'vertical' ? event.key === 'ArrowUp' : event.key === 'ArrowLeft'
+            )
               ? -1
-              : (orientation === 'vertical' ? event.key === 'ArrowDown' : event.key === 'ArrowRight')
+              : (closestStackOrientation === 'vertical' ? event.key === 'ArrowDown' : event.key === 'ArrowRight')
                 ? 1
                 : 0;
             const perpendicularDelta = (
-              orientation === 'vertical' ? event.key === 'ArrowLeft' : event.key === 'ArrowUp'
+              closestStackOrientation === 'vertical' ? event.key === 'ArrowLeft' : event.key === 'ArrowUp'
             )
               ? -1
-              : (orientation === 'vertical' ? event.key === 'ArrowRight' : event.key === 'ArrowDown')
+              : (closestStackOrientation === 'vertical' ? event.key === 'ArrowRight' : event.key === 'ArrowDown')
                 ? 1
                 : 0;
             if (parallelDelta !== 0) {
-              const items = Array.from(
-                target.closest('[data-dx-stack]')?.querySelectorAll(`[data-dx-stack-item="${stackId}"]`) ?? [],
-              );
-              const adjacentItem = items[
-                (items.indexOf(closestOwnedItem) + parallelDelta + items.length) % items.length
+              const adjacentItem = closestStackItems[
+                (closestStackItems.indexOf(closestOwnedItem) + parallelDelta + closestStackItems.length) %
+                  closestStackItems.length
               ] as HTMLElement | undefined;
               if (adjacentItem) {
                 event.preventDefault();
-                scrollIntoViewAndFocus(adjacentItem, orientation);
+                scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
               }
             }
-            if (perpendicularDelta !== 0 && ancestorStack && ancestorOrientation !== orientation) {
-              const siblingStacks = Array.from(
-                ancestorStack.querySelectorAll(
-                  `[data-dx-stack-item="${ancestorStack.getAttribute('data-dx-stack')}"] [data-dx-stack]`,
-                ),
-              ) as HTMLElement[];
-              const adjacentStack = siblingStacks[
-                (siblingStacks.indexOf(closestStack) + perpendicularDelta + siblingStacks.length) % siblingStacks.length
-              ] as HTMLElement | undefined;
-              const adjacentStackSelfItem = adjacentStack?.closest(
-                `[data-dx-stack-item=${ancestorStack.getAttribute('data-dx-stack')}]`,
-              ) as HTMLElement | undefined;
-              const adjacentStackItems = adjacentStack
-                ? (Array.from(
-                    adjacentStack.querySelectorAll(
-                      `[data-dx-stack-item="${adjacentStack.getAttribute('data-dx-stack')}"]`,
-                    ),
-                  ) as HTMLElement[])
-                : [];
-              console.log('[next stack]', adjacentStack, adjacentStackItems.length);
-              if (adjacentStackItems.length > 0) {
-                // Find the closest item by position
-                const ownedItemRect = closestOwnedItem.getBoundingClientRect();
-                const targetPosition = orientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
+            if (perpendicularDelta !== 0) {
+              if (ancestorStack && ancestorOrientation !== closestStackOrientation) {
+                const siblingStacks = Array.from(
+                  ancestorStack.querySelectorAll(
+                    `[data-dx-stack-item="${ancestorStack.getAttribute('data-dx-stack')}"] [data-dx-stack]`,
+                  ),
+                ) as HTMLElement[];
+                const adjacentStack = siblingStacks[
+                  (siblingStacks.indexOf(closestStack) + perpendicularDelta + siblingStacks.length) %
+                    siblingStacks.length
+                ] as HTMLElement | undefined;
+                const adjacentStackSelfItem = adjacentStack?.closest(
+                  `[data-dx-stack-item=${ancestorStack.getAttribute('data-dx-stack')}]`,
+                ) as HTMLElement | undefined;
+                const adjacentStackItems = adjacentStack
+                  ? (Array.from(
+                      adjacentStack.querySelectorAll(
+                        `[data-dx-stack-item="${adjacentStack.getAttribute('data-dx-stack')}"]`,
+                      ),
+                    ) as HTMLElement[])
+                  : [];
+                if (adjacentStackItems.length > 0) {
+                  // Find the closest item by position
+                  const ownedItemRect = closestOwnedItem.getBoundingClientRect();
+                  const targetPosition =
+                    closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
 
-                let closestItem = adjacentStackItems[0];
-                let closestDistance = Infinity;
+                  let closestItem = adjacentStackItems[0];
+                  let closestDistance = Infinity;
 
-                for (const item of adjacentStackItems) {
-                  const itemRect = item.getBoundingClientRect();
-                  const itemPosition = orientation === 'vertical' ? itemRect.top : itemRect.left;
-                  const distance = Math.abs(itemPosition - targetPosition);
+                  for (const item of adjacentStackItems) {
+                    const itemRect = item.getBoundingClientRect();
+                    const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
+                    const distance = Math.abs(itemPosition - targetPosition);
 
-                  if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestItem = item;
+                    if (distance < closestDistance) {
+                      closestDistance = distance;
+                      closestItem = item;
+                    }
+                    if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
+                      break;
+                    }
                   }
-                  if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
-                    break;
-                  }
+
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(closestItem, closestStackOrientation);
+                } else if (adjacentStackSelfItem) {
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(adjacentStackSelfItem, ancestorOrientation);
                 }
-
-                event.preventDefault();
-                scrollIntoViewAndFocus(closestItem, orientation);
-              } else if (adjacentStackSelfItem) {
-                event.preventDefault();
-                scrollIntoViewAndFocus(adjacentStackSelfItem, ancestorOrientation);
+              } else if (closestOwnedItem) {
+                const closestOwnedItemStack = closestOwnedItem.querySelector('[data-dx-stack]');
+                const closestOwnedItemStackItems = closestOwnedItemStack
+                  ? (Array.from(
+                      closestOwnedItemStack.querySelectorAll(
+                        `[data-dx-stack-item="${closestOwnedItemStack.getAttribute('data-dx-stack')}"]`,
+                      ),
+                    ) as HTMLElement[])
+                  : [];
+                if (closestOwnedItemStackItems.length > 0) {
+                  event.preventDefault();
+                  scrollIntoViewAndFocus(
+                    closestOwnedItemStackItems[
+                      ['ArrowUp', 'ArrowLeft'].includes(event.key) ? closestOwnedItemStackItems.length - 1 : 0
+                    ],
+                    closestOwnedItemStack?.getAttribute('aria-orientation') as Orientation,
+                  );
+                }
               }
             }
           }
