@@ -17,9 +17,7 @@ export type ViewCollectionColumnProps = {
 export const ViewCollectionColumn = ({ viewRef }: ViewCollectionColumnProps) => {
   // Resolve the view from the viewRef using useQuery
   const client = useClient();
-  const space = getSpace(viewRef);
-  const echoDxn = viewRef.dxn.asEchoDXN();
-  const [view]: View[] = useQuery(space, echoDxn ? Filter.ids(echoDxn.echoId) : Filter.nothing());
+  const view = viewRef.target;
 
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
