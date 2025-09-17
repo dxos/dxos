@@ -77,7 +77,7 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
             type: InvocationTraceEventType.START,
             invocationId,
             timestamp: now,
-            input: payload.data,
+            input: payload.data ?? {},
             // invocationTraceQueue: Ref.fromDXN(invocationQueue),
             invocationTarget: target ? Ref.fromDXN(target) : undefined,
             trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,

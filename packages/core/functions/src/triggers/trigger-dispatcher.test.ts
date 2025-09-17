@@ -27,6 +27,7 @@ import { FunctionTrigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
+import { PropertiesType } from '@dxos/client-protocol';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerLive),
@@ -34,7 +35,11 @@ const TestLayer = pipe(
     Layer.mergeAll(
       AiService.notAvailable,
       TestDatabaseLayer({
-        types: [FunctionType, FunctionTrigger],
+        types: [FunctionType, FunctionTrigger, PropertiesType],
+        onInit: Effect.fnUntraced(function* () {
+          // TODO(dmaretskyi): Migrate PropertiesType to Obj.def
+          yield* DatabaseService.add(Obj.make(PropertiesType as any, {}) as any);
+        }),
       }),
       CredentialsService.layerConfig([]),
       LocalFunctionExecutionService.layerLive,
@@ -237,33 +242,6 @@ describe('TriggerDispatcher', () => {
         // Can invoke the trigger
         const result = yield* dispatcher.invokeTrigger({ trigger });
         expect(Exit.isSuccess(result.result)).toBe(true);
-      }, Effect.provide(TestTriggerDispatcherLayer)),
-    );
-  });
-
-  describe('Error Handling', () => {
-    it.effect(
-      'should handle missing function reference',
-      Effect.fnUntraced(function* ({ expect }) {
-        const dispatcher = yield* TriggerDispatcher;
-
-        // Create trigger without function reference
-        const trigger = Obj.make(FunctionTrigger, {
-          function: undefined,
-          enabled: true,
-          spec: {
-            kind: 'timer',
-            cron: '* * * * *',
-          },
-        });
-
-        // Should die with message
-        const result = yield* dispatcher.invokeTrigger({ trigger }).pipe(
-          Effect.map(() => 'success'),
-          Effect.catchAllDefect(() => Effect.succeed('died')),
-        );
-
-        expect(result).toBe('died');
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
   });

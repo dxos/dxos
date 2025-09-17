@@ -320,6 +320,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 break;
               }
             }
+            break;
           }
           default: {
             return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
