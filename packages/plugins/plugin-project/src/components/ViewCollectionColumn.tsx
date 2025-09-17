@@ -4,20 +4,20 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { type AnyEchoObject, type Ref } from '@dxos/echo-schema';
+import { type AnyEchoObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { type View } from '@dxos/schema';
 
 export type ViewCollectionColumnProps = {
-  viewRef: Ref<View>;
+  view: View;
 };
 
-export const ViewCollectionColumn = ({ viewRef }: ViewCollectionColumnProps) => {
-  // Resolve the view from the viewRef using useQuery
+export const ViewCollectionColumn = ({ view }: ViewCollectionColumnProps) => {
+  // Resolve the view from the view using useQuery
   const client = useClient();
-  const view = viewRef.target;
+  const space = getSpace(view);
 
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
@@ -29,12 +29,12 @@ export const ViewCollectionColumn = ({ viewRef }: ViewCollectionColumnProps) => 
 
   return (
     <CardStack.Root asChild>
-      <StackItem.Root item={{ id: viewRef.dxn.toString() }} size={20} focusIndicatorVariant='group'>
+      <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
         <CardStack.Content>
           <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
             {view.name ?? 'Untitled view'}
           </StackItem.Heading>
-          <CardStack.Stack id={viewRef.dxn.toString()} itemsCount={items.length}>
+          <CardStack.Stack id={view.id} itemsCount={items.length}>
             {items.map((liveMarker) => {
               const item = liveMarker as unknown as AnyEchoObject;
               return (
