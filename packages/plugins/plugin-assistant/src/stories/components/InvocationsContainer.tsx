@@ -10,7 +10,7 @@ import type { ComponentProps } from './types';
 
 export const InvocationsContainer = ({ space }: ComponentProps) => {
   return (
-    <div className='h-full min-h-[20rem] flex items-center justify-center'>
+    <div className='flex bs-full min-bs-[20rem] items-center justify-center'>
       <InvocationTraceContainer space={space} />
     </div>
   );

@@ -9,24 +9,27 @@ import { Filter } from '@dxos/echo';
 import { FunctionTrigger, TriggerDispatcher } from '@dxos/functions';
 import { AutomationPanel } from '@dxos/plugin-automation';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Input, useAsyncState } from '@dxos/react-ui';
+import { Input, Toolbar, useAsyncState } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 
 import { useComputeRuntimeCallback } from '../../hooks';
+import { meta } from '../../meta';
 
 import type { ComponentProps } from './types';
 
 export const TriggersContainer = ({ space }: ComponentProps) => {
+  const { t } = useTranslation(meta.id);
   const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(space);
   return (
-    <div>
-      <div className='flex gap-2 items-center flex-row'>
-        <h2>{isRunning ? 'Trigger dispatcher running' : 'Trigger dispatcher stopped'}</h2>
+    <div className='flex flex-col p-2'>
+      <Toolbar.Root>
         <Input.Root>
+          <div>{isRunning ? t('trigger dispatcher running') : t('trigger dispatcher stopped')}</div>
           <Input.Switch classNames='mis-2 mie-2' checked={isRunning} onCheckedChange={isRunning ? stop : start} />
         </Input.Root>
-      </div>
+      </Toolbar.Root>
 
-      <AutomationPanel space={space} />
+      <AutomationPanel classNames='p-2' space={space} />
     </div>
   );
 };

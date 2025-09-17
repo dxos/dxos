@@ -24,7 +24,7 @@ export enum InvocationTraceEventType {
 }
 
 export const TraceEventException = Schema.Struct({
-  timestampMs: Schema.Number,
+  timestamp: Schema.Number,
   message: Schema.String,
   name: Schema.String,
   stack: Schema.optional(Schema.String),
@@ -44,7 +44,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Event generation time.
    */
-  timestampMs: Schema.Number,
+  timestamp: Schema.Number,
   /**
    * Data passed to function / workflow as an argument.
    */
@@ -80,7 +80,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
    * Event generation time.
    */
   // TODO(burdon): Remove ms suffix.
-  timestampMs: Schema.Number,
+  timestamp: Schema.Number,
   outcome: Schema.Enums(InvocationOutcome),
   exception: Schema.optional(TraceEventException),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceEnd', version: '0.1.0' }));
@@ -90,7 +90,7 @@ export type InvocationTraceEndEvent = Schema.Schema.Type<typeof InvocationTraceE
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
 export const TraceEventLog = Schema.Struct({
-  timestampMs: Schema.Number,
+  timestamp: Schema.Number,
   level: Schema.String,
   message: Schema.String,
   context: Schema.optional(Schema.Object),
@@ -115,12 +115,12 @@ export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
  */
 export type InvocationSpan = {
   id: string;
-  timestampMs: number;
+  timestamp: number;
+  duration: number;
   outcome: InvocationOutcome;
   input: object;
-  durationMs: number;
-  invocationTraceQueue: Ref.Ref<Queue>;
-  invocationTarget: Ref.Ref<Type.Expando>;
+  invocationTraceQueue?: Ref.Ref<Queue>;
+  invocationTarget?: Ref.Ref<Type.Expando>;
   trigger?: Ref.Ref<FunctionTrigger>;
   exception?: TraceEventException;
 };
@@ -163,8 +163,8 @@ export const createInvocationSpans = (items?: InvocationTraceEvent[]): Invocatio
 
     result.push({
       id: invocationId,
-      timestampMs: start.timestampMs,
-      durationMs: isInProgress ? now - start.timestampMs : end!.timestampMs - start.timestampMs,
+      timestamp: start.timestamp,
+      duration: isInProgress ? now - start.timestamp : end!.timestamp - start.timestamp,
       outcome: end?.outcome ?? InvocationOutcome.PENDING,
       exception: end?.exception,
       input: start.input,

@@ -76,7 +76,7 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
           const traceEvent = Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId,
-            timestampMs: now,
+            timestamp: now,
             input: payload.data,
             // invocationTraceQueue: Ref.fromDXN(invocationQueue),
             invocationTarget: target ? Ref.fromDXN(target) : undefined,
@@ -93,12 +93,12 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
           const traceEvent = Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: trace.invocationId,
-            timestampMs: now,
+            timestamp: now,
             outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
             exception: exception
               ? {
                   name: exception.constructor.name,
-                  timestampMs: now,
+                  timestamp: now,
                   message: exception?.message ?? 'Unknown error',
                   stack: exception?.stack,
                 }
