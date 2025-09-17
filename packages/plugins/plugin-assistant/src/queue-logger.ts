@@ -39,7 +39,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
-            timestampMs: Date.now(),
+            timestamp: Date.now(),
             input: {},
             invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
@@ -51,7 +51,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
-            timestampMs: Date.now(),
+            timestamp: Date.now(),
             outcome: InvocationOutcome.SUCCESS,
           }),
         ]);
@@ -65,7 +65,7 @@ export class QueueLogger implements SequenceLogger {
             ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { step: event.step },
@@ -83,7 +83,7 @@ export class QueueLogger implements SequenceLogger {
             ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { message: event.message },
@@ -101,7 +101,7 @@ export class QueueLogger implements SequenceLogger {
             ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { block: event.block },

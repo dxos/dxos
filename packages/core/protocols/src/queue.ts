@@ -31,3 +31,8 @@ export type QueryResult = {
    */
   prevCursor: QueueCursor | null;
 };
+
+/**
+ * Position of an object in the queue that it is in.
+ */
+export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';

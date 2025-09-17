@@ -38,6 +38,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -188,6 +189,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
             contributes(Capabilities.Functions, [syncLinearIssues]),
+            contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),
         defineModule({
