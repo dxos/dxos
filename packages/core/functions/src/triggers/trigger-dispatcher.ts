@@ -152,7 +152,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
-        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(Effect.fork);
+        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(Effect.forkDaemon);
       } else {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
       }
