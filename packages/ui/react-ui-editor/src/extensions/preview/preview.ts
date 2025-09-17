@@ -10,6 +10,9 @@ import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemir
 import { type SyntaxNode } from '@lezer/common';
 
 export type PreviewLinkRef = {
+  /** @deprecated */
+  // TODO(burdon): Remove?
+  suggest?: boolean;
   block?: boolean;
   label: string;
   ref: string;

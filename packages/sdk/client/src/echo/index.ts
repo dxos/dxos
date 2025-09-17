@@ -3,7 +3,7 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
+export { type Echo, type Space, PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export {
   compareForeignKeys,
   createQueueDXN,

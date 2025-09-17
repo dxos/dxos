@@ -3235,6 +3235,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -5688,6 +5691,9 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@18.2.0)
     devDependencies:
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess

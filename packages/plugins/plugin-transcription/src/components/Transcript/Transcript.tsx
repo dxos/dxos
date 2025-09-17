@@ -56,6 +56,9 @@ export type TranscriptViewProps = ThemedClassName<{
   space?: Space;
   transcript?: Transcript.Transcript;
   model: SerializationModel<DataType.Message>;
+  // TODO(burdon): Are these still in use?
+  attendableId?: string;
+  ignoreAttention?: boolean;
 }>;
 
 /**

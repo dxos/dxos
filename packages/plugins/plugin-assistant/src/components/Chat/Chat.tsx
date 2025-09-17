@@ -369,7 +369,6 @@ const ChatThread = (props: ChatThreadProps) => {
       messages={messages}
       error={error}
       toolProvider={toolProvider}
-      onEvent={(ev) => event.emit(ev)}
     />
   );
 };

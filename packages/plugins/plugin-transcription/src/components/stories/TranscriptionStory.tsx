@@ -37,7 +37,7 @@ export const TranscriptionStory: FC<{
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Content>
-          <TranscriptView space={space} model={model} attendableId='story' />
+          <TranscriptView space={space} model={model} />
         </ScrollContainer.Content>
       </ScrollContainer.Root>
     </div>

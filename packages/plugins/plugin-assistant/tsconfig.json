@@ -178,6 +178,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-automation"
+    },
+    {
       "path": "../plugin-board"
     },
     {

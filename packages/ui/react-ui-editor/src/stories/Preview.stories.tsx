@@ -72,7 +72,13 @@ type PreviewAction =
       link: PreviewLinkRef;
     };
 
-const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElement; view?: EditorView }) => {
+type PreviewBlockProps = {
+  el: HTMLElement;
+  link: PreviewLinkRef;
+  view?: EditorView;
+};
+
+const PreviewBlock = ({ el, link, view }: PreviewBlockProps) => {
   const target = useRefTarget(link);
 
   const handleAction = useCallback(
