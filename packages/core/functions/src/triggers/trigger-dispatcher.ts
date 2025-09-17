@@ -185,17 +185,18 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
       const { trigger, data } = options;
-
-      if (!trigger.enabled) {
-        return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
-      }
-
-      if (!trigger.function) {
-        return yield* Effect.dieMessage('Trigger has no function reference');
-      }
+      log.info('invoking trigger', { triggerId: trigger.id, spec: trigger.spec, data });
 
       // Sandboxed section.
       const result = yield* Effect.gen(this, function* () {
+        if (!trigger.enabled) {
+          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+        }
+
+        if (!trigger.function) {
+          return yield* Effect.dieMessage('Trigger has no function reference');
+        }
+
         // Resolve the function
         const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
         invariant(Obj.instanceOf(FunctionType, serialiedFunction));
@@ -212,7 +213,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         triggerId: trigger.id,
         result,
       };
-      log('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
+      log.info('Trigger function executed', {
+        triggerId: trigger.id,
+        success: Exit.isSuccess(result),
+        error: Exit.isFailure(result) ? result.cause : undefined,
+      });
       return triggerExecutionResult;
     });
 
@@ -236,17 +241,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         }
       }
 
-      log.info('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
-
       // Invoke all due triggers
-      return yield* Effect.all(
-        triggersToInvoke.map((trigger) =>
+      return yield* Effect.forEach(
+        triggersToInvoke,
+        (trigger) =>
           this.invokeTrigger({
             trigger,
             data: { tick: now.getTime() } satisfies TimerTriggerOutput,
           }),
-        ),
-        { concurrency: 'unbounded' },
+        { concurrency: 1 },
       );
     });
 
@@ -380,7 +383,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
     Effect.gen(this, function* () {
-      log.info('run triggers');
       yield* this.invokeScheduledTimerTriggers();
       yield* this.invokeScheduledQueueTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
