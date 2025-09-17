@@ -18,8 +18,7 @@ import {
   type QueueTriggerOutput,
   type TimerTrigger,
   type TimerTriggerOutput,
-  TriggerKind,
-  TriggerKinds,
+  type TriggerKind,
 } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';

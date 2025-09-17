@@ -7,6 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
+import { PropertiesType } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
@@ -27,7 +28,6 @@ import { FunctionTrigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
-import { PropertiesType } from '@dxos/client-protocol';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerLive),
