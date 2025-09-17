@@ -16,6 +16,7 @@ import type {
   RemoteFunctionExecutionService,
   TracingService,
   TriggerDispatcher,
+  InvocationTracer,
 } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';
@@ -54,6 +55,7 @@ export namespace AssistantCapabilities {
     | RemoteFunctionExecutionService
     // TODO(dmaretskyi): This service is private and shouldn't be exposed as a part of public API.
     | FunctionImplementationResolver
+    | InvocationTracer
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService

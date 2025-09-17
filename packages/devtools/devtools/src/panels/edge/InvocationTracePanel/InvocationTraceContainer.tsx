@@ -108,7 +108,7 @@ export const InvocationTraceContainer = ({
         time: new Date(invocation.timestampMs),
         status,
         duration: formatDuration(invocation.durationMs),
-        queue: invocation.invocationTraceQueue.dxn?.toString() ?? 'unknown',
+        queue: invocation.invocationTraceQueue?.dxn.toString() ?? 'unknown',
         _original: invocation,
       };
     });

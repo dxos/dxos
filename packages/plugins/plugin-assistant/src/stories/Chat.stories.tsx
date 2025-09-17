@@ -56,6 +56,7 @@ import {
 import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 import { exampleFunctions, FunctionTrigger, serializeFunction, FunctionType } from '@dxos/functions';
 import { TriggersContainer } from './components/TriggersContainer';
+import { InvocationsContainer } from './components/InvocationsContainer';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -525,7 +526,7 @@ export const WithTriggers: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [TriggersContainer]],
+    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
   },
 };
