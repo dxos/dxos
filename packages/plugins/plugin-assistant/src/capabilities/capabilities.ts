@@ -11,12 +11,12 @@ import type {
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
+  InvocationTracer,
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
   TracingService,
   TriggerDispatcher,
-  InvocationTracer,
 } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';

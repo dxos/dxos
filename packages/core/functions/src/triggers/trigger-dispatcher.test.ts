@@ -8,6 +8,7 @@ import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
 import { default as reply } from '../examples/reply';
 import { serializeFunction } from '../handler';
@@ -16,17 +17,16 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
+  QueueService,
   RemoteFunctionExecutionService,
   TracingService,
-  QueueService,
 } from '../services';
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from '../services/local-function-execution';
 import { TestDatabaseLayer } from '../testing';
 import { FunctionTrigger } from '../types';
 
-import { TriggerDispatcher } from './trigger-dispatcher';
-import { DataType } from '@dxos/schema';
 import { InvocationTracer } from './invocation-tracer';
+import { TriggerDispatcher } from './trigger-dispatcher';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerLive),

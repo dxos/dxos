@@ -7,12 +7,12 @@ import { type Context, type Effect, Schema } from 'effect';
 import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type HasId } from '@dxos/echo-schema';
+import { assertArgument } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
-import { type QueryResult, assertParameter } from '@dxos/protocols';
+import { type QueryResult } from '@dxos/protocols';
 
 import { FunctionType } from './schema';
 import { type Services } from './services';
-import { assertArgument } from '@dxos/invariant';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

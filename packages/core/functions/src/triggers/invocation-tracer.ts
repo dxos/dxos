@@ -1,16 +1,22 @@
-import { SpaceId, DXN, ObjectId } from '@dxos/keys';
-import { Context, Schema, Effect, Layer } from 'effect';
-import type { TriggerKind } from '../types';
-import { QueueService, DatabaseService } from '../services';
-import { Obj, Query, Ref } from '@dxos/echo';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Context, Effect, Layer } from 'effect';
+
 import { PropertiesType } from '@dxos/client-protocol';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN, ObjectId } from '@dxos/keys';
+
+import { DatabaseService, QueueService } from '../services';
 import {
   InvocationOutcome,
   InvocationTraceEndEvent,
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
+import type { TriggerKind } from '../types';
 
 export type FunctionInvocationPayload = {
   data?: any;

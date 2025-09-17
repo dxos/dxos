@@ -1,6 +1,12 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import React from 'react';
-import type { ComponentProps } from './types';
+
 import { InvocationTraceContainer } from '@dxos/devtools';
+
+import type { ComponentProps } from './types';
 
 export const InvocationsContainer = ({ space }: ComponentProps) => {
   return (

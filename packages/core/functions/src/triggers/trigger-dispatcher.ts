@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule, Array, Cause } from 'effect';
+import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
 
 import { DXN, Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
 import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
-import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput, QueueTriggerOutput } from '../types';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { FunctionTrigger, type QueueTriggerOutput, type TimerTrigger, type TimerTriggerOutput } from '../types';
+
 import { InvocationTracer } from './invocation-tracer';
 
 export type TimeControl = 'natural' | 'manual';
@@ -287,7 +288,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
 
-      let invocations: TriggerExecutionResult[] = [];
+      const invocations: TriggerExecutionResult[] = [];
       for (const trigger of triggers) {
         const spec = trigger.spec;
         if (spec?.kind !== 'queue') {

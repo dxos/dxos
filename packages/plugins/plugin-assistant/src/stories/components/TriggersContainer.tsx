@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { FunctionTrigger, TriggerDispatcher } from '@dxos/functions';
-import type { ComponentProps } from './types';
-import { Filter } from '@dxos/echo';
-import { useQuery, Space } from '@dxos/react-client/echo';
-import { useComputeRuntimeCallback } from '../../hooks';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Effect } from 'effect';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation, useAsyncState } from '@dxos/react-ui';
+import React from 'react';
+
+import { Filter } from '@dxos/echo';
+import { FunctionTrigger, TriggerDispatcher } from '@dxos/functions';
 import { AutomationPanel } from '@dxos/plugin-automation';
+import { type Space, useQuery } from '@dxos/react-client/echo';
+import { Input, useAsyncState } from '@dxos/react-ui';
+
+import { useComputeRuntimeCallback } from '../../hooks';
+
+import type { ComponentProps } from './types';
 
 export const TriggersContainer = ({ space }: ComponentProps) => {
   const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(space);

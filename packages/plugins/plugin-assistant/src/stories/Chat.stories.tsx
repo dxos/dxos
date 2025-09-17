@@ -13,6 +13,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { FunctionTrigger, FunctionType, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -53,10 +54,9 @@ import {
   TasksContainer,
   TokenManagerContainer,
 } from './components';
-import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
-import { exampleFunctions, FunctionTrigger, serializeFunction, FunctionType } from '@dxos/functions';
-import { TriggersContainer } from './components/TriggersContainer';
 import { InvocationsContainer } from './components/InvocationsContainer';
+import { TriggersContainer } from './components/TriggersContainer';
+import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 

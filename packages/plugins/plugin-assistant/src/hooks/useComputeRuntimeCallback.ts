@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import type { Effect } from 'effect';
+import { useCallback } from 'react';
+
 import { useCapability } from '@dxos/app-framework';
 import type { Space } from '@dxos/client/echo';
+
 import { AssistantCapabilities } from '../capabilities';
-import { useCallback } from 'react';
-import type { Effect } from 'effect';
 
 /**
  * Create an effectful function that has access to compute services

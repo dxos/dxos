@@ -13,12 +13,12 @@ import {
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
+  InvocationTracer,
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
   TracingService,
-  TriggerDispatcher, 
-InvocationTracer,
+  TriggerDispatcher,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';

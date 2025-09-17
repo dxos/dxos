@@ -9,11 +9,11 @@ import { Testing } from '@dxos/echo/testing';
 import { Ref, getSchema } from '@dxos/echo-schema';
 import { DXN, SpaceId } from '@dxos/keys';
 import { live } from '@dxos/live-object';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import type { Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;
