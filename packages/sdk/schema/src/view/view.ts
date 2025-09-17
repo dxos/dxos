@@ -6,7 +6,7 @@ import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
@@ -14,7 +14,6 @@ import {
   JsonSchemaType,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-  QueryType,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
@@ -71,7 +70,7 @@ export const View = Schema.Struct({
    * This includes the base type that the view schema (above) references.
    * It may include predicates that represent a persistent "drill-down" query.
    */
-  query: QueryType,
+  query: QueryAST.Query,
 
   /**
    * Projection of the data returned from the query.
@@ -84,7 +83,7 @@ export const View = Schema.Struct({
   presentation: Type.Ref(Type.Expando),
 })
   .pipe(LabelAnnotation.set(['name']))
-  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
+  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
 export type View = Schema.Schema.Type<typeof View>;
 
 export const createFieldId = () => PublicKey.random().truncate();
@@ -113,9 +112,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: {
-      typename,
-    },
+    query: Query.select(Filter.typename(typename)).ast,
     projection: {
       schema: overrideSchema,
       fields: [],

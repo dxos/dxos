@@ -4,8 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
-import { QueryType } from '@dxos/echo-schema';
+import { QueryAST, Type } from '@dxos/echo';
 
 export const Collection = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -19,9 +18,10 @@ export const Collection = Schema.Struct({
 
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
+// TODO(wittjosiah): Remove. Use View instead.
 export const QueryCollection = Schema.Struct({
   name: Schema.optional(Schema.String),
-  query: QueryType,
+  query: QueryAST.Query,
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/QueryCollection',

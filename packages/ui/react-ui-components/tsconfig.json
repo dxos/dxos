@@ -39,6 +39,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {

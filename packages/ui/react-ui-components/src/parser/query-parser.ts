@@ -4,11 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type BinaryOperator, type Expression, type RelationalOperator } from './types';
+import { type BinaryOperator, type Expression, type RelationalOperator, type RelationalSymbol } from './types';
 
 // TODO(burdon): Move to echo-schema?
-
-type RelationalSymbol = '=' | '<' | '>';
 
 const operators: Record<RelationalSymbol, RelationalOperator> = {
   '=': 'EQ',

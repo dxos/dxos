@@ -4,7 +4,7 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { QueryAST, Type } from '@dxos/echo';
 import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
@@ -62,19 +62,12 @@ const WebhookTriggerSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
-// TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
-const QuerySchema = Schema.Struct({
-  type: Schema.optional(Schema.String.annotations({ title: 'Type' })),
-  props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).annotations({ title: 'Query' });
-
 /**
  * Subscription.
  */
 const SubscriptionTriggerSchema = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
-  // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: QuerySchema,
+  filter: QueryAST.Query.annotations({ title: 'Query' }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).

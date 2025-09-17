@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { QueryEditor, QuerySerializer } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
@@ -16,27 +17,20 @@ import { type DataType, FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps } from '../Form';
+import { Form, type FormProps, type InputComponent } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
-
-const ViewMetaSchema = Schema.Struct({
-  typename: Format.URL.annotations({
-    title: 'Record type',
-  }),
-}).pipe(Schema.mutable);
-
-type ViewMetaType = Schema.Schema.Type<typeof ViewMetaSchema>;
 
 export type ViewEditorProps = ThemedClassName<
   {
     schema: Schema.Schema.AnyNoContext;
     view: DataType.View;
+    kind?: 'basic' | 'advanced';
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
-    onTypenameChanged?: (typename: string) => void;
+    onQueryChanged?: (query: string) => void;
     onDelete?: (fieldId: string) => void;
   } & Pick<FormProps<any>, 'outerSpacing'>
 >;
@@ -48,10 +42,11 @@ export const ViewEditor = ({
   classNames,
   schema,
   view,
+  kind = 'basic',
   registry,
   readonly,
   showHeading = false,
-  onTypenameChanged,
+  onQueryChanged,
   onDelete,
   outerSpacing = true,
 }: ViewEditorProps) => {
@@ -64,14 +59,28 @@ export const ViewEditor = ({
   }, [schema, view.projection]);
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
-  // TODO(burdon): Should be reactive.
-  const viewValues = useMemo(() => {
-    return {
-      // TODO(burdon): Need to warn user of possible consequences of editing.
-      // TODO(burdon): Settings should have domain name owned by user.
-      typename: view.query.typename,
-    };
-  }, [view.query.typename]);
+  const serializedQuery = Match.value(kind).pipe(
+    Match.when('basic', () =>
+      view.query.type === 'select' ? (view.query.filter.type === 'object' ? view.query.filter.typename : '') : '',
+    ),
+    Match.when('advanced', () => {
+      const serializer = new QuerySerializer();
+      return serializer.serialize(view.query);
+    }),
+    Match.exhaustive,
+  );
+
+  const viewSchema = useMemo(() => {
+    return Schema.Struct({
+      query:
+        kind === 'basic'
+          ? Format.URL.annotations({ title: 'Record type' })
+          : Schema.String.annotations({ title: 'Query' }),
+    }).pipe(Schema.mutable);
+  }, [kind]);
+  // TODO(burdon): Need to warn user of possible consequences of editing.
+  // TODO(burdon): Settings should have domain name owned by user.
+  const viewValues = useMemo(() => ({ query: serializedQuery }), [serializedQuery]);
 
   const handleToggleField = useCallback(
     (field: FieldType) => {
@@ -89,15 +98,15 @@ export const ViewEditor = ({
   }, [schema, projectionModel, readonly]);
 
   const handleUpdate = useCallback(
-    ({ typename }: ViewMetaType) => {
+    ({ query }: Schema.Schema.Type<typeof viewSchema>) => {
       invariant(!readonly);
       requestAnimationFrame(() => {
-        if (view.query.typename !== typename && !readonly) {
-          onTypenameChanged?.(typename);
+        if (serializedQuery !== query && !readonly) {
+          onQueryChanged?.(query);
         }
       });
     },
-    [view.query.typename, onTypenameChanged, readonly],
+    [serializedQuery, onQueryChanged, readonly],
   );
 
   const handleDelete = useCallback(
@@ -142,6 +151,16 @@ export const ViewEditor = ({
     [projectionModel],
   );
 
+  const custom: Partial<Record<string, InputComponent>> = useMemo(
+    () =>
+      kind === 'advanced'
+        ? {
+            ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props) => <QueryEditor {...props} />,
+          }
+        : {},
+    [],
+  );
+
   return (
     <div role='none' className={mx(classNames)}>
       {schemaReadonly && (
@@ -155,9 +174,9 @@ export const ViewEditor = ({
 
       {/* TODO(burdon): Is the form read-only or just the schema? */}
       {/* TODO(burdon): Readonly fields should take up the same space as editable fields (just be ghosted). */}
-      <Form<ViewMetaType>
+      <Form<Schema.Schema.Type<typeof viewSchema>>
         autoSave
-        schema={ViewMetaSchema}
+        schema={viewSchema}
         values={viewValues}
         readonly={readonly ? 'disabled-input' : false}
         onSave={handleUpdate}

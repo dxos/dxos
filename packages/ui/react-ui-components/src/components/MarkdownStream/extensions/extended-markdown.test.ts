@@ -20,7 +20,7 @@ describe('extended-markdown', () => {
     });
   };
 
-  test.only('tree', async ({ expect }) => {
+  test('tree', async ({ expect }) => {
     const doc = trim`
       <prompt>
         Hello
