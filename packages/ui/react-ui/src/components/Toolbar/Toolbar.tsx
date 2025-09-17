@@ -30,7 +30,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
     return (
       <ToolbarPrimitive.Root
         {...props}
-        data-arrow-keys={`handles-${props.orientation ?? 'horizontal'}`}
+        data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
         className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
         ref={forwardedRef}
       >

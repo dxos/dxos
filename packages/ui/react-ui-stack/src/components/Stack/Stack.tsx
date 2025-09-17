@@ -125,7 +125,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         if (
           event.key.startsWith('Arrow') &&
           !target.closest(
-            `input, textarea, [role="textbox"], [data-tabster*="mover"], [data-arrow-keys="handles-all"], [data-arrow-keys="handles-${['ArrowLeft', 'ArrowRight'].includes(event.key) ? 'horizontal' : 'vertical'}"]`,
+            `input, textarea, [role="textbox"], [data-tabster*="mover"], [data-arrow-keys="all"], [data-arrow-keys~="${event.key.toLowerCase().slice(5)}"]`,
           )
         ) {
           const closestOwnedItem = target.closest(`[data-dx-stack-item="${stackId}"]`);

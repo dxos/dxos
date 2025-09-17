@@ -1480,7 +1480,7 @@ export class DxGrid extends LitElement {
       <div
         role="none"
         class="dx-grid"
-        data-arrow-keys="handles-all"
+        data-arrow-keys="all"
         style=${styleMap({
           'grid-template-columns': [
             this.templatefrozenColsStart ? 'min-content' : false,
