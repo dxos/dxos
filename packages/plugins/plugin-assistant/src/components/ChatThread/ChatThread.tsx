@@ -24,15 +24,16 @@ export type ChatThreadProps = ThemedClassName<
     messages?: DataType.Message[];
     error?: Error;
   } & Pick<ChatMessageProps, 'debug' | 'toolProvider'> &
-    Pick<MarkdownStreamProps, 'characterDelay' | 'cursor' | 'fadeIn'>
+    Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, characterDelay = 5, cursor = false, fadeIn = true }, forwardedRef) => {
+  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
 
+    // Expose controller.
     const [controller, setController] = useState<MarkdownStreamController | null>(null);
     useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
 
@@ -56,7 +57,6 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
           ref={setController}
           classNames='bs-full max-is-prose overflow-hidden'
           registry={componentRegistry}
-          characterDelay={characterDelay}
           cursor={cursor}
           fadeIn={fadeIn}
         />
