@@ -78,6 +78,5 @@ const mixedParser = (registry?: XmlComponentRegistry): ParseWrapper => {
   });
 };
 
-// TODO(burdon): Factor out.
 export const renderObjectLink = (obj: Obj.Any, transclusion?: boolean) =>
   `${transclusion ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;

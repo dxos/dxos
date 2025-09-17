@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import { Effect, Queue, Stream, TestClock, TestContext } from 'effect';
 
-import { createStreamer, tokenizeWithFragments, tokenizeWithTags } from './stream';
+import { createStreamer, chunkWithXmlFragments, tokenizeWithTags } from './stream';
 
 describe('stream', () => {
   it.effect('tokenize tags', ({ expect }) =>
@@ -32,15 +32,15 @@ describe('stream', () => {
   it.effect('tokenize fragments', ({ expect }) =>
     Effect.gen(function* () {
       {
-        expect(tokenizeWithFragments('A\n<toolkit />\nB')).toEqual(['A', '\n', '<toolkit />', '\n', 'B']);
-        expect(tokenizeWithFragments('A\n<suggestion>Test</suggestion>\nB')).toEqual([
+        expect(chunkWithXmlFragments('A\n<toolkit />\nB')).toEqual(['A', '\n', '<toolkit />', '\n', 'B']);
+        expect(chunkWithXmlFragments('A\n<suggestion>Test</suggestion>\nB')).toEqual([
           'A',
           '\n',
           '<suggestion>Test</suggestion>',
           '\n',
           'B',
         ]);
-        expect(tokenizeWithFragments('A\n<select><option /><option>Test</option></select>\nB')).toEqual([
+        expect(chunkWithXmlFragments('A\n<select><option /><option>Test</option></select>\nB')).toEqual([
           'A',
           '\n',
           '<select><option /><option>Test</option></select>',

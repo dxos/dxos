@@ -28,7 +28,7 @@ export class MessageSyncer {
   constructor(private readonly _doc: TextModel) {}
 
   reset() {
-    log.info('reset');
+    log('reset');
     this._initialMessageId = undefined;
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
@@ -37,7 +37,7 @@ export class MessageSyncer {
   }
 
   sync(messages: DataType.Message[]) {
-    log.info('sync', {
+    log('sync', {
       messages: messages.map((m) => m.blocks.length),
       currentMessageIndex: this._currentMessageIndex,
       currentBlockIndex: this._currentBlockIndex,
@@ -69,11 +69,7 @@ export class MessageSyncer {
 
           void this._doc.append(content);
           this._currentBlockContent = content;
-          log.info('append', {
-            message: i,
-            block: j,
-            content,
-          });
+          log('append', { message: i, block: j, content });
         }
 
         if (block.pending) {

@@ -12,15 +12,18 @@ export const createStreamer =
   (source: Stream.Stream<string>) =>
     source.pipe(
       Stream.flatMap((chunk) =>
-        Stream.fromIterable(tokenizeWithFragments(chunk)).pipe(
+        Stream.fromIterable(chunkWithXmlFragments(chunk)).pipe(
           Stream.flatMap((token) => Stream.succeed(token).pipe(Stream.tap(() => Effect.sleep(characterDelay)))),
         ),
       ),
     );
 
-export const tokenizeWithFragments = (text: string): string[] => {
+/**
+ * Splits text into chunks, preserving XML/HTML fragments.
+ */
+export const chunkWithXmlFragments = (text: string): string[] => {
   // First tokenize with tags to get tags as complete tokens.
-  const initialTokens = tokenizeWithTags(text);
+  const initialTokens = chunkWithSpans(text);
   const tokens: string[] = [];
 
   let i = 0;
@@ -30,7 +33,6 @@ export const tokenizeWithFragments = (text: string): string[] => {
     // Check if this is an opening tag.
     if (token.startsWith('<') && !token.startsWith('</') && !token.endsWith('/>')) {
       const tagMatch = token.match(/<(\w+)[^>]*>/);
-
       if (tagMatch) {
         const tagName = tagMatch[1];
         const closingTag = `</${tagName}>`;
@@ -73,29 +75,100 @@ export const tokenizeWithFragments = (text: string): string[] => {
 };
 
 // TODO(burdon): Split into paragraphs and tags.
-export const tokenizeWithTags = (text: string): string[] => {
-  const tokens: string[] = [];
+// export const tokenizeWithTags = (text: string): string[] => {
+//   const tokens: string[] = [];
+//   let i = 0;
+//   while (i < text.length) {
+//     if (text[i] === '<') {
+//       // Find the closing bracket.
+//       const closeIndex = text.indexOf('>', i);
+//       if (closeIndex !== -1) {
+//         // Include the complete tag.
+//         tokens.push(text.slice(i, closeIndex + 1));
+//         i = closeIndex + 1;
+//       } else {
+//         // No closing bracket found, return the entire remaining fragment.
+//         tokens.push(text.slice(i));
+//         break;
+//       }
+//     } else {
+//       // Regular character.
+//       tokens.push(text[i]);
+//       i++;
+//     }
+//   }
+//   return tokens;
+// };
+
+export const chunkWithSpans = (text: string): string[] => {
+  const parts: string[] = [];
+  let currentText = '';
 
   let i = 0;
   while (i < text.length) {
     if (text[i] === '<') {
+      // If we have accumulated text, split it into sentences and push them.
+      if (currentText) {
+        const sentences = splitIntoSentences(currentText);
+        parts.push(...sentences);
+        currentText = '';
+      }
+
       // Find the closing bracket.
       const closeIndex = text.indexOf('>', i);
       if (closeIndex !== -1) {
         // Include the complete tag.
-        tokens.push(text.slice(i, closeIndex + 1));
+        parts.push(text.slice(i, closeIndex + 1));
         i = closeIndex + 1;
       } else {
-        // No closing bracket found, return the entire remaining fragment.
-        tokens.push(text.slice(i));
+        // No closing bracket found, treat the rest as text.
+        currentText = text.slice(i);
         break;
       }
     } else {
-      // Regular character.
-      tokens.push(text[i]);
+      // Accumulate regular text.
+      currentText += text[i];
       i++;
     }
   }
 
-  return tokens;
+  // Push any remaining text split into sentences.
+  if (currentText) {
+    const sentences = splitIntoSentences(currentText);
+    parts.push(...sentences);
+  }
+
+  return parts;
+};
+
+/**
+ * Split text into sentences, preserving the sentence-ending punctuation.
+ */
+const splitIntoSentences = (text: string): string[] => {
+  // Match sentences ending with ., !, or ? followed by space or end of string.
+  // This regex captures the sentence including its ending punctuation.
+  const sentenceRegex = /[^.!?]*[.!?]+(?:\s+|$)/g;
+  const sentences: string[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = sentenceRegex.exec(text)) !== null) {
+    sentences.push(match[0]);
+    lastIndex = match.index + match[0].length;
+  }
+
+  // If there's remaining text that doesn't end with punctuation, include it.
+  if (lastIndex < text.length) {
+    const remaining = text.slice(lastIndex);
+    if (remaining) {
+      sentences.push(remaining);
+    }
+  }
+
+  // If no sentences were found, return the original text.
+  if (sentences.length === 0 && text) {
+    sentences.push(text);
+  }
+
+  return sentences;
 };

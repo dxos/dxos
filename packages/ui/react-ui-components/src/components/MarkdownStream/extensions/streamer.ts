@@ -106,7 +106,7 @@ class CursorWidget extends WidgetType {
 }
 
 /**
- * State field to detect and decorate appended text.2
+ * State field to detect and decorate appended text.
  */
 const fadeIn = (): Extension => {
   return [
@@ -127,12 +127,7 @@ const fadeIn = (): Extension => {
 
           // Check if the change is at the end of the document.
           if (toA === tr.startState.doc.length && inserted.length > 0) {
-            // This is an append operation.
-            newDecorations.push(
-              Decoration.mark({
-                class: 'cm-fade-in',
-              }).range(fromB, toB),
-            );
+            newDecorations.push(Decoration.mark({ class: 'cm-fade-in' }).range(fromB, toB));
           }
         });
 
@@ -154,7 +149,7 @@ const fadeIn = (): Extension => {
 
     EditorView.theme({
       '.cm-fade-in': {
-        animation: 'fade-in 0.5s ease-out forwards',
+        animation: 'fade-in 1s ease-out forwards',
       },
       '@keyframes fade-in': {
         '0%': {

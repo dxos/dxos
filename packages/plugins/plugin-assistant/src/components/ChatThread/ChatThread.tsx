@@ -28,10 +28,7 @@ export type ChatThreadProps = ThemedClassName<
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
-  (
-    { classNames, identity, messages = [], error, debug, characterDelay = 5, cursor = true, fadeIn = true },
-    forwardedRef,
-  ) => {
+  ({ classNames, identity, messages = [], error, characterDelay = 5, cursor = false, fadeIn = true }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -52,7 +49,7 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
 
     return (
       <div
-        className={mx('flex bs-full justify-center overflow-hidden', classNames)}
+        className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
         style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
       >
         <MarkdownStream
