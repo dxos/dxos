@@ -121,7 +121,7 @@ const Board = (props: BoardProps) => {
       return;
     }
 
-    //
+    // Participate in keyboard navigation (set tabIndex={0})
     ref.current.setAttribute('data-arrow-keys', 'all');
 
     return addEventListener(ref.current, 'keydown', (ev) => {

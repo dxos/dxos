@@ -99,7 +99,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
     }, [grid, model?.pieces.value, promoting]);
 
     return (
-      <div ref={targetRef} tabIndex={-1} className={mx('relative outline-none', classNames)}>
+      <div ref={targetRef} tabIndex={0} className={mx('relative outline-none', classNames)}>
         {/* DOM Layout. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
           {layout}
@@ -184,10 +184,10 @@ const PromotionSelector = ({
       {positions.map(({ piece, bounds }) => (
         <Gameboard.Piece
           key={piece.id}
+          classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
           piece={piece}
           bounds={bounds}
           Component={ChessPieces[piece.type as ChessPiece]}
-          classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
           onClick={() => handleSelect(piece)}
         />
       ))}
