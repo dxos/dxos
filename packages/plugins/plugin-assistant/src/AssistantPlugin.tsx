@@ -16,6 +16,7 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  ComputeRuntime,
   EdgeModelResolver,
   IntentResolver,
   LocalModelResolver,
@@ -157,5 +158,11 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Use a different event.
       activatesOn: Events.Startup,
       activate: Toolkit,
+    }),
+    defineModule({
+      id: `${meta.id}/module/compute-runtime`,
+      // TODO(wittjosiah): Use a different event.
+      activatesOn: Events.Startup,
+      activate: ComputeRuntime,
     }),
   ]);

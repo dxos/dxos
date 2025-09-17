@@ -64,12 +64,15 @@ export const useInvocationSpans = ({ space, target }: { space?: Space; target?: 
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
       return invocationSpans.filter((span) => {
+        if (!span.invocationTarget) {
+          return false;
+        }
         const targetId = span.invocationTarget.dxn;
         const uuidPart = getUuidFromDxn(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget.dxn.toString() === Obj.getDXN(target).toString());
+      return invocationSpans.filter((span) => span.invocationTarget?.dxn.toString() === Obj.getDXN(target).toString());
     }
     return invocationSpans;
   }, [functionsForScript, target, invocationSpans]);

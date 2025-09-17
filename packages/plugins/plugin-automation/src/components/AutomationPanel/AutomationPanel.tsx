@@ -9,7 +9,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
-import { Clipboard, IconButton, Input, Separator, useTranslation } from '@dxos/react-ui';
+import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -19,15 +19,15 @@ import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
 
-export type AutomationPanelProps = {
+export type AutomationPanelProps = ThemedClassName<{
   space: Space;
   object?: Obj.Any;
   initialTrigger?: FunctionTrigger;
   onDone?: () => void;
-};
+}>;
 
 // TODO(burdon): Factor out common layout with ViewEditor.
-export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
+export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   const client = useClient();
   const triggers = useQuery(space, Filter.type(FunctionTrigger));
@@ -79,7 +79,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }
 
   return (
-    <div className={controlItemClasses}>
+    <div className={mx(controlItemClasses, classNames)}>
       {triggers.length > 0 && (
         <List.Root<FunctionTrigger> items={triggers} isItem={Schema.is(FunctionTrigger)} getId={(field) => field.id}>
           {({ items: triggers }) => (
