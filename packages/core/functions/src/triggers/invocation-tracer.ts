@@ -5,7 +5,7 @@
 import { Context, Effect, Layer } from 'effect';
 
 import { Obj, Ref } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
+import { type Queue } from '@dxos/echo-db';
 import { DXN, ObjectId } from '@dxos/keys';
 
 import { QueueService } from '../services';

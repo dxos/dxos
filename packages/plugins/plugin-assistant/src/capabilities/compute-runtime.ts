@@ -7,7 +7,9 @@ import { Effect, Layer, ManagedRuntime } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { PropertiesType } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { Query, Ref } from '@dxos/echo';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -25,8 +27,6 @@ import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantCapabilities } from './capabilities';
-import { Query, Ref } from '@dxos/echo';
-import { PropertiesType } from '@dxos/client/echo';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
