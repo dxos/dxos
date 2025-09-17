@@ -7,7 +7,6 @@ import { describe, it } from '@effect/vitest';
 import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
-import { PropertiesType } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
@@ -30,16 +29,12 @@ import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 
 const TestLayer = pipe(
-  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerLive),
+  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
       TestDatabaseLayer({
-        types: [FunctionType, FunctionTrigger, PropertiesType],
-        onInit: Effect.fnUntraced(function* () {
-          // TODO(dmaretskyi): Migrate PropertiesType to Obj.def
-          yield* DatabaseService.add(Obj.make(PropertiesType as any, {}) as any);
-        }),
+        types: [FunctionType, FunctionTrigger],
       }),
       CredentialsService.layerConfig([]),
       LocalFunctionExecutionService.layerLive,

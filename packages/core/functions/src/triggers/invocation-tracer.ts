@@ -4,12 +4,11 @@
 
 import { Context, Effect, Layer } from 'effect';
 
-import { PropertiesType } from '@dxos/client-protocol';
-import { Obj, Query, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
+import { Obj, Ref } from '@dxos/echo';
+import { Queue } from '@dxos/echo-db';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { DatabaseService, QueueService } from '../services';
+import { QueueService } from '../services';
 import {
   InvocationOutcome,
   InvocationTraceEndEvent,
@@ -45,68 +44,54 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
     traceInvocationEnd({ trace, exception }: { trace: TraceData; exception?: any }): Effect.Effect<void>;
   }
 >() {
-  static layerLive = Layer.effect(
-    InvocationTracer,
+  static layerLive = (opts: { invocationTraceQueue: Queue }) =>
+    Layer.effect(
+      InvocationTracer,
+      Effect.gen(function* () {
+        return {
+          traceInvocationStart: Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
+            const invocationId = ObjectId.random();
+
+            const now = Date.now();
+            const traceEvent = Obj.make(InvocationTraceStartEvent, {
+              type: InvocationTraceEventType.START,
+              invocationId,
+              timestamp: now,
+              input: payload.data ?? {},
+              // invocationTraceQueue: Ref.fromDXN(invocationQueue),
+              invocationTarget: target ? Ref.fromDXN(target) : undefined,
+              trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+            });
+            yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+
+            return { invocationId };
+          }),
+          traceInvocationEnd: Effect.fn('traceInvocationEnd')(function* ({ trace, exception }) {
+            const now = Date.now();
+            const traceEvent = Obj.make(InvocationTraceEndEvent, {
+              type: InvocationTraceEventType.END,
+              invocationId: trace.invocationId,
+              timestamp: now,
+              outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
+              exception: exception
+                ? {
+                    name: exception.constructor.name,
+                    timestamp: now,
+                    message: exception?.message ?? 'Unknown error',
+                    stack: exception?.stack,
+                  }
+                : undefined,
+            });
+            yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
+          }),
+        };
+      }),
+    );
+
+  static layerTest = Layer.unwrapEffect(
     Effect.gen(function* () {
-      const queues = yield* QueueService;
-      const db = yield* DatabaseService;
-
-      const resolveSpaceInvocationsQueue = Effect.fn('resolveSpaceInvocationQueue')(
-        function* () {
-          const {
-            objects: [properties],
-          } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
-          invariant(properties);
-          if (!properties.invocationTraceQueue) {
-            properties.invocationTraceQueue = Ref.fromDXN(queues.queues.create({ subspaceTag: 'trace' }).dxn);
-          }
-          const queue = properties.invocationTraceQueue.target;
-          invariant(queue);
-          return queue;
-        },
-        Effect.provideService(DatabaseService, db),
-      );
-
-      return {
-        traceInvocationStart: Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
-          const invocationId = ObjectId.random();
-          const invocationsQueue = yield* resolveSpaceInvocationsQueue();
-
-          const now = Date.now();
-          const traceEvent = Obj.make(InvocationTraceStartEvent, {
-            type: InvocationTraceEventType.START,
-            invocationId,
-            timestamp: now,
-            input: payload.data ?? {},
-            // invocationTraceQueue: Ref.fromDXN(invocationQueue),
-            invocationTarget: target ? Ref.fromDXN(target) : undefined,
-            trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
-          });
-          yield* Effect.promise(() => invocationsQueue.append([traceEvent]));
-
-          return { invocationId };
-        }),
-        traceInvocationEnd: Effect.fn('traceInvocationEnd')(function* ({ trace, exception }) {
-          const invocationsQueue = yield* resolveSpaceInvocationsQueue();
-
-          const now = Date.now();
-          const traceEvent = Obj.make(InvocationTraceEndEvent, {
-            type: InvocationTraceEventType.END,
-            invocationId: trace.invocationId,
-            timestamp: now,
-            outcome: exception ? InvocationOutcome.FAILURE : InvocationOutcome.SUCCESS,
-            exception: exception
-              ? {
-                  name: exception.constructor.name,
-                  timestamp: now,
-                  message: exception?.message ?? 'Unknown error',
-                  stack: exception?.stack,
-                }
-              : undefined,
-          });
-          yield* Effect.promise(() => invocationsQueue.append([traceEvent]));
-        }),
-      };
+      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+      return InvocationTracer.layerLive({ invocationTraceQueue: queue });
     }),
   );
 }

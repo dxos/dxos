@@ -25,6 +25,8 @@ import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantCapabilities } from './capabilities';
+import { Query, Ref } from '@dxos/echo';
+import { PropertiesType } from '@dxos/client/echo';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
@@ -77,7 +79,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
-              InvocationTracer.layerLive,
+              IvocationTracerLive,
               serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
@@ -105,3 +107,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
     return runtime;
   }
 }
+
+const IvocationTracerLive = Layer.unwrapEffect(
+  Effect.gen(function* () {
+    const {
+      objects: [properties],
+    } = yield* DatabaseService.runQuery(Query.type(PropertiesType));
+    invariant(properties);
+    if (!properties.invocationTraceQueue) {
+      const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
+      properties.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+    }
+    const queue = properties.invocationTraceQueue.target;
+    invariant(queue);
+    return InvocationTracer.layerLive({ invocationTraceQueue: queue });
+  }),
+);
