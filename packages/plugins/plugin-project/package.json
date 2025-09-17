@@ -48,6 +48,7 @@
     "effect": "3.17.7"
   },
   "devDependencies": {
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

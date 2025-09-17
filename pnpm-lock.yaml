@@ -8588,6 +8588,9 @@ importers:
         specifier: 3.17.7
         version: 3.17.7
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
