@@ -54,7 +54,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const View = Schema.Struct({
+const View_ = Schema.Struct({
   /**
    * Name of the view.
    */
@@ -84,7 +84,9 @@ export const View = Schema.Struct({
 })
   .pipe(LabelAnnotation.set(['name']))
   .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
-export type View = Schema.Schema.Type<typeof View>;
+export interface View extends Schema.Schema.Type<typeof View_> {}
+export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
+export const View: Schema.Schema<View, ViewEncoded> = View_;
 
 export const createFieldId = () => PublicKey.random().truncate();
 

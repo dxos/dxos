@@ -144,7 +144,7 @@ export type TimerTriggerOutput = Schema.Schema.Type<typeof TimerTriggerOutput>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-export const FunctionTrigger = Schema.Struct({
+const FunctionTrigger_ = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
@@ -180,7 +180,9 @@ export const FunctionTrigger = Schema.Struct({
     version: '0.2.0',
   }),
 );
-export type FunctionTrigger = Schema.Schema.Type<typeof FunctionTrigger>;
+export interface FunctionTrigger extends Schema.Schema.Type<typeof FunctionTrigger_> {}
+export interface FunctionTriggerEncoded extends Schema.Schema.Encoded<typeof FunctionTrigger_> {}
+export const FunctionTrigger: Schema.Schema<FunctionTrigger, FunctionTriggerEncoded> = FunctionTrigger_;
 
 // TODO(wittjosiah): Remove?
 
