@@ -36,6 +36,7 @@ export class QueryPlanner {
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
+    plan = this._ensureOrderStep(plan);
     return plan;
   }
 
@@ -434,7 +435,32 @@ export class QueryPlanner {
       ...this._generate(query.query, context).steps,
       {
         _tag: 'OrderStep',
-        order: query.order.length > 0 ? query.order : [Order.natural.ast],
+        order: query.order,
+      },
+    ]);
+  }
+
+  // After complete plan is built, inspect it from the end:
+  //   - Walk backwards until hitting an object set changer.
+  //   - If an order step is found, skip.
+  //   - Otherwise append natural order to the end.
+  private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+    const OBJECT_SET_CHANGERS = new Set(['SelectStep', 'TraverseStep', 'UnionStep', 'SetDifferenceStep']);
+    for (let i = plan.steps.length - 1; i >= 0; i--) {
+      const step = plan.steps[i];
+      if (step._tag === 'OrderStep') {
+        return plan;
+      }
+      if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        break;
+      }
+    }
+
+    return QueryPlan.Plan.make([
+      ...plan.steps,
+      {
+        _tag: 'OrderStep',
+        order: [Order.natural.ast],
       },
     ]);
   }

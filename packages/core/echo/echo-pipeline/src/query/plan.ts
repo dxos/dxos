@@ -201,6 +201,7 @@ export namespace QueryPlan {
   export type OrderStep = {
     _tag: 'OrderStep';
 
+    // Defaults to natural order if empty.
     order: readonly QueryAST.Order[];
   };
 }

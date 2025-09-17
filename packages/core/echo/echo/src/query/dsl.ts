@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
@@ -120,7 +121,7 @@ export interface Query<T> {
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  orderBy(...order: Order<T>[]): Query<T>;
+  orderBy(...order: NonEmptyArray<Order<T>>): Query<T>;
 
   /**
    * Add options to a query.
