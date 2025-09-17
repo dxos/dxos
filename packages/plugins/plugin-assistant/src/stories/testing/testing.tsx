@@ -57,6 +57,7 @@ import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
 import { Assistant } from '../../types';
+import { exampleFunctions } from '@dxos/functions';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -188,6 +189,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
             contributes(Capabilities.Functions, [syncLinearIssues]),
+            contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),
         defineModule({
