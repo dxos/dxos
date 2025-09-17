@@ -62,6 +62,7 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
     controller?.setContext({ timestamp: Date.now() });
   }, [controller]);
 
+  // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
   return (
     <PreviewProvider
       onLookup={async ({ label, ref }) => {
