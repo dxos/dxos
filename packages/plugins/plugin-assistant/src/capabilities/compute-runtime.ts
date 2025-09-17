@@ -17,7 +17,8 @@ import {
   QueueService,
   RemoteFunctionExecutionService,
   TracingService,
-  TriggerDispatcher,
+  TriggerDispatcher, 
+InvocationTracer,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
@@ -76,6 +77,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
+              InvocationTracer.layerLive,
               serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),

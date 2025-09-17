@@ -26,9 +26,10 @@ import { FunctionTrigger } from '../types';
 
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { DataType } from '@dxos/schema';
+import { InvocationTracer } from './invocation-tracer';
 
 const TestLayer = pipe(
-  Layer.mergeAll(ComputeEventLogger.layerFromTracing),
+  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerLive),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,

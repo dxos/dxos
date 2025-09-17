@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule, Array } from 'effect';
+import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule, Array, Cause } from 'effect';
 
 import { DXN, Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -14,6 +14,7 @@ import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput, QueueTriggerOutput } from '../types';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
+import { InvocationTracer } from './invocation-tracer';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -64,7 +65,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      * Start the trigger dispatcher.
      * Will automatically invoke triggers.
      */
-    start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService>;
+    start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService | InvocationTracer>;
 
     /**
      * Stop the trigger dispatcher.
@@ -81,7 +82,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     invokeTrigger(
       options: InvokeTriggerOptions,
-    ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService>;
+    ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer>;
 
     /**
      * Invoke all scheduled triggers whose time is up.
@@ -89,7 +90,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     invokeScheduledTimerTriggers(): Effect.Effect<
       TriggerExecutionResult[],
       never,
-      Services | LocalFunctionExecutionService
+      Services | LocalFunctionExecutionService | InvocationTracer
     >;
 
     /**
@@ -99,7 +100,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
     invokeScheduledQueueTriggers(): Effect.Effect<
       TriggerExecutionResult[],
       never,
-      Services | LocalFunctionExecutionService
+      Services | LocalFunctionExecutionService | InvocationTracer
     >;
 
     /**
@@ -142,7 +143,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     return this._running;
   }
 
-  start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+  start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService | InvocationTracer> =>
     Effect.gen(this, function* () {
       if (this._running) {
         return;
@@ -152,7 +153,14 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
-        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(Effect.forkDaemon);
+        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
+          Effect.tapErrorCause((cause) => {
+            log.error('trigger dispatcher error', { cause });
+            this._running = false;
+            return Effect.void;
+          }),
+          Effect.forkDaemon,
+        );
       } else {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
       }
@@ -182,10 +190,23 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   invokeTrigger = (
     options: InvokeTriggerOptions,
-  ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService> =>
+  ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer> =>
     Effect.gen(this, function* () {
       const { trigger, data } = options;
       log.info('invoking trigger', { triggerId: trigger.id, spec: trigger.spec, data });
+
+      const tracer = yield* InvocationTracer;
+      const trace = yield* tracer.traceInvocationStart({
+        target: trigger.function?.dxn,
+        payload: {
+          trigger: {
+            id: trigger.id,
+            // TODO(dmaretskyi): Is `spec` always there>
+            kind: trigger.spec!.kind,
+          },
+          data,
+        },
+      });
 
       // Sandboxed section.
       const result = yield* Effect.gen(this, function* () {
@@ -218,13 +239,18 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         success: Exit.isSuccess(result),
         error: Exit.isFailure(result) ? result.cause : undefined,
       });
+      yield* tracer.traceInvocationEnd({
+        trace,
+        // TODO(dmaretskyi): Might miss errors.
+        exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
+      });
       return triggerExecutionResult;
     });
 
   invokeScheduledTimerTriggers = (): Effect.Effect<
     TriggerExecutionResult[],
     never,
-    Services | LocalFunctionExecutionService
+    Services | LocalFunctionExecutionService | InvocationTracer
   > =>
     Effect.gen(this, function* () {
       yield* this.refreshTriggers();
@@ -256,7 +282,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   invokeScheduledQueueTriggers = (): Effect.Effect<
     TriggerExecutionResult[],
     never,
-    Services | LocalFunctionExecutionService
+    Services | LocalFunctionExecutionService | InvocationTracer
   > =>
     Effect.gen(this, function* () {
       const triggers = yield* this._fetchTriggers();
@@ -381,7 +407,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
-  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+  private _startNaturalTimeProcessing = (): Effect.Effect<
+    void,
+    never,
+    Services | LocalFunctionExecutionService | InvocationTracer
+  > =>
     Effect.gen(this, function* () {
       yield* this.invokeScheduledTimerTriggers();
       yield* this.invokeScheduledQueueTriggers();
