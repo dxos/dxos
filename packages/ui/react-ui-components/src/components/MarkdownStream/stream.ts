@@ -2,28 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Stream } from 'effect';
+import { Stream } from 'effect';
 
 /**
  * Streams text character by character with a delay, but keeps XML/HTML tags intact.
  */
-export const createStreamer =
-  (characterDelay = 0) =>
-  (source: Stream.Stream<string>) =>
-    source.pipe(
-      Stream.flatMap((chunk) =>
-        Stream.fromIterable(chunkWithXmlFragments(chunk)).pipe(
-          Stream.flatMap((token) => Stream.succeed(token).pipe(Stream.tap(() => Effect.sleep(characterDelay)))),
-        ),
-      ),
-    );
+export const createStreamer = (source: Stream.Stream<string>) =>
+  source.pipe(
+    Stream.flatMap((chunk) =>
+      Stream.fromIterable(splitFragments(chunk)).pipe(Stream.flatMap((token) => Stream.succeed(token))),
+    ),
+  );
 
 /**
  * Splits text into chunks, preserving XML/HTML fragments.
  */
-export const chunkWithXmlFragments = (text: string): string[] => {
+export const splitFragments = (text: string): string[] => {
   // First tokenize with tags to get tags as complete tokens.
-  const initialTokens = chunkWithSpans(text);
+  const initialTokens = splitSpans(text);
   const tokens: string[] = [];
 
   let i = 0;
@@ -100,8 +96,8 @@ export const chunkWithXmlFragments = (text: string): string[] => {
 //   return tokens;
 // };
 
-export const chunkWithSpans = (text: string): string[] => {
-  const parts: string[] = [];
+export const splitSpans = (text: string): string[] => {
+  const spans: string[] = [];
   let currentText = '';
 
   let i = 0;
@@ -109,8 +105,9 @@ export const chunkWithSpans = (text: string): string[] => {
     if (text[i] === '<') {
       // If we have accumulated text, split it into sentences and push them.
       if (currentText) {
-        const sentences = splitIntoSentences(currentText);
-        parts.push(...sentences);
+        // const sentences = splitSentences(currentText);
+        // spans.push(...sentences);
+        spans.push(currentText);
         currentText = '';
       }
 
@@ -118,7 +115,7 @@ export const chunkWithSpans = (text: string): string[] => {
       const closeIndex = text.indexOf('>', i);
       if (closeIndex !== -1) {
         // Include the complete tag.
-        parts.push(text.slice(i, closeIndex + 1));
+        spans.push(text.slice(i, closeIndex + 1));
         i = closeIndex + 1;
       } else {
         // No closing bracket found, treat the rest as text.
@@ -134,17 +131,18 @@ export const chunkWithSpans = (text: string): string[] => {
 
   // Push any remaining text split into sentences.
   if (currentText) {
-    const sentences = splitIntoSentences(currentText);
-    parts.push(...sentences);
+    spans.push(currentText);
+    // const sentences = splitSentences(currentText);
+    // spans.push(...sentences);
   }
 
-  return parts;
+  return spans;
 };
 
 /**
  * Split text into sentences, preserving the sentence-ending punctuation.
  */
-const splitIntoSentences = (text: string): string[] => {
+export const splitSentences = (text: string): string[] => {
   // Match sentences ending with ., !, or ? followed by space or end of string.
   // This regex captures the sentence including its ending punctuation.
   const sentenceRegex = /[^.!?]*[.!?]+(?:\s+|$)/g;

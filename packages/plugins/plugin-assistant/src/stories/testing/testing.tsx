@@ -24,14 +24,11 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
   research,
-  syncLinearIssues,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
@@ -180,14 +177,12 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           id: 'example.com/plugin/testing/module/testing',
           activatesOn: Events.SetupArtifactDefinition,
           activate: () => [
+            // TODO(burdon): Move into assistnat?
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
-            contributes(Capabilities.Functions, [syncLinearIssues]),
           ],
         }),
         defineModule({

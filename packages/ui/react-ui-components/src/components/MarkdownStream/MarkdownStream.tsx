@@ -27,15 +27,10 @@ export type MarkdownStreamController = {
   append: (text: string) => Promise<void>;
 };
 
-export type MarkdownStreamProps = ThemedClassName<{
-  content?: string;
-  characterDelay?: number;
-}> &
-  XmlTagOptions &
-  StreamerOptions;
+export type MarkdownStreamProps = ThemedClassName<{ content?: string }> & XmlTagOptions & StreamerOptions;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, registry, content, characterDelay = 5, ...streamerOptions }, forwardedRef) => {
+  ({ classNames, registry, content, ...streamerOptions }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor(() => {
       return {
@@ -70,7 +65,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
 
       // Consume queue.
       const fork = Stream.fromQueue(queueRef.current).pipe(
-        createStreamer(characterDelay),
+        createStreamer,
         Stream.runForEach((text) =>
           Effect.sync(() => {
             view.dispatch({

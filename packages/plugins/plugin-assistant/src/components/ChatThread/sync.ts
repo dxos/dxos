@@ -68,7 +68,7 @@ export class MessageSyncer {
           }
 
           void this._doc.append(content);
-          this._currentBlockContent = content;
+          this._currentBlockContent = currentBlockContent;
           log('append', { message: i, block: j, content });
         }
 
