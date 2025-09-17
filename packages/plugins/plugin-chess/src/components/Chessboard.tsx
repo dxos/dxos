@@ -121,6 +121,9 @@ const Board = (props: BoardProps) => {
       return;
     }
 
+    //
+    ref.current.setAttribute('data-arrow-keys', 'all');
+
     return addEventListener(ref.current, 'keydown', (ev) => {
       switch (ev.key) {
         case 'ArrowUp':
@@ -143,7 +146,7 @@ const Board = (props: BoardProps) => {
     });
   }, [model]);
 
-  return <NaturalChessboard ref={ref} {...{ 'data-arrow-keys': 'all' }} {...props} />;
+  return <NaturalChessboard ref={ref} {...props} />;
 };
 
 Board.displayName = 'Chessboard.Board';
