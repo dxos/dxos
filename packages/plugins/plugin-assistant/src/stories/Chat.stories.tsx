@@ -68,6 +68,7 @@ import {
   organizations,
   testTypes,
 } from './testing';
+import { PromptContainer } from './components';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -584,7 +585,7 @@ export const WithResearchQueue: Story = {
   args: {
     deckComponents: [
       [ResearchInputStack],
-      [TriggersContainer, InvocationsContainer, GraphContainer],
+      [TriggersContainer, PromptContainer, InvocationsContainer, GraphContainer],
       [ResearchOutputStack],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
