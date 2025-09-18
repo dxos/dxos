@@ -14,15 +14,15 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
-import { Testing, createObjectFactory } from '@dxos/schema/testing';
+import { createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Project } from './Project';
 
 const StorybookProjectItem = ({ item }: { item: Obj.Any }) => {
-  if (Obj.instanceOf(Testing.Contact, item)) {
-    const contact = item as Obj.Obj<Testing.Contact>;
-    return <Form values={contact} schema={Testing.ContactSchema} autoSave />;
+  if (Obj.instanceOf(DataType.Person, item)) {
+    const contact = item as Obj.Obj<DataType.Person>;
+    return <Form values={contact} schema={DataType.Person} autoSave />;
   }
   return <span>{item.id}</span>;
 };
@@ -56,7 +56,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   decorators: [
     withClientProvider({
-      types: [DataType.Project, DataType.View, DataType.Collection, Testing.Contact],
+      types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -68,8 +68,8 @@ export const Default: Story = {
         // Create a view for contacts
         const view = createView({
           name: 'Contacts',
-          typename: Testing.Contact.typename,
-          jsonSchema: Type.toJsonSchema(Testing.ContactSchema),
+          typename: DataType.Person.typename,
+          jsonSchema: Type.toJsonSchema(DataType.Person),
           presentation: project,
         });
 
@@ -80,7 +80,7 @@ export const Default: Story = {
 
         // Generate random contacts
         const factory = createObjectFactory(space.db, faker as any);
-        await factory([{ type: Testing.Contact, count: 12 }]);
+        await factory([{ type: DataType.Person, count: 12 }]);
       },
     }),
     withLayout({ fullscreen: true }),
