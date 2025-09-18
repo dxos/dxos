@@ -12,6 +12,7 @@
  */
 export * as DataType from './DataType';
 import type { Type } from '@dxos/echo';
+
 import * as DataType from './DataType';
 
 export const DataTypes: (Type.Obj.Any | Type.Relation.Any)[] = [
