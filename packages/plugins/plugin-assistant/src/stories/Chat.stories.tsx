@@ -10,8 +10,8 @@ import React, { type FC, useCallback } from 'react';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -36,6 +36,7 @@ import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
+import { Schema } from 'effect';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
@@ -549,13 +550,31 @@ export const WithResearchQueue: Story = {
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
 
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions: 'Research the organization provided as input.',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
       space.db.add(
         Obj.make(FunctionTrigger, {
-          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          function: Ref.make(serializeFunction(agent)),
           enabled: true,
           spec: {
             kind: 'queue',
             queue: researchInputQueue.queue.dxn.toString(),
+          },
+          input: {
+            prompt: Ref.make(researchPrompt),
+            input: '{{event.item}}',
           },
         }),
       );
