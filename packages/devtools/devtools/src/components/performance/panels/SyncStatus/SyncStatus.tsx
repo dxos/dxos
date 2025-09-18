@@ -6,7 +6,6 @@ import React from 'react';
 
 import { type PeerSyncState, type SpaceId, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { SpaceRowContainer } from './Space';
@@ -34,7 +33,6 @@ export const SyncStatus = ({ classNames, state }: SyncStatusProps) => {
           <SpaceRowContainer key={spaceId} spaceId={spaceId as SpaceId} state={state} />
         ))}
       </div>
-      {showSyncStats && <SyntaxHighlighter language='json'>{JSON.stringify(state, null, 2)}</SyntaxHighlighter>}
     </div>
   );
 };
