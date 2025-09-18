@@ -47,12 +47,32 @@ const DefaultStory = () => {
 
   const handleAddItem = useStorybookAddItem(space);
 
+  const handleAddColumn = useCallback(() => {
+    if (!space || !project) {
+      return;
+    }
+
+    // Create a new view for contacts similar to the initialization
+    const view = createView({
+      name: 'New Contacts',
+      typename: DataType.Person.typename,
+      jsonSchema: Type.toJsonSchema(DataType.Person),
+      presentation: project,
+      fields: ['fullName'],
+    });
+
+    space.db.add(view);
+    project.collections.push(Ref.make(view));
+
+    return Ref.make(view);
+  }, [space, project]);
+
   if (!project) {
     return <p>Loading…</p>;
   }
 
   return (
-    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem}>
+    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
       <Project.Content project={project} />
     </Project.Root>
   );
@@ -65,6 +85,24 @@ const MutationsStory = () => {
   const project = projects[0];
 
   const handleAddItem = useStorybookAddItem(space);
+
+  const handleAddColumn = useCallback(() => {
+    if (!space || !project) {
+      return;
+    }
+
+    // Create a new view for contacts similar to the initialization
+    const view = createView({
+      name: 'New Contacts',
+      typename: DataType.Person.typename,
+      jsonSchema: Type.toJsonSchema(DataType.Person),
+      presentation: project,
+      fields: ['fullName'],
+    });
+
+    space.db.add(view);
+    return project.collections.push(Ref.make(view));
+  }, [space, project]);
 
   useEffect(() => {
     if (!space || !project) {
@@ -98,7 +136,7 @@ const MutationsStory = () => {
   }
 
   return (
-    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem}>
+    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
       <Project.Content project={project} />
     </Project.Root>
   );

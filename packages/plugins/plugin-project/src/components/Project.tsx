@@ -10,6 +10,7 @@ import { Obj } from '@dxos/echo';
 import { Stack } from '@dxos/react-ui-stack';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
+import { AddColumn } from './AddColumn';
 import { ViewColumn } from './ViewColumn';
 
 type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
@@ -19,6 +20,7 @@ const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 type ProjectContextValue = {
   Item: FC<ItemProps>;
   onAddItem?: (schema: Schema.Schema.AnyNoContext) => void;
+  onAddColumn?: () => void;
 };
 type ProjectRootProps = ProjectContextValue;
 
@@ -41,6 +43,7 @@ const ProjectContent = ({ project }: ProjectContentProps) => {
       {views.map((view) => {
         return <ViewColumn key={view.id} view={view} />;
       })}
+      <AddColumn />
     </Stack>
   );
 };
