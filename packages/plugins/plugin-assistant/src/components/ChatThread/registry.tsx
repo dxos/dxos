@@ -141,17 +141,17 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       return `<suggestion>${block.text}</suggestion>`;
     }
     case 'select': {
-      return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>\n`;
+      return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
     case 'toolkit': {
-      return `<toolkit />\n`;
+      return `<toolkit />`;
     }
 
     case 'toolCall': {
       context.updateWidget(block.toolCallId, {
         blocks: [block],
       });
-      return `<toolCall id="${block.toolCallId}" />\n`;
+      return `<toolCall id="${block.toolCallId}" />`;
     }
     case 'toolResult': {
       context.updateWidget(block.toolCallId, ({ blocks = [] }: { blocks: ContentBlock.Any[] }) => ({
@@ -165,7 +165,7 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
     }
 
     default: {
-      return `<json>\n${JSON.stringify(block)}\n</json>\n`;
+      return `<json>\n${JSON.stringify(block)}\n</json>`;
     }
   }
 };
