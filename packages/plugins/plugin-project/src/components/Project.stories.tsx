@@ -10,8 +10,8 @@ import React from 'react';
 import { Filter, Ref } from '@dxos/client/echo';
 import { toJsonSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { useQuery } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { DataType, createView } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -19,11 +19,11 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { Project } from './Project';
 
 const DefaultStory = () => {
-  const [space] = useSpaces();
+  const { space } = useClientProvider();
   const projects = useQuery(space, Filter.typename(DataType.Project.typename));
   const project = projects[0];
 
-  console.log('[default]', space, projects, project);
+  console.log('[default]', space?.id, projects, project);
 
   if (!project) {
     return <>Loading…</>;

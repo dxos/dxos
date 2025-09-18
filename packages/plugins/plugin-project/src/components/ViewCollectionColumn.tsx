@@ -3,12 +3,14 @@
 //
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework';
 import { type AnyEchoObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { type View } from '@dxos/schema';
+
+import { meta } from '../meta';
 
 export type ViewCollectionColumnProps = {
   view: View;
@@ -18,6 +20,7 @@ export const ViewCollectionColumn = ({ view }: ViewCollectionColumnProps) => {
   // Resolve the view from the view using useQuery
   const client = useClient();
   const space = getSpace(view);
+  const { t } = useTranslation(meta.id);
 
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
@@ -40,14 +43,15 @@ export const ViewCollectionColumn = ({ view }: ViewCollectionColumnProps) => {
               return (
                 <CardStack.Item asChild key={item.id}>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
-                    <Card.StaticRoot>
-                      <Surface role='card--intrinsic' limit={1} data={{ subject: item, projection: view.projection }} />
-                    </Card.StaticRoot>
+                    <Card.StaticRoot>{item.id}</Card.StaticRoot>
                   </StackItem.Root>
                 </CardStack.Item>
               );
             })}
           </CardStack.Stack>
+          <CardStack.Footer>
+            <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+          </CardStack.Footer>
         </CardStack.Content>
       </StackItem.Root>
     </CardStack.Root>
