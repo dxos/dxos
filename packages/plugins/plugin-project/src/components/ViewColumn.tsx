@@ -12,11 +12,12 @@ import { type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export type ViewCollectionColumnProps = {
+export type ViewColumnProps = {
   view: View;
 };
 
-export const ViewCollectionColumn = ({ view }: ViewCollectionColumnProps) => {
+// This duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
+export const ViewColumn = ({ view }: ViewColumnProps) => {
   // Resolve the view from the view using useQuery
   const client = useClient();
   const space = getSpace(view);
@@ -35,7 +36,7 @@ export const ViewCollectionColumn = ({ view }: ViewCollectionColumnProps) => {
       <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
         <CardStack.Content>
           <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
-            {view.name ?? 'Untitled view'}
+            {view.name ?? t('untitled view title')}
           </StackItem.Heading>
           <CardStack.Stack id={view.id} itemsCount={items.length}>
             {items.map((liveMarker) => {

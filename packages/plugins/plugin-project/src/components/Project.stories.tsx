@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
-import { toJsonSchema } from '@dxos/echo-schema';
+import { Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -23,10 +23,8 @@ const DefaultStory = () => {
   const projects = useQuery(space, Filter.typename(DataType.Project.typename));
   const project = projects[0];
 
-  console.log('[default]', space?.id, projects, project);
-
   if (!project) {
-    return <>Loading…</>;
+    return <p>Loading…</p>;
   }
 
   return <Project project={project} />;
@@ -59,7 +57,7 @@ export const Default: Story = {
         const view = createView({
           name: 'Contacts',
           typename: Testing.Contact.typename,
-          jsonSchema: toJsonSchema(Testing.ContactSchema),
+          jsonSchema: Type.toJsonSchema(Testing.ContactSchema),
           presentation: project,
         });
 
