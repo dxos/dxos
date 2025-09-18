@@ -36,6 +36,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { objectPointerCodec } from '@dxos/protocols';
+import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, range } from '@dxos/util';
@@ -544,8 +545,8 @@ export class AutomergeHost extends Resource {
     this._collectionSynchronizer.refreshCollection(collectionId);
   }
 
-  async getCollectionSyncState(collectionId: string): Promise<CollectionSyncState> {
-    const result: CollectionSyncState = {
+  async getCollectionSyncState(collectionId: string): Promise<SpaceSyncState> {
+    const result: SpaceSyncState = {
       peers: [],
     };
 
@@ -558,13 +559,16 @@ export class AutomergeHost extends Resource {
 
     for (const [peerId, state] of remoteState) {
       const diff = diffCollectionState(localState, state);
-      result.peers.push({
+      result.peers!.push({
         peerId,
         missingOnRemote: diff.missingOnRemote.length,
         missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
         localDocumentCount: Object.entries(localState.documents).filter(([_, heads]) => heads.length > 0).length,
         remoteDocumentCount: Object.entries(state.documents).filter(([_, heads]) => heads.length > 0).length,
+
+        totalDocumentCount: new Set([...Object.keys(localState.documents), ...Object.keys(state.documents)]).size,
+        unsyncedDocumentCount: new Set([...diff.missingOnLocal, ...diff.missingOnRemote, ...diff.different]).size,
       });
     }
 
@@ -832,36 +836,4 @@ const decodeCollectionState = (state: unknown): CollectionState => {
 
 const encodeCollectionState = (state: CollectionState): unknown => {
   return state;
-};
-
-export type CollectionSyncState = {
-  peers: PeerSyncState[];
-};
-
-export type PeerSyncState = {
-  peerId: PeerId;
-  /**
-   * Documents that are present locally but not on the remote peer.
-   */
-  missingOnRemote: number;
-
-  /**
-   * Documents that are present on the remote peer but not locally.
-   */
-  missingOnLocal: number;
-
-  /**
-   * Documents that are present on both peers but have different heads.
-   */
-  differentDocuments: number;
-
-  /**
-   * Total number of documents locally.
-   */
-  localDocumentCount: number;
-
-  /**
-   * Total number of documents on the remote peer.
-   */
-  remoteDocumentCount: number;
 };
