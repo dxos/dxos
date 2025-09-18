@@ -59,7 +59,7 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
   // Set context.
   const [controller, setController] = useState<ChatThreadController | null>(null);
   useEffect(() => {
-    controller?.setContext({ timestamp: Date.now() });
+    // controller?.setContext({ timestamp: Date.now() });
   }, [controller]);
 
   // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
@@ -69,7 +69,7 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
         return { label, text: ref };
       }}
     >
-      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />;
+      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
       <PreviewCard />
     </PreviewProvider>
   );
@@ -105,6 +105,7 @@ const meta = {
     withTheme,
   ],
   parameters: {
+    layout: 'fullscreen', // TODO(burdon): Replace withLayout.
     translations,
   },
 } satisfies Meta<typeof ChatThread>;

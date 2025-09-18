@@ -15,6 +15,9 @@ export type TextModel = {
   append: (text: string) => Promise<void>;
 };
 
+/**
+ * Thread context.
+ */
 export class MessageThreadContext {
   reset() {}
 }
@@ -32,6 +35,10 @@ export class MessageSyncer {
   private readonly _context = new MessageThreadContext();
 
   constructor(private readonly _doc: TextModel) {}
+
+  get context() {
+    return this._context;
+  }
 
   reset() {
     log('reset');

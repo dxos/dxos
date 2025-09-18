@@ -9,6 +9,7 @@ import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { renderObjectLink } from '@dxos/react-ui-components';
 import { type ContentBlock, DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 export const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
   return Obj.make(DataType.Message, {
@@ -42,21 +43,37 @@ export const createMessageGenerator = (): MessageGenerator[] => [
         createMessage('assistant', [
           {
             _tag: 'text',
-            text: [
-              '## Markdown',
-              'Here is a [link](https://dxos.org)',
-              'And some **bold** text.',
-              // TODO(burdon): Markdown formatting requires a blank line at the end.
-              '',
-            ].join('\n'),
+            text:
+              trim`
+              ## Markdown
+              Here is a [link](https://dxos.org)
+
+              And some **bold** text.
+
+              And some JSON
+              \`\`\`json
+              {
+                "key": "value"
+              }
+              \`\`\`
+
+              And some code
+              \`\`\`js
+              const x = 1;
+              \`\`\`
+            ` + '\n',
           },
           {
             _tag: 'text',
             disposition: 'cot',
             text:
-              Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-                .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-                .join('\n\n') + '\n',
+              [
+                faker.lorem.paragraph(),
+                '',
+                ...Array.from({ length: faker.number.int({ min: 3, max: 5 }) }).map(
+                  (_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`,
+                ),
+              ].join('\n') + '\n',
           },
         ]),
       ]),
@@ -101,35 +118,6 @@ export const createMessageGenerator = (): MessageGenerator[] => [
 
   Effect.gen(function* () {
     const { queue } = yield* ContextQueueService;
-    const { db } = yield* DatabaseService;
-    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    // const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    // const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph(), '\n'].join(' '),
-          },
-
-          // Inline cards.
-          ...[obj2].map(
-            (obj) =>
-              ({
-                _tag: 'text',
-                text: renderObjectLink(obj, true) + '\n',
-              }) satisfies ContentBlock.Text,
-          ),
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
         createMessage('assistant', [
@@ -145,6 +133,55 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     const { queue } = yield* ContextQueueService;
     yield* Effect.promise(() =>
       queue.append([
+        createMessage('user', [
+          {
+            _tag: 'text',
+            text: faker.lorem.sentence(5),
+          },
+        ]),
+      ]),
+    );
+  }),
+
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    const { db } = yield* DatabaseService;
+    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
+    // const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
+    // const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
+    // const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          // Inline tag.
+          {
+            _tag: 'text',
+            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph(), '\n'].join(' '),
+          },
+
+          // Inline cards.
+          // ...[obj1, obj2, obj3, obj4].map(
+          //   (obj) =>
+          //     ({
+          //       _tag: 'text',
+          //       text: renderObjectLink(obj, true) + '\n',
+          //     }) satisfies ContentBlock.Text,
+          // ),
+        ]),
+      ]),
+    );
+  }),
+
+  Effect.gen(function* () {
+    const { queue } = yield* ContextQueueService;
+    yield* Effect.promise(() =>
+      queue.append([
+        createMessage('assistant', [
+          {
+            _tag: 'text',
+            text: faker.lorem.paragraph() + '\n',
+          },
+        ]),
         createMessage('assistant', [
           {
             _tag: 'toolCall',
@@ -171,6 +208,12 @@ export const createMessageGenerator = (): MessageGenerator[] => [
       queue.append([
         createMessage('assistant', [
           {
+            _tag: 'text',
+            text: faker.lorem.paragraph() + '\n',
+          },
+        ]),
+        createMessage('assistant', [
+          {
             _tag: 'toolCall',
             toolCallId: '4567',
             name: 'create',
@@ -188,9 +231,10 @@ export const createMessageGenerator = (): MessageGenerator[] => [
         createMessage('assistant', [
           {
             _tag: 'text',
-            text: Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
-              .map(() => faker.lorem.paragraph())
-              .join('\n\n'),
+            text:
+              Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
+                .map(() => faker.lorem.paragraph())
+                .join('\n\n') + '\n',
           },
         ]),
       ]),

@@ -19,7 +19,7 @@ import { ContentBlock, type DataType } from '@dxos/schema';
 
 import { type MessageThreadContext } from './sync';
 
-const Fallback = ({ tag, ...props }: XmlComponentProps<any>) => {
+const Fallback = ({ tag, ...props }: XmlComponentProps<MessageThreadContext>) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
       <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
@@ -125,12 +125,11 @@ export const blockToMarkdown = (context: MessageThreadContext, message: DataType
   return str;
 };
 
-// TODO(burdon): Pass in context.
 const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        return `<prompt>${block.text}</prompt>`;
+        return `\n<prompt>${block.text}</prompt>\n`;
       } else {
         return block.text;
       }
@@ -144,19 +143,24 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>\n`;
     }
 
-    // TODO(burdon): Add to context.
-    // case 'toolCall': {}
-    // case 'toolResult': {}
+    // TODO(burdon): Update context.
+    case 'toolCall': {
+      return `<json>\n${JSON.stringify(block)}\n</json>\n`;
+    }
+    case 'toolResult': {
+      // return `<json>\n${JSON.stringify(block)}\n</json>\n`;
+      break;
+    }
     case 'summary': {
       return `<summary>${ContentBlock.createSummaryMessage(block, true)}</summary>`;
     }
 
     case 'toolkit': {
-      return `<toolkit />`;
+      return `<toolkit />\n`;
     }
 
     default: {
-      return `<json>\n${JSON.stringify(block)}\n</json>`;
+      return `<json>\n${JSON.stringify(block)}\n</json>\n`;
     }
   }
 };

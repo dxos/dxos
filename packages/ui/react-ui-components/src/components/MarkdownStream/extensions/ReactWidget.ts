@@ -35,6 +35,7 @@ export class ReactWidget<Props extends {} = {}> extends WidgetType {
     const root = (dom as any)._reactRoot as Root | undefined;
     if (root) {
       // TODO(burdon): Warning: Attempted to synchronously unmount a root while React was already rendering.
+      // console.log(root);
       // root.unmount();
     }
   }
@@ -42,8 +43,8 @@ export class ReactWidget<Props extends {} = {}> extends WidgetType {
   override eq(other: WidgetType): boolean {
     return (
       other instanceof ReactWidget &&
-      other.component === this.component &&
-      JSON.stringify(other.props) === JSON.stringify(this.props)
+      this.component === other.component &&
+      JSON.stringify(this.props) === JSON.stringify(other.props)
     );
   }
 }

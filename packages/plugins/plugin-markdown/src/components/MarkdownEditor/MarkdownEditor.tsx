@@ -186,7 +186,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
             search: true,
           }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
           editorGutter,
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),

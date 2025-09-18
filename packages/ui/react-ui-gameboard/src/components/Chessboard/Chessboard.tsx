@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { forwardRef } from '@preact-signals/safe-react/react';
-import React, { type PropsWithChildren, memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useForwardedRef, useTrackProps } from '@dxos/react-ui';

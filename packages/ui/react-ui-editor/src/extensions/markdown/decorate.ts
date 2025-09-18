@@ -234,7 +234,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const mark = node.node.firstChild!;
         if (mark?.name === 'HeaderMark') {
           const { from, to = 6 } = options.numberedHeadings ?? {};
-          const text = view.state.sliceDoc(node.from, node.to);
+          const text = state.sliceDoc(node.from, node.to);
           const len = text.match(/[#\s]+/)![0].length;
           if (!from || level < from || level > to) {
             atomicDeco.add(mark.from, mark.from + len, hide);

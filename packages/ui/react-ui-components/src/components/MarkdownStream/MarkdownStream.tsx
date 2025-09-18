@@ -46,6 +46,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         extensions: [
           createThemeExtensions({
             themeMode,
+            syntaxHighlighting: true,
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-is-[100cqi]`.

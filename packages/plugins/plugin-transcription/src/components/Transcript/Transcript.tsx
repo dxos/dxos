@@ -70,7 +70,7 @@ export const TranscriptView = ({ classNames, space, transcript: object, model }:
     return {
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
         preview(),

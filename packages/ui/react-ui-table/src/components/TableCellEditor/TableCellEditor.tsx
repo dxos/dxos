@@ -222,10 +222,9 @@ export const TableCellEditor = ({
     if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
       // TODO(ZaymonFC): Reconcile this with the TagPicker component?
       // Add markdown extensions needed by tag picker.
-      extension.push(createMarkdownExtensions({ themeMode }));
+      extension.push(createMarkdownExtensions());
 
       const options = fieldProjection.props.options || [];
-
       const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
 
       extension.push(
