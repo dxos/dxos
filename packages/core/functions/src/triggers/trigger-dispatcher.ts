@@ -12,7 +12,14 @@ import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
-import { DatabaseService, QueueService, type Services } from '../services';
+import {
+  DatabaseService,
+  QueueService,
+  TracingService,
+  type Services,
+  ComputeEventPayload,
+  ComputeEventLogger,
+} from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import {
   type EventType,
@@ -64,6 +71,12 @@ interface ScheduledTrigger {
   nextExecution: Date;
 }
 
+// TODO(dmaretskyi): Refactor service management.
+type TriggerDispatcherServices =
+  | Exclude<Services, ComputeEventLogger | TracingService>
+  | LocalFunctionExecutionService
+  | InvocationTracer;
+
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
   {
@@ -75,7 +88,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      * Start the trigger dispatcher.
      * Will automatically invoke triggers.
      */
-    start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService | InvocationTracer>;
+    start(): Effect.Effect<void, never, TriggerDispatcherServices>;
 
     /**
      * Stop the trigger dispatcher.
@@ -92,14 +105,14 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     invokeTrigger(
       options: InvokeTriggerOptions,
-    ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer>;
+    ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices>;
 
     /**
      * Invoke all scheduled triggers who are due.
      */
     invokeScheduledTriggers(opts?: {
       kinds?: TriggerKind[];
-    }): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService | InvocationTracer>;
+    }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -141,7 +154,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     return this._running;
   }
 
-  start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService | InvocationTracer> =>
+  start = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       if (this._running) {
         return;
@@ -189,7 +202,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   invokeTrigger = (
     options: InvokeTriggerOptions,
-  ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer> =>
+  ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       const { trigger, event } = options;
       log.info('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
@@ -226,7 +239,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const inputData = this._prepareInputData(trigger, event);
 
         // Invoke the function
-        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
+        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData).pipe(
+          Effect.provide(
+            ComputeEventLogger.layerFromTracing.pipe(
+              Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+            ),
+          ),
+        );
       }).pipe(Effect.exit);
 
       const triggerExecutionResult: TriggerExecutionResult = {
@@ -253,7 +272,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
   invokeScheduledTriggers = ({ kinds = ['timer', 'queue'] } = {}): Effect.Effect<
     TriggerExecutionResult[],
     never,
-    Services | LocalFunctionExecutionService | InvocationTracer
+    TriggerDispatcherServices
   > =>
     Effect.gen(this, function* () {
       const invocations: TriggerExecutionResult[] = [];
@@ -416,11 +435,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
-  private _startNaturalTimeProcessing = (): Effect.Effect<
-    void,
-    never,
-    Services | LocalFunctionExecutionService | InvocationTracer
-  > =>
+  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);

@@ -9,6 +9,7 @@ import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 export default defineFunction({
   name: 'dxos.org/function/agent',

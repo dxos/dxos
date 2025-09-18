@@ -585,7 +585,7 @@ export const WithResearchQueue: Story = {
   args: {
     deckComponents: [
       [ResearchInputStack],
-      [TriggersContainer, PromptContainer, InvocationsContainer, GraphContainer],
+      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
       [ResearchOutputStack],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],

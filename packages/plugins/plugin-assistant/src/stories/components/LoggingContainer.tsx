@@ -5,17 +5,25 @@
 import React from 'react';
 
 import { Filter } from '@dxos/echo';
-import { type Queue, useQuery } from '@dxos/react-client/echo';
+import { type Queue, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Timeline } from '@dxos/react-ui-components';
 
 import { useExecutionGraph } from '../../hooks';
 import { Assistant } from '../../types';
 
+import { Obj } from '@dxos/echo';
+import { InvocationTraceStartEvent } from '@dxos/functions';
 import { type ComponentProps } from './types';
 
 export const LoggingContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
-  const { branches, commits } = useExecutionGraph(traceQueue ?? chat?.traceQueue?.target, true);
+  const invocations =
+    useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??
+    [];
+  const { branches, commits } = useExecutionGraph(
+    traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target ?? chat?.traceQueue?.target,
+    true,
+  );
 
   return <Timeline branches={branches} commits={commits} />;
 };

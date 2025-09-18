@@ -84,14 +84,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
               CredentialsService.layerFromDatabase(),
-              ComputeEventLogger.layerFromTracing,
             ),
           ),
           Layer.provideMerge(
             Layer.mergeAll(
               space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
               space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-              TracingService.layerNoop,
               LocalFunctionExecutionService.layerLive,
               RemoteFunctionExecutionService.mockLayer,
             ),

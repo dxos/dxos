@@ -24,6 +24,7 @@ import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGra
 import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import { log } from '@dxos/log';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -112,7 +113,6 @@ export default defineFunction({
           AiToolkit.make() as any,
           Layer.empty as any,
         ),
-        TracingService.layerNoop,
       ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),

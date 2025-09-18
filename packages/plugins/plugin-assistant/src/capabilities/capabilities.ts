@@ -58,9 +58,7 @@ export namespace AssistantCapabilities {
     | InvocationTracer
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
-    | ToolExecutionService
-    | ComputeEventLogger
-    | TracingService;
+    | ToolExecutionService;
 
   export interface ComputeRuntimeProvider {
     getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
