@@ -64,6 +64,13 @@ export const syncObjects: (
 const copyObjectData = (existing: Obj.Any, newObj: Obj.Any) => {
   for (const key of Object.keys(newObj)) {
     if (typeof key !== 'string' || key === 'id') continue;
+    if (
+      typeof (newObj as any)[key] !== 'string' &&
+      typeof (newObj as any)[key] !== 'number' &&
+      typeof (newObj as any)[key] !== 'boolean' &&
+      !Ref.isRef((newObj as any)[key])
+    )
+      continue;
     (existing as any)[key] = (newObj as any)[key];
   }
   for (const key of Object.keys(existing)) {
