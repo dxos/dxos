@@ -39,6 +39,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -122,6 +130,14 @@ describe('QueryPlanner', () => {
               "typename": null,
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -198,6 +214,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -257,6 +281,14 @@ describe('QueryPlanner', () => {
               "type": "object",
               "typename": "dxn:type:dxos.org/type/Task:0.1.0",
             },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -356,6 +388,14 @@ describe('QueryPlanner', () => {
               "typename": "dxn:type:dxos.org/type/Task:0.1.0",
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -415,6 +455,14 @@ describe('QueryPlanner', () => {
                     "mode": "only-non-deleted",
                   },
                 ],
+              },
+            ],
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
               },
             ],
           },
@@ -527,6 +575,14 @@ describe('QueryPlanner', () => {
               ],
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -583,6 +639,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -619,6 +683,14 @@ describe('QueryPlanner', () => {
               "typename": "dxn:type:dxos.org/type/Person:0.1.0",
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -645,6 +717,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -675,6 +755,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -716,6 +804,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -744,6 +840,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
