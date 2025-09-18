@@ -17,12 +17,12 @@ import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Project } from './Project';
+import { type ItemProps, Project } from './Project';
 
-const StorybookProjectItem = ({ item }: { item: Obj.Any }) => {
+const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   if (Obj.instanceOf(DataType.Person, item)) {
     const contact = item as Obj.Obj<DataType.Person>;
-    return <Form values={contact} schema={DataType.Person} autoSave />;
+    return <Form values={contact} schema={DataType.Person} projection={projectionModel} autoSave />;
   }
   return <span>{item.id}</span>;
 };
@@ -59,7 +59,7 @@ export const Default: Story = {
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onSpaceCreated: async ({ space }) => {
         // Create a project
         const project = DataType.makeProject({
           collections: [],
@@ -71,6 +71,7 @@ export const Default: Story = {
           typename: DataType.Person.typename,
           jsonSchema: Type.toJsonSchema(DataType.Person),
           presentation: project,
+          fields: ['fullName'],
         });
 
         project.collections.push(Ref.make(view));

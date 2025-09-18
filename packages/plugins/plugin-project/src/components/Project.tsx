@@ -7,11 +7,11 @@ import React, { type FC } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Stack } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { DataType, type ProjectionModel } from '@dxos/schema';
 
 import { ViewColumn } from './ViewColumn';
 
-type ItemProps = { item: Obj.Any };
+type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 

@@ -1,14 +1,14 @@
 //
 // Copyright 2025 DXOS.org
 //
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { type AnyEchoObject } from '@dxos/echo-schema';
+import { type Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
-import { type View } from '@dxos/schema';
+import { ProjectionModel, type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -29,6 +29,10 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
   const items = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const projectionModel = useMemo(
+    () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
+    [schema, view.projection],
+  );
 
   if (!view || !view.query || !items) {
     return null;
@@ -43,12 +47,12 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
           </StackItem.Heading>
           <CardStack.Stack id={view.id} itemsCount={items.length}>
             {items.map((liveMarker) => {
-              const item = liveMarker as unknown as AnyEchoObject;
+              const item = liveMarker as unknown as Obj.Any;
               return (
                 <CardStack.Item asChild key={item.id}>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
                     <Card.StaticRoot>
-                      <Item item={item} />
+                      <Item item={item} projectionModel={projectionModel} />
                     </Card.StaticRoot>
                   </StackItem.Root>
                 </CardStack.Item>
