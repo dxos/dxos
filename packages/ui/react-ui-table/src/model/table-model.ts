@@ -7,7 +7,6 @@ import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-c
 import { Resource } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import {
-  type FieldSortType,
   FormatEnum,
   type JsonProp,
   type JsonSchemaType,
@@ -28,7 +27,14 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type DataType, ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
+import {
+  type DataType,
+  type FieldSortType,
+  ProjectionModel,
+  type PropertyType,
+  type ValidationError,
+  validateSchema,
+} from '@dxos/schema';
 
 import { Table } from '../types';
 import { touch } from '../util';

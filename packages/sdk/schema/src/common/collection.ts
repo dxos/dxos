@@ -19,7 +19,7 @@ export const Collection = Schema.Struct({
 export type Collection = Schema.Schema.Type<typeof Collection>;
 
 // TODO(wittjosiah): Remove. Use View instead.
-export const QueryCollection = Schema.Struct({
+const QueryCollection_ = Schema.Struct({
   name: Schema.optional(Schema.String),
   query: QueryAST.Query,
 }).pipe(
@@ -29,4 +29,6 @@ export const QueryCollection = Schema.Struct({
   }),
 );
 
-export type QueryCollection = Schema.Schema.Type<typeof QueryCollection>;
+export type QueryCollection = Schema.Schema.Type<typeof QueryCollection_>;
+export type QueryCollectionEncoded = Schema.Schema.Encoded<typeof QueryCollection_>;
+export const QueryCollection: Schema.Schema<QueryCollection, QueryCollectionEncoded> = QueryCollection_;

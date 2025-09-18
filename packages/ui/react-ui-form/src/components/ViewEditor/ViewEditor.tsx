@@ -8,16 +8,24 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { getSpace } from '@dxos/react-client/echo';
 import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { QueryEditor, QuerySerializer } from '@dxos/react-ui-components';
+import { QueryEditor, QuerySerializer, createExpression } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { type DataType, FieldSchema, type FieldType, ProjectionModel, VIEW_FIELD_LIMIT } from '@dxos/schema';
+import {
+  type DataType,
+  FieldSchema,
+  type FieldType,
+  ProjectionModel,
+  VIEW_FIELD_LIMIT,
+  typenameFromQuery,
+} from '@dxos/schema';
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps, type InputComponent } from '../Form';
+import { Form, type FormProps, type InputComponent, type InputProps } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -50,6 +58,7 @@ export const ViewEditor = ({
   onDelete,
   outerSpacing = true,
 }: ViewEditorProps) => {
+  const space = getSpace(view);
   const schemaReadonly = !isMutable(schema);
   const { t } = useTranslation(translationKey);
   const projectionModel = useMemo(() => {
@@ -60,12 +69,14 @@ export const ViewEditor = ({
   const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
   const serializedQuery = Match.value(kind).pipe(
-    Match.when('basic', () =>
-      view.query.type === 'select' ? (view.query.filter.type === 'object' ? view.query.filter.typename : '') : '',
-    ),
+    Match.when('basic', () => typenameFromQuery(view.query)),
     Match.when('advanced', () => {
+      if (view.query.type !== 'select') {
+        return '';
+      }
+
       const serializer = new QuerySerializer();
-      return serializer.serialize(view.query);
+      return serializer.serialize(createExpression(view.query.filter));
     }),
     Match.exhaustive,
   );
@@ -155,7 +166,15 @@ export const ViewEditor = ({
     () =>
       kind === 'advanced'
         ? {
-            ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props) => <QueryEditor {...props} />,
+            ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props: InputProps) => {
+              const handleChange = useCallback(
+                (text: string) => props.onValueChange('string', text),
+                [props.onValueChange],
+              );
+
+              // TODO(wittjosiah): Add label & input styles.
+              return <QueryEditor space={space} initialValue={props.getValue()} onChange={handleChange} />;
+            },
           }
         : {},
     [],
@@ -181,6 +200,7 @@ export const ViewEditor = ({
         readonly={readonly ? 'disabled-input' : false}
         onSave={handleUpdate}
         outerSpacing={outerSpacing}
+        Custom={custom}
       />
 
       <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>

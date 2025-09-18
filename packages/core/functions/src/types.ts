@@ -67,7 +67,7 @@ export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
  */
 const SubscriptionTriggerSchema = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
-  filter: QueryAST.Query.annotations({ title: 'Query' }),
+  query: QueryAST.Query.annotations({ title: 'Query' }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).

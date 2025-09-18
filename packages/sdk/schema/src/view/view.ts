@@ -29,6 +29,7 @@ import { getSchemaProperties } from '../properties';
 
 import { FieldSchema } from './field';
 import { ProjectionModel } from './projection-model';
+import { FieldSortType } from './sort';
 
 export const Projection = Schema.Struct({
   /**
@@ -73,6 +74,11 @@ const View_ = Schema.Struct({
   query: QueryAST.Query,
 
   /**
+   * @deprecated Prefer ordering in query.
+   */
+  sort: Schema.optional(Schema.Array(FieldSortType)),
+
+  /**
    * Projection of the data returned from the query.
    */
   projection: Projection,
@@ -87,6 +93,11 @@ const View_ = Schema.Struct({
 export interface View extends Schema.Schema.Type<typeof View_> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
 export const View: Schema.Schema<View, ViewEncoded> = View_;
+
+/** @deprecated */
+// TODO(wittjosiah): Try to remove. Use full query instead.
+export const typenameFromQuery = (query: QueryAST.Query) =>
+  query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
 
 export const createFieldId = () => PublicKey.random().truncate();
 
