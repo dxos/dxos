@@ -12,6 +12,7 @@ import {
 import { log } from '@dxos/log';
 
 let _ner: Promise<TokenClassificationPipelineType>;
+
 /**
  * Named Entity Recognition pipeline.
  * Initializes the pipeline on first call.
@@ -24,6 +25,7 @@ export const getNer = () => {
       return ner;
     });
   }
+
   return _ner;
 };
 

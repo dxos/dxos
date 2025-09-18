@@ -3,20 +3,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import {
-  type EditorState,
-  type Extension,
-  type Range,
-  RangeSetBuilder,
-  StateEffect,
-  StateField,
-} from '@codemirror/state';
+import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, type WidgetType } from '@codemirror/view';
 import { type FC } from 'react';
 
 import { log } from '@dxos/log';
 
 import { ReactWidget } from './ReactWidget';
+import { decoSetToArray } from './util';
 import { nodeToJson } from './xml-util';
 
 export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
@@ -41,12 +35,19 @@ export type XmlTagOptions = {
   registry?: XmlComponentRegistry;
 };
 
+/**
+ * Update context.
+ */
 export const xmlTagContext = StateEffect.define<any>();
 
-// OPTIMIZATION
-// Create state field to map widgets => DOM placeholder.
-// State effect to update state.
-// Track position of last widget for rebuilding.
+/**
+ * Update widget.
+ */
+export const xmlTagUpdate = StateEffect.define<{ id: string; value: any }>();
+
+type WidgetState = {
+  [id: string]: any;
+};
 
 type DecorationField = {
   from: number;
@@ -57,7 +58,8 @@ type DecorationField = {
  * Extension that adds thread-related functionality including XML tag decorations.
  */
 export const xmlTags = (options: XmlTagOptions = {}): Extension => {
-  const context = StateField.define<any>({
+  // Contexts state.
+  const contextState = StateField.define<any>({
     create: () => null,
     update: (value, tr) => {
       for (const effect of tr.effects) {
@@ -65,39 +67,66 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
           return effect.value;
         }
       }
+
       return value;
     },
   });
 
-  return [
-    context,
+  // Widget decorations.
+  const decorationsState = StateField.define<DecorationField>({
+    create: (state) => buildDecorations(state, 0, state.doc.length, options, state.field(contextState)),
+    update: ({ from, decorations }, tr) => {
+      if (tr.docChanged) {
+        // Flag if the transaction has modified the head of the document.
+        // (i.e., any changes that touch before the current `from` position).
+        const reset = tr.changes.touchesRange(0, from);
 
-    // Tags.
-    StateField.define<DecorationField>({
-      create: (state) => buildDecorations(state, 0, state.doc.length, options, state.field(context)),
-      update: ({ from, decorations }, tr) => {
-        if (tr.docChanged) {
-          // Since append-only, rebuild decorations from the last widget and merge with existing.
-          const result = buildDecorations(tr.state, from, tr.state.doc.length, options, tr.state.field(context));
-          return { from: result.from, decorations: decorations.update({ add: decoSetToArray(result.decorations) }) };
+        // Since append-only, rebuild decorations from after the last widget.
+        const result = buildDecorations(
+          tr.state,
+          reset ? 0 : from,
+          tr.state.doc.length,
+          tr.state.field(contextState),
+          options,
+        );
+
+        // Merge with existing decorations.
+        return { from: result.from, decorations: decorations.update({ add: decoSetToArray(result.decorations) }) };
+      }
+
+      return { from, decorations: decorations.map(tr.changes) };
+    },
+    provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
+  });
+
+  // State management.
+  const widgetState = StateField.define<WidgetState>({
+    create: () => ({}),
+    update: (value, tr) => {
+      for (const e of tr.effects) {
+        if (e.is(xmlTagUpdate)) {
+          // TODO(burdon): Render.
+          console.log('update', e.value.id);
+          return { ...value, [e.value.id]: e.value };
         }
+      }
 
-        return { from, decorations: decorations.map(tr.changes) };
-      },
-      provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
-    }),
-  ];
+      return value;
+    },
+  });
+
+  return [contextState, decorationsState, widgetState];
 };
 
 /**
- * Creates decorations for XML tags in the document using the syntax tree.
+ * Creates widget decorations for XML tags in the document using the syntax tree.
  */
 const buildDecorations = (
   state: EditorState,
   from: number,
   to: number,
-  options: XmlTagOptions,
   context: any,
+  options: XmlTagOptions,
 ): DecorationField => {
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(state);
@@ -110,6 +139,7 @@ const buildDecorations = (
     to,
     enter: (node) => {
       switch (node.type.name) {
+        // XML Element.
         case 'Element': {
           try {
             // Check tag is closed before creating widget.
@@ -123,7 +153,7 @@ const buildDecorations = (
                   : undefined;
 
               if (widget) {
-                from = node.node.from;
+                from = node.node.to;
                 builder.add(node.node.from, node.node.to, Decoration.replace({ widget, block }));
               }
             }
@@ -138,20 +168,4 @@ const buildDecorations = (
   });
 
   return { from, decorations: builder.finish() };
-};
-
-// TODO(burdon): Util.
-const decoSetToArray = (deco: DecorationSet): readonly Range<Decoration>[] => {
-  const ranges: Range<Decoration>[] = [];
-  const iter = deco.iter();
-  while (iter.value) {
-    ranges.push({
-      from: iter.from,
-      to: iter.to,
-      value: iter.value,
-    });
-    iter.next();
-  }
-
-  return ranges;
 };

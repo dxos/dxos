@@ -86,20 +86,3 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): any => {
 
   return result;
 };
-
-/**
- * Get tag name by finding the first TagName node within this Element.
- */
-export const getTagName = (state: EditorState, node: SyntaxNode): string | undefined => {
-  let tagName: string | undefined;
-
-  const cursor = node.cursor();
-  cursor.iterate((node) => {
-    if (node.type.name === 'TagName' && !tagName) {
-      tagName = state.doc.sliceString(node.from, node.to);
-      return false; // Stop iteration.
-    }
-  });
-
-  return tagName;
-};

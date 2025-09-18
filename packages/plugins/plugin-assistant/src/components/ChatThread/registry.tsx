@@ -30,6 +30,15 @@ const Fallback = ({ tag, ...props }: XmlComponentProps<MessageThreadContext>) =>
   );
 };
 
+const ToolBlock = ({ id }: XmlComponentProps<MessageThreadContext>) => {
+  return (
+    <div className='flex items-center gap-2'>
+      <span>Tool</span>
+      <span className='text-green-500'>{id}</span>
+    </div>
+  );
+};
+
 /**
  * Custom XML tags registry.
  */
@@ -80,14 +89,9 @@ export const componentRegistry: XmlComponentRegistry = {
   // React
   //
 
-  // TODO(burdon): Reference messages via context.
-  ['toolBlock' as const]: {
-    block: true,
-    Component: Fallback,
-  },
   ['toolCall' as const]: {
     block: true,
-    Component: Fallback,
+    Component: ToolBlock,
   },
   ['toolResult' as const]: {
     block: true,
@@ -143,12 +147,10 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>\n`;
     }
 
-    // TODO(burdon): Update context.
     case 'toolCall': {
-      return `<json>\n${JSON.stringify(block)}\n</json>\n`;
+      return `<toolCall id="${message.id}" />\n`;
     }
     case 'toolResult': {
-      // return `<json>\n${JSON.stringify(block)}\n</json>\n`;
       break;
     }
     case 'summary': {
