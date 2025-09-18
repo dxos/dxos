@@ -8,15 +8,24 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Project } from './Project';
+
+const StorybookProjectItem = ({ item }: { item: Obj.Any }) => {
+  if (Obj.instanceOf(Testing.Contact, item)) {
+    const contact = item as Obj.Obj<Testing.Contact>;
+    return <Form values={contact} schema={Testing.ContactSchema} autoSave />;
+  }
+  return <span>{item.id}</span>;
+};
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
@@ -27,12 +36,15 @@ const DefaultStory = () => {
     return <p>Loading…</p>;
   }
 
-  return <Project project={project} />;
+  return (
+    <Project.Root Item={StorybookProjectItem}>
+      <Project.Content project={project} />
+    </Project.Root>
+  );
 };
 
 const meta: Meta<typeof Project> = {
   title: 'plugins/plugin-project/Project',
-  component: Project,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
 };

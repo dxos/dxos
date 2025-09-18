@@ -12,6 +12,8 @@ import { type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
+import { useProject } from './Project';
+
 export type ViewColumnProps = {
   view: View;
 };
@@ -22,6 +24,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const client = useClient();
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
+  const { Item } = useProject('ViewColumn');
 
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
@@ -44,7 +47,9 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
               return (
                 <CardStack.Item asChild key={item.id}>
                   <StackItem.Root item={item} focusIndicatorVariant='group'>
-                    <Card.StaticRoot>{item.id}</Card.StaticRoot>
+                    <Card.StaticRoot>
+                      <Item item={item} />
+                    </Card.StaticRoot>
                   </StackItem.Root>
                 </CardStack.Item>
               );
