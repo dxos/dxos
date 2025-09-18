@@ -25,5 +25,9 @@ export const LoggingContainer = ({ space, traceQueue }: ComponentProps & { trace
     true,
   );
 
-  return <Timeline branches={branches} commits={commits} />;
+  return (
+    <div className='flex flex-col h-full'>
+      <Timeline branches={branches} commits={commits} />
+    </div>
+  );
 };
