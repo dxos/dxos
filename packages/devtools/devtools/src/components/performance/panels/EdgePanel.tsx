@@ -73,16 +73,19 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
 };
 
 const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TableProps['rows'] => {
-  if (!status) {
-    return [];
-  }
-
-  return [
+  const rows: TableProps['rows'] = [
     [
       wsStatus === WsStatus.CONNECTED ? '✅' : '❌',
       'web socket',
       wsStatus === WsStatus.CONNECTED ? 'Connected' : 'Disconnected',
     ],
+  ];
+
+  if (!status) {
+    return rows;
+  }
+
+  rows.push(
     [
       (status.router.connectedDevices?.length ?? 0) > 0 && !status.router.fetchError ? '✅' : '❌',
       'router',
@@ -94,5 +97,7 @@ const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TablePr
       space.diagnostics?.redFlags?.length > 0 || space.fetchError ? '❌' : '✅',
       spaceId,
     ]),
-  ];
+  );
+
+  return rows;
 };
