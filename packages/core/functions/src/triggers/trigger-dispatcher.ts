@@ -12,14 +12,7 @@ import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
-import {
-  DatabaseService,
-  QueueService,
-  TracingService,
-  type Services,
-  ComputeEventPayload,
-  ComputeEventLogger,
-} from '../services';
+import { ComputeEventLogger, DatabaseService, QueueService, type Services, TracingService } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import {
   type EventType,

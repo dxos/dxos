@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { Filter } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { InvocationTraceStartEvent } from '@dxos/functions';
 import { type Queue, useQuery, useQueue } from '@dxos/react-client/echo';
 import { Timeline } from '@dxos/react-ui-components';
 
 import { useExecutionGraph } from '../../hooks';
 import { Assistant } from '../../types';
 
-import { Obj } from '@dxos/echo';
-import { InvocationTraceStartEvent } from '@dxos/functions';
 import { type ComponentProps } from './types';
 
 export const LoggingContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {

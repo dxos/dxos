@@ -11,7 +11,6 @@ import { PropertiesType } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
@@ -19,7 +18,6 @@ import {
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
-  TracingService,
   TriggerDispatcher,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
