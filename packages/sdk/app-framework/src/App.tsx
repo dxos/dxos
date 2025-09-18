@@ -223,7 +223,7 @@ const App = ({ placeholder: Placeholder, state }: AppProps) => {
   }
 
   // TODO(wittjosiah): Consider using Suspense instead?
-  if (stage < LoadingState.Done) {
+  if (!state.ready) {
     if (!Placeholder) {
       return null;
     }
