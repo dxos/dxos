@@ -24,7 +24,7 @@ import { type BlockRenderer, type MessageThreadContext } from './sync';
 const Fallback = ({ tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
+      <ToggleContainer.Header classNames='bg-groupSurface'>{tag}</ToggleContainer.Header>
       <ToggleContainer.Content classNames='bg-modalSurface'>
         <Json classNames='!p-2 text-sm' data={props} />
       </ToggleContainer.Content>

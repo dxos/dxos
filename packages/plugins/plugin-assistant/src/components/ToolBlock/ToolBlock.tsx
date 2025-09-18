@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -31,6 +31,8 @@ export type AiToolProvider = () => readonly AiTool.Any[];
 
 export type ToolBlockProps = {
   blocks: ContentBlock.Any[];
+
+  // TODO(burdon): Get from context.
   toolProvider?: AiToolProvider;
 };
 
@@ -124,16 +126,13 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
     setSelected(index);
   };
 
-  const title = useMemo(() => {
-    const lines = items.map((item) => item.title).filter(isNotFalsy);
-    return <TextCrawl key='status-roll' lines={lines} />;
-  }, [items]);
-
   const data = items[selected].content;
 
   return (
     <ToggleContainer.Root classNames={chatMessagePanel} open={open} onChangeOpen={setOpen}>
-      <ToggleContainer.Header classNames={chatMessagePanelHeader} title={title} />
+      <ToggleContainer.Header classNames={chatMessagePanelHeader}>
+        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} />
+      </ToggleContainer.Header>
       <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', chatMessagePanelContent]}>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json

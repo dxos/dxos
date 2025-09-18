@@ -219,7 +219,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
     const { t } = useTranslation(meta.id);
     return (
       <ToggleContainer.Root classNames={styles.panel} defaultOpen>
-        <ToggleContainer.Header classNames={styles.panelHeader} title={t('toolkit label')} />
+        <ToggleContainer.Header classNames={styles.panelHeader}>{t('toolkit label')}</ToggleContainer.Header>
         <ToggleContainer.Content classNames={styles.panelContent}>
           <Toolbox />
         </ToggleContainer.Content>
@@ -268,7 +268,9 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       default: {
         return (
           <ToggleContainer.Root classNames={styles.panel}>
-            <ToggleContainer.Header classNames={styles.panelHeader} title={block.disposition ?? block._tag} />
+            <ToggleContainer.Header classNames={styles.panelHeader}>
+              {block.disposition ?? block._tag}
+            </ToggleContainer.Header>
             <ToggleContainer.Content classNames={styles.panelContent}>
               <Json data={safeParseJson(block.data ?? block)} classNames={styles.json} />
             </ToggleContainer.Content>
@@ -284,7 +286,7 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
   default: ({ block }) => {
     return (
       <ToggleContainer.Root classNames={styles.panel}>
-        <ToggleContainer.Header classNames={styles.panelHeader} title={block._tag} />
+        <ToggleContainer.Header classNames={styles.panelHeader}>{block._tag}</ToggleContainer.Header>
         <ToggleContainer.Content classNames={styles.panelContent}>
           <Json data={block} classNames={styles.json} />
         </ToggleContainer.Content>
@@ -312,7 +314,9 @@ export const ChatError = ({ error, onEvent }: ChatErrorProps) => {
     <>
       <MessageItem>
         <ToggleContainer.Root classNames={styles.panel}>
-          <ToggleContainer.Header classNames={styles.panelHeader} title={error.message || t('error label')} />
+          <ToggleContainer.Header classNames={styles.panelHeader}>
+            {error.message || t('error label')}
+          </ToggleContainer.Header>
           <ToggleContainer.Content classNames={styles.panelContent}>{String(error.cause)}</ToggleContainer.Content>
         </ToggleContainer.Root>
       </MessageItem>
