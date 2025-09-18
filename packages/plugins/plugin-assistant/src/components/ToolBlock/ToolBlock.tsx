@@ -30,14 +30,12 @@ export const isToolMessage = (message: DataType.Message) => {
 export type AiToolProvider = () => readonly AiTool.Any[];
 
 export type ToolBlockProps = {
-  message: DataType.Message;
-  toolProvider: AiToolProvider;
+  blocks: ContentBlock.Any[];
+  toolProvider?: AiToolProvider;
 };
 
-// TODO(burdon): Pass in blocks.
-export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
+export const ToolBlock = ({ blocks, toolProvider }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
-  const { blocks = [] } = message;
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
@@ -49,7 +47,7 @@ export const ToolBlock = ({ message, toolProvider }: ToolBlockProps) => {
 
   const items = useMemo(() => {
     let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
-    const tools = toolProvider();
+    const tools = toolProvider?.() ?? [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
       .map((block) => {

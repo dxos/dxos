@@ -9,10 +9,10 @@ import { type ParseWrapper, parseMixed } from '@lezer/common';
 import { Obj } from '@dxos/echo';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 
-import { type XmlComponentRegistry } from './xml-tags';
+import { type XmlWidgetRegistry } from './xml-tags';
 
 export type ExtendedMarkdownOptions = {
-  registry?: XmlComponentRegistry;
+  registry?: XmlWidgetRegistry;
 };
 
 /**
@@ -40,7 +40,7 @@ export const extendedMarkdown = ({ registry }: ExtendedMarkdownOptions = {}): Ex
 /**
  * Configure mixed parser to recognize custom tags.
  */
-const mixedParser = (registry?: XmlComponentRegistry): ParseWrapper => {
+const mixedParser = (registry?: XmlWidgetRegistry): ParseWrapper => {
   const customTags = Object.keys(registry ?? {});
   const tagPattern = new RegExp(`<(${customTags.join('|')})`);
 

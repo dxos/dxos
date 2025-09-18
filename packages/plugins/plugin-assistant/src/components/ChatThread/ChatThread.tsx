@@ -6,14 +6,14 @@ import React, { type CSSProperties, forwardRef, useEffect, useImperativeHandle, 
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
-import { type ThemedClassName, useInterval } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
 import { type ChatMessageProps } from './ChatMessage';
-import { componentRegistry } from './registry';
+import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer } from './sync';
 
 export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
@@ -43,7 +43,7 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
     }, [controller, error]);
 
     // Update document.
-    const syncer = useMemo(() => controller && new MessageSyncer(controller), [controller]);
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
     useEffect(() => {
       syncer?.sync(messages);
     }, [syncer, messages]);

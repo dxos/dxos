@@ -3,38 +3,53 @@
 //
 
 import { log } from '@dxos/log';
-import { type DataType } from '@dxos/schema';
-
-import { blockToMarkdown } from './registry';
-
-// TODO(burdon): Pass in blockToMarkdown (factor out).
-
-// TODO(burdon): Extend syncer interface.
-export type TextModel = {
-  update: (text: string) => Promise<void>;
-  append: (text: string) => Promise<void>;
-};
+import { type MarkdownStreamController, type XmlWidgetStateManager } from '@dxos/react-ui-components';
+import { type ContentBlock, type DataType } from '@dxos/schema';
 
 /**
- * Thread context.
+ * Update document.
  */
-export class MessageThreadContext {
+export type TextModel = Pick<MarkdownStreamController, 'update' | 'append' | 'updateWidget'>;
+
+/**
+ * Thread context passed to renderer.
+ */
+export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
+  constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
+
   reset() {}
+
+  updateWidget<T>(id: string, value: T) {
+    this._widgetState?.updateWidget(id, value);
+  }
 }
+
+/**
+ * Renders a block to markdown.
+ */
+export type BlockRenderer = (
+  context: MessageThreadContext,
+  message: DataType.Message,
+  block: ContentBlock.Any,
+) => string | undefined;
 
 /**
  * Syncs messages with the editor.
  */
-// TODO(burdon): Factor out.
 export class MessageSyncer {
   private _initialMessageId?: string;
   private _currentMessageIndex = 0;
   private _currentBlockIndex = 0;
   private _currentBlockContent?: string;
 
-  private readonly _context = new MessageThreadContext();
+  private readonly _context: MessageThreadContext;
 
-  constructor(private readonly _doc: TextModel) {}
+  constructor(
+    private readonly _model: TextModel,
+    private readonly _blockRenderer: BlockRenderer,
+  ) {
+    this._context = new MessageThreadContext(this._model);
+  }
 
   get context() {
     return this._context;
@@ -47,7 +62,7 @@ export class MessageSyncer {
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
     this._context.reset();
-    void this._doc.update('');
+    void this._model.update('');
   }
 
   sync(messages: DataType.Message[]) {
@@ -72,7 +87,7 @@ export class MessageSyncer {
       let j = this._currentBlockIndex;
       for (const block of message.blocks.slice(this._currentBlockIndex)) {
         this._currentBlockIndex = j;
-        const currentBlockContent = blockToMarkdown(this._context, message, block);
+        const currentBlockContent = this._blockRenderer(this._context, message, block);
         if (currentBlockContent) {
           let content: string = '';
           if (this._currentBlockContent && currentBlockContent.startsWith(this._currentBlockContent)) {
@@ -81,7 +96,7 @@ export class MessageSyncer {
             content = currentBlockContent;
           }
 
-          void this._doc.append(content);
+          void this._model.append(content);
           this._currentBlockContent = currentBlockContent;
           log('append', { message: i, block: j, content });
         }

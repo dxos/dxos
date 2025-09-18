@@ -10,6 +10,7 @@ import { type ContentBlock } from '@dxos/schema';
 
 import { createMessage } from '../../testing';
 
+import { blockToMarkdown } from './registry';
 import { MessageSyncer, type TextModel } from './sync';
 
 class TestDocument implements TextModel {
@@ -33,7 +34,7 @@ describe('reducers', () => {
     'basic sync',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc);
+      const syncer = new MessageSyncer(doc, blockToMarkdown);
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),
@@ -53,7 +54,7 @@ describe('reducers', () => {
     'sync with partial updates',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
-      const syncer = new MessageSyncer(doc);
+      const syncer = new MessageSyncer(doc, blockToMarkdown);
 
       const messages = [
         createMessage('user', [{ _tag: 'text', text: 'Hello' }]),

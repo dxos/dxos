@@ -20,10 +20,12 @@ import { mx } from '@dxos/react-ui-theme';
 
 import {
   type StreamerOptions,
-  type XmlTagOptions,
+  type XmlTagsOptions,
+  type XmlWidgetStateManager,
   extendedMarkdown,
   streamer,
-  xmlTagContext,
+  xmlTagContextEffect,
+  xmlTagUpdateEffect,
   xmlTags,
 } from './extensions';
 import { createStreamer } from './stream';
@@ -33,9 +35,9 @@ export type MarkdownStreamController = {
   scrollToBottom: () => void;
   update: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
-};
+} & Pick<XmlWidgetStateManager, 'updateWidget'>;
 
-export type MarkdownStreamProps = ThemedClassName<{ content?: string }> & XmlTagOptions & StreamerOptions;
+export type MarkdownStreamProps = ThemedClassName<{ content?: string }> & XmlTagsOptions & StreamerOptions;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
   ({ classNames, registry, content, ...streamerOptions }, forwardedRef) => {
@@ -102,7 +104,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Set the context for XML tags.
         setContext: (context: any) => {
           view.dispatch({
-            effects: xmlTagContext.of(context),
+            effects: xmlTagContextEffect.of(context),
           });
         },
         // Immediately scroll to bottom (and pin).
@@ -125,7 +127,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             await Effect.runPromise(Queue.offer(queueRef.current, text));
           }
         },
-      };
+        // Update widget.
+        updateWidget: (id: string, value: any) => {
+          view.dispatch({
+            effects: xmlTagUpdateEffect.of({ id, value }),
+          });
+        },
+      } satisfies MarkdownStreamController;
     }, [view]);
 
     return <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />;

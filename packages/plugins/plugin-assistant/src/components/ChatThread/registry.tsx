@@ -11,15 +11,17 @@ import {
   SuggestionWidget,
   SummaryWidget,
   ToggleContainer,
-  type XmlComponentProps,
-  type XmlComponentRegistry,
+  type XmlWidgetProps,
+  type XmlWidgetRegistry,
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 
-import { type MessageThreadContext } from './sync';
+import { ToolBlock } from '../ToolBlock';
 
-const Fallback = ({ tag, ...props }: XmlComponentProps<MessageThreadContext>) => {
+import { type BlockRenderer, type MessageThreadContext } from './sync';
+
+const Fallback = ({ tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
       <ToggleContainer.Header classNames='bg-groupSurface' title={tag} />
@@ -30,19 +32,15 @@ const Fallback = ({ tag, ...props }: XmlComponentProps<MessageThreadContext>) =>
   );
 };
 
-const ToolBlock = ({ id }: XmlComponentProps<MessageThreadContext>) => {
-  return (
-    <div className='flex items-center gap-2'>
-      <span>Tool</span>
-      <span className='text-green-500'>{id}</span>
-    </div>
-  );
+const getTextChild = (children: any[]): string | null => {
+  const child = children?.[0];
+  return typeof child === 'string' ? child : null;
 };
 
 /**
  * Custom XML tags registry.
  */
-export const componentRegistry: XmlComponentRegistry = {
+export const componentRegistry: XmlWidgetRegistry = {
   //
   // Widgets
   //
@@ -112,15 +110,15 @@ export const componentRegistry: XmlComponentRegistry = {
   },
 };
 
-const getTextChild = (children: any[]): string | null => {
-  const child = children?.[0];
-  return typeof child === 'string' ? child : null;
-};
-
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+// TODO(burdon): Move into registry.
+export const blockToMarkdown: BlockRenderer = (
+  context: MessageThreadContext,
+  message: DataType.Message,
+  block: ContentBlock.Any,
+) => {
   let str = _blockToMarkdown(context, message, block);
   if (str && !block.pending) {
     return (str += '\n');
@@ -142,23 +140,28 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
     case 'suggestion': {
       return `<suggestion>${block.text}</suggestion>`;
     }
-
     case 'select': {
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>\n`;
     }
-
-    case 'toolCall': {
-      return `<toolCall id="${message.id}" />\n`;
-    }
-    case 'toolResult': {
-      break;
-    }
-    case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block, true)}</summary>`;
-    }
-
     case 'toolkit': {
       return `<toolkit />\n`;
+    }
+
+    case 'toolCall': {
+      context.updateWidget(block.toolCallId, {
+        blocks: [block],
+      });
+      return `<toolCall id="${block.toolCallId}" />\n`;
+    }
+    case 'toolResult': {
+      context.updateWidget(block.toolCallId, ({ blocks = [] }: { blocks: ContentBlock.Any[] }) => ({
+        blocks: [...blocks, block],
+      }));
+      break;
+    }
+
+    case 'summary': {
+      return `<summary>${ContentBlock.createSummaryMessage(block, true)}</summary>`;
     }
 
     default: {

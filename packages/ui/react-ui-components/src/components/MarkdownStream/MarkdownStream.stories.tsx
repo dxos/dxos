@@ -17,7 +17,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { type XmlComponentRegistry } from './extensions';
+import { type XmlWidgetRegistry } from './extensions';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
 import doc from './testing/doc.md?raw';
@@ -32,7 +32,7 @@ const defaultStreamOptions: TextStreamOptions = {
   variance: 0.5,
 };
 
-const testRegistry: XmlComponentRegistry = {
+const testRegistry: XmlWidgetRegistry = {
   ['suggestion' as const]: {
     block: true,
     factory: (props: any) => new SuggestionWidget(props.children?.[0]),

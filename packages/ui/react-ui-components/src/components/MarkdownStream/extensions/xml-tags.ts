@@ -13,57 +13,77 @@ import { ReactWidget } from './ReactWidget';
 import { decoSetToArray } from './util';
 import { nodeToJson } from './xml-util';
 
+export type StateDispatch<T> = T | ((state: T) => T);
+
+/**
+ * Manages widget state.
+ */
+export interface XmlWidgetStateManager {
+  updateWidget<T>(id: string, props: StateDispatch<T>): void;
+}
+
 export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 
-export type XmlComponentProps<TContext = any, TProps = any> = TProps & {
+/**
+ * Widget component.
+ */
+export type XmlWidgetProps<TContext = any, TProps = any> = TProps & {
   context: TContext;
   tag: string;
   onEvent?: XmlEventHandler;
 };
 
-export type XmlWidgetFactory = (props: XmlComponentProps, onEvent?: XmlEventHandler) => WidgetType | null;
+/**
+ * Factory for creating widgets.
+ */
+export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler) => WidgetType | null;
 
-export type XmlComponentDef = {
+/**
+ * Widget registry definition.
+ */
+export type XmlWidgetDef = {
   block?: boolean;
+  /** Native widget. */
   factory?: XmlWidgetFactory;
-  Component?: FC<XmlComponentProps>;
+  /** React widget. */
+  Component?: FC<XmlWidgetProps>;
 };
 
-export type XmlComponentRegistry = Record<string, XmlComponentDef>;
-
-export type XmlTagOptions = {
-  registry?: XmlComponentRegistry;
-};
+export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
 
 /**
  * Update context.
  */
-export const xmlTagContext = StateEffect.define<any>();
+export const xmlTagContextEffect = StateEffect.define<any>();
 
 /**
  * Update widget.
  */
-export const xmlTagUpdate = StateEffect.define<{ id: string; value: any }>();
+export const xmlTagUpdateEffect = StateEffect.define<{ id: string; value: any }>();
 
-type WidgetState = {
-  [id: string]: any;
-};
-
-type DecorationField = {
+type WidgetDecorationSet = {
   from: number;
   decorations: DecorationSet;
+};
+
+type WidgetStateMap = Record<string, any>;
+
+export type XmlTagsOptions = {
+  registry?: XmlWidgetRegistry;
 };
 
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
-export const xmlTags = (options: XmlTagOptions = {}): Extension => {
-  // Contexts state.
+export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
+  //
+  // Context state.
+  //
   const contextState = StateField.define<any>({
-    create: () => null,
+    create: () => undefined,
     update: (value, tr) => {
       for (const effect of tr.effects) {
-        if (effect.is(xmlTagContext)) {
+        if (effect.is(xmlTagContextEffect)) {
           return effect.value;
         }
       }
@@ -72,9 +92,13 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
     },
   });
 
+  //
   // Widget decorations.
-  const decorationsState = StateField.define<DecorationField>({
-    create: (state) => buildDecorations(state, 0, state.doc.length, options, state.field(contextState)),
+  //
+  const decorationsState = StateField.define<WidgetDecorationSet>({
+    create: (state) => {
+      return buildDecorations(state, 0, state.doc.length, options, state.field(contextState), state.field(widgetState));
+    },
     update: ({ from, decorations }, tr) => {
       if (tr.docChanged) {
         // Flag if the transaction has modified the head of the document.
@@ -87,6 +111,7 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
           reset ? 0 : from,
           tr.state.doc.length,
           tr.state.field(contextState),
+          tr.state.field(widgetState),
           options,
         );
 
@@ -99,19 +124,34 @@ export const xmlTags = (options: XmlTagOptions = {}): Extension => {
     provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
   });
 
-  // State management.
-  const widgetState = StateField.define<WidgetState>({
+  //
+  // Widget state management.
+  //
+  const widgetState = StateField.define<WidgetStateMap>({
     create: () => ({}),
-    update: (value, tr) => {
+    update: (map, tr) => {
       for (const e of tr.effects) {
-        if (e.is(xmlTagUpdate)) {
-          // TODO(burdon): Render.
-          console.log('update', e.value.id);
-          return { ...value, [e.value.id]: e.value };
+        if (e.is(xmlTagUpdateEffect)) {
+          // Update accumulated widget props by id.
+          const { id, value } = e.value;
+          const newValue = typeof value === 'function' ? value(map[id]) : value;
+          const nextMap = { ...map, [id]: newValue } as WidgetStateMap;
+
+          // Find and render widget.
+          const { decorations } = tr.state.field(decorationsState);
+          for (const range of decoSetToArray(decorations)) {
+            const deco = range.value;
+            const widget = deco?.spec?.widget;
+            if (widget && widget instanceof ReactWidget && widget.id === e.value.id) {
+              widget.render(newValue);
+            }
+          }
+
+          return nextMap;
         }
       }
 
-      return value;
+      return map;
     },
   });
 
@@ -126,8 +166,9 @@ const buildDecorations = (
   from: number,
   to: number,
   context: any,
-  options: XmlTagOptions,
-): DecorationField => {
+  widgetState: WidgetStateMap,
+  options: XmlTagsOptions,
+): WidgetDecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
@@ -146,10 +187,11 @@ const buildDecorations = (
             const props = nodeToJson(state, node.node);
             if (options.registry && props?.tag) {
               const { block, factory, Component } = options.registry[props.tag] ?? {};
+              const state = widgetState[props.id];
               const widget = factory
                 ? factory({ context, ...props })
                 : Component
-                  ? new ReactWidget(Component, { context, ...props })
+                  ? props.id && new ReactWidget(props.id, Component, { context, ...props, ...state })
                   : undefined;
 
               if (widget) {
