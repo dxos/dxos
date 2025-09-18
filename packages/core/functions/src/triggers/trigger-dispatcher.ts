@@ -22,6 +22,7 @@ import {
 } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
+import { causeToError } from '@dxos/effect';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -150,7 +151,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       if (this.timeControl === 'natural') {
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
           Effect.tapErrorCause((cause) => {
-            log.error('trigger dispatcher error', { cause });
+            const error = causeToError(cause);
+            log.error('trigger dispatcher error', { error });
             this._running = false;
             return Effect.void;
           }),

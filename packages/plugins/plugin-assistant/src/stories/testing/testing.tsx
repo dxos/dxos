@@ -34,6 +34,7 @@ import {
   syncLinearIssues,
   updateDocument,
   updateTasks,
+  localServiceEndpoints,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
@@ -87,6 +88,18 @@ export const config = {
         },
         edge: {
           url: remoteServiceEndpoints.edge,
+        },
+      },
+    },
+  }),
+  local: new Config({
+    runtime: {
+      services: {
+        ai: {
+          server: localServiceEndpoints.ai,
+        },
+        edge: {
+          url: localServiceEndpoints.edge,
         },
       },
     },

@@ -539,7 +539,7 @@ export const WithTriggers: Story = {
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
-    config: config.remote,
+    config: config.local,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
