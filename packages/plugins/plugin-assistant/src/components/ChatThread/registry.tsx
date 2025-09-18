@@ -133,8 +133,12 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       if (message.sender.role === 'user') {
         return `\n<prompt>${block.text}</prompt>\n`;
       } else {
-        return block.text;
+        const text = block.text.trim();
+        if (text.length > 0) {
+          return text;
+        }
       }
+      break;
     }
 
     case 'suggestion': {
