@@ -22,22 +22,19 @@ import { isNonNullable } from '@dxos/util';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { useChatContext } from '../Chat';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
 };
 
-export type AiToolProvider = () => readonly AiTool.Any[];
-
 export type ToolBlockProps = {
   blocks: ContentBlock.Any[];
-
-  // TODO(burdon): Get from context.
-  toolProvider?: AiToolProvider;
 };
 
-export const ToolBlock = ({ blocks, toolProvider }: ToolBlockProps) => {
+export const ToolBlock = ({ blocks }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
+  const { processor } = useChatContext(ToolBlock.displayName);
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
@@ -49,7 +46,7 @@ export const ToolBlock = ({ blocks, toolProvider }: ToolBlockProps) => {
 
   const items = useMemo(() => {
     let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
-    const tools = toolProvider?.() ?? [];
+    const tools = processor.conversation.toolkit?.tools ?? [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
       .map((block) => {
@@ -107,6 +104,8 @@ export const ToolBlock = ({ blocks, toolProvider }: ToolBlockProps) => {
 
   return <ToolContainer items={items} />;
 };
+
+ToolBlock.displayName = 'ToolBlock';
 
 type ToolContainerParams = {
   items: { title: string; content: any }[];

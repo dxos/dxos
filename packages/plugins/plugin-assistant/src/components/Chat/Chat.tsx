@@ -55,7 +55,6 @@ type ChatContextValue = {
   processor: AiChatProcessor;
 };
 
-// NOTE: Do not export.
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
@@ -137,8 +136,8 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
       event={event}
       chat={chat}
       space={space}
-      processor={processor}
       messages={messages}
+      processor={processor}
       {...props}
     >
       <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AiTool } from '@effect/ai';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
 import { ErrorBoundary, Surface } from '@dxos/app-framework';
@@ -27,10 +28,12 @@ import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
-import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
+import { ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
+
+export type AiToolProvider = () => readonly AiTool.Any[];
 
 export const styles = {
   margin: chatMessageMargin,
@@ -50,6 +53,10 @@ export type ChatMessageProps = ThemedClassName<{
   onDelete?: () => void;
 }>;
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export const ChatMessage = ({
   classNames,
   debug,
