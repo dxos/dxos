@@ -1,12 +1,12 @@
 //
 // Copyright 2025 DXOS.org
 //
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { type Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
 
@@ -25,6 +25,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
+  const [tab, setTab] = useState<'enumerating' | 'editing'>('enumerating');
 
   // Resolve the view.query to its items
   const schema = useSchema(client, space, view?.query.typename);
@@ -43,7 +44,29 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
       <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
         <CardStack.Content>
           <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
-            {view.name ?? t('untitled view title')}
+            <h3 className='grow'>{view.name ?? t('untitled view title')}</h3>
+            <ToggleGroup
+              type='single'
+              value={tab}
+              onValueChange={(nextValue: 'enumerating' | 'editing') => setTab(nextValue)}
+            >
+              <ToggleGroupIconItem
+                iconOnly
+                variant='ghost'
+                value='enumerating'
+                label={t('enumerating tab label')}
+                icon='ph--rows-plus-bottom--regular'
+                density='fine'
+              />
+              <ToggleGroupIconItem
+                iconOnly
+                variant='ghost'
+                value='editing'
+                label={t('edit tab label')}
+                icon='ph--pencil-simple-line--regular'
+                density='fine'
+              />
+            </ToggleGroup>
           </StackItem.Heading>
           <CardStack.Stack id={view.id} itemsCount={items.length}>
             {items.map((liveMarker) => {
