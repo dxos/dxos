@@ -15,6 +15,7 @@ import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import {
   FunctionTrigger,
+  type EventType,
   type QueueTriggerOutput,
   type TimerTrigger,
   type TimerTriggerOutput,
@@ -23,6 +24,7 @@ import {
 
 import { InvocationTracer } from './invocation-tracer';
 import { causeToError } from '@dxos/effect';
+import { createInvocationPayload } from './input-builder';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -49,7 +51,7 @@ export interface TriggerDispatcherOptions {
 
 export interface InvokeTriggerOptions {
   trigger: FunctionTrigger;
-  data?: unknown;
+  event: EventType;
 }
 export interface TriggerExecutionResult {
   triggerId: string;
@@ -189,8 +191,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     options: InvokeTriggerOptions,
   ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService | InvocationTracer> =>
     Effect.gen(this, function* () {
-      const { trigger, data } = options;
-      log.info('invoking trigger', { triggerId: trigger.id, spec: trigger.spec, data });
+      const { trigger, event } = options;
+      log.info('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
       const tracer = yield* InvocationTracer;
       const trace = yield* tracer.traceInvocationStart({
@@ -201,7 +203,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             // TODO(dmaretskyi): Is `spec` always there>
             kind: trigger.spec!.kind,
           },
-          data,
+          data: event,
         },
       });
 
@@ -221,7 +223,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const functionDef = deserializeFunction(serialiedFunction);
 
         // Prepare input data
-        const inputData = data ?? this._prepareInputData(trigger);
+        const inputData = this._prepareInputData(trigger, event);
 
         // Invoke the function
         return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
@@ -231,11 +233,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         triggerId: trigger.id,
         result,
       };
-      log.info('Trigger function executed', {
-        triggerId: trigger.id,
-        success: Exit.isSuccess(result),
-        error: Exit.isFailure(result) ? result.cause : undefined,
-      });
+      if (Exit.isSuccess(result)) {
+        log.info('trigger execution success', {
+          triggerId: trigger.id,
+        });
+      } else {
+        log.error('trigger execution failure', {
+          error: causeToError(result.cause),
+        });
+      }
       yield* tracer.traceInvocationEnd({
         trace,
         // TODO(dmaretskyi): Might miss errors.
@@ -275,7 +281,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   (trigger) =>
                     this.invokeTrigger({
                       trigger,
-                      data: { tick: now.getTime() } satisfies TimerTriggerOutput,
+                      event: { tick: now.getTime() } satisfies TimerTriggerOutput,
                     }),
                   { concurrency: 1 },
                 )),
@@ -304,7 +310,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 invocations.push(
                   yield* this.invokeTrigger({
                     trigger,
-                    data: {
+                    event: {
                       queue: spec.queue,
                       item: object,
                       cursor: objectPos,
@@ -419,13 +425,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
-  private _prepareInputData = (trigger: FunctionTrigger): any => {
-    if (!trigger.input) {
-      return {};
-    }
-
-    // TODO: Process input template with trigger context
-    return trigger.input;
+  private _prepareInputData = (trigger: FunctionTrigger, event: EventType): any => {
+    return createInvocationPayload(trigger, event);
   };
 }
 

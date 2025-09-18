@@ -27,6 +27,7 @@ import { FunctionTrigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
+import { invariant } from '@dxos/invariant';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest),
@@ -391,6 +392,48 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
           expect(results.length).toBe(0);
         }
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'builds input from pattern',
+      Effect.fnUntraced(function* ({ expect }) {
+        const queue = yield* QueueService.createQueue();
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: queue.dxn.toString(),
+          },
+          input: {
+            instructions: 'Please process the queue item.',
+            input: '{{event.item}}',
+            triggerId: '{{trigger.id}}',
+          },
+        });
+        yield* DatabaseService.add(trigger);
+        const person = Obj.make(DataType.Person, {
+          fullName: 'John Doe',
+        });
+        yield* QueueService.append(queue, [person]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        expect(results.length).toBe(1);
+        expect(results[0].triggerId).toBe(trigger.id);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({
+          instructions: 'Please process the queue item.',
+          input: {
+            id: person.id,
+            fullName: 'John Doe',
+          },
+          triggerId: trigger.id,
+        });
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
   });
