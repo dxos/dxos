@@ -25,7 +25,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const client = useClient();
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
-  const { Item } = useProject('ViewColumn');
+  const { Item, onAddItem } = useProject('ViewColumn');
   const [tab, setTab] = useState<'enumerating' | 'editing'>('enumerating');
 
   // Resolve the view.query to its items
@@ -85,7 +85,12 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
                   })}
                 </CardStack.Stack>
                 <CardStack.Footer>
-                  <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                  <IconButton
+                    icon='ph--plus--regular'
+                    label={t('add card label')}
+                    classNames='is-full'
+                    onClick={() => onAddItem?.(schema)}
+                  />
                 </CardStack.Footer>
               </>
             ) : (

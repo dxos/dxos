@@ -3,6 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import type { Schema } from 'effect';
 import React, { type FC } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -15,7 +16,10 @@ type ItemProps = { item: Obj.Any; projectionModel?: ProjectionModel };
 
 const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
-type ProjectContextValue = { Item: FC<ItemProps> };
+type ProjectContextValue = {
+  Item: FC<ItemProps>;
+  onAddItem?: (schema: Schema.Schema.AnyNoContext) => void;
+};
 type ProjectRootProps = ProjectContextValue;
 
 const PROJECT_NAME = 'ProjectRoot';
