@@ -517,13 +517,10 @@ export const WithTriggers: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [FunctionType, FunctionTrigger],
-    onInit: async ({ space, binder }) => {
-      const functionObj = serializeFunction(exampleFunctions.reply);
-      space.db.add(functionObj);
-      const object = space.db.add(
+    onInit: async ({ space }) => {
+      space.db.add(
         Obj.make(FunctionTrigger, {
-          function: Ref.make(functionObj),
+          function: Ref.make(serializeFunction(exampleFunctions.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -531,7 +528,6 @@ export const WithTriggers: Story = {
           },
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
@@ -552,6 +548,17 @@ export const WithResearchQueue: Story = {
       );
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
       await researchInputQueue.queue.target!.append(orgs);
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: researchInputQueue.queue.dxn.toString(),
+          },
+        }),
+      );
     },
   }),
   args: {

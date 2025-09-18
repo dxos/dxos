@@ -38,7 +38,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { exampleFunctions } from '@dxos/functions';
+import { exampleFunctions, FunctionTrigger, FunctionType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -130,7 +130,15 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       SettingsPlugin(),
       SpacePlugin(),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
+        types: [
+          Markdown.Document,
+          Assistant.Chat,
+          Blueprint.Blueprint,
+          DataType.AccessToken,
+          FunctionTrigger,
+          FunctionType,
+          ...types,
+        ],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
