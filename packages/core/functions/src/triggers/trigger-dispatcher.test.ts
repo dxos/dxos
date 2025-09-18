@@ -90,10 +90,10 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({
           trigger,
-          data: { custom: 'data' },
+          event: { tick: 0 },
         });
 
-        expect(result).toEqual(Exit.succeed({ custom: 'data' }));
+        expect(result).toEqual(Exit.succeed({ tick: 0 }));
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
   });

@@ -58,7 +58,7 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
               invocationId,
               timestamp: now,
               // TODO(dmaretskyi): Not json-stringifying this makes ECHO fail when one ECHO object becomes embedded in another ECHO object.
-              input: JSON.parse(JSON.stringify(payload.data)),
+              input: JSON.parse(JSON.stringify(payload.data ?? {})),
               // invocationTraceQueue: Ref.fromDXN(invocationQueue),
               invocationTarget: target ? Ref.fromDXN(target) : undefined,
               trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
