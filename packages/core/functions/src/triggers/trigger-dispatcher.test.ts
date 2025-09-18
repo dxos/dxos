@@ -236,7 +236,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(trigger);
 
         // Can invoke the trigger
-        const result = yield* dispatcher.invokeTrigger({ trigger });
+        const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
         expect(Exit.isSuccess(result.result)).toBe(true);
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
@@ -271,7 +271,7 @@ describe('TriggerDispatcher', () => {
           });
           yield* DatabaseService.add(trigger);
 
-          const result = yield* dispatcher.invokeTrigger({ trigger });
+          const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
           expect(Exit.isSuccess(result.result)).toBe(true);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),

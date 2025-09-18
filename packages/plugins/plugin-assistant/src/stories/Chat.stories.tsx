@@ -13,7 +13,7 @@ import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -52,21 +52,22 @@ import {
   GraphContainer,
   LoggingContainer,
   MessageContainer,
+  ResearchInputStack,
+  ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
 } from './components';
 import { InvocationsContainer } from './components/InvocationsContainer';
 import { TriggersContainer } from './components/TriggersContainer';
 import {
+  ResearchInputQueue,
   accessTokensFromEnv,
   addTestData,
   config,
   getDecorators,
-  testTypes,
   organizations,
-  ResearchInputQueue,
+  testTypes,
 } from './testing';
-import { ResearchInputStack } from './components/ResearchInputStack';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -581,7 +582,11 @@ export const WithResearchQueue: Story = {
     },
   }),
   args: {
-    deckComponents: [[ResearchInputStack], [TriggersContainer, InvocationsContainer]],
+    deckComponents: [
+      [ResearchInputStack],
+      [TriggersContainer, InvocationsContainer, GraphContainer],
+      [ResearchOutputStack],
+    ],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };

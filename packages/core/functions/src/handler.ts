@@ -136,7 +136,7 @@ export const defineFunction = <T, O>({
   };
 
   const handlerWithSpan = (...args: any[]) => {
-    const result = handler(...args);
+    const result = (handler as any)(...args);
     if (Effect.isEffect(result)) {
       return Effect.withSpan(result, `${key ?? name}`, {
         captureStackTrace,
