@@ -22,7 +22,6 @@ import { isNonNullable } from '@dxos/util';
 import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { useChatContext } from '../Chat';
 
 export const isToolMessage = (message: DataType.Message) => {
   return message.blocks.some((block) => block._tag === 'toolCall' || block._tag === 'toolResult');
@@ -34,7 +33,6 @@ export type ToolBlockProps = {
 
 export const ToolBlock = ({ blocks }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
-  const { processor } = useChatContext(ToolBlock.displayName);
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
     if (!tool) {
@@ -46,7 +44,8 @@ export const ToolBlock = ({ blocks }: ToolBlockProps) => {
 
   const items = useMemo(() => {
     let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
-    const tools = processor.conversation.toolkit?.tools ?? [];
+    // TODO(burdon): Get from context?
+    const tools: AiTool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
       .map((block) => {

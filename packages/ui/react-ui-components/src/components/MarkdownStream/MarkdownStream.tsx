@@ -136,6 +136,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       } satisfies MarkdownStreamController;
     }, [view]);
 
+    useEffect(() => {
+      return () => {
+        view?.destroy();
+      };
+    }, [view]);
+
     return <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />;
   },
 );

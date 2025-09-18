@@ -59,5 +59,25 @@ export class ReactWidget<Props extends {} = {}> extends WidgetType {
 
     const element = createElement(this.component, { ...this.props, ...state });
     this.root.render(<ThemeProvider tx={defaultTx}>{element}</ThemeProvider>);
+    console.log('!');
+    // createPortal(<ThemeProvider tx={defaultTx}>{element}</ThemeProvider>, this.container);
   }
 }
+
+// TODO(burdon): Move widgets to a common context.
+/* 
+  <>
+    <div id="editor" />
+    <WidgetLayer widgets={widgets} />
+  </> 
+
+  export function WidgetLayer({ widgets }: { widgets: { key: string, dom: HTMLElement }[] }) {
+  return (
+    <>
+      {widgets.map(w =>
+        createPortal(<MyWidget />, w.dom, w.key)
+      )}
+    </>
+  );
+}
+*/
