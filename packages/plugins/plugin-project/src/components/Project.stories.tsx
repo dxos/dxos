@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
@@ -31,6 +31,50 @@ const DefaultStory = () => {
   const { space } = useClientProvider();
   const projects = useQuery(space, Filter.typename(DataType.Project.typename));
   const project = projects[0];
+
+  if (!project) {
+    return <p>Loading…</p>;
+  }
+
+  return (
+    <Project.Root Item={StorybookProjectItem}>
+      <Project.Content project={project} />
+    </Project.Root>
+  );
+};
+
+const MutationsStory = () => {
+  const { space } = useClientProvider();
+  const projects = useQuery(space, Filter.typename(DataType.Project.typename));
+  const contacts = useQuery(space, Filter.typename(DataType.Person.typename));
+  const project = projects[0];
+
+  useEffect(() => {
+    if (!space || !project) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const factory = createObjectFactory(space.db, faker as any);
+      const p = Math.random();
+
+      if (p < 0.4) {
+        // Append to the name
+        const contactToAdjust = faker.helpers.arrayElement(contacts);
+        contactToAdjust.fullName += ' X';
+        return;
+      } else if (p < 0.7 && contacts.length > 1) {
+        // Remove a contact (30% chance, but only if we have more than 1)
+        const contactToRemove = faker.helpers.arrayElement(contacts);
+        space.db.remove(contactToRemove);
+      } else {
+        // Add a new contact (30% chance)
+        void factory([{ type: DataType.Person, count: 1 }]);
+      }
+    }, 3_000);
+
+    return () => clearInterval(interval);
+  }, [space, project, contacts]);
 
   if (!project) {
     return <p>Loading…</p>;
@@ -82,6 +126,43 @@ export const Default: Story = {
         // Generate random contacts
         const factory = createObjectFactory(space.db, faker as any);
         await factory([{ type: DataType.Person, count: 12 }]);
+      },
+    }),
+    withLayout({ fullscreen: true }),
+    withTheme,
+  ],
+};
+
+export const Mutations: Story = {
+  render: MutationsStory,
+  decorators: [
+    withClientProvider({
+      types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
+      createIdentity: true,
+      createSpace: true,
+      onSpaceCreated: async ({ space }) => {
+        // Create a project
+        const project = DataType.makeProject({
+          collections: [],
+        });
+
+        // Create a view for contacts
+        const view = createView({
+          name: 'Contacts',
+          typename: DataType.Person.typename,
+          jsonSchema: Type.toJsonSchema(DataType.Person),
+          presentation: project,
+          fields: ['fullName'],
+        });
+
+        project.collections.push(Ref.make(view));
+
+        space.db.add(view);
+        space.db.add(project);
+
+        // Generate initial contacts
+        const factory = createObjectFactory(space.db, faker as any);
+        await factory([{ type: DataType.Person, count: 3 }]);
       },
     }),
     withLayout({ fullscreen: true }),
