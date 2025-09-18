@@ -27,6 +27,8 @@ import {
   LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  agent,
+  localServiceEndpoints,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
@@ -34,13 +36,11 @@ import {
   syncLinearIssues,
   updateDocument,
   updateTasks,
-  localServiceEndpoints,
-  agent,
 } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { exampleFunctions, FunctionTrigger, FunctionType } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';

@@ -1,7 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Predicate } from 'effect';
+import React from 'react';
+
 import { Prompt } from '@dxos/blueprints';
 import { Filter } from '@dxos/echo';
-import { createDocAccessor, Space, useQuery } from '@dxos/react-client/echo';
-import { useThemeContext, ThemedClassName } from '@dxos/react-ui';
+import { type Space, createDocAccessor, useQuery } from '@dxos/react-client/echo';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -10,8 +17,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { Predicate } from 'effect';
-import React from 'react';
 
 export const PromptContainer = ({ space }: { space: Space }) => {
   const [prompt] = useQuery(space, Filter.type(Prompt.Prompt));

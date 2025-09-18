@@ -1,9 +1,16 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import React from 'react';
-import { Filter, Obj } from '@dxos/echo';
+
+import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
+
 import { ResearchInputQueue } from '../testing';
-import type { ComponentProps } from './types';
+
 import { DebugCard } from './DebugCard';
+import type { ComponentProps } from './types';
 
 export const ResearchInputStack = ({ space }: ComponentProps) => {
   const [researchInput] = useQuery(space, Filter.type(ResearchInputQueue));

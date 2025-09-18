@@ -1,7 +1,11 @@
-import { Obj, Relation } from '@dxos/echo';
+//
+// Copyright 2025 DXOS.org
+//
+
 import React from 'react';
-import { ObjectId } from '@dxos/keys';
-import { mx } from '@dxos/react-ui-theme';
+
+import { Obj, type Relation } from '@dxos/echo';
+import { type ObjectId } from '@dxos/keys';
 
 interface DebugCardProps {
   obj: Obj.Any | Relation.Any;

@@ -1,6 +1,12 @@
-import { Type, Ref, Obj } from '@dxos/echo';
-import { JsonSchemaType, toJsonSchema } from '@dxos/echo-schema';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Schema } from 'effect';
+
+import { Obj, type Ref, Type } from '@dxos/echo';
+import { JsonSchemaType, toJsonSchema } from '@dxos/echo-schema';
+
 import { Blueprint } from '../blueprint';
 
 /**

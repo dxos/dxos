@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Filter } from '@dxos/echo';
-import { useQuery, Queue } from '@dxos/react-client/echo';
+import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { Timeline } from '@dxos/react-ui-components';
 
 import { useExecutionGraph } from '../../hooks';

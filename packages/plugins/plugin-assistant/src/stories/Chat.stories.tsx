@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -36,7 +37,6 @@ import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
-import { Schema } from 'effect';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
@@ -57,6 +57,7 @@ import {
   TasksContainer,
   TokenManagerContainer,
 } from './components';
+import { PromptContainer } from './components';
 import { InvocationsContainer } from './components/InvocationsContainer';
 import { TriggersContainer } from './components/TriggersContainer';
 import {
@@ -68,7 +69,6 @@ import {
   organizations,
   testTypes,
 } from './testing';
-import { PromptContainer } from './components';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 

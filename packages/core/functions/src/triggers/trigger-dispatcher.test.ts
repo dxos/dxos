@@ -8,6 +8,7 @@ import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
 import { default as reply } from '../examples/reply';
@@ -27,7 +28,6 @@ import { FunctionTrigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
-import { invariant } from '@dxos/invariant';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest),

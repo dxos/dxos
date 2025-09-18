@@ -1,9 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Array, Effect, Option, Schema } from 'effect';
+
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt } from '@dxos/blueprints';
 import { Type } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import { Effect, Schema, Option, Array } from 'effect';
 
 export default defineFunction({
   name: 'dxos.org/function/agent',

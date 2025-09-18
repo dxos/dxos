@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React from 'react';
+
 import { Surface } from '@dxos/app-framework';
 import { ResearchGraph } from '@dxos/assistant-testing';
 import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
-import React from 'react';
+
 import type { ComponentProps } from './types';
 
 export const ResearchOutputStack = ({ space }: ComponentProps) => {

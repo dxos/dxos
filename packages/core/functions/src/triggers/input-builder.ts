@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FunctionTrigger, type EventType } from '@dxos/functions';
+import { type EventType, type FunctionTrigger } from '@dxos/functions';
 
 export const createInvocationPayload = (trigger: FunctionTrigger, event: EventType): any => {
   if (!trigger.input) {

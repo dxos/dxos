@@ -1,6 +1,11 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Schema } from 'effect';
+
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { Schema } from 'effect';
 
 export const ResearchInputQueue = Schema.Struct({
   queue: Type.Ref(Queue),

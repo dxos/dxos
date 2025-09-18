@@ -13,7 +13,6 @@ import { type QueryResult } from '@dxos/protocols';
 
 import { FunctionType } from './schema';
 import { type Services } from './services';
-import { failCauseSync } from 'effect/Deferred';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html

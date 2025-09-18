@@ -5,6 +5,7 @@
 import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
 
 import { DXN, Filter, Obj } from '@dxos/echo';
+import { causeToError } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
@@ -14,17 +15,16 @@ import { FunctionType } from '../schema';
 import { DatabaseService, QueueService, type Services } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
 import {
-  FunctionTrigger,
   type EventType,
+  FunctionTrigger,
   type QueueTriggerOutput,
   type TimerTrigger,
   type TimerTriggerOutput,
   type TriggerKind,
 } from '../types';
 
-import { InvocationTracer } from './invocation-tracer';
-import { causeToError } from '@dxos/effect';
 import { createInvocationPayload } from './input-builder';
+import { InvocationTracer } from './invocation-tracer';
 
 export type TimeControl = 'natural' | 'manual';
 
