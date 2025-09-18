@@ -146,16 +146,7 @@ export class DataServiceImpl implements DataService {
       const scheduler = new UpdateScheduler(ctx, async () => {
         const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
 
-        next({
-          peers: state.peers.map((peer) => ({
-            peerId: peer.peerId,
-            missingOnRemote: peer.missingOnRemote,
-            missingOnLocal: peer.missingOnLocal,
-            differentDocuments: peer.differentDocuments,
-            localDocumentCount: peer.localDocumentCount,
-            remoteDocumentCount: peer.remoteDocumentCount,
-          })),
-        });
+        next({ peers: state.peers });
       });
 
       this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
