@@ -56,7 +56,16 @@ import {
 } from './components';
 import { InvocationsContainer } from './components/InvocationsContainer';
 import { TriggersContainer } from './components/TriggersContainer';
-import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
+import {
+  accessTokensFromEnv,
+  addTestData,
+  config,
+  getDecorators,
+  testTypes,
+  organizations,
+  ResearchInputQueue,
+} from './testing';
+import { ResearchInputStack } from './components/ResearchInputStack';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -528,5 +537,25 @@ export const WithTriggers: Story = {
   args: {
     deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
+  },
+};
+
+export const WithResearchQueue: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      const researchInputQueue = space.db.add(
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+      );
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      await researchInputQueue.queue.target!.append(orgs);
+    },
+  }),
+  args: {
+    deckComponents: [[ResearchInputStack], [TriggersContainer, InvocationsContainer]],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
