@@ -7,6 +7,7 @@ import { type Obj, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { IconButton, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import { ViewEditor } from '@dxos/react-ui-form';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
 
@@ -35,7 +36,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     [schema, view.projection],
   );
 
-  if (!view || !view.query || !items) {
+  if (!schema || !view || !view.query || !items) {
     return null;
   }
 
@@ -43,7 +44,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     <CardStack.Root asChild>
       <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
         <CardStack.Content>
-          <StackItem.Heading classNames={cardStackHeading} separateOnScroll>
+          <StackItem.Heading classNames={[cardStackHeading, 'pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow'>{view.name ?? t('untitled view title')}</h3>
             <ToggleGroup
               type='single'
@@ -56,7 +57,6 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
                 value='enumerating'
                 label={t('enumerating tab label')}
                 icon='ph--rows-plus-bottom--regular'
-                density='fine'
               />
               <ToggleGroupIconItem
                 iconOnly
@@ -64,27 +64,34 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
                 value='editing'
                 label={t('edit tab label')}
                 icon='ph--pencil-simple-line--regular'
-                density='fine'
               />
             </ToggleGroup>
           </StackItem.Heading>
-          <CardStack.Stack id={view.id} itemsCount={items.length}>
-            {items.map((liveMarker) => {
-              const item = liveMarker as unknown as Obj.Any;
-              return (
-                <CardStack.Item asChild key={item.id}>
-                  <StackItem.Root item={item} focusIndicatorVariant='group'>
-                    <Card.StaticRoot>
-                      <Item item={item} projectionModel={projectionModel} />
-                    </Card.StaticRoot>
-                  </StackItem.Root>
-                </CardStack.Item>
-              );
-            })}
-          </CardStack.Stack>
-          <CardStack.Footer>
-            <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
-          </CardStack.Footer>
+          <>
+            {tab === 'enumerating' ? (
+              <>
+                <CardStack.Stack id={view.id} itemsCount={items.length}>
+                  {items.map((liveMarker) => {
+                    const item = liveMarker as unknown as Obj.Any;
+                    return (
+                      <CardStack.Item asChild key={item.id}>
+                        <StackItem.Root item={item} focusIndicatorVariant='group'>
+                          <Card.StaticRoot>
+                            <Item item={item} projectionModel={projectionModel} />
+                          </Card.StaticRoot>
+                        </StackItem.Root>
+                      </CardStack.Item>
+                    );
+                  })}
+                </CardStack.Stack>
+                <CardStack.Footer>
+                  <IconButton icon='ph--plus--regular' label={t('add card label')} classNames='is-full' />
+                </CardStack.Footer>
+              </>
+            ) : (
+              <ViewEditor view={view} schema={schema} classNames='overflow-y-auto row-span-2' />
+            )}
+          </>
         </CardStack.Content>
       </StackItem.Root>
     </CardStack.Root>
