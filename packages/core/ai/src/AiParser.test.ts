@@ -68,10 +68,11 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           text('Hello, world!'),
-          new Response.ToolCallPart({
-            id: Response.ToolCallId.make('123'),
+          Response.makePart('tool-call', {
+            id: '123',
             name: 'foo',
             params: { bar: 'baz' },
+            providerExecuted: false,
           }),
         ])
           .pipe(parseResponse())
@@ -98,10 +99,11 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           text('<status>I am thinking...'),
-          new Response.ToolCallPart({
-            id: Response.ToolCallId.make('123'),
+          Response.makePart('tool-call', {
+            id: '123',
             name: 'foo',
             params: { bar: 'baz' },
+            providerExecuted: false,
           }),
         ])
           .pipe(parseResponse())
@@ -127,8 +129,8 @@ describe('parser', () => {
       'reasoning gets passed through',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          new Response.ReasoningPart({
-            reasoningText: 'My thoughts are...',
+          Response.makePart('reasoning', {
+            text: 'My thoughts are...',
           }),
           text('Hello, world!'),
         ])
@@ -263,13 +265,14 @@ describe('parser', () => {
 
   describe('streaming', () => {
     const PARTS = [
-      new Response.ReasoningPart({ reasoningText: 'My thoughts are...' }),
+      Response.makePart('reasoning', { text: 'My thoughts are...' }),
       text('Hello, '),
       text('world!'),
-      new Response.ToolCallPart({
-        id: Response.ToolCallId.make('123'),
+      Response.makePart('tool-call', {
+        id: '123',
         name: 'foo',
         params: { bar: 'baz' },
+        providerExecuted: false,
       }),
     ];
 
@@ -322,7 +325,7 @@ describe('parser', () => {
   });
 });
 
-const makeInputStream = (parts: readonly Response.Part[]): Stream.Stream<Response.Response, never, never> =>
+const makeInputStream = (parts: readonly Response.Part<any>[]): Stream.Stream<Response.Response, never, never> =>
   Stream.fromIterable(parts).pipe(Stream.map((part) => new Response.Response({ parts: [part] })));
 
 const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
