@@ -21,6 +21,11 @@ export const translations = [
       },
       [meta.id]: {
         'plugin name': 'Projects',
+        'add column label': 'Add column',
+        'add card label': 'Add item',
+        'untitled view title': 'Query',
+        'enumerating tab label': 'List',
+        'editing tab label': 'Edit',
       },
     },
   },
